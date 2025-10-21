@@ -47,7 +47,6 @@ export default function GeradorEditar() {
   const { id } = useParams<{ id: string }>();
   const [novaUnidade, setNovaUnidade] = useState("");
   const [editandoUnidade, setEditandoUnidade] = useState<string | null>(null);
-  const [editandoCurso, setEditandoCurso] = useState(false);
   const [tituloEditado, setTituloEditado] = useState(
     state.cursoAtual?.titulo || ""
   );
@@ -66,6 +65,26 @@ export default function GeradorEditar() {
     unidadeId: "",
   });
   const [adicionarUnidadeModal, setAdicionarUnidadeModal] = useState(false);
+  const [confirmarDeletarUnidade, setConfirmarDeletarUnidade] = useState(false);
+  const [unidadeParaDeletar, setUnidadeParaDeletar] = useState<string | null>(
+    null
+  );
+  const [conteudoParaDeletar, setConteudoParaDeletar] = useState<{
+    unidadeId: string;
+    conteudoId: string;
+  } | null>(null);
+  const [confirmarDeletarConteudo, setConfirmarDeletarConteudo] =
+    useState(false);
+  const [closingAdicionarUnidade, setClosingAdicionarUnidade] = useState(false);
+  const [closingConfirmarDeletar, setClosingConfirmarDeletar] = useState(false);
+  const [closingConfirmarDeletarConteudo, setClosingConfirmarDeletarConteudo] =
+    useState(false);
+  const [closingEditarConteudo, setClosingEditarConteudo] = useState(false);
+  const [closingAdicionarConteudo, setClosingAdicionarConteudo] =
+    useState(false);
+  const [editarCursoModal, setEditarCursoModal] = useState(false);
+  const [closingEditarCurso, setClosingEditarCurso] = useState(false);
+
   useEffect(() => {
     if (id) {
       selecionarCurso(id);
@@ -75,13 +94,67 @@ export default function GeradorEditar() {
     navigate("/cursos");
   };
 
+  const closeAdicionarUnidadeModal = () => {
+    setClosingAdicionarUnidade(true);
+    setTimeout(() => {
+      setAdicionarUnidadeModal(false);
+      setClosingAdicionarUnidade(false);
+      setNovaUnidade("");
+    }, 200);
+  };
+
+  const closeConfirmarDeletarUnidadeModal = () => {
+    setClosingConfirmarDeletar(true);
+    setTimeout(() => {
+      setConfirmarDeletarUnidade(false);
+      setClosingConfirmarDeletar(false);
+      setUnidadeParaDeletar(null);
+    }, 200);
+  };
+
+  const closeConfirmarDeletarConteudoModal = () => {
+    setClosingConfirmarDeletarConteudo(true);
+    setTimeout(() => {
+      setConfirmarDeletarConteudo(false);
+      setClosingConfirmarDeletarConteudo(false);
+      setConteudoParaDeletar(null);
+    }, 200);
+  };
+
+  const closeEditarConteudoModal = () => {
+    setClosingEditarConteudo(true);
+    setTimeout(() => {
+      setEditandoConteudo(null);
+      setClosingEditarConteudo(false);
+    }, 200);
+  };
+
+  const closeAdicionarConteudoModal = () => {
+    setClosingAdicionarConteudo(true);
+    setTimeout(() => {
+      setConteudoTemp({
+        tipo: "paragrafo",
+        conteudo: "",
+        unidadeId: "",
+      });
+      setClosingAdicionarConteudo(false);
+    }, 200);
+  };
+
+  const closeEditarCursoModal = () => {
+    setClosingEditarCurso(true);
+    setTimeout(() => {
+      setEditarCursoModal(false);
+      setClosingEditarCurso(false);
+    }, 200);
+  };
+
   const handleSalvarEdicaoCurso = () => {
     if (state.cursoAtual) {
       editarCurso(state.cursoAtual.id, {
         titulo: tituloEditado,
         descricao: descricaoEditada,
       });
-      setEditandoCurso(false);
     }
   };
 
@@ -98,7 +171,8 @@ export default function GeradorEditar() {
   };
 
   const handleDeletarUnidade = (unidadeId: string) => {
-    deletarUnidade(unidadeId);
+    setUnidadeParaDeletar(unidadeId);
+    setConfirmarDeletarUnidade(true);
   };
 
   const handleAdicionarConteudo = (
@@ -129,7 +203,8 @@ export default function GeradorEditar() {
   };
 
   const handleDeletarConteudo = (unidadeId: string, conteudoId: string) => {
-    deletarConteudo(unidadeId, conteudoId);
+    setConteudoParaDeletar({ unidadeId, conteudoId });
+    setConfirmarDeletarConteudo(true);
   };
 
   const handleMoverUnidadeAcima = (index: number) => {
@@ -706,82 +781,39 @@ document.addEventListener('DOMContentLoaded', initSCORM);`;
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Card de Informações do Curso */}
         <Card className="mb-6">
-          {editandoCurso ? (
-            <CardContent className="pt-6 space-y-4">
-              <div>
-                <label className="text-sm font-medium text-gray-700 mb-2 block">
-                  Título do Curso
-                </label>
-                <Input
-                  value={tituloEditado}
-                  onChange={(e) => setTituloEditado(e.target.value)}
-                  placeholder="Título do curso"
-                />
-              </div>
-              <div>
-                <label className="text-sm font-medium text-gray-700 mb-2 block">
-                  Descrição do Curso
-                </label>
-                <Input
-                  value={descricaoEditada}
-                  onChange={(e) => setDescricaoEditada(e.target.value)}
-                  placeholder="Descrição do curso"
-                />
-              </div>
-              <div className="flex space-x-2">
-                <Button
-                  onClick={handleSalvarEdicaoCurso}
-                  className="bg-blue-600 hover:bg-blue-700"
-                >
-                  Salvar
-                </Button>
+          <div>
+            <CardHeader>
+              <div className="flex items-start justify-between">
+                <div className="flex-1 flex items-start space-x-4">
+                  <BookOpen className="h-8 w-8 text-blue-600 flex-shrink-0 mt-1" />
+                  <div>
+                    <CardTitle className="text-2xl">
+                      {state.cursoAtual.titulo}
+                    </CardTitle>
+                    <p className="text-gray-600 mt-2">
+                      {state.cursoAtual.descricao}
+                    </p>
+                  </div>
+                </div>
                 <Button
                   variant="outline"
-                  onClick={() => {
-                    setEditandoCurso(false);
-                    setTituloEditado(state.cursoAtual?.titulo || "");
-                    setDescricaoEditada(state.cursoAtual?.descricao || "");
-                  }}
+                  size="sm"
+                  onClick={() => setEditarCursoModal(true)}
                 >
-                  Cancelar
+                  <Edit className="h-4 w-4 mr-1" />
+                  Editar
+                </Button>
+                <Button
+                  size="sm"
+                  onClick={() => setAdicionarUnidadeModal(true)}
+                  className="bg-purple-600 hover:bg-purple-700 text-white ml-3"
+                >
+                  <Plus className="h-4 w-4 mr-1" />
+                  Adicionar Unidade
                 </Button>
               </div>
-            </CardContent>
-          ) : (
-            <div>
-              <CardHeader>
-                <div className="flex items-start justify-between">
-                  <div className="flex-1 flex items-start space-x-4">
-                    <BookOpen className="h-8 w-8 text-blue-600 flex-shrink-0 mt-1" />
-                    <div>
-                      <CardTitle className="text-2xl">
-                        {state.cursoAtual.titulo}
-                      </CardTitle>
-                      <p className="text-gray-600 mt-2">
-                        {state.cursoAtual.descricao}
-                      </p>
-                    </div>
-                  </div>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setEditandoCurso(true)}
-                  >
-                    <Edit className="h-4 w-4 mr-1" />
-                    Editar
-                  </Button>
-                  <Button
-                    size="sm"
-                    onClick={() => setAdicionarUnidadeModal(true)}
-                    className="bg-purple-600 hover:bg-purple-700 text-white ml-3"
-                  >
-                    <Plus className="h-4 w-4 mr-1" />
-                    Adicionar Unidade
-                  </Button>
-                </div>
-              </CardHeader>
-            </div>
-          )}
+            </CardHeader>
+          </div>
         </Card>
 
         {/* Adicionar Nova Unidade */}
@@ -1084,10 +1116,85 @@ document.addEventListener('DOMContentLoaded', initSCORM);`;
         )}
       </div>
 
+      {/* Modal para editar curso */}
+      {editarCursoModal && (
+        <div
+          className={`fixed inset-0 bg-black flex items-center justify-center p-4 z-50 ${
+            closingEditarCurso
+              ? "animate-out fade-out duration-200"
+              : "animate-in fade-in duration-200"
+          } ${closingEditarCurso ? "bg-opacity-0" : "bg-opacity-50"}`}
+          onClick={closeEditarCursoModal}
+        >
+          <Card
+            className={`w-full max-w-2xl ${
+              closingEditarCurso
+                ? "animate-out zoom-out-95 duration-200"
+                : "animate-in zoom-in-95 duration-200"
+            }`}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <CardHeader>
+              <CardTitle>Editar Curso</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div>
+                <label className="text-sm font-medium text-gray-700 mb-2 block">
+                  Título do Curso
+                </label>
+                <Input
+                  value={tituloEditado}
+                  onChange={(e) => setTituloEditado(e.target.value)}
+                  placeholder="Título do curso"
+                />
+              </div>
+              <div>
+                <label className="text-sm font-medium text-gray-700 mb-2 block">
+                  Descrição do Curso
+                </label>
+                <Input
+                  value={descricaoEditada}
+                  onChange={(e) => setDescricaoEditada(e.target.value)}
+                  placeholder="Descrição do curso"
+                />
+              </div>
+              <div className="flex justify-end space-x-3">
+                <Button variant="outline" onClick={closeEditarCursoModal}>
+                  Cancelar
+                </Button>
+                <Button
+                  onClick={() => {
+                    handleSalvarEdicaoCurso();
+                    closeEditarCursoModal();
+                  }}
+                  className="bg-blue-600 hover:bg-blue-700"
+                >
+                  Salvar
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
       {/* Modal para editar conteúdo */}
       {editandoConteudo && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <Card className="w-full max-w-2xl">
+        <div
+          className={`fixed inset-0 bg-black flex items-center justify-center p-4 z-50 ${
+            closingEditarConteudo
+              ? "animate-out fade-out duration-200"
+              : "animate-in fade-in duration-200"
+          } ${closingEditarConteudo ? "bg-opacity-0" : "bg-opacity-50"}`}
+          onClick={closeEditarConteudoModal}
+        >
+          <Card
+            className={`w-full max-w-2xl ${
+              closingEditarConteudo
+                ? "animate-out zoom-out-95 duration-200"
+                : "animate-in zoom-in-95 duration-200"
+            }`}
+            onClick={(e) => e.stopPropagation()}
+          >
             <CardHeader>
               <CardTitle>Editar Conteúdo</CardTitle>
             </CardHeader>
@@ -1106,10 +1213,7 @@ document.addEventListener('DOMContentLoaded', initSCORM);`;
               />
 
               <div className="flex justify-end space-x-3">
-                <Button
-                  variant="outline"
-                  onClick={() => setEditandoConteudo(null)}
-                >
+                <Button variant="outline" onClick={closeEditarConteudoModal}>
                   Cancelar
                 </Button>
                 <Button
@@ -1120,6 +1224,7 @@ document.addEventListener('DOMContentLoaded', initSCORM);`;
                       editandoConteudo.tipo,
                       editandoConteudo.conteudo
                     );
+                    closeEditarConteudoModal();
                   }}
                   className="bg-blue-600 hover:bg-blue-700"
                 >
@@ -1133,8 +1238,22 @@ document.addEventListener('DOMContentLoaded', initSCORM);`;
 
       {/* Modal para adicionar conteúdo */}
       {conteudoTemp.unidadeId && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <Card className="w-full max-w-2xl">
+        <div
+          className={`fixed inset-0 bg-black flex items-center justify-center p-4 z-50 ${
+            closingAdicionarConteudo
+              ? "animate-out fade-out duration-200"
+              : "animate-in fade-in duration-200"
+          } ${closingAdicionarConteudo ? "bg-opacity-0" : "bg-opacity-50"}`}
+          onClick={closeAdicionarConteudoModal}
+        >
+          <Card
+            className={`w-full max-w-2xl ${
+              closingAdicionarConteudo
+                ? "animate-out zoom-out-95 duration-200"
+                : "animate-in zoom-in-95 duration-200"
+            }`}
+            onClick={(e) => e.stopPropagation()}
+          >
             <CardHeader>
               <CardTitle>
                 Adicionar{" "}
@@ -1163,20 +1282,14 @@ document.addEventListener('DOMContentLoaded', initSCORM);`;
               />
 
               <div className="flex justify-end space-x-3">
-                <Button
-                  variant="outline"
-                  onClick={() =>
-                    setConteudoTemp({
-                      tipo: "paragrafo",
-                      conteudo: "",
-                      unidadeId: "",
-                    })
-                  }
-                >
+                <Button variant="outline" onClick={closeAdicionarConteudoModal}>
                   Cancelar
                 </Button>
                 <Button
-                  onClick={handleSalvarConteudo}
+                  onClick={() => {
+                    handleSalvarConteudo();
+                    closeAdicionarConteudoModal();
+                  }}
                   className="bg-blue-600 hover:bg-blue-700"
                   disabled={!conteudoTemp.conteudo.trim()}
                 >
@@ -1190,8 +1303,22 @@ document.addEventListener('DOMContentLoaded', initSCORM);`;
 
       {/* Modal para adicionar unidade */}
       {adicionarUnidadeModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <Card className="w-full max-w-2xl">
+        <div
+          className={`fixed inset-0 bg-black flex items-center justify-center p-4 z-50 ${
+            closingAdicionarUnidade
+              ? "animate-out fade-out duration-200"
+              : "animate-in fade-in duration-200"
+          } ${closingAdicionarUnidade ? "bg-opacity-0" : "bg-opacity-50"}`}
+          onClick={closeAdicionarUnidadeModal}
+        >
+          <Card
+            className={`w-full max-w-2xl ${
+              closingAdicionarUnidade
+                ? "animate-out zoom-out-95 duration-200"
+                : "animate-in zoom-in-95 duration-200"
+            }`}
+            onClick={(e) => e.stopPropagation()}
+          >
             <CardHeader>
               <CardTitle>Adicionar Nova Unidade</CardTitle>
             </CardHeader>
@@ -1206,24 +1333,137 @@ document.addEventListener('DOMContentLoaded', initSCORM);`;
               />
 
               <div className="flex justify-end space-x-3">
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    setAdicionarUnidadeModal(false);
-                    setNovaUnidade("");
-                  }}
-                >
+                <Button variant="outline" onClick={closeAdicionarUnidadeModal}>
                   Cancelar
                 </Button>
                 <Button
                   onClick={() => {
                     handleAdicionarUnidade();
-                    setAdicionarUnidadeModal(false);
+                    closeAdicionarUnidadeModal();
                   }}
                   className="bg-purple-600 hover:bg-purple-700"
                   disabled={!novaUnidade.trim()}
                 >
                   Adicionar
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {/* Modal de confirmação para deletar unidade */}
+      {confirmarDeletarUnidade && unidadeParaDeletar && (
+        <div
+          className={`fixed inset-0 bg-black flex items-center justify-center p-4 z-50 ${
+            closingConfirmarDeletar
+              ? "animate-out fade-out duration-200"
+              : "animate-in fade-in duration-200"
+          } ${closingConfirmarDeletar ? "bg-opacity-0" : "bg-opacity-50"}`}
+          onClick={closeConfirmarDeletarUnidadeModal}
+        >
+          <Card
+            className={`w-full max-w-md ${
+              closingConfirmarDeletar
+                ? "animate-out zoom-out-95 duration-200"
+                : "animate-in zoom-in-95 duration-200"
+            }`}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <CardHeader>
+              <CardTitle>Confirmar Exclusão</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <p>
+                Tem certeza que deseja excluir a unidade "
+                {
+                  (state.cursoAtual?.unidades || []).find(
+                    (u) => u.id === unidadeParaDeletar
+                  )?.titulo
+                }
+                "? Esta ação não pode ser desfeita.
+              </p>
+              <div className="flex justify-end space-x-3">
+                <Button
+                  variant="outline"
+                  onClick={closeConfirmarDeletarUnidadeModal}
+                >
+                  Cancelar
+                </Button>
+                <Button
+                  variant="destructive"
+                  onClick={() => {
+                    deletarUnidade(unidadeParaDeletar);
+                    closeConfirmarDeletarUnidadeModal();
+                  }}
+                >
+                  Excluir
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {/* Modal de confirmação para deletar conteúdo */}
+      {confirmarDeletarConteudo && conteudoParaDeletar && (
+        <div
+          className={`fixed inset-0 bg-black flex items-center justify-center p-4 z-50 ${
+            closingConfirmarDeletarConteudo
+              ? "animate-out fade-out duration-200"
+              : "animate-in fade-in duration-200"
+          } ${
+            closingConfirmarDeletarConteudo ? "bg-opacity-0" : "bg-opacity-50"
+          }`}
+          onClick={closeConfirmarDeletarConteudoModal}
+        >
+          <Card
+            className={`w-full max-w-md ${
+              closingConfirmarDeletarConteudo
+                ? "animate-out zoom-out-95 duration-200"
+                : "animate-in zoom-in-95 duration-200"
+            }`}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <CardHeader>
+              <CardTitle>Confirmar Exclusão</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <p>
+                Tem certeza que deseja excluir o conteúdo "
+                {
+                  (state.cursoAtual?.unidades || [])
+                    .find((u) => u.id === conteudoParaDeletar.unidadeId)
+                    ?.conteudo.find(
+                      (c) => c.id === conteudoParaDeletar.conteudoId
+                    )?.conteudo
+                }
+                " da unidade "
+                {
+                  (state.cursoAtual?.unidades || []).find(
+                    (u) => u.id === conteudoParaDeletar.unidadeId
+                  )?.titulo
+                }
+                "? Esta ação não pode ser desfeita.
+              </p>
+              <div className="flex justify-end space-x-3">
+                <Button
+                  variant="outline"
+                  onClick={closeConfirmarDeletarConteudoModal}
+                >
+                  Cancelar
+                </Button>
+                <Button
+                  variant="destructive"
+                  onClick={() => {
+                    deletarConteudo(
+                      conteudoParaDeletar.unidadeId,
+                      conteudoParaDeletar.conteudoId
+                    );
+                    closeConfirmarDeletarConteudoModal();
+                  }}
+                >
+                  Excluir
                 </Button>
               </div>
             </CardContent>
