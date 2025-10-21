@@ -815,7 +815,7 @@ document.addEventListener('DOMContentLoaded', initSCORM);`;
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <div className="bg-white border-b border-gray-200">
+      <div className="bg-white border-b border-gray-200 fixed top-0 left-0 right-0 z-30">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between">
             <Button variant="outline" size="sm" onClick={handleVoltar}>
@@ -835,19 +835,19 @@ document.addEventListener('DOMContentLoaded', initSCORM);`;
                 </Tooltip>
               </TooltipProvider>
               <Button
-                variant="outline"
-                onClick={handleGerarSCORM}
-                title="Gerar SCORM"
-                className="scorm-button"
-              >
-                <Download className="h-4 w-4" />
-              </Button>
-              <Button
                 onClick={handleSalvarCurso}
                 className="bg-blue-600 hover:bg-blue-700"
               >
                 <Save className="h-4 w-4 mr-2" />
                 Salvar
+              </Button>
+              <Button
+                onClick={handleGerarSCORM}
+                title="Gerar SCORM"
+                className="bg-purple-600 hover:bg-purple-700 text-white scorm-button"
+              >
+                <Download className="h-4 w-4 mr-1" />
+                SCORM
               </Button>
             </div>
           </div>
@@ -855,7 +855,7 @@ document.addEventListener('DOMContentLoaded', initSCORM);`;
       </div>
 
       {/* Conteúdo Principal */}
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pt-24">
         {/* Card de Informações do Curso */}
         <Card className="mb-6">
           <div>

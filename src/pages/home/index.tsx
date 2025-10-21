@@ -17,6 +17,7 @@ import {
   Clock,
   User,
   Download,
+  BookOpen,
 } from "lucide-react";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -484,23 +485,42 @@ document.addEventListener('DOMContentLoaded', initSCORM);`;
                   ${(curso.unidades || [])
                     .map(
                       (unidade) => `
-                    <div class="border-l-4 border-blue-500 pl-6">
-                      <h2 class="text-xl font-semibold text-gray-900 mb-4">${
+                    <div>
+                      <h2 class="text-2xl font-bold text-gray-900 mb-4">${
                         unidade.titulo
                       }</h2>
-                      <div class="space-y-4">
-                        ${unidade.conteudo
-                          .map(
-                            (item) => `
-                          ${
-                            item.tipo === "subtitulo"
-                              ? `<h3 class="text-lg font-medium text-gray-800">${item.conteudo}</h3>`
-                              : `<p class="text-gray-700 leading-relaxed">${item.conteudo}</p>`
+                      ${unidade.conteudo
+                        .map((item) => {
+                          if (item.tipo === "titulo")
+                            return `<h3 class="text-xl font-bold text-gray-800 mb-3 mt-6">${item.conteudo}</h3>`;
+                          if (item.tipo === "subtitulo")
+                            return `<h4 class="text-lg font-semibold text-gray-800 mb-2">${item.conteudo}</h4>`;
+                          if (item.tipo === "imagem") {
+                            const tamanhoClass =
+                              item.tamanho === "pequena"
+                                ? "max-w-xs"
+                                : item.tamanho === "media"
+                                ? "max-w-md"
+                                : "max-w-full";
+                            return `<div class="mb-4">
+                              ${
+                                item.fonte
+                                  ? `<p class="text-xs text-gray-500 mb-1">Fonte: ${item.fonte}</p>`
+                                  : ""
+                              }
+                              <img src="${item.conteudo}" alt="${
+                              item.legenda || "Imagem"
+                            }" class="${tamanhoClass} h-auto mb-2 rounded-md border border-gray-200" />
+                               ${
+                                 item.legenda
+                                   ? `<p class="text-sm text-gray-600 italic mb-1">${item.legenda}</p>`
+                                   : ""
+                               }
+                            </div>`;
                           }
-                        `
-                          )
-                          .join("")}
-                      </div>
+                          return `<p class="text-gray-700 mb-3 leading-relaxed">${item.conteudo}</p>`;
+                        })
+                        .join("")}
                     </div>
                   `
                     )
@@ -599,7 +619,8 @@ document.addEventListener('DOMContentLoaded', initSCORM);`;
                       <Calendar className="h-4 w-4 mr-2" />
                       {curso.modalidade}
                     </div>
-                    <div className="text-sm text-gray-500">
+                    <div className="flex items-center text-sm text-gray-500">
+                      <BookOpen className="h-4 w-4 mr-1" />
                       {curso.unidades?.length || 0} unidade
                       {curso.unidades?.length !== 1 ? "s" : ""}
                     </div>
@@ -618,16 +639,6 @@ document.addEventListener('DOMContentLoaded', initSCORM);`;
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => handleGerarSCORM(curso.id)}
-                      className="flex-1 scorm-button"
-                      data-curso-id={curso.id}
-                    >
-                      <Download className="h-4 w-4 mr-1" />
-                      SCORM
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
                       onClick={() => handleEditarCurso(curso.id)}
                       className="flex-1"
                     >
@@ -641,6 +652,15 @@ document.addEventListener('DOMContentLoaded', initSCORM);`;
                       className="text-red-600 hover:text-red-700 hover:bg-red-50"
                     >
                       <Trash2 className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      size="sm"
+                      onClick={() => handleGerarSCORM(curso.id)}
+                      className="bg-purple-600 hover:bg-purple-700 text-white scorm-button"
+                      data-curso-id={curso.id}
+                    >
+                      <Download className="h-4 w-4 mr-1" />
+                      SCORM
                     </Button>
                   </div>
                 </CardContent>
