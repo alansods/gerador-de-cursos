@@ -22,6 +22,7 @@ import {
   ArrowUp,
   ArrowDown,
   Image,
+  X,
 } from "lucide-react";
 import {
   Tooltip,
@@ -86,12 +87,30 @@ export default function GeradorEditar() {
     useState(false);
   const [editarCursoModal, setEditarCursoModal] = useState(false);
   const [closingEditarCurso, setClosingEditarCurso] = useState(false);
+  const [mostrandoMenuFlutuante, setMostrandoMenuFlutuante] = useState(false);
 
   useEffect(() => {
     if (id) {
       selecionarCurso(id);
     }
   }, [id]);
+
+  // Fechar menu flutuante quando clicar fora
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (mostrandoMenuFlutuante) {
+        const target = event.target as HTMLElement;
+        if (!target.closest(".floating-menu-container")) {
+          setMostrandoMenuFlutuante(false);
+        }
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [mostrandoMenuFlutuante]);
   const handleVoltar = () => {
     navigate("/cursos");
   };
@@ -208,7 +227,7 @@ export default function GeradorEditar() {
         fonte: conteudoTemp.fonte,
       });
       setConteudoTemp({ tipo: "paragrafo", conteudo: "", unidadeId: "" });
-      toast.success("Conteúdo salvo com sucesso!");
+      toast.success("Alterações salvas");
     }
   };
 
@@ -229,7 +248,7 @@ export default function GeradorEditar() {
       fonte,
     });
     setEditandoConteudo(null);
-    toast.success("Conteúdo editado com sucesso!");
+    toast.success("Alterações salvas");
   };
 
   const handleDeletarConteudo = (unidadeId: string, conteudoId: string) => {
@@ -239,7 +258,7 @@ export default function GeradorEditar() {
 
   const handleSalvarCurso = () => {
     salvarCurso();
-    toast.success("Curso salvo com sucesso!");
+    toast.success("Alterações salvas");
   };
 
   const handleMoverUnidadeAcima = (index: number) => {
@@ -965,83 +984,6 @@ document.addEventListener('DOMContentLoaded', initSCORM);`;
               </CardHeader>
 
               <CardContent>
-                {/* Legenda - Adicionar Conteúdo */}
-                <div className="mb-4">
-                  <p className="text-sm text-gray-600 font-medium mb-3">
-                    Adicione conteúdo a esta unidade:
-                  </p>
-                </div>
-
-                <div className="bg-purple-50 rounded-lg p-4 mb-6 border border-purple-200">
-                  <div className="flex space-x-2">
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button
-                            size="sm"
-                            onClick={() =>
-                              handleAdicionarConteudo(unidade.id, "titulo")
-                            }
-                            className="bg-purple-600 hover:bg-purple-700 text-white"
-                          >
-                            <Heading2 className="h-4 w-4 mr-1 text-white" />
-                            Título
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>Adicionar título</TooltipContent>
-                      </Tooltip>
-
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button
-                            size="sm"
-                            onClick={() =>
-                              handleAdicionarConteudo(unidade.id, "subtitulo")
-                            }
-                            className="bg-purple-600 hover:bg-purple-700 text-white"
-                          >
-                            <Heading3 className="h-4 w-4 mr-1 text-white" />
-                            Subtítulo
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>Adicionar subtítulo</TooltipContent>
-                      </Tooltip>
-
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button
-                            size="sm"
-                            onClick={() =>
-                              handleAdicionarConteudo(unidade.id, "paragrafo")
-                            }
-                            className="bg-purple-600 hover:bg-purple-700 text-white"
-                          >
-                            <Type className="h-4 w-4 mr-1 text-white" />
-                            Parágrafo
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>Adicionar parágrafo</TooltipContent>
-                      </Tooltip>
-
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button
-                            size="sm"
-                            onClick={() =>
-                              handleAdicionarConteudo(unidade.id, "imagem")
-                            }
-                            className="bg-purple-600 hover:bg-purple-700 text-white"
-                          >
-                            <Image className="h-4 w-4 mr-1 text-white" />
-                            Imagem
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>Adicionar imagem</TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-                  </div>
-                </div>
-
                 {/* Lista de Conteúdo */}
                 {unidade.conteudo.length === 0 ? (
                   <div className="text-center py-8 text-gray-500">
@@ -1800,6 +1742,121 @@ document.addEventListener('DOMContentLoaded', initSCORM);`;
           },
         }}
       />
+
+      {/* Botão flutuante para adicionar conteúdo */}
+      <div className="fixed bottom-6 right-6 z-40 floating-menu-container">
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                onClick={() =>
+                  setMostrandoMenuFlutuante(!mostrandoMenuFlutuante)
+                }
+                className="w-14 h-14 rounded-full bg-purple-600 hover:bg-purple-700 text-white shadow-lg hover:shadow-xl transition-all duration-200"
+              >
+                {mostrandoMenuFlutuante ? (
+                  <X className="h-6 w-6" />
+                ) : (
+                  <Plus className="h-6 w-6" />
+                )}
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Adicionar conteúdo</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+
+        {/* Menu dropdown flutuante */}
+        {mostrandoMenuFlutuante && (
+          <div className="absolute bottom-16 right-0 bg-white rounded-lg shadow-xl border border-gray-200 p-2 min-w-[200px] animate-in fade-in duration-200">
+            <div className="space-y-1">
+              <Button
+                variant="ghost"
+                className="w-full justify-start text-left"
+                onClick={() => {
+                  setMostrandoMenuFlutuante(false);
+                  // Aqui você pode adicionar lógica para selecionar a unidade
+                  // Por enquanto, vou usar a primeira unidade como exemplo
+                  if (
+                    state.cursoAtual?.unidades &&
+                    state.cursoAtual.unidades.length > 0
+                  ) {
+                    setConteudoTemp({
+                      tipo: "titulo",
+                      conteudo: "",
+                      unidadeId: state.cursoAtual.unidades[0].id,
+                    });
+                  }
+                }}
+              >
+                <Heading2 className="h-4 w-4 mr-2 text-purple-600" />
+                Título
+              </Button>
+              <Button
+                variant="ghost"
+                className="w-full justify-start text-left"
+                onClick={() => {
+                  setMostrandoMenuFlutuante(false);
+                  if (
+                    state.cursoAtual?.unidades &&
+                    state.cursoAtual.unidades.length > 0
+                  ) {
+                    setConteudoTemp({
+                      tipo: "subtitulo",
+                      conteudo: "",
+                      unidadeId: state.cursoAtual.unidades[0].id,
+                    });
+                  }
+                }}
+              >
+                <Heading3 className="h-4 w-4 mr-2 text-blue-600" />
+                Subtítulo
+              </Button>
+              <Button
+                variant="ghost"
+                className="w-full justify-start text-left"
+                onClick={() => {
+                  setMostrandoMenuFlutuante(false);
+                  if (
+                    state.cursoAtual?.unidades &&
+                    state.cursoAtual.unidades.length > 0
+                  ) {
+                    setConteudoTemp({
+                      tipo: "paragrafo",
+                      conteudo: "",
+                      unidadeId: state.cursoAtual.unidades[0].id,
+                    });
+                  }
+                }}
+              >
+                <Type className="h-4 w-4 mr-2 text-gray-600" />
+                Parágrafo
+              </Button>
+              <Button
+                variant="ghost"
+                className="w-full justify-start text-left"
+                onClick={() => {
+                  setMostrandoMenuFlutuante(false);
+                  if (
+                    state.cursoAtual?.unidades &&
+                    state.cursoAtual.unidades.length > 0
+                  ) {
+                    setConteudoTemp({
+                      tipo: "imagem",
+                      conteudo: "",
+                      unidadeId: state.cursoAtual.unidades[0].id,
+                    });
+                  }
+                }}
+              >
+                <Image className="h-4 w-4 mr-2 text-green-600" />
+                Imagem
+              </Button>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
