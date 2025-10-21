@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useGeradorCurso } from "@/context/GeradorCursoContext";
-import toast, { Toaster } from "react-hot-toast";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -21,7 +20,6 @@ import {
   Layers,
   ArrowUp,
   ArrowDown,
-  Image,
 } from "lucide-react";
 import {
   Tooltip,
@@ -186,60 +184,27 @@ export default function GeradorEditar() {
 
   const handleSalvarConteudo = () => {
     if (conteudoTemp.conteudo.trim()) {
-      // Validação para imagens
-      if (conteudoTemp.tipo === "imagem") {
-        if (
-          !conteudoTemp.tamanho ||
-          !conteudoTemp.legenda ||
-          !conteudoTemp.fonte
-        ) {
-          alert(
-            "Por favor, preencha todos os campos obrigatórios para a imagem."
-          );
-          return;
-        }
-      }
-
       adicionarConteudo(conteudoTemp.unidadeId, {
         tipo: conteudoTemp.tipo,
         conteudo: conteudoTemp.conteudo,
-        tamanho: conteudoTemp.tamanho,
-        legenda: conteudoTemp.legenda,
-        fonte: conteudoTemp.fonte,
       });
       setConteudoTemp({ tipo: "paragrafo", conteudo: "", unidadeId: "" });
-      toast.success("Conteúdo salvo com sucesso!");
     }
   };
 
   const handleEditarConteudo = (
     unidadeId: string,
     conteudoId: string,
-    tipo: "paragrafo" | "subtitulo" | "titulo" | "imagem",
-    conteudo: string,
-    tamanho?: string,
-    legenda?: string,
-    fonte?: string
+    tipo: "paragrafo" | "subtitulo" | "titulo",
+    conteudo: string
   ) => {
-    editarConteudo(unidadeId, conteudoId, {
-      tipo,
-      conteudo,
-      tamanho,
-      legenda,
-      fonte,
-    });
+    editarConteudo(unidadeId, conteudoId, { tipo, conteudo });
     setEditandoConteudo(null);
-    toast.success("Conteúdo editado com sucesso!");
   };
 
   const handleDeletarConteudo = (unidadeId: string, conteudoId: string) => {
     setConteudoParaDeletar({ unidadeId, conteudoId });
     setConfirmarDeletarConteudo(true);
-  };
-
-  const handleSalvarCurso = () => {
-    salvarCurso();
-    toast.success("Curso salvo com sucesso!");
   };
 
   const handleMoverUnidadeAcima = (index: number) => {
@@ -744,29 +709,6 @@ document.addEventListener('DOMContentLoaded', initSCORM);`;
                             return `<h3 class="text-xl font-bold text-gray-800 mb-3 mt-6">${item.conteudo}</h3>`;
                           if (item.tipo === "subtitulo")
                             return `<h4 class="text-lg font-semibold text-gray-800 mb-2">${item.conteudo}</h4>`;
-                          if (item.tipo === "imagem") {
-                            const tamanhoClass =
-                              item.tamanho === "pequena"
-                                ? "max-w-xs"
-                                : item.tamanho === "media"
-                                ? "max-w-md"
-                                : "max-w-full";
-                            return `<div class="mb-4">
-                              ${
-                                item.fonte
-                                  ? `<p class="text-xs text-gray-500 mb-1">Fonte: ${item.fonte}</p>`
-                                  : ""
-                              }
-                              <img src="${item.conteudo}" alt="${
-                              item.legenda || "Imagem"
-                            }" class="${tamanhoClass} h-auto mb-2 rounded-md border border-gray-200" />
-                               ${
-                                 item.legenda
-                                   ? `<p class="text-sm text-gray-600 italic mb-1">${item.legenda}</p>`
-                                   : ""
-                               }
-                            </div>`;
-                          }
                           return `<p class="text-gray-700 mb-3 leading-relaxed">${item.conteudo}</p>`;
                         })
                         .join("")}
@@ -824,7 +766,7 @@ document.addEventListener('DOMContentLoaded', initSCORM);`;
                 <Download className="h-4 w-4" />
               </Button>
               <Button
-                onClick={handleSalvarCurso}
+                onClick={salvarCurso}
                 className="bg-blue-600 hover:bg-blue-700"
               >
                 <Save className="h-4 w-4 mr-2" />
@@ -1022,22 +964,6 @@ document.addEventListener('DOMContentLoaded', initSCORM);`;
                         </TooltipTrigger>
                         <TooltipContent>Adicionar parágrafo</TooltipContent>
                       </Tooltip>
-
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button
-                            size="sm"
-                            onClick={() =>
-                              handleAdicionarConteudo(unidade.id, "imagem")
-                            }
-                            className="bg-purple-600 hover:bg-purple-700 text-white"
-                          >
-                            <Image className="h-4 w-4 mr-1 text-white" />
-                            Imagem
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>Adicionar imagem</TooltipContent>
-                      </Tooltip>
                     </TooltipProvider>
                   </div>
                 </div>
@@ -1050,171 +976,121 @@ document.addEventListener('DOMContentLoaded', initSCORM);`;
                 ) : (
                   <div className="space-y-3">
                     {unidade.conteudo.map((item, itemIndex) => (
-                      <TooltipProvider key={item.id}>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <div className="group">
-                              <div className="flex items-start space-x-3 p-4 bg-gray-50 rounded-lg">
-                                <div className="flex-shrink-0 mt-1">
-                                  {item.tipo === "titulo" ? (
-                                    <Heading2 className="h-4 w-4 text-purple-600" />
-                                  ) : item.tipo === "subtitulo" ? (
-                                    <Heading3 className="h-4 w-4 text-blue-600" />
-                                  ) : item.tipo === "imagem" ? (
-                                    <Image className="h-4 w-4 text-green-600" />
-                                  ) : (
-                                    <Type className="h-4 w-4 text-gray-600" />
-                                  )}
-                                </div>
-                                <div className="flex-1">
-                                  {item.tipo === "titulo" ? (
-                                    <h3 className="font-bold text-lg text-gray-900">
-                                      {item.conteudo}
-                                    </h3>
-                                  ) : item.tipo === "subtitulo" ? (
-                                    <h4 className="font-semibold text-gray-900">
-                                      {item.conteudo}
-                                    </h4>
-                                  ) : item.tipo === "imagem" ? (
-                                    <div className="space-y-2">
-                                      {item.fonte && (
-                                        <p className="text-xs text-gray-500">
-                                          Fonte: {item.fonte}
-                                        </p>
-                                      )}
-                                      <img
-                                        src={item.conteudo}
-                                        alt={item.legenda || "Imagem"}
-                                        className={`h-auto object-contain border border-gray-200 rounded-md ${
-                                          item.tamanho === "pequena"
-                                            ? "max-w-xs"
-                                            : item.tamanho === "media"
-                                            ? "max-w-md"
-                                            : "max-w-full"
-                                        }`}
-                                        onError={(e) => {
-                                          e.currentTarget.style.display =
-                                            "none";
-                                        }}
-                                      />
-                                      {item.legenda && (
-                                        <p className="text-sm text-gray-600 italic">
-                                          {item.legenda}
-                                        </p>
-                                      )}
-                                    </div>
-                                  ) : (
-                                    <p className="text-gray-700">
-                                      {item.conteudo}
-                                    </p>
-                                  )}
-                                </div>
-                                <div className="flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                  <TooltipProvider>
-                                    <Tooltip>
-                                      <TooltipTrigger asChild>
-                                        <Button
-                                          variant="outline"
-                                          size="sm"
-                                          onClick={() =>
-                                            handleMoverConteudoAcima(
-                                              unidade.id,
-                                              itemIndex
-                                            )
-                                          }
-                                          disabled={itemIndex === 0}
-                                        >
-                                          <ArrowUp className="h-3 w-3" />
-                                        </Button>
-                                      </TooltipTrigger>
-                                      <TooltipContent>Subir</TooltipContent>
-                                    </Tooltip>
-
-                                    <Tooltip>
-                                      <TooltipTrigger asChild>
-                                        <Button
-                                          variant="outline"
-                                          size="sm"
-                                          onClick={() =>
-                                            handleMoverConteudoAbaixo(
-                                              unidade.id,
-                                              itemIndex
-                                            )
-                                          }
-                                          disabled={
-                                            itemIndex ===
-                                            unidade.conteudo.length - 1
-                                          }
-                                        >
-                                          <ArrowDown className="h-3 w-3" />
-                                        </Button>
-                                      </TooltipTrigger>
-                                      <TooltipContent>Descer</TooltipContent>
-                                    </Tooltip>
-
-                                    <Tooltip>
-                                      <TooltipTrigger asChild>
-                                        <Button
-                                          variant="outline"
-                                          size="sm"
-                                          onClick={() =>
-                                            setEditandoConteudo({
-                                              unidadeId: unidade.id,
-                                              conteudoId: item.id,
-                                              tipo: item.tipo as
-                                                | "paragrafo"
-                                                | "subtitulo"
-                                                | "titulo"
-                                                | "imagem",
-                                              conteudo: item.conteudo,
-                                              tamanho: item.tamanho,
-                                              legenda: item.legenda,
-                                              fonte: item.fonte,
-                                            })
-                                          }
-                                        >
-                                          <Edit className="h-4 w-4" />
-                                        </Button>
-                                      </TooltipTrigger>
-                                      <TooltipContent>Editar</TooltipContent>
-                                    </Tooltip>
-
-                                    <Tooltip>
-                                      <TooltipTrigger asChild>
-                                        <Button
-                                          variant="outline"
-                                          size="sm"
-                                          onClick={() =>
-                                            handleDeletarConteudo(
-                                              unidade.id,
-                                              item.id
-                                            )
-                                          }
-                                          className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                                        >
-                                          <Trash2 className="h-4 w-4" />
-                                        </Button>
-                                      </TooltipTrigger>
-                                      <TooltipContent>Deletar</TooltipContent>
-                                    </Tooltip>
-                                  </TooltipProvider>
-                                </div>
-                              </div>
-                            </div>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <p>
+                      <div key={item.id} className="group">
+                        <div className="flex items-start space-x-3 p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                          <div className="flex-shrink-0 mt-1">
+                            {item.tipo === "titulo" ? (
+                              <Heading2 className="h-4 w-4 text-purple-600" />
+                            ) : item.tipo === "subtitulo" ? (
+                              <Heading3 className="h-4 w-4 text-blue-600" />
+                            ) : (
+                              <Type className="h-4 w-4 text-gray-600" />
+                            )}
+                          </div>
+                          <div className="flex-1">
+                            {item.tipo === "titulo" ? (
+                              <h3 className="font-bold text-lg text-gray-900">
+                                {item.conteudo}
+                              </h3>
+                            ) : item.tipo === "subtitulo" ? (
+                              <h4 className="font-semibold text-gray-900">
+                                {item.conteudo}
+                              </h4>
+                            ) : (
+                              <p className="text-gray-700">{item.conteudo}</p>
+                            )}
+                            <Badge variant="secondary" className="mt-1">
                               {item.tipo === "titulo"
                                 ? "Título"
                                 : item.tipo === "subtitulo"
                                 ? "Subtítulo"
-                                : item.tipo === "imagem"
-                                ? "Imagem"
                                 : "Parágrafo"}
-                            </p>
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
+                            </Badge>
+                          </div>
+                          <div className="flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() =>
+                                      handleMoverConteudoAcima(
+                                        unidade.id,
+                                        itemIndex
+                                      )
+                                    }
+                                    disabled={itemIndex === 0}
+                                  >
+                                    <ArrowUp className="h-3 w-3" />
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>Subir</TooltipContent>
+                              </Tooltip>
+
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() =>
+                                      handleMoverConteudoAbaixo(
+                                        unidade.id,
+                                        itemIndex
+                                      )
+                                    }
+                                    disabled={
+                                      itemIndex === unidade.conteudo.length - 1
+                                    }
+                                  >
+                                    <ArrowDown className="h-3 w-3" />
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>Descer</TooltipContent>
+                              </Tooltip>
+
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() =>
+                                      setEditandoConteudo({
+                                        unidadeId: unidade.id,
+                                        conteudoId: item.id,
+                                        tipo: item.tipo as
+                                          | "paragrafo"
+                                          | "subtitulo"
+                                          | "titulo",
+                                        conteudo: item.conteudo,
+                                      })
+                                    }
+                                  >
+                                    <Edit className="h-4 w-4" />
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>Editar</TooltipContent>
+                              </Tooltip>
+
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() =>
+                                      handleDeletarConteudo(unidade.id, item.id)
+                                    }
+                                    className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>Deletar</TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
+                          </div>
+                        </div>
+                      </div>
                     ))}
                   </div>
                 )}
@@ -1259,10 +1135,7 @@ document.addEventListener('DOMContentLoaded', initSCORM);`;
             onClick={(e) => e.stopPropagation()}
           >
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Edit className="h-5 w-5 text-blue-600" />
-                Editar Curso
-              </CardTitle>
+              <CardTitle>Editar Curso</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
@@ -1279,12 +1152,10 @@ document.addEventListener('DOMContentLoaded', initSCORM);`;
                 <label className="text-sm font-medium text-gray-700 mb-2 block">
                   Descrição do Curso
                 </label>
-                <textarea
+                <Input
                   value={descricaoEditada}
                   onChange={(e) => setDescricaoEditada(e.target.value)}
                   placeholder="Descrição do curso"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
-                  rows={3}
                 />
               </div>
               <div className="flex justify-end space-x-3">
@@ -1325,110 +1196,21 @@ document.addEventListener('DOMContentLoaded', initSCORM);`;
             onClick={(e) => e.stopPropagation()}
           >
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Edit className="h-5 w-5 text-blue-600" />
-                Editar{" "}
-                {editandoConteudo.tipo === "titulo"
-                  ? "Título"
-                  : editandoConteudo.tipo === "subtitulo"
-                  ? "Subtítulo"
-                  : editandoConteudo.tipo === "imagem"
-                  ? "Imagem"
-                  : "Parágrafo"}
-              </CardTitle>
+              <CardTitle>Editar Conteúdo</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              {editandoConteudo.tipo === "imagem" ? (
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      URL da Imagem *
-                    </label>
-                    <Input
-                      value={editandoConteudo.conteudo}
-                      onChange={(e) =>
-                        setEditandoConteudo({
-                          ...editandoConteudo,
-                          conteudo: e.target.value,
-                        })
-                      }
-                      placeholder="Cole a URL da imagem..."
-                      className="w-full"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Tamanho da Imagem *
-                    </label>
-                    <select
-                      value={editandoConteudo.tamanho || ""}
-                      onChange={(e) =>
-                        setEditandoConteudo({
-                          ...editandoConteudo,
-                          tamanho: e.target.value as
-                            | "pequena"
-                            | "media"
-                            | "grande",
-                        })
-                      }
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    >
-                      <option value="">Selecione o tamanho</option>
-                      <option value="pequena">Pequena (25%)</option>
-                      <option value="media">Média (50%)</option>
-                      <option value="grande">Grande (100%)</option>
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Legenda *
-                    </label>
-                    <Input
-                      value={editandoConteudo.legenda || ""}
-                      onChange={(e) =>
-                        setEditandoConteudo({
-                          ...editandoConteudo,
-                          legenda: e.target.value,
-                        })
-                      }
-                      placeholder="Digite a legenda da imagem..."
-                      className="w-full"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Fonte *
-                    </label>
-                    <Input
-                      value={editandoConteudo.fonte || ""}
-                      onChange={(e) =>
-                        setEditandoConteudo({
-                          ...editandoConteudo,
-                          fonte: e.target.value,
-                        })
-                      }
-                      placeholder="Digite a fonte da imagem..."
-                      className="w-full"
-                    />
-                  </div>
-                </div>
-              ) : (
-                <textarea
-                  value={editandoConteudo.conteudo}
-                  onChange={(e) =>
-                    setEditandoConteudo({
-                      ...editandoConteudo,
-                      conteudo: e.target.value,
-                    })
-                  }
-                  placeholder="Digite o conteúdo..."
-                  rows={6}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                />
-              )}
+              <textarea
+                value={editandoConteudo.conteudo}
+                onChange={(e) =>
+                  setEditandoConteudo({
+                    ...editandoConteudo,
+                    conteudo: e.target.value,
+                  })
+                }
+                placeholder="Digite o conteúdo..."
+                rows={6}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              />
 
               <div className="flex justify-end space-x-3">
                 <Button variant="outline" onClick={closeEditarConteudoModal}>
@@ -1440,21 +1222,11 @@ document.addEventListener('DOMContentLoaded', initSCORM);`;
                       editandoConteudo.unidadeId,
                       editandoConteudo.conteudoId,
                       editandoConteudo.tipo,
-                      editandoConteudo.conteudo,
-                      editandoConteudo.tamanho,
-                      editandoConteudo.legenda,
-                      editandoConteudo.fonte
+                      editandoConteudo.conteudo
                     );
                     closeEditarConteudoModal();
                   }}
                   className="bg-blue-600 hover:bg-blue-700"
-                  disabled={
-                    !editandoConteudo.conteudo.trim() ||
-                    (editandoConteudo.tipo === "imagem" &&
-                      (!editandoConteudo.tamanho ||
-                        !editandoConteudo.legenda ||
-                        !editandoConteudo.fonte))
-                  }
                 >
                   Salvar
                 </Button>
@@ -1489,109 +1261,25 @@ document.addEventListener('DOMContentLoaded', initSCORM);`;
                   ? "Título"
                   : conteudoTemp.tipo === "subtitulo"
                   ? "Subtítulo"
-                  : conteudoTemp.tipo === "imagem"
-                  ? "Imagem"
                   : "Parágrafo"}
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              {conteudoTemp.tipo === "imagem" ? (
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      URL da Imagem *
-                    </label>
-                    <Input
-                      value={conteudoTemp.conteudo}
-                      onChange={(e) =>
-                        setConteudoTemp({
-                          ...conteudoTemp,
-                          conteudo: e.target.value,
-                        })
-                      }
-                      placeholder="Cole a URL da imagem..."
-                      className="w-full"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Tamanho da Imagem *
-                    </label>
-                    <select
-                      value={conteudoTemp.tamanho || ""}
-                      onChange={(e) =>
-                        setConteudoTemp({
-                          ...conteudoTemp,
-                          tamanho: e.target.value as
-                            | "pequena"
-                            | "media"
-                            | "grande",
-                        })
-                      }
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    >
-                      <option value="">Selecione o tamanho</option>
-                      <option value="pequena">Pequena (25%)</option>
-                      <option value="media">Média (50%)</option>
-                      <option value="grande">Grande (100%)</option>
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Legenda *
-                    </label>
-                    <Input
-                      value={conteudoTemp.legenda || ""}
-                      onChange={(e) =>
-                        setConteudoTemp({
-                          ...conteudoTemp,
-                          legenda: e.target.value,
-                        })
-                      }
-                      placeholder="Digite a legenda da imagem..."
-                      className="w-full"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Fonte *
-                    </label>
-                    <Input
-                      value={conteudoTemp.fonte || ""}
-                      onChange={(e) =>
-                        setConteudoTemp({
-                          ...conteudoTemp,
-                          fonte: e.target.value,
-                        })
-                      }
-                      placeholder="Digite a fonte da imagem..."
-                      className="w-full"
-                    />
-                  </div>
-                </div>
-              ) : (
-                <textarea
-                  value={conteudoTemp.conteudo}
-                  onChange={(e) =>
-                    setConteudoTemp({
-                      ...conteudoTemp,
-                      conteudo: e.target.value,
-                    })
-                  }
-                  placeholder={`Digite o ${
-                    conteudoTemp.tipo === "titulo"
-                      ? "título"
-                      : conteudoTemp.tipo === "subtitulo"
-                      ? "subtítulo"
-                      : "parágrafo"
-                  }...`}
-                  rows={conteudoTemp.tipo === "paragrafo" ? 6 : 3}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                />
-              )}
+              <textarea
+                value={conteudoTemp.conteudo}
+                onChange={(e) =>
+                  setConteudoTemp({ ...conteudoTemp, conteudo: e.target.value })
+                }
+                placeholder={`Digite o ${
+                  conteudoTemp.tipo === "titulo"
+                    ? "título"
+                    : conteudoTemp.tipo === "subtitulo"
+                    ? "subtítulo"
+                    : "parágrafo"
+                }...`}
+                rows={conteudoTemp.tipo === "paragrafo" ? 6 : 3}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              />
 
               <div className="flex justify-end space-x-3">
                 <Button variant="outline" onClick={closeAdicionarConteudoModal}>
@@ -1603,13 +1291,7 @@ document.addEventListener('DOMContentLoaded', initSCORM);`;
                     closeAdicionarConteudoModal();
                   }}
                   className="bg-blue-600 hover:bg-blue-700"
-                  disabled={
-                    !conteudoTemp.conteudo.trim() ||
-                    (conteudoTemp.tipo === "imagem" &&
-                      (!conteudoTemp.tamanho ||
-                        !conteudoTemp.legenda ||
-                        !conteudoTemp.fonte))
-                  }
+                  disabled={!conteudoTemp.conteudo.trim()}
                 >
                   Adicionar
                 </Button>
@@ -1788,18 +1470,6 @@ document.addEventListener('DOMContentLoaded', initSCORM);`;
           </Card>
         </div>
       )}
-
-      {/* Toast notifications */}
-      <Toaster
-        position="top-right"
-        toastOptions={{
-          duration: 3000,
-          style: {
-            background: "#363636",
-            color: "#fff",
-          },
-        }}
-      />
     </div>
   );
 }

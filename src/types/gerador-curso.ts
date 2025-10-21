@@ -4,6 +4,10 @@ export interface ConteudoUnidade {
   tipo: 'titulo' | 'paragrafo' | 'subtitulo' | 'imagem';
   conteudo: string;
   ordem: number;
+  // Propriedades específicas para imagens
+  tamanho?: 'pequena' | 'media' | 'grande';
+  legenda?: string;
+  fonte?: string;
 }
 
 export interface Unidade {
