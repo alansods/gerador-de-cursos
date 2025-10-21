@@ -1,0 +1,87 @@
+{
+  "id": 1,
+  "titulo": "Fundamentos da Embalagem",
+  "descricao": "Conceitos fundamentais e o impacto da tecnologia na produção industrial.",
+  "duracao": "40 horas",
+  "progresso": 0,
+  "aulasConcluidas": 0,
+  "totalAulas": 10,
+  "aulas": [
+    {
+      "id": 1,
+      "titulo": "Introdução",
+      "duracao": 10,
+      "status": "ativa",
+      "objetivos": [
+        "Compreender os conceitos e objetivos da embalagem.",
+        "Classificar os diferentes tipos de embalagens e suas funções.",
+        "Identificar os materiais de embalagem e a importância da sua padronização.",
+        "Analisar unitização e conteinerização.",
+        "Compreender marcações obrigatórias.",
+        "Explorar embalagens sustentáveis e ecodesign."
+      ],
+      "conteudo": {
+        "video": {
+          "url": "https://www.youtube.com/watch?v=zpQ-x7P1tRU",
+          "titulo": "Introdução",
+          "descricao": "Vídeo de abertura: introdução à unidade."
+        },
+        "texto": "Vídeo de abertura: introdução à unidade."
+      },
+      "materialComplementar": [
+        {
+          "id": "mat1",
+          "titulo": "História da Indústria - PDF",
+          "tipo": "pdf",
+          "url": "/materiais/historia-industria.pdf",
+          "descricao": "Material complementar sobre a evolução industrial"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "titulo": "Conceito e Objetivos da Embalagem",
+      "status": "nao-iniciada"
+    },
+    {
+      "id": 3,
+      "titulo": "Classificação das Embalagens",
+      "status": "nao-iniciada"
+    },
+    {
+      "id": 4,
+      "titulo": "Materiais e Padronização na Logística",
+      "status": "nao-iniciada"
+    },
+    {
+      "id": 5,
+      "titulo": "Unitização",
+      "status": "nao-iniciada"
+    },
+    {
+      "id": 6,
+      "titulo": "Conteinerização e Marcações",
+      "status": "nao-iniciada"
+    },
+    {
+      "id": 7,
+      "titulo": "Embalagens Sustentáveis e Ecodesign",
+      "status": "nao-iniciada"
+    },
+    {
+      "id": 8,
+      "titulo": "Principais Tipos de Embalagens Sustentáveis",
+      "status": "nao-iniciada"
+    },
+    {
+      "id": 9,
+      "titulo": "Simulação e Desafio",
+      "status": "nao-iniciada"
+    },
+    {
+      "id": 10,
+      "titulo": "Encerramento",
+      "status": "nao-iniciada"
+    }
+  ]
+}

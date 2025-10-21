@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="icon" href="./favicon.ico" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#000000" />
+    <meta
+      name="description"
+      content="Assistente de Operações Logísticas - Curso SCORM"
+    />
+    <link rel="apple-touch-icon" href="./logo192.png" />
+    <link rel="manifest" href="./manifest.json" />
+    <title>Assistente de Operações Logísticas</title>
+    <script type="text/javascript">
+      // Este script garante que a aplicação tenha acesso ao LMS através do iframe
+      if (window.parent !== window) {
+        document.domain = document.domain;
+      }
+      
+      // Configurações para SCORM
+      window.SCORM_CONFIG = {
+        version: '1.2',
+        debug: false
+      };
+    </script>
+  </head>
+  <body>
+    <div id="root">
+      <div style="display: flex; justify-content: center; align-items: center; height: 100vh; font-family: Arial, sans-serif;">
+        <div style="text-align: center;">
+          <h2>Carregando curso...</h2>
+          <p>Assistente de Operações Logísticas</p>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
