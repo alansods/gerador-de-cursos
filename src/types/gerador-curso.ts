@@ -1,7 +1,7 @@
 // Tipos para o gerador de cursos
 export interface ConteudoUnidade {
   id: string;
-  tipo: 'titulo' | 'paragrafo' | 'subtitulo';
+  tipo: 'titulo' | 'paragrafo' | 'subtitulo' | 'imagem';
   conteudo: string;
   ordem: number;
 }

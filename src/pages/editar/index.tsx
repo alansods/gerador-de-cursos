@@ -20,6 +20,7 @@ import {
   Layers,
   ArrowUp,
   ArrowDown,
+  Image,
 } from "lucide-react";
 import {
   Tooltip,
@@ -709,6 +710,8 @@ document.addEventListener('DOMContentLoaded', initSCORM);`;
                             return `<h3 class="text-xl font-bold text-gray-800 mb-3 mt-6">${item.conteudo}</h3>`;
                           if (item.tipo === "subtitulo")
                             return `<h4 class="text-lg font-semibold text-gray-800 mb-2">${item.conteudo}</h4>`;
+                          if (item.tipo === "imagem")
+                            return `<img src="${item.conteudo}" alt="Imagem" class="max-w-full h-auto mb-3 rounded-md border border-gray-200" />`;
                           return `<p class="text-gray-700 mb-3 leading-relaxed">${item.conteudo}</p>`;
                         })
                         .join("")}
@@ -964,6 +967,22 @@ document.addEventListener('DOMContentLoaded', initSCORM);`;
                         </TooltipTrigger>
                         <TooltipContent>Adicionar parágrafo</TooltipContent>
                       </Tooltip>
+
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            size="sm"
+                            onClick={() =>
+                              handleAdicionarConteudo(unidade.id, "imagem")
+                            }
+                            className="bg-purple-600 hover:bg-purple-700 text-white"
+                          >
+                            <Image className="h-4 w-4 mr-1 text-white" />
+                            Imagem
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>Adicionar imagem</TooltipContent>
+                      </Tooltip>
                     </TooltipProvider>
                   </div>
                 </div>
@@ -983,6 +1002,8 @@ document.addEventListener('DOMContentLoaded', initSCORM);`;
                               <Heading2 className="h-4 w-4 text-purple-600" />
                             ) : item.tipo === "subtitulo" ? (
                               <Heading3 className="h-4 w-4 text-blue-600" />
+                            ) : item.tipo === "imagem" ? (
+                              <Image className="h-4 w-4 text-green-600" />
                             ) : (
                               <Type className="h-4 w-4 text-gray-600" />
                             )}
@@ -996,6 +1017,20 @@ document.addEventListener('DOMContentLoaded', initSCORM);`;
                               <h4 className="font-semibold text-gray-900">
                                 {item.conteudo}
                               </h4>
+                            ) : item.tipo === "imagem" ? (
+                              <div className="space-y-2">
+                                <img
+                                  src={item.conteudo}
+                                  alt="Imagem"
+                                  className="max-w-full h-auto max-h-32 object-contain border border-gray-200 rounded-md"
+                                  onError={(e) => {
+                                    e.currentTarget.style.display = 'none';
+                                  }}
+                                />
+                                <p className="text-sm text-gray-500 break-all">
+                                  {item.conteudo}
+                                </p>
+                              </div>
                             ) : (
                               <p className="text-gray-700">{item.conteudo}</p>
                             )}
@@ -1004,6 +1039,8 @@ document.addEventListener('DOMContentLoaded', initSCORM);`;
                                 ? "Título"
                                 : item.tipo === "subtitulo"
                                 ? "Subtítulo"
+                                : item.tipo === "imagem"
+                                ? "Imagem"
                                 : "Parágrafo"}
                             </Badge>
                           </div>
@@ -1199,18 +1236,47 @@ document.addEventListener('DOMContentLoaded', initSCORM);`;
               <CardTitle>Editar Conteúdo</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <textarea
-                value={editandoConteudo.conteudo}
-                onChange={(e) =>
-                  setEditandoConteudo({
-                    ...editandoConteudo,
-                    conteudo: e.target.value,
-                  })
-                }
-                placeholder="Digite o conteúdo..."
-                rows={6}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              />
+              {editandoConteudo.tipo === "imagem" ? (
+                <div className="space-y-4">
+                  <Input
+                    value={editandoConteudo.conteudo}
+                    onChange={(e) =>
+                      setEditandoConteudo({
+                        ...editandoConteudo,
+                        conteudo: e.target.value,
+                      })
+                    }
+                    placeholder="Cole a URL da imagem..."
+                    className="w-full"
+                  />
+                  {editandoConteudo.conteudo && (
+                    <div className="mt-4">
+                      <p className="text-sm text-gray-600 mb-2">Preview:</p>
+                      <img
+                        src={editandoConteudo.conteudo}
+                        alt="Preview"
+                        className="max-w-full h-auto max-h-64 object-contain border border-gray-200 rounded-md"
+                        onError={(e) => {
+                          e.currentTarget.style.display = 'none';
+                        }}
+                      />
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <textarea
+                  value={editandoConteudo.conteudo}
+                  onChange={(e) =>
+                    setEditandoConteudo({
+                      ...editandoConteudo,
+                      conteudo: e.target.value,
+                    })
+                  }
+                  placeholder="Digite o conteúdo..."
+                  rows={6}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                />
+              )}
 
               <div className="flex justify-end space-x-3">
                 <Button variant="outline" onClick={closeEditarConteudoModal}>
@@ -1261,25 +1327,53 @@ document.addEventListener('DOMContentLoaded', initSCORM);`;
                   ? "Título"
                   : conteudoTemp.tipo === "subtitulo"
                   ? "Subtítulo"
+                  : conteudoTemp.tipo === "imagem"
+                  ? "Imagem"
                   : "Parágrafo"}
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <textarea
-                value={conteudoTemp.conteudo}
-                onChange={(e) =>
-                  setConteudoTemp({ ...conteudoTemp, conteudo: e.target.value })
-                }
-                placeholder={`Digite o ${
-                  conteudoTemp.tipo === "titulo"
-                    ? "título"
-                    : conteudoTemp.tipo === "subtitulo"
-                    ? "subtítulo"
-                    : "parágrafo"
-                }...`}
-                rows={conteudoTemp.tipo === "paragrafo" ? 6 : 3}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              />
+              {conteudoTemp.tipo === "imagem" ? (
+                <div className="space-y-4">
+                  <Input
+                    value={conteudoTemp.conteudo}
+                    onChange={(e) =>
+                      setConteudoTemp({ ...conteudoTemp, conteudo: e.target.value })
+                    }
+                    placeholder="Cole a URL da imagem..."
+                    className="w-full"
+                  />
+                  {conteudoTemp.conteudo && (
+                    <div className="mt-4">
+                      <p className="text-sm text-gray-600 mb-2">Preview:</p>
+                      <img
+                        src={conteudoTemp.conteudo}
+                        alt="Preview"
+                        className="max-w-full h-auto max-h-64 object-contain border border-gray-200 rounded-md"
+                        onError={(e) => {
+                          e.currentTarget.style.display = 'none';
+                        }}
+                      />
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <textarea
+                  value={conteudoTemp.conteudo}
+                  onChange={(e) =>
+                    setConteudoTemp({ ...conteudoTemp, conteudo: e.target.value })
+                  }
+                  placeholder={`Digite o ${
+                    conteudoTemp.tipo === "titulo"
+                      ? "título"
+                      : conteudoTemp.tipo === "subtitulo"
+                      ? "subtítulo"
+                      : "parágrafo"
+                  }...`}
+                  rows={conteudoTemp.tipo === "paragrafo" ? 6 : 3}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                />
+              )}
 
               <div className="flex justify-end space-x-3">
                 <Button variant="outline" onClick={closeAdicionarConteudoModal}>
