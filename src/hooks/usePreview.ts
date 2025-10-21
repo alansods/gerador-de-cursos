@@ -121,18 +121,11 @@ export const usePreview = () => {
           }
           
           function handleGerarSCORM() {
-            // Tentar chamar a função SCORM diretamente do parent
-            if (window.opener && window.opener.handleGerarSCORM) {
-              window.opener.handleGerarSCORM();
-            } else if (window.parent && window.parent.handleGerarSCORM) {
-              window.parent.handleGerarSCORM();
+            // Chamar a função SCORM global exposta pela página
+            if (typeof window.handleGerarSCORM === 'function') {
+              window.handleGerarSCORM();
             } else {
-              // Fallback: tentar encontrar a função globalmente
-              if (typeof window.handleGerarSCORM === 'function') {
-                window.handleGerarSCORM();
-              } else {
-                alert('Função SCORM não disponível no preview');
-              }
+              alert('Função SCORM não disponível no preview');
             }
           }
         </script>
