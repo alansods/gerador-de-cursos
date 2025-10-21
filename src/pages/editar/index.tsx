@@ -1,11 +1,11 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useGeradorCurso } from "@/context/GeradorCursoContext";
+import { usePreview } from "@/hooks/usePreview";
 import toast, { Toaster } from "react-hot-toast";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
 import {
   ArrowLeft,
   Plus,
@@ -16,7 +16,6 @@ import {
   Type,
   Heading3,
   Heading2,
-  Download,
   BookOpen,
   Layers,
   ArrowUp,
@@ -45,6 +44,7 @@ export default function GeradorEditar() {
     editarCurso,
     selecionarCurso,
   } = useGeradorCurso();
+  const { openPreview } = usePreview();
   const navigate = useNavigate();
 
   const { id } = useParams<{ id: string }>();
@@ -59,13 +59,19 @@ export default function GeradorEditar() {
   const [editandoConteudo, setEditandoConteudo] = useState<{
     unidadeId: string;
     conteudoId: string;
-    tipo: "paragrafo" | "subtitulo" | "titulo";
+    tipo: "paragrafo" | "subtitulo" | "titulo" | "imagem";
     conteudo: string;
+    tamanho?: "pequena" | "media" | "grande";
+    legenda?: string;
+    fonte?: string;
   } | null>(null);
   const [conteudoTemp, setConteudoTemp] = useState({
-    tipo: "paragrafo" as "paragrafo" | "subtitulo" | "titulo",
+    tipo: "paragrafo" as "paragrafo" | "subtitulo" | "titulo" | "imagem",
     conteudo: "",
     unidadeId: "",
+    tamanho: "media" as "pequena" | "media" | "grande",
+    legenda: "",
+    fonte: "",
   });
   const [adicionarUnidadeModal, setAdicionarUnidadeModal] = useState(false);
   const [confirmarDeletarUnidade, setConfirmarDeletarUnidade] = useState(false);
@@ -94,6 +100,15 @@ export default function GeradorEditar() {
       selecionarCurso(id);
     }
   }, [id]);
+
+  // Expor função SCORM globalmente para o preview
+  useEffect(() => {
+    (window as any).handleGerarSCORM = handleGerarSCORM;
+    
+    return () => {
+      delete (window as any).handleGerarSCORM;
+    };
+  }, []);
 
   // Fechar menu flutuante quando clicar fora
   useEffect(() => {
@@ -157,6 +172,9 @@ export default function GeradorEditar() {
         tipo: "paragrafo",
         conteudo: "",
         unidadeId: "",
+        tamanho: "media",
+        legenda: "",
+        fonte: "",
       });
       setClosingAdicionarConteudo(false);
     }, 200);
@@ -200,7 +218,14 @@ export default function GeradorEditar() {
     unidadeId: string,
     tipo: "paragrafo" | "subtitulo" | "titulo"
   ) => {
-    setConteudoTemp({ tipo, conteudo: "", unidadeId });
+    setConteudoTemp({
+      tipo,
+      conteudo: "",
+      unidadeId,
+      tamanho: "media",
+      legenda: "",
+      fonte: "",
+    });
   };
 
   const handleSalvarConteudo = () => {
@@ -226,7 +251,14 @@ export default function GeradorEditar() {
         legenda: conteudoTemp.legenda,
         fonte: conteudoTemp.fonte,
       });
-      setConteudoTemp({ tipo: "paragrafo", conteudo: "", unidadeId: "" });
+      setConteudoTemp({
+        tipo: "paragrafo",
+        conteudo: "",
+        unidadeId: "",
+        tamanho: "media",
+        legenda: "",
+        fonte: "",
+      });
       toast.success("Alterações salvas");
     }
   };
@@ -236,7 +268,7 @@ export default function GeradorEditar() {
     conteudoId: string,
     tipo: "paragrafo" | "subtitulo" | "titulo" | "imagem",
     conteudo: string,
-    tamanho?: string,
+    tamanho?: "pequena" | "media" | "grande",
     legenda?: string,
     fonte?: string
   ) => {
@@ -712,95 +744,7 @@ document.addEventListener('DOMContentLoaded', initSCORM);`;
 
   const handlePreview = () => {
     if (state.cursoAtual) {
-      const previewWindow = window.open("", "_blank");
-      if (previewWindow) {
-        previewWindow.document.write(`
-          <!DOCTYPE html>
-          <html lang="pt-BR">
-          <head>
-            <meta charset="UTF-8">
-            <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>Preview - ${state.cursoAtual.titulo}</title>
-            <script src="https://cdn.tailwindcss.com"></script>
-          </head>
-          <body class="bg-gray-50">
-            <div class="max-w-4xl mx-auto p-6">
-              <div class="bg-white rounded-lg shadow-lg p-8">
-                <h1 class="text-3xl font-bold text-gray-900 mb-4">${
-                  state.cursoAtual.titulo
-                }</h1>
-                <p class="text-gray-600 mb-6">${state.cursoAtual.descricao}</p>
-                
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-                  <div class="flex items-center space-x-2">
-                    <span class="text-sm text-gray-600">Carga Horária: ${
-                      state.cursoAtual.cargaHoraria
-                    }</span>
-                  </div>
-                  <div class="flex items-center space-x-2">
-                    <span class="text-sm text-gray-600">Instrutor: ${
-                      state.cursoAtual.instrutor
-                    }</span>
-                  </div>
-                  <div class="flex items-center space-x-2">
-                    <span class="text-sm text-gray-600">Modalidade: ${
-                      state.cursoAtual.modalidade
-                    }</span>
-                  </div>
-                </div>
-
-                <div class="space-y-8">
-                  ${(state.cursoAtual.unidades || [])
-                    .map(
-                      (unidade) => `
-                    <div>
-                      <h2 class="text-2xl font-bold text-gray-900 mb-4">${
-                        unidade.titulo
-                      }</h2>
-                      ${unidade.conteudo
-                        .map((item) => {
-                          if (item.tipo === "titulo")
-                            return `<h3 class="text-xl font-bold text-gray-800 mb-3 mt-6">${item.conteudo}</h3>`;
-                          if (item.tipo === "subtitulo")
-                            return `<h4 class="text-lg font-semibold text-gray-800 mb-2">${item.conteudo}</h4>`;
-                          if (item.tipo === "imagem") {
-                            const tamanhoClass =
-                              item.tamanho === "pequena"
-                                ? "max-w-xs"
-                                : item.tamanho === "media"
-                                ? "max-w-md"
-                                : "max-w-full";
-                            return `<div class="mb-4">
-                              ${
-                                item.fonte
-                                  ? `<p class="text-xs text-gray-500 mb-1">Fonte: ${item.fonte}</p>`
-                                  : ""
-                              }
-                              <img src="${item.conteudo}" alt="${
-                              item.legenda || "Imagem"
-                            }" class="${tamanhoClass} h-auto mb-2 rounded-md border border-gray-200" />
-                               ${
-                                 item.legenda
-                                   ? `<p class="text-sm text-gray-600 italic mb-1">${item.legenda}</p>`
-                                   : ""
-                               }
-                            </div>`;
-                          }
-                          return `<p class="text-gray-700 mb-3 leading-relaxed">${item.conteudo}</p>`;
-                        })
-                        .join("")}
-                    </div>
-                  `
-                    )
-                    .join("")}
-                </div>
-              </div>
-            </div>
-          </body>
-          </html>
-        `);
-        previewWindow.document.close();
-      }
+      openPreview(state.cursoAtual);
     }
   };
 
@@ -827,8 +771,9 @@ document.addEventListener('DOMContentLoaded', initSCORM);`;
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <Button variant="outline" size="sm" onClick={handlePreview}>
-                      <Eye className="h-4 w-4" />
+                    <Button variant="outline" onClick={handlePreview}>
+                      <Eye className="h-4 w-4 mr-2" />
+                      Preview
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent>Preview</TooltipContent>
@@ -840,14 +785,6 @@ document.addEventListener('DOMContentLoaded', initSCORM);`;
               >
                 <Save className="h-4 w-4 mr-2" />
                 Salvar
-              </Button>
-              <Button
-                onClick={handleGerarSCORM}
-                title="Gerar SCORM"
-                className="bg-purple-600 hover:bg-purple-700 text-white scorm-button"
-              >
-                <Download className="h-4 w-4 mr-1" />
-                SCORM
               </Button>
             </div>
           </div>
@@ -1634,15 +1571,7 @@ document.addEventListener('DOMContentLoaded', initSCORM);`;
               <CardTitle>Confirmar Exclusão</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <p>
-                Tem certeza que deseja excluir a unidade "
-                {
-                  (state.cursoAtual?.unidades || []).find(
-                    (u) => u.id === unidadeParaDeletar
-                  )?.titulo
-                }
-                "? Esta ação não pode ser desfeita.
-              </p>
+              <p>Tem certeza que deseja deletar esse elemento?</p>
               <div className="flex justify-end space-x-3">
                 <Button
                   variant="outline"
@@ -1689,23 +1618,7 @@ document.addEventListener('DOMContentLoaded', initSCORM);`;
               <CardTitle>Confirmar Exclusão</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <p>
-                Tem certeza que deseja excluir o conteúdo "
-                {
-                  (state.cursoAtual?.unidades || [])
-                    .find((u) => u.id === conteudoParaDeletar.unidadeId)
-                    ?.conteudo.find(
-                      (c) => c.id === conteudoParaDeletar.conteudoId
-                    )?.conteudo
-                }
-                " da unidade "
-                {
-                  (state.cursoAtual?.unidades || []).find(
-                    (u) => u.id === conteudoParaDeletar.unidadeId
-                  )?.titulo
-                }
-                "? Esta ação não pode ser desfeita.
-              </p>
+              <p>Tem certeza que deseja deletar esse elemento?</p>
               <div className="flex justify-end space-x-3">
                 <Button
                   variant="outline"
@@ -1786,6 +1699,9 @@ document.addEventListener('DOMContentLoaded', initSCORM);`;
                       tipo: "titulo",
                       conteudo: "",
                       unidadeId: state.cursoAtual.unidades[0].id,
+                      tamanho: "media",
+                      legenda: "",
+                      fonte: "",
                     });
                   }
                 }}
@@ -1806,6 +1722,9 @@ document.addEventListener('DOMContentLoaded', initSCORM);`;
                       tipo: "subtitulo",
                       conteudo: "",
                       unidadeId: state.cursoAtual.unidades[0].id,
+                      tamanho: "media",
+                      legenda: "",
+                      fonte: "",
                     });
                   }
                 }}
@@ -1826,6 +1745,9 @@ document.addEventListener('DOMContentLoaded', initSCORM);`;
                       tipo: "paragrafo",
                       conteudo: "",
                       unidadeId: state.cursoAtual.unidades[0].id,
+                      tamanho: "media",
+                      legenda: "",
+                      fonte: "",
                     });
                   }
                 }}
@@ -1846,6 +1768,9 @@ document.addEventListener('DOMContentLoaded', initSCORM);`;
                       tipo: "imagem",
                       conteudo: "",
                       unidadeId: state.cursoAtual.unidades[0].id,
+                      tamanho: "media",
+                      legenda: "",
+                      fonte: "",
                     });
                   }
                 }}

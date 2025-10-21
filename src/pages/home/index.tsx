@@ -1,4 +1,5 @@
 import { useGeradorCurso } from "@/context/GeradorCursoContext";
+import { usePreview } from "@/hooks/usePreview";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -24,6 +25,7 @@ import { useNavigate } from "react-router-dom";
 
 export default function GeradorHome() {
   const { state, deletarCurso, selecionarCurso } = useGeradorCurso();
+  const { openPreview } = usePreview();
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(
     null
   );
@@ -53,8 +55,8 @@ export default function GeradorHome() {
         `[data-curso-id="${cursoId}"] .scorm-button`
       );
       if (loadingButton) {
-        loadingButton.textContent = "Gerando...";
-        loadingButton.disabled = true;
+        (loadingButton as HTMLButtonElement).textContent = "Gerando...";
+        (loadingButton as HTMLButtonElement).disabled = true;
       }
 
       // Gerar manifest SCORM 1.2 funcional
@@ -72,7 +74,7 @@ export default function GeradorHome() {
 
       const recursoItems = (curso.unidades || [])
         .map(
-          (unidade, idx) =>
+          (_, idx) =>
             `<resource identifier="resource_unidade_${
               idx + 1
             }" type="webcontent" href="index.html" adlcp:scormtype="sco">
@@ -145,7 +147,7 @@ export default function GeradorHome() {
         <div class="content">
             ${(curso.unidades || [])
               .map(
-                (unidade, idx) =>
+                (unidade) =>
                   `<section class="unit">
                 <h2>${unidade.titulo}</h2>
                 <div class="unit-content">
@@ -431,8 +433,8 @@ document.addEventListener('DOMContentLoaded', initSCORM);`;
         `[data-curso-id="${cursoId}"] .scorm-button`
       );
       if (loadingButton) {
-        loadingButton.textContent = "SCORM";
-        loadingButton.disabled = false;
+        (loadingButton as HTMLButtonElement).textContent = "SCORM";
+        (loadingButton as HTMLButtonElement).disabled = false;
       }
     }
   };
@@ -440,99 +442,9 @@ document.addEventListener('DOMContentLoaded', initSCORM);`;
   const handlePreviewCurso = (cursoId: string) => {
     const curso = state.cursos.find((c) => c.id === cursoId);
     if (curso) {
-      // Abrir preview em nova aba
-      const previewWindow = window.open("", "_blank");
-      if (previewWindow) {
-        previewWindow.document.write(`
-          <!DOCTYPE html>
-          <html lang="pt-BR">
-          <head>
-            <meta charset="UTF-8">
-            <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>Preview - ${curso.titulo}</title>
-            <script src="https://cdn.tailwindcss.com"></script>
-          </head>
-          <body class="bg-gray-50">
-            <div class="max-w-4xl mx-auto p-6">
-              <div class="bg-white rounded-lg shadow-lg p-8">
-                <h1 class="text-3xl font-bold text-gray-900 mb-4">${
-                  curso.titulo
-                }</h1>
-                <p class="text-gray-600 mb-6">${curso.descricao}</p>
-                
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-                  <div class="flex items-center space-x-2">
-                    <Clock className="h-5 w-5 text-blue-600" />
-                    <span class="text-sm text-gray-600">${
-                      curso.cargaHoraria
-                    }</span>
-                  </div>
-                  <div class="flex items-center space-x-2">
-                    <User className="h-5 w-5 text-blue-600" />
-                    <span class="text-sm text-gray-600">${
-                      curso.instrutor
-                    }</span>
-                  </div>
-                  <div class="flex items-center space-x-2">
-                    <Calendar className="h-5 w-5 text-blue-600" />
-                    <span class="text-sm text-gray-600">${
-                      curso.modalidade
-                    }</span>
-                  </div>
-                </div>
-
-                <div class="space-y-8">
-                  ${(curso.unidades || [])
-                    .map(
-                      (unidade) => `
-                    <div>
-                      <h2 class="text-2xl font-bold text-gray-900 mb-4">${
-                        unidade.titulo
-                      }</h2>
-                      ${unidade.conteudo
-                        .map((item) => {
-                          if (item.tipo === "titulo")
-                            return `<h3 class="text-xl font-bold text-gray-800 mb-3 mt-6">${item.conteudo}</h3>`;
-                          if (item.tipo === "subtitulo")
-                            return `<h4 class="text-lg font-semibold text-gray-800 mb-2">${item.conteudo}</h4>`;
-                          if (item.tipo === "imagem") {
-                            const tamanhoClass =
-                              item.tamanho === "pequena"
-                                ? "max-w-xs"
-                                : item.tamanho === "media"
-                                ? "max-w-md"
-                                : "max-w-full";
-                            return `<div class="mb-4">
-                              ${
-                                item.fonte
-                                  ? `<p class="text-xs text-gray-500 mb-1">Fonte: ${item.fonte}</p>`
-                                  : ""
-                              }
-                              <img src="${item.conteudo}" alt="${
-                              item.legenda || "Imagem"
-                            }" class="${tamanhoClass} h-auto mb-2 rounded-md border border-gray-200" />
-                               ${
-                                 item.legenda
-                                   ? `<p class="text-sm text-gray-600 italic mb-1">${item.legenda}</p>`
-                                   : ""
-                               }
-                            </div>`;
-                          }
-                          return `<p class="text-gray-700 mb-3 leading-relaxed">${item.conteudo}</p>`;
-                        })
-                        .join("")}
-                    </div>
-                  `
-                    )
-                    .join("")}
-                </div>
-              </div>
-            </div>
-          </body>
-          </html>
-        `);
-        previewWindow.document.close();
-      }
+      // Expor função SCORM globalmente antes de abrir preview
+      (window as any).handleGerarSCORM = () => handleGerarSCORM(cursoId);
+      openPreview(curso);
     }
   };
 
@@ -678,8 +590,7 @@ document.addEventListener('DOMContentLoaded', initSCORM);`;
               Confirmar Exclusão
             </h3>
             <p className="text-gray-600 mb-6">
-              Tem certeza que deseja excluir este curso? Esta ação não pode ser
-              desfeita.
+              Tem certeza que deseja deletar esse elemento?
             </p>
             <div className="flex space-x-3">
               <Button
