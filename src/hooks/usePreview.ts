@@ -29,7 +29,7 @@ export const usePreview = () => {
               </button>
               
               <button 
-                onclick="handleGerarSCORM()" 
+                onclick="if (typeof window.handleGerarSCORM === 'function') { window.handleGerarSCORM(); } else { alert('Função SCORM não disponível'); }" 
                 class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-md flex items-center space-x-2 transition-colors"
               >
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -117,15 +117,6 @@ export const usePreview = () => {
             } else {
               // Fallback: redirecionar para a página de cursos
               window.location.href = '/cursos';
-            }
-          }
-          
-          function handleGerarSCORM() {
-            // Chamar a função SCORM global exposta pela página
-            if (typeof window.handleGerarSCORM === 'function') {
-              window.handleGerarSCORM();
-            } else {
-              alert('Função SCORM não disponível no preview');
             }
           }
         </script>
