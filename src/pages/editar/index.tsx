@@ -9,7 +9,6 @@ import { Input } from "@/components/ui/input";
 import {
   ArrowLeft,
   Plus,
-  Save,
   Eye,
   Edit,
   Trash2,
@@ -21,7 +20,6 @@ import {
   ArrowUp,
   ArrowDown,
   Image,
-  X,
   Download,
   MoreHorizontal,
   AlignLeft,
@@ -29,6 +27,7 @@ import {
   AlignRight,
   AlignJustify,
   Palette,
+  BookmarkPlus,
 } from "lucide-react";
 import {
   Tooltip,
@@ -53,7 +52,6 @@ export default function GeradorEditar() {
     adicionarConteudo,
     editarConteudo,
     deletarConteudo,
-    salvarCurso,
     editarCurso,
     selecionarCurso,
   } = useGeradorCurso();
@@ -117,10 +115,6 @@ export default function GeradorEditar() {
   const [editarCursoModal, setEditarCursoModal] = useState(false);
   const [closingEditarCurso, setClosingEditarCurso] = useState(false);
   const [mostrandoMenuFlutuante, setMostrandoMenuFlutuante] = useState(false);
-  const [selecionarUnidadeModal, setSelecionarUnidadeModal] = useState(false);
-  const [tipoConteudoSelecionado, setTipoConteudoSelecionado] = useState<
-    "titulo" | "subtitulo" | "paragrafo" | "imagem" | null
-  >(null);
 
   // Estados para edição do curso
   const [cargaHorariaEditada, setCargaHorariaEditada] = useState("");
@@ -265,23 +259,6 @@ export default function GeradorEditar() {
     setConfirmarDeletarUnidade(true);
   };
 
-  const handleAdicionarConteudo = (
-    unidadeId: string,
-    tipo: "paragrafo" | "subtitulo" | "titulo"
-  ) => {
-    setConteudoTemp({
-      tipo,
-      conteudo: "",
-      unidadeId,
-      tamanho: "media",
-      legenda: "",
-      fonte: "",
-      corTexto: "preto",
-      alinhamento: "esquerda",
-      colunas: 12,
-    });
-  };
-
   const handleSalvarConteudo = () => {
     if (conteudoTemp.conteudo.trim()) {
       // Validação para imagens
@@ -354,23 +331,14 @@ export default function GeradorEditar() {
     setConfirmarDeletarConteudo(true);
   };
 
-  const handleSalvarCurso = () => {
-    salvarCurso();
-    toast.success("Alterações salvas");
-  };
-
   const handleSelecionarTipoConteudo = (
-    tipo: "titulo" | "subtitulo" | "paragrafo" | "imagem"
+    tipo: "titulo" | "subtitulo" | "paragrafo" | "imagem",
+    unidadeId?: string
   ) => {
-    setTipoConteudoSelecionado(tipo);
-    setSelecionarUnidadeModal(true);
-    setMostrandoMenuFlutuante(false);
-  };
-
-  const handleSelecionarUnidade = (unidadeId: string) => {
-    if (tipoConteudoSelecionado) {
+    if (unidadeId) {
+      // Se unidadeId foi fornecido, adicionar diretamente
       setConteudoTemp({
-        tipo: tipoConteudoSelecionado,
+        tipo: tipo,
         conteudo: "",
         unidadeId: unidadeId,
         tamanho: "media",
@@ -380,8 +348,11 @@ export default function GeradorEditar() {
         alinhamento: "esquerda",
         colunas: 12,
       });
-      setSelecionarUnidadeModal(false);
-      setTipoConteudoSelecionado(null);
+    } else {
+      // Se não, abrir modal de seleção
+      // Tipo de conteúdo selecionado
+      // Modal de seleção removido - agora adiciona diretamente
+      setMostrandoMenuFlutuante(false);
     }
   };
 
@@ -1070,7 +1041,7 @@ document.addEventListener('DOMContentLoaded', initSCORM);`;
                 {/* Lista de Conteúdo */}
                 {unidade.conteudo.length === 0 ? (
                   <div className="text-center py-8 text-gray-500">
-                    <p>Nenhum conteúdo adicionado ainda</p>
+                    <p>Nenhum conteúdo adicionado.</p>
                   </div>
                 ) : (
                   <div className="grid grid-cols-1 md:grid-cols-12 gap-3">
@@ -1257,19 +1228,83 @@ document.addEventListener('DOMContentLoaded', initSCORM);`;
                     ))}
                   </div>
                 )}
+
+                {/* Botão para adicionar conteúdo */}
+                <div className="mt-4 pt-4 border-t border-gray-200">
+                  <div className="flex flex-wrap gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() =>
+                        handleSelecionarTipoConteudo("titulo", unidade.id)
+                      }
+                      className="text-blue-600 border-blue-200 hover:bg-blue-50"
+                    >
+                      <Heading2 className="h-4 w-4 mr-2" />
+                      Título
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() =>
+                        handleSelecionarTipoConteudo("subtitulo", unidade.id)
+                      }
+                      className="text-blue-600 border-blue-200 hover:bg-blue-50"
+                    >
+                      <Heading3 className="h-4 w-4 mr-2" />
+                      Subtítulo
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() =>
+                        handleSelecionarTipoConteudo("paragrafo", unidade.id)
+                      }
+                      className="text-blue-600 border-blue-200 hover:bg-blue-50"
+                    >
+                      <Type className="h-4 w-4 mr-2" />
+                      Parágrafo
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() =>
+                        handleSelecionarTipoConteudo("imagem", unidade.id)
+                      }
+                      className="text-blue-600 border-blue-200 hover:bg-blue-50"
+                    >
+                      <Image className="h-4 w-4 mr-2" />
+                      Imagem
+                    </Button>
+                  </div>
+                </div>
               </CardContent>
             </Card>
           ))}
         </div>
 
+        {/* Botão para adicionar nova unidade */}
+        {(state.cursoAtual.unidades || []).length > 0 && (
+          <div className="mt-6 flex justify-center">
+            <Button
+              variant="outline"
+              onClick={() => setAdicionarUnidadeModal(true)}
+              className="text-blue-600 border-blue-200 hover:bg-blue-50"
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Adicionar Nova Unidade
+            </Button>
+          </div>
+        )}
+
         {(state.cursoAtual.unidades || []).length === 0 && (
           <Card>
             <CardContent className="text-center py-12">
               <div className="mx-auto w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mb-6">
-                <Plus className="h-12 w-12 text-gray-400" />
+                <BookmarkPlus className="h-12 w-12 text-gray-400" />
               </div>
               <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                Nenhuma unidade criada ainda
+                Nenhuma unidade criada
               </h3>
               <p className="text-gray-600 mb-8">
                 Comece adicionando a primeira unidade do seu curso
@@ -1279,7 +1314,7 @@ document.addEventListener('DOMContentLoaded', initSCORM);`;
                 className="bg-blue-600 hover:bg-blue-700 text-white"
               >
                 <Plus className="h-4 w-4 mr-2" />
-                Criar Primeira Unidade
+                Adicionar Unidade
               </Button>
             </CardContent>
           </Card>
@@ -2231,126 +2266,6 @@ document.addEventListener('DOMContentLoaded', initSCORM);`;
           },
         }}
       />
-
-      {/* Botão flutuante para adicionar conteúdo */}
-      <div className="fixed bottom-6 right-6 z-40 floating-menu-container">
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                onClick={() =>
-                  setMostrandoMenuFlutuante(!mostrandoMenuFlutuante)
-                }
-                className="w-14 h-14 rounded-full bg-blue-600 hover:bg-blue-700 text-white shadow-lg hover:shadow-xl hover:scale-110 transition-all duration-200"
-              >
-                {mostrandoMenuFlutuante ? (
-                  <X className="h-6 w-6" />
-                ) : (
-                  <Plus className="h-6 w-6" />
-                )}
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>
-              <p>Adicionar conteúdo</p>
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
-
-        {/* Menu dropdown flutuante */}
-        {mostrandoMenuFlutuante && (
-          <div className="absolute bottom-16 right-0 bg-white rounded-lg shadow-xl border border-gray-200 p-2 min-w-[200px] animate-in fade-in duration-200">
-            <div className="space-y-1">
-              <Button
-                variant="ghost"
-                className="w-full justify-start text-left hover:bg-blue-50 hover:scale-105 transition-all duration-200"
-                onClick={() => handleSelecionarTipoConteudo("titulo")}
-              >
-                <Heading2 className="h-4 w-4 mr-2 text-blue-600" />
-                Título
-              </Button>
-              <Button
-                variant="ghost"
-                className="w-full justify-start text-left hover:bg-blue-50 hover:scale-105 transition-all duration-200"
-                onClick={() => handleSelecionarTipoConteudo("subtitulo")}
-              >
-                <Heading3 className="h-4 w-4 mr-2 text-blue-600" />
-                Subtítulo
-              </Button>
-              <Button
-                variant="ghost"
-                className="w-full justify-start text-left hover:bg-blue-50 hover:scale-105 transition-all duration-200"
-                onClick={() => handleSelecionarTipoConteudo("paragrafo")}
-              >
-                <Type className="h-4 w-4 mr-2 text-blue-600" />
-                Parágrafo
-              </Button>
-              <Button
-                variant="ghost"
-                className="w-full justify-start text-left hover:bg-blue-50 hover:scale-105 transition-all duration-200"
-                onClick={() => handleSelecionarTipoConteudo("imagem")}
-              >
-                <Image className="h-4 w-4 mr-2 text-blue-600" />
-                Imagem
-              </Button>
-              <Button
-                variant="ghost"
-                className="w-full justify-start text-left hover:bg-blue-50 hover:scale-105 transition-all duration-200"
-                onClick={() => {
-                  setMostrandoMenuFlutuante(false);
-                  setAdicionarUnidadeModal(true);
-                }}
-              >
-                <Plus className="h-4 w-4 mr-2 text-blue-600" />
-                Adicionar Unidade
-              </Button>
-            </div>
-          </div>
-        )}
-
-        {/* Modal de seleção de unidade */}
-        {selecionarUnidadeModal && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-            <Card className="w-full max-w-md">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Plus className="h-5 w-5 text-blue-600" />
-                  Selecionar Unidade
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm text-gray-600 mb-4">
-                  Escolha a unidade onde deseja adicionar o{" "}
-                  {tipoConteudoSelecionado}:
-                </p>
-                <div className="space-y-2">
-                  {(state.cursoAtual?.unidades || []).map((unidade) => (
-                    <Button
-                      key={unidade.id}
-                      variant="outline"
-                      className="w-full justify-start"
-                      onClick={() => handleSelecionarUnidade(unidade.id)}
-                    >
-                      <Layers className="h-4 w-4 mr-2 text-blue-600" />
-                      {unidade.titulo}
-                    </Button>
-                  ))}
-                </div>
-                <div className="flex justify-end mt-4">
-                  <Button
-                    variant="outline"
-                    onClick={() => {
-                      setSelecionarUnidadeModal(false);
-                      setTipoConteudoSelecionado(null);
-                    }}
-                  >
-                    Cancelar
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        )}
-      </div>
     </div>
   );
 }
