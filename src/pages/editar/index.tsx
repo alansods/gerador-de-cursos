@@ -138,12 +138,12 @@ export default function GeradorEditar() {
 
   // Expor função SCORM globalmente para o preview
   useEffect(() => {
-    (window as any).handleGerarSCORM = handleGerarSCORM;
+    (window as any).handleGerarSCORM = () => generateSCORMPackage(state.cursoAtual!);
 
     return () => {
       delete (window as any).handleGerarSCORM;
     };
-  }, []);
+  }, [state.cursoAtual, generateSCORMPackage]);
 
   // Fechar menu flutuante quando clicar fora
   useEffect(() => {
@@ -437,7 +437,8 @@ export default function GeradorEditar() {
     }
   };
 
-  const handleGerarSCORM = async () => {
+  // Função SCORM removida - usando useSCORM hook
+  // const handleGerarSCORM = async () => {
     if (!state.cursoAtual) return;
 
     try {
@@ -866,7 +867,7 @@ document.addEventListener('DOMContentLoaded', initSCORM);`;
         (loadingButton as HTMLButtonElement).disabled = false;
       }
     }
-  };
+  // };
 
   const handlePreview = () => {
     if (state.cursoAtual) {

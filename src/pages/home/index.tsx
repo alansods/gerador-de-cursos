@@ -47,7 +47,8 @@ export default function GeradorHome() {
     setShowDeleteConfirm(null);
   };
 
-  const handleGerarSCORM = async (cursoId: string) => {
+  // Função SCORM removida - usando useSCORM hook
+  // const handleGerarSCORM = async (cursoId: string) => {
     const curso = state.cursos.find((c) => c.id === cursoId);
     if (!curso) return;
 
@@ -439,13 +440,13 @@ document.addEventListener('DOMContentLoaded', initSCORM);`;
         (loadingButton as HTMLButtonElement).disabled = false;
       }
     }
-  };
+  // };
 
   const handlePreviewCurso = (cursoId: string) => {
     const curso = state.cursos.find((c) => c.id === cursoId);
     if (curso) {
       // Expor função SCORM globalmente antes de abrir preview
-      (window as any).handleGerarSCORM = () => handleGerarSCORM(cursoId);
+      (window as any).handleGerarSCORM = () => generateSCORMPackage(curso);
       openPreview(curso);
     }
   };
