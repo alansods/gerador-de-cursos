@@ -1687,7 +1687,7 @@ document.addEventListener('DOMContentLoaded', initSCORM);`;
             <div className="space-y-1">
               <Button
                 variant="ghost"
-                className="w-full justify-start text-left"
+                className="w-full justify-start text-left hover:bg-blue-50 hover:scale-105 transition-all duration-200"
                 onClick={() => {
                   setMostrandoMenuFlutuante(false);
                   // Aqui você pode adicionar lógica para selecionar a unidade
@@ -1707,12 +1707,12 @@ document.addEventListener('DOMContentLoaded', initSCORM);`;
                   }
                 }}
               >
-                <Heading2 className="h-4 w-4 mr-2 text-purple-600" />
+                <Heading2 className="h-4 w-4 mr-2 text-blue-600" />
                 Título
               </Button>
               <Button
                 variant="ghost"
-                className="w-full justify-start text-left"
+                className="w-full justify-start text-left hover:bg-blue-50 hover:scale-105 transition-all duration-200"
                 onClick={() => {
                   setMostrandoMenuFlutuante(false);
                   if (
@@ -1735,7 +1735,7 @@ document.addEventListener('DOMContentLoaded', initSCORM);`;
               </Button>
               <Button
                 variant="ghost"
-                className="w-full justify-start text-left"
+                className="w-full justify-start text-left hover:bg-blue-50 hover:scale-105 transition-all duration-200"
                 onClick={() => {
                   setMostrandoMenuFlutuante(false);
                   if (
@@ -1753,12 +1753,12 @@ document.addEventListener('DOMContentLoaded', initSCORM);`;
                   }
                 }}
               >
-                <Type className="h-4 w-4 mr-2 text-gray-600" />
+                <Type className="h-4 w-4 mr-2 text-blue-600" />
                 Parágrafo
               </Button>
               <Button
                 variant="ghost"
-                className="w-full justify-start text-left"
+                className="w-full justify-start text-left hover:bg-blue-50 hover:scale-105 transition-all duration-200"
                 onClick={() => {
                   setMostrandoMenuFlutuante(false);
                   if (
@@ -1776,7 +1776,7 @@ document.addEventListener('DOMContentLoaded', initSCORM);`;
                   }
                 }}
               >
-                <Image className="h-4 w-4 mr-2 text-green-600" />
+                <Image className="h-4 w-4 mr-2 text-blue-600" />
                 Imagem
               </Button>
             </div>
