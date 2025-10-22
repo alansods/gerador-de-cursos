@@ -100,7 +100,7 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
       className="rich-text-editor border border-gray-300 rounded-lg overflow-hidden"
       style={{ height: `${height}px` }}
     >
-      <style jsx>{`
+      <style>{`
         .rich-text-editor [contenteditable]:empty:before {
           content: attr(data-placeholder);
           color: #9ca3af;

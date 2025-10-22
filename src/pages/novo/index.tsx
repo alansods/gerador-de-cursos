@@ -64,7 +64,10 @@ export default function GeradorNovo() {
     e.preventDefault();
 
     if (validateForm()) {
-      const cursoId = criarCurso(formData);
+      const cursoId = criarCurso({
+        ...formData,
+        unidades: [],
+      });
       navigate(`/cursos/${cursoId}`);
     }
   };

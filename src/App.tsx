@@ -4,6 +4,7 @@ import { GeradorCursoProvider } from "./context/GeradorCursoContext";
 import Home from "./pages/home/index";
 import Novo from "./pages/novo/index";
 import Editar from "./pages/editar/index";
+import Preview from "./pages/preview/index";
 
 import "./App.css";
 
@@ -17,6 +18,7 @@ function App() {
             <Route path="/cursos" element={<Home />} />
             <Route path="/cursos/novo" element={<Novo />} />
             <Route path="/cursos/:id" element={<Editar />} />
+            <Route path="/cursos/:id/preview" element={<Preview />} />
           </Routes>
         </div>
       </BrowserRouter>
