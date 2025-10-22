@@ -67,6 +67,7 @@ export default function GeradorEditar() {
     fonte?: string;
     corTexto?: "preto" | "cinza" | "azul" | "verde" | "vermelho" | "roxo";
     alinhamento?: "esquerda" | "centro" | "direita" | "justificado";
+    colunas?: 1 | 2 | 3 | 4 | 6 | 12;
   } | null>(null);
   const [conteudoTemp, setConteudoTemp] = useState({
     tipo: "paragrafo" as "paragrafo" | "subtitulo" | "titulo" | "imagem",
@@ -75,8 +76,19 @@ export default function GeradorEditar() {
     tamanho: "media" as "pequena" | "media" | "grande",
     legenda: "",
     fonte: "",
-    corTexto: "preto" as "preto" | "cinza" | "azul" | "verde" | "vermelho" | "roxo",
-    alinhamento: "esquerda" as "esquerda" | "centro" | "direita" | "justificado",
+    corTexto: "preto" as
+      | "preto"
+      | "cinza"
+      | "azul"
+      | "verde"
+      | "vermelho"
+      | "roxo",
+    alinhamento: "esquerda" as
+      | "esquerda"
+      | "centro"
+      | "direita"
+      | "justificado",
+    colunas: 12 as 1 | 2 | 3 | 4 | 6 | 12,
   });
   const [adicionarUnidadeModal, setAdicionarUnidadeModal] = useState(false);
   const [confirmarDeletarUnidade, setConfirmarDeletarUnidade] = useState(false);
@@ -198,6 +210,7 @@ export default function GeradorEditar() {
         fonte: "",
         corTexto: "preto",
         alinhamento: "esquerda",
+        colunas: 12,
       });
       setClosingAdicionarConteudo(false);
     }, 200);
@@ -253,6 +266,7 @@ export default function GeradorEditar() {
       fonte: "",
       corTexto: "preto",
       alinhamento: "esquerda",
+      colunas: 12,
     });
   };
 
@@ -280,6 +294,7 @@ export default function GeradorEditar() {
         fonte: conteudoTemp.fonte,
         corTexto: conteudoTemp.corTexto,
         alinhamento: conteudoTemp.alinhamento,
+        colunas: conteudoTemp.colunas,
       });
       setConteudoTemp({
         tipo: "paragrafo",
@@ -290,6 +305,7 @@ export default function GeradorEditar() {
         fonte: "",
         corTexto: "preto",
         alinhamento: "esquerda",
+        colunas: 12,
       });
       toast.success("Alterações salvas");
     }
@@ -304,7 +320,8 @@ export default function GeradorEditar() {
     legenda?: string,
     fonte?: string,
     corTexto?: "preto" | "cinza" | "azul" | "verde" | "vermelho" | "roxo",
-    alinhamento?: "esquerda" | "centro" | "direita" | "justificado"
+    alinhamento?: "esquerda" | "centro" | "direita" | "justificado",
+    colunas?: 1 | 2 | 3 | 4 | 6 | 12
   ) => {
     editarConteudo(unidadeId, conteudoId, {
       tipo,
@@ -314,6 +331,7 @@ export default function GeradorEditar() {
       fonte,
       corTexto,
       alinhamento,
+      colunas,
     });
     setEditandoConteudo(null);
     toast.success("Alterações salvas");
@@ -487,28 +505,46 @@ export default function GeradorEditar() {
                 (unidade) =>
                   `<section class="unit">
                 <h2>${unidade.titulo}</h2>
-                <div class="unit-content">
+                <div class="unit-content grid grid-cols-1 md:grid-cols-12 gap-3">
                     ${unidade.conteudo
                       .map((conteudo) => {
+                        const colSpanClass = conteudo.colunas === 1 ? 'md:col-span-1' :
+                                           conteudo.colunas === 2 ? 'md:col-span-2' :
+                                           conteudo.colunas === 3 ? 'md:col-span-3' :
+                                           conteudo.colunas === 4 ? 'md:col-span-4' :
+                                           conteudo.colunas === 6 ? 'md:col-span-6' :
+                                           'md:col-span-12';
+                        
                         if (conteudo.tipo === "subtitulo") {
-                          return `<h3>${conteudo.conteudo}</h3>`;
+                          return `<div class="${colSpanClass}"><h3>${conteudo.conteudo}</h3></div>`;
                         } else if (conteudo.tipo === "paragrafo") {
-                          const corClass = conteudo.corTexto === 'preto' ? 'color-black' :
-                                         conteudo.corTexto === 'cinza' ? 'color-gray' :
-                                         conteudo.corTexto === 'azul' ? 'color-blue' :
-                                         conteudo.corTexto === 'verde' ? 'color-green' :
-                                         conteudo.corTexto === 'vermelho' ? 'color-red' :
-                                         conteudo.corTexto === 'roxo' ? 'color-purple' :
-                                         'color-default';
-                          
-                          const alignClass = conteudo.alinhamento === 'centro' ? 'text-center' :
-                                            conteudo.alinhamento === 'direita' ? 'text-right' :
-                                            conteudo.alinhamento === 'justificado' ? 'text-justify' :
-                                            'text-left';
-                          
-                          return `<p class="${corClass} ${alignClass}">${conteudo.conteudo}</p>`;
+                          const corClass =
+                            conteudo.corTexto === "preto"
+                              ? "color-black"
+                              : conteudo.corTexto === "cinza"
+                              ? "color-gray"
+                              : conteudo.corTexto === "azul"
+                              ? "color-blue"
+                              : conteudo.corTexto === "verde"
+                              ? "color-green"
+                              : conteudo.corTexto === "vermelho"
+                              ? "color-red"
+                              : conteudo.corTexto === "roxo"
+                              ? "color-purple"
+                              : "color-default";
+
+                          const alignClass =
+                            conteudo.alinhamento === "centro"
+                              ? "text-center"
+                              : conteudo.alinhamento === "direita"
+                              ? "text-right"
+                              : conteudo.alinhamento === "justificado"
+                              ? "text-justify"
+                              : "text-left";
+
+                          return `<div class="${colSpanClass}"><p class="${corClass} ${alignClass}">${conteudo.conteudo}</p></div>`;
                         } else {
-                          return `<p>${conteudo.conteudo}</p>`;
+                          return `<div class="${colSpanClass}"><p>${conteudo.conteudo}</p></div>`;
                         }
                       })
                       .join("")}
@@ -622,6 +658,21 @@ h1 {
 .text-right { text-align: right !important; }
 .text-justify { text-align: justify !important; }
 .text-left { text-align: left !important; }
+
+/* Classes de grid responsivo */
+.grid { display: grid !important; }
+.grid-cols-1 { grid-template-columns: repeat(1, minmax(0, 1fr)) !important; }
+.gap-3 { gap: 0.75rem !important; }
+
+@media (min-width: 768px) {
+  .md\\:grid-cols-12 { grid-template-columns: repeat(12, minmax(0, 1fr)) !important; }
+  .md\\:col-span-1 { grid-column: span 1 / span 1 !important; }
+  .md\\:col-span-2 { grid-column: span 2 / span 2 !important; }
+  .md\\:col-span-3 { grid-column: span 3 / span 3 !important; }
+  .md\\:col-span-4 { grid-column: span 4 / span 4 !important; }
+  .md\\:col-span-6 { grid-column: span 6 / span 6 !important; }
+  .md\\:col-span-12 { grid-column: span 12 / span 12 !important; }
+}
 
 @media (max-width: 768px) {
     .container {
@@ -1008,9 +1059,19 @@ document.addEventListener('DOMContentLoaded', initSCORM);`;
                     <p>Nenhum conteúdo adicionado ainda</p>
                   </div>
                 ) : (
-                  <div className="space-y-3">
+                  <div className="grid grid-cols-1 md:grid-cols-12 gap-3">
                     {unidade.conteudo.map((item, itemIndex) => (
-                      <div key={item.id} className="group">
+                      <div 
+                        key={item.id} 
+                        className={`group ${
+                          item.colunas === 1 ? 'md:col-span-1' :
+                          item.colunas === 2 ? 'md:col-span-2' :
+                          item.colunas === 3 ? 'md:col-span-3' :
+                          item.colunas === 4 ? 'md:col-span-4' :
+                          item.colunas === 6 ? 'md:col-span-6' :
+                          'md:col-span-12'
+                        }`}
+                      >
                         <div className="flex items-start space-x-3 p-4 bg-gray-50 rounded-lg">
                           <div className="flex-shrink-0 mt-1">
                             {item.tipo === "titulo" ? (
@@ -1059,26 +1120,35 @@ document.addEventListener('DOMContentLoaded', initSCORM);`;
                                   </p>
                                 )}
                               </div>
-                                  ) : (
-                                    <p 
-                                      className={`${
-                                        item.corTexto === 'preto' ? 'text-black' :
-                                        item.corTexto === 'cinza' ? 'text-gray-600' :
-                                        item.corTexto === 'azul' ? 'text-blue-600' :
-                                        item.corTexto === 'verde' ? 'text-green-600' :
-                                        item.corTexto === 'vermelho' ? 'text-red-600' :
-                                        item.corTexto === 'roxo' ? 'text-purple-600' :
-                                        'text-gray-700'
-                                      } ${
-                                        item.alinhamento === 'centro' ? 'text-center' :
-                                        item.alinhamento === 'direita' ? 'text-right' :
-                                        item.alinhamento === 'justificado' ? 'text-justify' :
-                                        'text-left'
-                                      }`}
-                                    >
-                                      {item.conteudo}
-                                    </p>
-                                  )}
+                            ) : (
+                              <p
+                                className={`${
+                                  item.corTexto === "preto"
+                                    ? "text-black"
+                                    : item.corTexto === "cinza"
+                                    ? "text-gray-600"
+                                    : item.corTexto === "azul"
+                                    ? "text-blue-600"
+                                    : item.corTexto === "verde"
+                                    ? "text-green-600"
+                                    : item.corTexto === "vermelho"
+                                    ? "text-red-600"
+                                    : item.corTexto === "roxo"
+                                    ? "text-purple-600"
+                                    : "text-gray-700"
+                                } ${
+                                  item.alinhamento === "centro"
+                                    ? "text-center"
+                                    : item.alinhamento === "direita"
+                                    ? "text-right"
+                                    : item.alinhamento === "justificado"
+                                    ? "text-justify"
+                                    : "text-left"
+                                }`}
+                              >
+                                {item.conteudo}
+                              </p>
+                            )}
                           </div>
                           <div className="flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
                             <Button
@@ -1123,6 +1193,7 @@ document.addEventListener('DOMContentLoaded', initSCORM);`;
                                   fonte: item.fonte,
                                   corTexto: item.corTexto,
                                   alinhamento: item.alinhamento,
+                                  colunas: item.colunas,
                                 })
                               }
                             >
@@ -1390,14 +1461,14 @@ document.addEventListener('DOMContentLoaded', initSCORM);`;
                         ...editandoConteudo,
                         conteudo: e.target.value,
                       })
-                    )}
+                    }
                     placeholder="Digite o conteúdo..."
                     rows={6}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   />
-                  
+
                   {editandoConteudo.tipo === "paragrafo" && (
-                    <div className="grid grid-cols-2 gap-4 mt-4">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
                           Cor do Texto
@@ -1440,6 +1511,28 @@ document.addEventListener('DOMContentLoaded', initSCORM);`;
                           <option value="justificado">Justificado</option>
                         </select>
                       </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Largura (Colunas)
+                        </label>
+                        <select
+                          value={editandoConteudo.colunas || 12}
+                          onChange={(e) =>
+                            setEditandoConteudo({
+                              ...editandoConteudo,
+                              colunas: parseInt(e.target.value) as 1 | 2 | 3 | 4 | 6 | 12,
+                            })
+                          }
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        >
+                          <option value={1}>1 coluna (1/12)</option>
+                          <option value={2}>2 colunas (1/6)</option>
+                          <option value={3}>3 colunas (1/4)</option>
+                          <option value={4}>4 colunas (1/3)</option>
+                          <option value={6}>6 colunas (1/2)</option>
+                          <option value={12}>12 colunas (largura total)</option>
+                        </select>
+                      </div>
                     </div>
                   )}
                 </div>
@@ -1460,7 +1553,8 @@ document.addEventListener('DOMContentLoaded', initSCORM);`;
                       editandoConteudo.legenda,
                       editandoConteudo.fonte,
                       editandoConteudo.corTexto,
-                      editandoConteudo.alinhamento
+                      editandoConteudo.alinhamento,
+                      editandoConteudo.colunas
                     );
                     closeEditarConteudoModal();
                   }}
@@ -1609,9 +1703,9 @@ document.addEventListener('DOMContentLoaded', initSCORM);`;
                     rows={conteudoTemp.tipo === "paragrafo" ? 6 : 3}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   />
-                  
+
                   {conteudoTemp.tipo === "paragrafo" && (
-                    <div className="grid grid-cols-2 gap-4 mt-4">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
                           Cor do Texto
@@ -1652,6 +1746,28 @@ document.addEventListener('DOMContentLoaded', initSCORM);`;
                           <option value="centro">Centro</option>
                           <option value="direita">Direita</option>
                           <option value="justificado">Justificado</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Largura (Colunas)
+                        </label>
+                        <select
+                          value={conteudoTemp.colunas || 12}
+                          onChange={(e) =>
+                            setConteudoTemp({
+                              ...conteudoTemp,
+                              colunas: parseInt(e.target.value) as 1 | 2 | 3 | 4 | 6 | 12,
+                            })
+                          }
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        >
+                          <option value={1}>1 coluna (1/12)</option>
+                          <option value={2}>2 colunas (1/6)</option>
+                          <option value={3}>3 colunas (1/4)</option>
+                          <option value={4}>4 colunas (1/3)</option>
+                          <option value={6}>6 colunas (1/2)</option>
+                          <option value={12}>12 colunas (largura total)</option>
                         </select>
                       </div>
                     </div>
@@ -1891,6 +2007,7 @@ document.addEventListener('DOMContentLoaded', initSCORM);`;
                       fonte: "",
                       corTexto: "preto",
                       alinhamento: "esquerda",
+                      colunas: 12,
                     });
                   }
                 }}
@@ -1916,6 +2033,7 @@ document.addEventListener('DOMContentLoaded', initSCORM);`;
                       fonte: "",
                       corTexto: "preto",
                       alinhamento: "esquerda",
+                      colunas: 12,
                     });
                   }
                 }}
@@ -1941,6 +2059,7 @@ document.addEventListener('DOMContentLoaded', initSCORM);`;
                       fonte: "",
                       corTexto: "preto",
                       alinhamento: "esquerda",
+                      colunas: 12,
                     });
                   }
                 }}
@@ -1966,6 +2085,7 @@ document.addEventListener('DOMContentLoaded', initSCORM);`;
                       fonte: "",
                       corTexto: "preto",
                       alinhamento: "esquerda",
+                      colunas: 12,
                     });
                   }
                 }}
