@@ -1,6 +1,19 @@
-import React, { useMemo } from "react";
-import ReactQuill from "react-quill";
-import "react-quill/dist/quill.snow.css";
+import React, { useState, useRef, useEffect } from "react";
+import { 
+  Bold, 
+  Italic, 
+  Underline, 
+  Strikethrough,
+  AlignLeft,
+  AlignCenter,
+  AlignRight,
+  AlignJustify,
+  List,
+  ListOrdered,
+  Link,
+  Palette,
+  Type
+} from "lucide-react";
 
 interface RichTextEditorProps {
   value: string;
@@ -15,80 +28,232 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
   placeholder = "Digite o parágrafo...",
   height = 200,
 }) => {
-  const modules = useMemo(
-    () => ({
-      toolbar: [
-        [{ header: [1, 2, 3, false] }],
-        ["bold", "italic", "underline", "strike"],
-        [{ color: [] }, { background: [] }],
-        [{ align: [] }],
-        [{ list: "ordered" }, { list: "bullet" }],
-        ["link", "image"],
-        ["clean"],
-      ],
-    }),
-    []
-  );
+  const [isBold, setIsBold] = useState(false);
+  const [isItalic, setIsItalic] = useState(false);
+  const [isUnderline, setIsUnderline] = useState(false);
+  const [isStrikethrough, setIsStrikethrough] = useState(false);
+  const [showColorPicker, setShowColorPicker] = useState(false);
+  const [selectedColor, setSelectedColor] = useState("#000000");
+  const editorRef = useRef<HTMLDivElement>(null);
 
-  const formats = [
-    "header",
-    "bold",
-    "italic",
-    "underline",
-    "strike",
-    "color",
-    "background",
-    "align",
-    "list",
-    "bullet",
-    "link",
-    "image",
-  ];
+  const execCommand = (command: string, value?: string) => {
+    document.execCommand(command, false, value);
+    editorRef.current?.focus();
+    updateToolbarState();
+  };
+
+  const updateToolbarState = () => {
+    if (editorRef.current) {
+      setIsBold(document.queryCommandState("bold"));
+      setIsItalic(document.queryCommandState("italic"));
+      setIsUnderline(document.queryCommandState("underline"));
+      setIsStrikethrough(document.queryCommandState("strikeThrough"));
+    }
+  };
+
+  const handleInput = () => {
+    if (editorRef.current) {
+      onChange(editorRef.current.innerHTML);
+    }
+  };
+
+  const handleKeyUp = () => {
+    updateToolbarState();
+  };
+
+  const handleSelectionChange = () => {
+    updateToolbarState();
+  };
+
+  useEffect(() => {
+    if (editorRef.current) {
+      editorRef.current.innerHTML = value;
+    }
+  }, [value]);
+
+  useEffect(() => {
+    document.addEventListener("selectionchange", handleSelectionChange);
+    return () => {
+      document.removeEventListener("selectionchange", handleSelectionChange);
+    };
+  }, []);
 
   return (
-    <div className="rich-text-editor">
-      <style jsx global>{`
-        .rich-text-editor .ql-editor {
-          min-height: ${height - 42}px;
-          font-family: -apple-system, BlinkMacSystemFont, 'San Francisco', 'Segoe UI', 'Roboto', 'Helvetica Neue', sans-serif;
-          font-size: 14px;
-          line-height: 1.5;
-        }
-        .rich-text-editor .ql-toolbar {
-          border-top: 1px solid #d1d5db;
-          border-left: 1px solid #d1d5db;
-          border-right: 1px solid #d1d5db;
-          border-top-left-radius: 6px;
-          border-top-right-radius: 6px;
-        }
-        .rich-text-editor .ql-container {
-          border-bottom: 1px solid #d1d5db;
-          border-left: 1px solid #d1d5db;
-          border-right: 1px solid #d1d5db;
-          border-bottom-left-radius: 6px;
-          border-bottom-right-radius: 6px;
-        }
-        .rich-text-editor .ql-toolbar .ql-stroke {
-          stroke: #6b7280;
-        }
-        .rich-text-editor .ql-toolbar .ql-fill {
-          fill: #6b7280;
-        }
-        .rich-text-editor .ql-toolbar button:hover {
-          color: #2563eb;
-        }
-        .rich-text-editor .ql-toolbar button.ql-active {
-          color: #2563eb;
+    <div className="rich-text-editor border border-gray-300 rounded-lg overflow-hidden">
+      <style jsx>{`
+        .rich-text-editor [contenteditable]:empty:before {
+          content: attr(data-placeholder);
+          color: #9ca3af;
+          pointer-events: none;
         }
       `}</style>
-      <ReactQuill
-        theme="snow"
-        value={value}
-        onChange={onChange}
-        modules={modules}
-        formats={formats}
-        placeholder={placeholder}
-        style={{ height: `${height}px` }}
+      {/* Toolbar */}
+      <div className="flex items-center gap-1 p-2 bg-gray-50 border-b border-gray-200">
+        {/* Formatação */}
+        <div className="flex items-center gap-1">
+          <button
+            type="button"
+            onClick={() => execCommand("bold")}
+            className={`p-2 rounded hover:bg-gray-200 transition-colors ${
+              isBold ? "bg-blue-100 text-blue-600" : "text-gray-600"
+            }`}
+            title="Negrito"
+          >
+            <Bold className="h-4 w-4" />
+          </button>
+          <button
+            type="button"
+            onClick={() => execCommand("italic")}
+            className={`p-2 rounded hover:bg-gray-200 transition-colors ${
+              isItalic ? "bg-blue-100 text-blue-600" : "text-gray-600"
+            }`}
+            title="Itálico"
+          >
+            <Italic className="h-4 w-4" />
+          </button>
+          <button
+            type="button"
+            onClick={() => execCommand("underline")}
+            className={`p-2 rounded hover:bg-gray-200 transition-colors ${
+              isUnderline ? "bg-blue-100 text-blue-600" : "text-gray-600"
+            }`}
+            title="Sublinhado"
+          >
+            <Underline className="h-4 w-4" />
+          </button>
+          <button
+            type="button"
+            onClick={() => execCommand("strikeThrough")}
+            className={`p-2 rounded hover:bg-gray-200 transition-colors ${
+              isStrikethrough ? "bg-blue-100 text-blue-600" : "text-gray-600"
+            }`}
+            title="Riscado"
+          >
+            <Strikethrough className="h-4 w-4" />
+          </button>
+        </div>
+
+        {/* Separador */}
+        <div className="w-px h-6 bg-gray-300 mx-1"></div>
+
+        {/* Alinhamento */}
+        <div className="flex items-center gap-1">
+          <button
+            type="button"
+            onClick={() => execCommand("justifyLeft")}
+            className="p-2 rounded hover:bg-gray-200 transition-colors text-gray-600"
+            title="Alinhar à esquerda"
+          >
+            <AlignLeft className="h-4 w-4" />
+          </button>
+          <button
+            type="button"
+            onClick={() => execCommand("justifyCenter")}
+            className="p-2 rounded hover:bg-gray-200 transition-colors text-gray-600"
+            title="Centralizar"
+          >
+            <AlignCenter className="h-4 w-4" />
+          </button>
+          <button
+            type="button"
+            onClick={() => execCommand("justifyRight")}
+            className="p-2 rounded hover:bg-gray-200 transition-colors text-gray-600"
+            title="Alinhar à direita"
+          >
+            <AlignRight className="h-4 w-4" />
+          </button>
+          <button
+            type="button"
+            onClick={() => execCommand("justifyFull")}
+            className="p-2 rounded hover:bg-gray-200 transition-colors text-gray-600"
+            title="Justificar"
+          >
+            <AlignJustify className="h-4 w-4" />
+          </button>
+        </div>
+
+        {/* Separador */}
+        <div className="w-px h-6 bg-gray-300 mx-1"></div>
+
+        {/* Listas */}
+        <div className="flex items-center gap-1">
+          <button
+            type="button"
+            onClick={() => execCommand("insertUnorderedList")}
+            className="p-2 rounded hover:bg-gray-200 transition-colors text-gray-600"
+            title="Lista com marcadores"
+          >
+            <List className="h-4 w-4" />
+          </button>
+          <button
+            type="button"
+            onClick={() => execCommand("insertOrderedList")}
+            className="p-2 rounded hover:bg-gray-200 transition-colors text-gray-600"
+            title="Lista numerada"
+          >
+            <ListOrdered className="h-4 w-4" />
+          </button>
+        </div>
+
+        {/* Separador */}
+        <div className="w-px h-6 bg-gray-300 mx-1"></div>
+
+        {/* Cor do texto */}
+        <div className="relative">
+          <button
+            type="button"
+            onClick={() => setShowColorPicker(!showColorPicker)}
+            className="p-2 rounded hover:bg-gray-200 transition-colors text-gray-600"
+            title="Cor do texto"
+          >
+            <Palette className="h-4 w-4" />
+          </button>
+          {showColorPicker && (
+            <div className="absolute top-full left-0 mt-1 p-2 bg-white border border-gray-300 rounded shadow-lg z-10">
+              <input
+                type="color"
+                value={selectedColor}
+                onChange={(e) => {
+                  setSelectedColor(e.target.value);
+                  execCommand("foreColor", e.target.value);
+                }}
+                className="w-8 h-8 border border-gray-300 rounded cursor-pointer"
+              />
+            </div>
+          )}
+        </div>
+
+        {/* Link */}
+        <button
+          type="button"
+          onClick={() => {
+            const url = prompt("Digite a URL:");
+            if (url) {
+              execCommand("createLink", url);
+            }
+          }}
+          className="p-2 rounded hover:bg-gray-200 transition-colors text-gray-600"
+          title="Inserir link"
+        >
+          <Link className="h-4 w-4" />
+        </button>
+      </div>
+
+      {/* Editor */}
+      <div
+        ref={editorRef}
+        contentEditable
+        onInput={handleInput}
+        onKeyUp={handleKeyUp}
+        className="p-3 focus:outline-none"
+        style={{ 
+          minHeight: `${height - 60}px`,
+          fontFamily: "-apple-system, BlinkMacSystemFont, 'San Francisco', 'Segoe UI', 'Roboto', 'Helvetica Neue', sans-serif",
+          fontSize: "14px",
+          lineHeight: "1.5"
+        }}
+        data-placeholder={placeholder}
+        suppressContentEditableWarning={true}
       />
     </div>
   );
