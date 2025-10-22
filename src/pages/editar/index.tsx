@@ -240,6 +240,8 @@ export default function GeradorEditar() {
     if (novaUnidade.trim()) {
       adicionarUnidade({ titulo: novaUnidade.trim(), conteudo: [] });
       setNovaUnidade("");
+      setAdicionarUnidadeModal(false);
+      toast.success("Unidade adicionada com sucesso!");
     }
   };
 
@@ -1213,7 +1215,11 @@ document.addEventListener('DOMContentLoaded', initSCORM);`;
                                 toast.success("Largura alterada");
                               }}
                               className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
-                              title={item.colunas === 6 ? "Expandir para largura total" : "Reduzir para metade da largura"}
+                              title={
+                                item.colunas === 6
+                                  ? "Expandir para largura total"
+                                  : "Reduzir para metade da largura"
+                              }
                             >
                               {item.colunas === 6 ? (
                                 <div className="flex items-center">
