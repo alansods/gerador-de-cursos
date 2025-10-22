@@ -1144,92 +1144,126 @@ document.addEventListener('DOMContentLoaded', initSCORM);`;
                             )}
                           </div>
                           <div className="flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() =>
-                                handleMoverConteudoAcima(unidade.id, itemIndex)
-                              }
-                              disabled={itemIndex === 0}
-                            >
-                              <ArrowUp className="h-3 w-3" />
-                            </Button>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() =>
+                                    handleMoverConteudoAcima(unidade.id, itemIndex)
+                                  }
+                                  disabled={itemIndex === 0}
+                                >
+                                  <ArrowUp className="h-3 w-3" />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>Mover para cima</p>
+                              </TooltipContent>
+                            </Tooltip>
 
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() =>
-                                handleMoverConteudoAbaixo(unidade.id, itemIndex)
-                              }
-                              disabled={
-                                itemIndex === unidade.conteudo.length - 1
-                              }
-                            >
-                              <ArrowDown className="h-3 w-3" />
-                            </Button>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() =>
+                                    handleMoverConteudoAbaixo(unidade.id, itemIndex)
+                                  }
+                                  disabled={
+                                    itemIndex === unidade.conteudo.length - 1
+                                  }
+                                >
+                                  <ArrowDown className="h-3 w-3" />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>Mover para baixo</p>
+                              </TooltipContent>
+                            </Tooltip>
 
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() =>
-                                setEditandoConteudo({
-                                  unidadeId: unidade.id,
-                                  conteudoId: item.id,
-                                  tipo: item.tipo as
-                                    | "paragrafo"
-                                    | "subtitulo"
-                                    | "titulo"
-                                    | "imagem",
-                                  conteudo: item.conteudo,
-                                  tamanho: item.tamanho,
-                                  legenda: item.legenda,
-                                  fonte: item.fonte,
-                                  corTexto: item.corTexto,
-                                  alinhamento: item.alinhamento,
-                                  colunas: item.colunas,
-                                })
-                              }
-                            >
-                              <Edit className="h-4 w-4" />
-                            </Button>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() =>
+                                    setEditandoConteudo({
+                                      unidadeId: unidade.id,
+                                      conteudoId: item.id,
+                                      tipo: item.tipo as
+                                        | "paragrafo"
+                                        | "subtitulo"
+                                        | "titulo"
+                                        | "imagem",
+                                      conteudo: item.conteudo,
+                                      tamanho: item.tamanho,
+                                      legenda: item.legenda,
+                                      fonte: item.fonte,
+                                      corTexto: item.corTexto,
+                                      alinhamento: item.alinhamento,
+                                      colunas: item.colunas,
+                                    })
+                                  }
+                                >
+                                  <Edit className="h-4 w-4" />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>Editar conteúdo</p>
+                              </TooltipContent>
+                            </Tooltip>
 
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() =>
-                                handleDeletarConteudo(unidade.id, item.id)
-                              }
-                              className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() =>
+                                    handleDeletarConteudo(unidade.id, item.id)
+                                  }
+                                  className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>Deletar conteúdo</p>
+                              </TooltipContent>
+                            </Tooltip>
 
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => {
-                                const novaColuna = item.colunas === 6 ? 12 : 6;
-                                editarConteudo(unidade.id, item.id, {
-                                  colunas: novaColuna,
-                                });
-                                toast.success("Largura alterada");
-                              }}
-                              className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
-                              title={
-                                item.colunas === 6
-                                  ? "Expandir para largura total"
-                                  : "Reduzir para metade da largura"
-                              }
-                            >
-                              {item.colunas === 6 ? (
-                                <div className="flex items-center">
-                                  <div className="w-2 h-2 bg-blue-600 rounded-sm mr-1"></div>
-                                  <div className="w-2 h-2 bg-blue-600 rounded-sm"></div>
-                                </div>
-                              ) : (
-                                <div className="w-4 h-2 bg-blue-600 rounded-sm"></div>
-                              )}
-                            </Button>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => {
+                                    const novaColuna = item.colunas === 6 ? 12 : 6;
+                                    editarConteudo(unidade.id, item.id, {
+                                      colunas: novaColuna,
+                                    });
+                                    toast.success("Largura alterada");
+                                  }}
+                                  className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                                >
+                                  {item.colunas === 6 ? (
+                                    <div className="flex items-center">
+                                      <div className="w-2 h-2 bg-blue-600 rounded-sm mr-1"></div>
+                                      <div className="w-2 h-2 bg-blue-600 rounded-sm"></div>
+                                    </div>
+                                  ) : (
+                                    <div className="w-4 h-2 bg-blue-600 rounded-sm"></div>
+                                  )}
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>
+                                  {item.colunas === 6
+                                    ? "Expandir para largura total"
+                                    : "Reduzir para metade da largura"}
+                                </p>
+                              </TooltipContent>
+                            </Tooltip>
                           </div>
                         </div>
                       </div>
