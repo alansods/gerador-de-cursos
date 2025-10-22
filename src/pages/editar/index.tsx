@@ -138,7 +138,8 @@ export default function GeradorEditar() {
 
   // Expor função SCORM globalmente para o preview
   useEffect(() => {
-    (window as any).handleGerarSCORM = () => generateSCORMPackage(state.cursoAtual!);
+    (window as any).handleGerarSCORM = () =>
+      generateSCORMPackage(state.cursoAtual!);
 
     return () => {
       delete (window as any).handleGerarSCORM;
@@ -439,44 +440,44 @@ export default function GeradorEditar() {
 
   // Função SCORM removida - usando useSCORM hook
   // const handleGerarSCORM = async () => {
-    if (!state.cursoAtual) return;
+  if (!state.cursoAtual) return;
 
-    try {
-      // Mostrar loading
-      const loadingButton = document.querySelector(".scorm-button");
-      if (loadingButton) {
-        (loadingButton as HTMLButtonElement).innerHTML =
-          '<div class="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>';
-        (loadingButton as HTMLButtonElement).disabled = true;
-      }
+  try {
+    // Mostrar loading
+    const loadingButton = document.querySelector(".scorm-button");
+    if (loadingButton) {
+      (loadingButton as HTMLButtonElement).innerHTML =
+        '<div class="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>';
+      (loadingButton as HTMLButtonElement).disabled = true;
+    }
 
-      // Gerar manifest SCORM 1.2 funcional
-      const sanitizedId = state.cursoAtual.id.replace(/[^a-zA-Z0-9_-]/g, "_");
-      const unidadeItems = (state.cursoAtual.unidades || [])
-        .map(
-          (unidade, idx) =>
-            `<item identifier="unidade_${
-              idx + 1
-            }" isvisible="true" identifierref="resource_unidade_${idx + 1}">
+    // Gerar manifest SCORM 1.2 funcional
+    const sanitizedId = state.cursoAtual.id.replace(/[^a-zA-Z0-9_-]/g, "_");
+    const unidadeItems = (state.cursoAtual.unidades || [])
+      .map(
+        (unidade, idx) =>
+          `<item identifier="unidade_${
+            idx + 1
+          }" isvisible="true" identifierref="resource_unidade_${idx + 1}">
           <title>${unidade.titulo}</title>
         </item>`
-        )
-        .join("\n");
+      )
+      .join("\n");
 
-      const recursoItems = (state.cursoAtual.unidades || [])
-        .map(
-          (_, idx) =>
-            `<resource identifier="resource_unidade_${
-              idx + 1
-            }" type="webcontent" href="index.html" adlcp:scormtype="sco">
+    const recursoItems = (state.cursoAtual.unidades || [])
+      .map(
+        (_, idx) =>
+          `<resource identifier="resource_unidade_${
+            idx + 1
+          }" type="webcontent" href="index.html" adlcp:scormtype="sco">
       <file href="index.html" />
       <file href="scormconfig.js" />
       <file href="style.css" />
     </resource>`
-        )
-        .join("\n");
+      )
+      .join("\n");
 
-      const manifestXML = `<?xml version="1.0" encoding="UTF-8"?>
+    const manifestXML = `<?xml version="1.0" encoding="UTF-8"?>
 <manifest xmlns="http://www.imsproject.org/xsd/imscp_rootv1p1p2" xmlns:imsmd="http://www.imsglobal.org/xsd/imsmd_rootv1p2p1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:adlcp="http://www.adlnet.org/xsd/adlcp_rootv1p2" identifier="MANIFEST-${sanitizedId}" xsi:schemaLocation="http://www.imsproject.org/xsd/imscp_rootv1p1p2 imscp_rootv1p1p2.xsd http://www.imsglobal.org/xsd/imsmd_rootv1p2p1 imsmd_rootv1p2p1.xsd http://www.adlnet.org/xsd/adlcp_rootv1p2 adlcp_rootv1p2.xsd">
   <metadata>
     <schema>ADL SCORM</schema>
@@ -516,8 +517,8 @@ export default function GeradorEditar() {
   </resources>
 </manifest>`;
 
-      // HTML simples do curso
-      const cursoHTML = `<!DOCTYPE html>
+    // HTML simples do curso
+    const cursoHTML = `<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
@@ -578,8 +579,8 @@ export default function GeradorEditar() {
 </body>
 </html>`;
 
-      // CSS simples e minimalista
-      const cursoCSS = `* {
+    // CSS simples e minimalista
+    const cursoCSS = `* {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
@@ -701,8 +702,8 @@ h1 {
     }
 }`;
 
-      // SCORM Config JS
-      const scormConfig = `// SCORM Configuration
+    // SCORM Config JS
+    const scormConfig = `// SCORM Configuration
 var scormApi = null;
 var currentUnit = 0;
 
@@ -810,63 +811,63 @@ window.onbeforeunload = function() {
 // Inicializar ao carregar página
 document.addEventListener('DOMContentLoaded', initSCORM);`;
 
-      // Criar ZIP
-      const JSZip = (await import("jszip")).default;
-      const zip = new JSZip();
+    // Criar ZIP
+    const JSZip = (await import("jszip")).default;
+    const zip = new JSZip();
 
-      // Adicionar arquivos ao ZIP
-      zip.file("imsmanifest.xml", manifestXML);
-      zip.file("index.html", cursoHTML);
-      zip.file("style.css", cursoCSS);
-      zip.file("scormconfig.js", scormConfig);
+    // Adicionar arquivos ao ZIP
+    zip.file("imsmanifest.xml", manifestXML);
+    zip.file("index.html", cursoHTML);
+    zip.file("style.css", cursoCSS);
+    zip.file("scormconfig.js", scormConfig);
 
-      // Adicionar XSD files
-      const xsdFiles = {
-        "imscp_rootv1p1p2.xsd": `<?xml version="1.0" encoding="UTF-8"?>
+    // Adicionar XSD files
+    const xsdFiles = {
+      "imscp_rootv1p1p2.xsd": `<?xml version="1.0" encoding="UTF-8"?>
 <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" targetNamespace="http://www.imsproject.org/xsd/imscp_rootv1p1p2" elementFormDefault="qualified">
   <xsd:element name="manifest"/>
 </xsd:schema>`,
-        "imsmd_rootv1p2p1.xsd": `<?xml version="1.0" encoding="UTF-8"?>
+      "imsmd_rootv1p2p1.xsd": `<?xml version="1.0" encoding="UTF-8"?>
 <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" targetNamespace="http://www.imsglobal.org/xsd/imsmd_rootv1p2p1" elementFormDefault="qualified">
   <xsd:element name="lom"/>
 </xsd:schema>`,
-        "adlcp_rootv1p2.xsd": `<?xml version="1.0" encoding="UTF-8"?>
+      "adlcp_rootv1p2.xsd": `<?xml version="1.0" encoding="UTF-8"?>
 <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" targetNamespace="http://www.adlnet.org/xsd/adlcp_rootv1p2" elementFormDefault="qualified">
   <xsd:element name="scormtype"/>
 </xsd:schema>`,
-      };
+    };
 
-      Object.entries(xsdFiles).forEach(([filename, content]) => {
-        zip.file(filename, content);
-      });
+    Object.entries(xsdFiles).forEach(([filename, content]) => {
+      zip.file(filename, content);
+    });
 
-      // Gerar ZIP
-      const zipBlob = await zip.generateAsync({ type: "blob" });
+    // Gerar ZIP
+    const zipBlob = await zip.generateAsync({ type: "blob" });
 
-      // Download
-      const url = URL.createObjectURL(zipBlob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = `${state.cursoAtual.titulo.replace(
-        /[^a-zA-Z0-9]/g,
-        "_"
-      )}_scorm.zip`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(url);
-    } catch (error) {
-      console.error("Erro ao gerar SCORM:", error);
-      alert("Erro ao gerar pacote SCORM. Tente novamente.");
-    } finally {
-      // Restaurar botão
-      const loadingButton = document.querySelector(".scorm-button");
-      if (loadingButton) {
-        (loadingButton as HTMLButtonElement).innerHTML =
-          '<svg class="h-4 w-4" /* download icon */></svg>';
-        (loadingButton as HTMLButtonElement).disabled = false;
-      }
+    // Download
+    const url = URL.createObjectURL(zipBlob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `${state.cursoAtual.titulo.replace(
+      /[^a-zA-Z0-9]/g,
+      "_"
+    )}_scorm.zip`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  } catch (error) {
+    console.error("Erro ao gerar SCORM:", error);
+    alert("Erro ao gerar pacote SCORM. Tente novamente.");
+  } finally {
+    // Restaurar botão
+    const loadingButton = document.querySelector(".scorm-button");
+    if (loadingButton) {
+      (loadingButton as HTMLButtonElement).innerHTML =
+        '<svg class="h-4 w-4" /* download icon */></svg>';
+      (loadingButton as HTMLButtonElement).disabled = false;
     }
+  }
   // };
 
   const handlePreview = () => {
