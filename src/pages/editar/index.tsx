@@ -22,6 +22,7 @@ import {
   ArrowDown,
   Image,
   X,
+  Download,
 } from "lucide-react";
 import {
   Tooltip,
@@ -780,11 +781,11 @@ document.addEventListener('DOMContentLoaded', initSCORM);`;
                 </Tooltip>
               </TooltipProvider>
               <Button
-                onClick={handleSalvarCurso}
-                className="bg-blue-600 hover:bg-blue-700"
+                onClick={handleGerarSCORM}
+                className="bg-purple-600 hover:bg-purple-700 text-white"
               >
-                <Save className="h-4 w-4 mr-2" />
-                Salvar
+                <Download className="h-4 w-4 mr-2" />
+                Baixar SCORM
               </Button>
             </div>
           </div>
