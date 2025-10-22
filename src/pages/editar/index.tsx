@@ -7,6 +7,7 @@ import toast, { Toaster } from "react-hot-toast";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
 import {
   ArrowLeft,
   Plus,
@@ -23,6 +24,9 @@ import {
   Image,
   Download,
   BookmarkPlus,
+  Clock,
+  User,
+  GraduationCap,
 } from "lucide-react";
 import {
   Tooltip,
@@ -455,7 +459,7 @@ export default function GeradorEditar() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
       <style
         dangerouslySetInnerHTML={{
           __html: `
@@ -485,8 +489,8 @@ export default function GeradorEditar() {
         }}
       />
       {/* Header */}
-      <div className="bg-white border-b border-gray-200 fixed top-0 left-0 right-0 z-30">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+      <div className="bg-white/80 backdrop-blur-sm border-b border-gray-200 sticky top-0 z-50">
+        <div className="max-w-6xl mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             <Button variant="outline" size="sm" onClick={handleVoltar}>
               <ArrowLeft className="h-4 w-4 mr-2" />
@@ -518,43 +522,21 @@ export default function GeradorEditar() {
       </div>
 
       {/* Conteúdo Principal */}
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pt-24">
+      <div className="max-w-6xl mx-auto px-6 py-8">
         {/* Card de Informações do Curso */}
-        <Card className="mb-6">
-          <div>
-            <CardHeader>
-              <div className="flex items-start justify-between group">
-                <div className="flex-1 flex items-start space-x-4">
-                  <BookOpen className="h-8 w-8 text-blue-600 flex-shrink-0 mt-1" />
-                  <div>
-                    <CardTitle className="text-2xl">
-                      {state.cursoAtual.titulo}
-                    </CardTitle>
-                    <p className="text-gray-600 mt-2">
-                      {state.cursoAtual.descricao}
-                    </p>
-                    <div className="flex flex-wrap gap-4 mt-3 text-sm text-gray-500">
-                      <span className="flex items-center">
-                        <span className="font-medium">Carga Horária:</span>
-                        <span className="ml-1">
-                          {state.cursoAtual.cargaHoraria}
-                        </span>
-                      </span>
-                      <span className="flex items-center">
-                        <span className="font-medium">Instrutor:</span>
-                        <span className="ml-1">
-                          {state.cursoAtual.instrutor}
-                        </span>
-                      </span>
-                      <span className="flex items-center">
-                        <span className="font-medium">Modalidade:</span>
-                        <span className="ml-1">
-                          {state.cursoAtual.modalidade}
-                        </span>
-                      </span>
-                    </div>
-                  </div>
-                </div>
+        <Card className="mb-8 shadow-xl border-0 bg-gradient-to-r from-blue-600 to-purple-600 text-white">
+          <CardHeader className="pb-4">
+            <div className="flex items-start justify-between">
+              <div className="flex-1">
+                <CardTitle className="text-3xl font-bold mb-3 flex items-center gap-3">
+                  <BookOpen className="h-8 w-8" />
+                  {state.cursoAtual.titulo}
+                </CardTitle>
+                <p className="text-blue-100 text-lg leading-relaxed">
+                  {state.cursoAtual.descricao}
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger asChild>
@@ -562,7 +544,7 @@ export default function GeradorEditar() {
                         variant="outline"
                         size="sm"
                         onClick={() => setEditarCursoModal(true)}
-                        className="p-2"
+                        className="p-2 bg-white/10 border-white/20 text-white hover:bg-white/20"
                       >
                         <Edit className="h-4 w-4" />
                       </Button>
@@ -571,19 +553,62 @@ export default function GeradorEditar() {
                   </Tooltip>
                 </TooltipProvider>
               </div>
-            </CardHeader>
-          </div>
+            </div>
+          </CardHeader>
+
+          <CardContent className="pt-0">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="flex items-center gap-3 bg-white/10 rounded-lg p-3">
+                <Clock className="h-5 w-5 text-blue-200" />
+                <div>
+                  <p className="text-sm text-blue-200">Carga Horária</p>
+                  <p className="font-semibold">{state.cursoAtual.cargaHoraria}</p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-3 bg-white/10 rounded-lg p-3">
+                <User className="h-5 w-5 text-blue-200" />
+                <div>
+                  <p className="text-sm text-blue-200">Instrutor</p>
+                  <p className="font-semibold">{state.cursoAtual.instrutor}</p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-3 bg-white/10 rounded-lg p-3">
+                <GraduationCap className="h-5 w-5 text-blue-200" />
+                <div>
+                  <p className="text-sm text-blue-200">Modalidade</p>
+                  <p className="font-semibold">{state.cursoAtual.modalidade}</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-4 flex items-center gap-2">
+              <Badge
+                variant="secondary"
+                className="bg-white/20 text-white border-white/30"
+              >
+                {state.cursoAtual.categoria}
+              </Badge>
+              <Badge
+                variant="secondary"
+                className="bg-white/20 text-white border-white/30"
+              >
+                {state.cursoAtual.unidades?.length || 0} Unidades
+              </Badge>
+            </div>
+          </CardContent>
         </Card>
 
         {/* Adicionar Nova Unidade */}
         {/* Lista de Unidades */}
-        <div className="space-y-4">
+        <div className="space-y-8">
           {(state.cursoAtual.unidades || []).map((unidade, unidadeIndex) => (
-            <Card key={unidade.id} className="group">
-              <CardHeader>
+            <Card key={unidade.id} className="group shadow-lg border-0 bg-white/80 backdrop-blur-sm">
+              <CardHeader className="bg-gradient-to-r from-gray-50 to-blue-50 border-b border-gray-200">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-3">
-                    <Layers className="h-5 w-5 text-blue-600" />
+                    <Layers className="h-6 w-6 text-blue-600" />
                     {editandoUnidade === unidade.id ? (
                       <Input
                         defaultValue={unidade.titulo}
@@ -598,11 +623,11 @@ export default function GeradorEditar() {
                             );
                           }
                         }}
-                        className="text-lg font-semibold"
+                        className="text-2xl font-bold text-gray-900"
                         autoFocus
                       />
                     ) : (
-                      <h3 className="text-lg font-semibold text-gray-900">
+                      <h3 className="text-2xl font-bold text-gray-900">
                         {unidade.titulo}
                       </h3>
                     )}
