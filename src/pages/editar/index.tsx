@@ -1547,7 +1547,8 @@ document.addEventListener('DOMContentLoaded', initSCORM);`;
                     <div className="mt-4">
                       {/* Barra de ferramentas */}
                       <div className="border border-gray-200 rounded-lg p-3 bg-gray-50">
-                        <div className="flex flex-wrap gap-2">
+                        <TooltipProvider>
+                          <div className="flex flex-wrap gap-2">
                           {/* Cores */}
                           <div className="flex items-center gap-1">
                             <Palette className="h-4 w-4 text-gray-600" />
@@ -1663,6 +1664,7 @@ document.addEventListener('DOMContentLoaded', initSCORM);`;
                             ))}
                           </div>
                         </div>
+                        </TooltipProvider>
                       </div>
                     </div>
                   )}
@@ -1839,7 +1841,8 @@ document.addEventListener('DOMContentLoaded', initSCORM);`;
                     <div className="mt-4">
                       {/* Barra de ferramentas */}
                       <div className="border border-gray-200 rounded-lg p-3 bg-gray-50">
-                        <div className="flex flex-wrap gap-2">
+                        <TooltipProvider>
+                          <div className="flex flex-wrap gap-2">
                           {/* Cores */}
                           <div className="flex items-center gap-1">
                             <Palette className="h-4 w-4 text-gray-600" />
@@ -1955,6 +1958,7 @@ document.addEventListener('DOMContentLoaded', initSCORM);`;
                             ))}
                           </div>
                         </div>
+                        </TooltipProvider>
                       </div>
                     </div>
                   )}
