@@ -118,6 +118,8 @@ export default function GeradorEditar() {
   const [editarCursoModal, setEditarCursoModal] = useState(false);
   const [closingEditarCurso, setClosingEditarCurso] = useState(false);
   const [mostrandoMenuFlutuante, setMostrandoMenuFlutuante] = useState(false);
+  const [selecionarUnidadeModal, setSelecionarUnidadeModal] = useState(false);
+  const [tipoConteudoSelecionado, setTipoConteudoSelecionado] = useState<"titulo" | "subtitulo" | "paragrafo" | "imagem" | null>(null);
 
   // Estados para edição do curso
   const [cargaHorariaEditada, setCargaHorariaEditada] = useState("");
@@ -354,6 +356,30 @@ export default function GeradorEditar() {
   const handleSalvarCurso = () => {
     salvarCurso();
     toast.success("Alterações salvas");
+  };
+
+  const handleSelecionarTipoConteudo = (tipo: "titulo" | "subtitulo" | "paragrafo" | "imagem") => {
+    setTipoConteudoSelecionado(tipo);
+    setSelecionarUnidadeModal(true);
+    setMostrandoMenuFlutuante(false);
+  };
+
+  const handleSelecionarUnidade = (unidadeId: string) => {
+    if (tipoConteudoSelecionado) {
+      setConteudoTemp({
+        tipo: tipoConteudoSelecionado,
+        conteudo: "",
+        unidadeId: unidadeId,
+        tamanho: "media",
+        legenda: "",
+        fonte: "",
+        corTexto: "preto",
+        alinhamento: "esquerda",
+        colunas: 12,
+      });
+      setSelecionarUnidadeModal(false);
+      setTipoConteudoSelecionado(null);
+    }
   };
 
   const handleMoverUnidadeAcima = (index: number) => {
@@ -1164,7 +1190,10 @@ document.addEventListener('DOMContentLoaded', initSCORM);`;
                               <DropdownMenuContent align="end">
                                 <DropdownMenuItem
                                   onClick={() =>
-                                    handleMoverConteudoAcima(unidade.id, itemIndex)
+                                    handleMoverConteudoAcima(
+                                      unidade.id,
+                                      itemIndex
+                                    )
                                   }
                                   disabled={itemIndex === 0}
                                   className="cursor-pointer"
@@ -1174,9 +1203,14 @@ document.addEventListener('DOMContentLoaded', initSCORM);`;
                                 </DropdownMenuItem>
                                 <DropdownMenuItem
                                   onClick={() =>
-                                    handleMoverConteudoAbaixo(unidade.id, itemIndex)
+                                    handleMoverConteudoAbaixo(
+                                      unidade.id,
+                                      itemIndex
+                                    )
                                   }
-                                  disabled={itemIndex === unidade.conteudo.length - 1}
+                                  disabled={
+                                    itemIndex === unidade.conteudo.length - 1
+                                  }
                                   className="cursor-pointer"
                                 >
                                   <ArrowDown className="h-4 w-4 mr-2" />
@@ -1208,7 +1242,8 @@ document.addEventListener('DOMContentLoaded', initSCORM);`;
                                 </DropdownMenuItem>
                                 <DropdownMenuItem
                                   onClick={() => {
-                                    const novaColuna = item.colunas === 6 ? 12 : 6;
+                                    const novaColuna =
+                                      item.colunas === 6 ? 12 : 6;
                                     editarConteudo(unidade.id, item.id, {
                                       colunas: novaColuna,
                                     });
@@ -1222,12 +1257,12 @@ document.addEventListener('DOMContentLoaded', initSCORM);`;
                                         <div className="w-2 h-2 bg-blue-600 rounded-sm mr-1"></div>
                                         <div className="w-2 h-2 bg-blue-600 rounded-sm"></div>
                                       </div>
-                                      Expandir para largura total
+                                      Expandir coluna
                                     </>
                                   ) : (
                                     <>
                                       <div className="w-4 h-2 bg-blue-600 rounded-sm mr-2"></div>
-                                      Reduzir para metade da largura
+                                      Reduzir coluna
                                     </>
                                   )}
                                 </DropdownMenuItem>
@@ -2014,27 +2049,7 @@ document.addEventListener('DOMContentLoaded', initSCORM);`;
               <Button
                 variant="ghost"
                 className="w-full justify-start text-left hover:bg-blue-50 hover:scale-105 transition-all duration-200"
-                onClick={() => {
-                  setMostrandoMenuFlutuante(false);
-                  // Aqui você pode adicionar lógica para selecionar a unidade
-                  // Por enquanto, vou usar a primeira unidade como exemplo
-                  if (
-                    state.cursoAtual?.unidades &&
-                    state.cursoAtual.unidades.length > 0
-                  ) {
-                    setConteudoTemp({
-                      tipo: "titulo",
-                      conteudo: "",
-                      unidadeId: state.cursoAtual.unidades[0].id,
-                      tamanho: "media",
-                      legenda: "",
-                      fonte: "",
-                      corTexto: "preto",
-                      alinhamento: "esquerda",
-                      colunas: 12,
-                    });
-                  }
-                }}
+                onClick={() => handleSelecionarTipoConteudo("titulo")}
               >
                 <Heading2 className="h-4 w-4 mr-2 text-blue-600" />
                 Título
@@ -2042,25 +2057,7 @@ document.addEventListener('DOMContentLoaded', initSCORM);`;
               <Button
                 variant="ghost"
                 className="w-full justify-start text-left hover:bg-blue-50 hover:scale-105 transition-all duration-200"
-                onClick={() => {
-                  setMostrandoMenuFlutuante(false);
-                  if (
-                    state.cursoAtual?.unidades &&
-                    state.cursoAtual.unidades.length > 0
-                  ) {
-                    setConteudoTemp({
-                      tipo: "subtitulo",
-                      conteudo: "",
-                      unidadeId: state.cursoAtual.unidades[0].id,
-                      tamanho: "media",
-                      legenda: "",
-                      fonte: "",
-                      corTexto: "preto",
-                      alinhamento: "esquerda",
-                      colunas: 12,
-                    });
-                  }
-                }}
+                onClick={() => handleSelecionarTipoConteudo("subtitulo")}
               >
                 <Heading3 className="h-4 w-4 mr-2 text-blue-600" />
                 Subtítulo
@@ -2068,25 +2065,7 @@ document.addEventListener('DOMContentLoaded', initSCORM);`;
               <Button
                 variant="ghost"
                 className="w-full justify-start text-left hover:bg-blue-50 hover:scale-105 transition-all duration-200"
-                onClick={() => {
-                  setMostrandoMenuFlutuante(false);
-                  if (
-                    state.cursoAtual?.unidades &&
-                    state.cursoAtual.unidades.length > 0
-                  ) {
-                    setConteudoTemp({
-                      tipo: "paragrafo",
-                      conteudo: "",
-                      unidadeId: state.cursoAtual.unidades[0].id,
-                      tamanho: "media",
-                      legenda: "",
-                      fonte: "",
-                      corTexto: "preto",
-                      alinhamento: "esquerda",
-                      colunas: 12,
-                    });
-                  }
-                }}
+                onClick={() => handleSelecionarTipoConteudo("paragrafo")}
               >
                 <Type className="h-4 w-4 mr-2 text-blue-600" />
                 Parágrafo
@@ -2094,25 +2073,7 @@ document.addEventListener('DOMContentLoaded', initSCORM);`;
               <Button
                 variant="ghost"
                 className="w-full justify-start text-left hover:bg-blue-50 hover:scale-105 transition-all duration-200"
-                onClick={() => {
-                  setMostrandoMenuFlutuante(false);
-                  if (
-                    state.cursoAtual?.unidades &&
-                    state.cursoAtual.unidades.length > 0
-                  ) {
-                    setConteudoTemp({
-                      tipo: "imagem",
-                      conteudo: "",
-                      unidadeId: state.cursoAtual.unidades[0].id,
-                      tamanho: "media",
-                      legenda: "",
-                      fonte: "",
-                      corTexto: "preto",
-                      alinhamento: "esquerda",
-                      colunas: 12,
-                    });
-                  }
-                }}
+                onClick={() => handleSelecionarTipoConteudo("imagem")}
               >
                 <Image className="h-4 w-4 mr-2 text-blue-600" />
                 Imagem
@@ -2129,6 +2090,49 @@ document.addEventListener('DOMContentLoaded', initSCORM);`;
                 Adicionar Unidade
               </Button>
             </div>
+          </div>
+        )}
+
+        {/* Modal de seleção de unidade */}
+        {selecionarUnidadeModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+            <Card className="w-full max-w-md">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Plus className="h-5 w-5 text-blue-600" />
+                  Selecionar Unidade
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-gray-600 mb-4">
+                  Escolha a unidade onde deseja adicionar o {tipoConteudoSelecionado}:
+                </p>
+                <div className="space-y-2">
+                  {(state.cursoAtual?.unidades || []).map((unidade) => (
+                    <Button
+                      key={unidade.id}
+                      variant="outline"
+                      className="w-full justify-start"
+                      onClick={() => handleSelecionarUnidade(unidade.id)}
+                    >
+                      <Layers className="h-4 w-4 mr-2 text-blue-600" />
+                      {unidade.titulo}
+                    </Button>
+                  ))}
+                </div>
+                <div className="flex justify-end mt-4">
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      setSelecionarUnidadeModal(false);
+                      setTipoConteudoSelecionado(null);
+                    }}
+                  >
+                    Cancelar
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
           </div>
         )}
       </div>
