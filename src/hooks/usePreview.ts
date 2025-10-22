@@ -14,37 +14,8 @@ export const usePreview = () => {
         <script src="https://cdn.tailwindcss.com"></script>
       </head>
       <body class="bg-gray-50">
-        <!-- Navbar -->
-        <div class="bg-white border-b border-gray-200 fixed top-0 left-0 right-0 z-30">
-          <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-            <div class="flex items-center justify-between">
-              <button 
-                onclick="handleVoltar()" 
-                class="flex items-center px-3 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-              >
-                <svg class="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
-                </svg>
-                Voltar
-              </button>
-              
-              <button 
-                onclick="if (typeof window.handleGerarSCORM === 'function') { window.handleGerarSCORM(); } else { alert('Função SCORM não disponível'); }" 
-                class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-md flex items-center space-x-2 transition-colors"
-              >
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                </svg>
-                <span>Baixar SCORM</span>
-              </button>
-            </div>
-          </div>
-        </div>
-        
-        <!-- Conteúdo com padding para navbar fixo -->
-        <div class="pt-20">
-          <div class="max-w-4xl mx-auto p-6">
-            <div class="bg-white rounded-lg shadow-lg p-8">
+        <div class="max-w-4xl mx-auto p-6">
+          <div class="bg-white rounded-lg shadow-lg p-8">
               <div class="mb-6">
                 <h1 class="text-3xl font-bold text-gray-900 mb-2">${curso.titulo}</h1>
                 <p class="text-gray-600">${curso.descricao}</p>
@@ -108,26 +79,14 @@ export const usePreview = () => {
             </div>
           </div>
         </div>
-        
-        <script>
-          function handleVoltar() {
-            // Tentar voltar para a página anterior
-            if (window.history.length > 1) {
-              window.history.back();
-            } else {
-              // Fallback: redirecionar para a página de cursos
-              window.location.href = '/cursos';
-            }
-          }
-        </script>
       </body>
       </html>
     `;
   };
 
   const openPreview = (curso: any) => {
-    // Abrir na mesma aba
-    const previewWindow = window.open("", "_self");
+    // Abrir em nova aba
+    const previewWindow = window.open("", "_blank");
     if (previewWindow) {
       previewWindow.document.write(generatePreviewHTML(curso));
       previewWindow.document.close();
