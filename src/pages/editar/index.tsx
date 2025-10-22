@@ -65,6 +65,8 @@ export default function GeradorEditar() {
     tamanho?: "pequena" | "media" | "grande";
     legenda?: string;
     fonte?: string;
+    corTexto?: "preto" | "cinza" | "azul" | "verde" | "vermelho" | "roxo";
+    alinhamento?: "esquerda" | "centro" | "direita" | "justificado";
   } | null>(null);
   const [conteudoTemp, setConteudoTemp] = useState({
     tipo: "paragrafo" as "paragrafo" | "subtitulo" | "titulo" | "imagem",
@@ -73,6 +75,8 @@ export default function GeradorEditar() {
     tamanho: "media" as "pequena" | "media" | "grande",
     legenda: "",
     fonte: "",
+    corTexto: "preto" as "preto" | "cinza" | "azul" | "verde" | "vermelho" | "roxo",
+    alinhamento: "esquerda" as "esquerda" | "centro" | "direita" | "justificado",
   });
   const [adicionarUnidadeModal, setAdicionarUnidadeModal] = useState(false);
   const [confirmarDeletarUnidade, setConfirmarDeletarUnidade] = useState(false);
@@ -192,6 +196,8 @@ export default function GeradorEditar() {
         tamanho: "media",
         legenda: "",
         fonte: "",
+        corTexto: "preto",
+        alinhamento: "esquerda",
       });
       setClosingAdicionarConteudo(false);
     }, 200);
@@ -245,6 +251,8 @@ export default function GeradorEditar() {
       tamanho: "media",
       legenda: "",
       fonte: "",
+      corTexto: "preto",
+      alinhamento: "esquerda",
     });
   };
 
@@ -270,6 +278,8 @@ export default function GeradorEditar() {
         tamanho: conteudoTemp.tamanho,
         legenda: conteudoTemp.legenda,
         fonte: conteudoTemp.fonte,
+        corTexto: conteudoTemp.corTexto,
+        alinhamento: conteudoTemp.alinhamento,
       });
       setConteudoTemp({
         tipo: "paragrafo",
@@ -278,6 +288,8 @@ export default function GeradorEditar() {
         tamanho: "media",
         legenda: "",
         fonte: "",
+        corTexto: "preto",
+        alinhamento: "esquerda",
       });
       toast.success("Alterações salvas");
     }
@@ -290,7 +302,9 @@ export default function GeradorEditar() {
     conteudo: string,
     tamanho?: "pequena" | "media" | "grande",
     legenda?: string,
-    fonte?: string
+    fonte?: string,
+    corTexto?: "preto" | "cinza" | "azul" | "verde" | "vermelho" | "roxo",
+    alinhamento?: "esquerda" | "centro" | "direita" | "justificado"
   ) => {
     editarConteudo(unidadeId, conteudoId, {
       tipo,
@@ -298,6 +312,8 @@ export default function GeradorEditar() {
       tamanho,
       legenda,
       fonte,
+      corTexto,
+      alinhamento,
     });
     setEditandoConteudo(null);
     toast.success("Alterações salvas");
@@ -473,11 +489,28 @@ export default function GeradorEditar() {
                 <h2>${unidade.titulo}</h2>
                 <div class="unit-content">
                     ${unidade.conteudo
-                      .map((conteudo) =>
-                        conteudo.tipo === "subtitulo"
-                          ? `<h3>${conteudo.conteudo}</h3>`
-                          : `<p>${conteudo.conteudo}</p>`
-                      )
+                      .map((conteudo) => {
+                        if (conteudo.tipo === "subtitulo") {
+                          return `<h3>${conteudo.conteudo}</h3>`;
+                        } else if (conteudo.tipo === "paragrafo") {
+                          const corClass = conteudo.corTexto === 'preto' ? 'color-black' :
+                                         conteudo.corTexto === 'cinza' ? 'color-gray' :
+                                         conteudo.corTexto === 'azul' ? 'color-blue' :
+                                         conteudo.corTexto === 'verde' ? 'color-green' :
+                                         conteudo.corTexto === 'vermelho' ? 'color-red' :
+                                         conteudo.corTexto === 'roxo' ? 'color-purple' :
+                                         'color-default';
+                          
+                          const alignClass = conteudo.alinhamento === 'centro' ? 'text-center' :
+                                            conteudo.alinhamento === 'direita' ? 'text-right' :
+                                            conteudo.alinhamento === 'justificado' ? 'text-justify' :
+                                            'text-left';
+                          
+                          return `<p class="${corClass} ${alignClass}">${conteudo.conteudo}</p>`;
+                        } else {
+                          return `<p>${conteudo.conteudo}</p>`;
+                        }
+                      })
                       .join("")}
                 </div>
             </section>`
@@ -574,6 +607,21 @@ h1 {
     color: #555;
     font-size: 0.95em;
 }
+
+/* Classes de cor para parágrafos */
+.color-black { color: #000 !important; }
+.color-gray { color: #6b7280 !important; }
+.color-blue { color: #2563eb !important; }
+.color-green { color: #16a34a !important; }
+.color-red { color: #dc2626 !important; }
+.color-purple { color: #9333ea !important; }
+.color-default { color: #555 !important; }
+
+/* Classes de alinhamento */
+.text-center { text-align: center !important; }
+.text-right { text-align: right !important; }
+.text-justify { text-align: justify !important; }
+.text-left { text-align: left !important; }
 
 @media (max-width: 768px) {
     .container {
@@ -1011,9 +1059,26 @@ document.addEventListener('DOMContentLoaded', initSCORM);`;
                                   </p>
                                 )}
                               </div>
-                            ) : (
-                              <p className="text-gray-700">{item.conteudo}</p>
-                            )}
+                                  ) : (
+                                    <p 
+                                      className={`${
+                                        item.corTexto === 'preto' ? 'text-black' :
+                                        item.corTexto === 'cinza' ? 'text-gray-600' :
+                                        item.corTexto === 'azul' ? 'text-blue-600' :
+                                        item.corTexto === 'verde' ? 'text-green-600' :
+                                        item.corTexto === 'vermelho' ? 'text-red-600' :
+                                        item.corTexto === 'roxo' ? 'text-purple-600' :
+                                        'text-gray-700'
+                                      } ${
+                                        item.alinhamento === 'centro' ? 'text-center' :
+                                        item.alinhamento === 'direita' ? 'text-right' :
+                                        item.alinhamento === 'justificado' ? 'text-justify' :
+                                        'text-left'
+                                      }`}
+                                    >
+                                      {item.conteudo}
+                                    </p>
+                                  )}
                           </div>
                           <div className="flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
                             <Button
@@ -1056,6 +1121,8 @@ document.addEventListener('DOMContentLoaded', initSCORM);`;
                                   tamanho: item.tamanho,
                                   legenda: item.legenda,
                                   fonte: item.fonte,
+                                  corTexto: item.corTexto,
+                                  alinhamento: item.alinhamento,
                                 })
                               }
                             >
@@ -1315,18 +1382,67 @@ document.addEventListener('DOMContentLoaded', initSCORM);`;
                   </div>
                 </div>
               ) : (
-                <textarea
-                  value={editandoConteudo.conteudo}
-                  onChange={(e) =>
-                    setEditandoConteudo({
-                      ...editandoConteudo,
-                      conteudo: e.target.value,
-                    })
-                  }
-                  placeholder="Digite o conteúdo..."
-                  rows={6}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                />
+                <div>
+                  <textarea
+                    value={editandoConteudo.conteudo}
+                    onChange={(e) =>
+                      setEditandoConteudo({
+                        ...editandoConteudo,
+                        conteudo: e.target.value,
+                      })
+                    )}
+                    placeholder="Digite o conteúdo..."
+                    rows={6}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  />
+                  
+                  {editandoConteudo.tipo === "paragrafo" && (
+                    <div className="grid grid-cols-2 gap-4 mt-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Cor do Texto
+                        </label>
+                        <select
+                          value={editandoConteudo.corTexto || "preto"}
+                          onChange={(e) =>
+                            setEditandoConteudo({
+                              ...editandoConteudo,
+                              corTexto: e.target.value as any,
+                            })
+                          }
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        >
+                          <option value="preto">Preto</option>
+                          <option value="cinza">Cinza</option>
+                          <option value="azul">Azul</option>
+                          <option value="verde">Verde</option>
+                          <option value="vermelho">Vermelho</option>
+                          <option value="roxo">Roxo</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Alinhamento
+                        </label>
+                        <select
+                          value={editandoConteudo.alinhamento || "esquerda"}
+                          onChange={(e) =>
+                            setEditandoConteudo({
+                              ...editandoConteudo,
+                              alinhamento: e.target.value as any,
+                            })
+                          }
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        >
+                          <option value="esquerda">Esquerda</option>
+                          <option value="centro">Centro</option>
+                          <option value="direita">Direita</option>
+                          <option value="justificado">Justificado</option>
+                        </select>
+                      </div>
+                    </div>
+                  )}
+                </div>
               )}
 
               <div className="flex justify-end space-x-3">
@@ -1342,7 +1458,9 @@ document.addEventListener('DOMContentLoaded', initSCORM);`;
                       editandoConteudo.conteudo,
                       editandoConteudo.tamanho,
                       editandoConteudo.legenda,
-                      editandoConteudo.fonte
+                      editandoConteudo.fonte,
+                      editandoConteudo.corTexto,
+                      editandoConteudo.alinhamento
                     );
                     closeEditarConteudoModal();
                   }}
@@ -1472,24 +1590,73 @@ document.addEventListener('DOMContentLoaded', initSCORM);`;
                   </div>
                 </div>
               ) : (
-                <textarea
-                  value={conteudoTemp.conteudo}
-                  onChange={(e) =>
-                    setConteudoTemp({
-                      ...conteudoTemp,
-                      conteudo: e.target.value,
-                    })
-                  }
-                  placeholder={`Digite o ${
-                    conteudoTemp.tipo === "titulo"
-                      ? "título"
-                      : conteudoTemp.tipo === "subtitulo"
-                      ? "subtítulo"
-                      : "parágrafo"
-                  }...`}
-                  rows={conteudoTemp.tipo === "paragrafo" ? 6 : 3}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                />
+                <div>
+                  <textarea
+                    value={conteudoTemp.conteudo}
+                    onChange={(e) =>
+                      setConteudoTemp({
+                        ...conteudoTemp,
+                        conteudo: e.target.value,
+                      })
+                    }
+                    placeholder={`Digite o ${
+                      conteudoTemp.tipo === "titulo"
+                        ? "título"
+                        : conteudoTemp.tipo === "subtitulo"
+                        ? "subtítulo"
+                        : "parágrafo"
+                    }...`}
+                    rows={conteudoTemp.tipo === "paragrafo" ? 6 : 3}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  />
+                  
+                  {conteudoTemp.tipo === "paragrafo" && (
+                    <div className="grid grid-cols-2 gap-4 mt-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Cor do Texto
+                        </label>
+                        <select
+                          value={conteudoTemp.corTexto || "preto"}
+                          onChange={(e) =>
+                            setConteudoTemp({
+                              ...conteudoTemp,
+                              corTexto: e.target.value as any,
+                            })
+                          }
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        >
+                          <option value="preto">Preto</option>
+                          <option value="cinza">Cinza</option>
+                          <option value="azul">Azul</option>
+                          <option value="verde">Verde</option>
+                          <option value="vermelho">Vermelho</option>
+                          <option value="roxo">Roxo</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Alinhamento
+                        </label>
+                        <select
+                          value={conteudoTemp.alinhamento || "esquerda"}
+                          onChange={(e) =>
+                            setConteudoTemp({
+                              ...conteudoTemp,
+                              alinhamento: e.target.value as any,
+                            })
+                          }
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        >
+                          <option value="esquerda">Esquerda</option>
+                          <option value="centro">Centro</option>
+                          <option value="direita">Direita</option>
+                          <option value="justificado">Justificado</option>
+                        </select>
+                      </div>
+                    </div>
+                  )}
+                </div>
               )}
 
               <div className="flex justify-end space-x-3">
@@ -1722,6 +1889,8 @@ document.addEventListener('DOMContentLoaded', initSCORM);`;
                       tamanho: "media",
                       legenda: "",
                       fonte: "",
+                      corTexto: "preto",
+                      alinhamento: "esquerda",
                     });
                   }
                 }}
@@ -1745,6 +1914,8 @@ document.addEventListener('DOMContentLoaded', initSCORM);`;
                       tamanho: "media",
                       legenda: "",
                       fonte: "",
+                      corTexto: "preto",
+                      alinhamento: "esquerda",
                     });
                   }
                 }}
@@ -1768,6 +1939,8 @@ document.addEventListener('DOMContentLoaded', initSCORM);`;
                       tamanho: "media",
                       legenda: "",
                       fonte: "",
+                      corTexto: "preto",
+                      alinhamento: "esquerda",
                     });
                   }
                 }}
@@ -1791,6 +1964,8 @@ document.addEventListener('DOMContentLoaded', initSCORM);`;
                       tamanho: "media",
                       legenda: "",
                       fonte: "",
+                      corTexto: "preto",
+                      alinhamento: "esquerda",
                     });
                   }
                 }}

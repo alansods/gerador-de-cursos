@@ -8,6 +8,9 @@ export interface ConteudoUnidade {
   tamanho?: 'pequena' | 'media' | 'grande';
   legenda?: string;
   fonte?: string;
+  // Propriedades específicas para parágrafos
+  corTexto?: 'preto' | 'cinza' | 'azul' | 'verde' | 'vermelho' | 'roxo';
+  alinhamento?: 'esquerda' | 'centro' | 'direita' | 'justificado';
 }
 
 export interface Unidade {
