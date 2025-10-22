@@ -9,7 +9,7 @@ export interface ConteudoUnidade {
   legenda?: string;
   fonte?: string;
   // Propriedades específicas para parágrafos
-  corTexto?: 'preto' | 'cinza' | 'azul' | 'verde' | 'vermelho' | 'roxo';
+  corTexto?: string;
   alinhamento?: 'esquerda' | 'centro' | 'direita' | 'justificado';
   // Propriedades de layout
   colunas?: 6 | 12;
