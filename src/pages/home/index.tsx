@@ -1,5 +1,6 @@
 import { useGeradorCurso } from "@/context/GeradorCursoContext";
 import { usePreview } from "@/hooks/usePreview";
+import { useSCORM } from "@/hooks/useSCORM";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -26,6 +27,7 @@ import { useNavigate } from "react-router-dom";
 export default function GeradorHome() {
   const { state, deletarCurso, selecionarCurso } = useGeradorCurso();
   const { openPreview } = usePreview();
+  const { generateSCORMPackage } = useSCORM();
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(
     null
   );
@@ -567,7 +569,7 @@ document.addEventListener('DOMContentLoaded', initSCORM);`;
                     </Button>
                     <Button
                       size="sm"
-                      onClick={() => handleGerarSCORM(curso.id)}
+                      onClick={() => generateSCORMPackage(curso)}
                       className="bg-purple-600 hover:bg-purple-700 text-white scorm-button"
                       data-curso-id={curso.id}
                     >

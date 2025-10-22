@@ -15,6 +15,7 @@ interface Curso {
       tamanho?: string;
       legenda?: string;
       fonte?: string;
+      colunas?: number;
     }>;
   }>;
 }
@@ -157,6 +158,34 @@ export const useSCORM = () => {
           font-style: italic;
           margin-top: 5px;
         }
+        
+        /* Grid layout for columns */
+        .unit-content {
+          display: grid !important;
+          grid-template-columns: 1fr !important;
+          gap: 0.75rem !important;
+        }
+        
+        @media (min-width: 768px) {
+          .unit-content {
+            grid-template-columns: repeat(12, 1fr) !important;
+          }
+        }
+        
+        .col-span-6 {
+          grid-column: span 6 !important;
+        }
+        
+        .col-span-12 {
+          grid-column: span 12 !important;
+        }
+        
+        @media (max-width: 767px) {
+          .col-span-6,
+          .col-span-12 {
+            grid-column: span 1 !important;
+          }
+        }
       `;
 
       // HTML simplificado
@@ -184,38 +213,42 @@ export const useSCORM = () => {
                 (unidade) => `
               <div class="unit">
                 <h2>${unidade.titulo}</h2>
-                ${unidade.conteudo
-                  .map((item) => {
-                    if (item.tipo === "titulo")
-                      return `<h3>${item.conteudo}</h3>`;
-                    if (item.tipo === "subtitulo")
-                      return `<h4>${item.conteudo}</h4>`;
-                    if (item.tipo === "imagem") {
-                      const tamanhoClass =
-                        item.tamanho === "pequena"
-                          ? "max-w-xs"
-                          : item.tamanho === "media"
-                          ? "max-w-md"
-                          : "max-w-full";
-                      return `<div>
-                        ${
-                          item.fonte
-                            ? `<p class="image-source">Fonte: ${item.fonte}</p>`
-                            : ""
-                        }
-                        <img src="${item.conteudo}" alt="${
-                        item.legenda || "Imagem"
-                      }" class="${tamanhoClass}" />
-                         ${
-                           item.legenda
-                             ? `<p class="image-caption">${item.legenda}</p>`
-                             : ""
-                         }
-                      </div>`;
-                    }
-                    return `<p>${item.conteudo}</p>`;
-                  })
-                  .join("")}
+                <div class="unit-content">
+                  ${unidade.conteudo
+                    .map((item) => {
+                      const colSpanClass = (item.colunas === 6) ? "col-span-6" : "col-span-12";
+                      
+                      if (item.tipo === "titulo")
+                        return `<div class="${colSpanClass}"><h3>${item.conteudo}</h3></div>`;
+                      if (item.tipo === "subtitulo")
+                        return `<div class="${colSpanClass}"><h4>${item.conteudo}</h4></div>`;
+                      if (item.tipo === "imagem") {
+                        const tamanhoClass =
+                          item.tamanho === "pequena"
+                            ? "max-w-xs"
+                            : item.tamanho === "media"
+                            ? "max-w-md"
+                            : "max-w-full";
+                        return `<div class="${colSpanClass}">
+                          ${
+                            item.fonte
+                              ? `<p class="image-source">Fonte: ${item.fonte}</p>`
+                              : ""
+                          }
+                          <img src="${item.conteudo}" alt="${
+                          item.legenda || "Imagem"
+                        }" class="${tamanhoClass}" />
+                           ${
+                             item.legenda
+                               ? `<p class="image-caption">${item.legenda}</p>`
+                               : ""
+                           }
+                        </div>`;
+                      }
+                      return `<div class="${colSpanClass}">${item.conteudo}</div>`;
+                    })
+                    .join("")}
+                </div>
               </div>
             `
               )

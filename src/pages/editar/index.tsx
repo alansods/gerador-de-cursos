@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useGeradorCurso } from "@/context/GeradorCursoContext";
 import { usePreview } from "@/hooks/usePreview";
+import { useSCORM } from "@/hooks/useSCORM";
 import toast, { Toaster } from "react-hot-toast";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -46,6 +47,7 @@ export default function GeradorEditar() {
     selecionarCurso,
   } = useGeradorCurso();
   const { openPreview } = usePreview();
+  const { generateSCORMPackage } = useSCORM();
   const navigate = useNavigate();
 
   const { id } = useParams<{ id: string }>();
@@ -932,7 +934,7 @@ document.addEventListener('DOMContentLoaded', initSCORM);`;
                 </Tooltip>
               </TooltipProvider>
               <Button
-                onClick={handleGerarSCORM}
+                onClick={() => generateSCORMPackage(state.cursoAtual!)}
                 className="bg-purple-600 hover:bg-purple-700 text-white"
               >
                 <Download className="h-4 w-4 mr-2" />
