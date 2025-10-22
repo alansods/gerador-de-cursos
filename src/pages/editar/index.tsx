@@ -23,6 +23,7 @@ import {
   Image,
   X,
   Download,
+  MoreHorizontal,
 } from "lucide-react";
 import {
   Tooltip,
@@ -30,6 +31,12 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 export default function GeradorEditar() {
   const {
@@ -1143,57 +1150,39 @@ document.addEventListener('DOMContentLoaded', initSCORM);`;
                               </p>
                             )}
                           </div>
-                          <div className="flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <TooltipProvider>
-                            <Tooltip>
-                              <TooltipTrigger asChild>
+                          <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
                                 <Button
                                   variant="outline"
                                   size="sm"
+                                  className="h-8 w-8 p-0"
+                                >
+                                  <MoreHorizontal className="h-4 w-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                <DropdownMenuItem
                                   onClick={() =>
-                                    handleMoverConteudoAcima(
-                                      unidade.id,
-                                      itemIndex
-                                    )
+                                    handleMoverConteudoAcima(unidade.id, itemIndex)
                                   }
                                   disabled={itemIndex === 0}
+                                  className="cursor-pointer"
                                 >
-                                  <ArrowUp className="h-3 w-3" />
-                                </Button>
-                              </TooltipTrigger>
-                              <TooltipContent>
-                                <p>Mover para cima</p>
-                              </TooltipContent>
-                            </Tooltip>
-
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <Button
-                                  variant="outline"
-                                  size="sm"
+                                  <ArrowUp className="h-4 w-4 mr-2" />
+                                  Mover para cima
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
                                   onClick={() =>
-                                    handleMoverConteudoAbaixo(
-                                      unidade.id,
-                                      itemIndex
-                                    )
+                                    handleMoverConteudoAbaixo(unidade.id, itemIndex)
                                   }
-                                  disabled={
-                                    itemIndex === unidade.conteudo.length - 1
-                                  }
+                                  disabled={itemIndex === unidade.conteudo.length - 1}
+                                  className="cursor-pointer"
                                 >
-                                  <ArrowDown className="h-3 w-3" />
-                                </Button>
-                              </TooltipTrigger>
-                              <TooltipContent>
-                                <p>Mover para baixo</p>
-                              </TooltipContent>
-                            </Tooltip>
-
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <Button
-                                  variant="outline"
-                                  size="sm"
+                                  <ArrowDown className="h-4 w-4 mr-2" />
+                                  Mover para baixo
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
                                   onClick={() =>
                                     setEditandoConteudo({
                                       unidadeId: unidade.id,
@@ -1212,67 +1201,47 @@ document.addEventListener('DOMContentLoaded', initSCORM);`;
                                       colunas: item.colunas,
                                     })
                                   }
+                                  className="cursor-pointer"
                                 >
-                                  <Edit className="h-4 w-4" />
-                                </Button>
-                              </TooltipTrigger>
-                              <TooltipContent>
-                                <p>Editar conteúdo</p>
-                              </TooltipContent>
-                            </Tooltip>
-
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() =>
-                                    handleDeletarConteudo(unidade.id, item.id)
-                                  }
-                                  className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                                >
-                                  <Trash2 className="h-4 w-4" />
-                                </Button>
-                              </TooltipTrigger>
-                              <TooltipContent>
-                                <p>Deletar conteúdo</p>
-                              </TooltipContent>
-                            </Tooltip>
-
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <Button
-                                  variant="outline"
-                                  size="sm"
+                                  <Edit className="h-4 w-4 mr-2" />
+                                  Editar conteúdo
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
                                   onClick={() => {
-                                    const novaColuna =
-                                      item.colunas === 6 ? 12 : 6;
+                                    const novaColuna = item.colunas === 6 ? 12 : 6;
                                     editarConteudo(unidade.id, item.id, {
                                       colunas: novaColuna,
                                     });
                                     toast.success("Largura alterada");
                                   }}
-                                  className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                                  className="cursor-pointer"
                                 >
                                   {item.colunas === 6 ? (
-                                    <div className="flex items-center">
-                                      <div className="w-2 h-2 bg-blue-600 rounded-sm mr-1"></div>
-                                      <div className="w-2 h-2 bg-blue-600 rounded-sm"></div>
-                                    </div>
+                                    <>
+                                      <div className="flex items-center mr-2">
+                                        <div className="w-2 h-2 bg-blue-600 rounded-sm mr-1"></div>
+                                        <div className="w-2 h-2 bg-blue-600 rounded-sm"></div>
+                                      </div>
+                                      Expandir para largura total
+                                    </>
                                   ) : (
-                                    <div className="w-4 h-2 bg-blue-600 rounded-sm"></div>
+                                    <>
+                                      <div className="w-4 h-2 bg-blue-600 rounded-sm mr-2"></div>
+                                      Reduzir para metade da largura
+                                    </>
                                   )}
-                                </Button>
-                              </TooltipTrigger>
-                              <TooltipContent>
-                                <p>
-                                  {item.colunas === 6
-                                    ? "Expandir para largura total"
-                                    : "Reduzir para metade da largura"}
-                                </p>
-                              </TooltipContent>
-                            </Tooltip>
-                            </TooltipProvider>
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                  onClick={() =>
+                                    handleDeletarConteudo(unidade.id, item.id)
+                                  }
+                                  className="cursor-pointer text-red-600 focus:text-red-600"
+                                >
+                                  <Trash2 className="h-4 w-4 mr-2" />
+                                  Deletar conteúdo
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
                           </div>
                         </div>
                       </div>
