@@ -137,7 +137,19 @@ export function MenuConteudo({
             }}
             className="cursor-pointer"
           >
-            {item.colunas === 6 ? "Expandir coluna" : "Reduzir coluna"}
+            <div className="flex items-center gap-2">
+              {item.colunas === 6 ? (
+                <div className="flex gap-1">
+                  <div className="w-2 h-2 bg-blue-600 rounded-sm"></div>
+                  <div className="w-2 h-2 bg-blue-600 rounded-sm"></div>
+                </div>
+              ) : (
+                <div className="flex gap-1">
+                  <div className="w-3 h-2 bg-blue-600 rounded-sm"></div>
+                </div>
+              )}
+              {item.colunas === 6 ? "Expandir coluna" : "Reduzir coluna"}
+            </div>
           </DropdownMenuItem>
 
           <DropdownMenuItem

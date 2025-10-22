@@ -217,7 +217,7 @@ export const PreviewCurso: React.FC<PreviewCursoProps> = ({
 
         {/* Course Content */}
         <div className="space-y-8">
-          {(curso.unidades || []).map((unidade, unidadeIndex) => (
+          {(curso.unidades || []).map((unidade) => (
             <Card
               key={unidade.id}
               className="shadow-lg border-0 bg-white/80 backdrop-blur-sm"
@@ -230,9 +230,14 @@ export const PreviewCurso: React.FC<PreviewCursoProps> = ({
               </CardHeader>
 
               <CardContent className="p-8">
-                <div className="space-y-6">
-                  {unidade.conteudo.map((item, itemIndex) => (
-                    <div key={item.id} className="group">
+                <div className="grid grid-cols-1 md:grid-cols-12 gap-3">
+                  {unidade.conteudo.map((item) => (
+                    <div
+                      key={item.id}
+                      className={`${
+                        item.colunas === 6 ? "md:col-span-6" : "md:col-span-12"
+                      }`}
+                    >
                       {renderConteudo(item)}
                     </div>
                   ))}

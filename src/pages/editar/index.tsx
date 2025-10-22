@@ -1573,12 +1573,21 @@ document.addEventListener('DOMContentLoaded', initSCORM);`;
                               {[
                                 {
                                   value: 1,
-                                  icon: "1",
+                                  icon: (
+                                    <div className="flex gap-1">
+                                      <div className="w-3 h-3 bg-blue-600 rounded"></div>
+                                    </div>
+                                  ),
                                   tooltip: "1 coluna (largura total)",
                                 },
                                 {
                                   value: 2,
-                                  icon: "2",
+                                  icon: (
+                                    <div className="flex gap-1">
+                                      <div className="w-2 h-3 bg-blue-600 rounded"></div>
+                                      <div className="w-2 h-3 bg-blue-600 rounded"></div>
+                                    </div>
+                                  ),
                                   tooltip: "2 colunas (1/2 da largura)",
                                 },
                               ].map(({ value, icon, tooltip }) => (
@@ -1601,9 +1610,7 @@ document.addEventListener('DOMContentLoaded', initSCORM);`;
                                           : "bg-white border-gray-300 text-gray-600 hover:bg-gray-50"
                                       }`}
                                     >
-                                      <span className="text-sm font-mono">
-                                        {icon}
-                                      </span>
+                                      {icon}
                                     </button>
                                   </TooltipTrigger>
                                   <TooltipContent>
@@ -1822,12 +1829,21 @@ document.addEventListener('DOMContentLoaded', initSCORM);`;
                               {[
                                 {
                                   value: 1,
-                                  icon: "1",
+                                  icon: (
+                                    <div className="flex gap-1">
+                                      <div className="w-3 h-3 bg-blue-600 rounded"></div>
+                                    </div>
+                                  ),
                                   tooltip: "1 coluna (largura total)",
                                 },
                                 {
                                   value: 2,
-                                  icon: "2",
+                                  icon: (
+                                    <div className="flex gap-1">
+                                      <div className="w-2 h-3 bg-blue-600 rounded"></div>
+                                      <div className="w-2 h-3 bg-blue-600 rounded"></div>
+                                    </div>
+                                  ),
                                   tooltip: "2 colunas (1/2 da largura)",
                                 },
                               ].map(({ value, icon, tooltip }) => (
@@ -1850,9 +1866,7 @@ document.addEventListener('DOMContentLoaded', initSCORM);`;
                                           : "bg-white border-gray-300 text-gray-600 hover:bg-gray-50"
                                       }`}
                                     >
-                                      <span className="text-sm font-mono">
-                                        {icon}
-                                      </span>
+                                      {icon}
                                     </button>
                                   </TooltipTrigger>
                                   <TooltipContent>
