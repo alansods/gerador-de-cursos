@@ -1144,13 +1144,17 @@ document.addEventListener('DOMContentLoaded', initSCORM);`;
                             )}
                           </div>
                           <div className="flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <TooltipProvider>
                             <Tooltip>
                               <TooltipTrigger asChild>
                                 <Button
                                   variant="outline"
                                   size="sm"
                                   onClick={() =>
-                                    handleMoverConteudoAcima(unidade.id, itemIndex)
+                                    handleMoverConteudoAcima(
+                                      unidade.id,
+                                      itemIndex
+                                    )
                                   }
                                   disabled={itemIndex === 0}
                                 >
@@ -1168,7 +1172,10 @@ document.addEventListener('DOMContentLoaded', initSCORM);`;
                                   variant="outline"
                                   size="sm"
                                   onClick={() =>
-                                    handleMoverConteudoAbaixo(unidade.id, itemIndex)
+                                    handleMoverConteudoAbaixo(
+                                      unidade.id,
+                                      itemIndex
+                                    )
                                   }
                                   disabled={
                                     itemIndex === unidade.conteudo.length - 1
@@ -1238,7 +1245,8 @@ document.addEventListener('DOMContentLoaded', initSCORM);`;
                                   variant="outline"
                                   size="sm"
                                   onClick={() => {
-                                    const novaColuna = item.colunas === 6 ? 12 : 6;
+                                    const novaColuna =
+                                      item.colunas === 6 ? 12 : 6;
                                     editarConteudo(unidade.id, item.id, {
                                       colunas: novaColuna,
                                     });
@@ -1264,6 +1272,7 @@ document.addEventListener('DOMContentLoaded', initSCORM);`;
                                 </p>
                               </TooltipContent>
                             </Tooltip>
+                            </TooltipProvider>
                           </div>
                         </div>
                       </div>
