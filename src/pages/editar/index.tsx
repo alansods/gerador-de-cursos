@@ -105,7 +105,7 @@ export default function GeradorEditar() {
   // Expor função SCORM globalmente para o preview
   useEffect(() => {
     (window as any).handleGerarSCORM = handleGerarSCORM;
-    
+
     return () => {
       delete (window as any).handleGerarSCORM;
     };
@@ -821,7 +821,7 @@ document.addEventListener('DOMContentLoaded', initSCORM);`;
                 <Button
                   size="sm"
                   onClick={() => setAdicionarUnidadeModal(true)}
-                  className="bg-purple-600 hover:bg-purple-700 text-white ml-3"
+                  className="bg-blue-600 hover:bg-blue-700 text-white ml-3"
                 >
                   <Plus className="h-4 w-4 mr-1" />
                   Adicionar Unidade
