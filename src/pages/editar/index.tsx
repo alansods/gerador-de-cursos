@@ -119,7 +119,9 @@ export default function GeradorEditar() {
   const [closingEditarCurso, setClosingEditarCurso] = useState(false);
   const [mostrandoMenuFlutuante, setMostrandoMenuFlutuante] = useState(false);
   const [selecionarUnidadeModal, setSelecionarUnidadeModal] = useState(false);
-  const [tipoConteudoSelecionado, setTipoConteudoSelecionado] = useState<"titulo" | "subtitulo" | "paragrafo" | "imagem" | null>(null);
+  const [tipoConteudoSelecionado, setTipoConteudoSelecionado] = useState<
+    "titulo" | "subtitulo" | "paragrafo" | "imagem" | null
+  >(null);
 
   // Estados para edição do curso
   const [cargaHorariaEditada, setCargaHorariaEditada] = useState("");
@@ -358,7 +360,9 @@ export default function GeradorEditar() {
     toast.success("Alterações salvas");
   };
 
-  const handleSelecionarTipoConteudo = (tipo: "titulo" | "subtitulo" | "paragrafo" | "imagem") => {
+  const handleSelecionarTipoConteudo = (
+    tipo: "titulo" | "subtitulo" | "paragrafo" | "imagem"
+  ) => {
     setTipoConteudoSelecionado(tipo);
     setSelecionarUnidadeModal(true);
     setMostrandoMenuFlutuante(false);
@@ -1930,7 +1934,10 @@ document.addEventListener('DOMContentLoaded', initSCORM);`;
             onClick={(e) => e.stopPropagation()}
           >
             <CardHeader>
-              <CardTitle>Confirmar Exclusão</CardTitle>
+              <CardTitle className="flex items-center gap-2">
+                <Trash2 className="h-5 w-5 text-red-600" />
+                Confirmar Exclusão
+              </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <p>Tem certeza que deseja deletar esse elemento?</p>
@@ -1977,7 +1984,10 @@ document.addEventListener('DOMContentLoaded', initSCORM);`;
             onClick={(e) => e.stopPropagation()}
           >
             <CardHeader>
-              <CardTitle>Confirmar Exclusão</CardTitle>
+              <CardTitle className="flex items-center gap-2">
+                <Trash2 className="h-5 w-5 text-red-600" />
+                Confirmar Exclusão
+              </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <p>Tem certeza que deseja deletar esse elemento?</p>
@@ -2105,7 +2115,8 @@ document.addEventListener('DOMContentLoaded', initSCORM);`;
               </CardHeader>
               <CardContent>
                 <p className="text-sm text-gray-600 mb-4">
-                  Escolha a unidade onde deseja adicionar o {tipoConteudoSelecionado}:
+                  Escolha a unidade onde deseja adicionar o{" "}
+                  {tipoConteudoSelecionado}:
                 </p>
                 <div className="space-y-2">
                   {(state.cursoAtual?.unidades || []).map((unidade) => (
