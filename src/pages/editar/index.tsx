@@ -554,7 +554,9 @@ export default function GeradorEditar() {
                         if (conteudo.tipo === "subtitulo") {
                           return `<div class="${colSpanClass}"><h3>${conteudo.conteudo}</h3></div>`;
                         } else if (conteudo.tipo === "paragrafo") {
-                          const corStyle = conteudo.corTexto ? `color: ${conteudo.corTexto};` : "";
+                          const corStyle = conteudo.corTexto
+                            ? `color: ${conteudo.corTexto};`
+                            : "";
 
                           const alignClass =
                             conteudo.alinhamento === "centro"
@@ -1132,7 +1134,7 @@ document.addEventListener('DOMContentLoaded', initSCORM);`;
                             ) : (
                               <p
                                 style={{
-                                  color: item.corTexto || "#000000"
+                                  color: item.corTexto || "#000000",
                                 }}
                                 className={`${
                                   item.alinhamento === "centro"
@@ -1272,6 +1274,13 @@ document.addEventListener('DOMContentLoaded', initSCORM);`;
               <p className="text-gray-600 mb-8">
                 Comece adicionando a primeira unidade do seu curso
               </p>
+              <Button
+                onClick={() => setAdicionarUnidadeModal(true)}
+                className="bg-blue-600 hover:bg-blue-700 text-white"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Criar Primeira Unidade
+              </Button>
             </CardContent>
           </Card>
         )}
@@ -1512,54 +1521,66 @@ document.addEventListener('DOMContentLoaded', initSCORM);`;
                       <div className="border border-gray-200 rounded-lg p-3 bg-gray-50">
                         <TooltipProvider>
                           <div className="flex flex-wrap gap-2">
-                             {/* Cores */}
-                             <div className="flex items-center gap-3">
-                               <Palette className="h-4 w-4 text-gray-600" />
-                               <span className="text-sm font-medium text-gray-700">
-                                 Cor:
-                               </span>
-                               <div className="flex items-center gap-2">
-                                 <input
-                                   type="color"
-                                   value={
-                                     editandoConteudo.corTexto === "preto" ? "#000000" :
-                                     editandoConteudo.corTexto === "cinza" ? "#6B7280" :
-                                     editandoConteudo.corTexto === "azul" ? "#2563EB" :
-                                     editandoConteudo.corTexto === "verde" ? "#16A34A" :
-                                     editandoConteudo.corTexto === "vermelho" ? "#DC2626" :
-                                     editandoConteudo.corTexto === "roxo" ? "#9333EA" :
-                                     editandoConteudo.corTexto || "#000000"
-                                   }
-                                   onChange={(e) =>
-                                     setEditandoConteudo({
-                                       ...editandoConteudo,
-                                       corTexto: e.target.value,
-                                     })
-                                   }
-                                   className="w-8 h-8 rounded border border-gray-300 cursor-pointer"
-                                 />
-                                 <input
-                                   type="text"
-                                   value={
-                                     editandoConteudo.corTexto === "preto" ? "#000000" :
-                                     editandoConteudo.corTexto === "cinza" ? "#6B7280" :
-                                     editandoConteudo.corTexto === "azul" ? "#2563EB" :
-                                     editandoConteudo.corTexto === "verde" ? "#16A34A" :
-                                     editandoConteudo.corTexto === "vermelho" ? "#DC2626" :
-                                     editandoConteudo.corTexto === "roxo" ? "#9333EA" :
-                                     editandoConteudo.corTexto || "#000000"
-                                   }
-                                   onChange={(e) =>
-                                     setEditandoConteudo({
-                                       ...editandoConteudo,
-                                       corTexto: e.target.value,
-                                     })
-                                   }
-                                   placeholder="#000000"
-                                   className="w-20 px-2 py-1 text-xs border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                 />
-                               </div>
-                             </div>
+                            {/* Cores */}
+                            <div className="flex items-center gap-3">
+                              <Palette className="h-4 w-4 text-gray-600" />
+                              <span className="text-sm font-medium text-gray-700">
+                                Cor:
+                              </span>
+                              <div className="flex items-center gap-2">
+                                <input
+                                  type="color"
+                                  value={
+                                    editandoConteudo.corTexto === "preto"
+                                      ? "#000000"
+                                      : editandoConteudo.corTexto === "cinza"
+                                      ? "#6B7280"
+                                      : editandoConteudo.corTexto === "azul"
+                                      ? "#2563EB"
+                                      : editandoConteudo.corTexto === "verde"
+                                      ? "#16A34A"
+                                      : editandoConteudo.corTexto === "vermelho"
+                                      ? "#DC2626"
+                                      : editandoConteudo.corTexto === "roxo"
+                                      ? "#9333EA"
+                                      : editandoConteudo.corTexto || "#000000"
+                                  }
+                                  onChange={(e) =>
+                                    setEditandoConteudo({
+                                      ...editandoConteudo,
+                                      corTexto: e.target.value,
+                                    })
+                                  }
+                                  className="w-8 h-8 rounded border border-gray-300 cursor-pointer"
+                                />
+                                <input
+                                  type="text"
+                                  value={
+                                    editandoConteudo.corTexto === "preto"
+                                      ? "#000000"
+                                      : editandoConteudo.corTexto === "cinza"
+                                      ? "#6B7280"
+                                      : editandoConteudo.corTexto === "azul"
+                                      ? "#2563EB"
+                                      : editandoConteudo.corTexto === "verde"
+                                      ? "#16A34A"
+                                      : editandoConteudo.corTexto === "vermelho"
+                                      ? "#DC2626"
+                                      : editandoConteudo.corTexto === "roxo"
+                                      ? "#9333EA"
+                                      : editandoConteudo.corTexto || "#000000"
+                                  }
+                                  onChange={(e) =>
+                                    setEditandoConteudo({
+                                      ...editandoConteudo,
+                                      corTexto: e.target.value,
+                                    })
+                                  }
+                                  placeholder="#000000"
+                                  className="w-20 px-2 py-1 text-xs border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                />
+                              </div>
+                            </div>
 
                             {/* Separador */}
                             <div className="w-px h-8 bg-gray-300 mx-2"></div>
@@ -1847,54 +1868,66 @@ document.addEventListener('DOMContentLoaded', initSCORM);`;
                       <div className="border border-gray-200 rounded-lg p-3 bg-gray-50">
                         <TooltipProvider>
                           <div className="flex flex-wrap gap-2">
-                             {/* Cores */}
-                             <div className="flex items-center gap-3">
-                               <Palette className="h-4 w-4 text-gray-600" />
-                               <span className="text-sm font-medium text-gray-700">
-                                 Cor:
-                               </span>
-                               <div className="flex items-center gap-2">
-                                 <input
-                                   type="color"
-                                   value={
-                                     conteudoTemp.corTexto === "preto" ? "#000000" :
-                                     conteudoTemp.corTexto === "cinza" ? "#6B7280" :
-                                     conteudoTemp.corTexto === "azul" ? "#2563EB" :
-                                     conteudoTemp.corTexto === "verde" ? "#16A34A" :
-                                     conteudoTemp.corTexto === "vermelho" ? "#DC2626" :
-                                     conteudoTemp.corTexto === "roxo" ? "#9333EA" :
-                                     conteudoTemp.corTexto || "#000000"
-                                   }
-                                   onChange={(e) =>
-                                     setConteudoTemp({
-                                       ...conteudoTemp,
-                                       corTexto: e.target.value,
-                                     })
-                                   }
-                                   className="w-8 h-8 rounded border border-gray-300 cursor-pointer"
-                                 />
-                                 <input
-                                   type="text"
-                                   value={
-                                     conteudoTemp.corTexto === "preto" ? "#000000" :
-                                     conteudoTemp.corTexto === "cinza" ? "#6B7280" :
-                                     conteudoTemp.corTexto === "azul" ? "#2563EB" :
-                                     conteudoTemp.corTexto === "verde" ? "#16A34A" :
-                                     conteudoTemp.corTexto === "vermelho" ? "#DC2626" :
-                                     conteudoTemp.corTexto === "roxo" ? "#9333EA" :
-                                     conteudoTemp.corTexto || "#000000"
-                                   }
-                                   onChange={(e) =>
-                                     setConteudoTemp({
-                                       ...conteudoTemp,
-                                       corTexto: e.target.value,
-                                     })
-                                   }
-                                   placeholder="#000000"
-                                   className="w-20 px-2 py-1 text-xs border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                 />
-                               </div>
-                             </div>
+                            {/* Cores */}
+                            <div className="flex items-center gap-3">
+                              <Palette className="h-4 w-4 text-gray-600" />
+                              <span className="text-sm font-medium text-gray-700">
+                                Cor:
+                              </span>
+                              <div className="flex items-center gap-2">
+                                <input
+                                  type="color"
+                                  value={
+                                    conteudoTemp.corTexto === "preto"
+                                      ? "#000000"
+                                      : conteudoTemp.corTexto === "cinza"
+                                      ? "#6B7280"
+                                      : conteudoTemp.corTexto === "azul"
+                                      ? "#2563EB"
+                                      : conteudoTemp.corTexto === "verde"
+                                      ? "#16A34A"
+                                      : conteudoTemp.corTexto === "vermelho"
+                                      ? "#DC2626"
+                                      : conteudoTemp.corTexto === "roxo"
+                                      ? "#9333EA"
+                                      : conteudoTemp.corTexto || "#000000"
+                                  }
+                                  onChange={(e) =>
+                                    setConteudoTemp({
+                                      ...conteudoTemp,
+                                      corTexto: e.target.value,
+                                    })
+                                  }
+                                  className="w-8 h-8 rounded border border-gray-300 cursor-pointer"
+                                />
+                                <input
+                                  type="text"
+                                  value={
+                                    conteudoTemp.corTexto === "preto"
+                                      ? "#000000"
+                                      : conteudoTemp.corTexto === "cinza"
+                                      ? "#6B7280"
+                                      : conteudoTemp.corTexto === "azul"
+                                      ? "#2563EB"
+                                      : conteudoTemp.corTexto === "verde"
+                                      ? "#16A34A"
+                                      : conteudoTemp.corTexto === "vermelho"
+                                      ? "#DC2626"
+                                      : conteudoTemp.corTexto === "roxo"
+                                      ? "#9333EA"
+                                      : conteudoTemp.corTexto || "#000000"
+                                  }
+                                  onChange={(e) =>
+                                    setConteudoTemp({
+                                      ...conteudoTemp,
+                                      corTexto: e.target.value,
+                                    })
+                                  }
+                                  placeholder="#000000"
+                                  className="w-20 px-2 py-1 text-xs border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                />
+                              </div>
+                            </div>
 
                             {/* Separador */}
                             <div className="w-px h-8 bg-gray-300 mx-2"></div>
