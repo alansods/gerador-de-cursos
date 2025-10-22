@@ -21,7 +21,6 @@ import {
   ArrowDown,
   Image,
   Download,
-  MoreHorizontal,
   BookmarkPlus,
 } from "lucide-react";
 import {
@@ -30,13 +29,8 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { RichTextEditor } from "@/components/ui/rich-text-editor";
+import { MenuConteudo } from "@/components/MenuConteudo";
 
 export default function GeradorEditar() {
   const {
@@ -91,6 +85,11 @@ export default function GeradorEditar() {
     colunas: 12 as 6 | 12,
   });
   const [adicionarUnidadeModal, setAdicionarUnidadeModal] = useState(false);
+  const [editarUnidadeModal, setEditarUnidadeModal] = useState(false);
+  const [unidadeParaEditar, setUnidadeParaEditar] = useState<string | null>(
+    null
+  );
+  const [tituloUnidadeEditando, setTituloUnidadeEditando] = useState("");
   const [confirmarDeletarUnidade, setConfirmarDeletarUnidade] = useState(false);
   const [unidadeParaDeletar, setUnidadeParaDeletar] = useState<string | null>(
     null
@@ -102,6 +101,7 @@ export default function GeradorEditar() {
   const [confirmarDeletarConteudo, setConfirmarDeletarConteudo] =
     useState(false);
   const [closingAdicionarUnidade, setClosingAdicionarUnidade] = useState(false);
+  const [closingEditarUnidade, setClosingEditarUnidade] = useState(false);
   const [closingConfirmarDeletar, setClosingConfirmarDeletar] = useState(false);
   const [closingConfirmarDeletarConteudo, setClosingConfirmarDeletarConteudo] =
     useState(false);
@@ -169,6 +169,25 @@ export default function GeradorEditar() {
       setAdicionarUnidadeModal(false);
       setClosingAdicionarUnidade(false);
       setNovaUnidade("");
+    }, 200);
+  };
+
+  const openEditarUnidadeModal = (unidadeId: string) => {
+    const unidade = state.cursoAtual?.unidades?.find((u) => u.id === unidadeId);
+    if (unidade) {
+      setUnidadeParaEditar(unidadeId);
+      setTituloUnidadeEditando(unidade.titulo);
+      setEditarUnidadeModal(true);
+    }
+  };
+
+  const closeEditarUnidadeModal = () => {
+    setClosingEditarUnidade(true);
+    setTimeout(() => {
+      setEditarUnidadeModal(false);
+      setClosingEditarUnidade(false);
+      setUnidadeParaEditar(null);
+      setTituloUnidadeEditando("");
     }, 200);
   };
 
@@ -248,6 +267,15 @@ export default function GeradorEditar() {
   const handleEditarUnidade = (unidadeId: string, novoTitulo: string) => {
     editarUnidade(unidadeId, { titulo: novoTitulo });
     setEditandoUnidade(null);
+  };
+
+  const handleSalvarEdicaoUnidade = () => {
+    if (unidadeParaEditar && tituloUnidadeEditando.trim()) {
+      editarUnidade(unidadeParaEditar, {
+        titulo: tituloUnidadeEditando.trim(),
+      });
+      closeEditarUnidadeModal();
+    }
   };
 
   const handleDeletarUnidade = (unidadeId: string) => {
@@ -854,6 +882,34 @@ document.addEventListener('DOMContentLoaded', initSCORM);`;
 
   return (
     <div className="min-h-screen bg-gray-50">
+      <style
+        dangerouslySetInnerHTML={{
+          __html: `
+          /* Preservar cores do rich text editor */
+          .conteudo-paragrafo span[style*="color"] {
+            color: inherit !important;
+          }
+          
+          .conteudo-paragrafo * {
+            color: inherit !important;
+          }
+          
+          .conteudo-paragrafo {
+            color: inherit !important;
+          }
+          
+          /* Garantir que as cores inline sejam preservadas */
+          .conteudo-paragrafo [style*="color"] {
+            color: inherit !important;
+          }
+          
+          /* Remover qualquer override do Tailwind */
+          .conteudo-paragrafo * {
+            color: inherit !important;
+          }
+        `,
+        }}
+      />
       {/* Header */}
       <div className="bg-white border-b border-gray-200 fixed top-0 left-0 right-0 z-30">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
@@ -925,15 +981,21 @@ document.addEventListener('DOMContentLoaded', initSCORM);`;
                     </div>
                   </div>
                 </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setEditarCursoModal(true)}
-                  className="opacity-0 group-hover:opacity-100 transition-opacity duration-200"
-                >
-                  <Edit className="h-4 w-4 mr-1" />
-                  Editar
-                </Button>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setEditarCursoModal(true)}
+                        className="p-2"
+                      >
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>Editar curso</TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
               </div>
             </CardHeader>
           </div>
@@ -943,7 +1005,7 @@ document.addEventListener('DOMContentLoaded', initSCORM);`;
         {/* Lista de Unidades */}
         <div className="space-y-4">
           {(state.cursoAtual.unidades || []).map((unidade, unidadeIndex) => (
-            <Card key={unidade.id}>
+            <Card key={unidade.id} className="group">
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-3">
@@ -966,65 +1028,78 @@ document.addEventListener('DOMContentLoaded', initSCORM);`;
                         autoFocus
                       />
                     ) : (
-                      <h3
-                        className="text-lg font-semibold text-gray-900 cursor-pointer hover:text-blue-600"
-                        onClick={() => setEditandoUnidade(unidade.id)}
-                      >
+                      <h3 className="text-lg font-semibold text-gray-900">
                         {unidade.titulo}
                       </h3>
                     )}
                   </div>
-                  <div className="flex space-x-1">
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() =>
-                              handleMoverUnidadeAcima(unidadeIndex)
-                            }
-                            disabled={unidadeIndex === 0}
-                          >
-                            <ArrowUp className="h-4 w-4" />
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>Subir unidade</TooltipContent>
-                      </Tooltip>
+                  <div className="flex items-center space-x-2">
+                    <div className="flex space-x-1">
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() =>
+                                handleMoverUnidadeAcima(unidadeIndex)
+                              }
+                              disabled={unidadeIndex === 0}
+                            >
+                              <ArrowUp className="h-4 w-4" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>Subir unidade</TooltipContent>
+                        </Tooltip>
 
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() =>
-                              handleMoverUnidadeAbaixo(unidadeIndex)
-                            }
-                            disabled={
-                              unidadeIndex ===
-                              (state.cursoAtual?.unidades || []).length - 1
-                            }
-                          >
-                            <ArrowDown className="h-4 w-4" />
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>Descer unidade</TooltipContent>
-                      </Tooltip>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() =>
+                                handleMoverUnidadeAbaixo(unidadeIndex)
+                              }
+                              disabled={
+                                unidadeIndex ===
+                                (state.cursoAtual?.unidades || []).length - 1
+                              }
+                            >
+                              <ArrowDown className="h-4 w-4" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>Descer unidade</TooltipContent>
+                        </Tooltip>
 
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleDeletarUnidade(unidade.id)}
-                            className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>Deletar unidade</TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => openEditarUnidadeModal(unidade.id)}
+                              className="p-2"
+                            >
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>Editar unidade</TooltipContent>
+                        </Tooltip>
+
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleDeletarUnidade(unidade.id)}
+                              className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>Deletar unidade</TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    </div>
                   </div>
                 </div>
               </CardHeader>
@@ -1096,7 +1171,7 @@ document.addEventListener('DOMContentLoaded', initSCORM);`;
                               </div>
                             ) : (
                               <div
-                                className={`${
+                                className={`conteudo-paragrafo ${
                                   item.alinhamento === "centro"
                                     ? "text-center"
                                     : item.alinhamento === "direita"
@@ -1108,110 +1183,27 @@ document.addEventListener('DOMContentLoaded', initSCORM);`;
                                 dangerouslySetInnerHTML={{
                                   __html: item.conteudo,
                                 }}
+                                style={{
+                                  color: "inherit",
+                                }}
                               />
                             )}
                           </div>
-                          <div className="opacity-0 group-hover:opacity-100 transition-opacity">
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  className="h-8 w-8 p-0"
-                                >
-                                  <MoreHorizontal className="h-4 w-4" />
-                                </Button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end">
-                                <DropdownMenuItem
-                                  onClick={() =>
-                                    handleMoverConteudoAcima(
-                                      unidade.id,
-                                      itemIndex
-                                    )
-                                  }
-                                  disabled={itemIndex === 0}
-                                  className="cursor-pointer"
-                                >
-                                  <ArrowUp className="h-4 w-4 mr-2" />
-                                  Mover para cima
-                                </DropdownMenuItem>
-                                <DropdownMenuItem
-                                  onClick={() =>
-                                    handleMoverConteudoAbaixo(
-                                      unidade.id,
-                                      itemIndex
-                                    )
-                                  }
-                                  disabled={
-                                    itemIndex === unidade.conteudo.length - 1
-                                  }
-                                  className="cursor-pointer"
-                                >
-                                  <ArrowDown className="h-4 w-4 mr-2" />
-                                  Mover para baixo
-                                </DropdownMenuItem>
-                                <DropdownMenuItem
-                                  onClick={() =>
-                                    setEditandoConteudo({
-                                      unidadeId: unidade.id,
-                                      conteudoId: item.id,
-                                      tipo: item.tipo as
-                                        | "paragrafo"
-                                        | "subtitulo"
-                                        | "titulo"
-                                        | "imagem",
-                                      conteudo: item.conteudo,
-                                      tamanho: item.tamanho,
-                                      legenda: item.legenda,
-                                      fonte: item.fonte,
-                                      corTexto: item.corTexto,
-                                      alinhamento: item.alinhamento,
-                                      colunas: item.colunas,
-                                    })
-                                  }
-                                  className="cursor-pointer"
-                                >
-                                  <Edit className="h-4 w-4 mr-2" />
-                                  Editar conteúdo
-                                </DropdownMenuItem>
-                                <DropdownMenuItem
-                                  onClick={() => {
-                                    const novaColuna =
-                                      item.colunas === 6 ? 12 : 6;
-                                    editarConteudo(unidade.id, item.id, {
-                                      colunas: novaColuna,
-                                    });
-                                    toast.success("Largura alterada");
-                                  }}
-                                  className="cursor-pointer"
-                                >
-                                  {item.colunas === 6 ? (
-                                    <>
-                                      <div className="flex items-center mr-2">
-                                        <div className="w-2 h-2 bg-blue-600 rounded-sm mr-1"></div>
-                                        <div className="w-2 h-2 bg-blue-600 rounded-sm"></div>
-                                      </div>
-                                      Expandir coluna
-                                    </>
-                                  ) : (
-                                    <>
-                                      <div className="w-4 h-2 bg-blue-600 rounded-sm mr-2"></div>
-                                      Reduzir coluna
-                                    </>
-                                  )}
-                                </DropdownMenuItem>
-                                <DropdownMenuItem
-                                  onClick={() =>
-                                    handleDeletarConteudo(unidade.id, item.id)
-                                  }
-                                  className="cursor-pointer text-red-600 focus:text-red-600"
-                                >
-                                  <Trash2 className="h-4 w-4 mr-2" />
-                                  Deletar conteúdo
-                                </DropdownMenuItem>
-                              </DropdownMenuContent>
-                            </DropdownMenu>
+                          <div>
+                            <MenuConteudo
+                              unidade={unidade}
+                              item={item}
+                              itemIndex={itemIndex}
+                              handleMoverConteudoAcima={
+                                handleMoverConteudoAcima
+                              }
+                              handleMoverConteudoAbaixo={
+                                handleMoverConteudoAbaixo
+                              }
+                              handleDeletarConteudo={handleDeletarConteudo}
+                              editarConteudo={editarConteudo}
+                              setEditandoConteudo={setEditandoConteudo}
+                            />
                           </div>
                         </div>
                       </div>
@@ -1438,13 +1430,27 @@ document.addEventListener('DOMContentLoaded', initSCORM);`;
               <CardTitle className="flex items-center gap-2">
                 <Edit className="h-5 w-5 text-blue-600" />
                 Editar{" "}
-                {editandoConteudo.tipo === "titulo"
-                  ? "Título"
-                  : editandoConteudo.tipo === "subtitulo"
-                  ? "Subtítulo"
-                  : editandoConteudo.tipo === "imagem"
-                  ? "Imagem"
-                  : "Parágrafo"}
+                {editandoConteudo.tipo === "titulo" ? (
+                  <>
+                    <Heading2 className="h-4 w-4 text-blue-600" />
+                    Título
+                  </>
+                ) : editandoConteudo.tipo === "subtitulo" ? (
+                  <>
+                    <Heading3 className="h-4 w-4 text-blue-600" />
+                    Subtítulo
+                  </>
+                ) : editandoConteudo.tipo === "imagem" ? (
+                  <>
+                    <Image className="h-4 w-4 text-blue-600" />
+                    Imagem
+                  </>
+                ) : (
+                  <>
+                    <Type className="h-4 w-4 text-blue-600" />
+                    Parágrafo
+                  </>
+                )}
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -1556,24 +1562,24 @@ document.addEventListener('DOMContentLoaded', initSCORM);`;
 
                   {editandoConteudo.tipo === "paragrafo" && (
                     <div className="mt-4">
-                      {/* Largura */}
+                      {/* Colunas */}
                       <div className="border border-gray-200 rounded-lg p-3 bg-gray-50">
                         <TooltipProvider>
                           <div className="flex items-center gap-3">
                             <span className="text-sm font-medium text-gray-700">
-                              Largura:
+                              Colunas:
                             </span>
                             <div className="flex gap-1">
                               {[
                                 {
-                                  value: 6,
-                                  icon: "⊞",
-                                  tooltip: "6 colunas (1/2 da largura)",
+                                  value: 1,
+                                  icon: "1",
+                                  tooltip: "1 coluna (largura total)",
                                 },
                                 {
-                                  value: 12,
-                                  icon: "⊟",
-                                  tooltip: "12 colunas (largura total)",
+                                  value: 2,
+                                  icon: "2",
+                                  tooltip: "2 colunas (1/2 da largura)",
                                 },
                               ].map(({ value, icon, tooltip }) => (
                                 <Tooltip key={value}>
@@ -1583,11 +1589,14 @@ document.addEventListener('DOMContentLoaded', initSCORM);`;
                                       onClick={() =>
                                         setEditandoConteudo({
                                           ...editandoConteudo,
-                                          colunas: value as 6 | 12,
+                                          colunas: value === 1 ? 12 : 6,
                                         })
                                       }
                                       className={`p-2 rounded border transition-all ${
-                                        editandoConteudo.colunas === value
+                                        (editandoConteudo.colunas === 12 &&
+                                          value === 1) ||
+                                        (editandoConteudo.colunas === 6 &&
+                                          value === 2)
                                           ? "bg-blue-100 border-blue-300 text-blue-700"
                                           : "bg-white border-gray-300 text-gray-600 hover:bg-gray-50"
                                       }`}
@@ -1667,15 +1676,28 @@ document.addEventListener('DOMContentLoaded', initSCORM);`;
             onClick={(e) => e.stopPropagation()}
           >
             <CardHeader>
-              <CardTitle>
-                Adicionar{" "}
-                {conteudoTemp.tipo === "titulo"
-                  ? "Título"
-                  : conteudoTemp.tipo === "subtitulo"
-                  ? "Subtítulo"
-                  : conteudoTemp.tipo === "imagem"
-                  ? "Imagem"
-                  : "Parágrafo"}
+              <CardTitle className="flex items-center gap-2">
+                {conteudoTemp.tipo === "titulo" ? (
+                  <>
+                    <Heading2 className="h-5 w-5 text-blue-600" />
+                    Adicionar Título
+                  </>
+                ) : conteudoTemp.tipo === "subtitulo" ? (
+                  <>
+                    <Heading3 className="h-5 w-5 text-blue-600" />
+                    Adicionar Subtítulo
+                  </>
+                ) : conteudoTemp.tipo === "imagem" ? (
+                  <>
+                    <Image className="h-5 w-5 text-blue-600" />
+                    Adicionar Imagem
+                  </>
+                ) : (
+                  <>
+                    <Type className="h-5 w-5 text-blue-600" />
+                    Adicionar Parágrafo
+                  </>
+                )}
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -1789,24 +1811,24 @@ document.addEventListener('DOMContentLoaded', initSCORM);`;
 
                   {conteudoTemp.tipo === "paragrafo" && (
                     <div className="mt-4">
-                      {/* Largura */}
+                      {/* Colunas */}
                       <div className="border border-gray-200 rounded-lg p-3 bg-gray-50">
                         <TooltipProvider>
                           <div className="flex items-center gap-3">
                             <span className="text-sm font-medium text-gray-700">
-                              Largura:
+                              Colunas:
                             </span>
                             <div className="flex gap-1">
                               {[
                                 {
-                                  value: 6,
-                                  icon: "⊞",
-                                  tooltip: "6 colunas (1/2 da largura)",
+                                  value: 1,
+                                  icon: "1",
+                                  tooltip: "1 coluna (largura total)",
                                 },
                                 {
-                                  value: 12,
-                                  icon: "⊟",
-                                  tooltip: "12 colunas (largura total)",
+                                  value: 2,
+                                  icon: "2",
+                                  tooltip: "2 colunas (1/2 da largura)",
                                 },
                               ].map(({ value, icon, tooltip }) => (
                                 <Tooltip key={value}>
@@ -1816,11 +1838,14 @@ document.addEventListener('DOMContentLoaded', initSCORM);`;
                                       onClick={() =>
                                         setConteudoTemp({
                                           ...conteudoTemp,
-                                          colunas: value as 6 | 12,
+                                          colunas: value === 1 ? 12 : 6,
                                         })
                                       }
                                       className={`p-2 rounded border transition-all ${
-                                        conteudoTemp.colunas === value
+                                        (conteudoTemp.colunas === 12 &&
+                                          value === 1) ||
+                                        (conteudoTemp.colunas === 6 &&
+                                          value === 2)
                                           ? "bg-blue-100 border-blue-300 text-blue-700"
                                           : "bg-white border-gray-300 text-gray-600 hover:bg-gray-50"
                                       }`}
@@ -1889,7 +1914,10 @@ document.addEventListener('DOMContentLoaded', initSCORM);`;
             onClick={(e) => e.stopPropagation()}
           >
             <CardHeader>
-              <CardTitle>Adicionar Nova Unidade</CardTitle>
+              <CardTitle className="flex items-center gap-2">
+                <Layers className="h-5 w-5 text-blue-600" />
+                Adicionar Nova Unidade
+              </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <Input
@@ -1910,10 +1938,67 @@ document.addEventListener('DOMContentLoaded', initSCORM);`;
                     handleAdicionarUnidade();
                     closeAdicionarUnidadeModal();
                   }}
-                  className="bg-purple-600 hover:bg-purple-700"
+                  className="bg-blue-600 hover:bg-blue-700"
                   disabled={!novaUnidade.trim()}
                 >
                   Adicionar
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {/* Modal para editar unidade */}
+      {editarUnidadeModal && unidadeParaEditar && (
+        <div
+          className={`fixed inset-0 bg-black flex items-center justify-center p-4 z-50 ${
+            closingEditarUnidade
+              ? "animate-out fade-out duration-200"
+              : "animate-in fade-in duration-200"
+          } ${closingEditarUnidade ? "bg-opacity-0" : "bg-opacity-50"}`}
+          onClick={closeEditarUnidadeModal}
+        >
+          <Card
+            className={`w-full max-w-2xl ${
+              closingEditarUnidade
+                ? "animate-out zoom-out-95 duration-200"
+                : "animate-in zoom-in-95 duration-200"
+            }`}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Edit className="h-5 w-5 text-blue-600" />
+                Editar Unidade
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Título da Unidade *
+                </label>
+                <Input
+                  value={tituloUnidadeEditando}
+                  onChange={(e) => setTituloUnidadeEditando(e.target.value)}
+                  placeholder="Digite o título da unidade..."
+                  className="w-full"
+                  onKeyPress={(e) =>
+                    e.key === "Enter" && handleSalvarEdicaoUnidade()
+                  }
+                />
+              </div>
+
+              <div className="flex justify-end space-x-3">
+                <Button variant="outline" onClick={closeEditarUnidadeModal}>
+                  Cancelar
+                </Button>
+                <Button
+                  onClick={handleSalvarEdicaoUnidade}
+                  className="bg-blue-600 hover:bg-blue-700"
+                  disabled={!tituloUnidadeEditando.trim()}
+                >
+                  Salvar
                 </Button>
               </div>
             </CardContent>

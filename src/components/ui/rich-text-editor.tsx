@@ -1,8 +1,8 @@
 import React, { useState, useRef, useEffect } from "react";
-import { 
-  Bold, 
-  Italic, 
-  Underline, 
+import {
+  Bold,
+  Italic,
+  Underline,
   Strikethrough,
   AlignLeft,
   AlignCenter,
@@ -12,7 +12,7 @@ import {
   ListOrdered,
   Link,
   Palette,
-  Type
+  Type,
 } from "lucide-react";
 
 interface RichTextEditorProps {
@@ -78,13 +78,109 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
     };
   }, []);
 
+  // Fechar color picker quando clicar fora
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        showColorPicker &&
+        !(event.target as Element).closest(".color-picker-container")
+      ) {
+        setShowColorPicker(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [showColorPicker]);
+
   return (
-    <div className="rich-text-editor border border-gray-300 rounded-lg overflow-hidden">
+    <div
+      className="rich-text-editor border border-gray-300 rounded-lg overflow-hidden"
+      style={{ height: `${height}px` }}
+    >
       <style jsx>{`
         .rich-text-editor [contenteditable]:empty:before {
           content: attr(data-placeholder);
           color: #9ca3af;
           pointer-events: none;
+        }
+
+        /* Estilos específicos para o editor - sobrescrevem Tailwind */
+        .rich-text-editor [contenteditable] {
+          all: initial;
+          font-family: -apple-system, BlinkMacSystemFont, "San Francisco",
+            "Segoe UI", "Roboto", "Helvetica Neue", sans-serif !important;
+          font-size: 14px !important;
+          line-height: 1.5 !important;
+          color: #000 !important;
+          height: 140px !important;
+          min-height: 140px !important;
+          overflow-y: auto !important;
+          display: block !important;
+          padding: 12px !important;
+        }
+
+        .rich-text-editor [contenteditable] * {
+          all: revert;
+        }
+
+        /* Garantir que as cores funcionem */
+        .rich-text-editor [contenteditable] span[style*="color"] {
+          color: inherit !important;
+        }
+
+        /* Garantir que as listas funcionem */
+        .rich-text-editor [contenteditable] ul {
+          list-style-type: disc !important;
+          margin-left: 20px !important;
+          padding-left: 0 !important;
+        }
+
+        .rich-text-editor [contenteditable] ol {
+          list-style-type: decimal !important;
+          margin-left: 20px !important;
+          padding-left: 0 !important;
+        }
+
+        .rich-text-editor [contenteditable] li {
+          display: list-item !important;
+          margin: 0 !important;
+        }
+
+        /* Garantir que links funcionem */
+        .rich-text-editor [contenteditable] a {
+          color: #2563eb !important;
+          text-decoration: underline !important;
+        }
+
+        .rich-text-editor [contenteditable] a:visited {
+          color: #2563eb !important;
+        }
+
+        .rich-text-editor [contenteditable] a:hover {
+          color: #1d4ed8 !important;
+        }
+
+        /* Garantir que formatação funcione */
+        .rich-text-editor [contenteditable] strong,
+        .rich-text-editor [contenteditable] b {
+          font-weight: bold !important;
+        }
+
+        .rich-text-editor [contenteditable] em,
+        .rich-text-editor [contenteditable] i {
+          font-style: italic !important;
+        }
+
+        .rich-text-editor [contenteditable] u {
+          text-decoration: underline !important;
+        }
+
+        .rich-text-editor [contenteditable] s,
+        .rich-text-editor [contenteditable] strike {
+          text-decoration: line-through !important;
         }
       `}</style>
       {/* Toolbar */}
@@ -179,7 +275,13 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
         <div className="flex items-center gap-1">
           <button
             type="button"
-            onClick={() => execCommand("insertUnorderedList")}
+            onClick={() => {
+              if (editorRef.current) {
+                editorRef.current.focus();
+                document.execCommand("insertUnorderedList", false);
+                updateToolbarState();
+              }
+            }}
             className="p-2 rounded hover:bg-gray-200 transition-colors text-gray-600"
             title="Lista com marcadores"
           >
@@ -187,7 +289,13 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
           </button>
           <button
             type="button"
-            onClick={() => execCommand("insertOrderedList")}
+            onClick={() => {
+              if (editorRef.current) {
+                editorRef.current.focus();
+                document.execCommand("insertOrderedList", false);
+                updateToolbarState();
+              }
+            }}
             className="p-2 rounded hover:bg-gray-200 transition-colors text-gray-600"
             title="Lista numerada"
           >
@@ -199,7 +307,7 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
         <div className="w-px h-6 bg-gray-300 mx-1"></div>
 
         {/* Cor do texto */}
-        <div className="relative">
+        <div className="relative color-picker-container">
           <button
             type="button"
             onClick={() => setShowColorPicker(!showColorPicker)}
@@ -210,15 +318,73 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
           </button>
           {showColorPicker && (
             <div className="absolute top-full left-0 mt-1 p-2 bg-white border border-gray-300 rounded shadow-lg z-10">
-              <input
-                type="color"
-                value={selectedColor}
-                onChange={(e) => {
-                  setSelectedColor(e.target.value);
-                  execCommand("foreColor", e.target.value);
-                }}
-                className="w-8 h-8 border border-gray-300 rounded cursor-pointer"
-              />
+              <div className="flex items-center gap-2">
+                <input
+                  type="color"
+                  value={selectedColor}
+                  onChange={(e) => {
+                    setSelectedColor(e.target.value);
+                    if (editorRef.current) {
+                      editorRef.current.focus();
+                      // Aplicar cor ao texto selecionado ou ao cursor
+                      if (window.getSelection()?.toString()) {
+                        document.execCommand(
+                          "foreColor",
+                          false,
+                          e.target.value
+                        );
+                      } else {
+                        // Se não há seleção, selecionar todo o texto e aplicar a cor
+                        const range = document.createRange();
+                        range.selectNodeContents(editorRef.current);
+                        const selection = window.getSelection();
+                        selection?.removeAllRanges();
+                        selection?.addRange(range);
+                        document.execCommand(
+                          "foreColor",
+                          false,
+                          e.target.value
+                        );
+                        selection?.removeAllRanges();
+                      }
+                    }
+                  }}
+                  className="w-8 h-8 border border-gray-300 rounded cursor-pointer"
+                />
+                <input
+                  type="text"
+                  value={selectedColor}
+                  onChange={(e) => {
+                    setSelectedColor(e.target.value);
+                    if (editorRef.current) {
+                      editorRef.current.focus();
+                      // Aplicar cor ao texto selecionado ou ao cursor
+                      if (window.getSelection()?.toString()) {
+                        document.execCommand(
+                          "foreColor",
+                          false,
+                          e.target.value
+                        );
+                      } else {
+                        // Se não há seleção, selecionar todo o texto e aplicar a cor
+                        const range = document.createRange();
+                        range.selectNodeContents(editorRef.current);
+                        const selection = window.getSelection();
+                        selection?.removeAllRanges();
+                        selection?.addRange(range);
+                        document.execCommand(
+                          "foreColor",
+                          false,
+                          e.target.value
+                        );
+                        selection?.removeAllRanges();
+                      }
+                    }
+                  }}
+                  className="w-20 px-2 py-1 text-xs border border-gray-300 rounded"
+                  placeholder="#000000"
+                />
+              </div>
             </div>
           )}
         </div>
@@ -246,11 +412,13 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
         onInput={handleInput}
         onKeyUp={handleKeyUp}
         className="p-3 focus:outline-none"
-        style={{ 
+        style={{
+          height: `${height - 60}px`,
           minHeight: `${height - 60}px`,
-          fontFamily: "-apple-system, BlinkMacSystemFont, 'San Francisco', 'Segoe UI', 'Roboto', 'Helvetica Neue', sans-serif",
+          fontFamily:
+            "-apple-system, BlinkMacSystemFont, 'San Francisco', 'Segoe UI', 'Roboto', 'Helvetica Neue', sans-serif",
           fontSize: "14px",
-          lineHeight: "1.5"
+          lineHeight: "1.5",
         }}
         data-placeholder={placeholder}
         suppressContentEditableWarning={true}
