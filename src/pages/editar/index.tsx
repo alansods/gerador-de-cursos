@@ -67,7 +67,7 @@ export default function GeradorEditar() {
     fonte?: string;
     corTexto?: "preto" | "cinza" | "azul" | "verde" | "vermelho" | "roxo";
     alinhamento?: "esquerda" | "centro" | "direita" | "justificado";
-    colunas?: 1 | 2 | 3 | 4 | 6 | 12;
+    colunas?: 6 | 12;
   } | null>(null);
   const [conteudoTemp, setConteudoTemp] = useState({
     tipo: "paragrafo" as "paragrafo" | "subtitulo" | "titulo" | "imagem",
@@ -88,7 +88,7 @@ export default function GeradorEditar() {
       | "centro"
       | "direita"
       | "justificado",
-    colunas: 12 as 1 | 2 | 3 | 4 | 6 | 12,
+    colunas: 12 as 6 | 12,
   });
   const [adicionarUnidadeModal, setAdicionarUnidadeModal] = useState(false);
   const [confirmarDeletarUnidade, setConfirmarDeletarUnidade] = useState(false);
@@ -321,7 +321,7 @@ export default function GeradorEditar() {
     fonte?: string,
     corTexto?: "preto" | "cinza" | "azul" | "verde" | "vermelho" | "roxo",
     alinhamento?: "esquerda" | "centro" | "direita" | "justificado",
-    colunas?: 1 | 2 | 3 | 4 | 6 | 12
+    colunas?: 6 | 12
   ) => {
     editarConteudo(unidadeId, conteudoId, {
       tipo,
@@ -508,13 +508,11 @@ export default function GeradorEditar() {
                 <div class="unit-content grid grid-cols-1 md:grid-cols-12 gap-3">
                     ${unidade.conteudo
                       .map((conteudo) => {
-                        const colSpanClass = conteudo.colunas === 1 ? 'md:col-span-1' :
-                                           conteudo.colunas === 2 ? 'md:col-span-2' :
-                                           conteudo.colunas === 3 ? 'md:col-span-3' :
-                                           conteudo.colunas === 4 ? 'md:col-span-4' :
-                                           conteudo.colunas === 6 ? 'md:col-span-6' :
-                                           'md:col-span-12';
-                        
+                        const colSpanClass =
+                          conteudo.colunas === 6
+                            ? "md:col-span-6"
+                            : "md:col-span-12";
+
                         if (conteudo.tipo === "subtitulo") {
                           return `<div class="${colSpanClass}"><h3>${conteudo.conteudo}</h3></div>`;
                         } else if (conteudo.tipo === "paragrafo") {
@@ -666,10 +664,6 @@ h1 {
 
 @media (min-width: 768px) {
   .md\\:grid-cols-12 { grid-template-columns: repeat(12, minmax(0, 1fr)) !important; }
-  .md\\:col-span-1 { grid-column: span 1 / span 1 !important; }
-  .md\\:col-span-2 { grid-column: span 2 / span 2 !important; }
-  .md\\:col-span-3 { grid-column: span 3 / span 3 !important; }
-  .md\\:col-span-4 { grid-column: span 4 / span 4 !important; }
   .md\\:col-span-6 { grid-column: span 6 / span 6 !important; }
   .md\\:col-span-12 { grid-column: span 12 / span 12 !important; }
 }
@@ -1061,15 +1055,12 @@ document.addEventListener('DOMContentLoaded', initSCORM);`;
                 ) : (
                   <div className="grid grid-cols-1 md:grid-cols-12 gap-3">
                     {unidade.conteudo.map((item, itemIndex) => (
-                      <div 
-                        key={item.id} 
+                      <div
+                        key={item.id}
                         className={`group ${
-                          item.colunas === 1 ? 'md:col-span-1' :
-                          item.colunas === 2 ? 'md:col-span-2' :
-                          item.colunas === 3 ? 'md:col-span-3' :
-                          item.colunas === 4 ? 'md:col-span-4' :
-                          item.colunas === 6 ? 'md:col-span-6' :
-                          'md:col-span-12'
+                          item.colunas === 6
+                            ? "md:col-span-6"
+                            : "md:col-span-12"
                         }`}
                       >
                         <div className="flex items-start space-x-3 p-4 bg-gray-50 rounded-lg">
@@ -1209,6 +1200,29 @@ document.addEventListener('DOMContentLoaded', initSCORM);`;
                               className="text-red-600 hover:text-red-700 hover:bg-red-50"
                             >
                               <Trash2 className="h-4 w-4" />
+                            </Button>
+
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                const novaColuna = item.colunas === 6 ? 12 : 6;
+                                editarConteudo(unidade.id, item.id, {
+                                  colunas: novaColuna,
+                                });
+                                toast.success("Largura alterada");
+                              }}
+                              className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                              title={item.colunas === 6 ? "Expandir para largura total" : "Reduzir para metade da largura"}
+                            >
+                              {item.colunas === 6 ? (
+                                <div className="flex items-center">
+                                  <div className="w-2 h-2 bg-blue-600 rounded-sm mr-1"></div>
+                                  <div className="w-2 h-2 bg-blue-600 rounded-sm"></div>
+                                </div>
+                              ) : (
+                                <div className="w-4 h-2 bg-blue-600 rounded-sm"></div>
+                              )}
                             </Button>
                           </div>
                         </div>
@@ -1520,16 +1534,12 @@ document.addEventListener('DOMContentLoaded', initSCORM);`;
                           onChange={(e) =>
                             setEditandoConteudo({
                               ...editandoConteudo,
-                              colunas: parseInt(e.target.value) as 1 | 2 | 3 | 4 | 6 | 12,
+                              colunas: parseInt(e.target.value) as 6 | 12,
                             })
                           }
                           className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                         >
-                          <option value={1}>1 coluna (1/12)</option>
-                          <option value={2}>2 colunas (1/6)</option>
-                          <option value={3}>3 colunas (1/4)</option>
-                          <option value={4}>4 colunas (1/3)</option>
-                          <option value={6}>6 colunas (1/2)</option>
+                          <option value={6}>6 colunas (1/2 da largura)</option>
                           <option value={12}>12 colunas (largura total)</option>
                         </select>
                       </div>
@@ -1757,16 +1767,12 @@ document.addEventListener('DOMContentLoaded', initSCORM);`;
                           onChange={(e) =>
                             setConteudoTemp({
                               ...conteudoTemp,
-                              colunas: parseInt(e.target.value) as 1 | 2 | 3 | 4 | 6 | 12,
+                              colunas: parseInt(e.target.value) as 6 | 12,
                             })
                           }
                           className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                         >
-                          <option value={1}>1 coluna (1/12)</option>
-                          <option value={2}>2 colunas (1/6)</option>
-                          <option value={3}>3 colunas (1/4)</option>
-                          <option value={4}>4 colunas (1/3)</option>
-                          <option value={6}>6 colunas (1/2)</option>
+                          <option value={6}>6 colunas (1/2 da largura)</option>
                           <option value={12}>12 colunas (largura total)</option>
                         </select>
                       </div>

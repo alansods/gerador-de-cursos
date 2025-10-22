@@ -12,7 +12,7 @@ export interface ConteudoUnidade {
   corTexto?: 'preto' | 'cinza' | 'azul' | 'verde' | 'vermelho' | 'roxo';
   alinhamento?: 'esquerda' | 'centro' | 'direita' | 'justificado';
   // Propriedades de layout
-  colunas?: 1 | 2 | 3 | 4 | 6 | 12;
+  colunas?: 6 | 12;
 }
 
 export interface Unidade {
