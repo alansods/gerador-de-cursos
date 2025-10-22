@@ -24,6 +24,11 @@ import {
   X,
   Download,
   MoreHorizontal,
+  AlignLeft,
+  AlignCenter,
+  AlignRight,
+  AlignJustify,
+  Palette,
 } from "lucide-react";
 import {
   Tooltip,
@@ -1539,66 +1544,125 @@ document.addEventListener('DOMContentLoaded', initSCORM);`;
                   />
 
                   {editandoConteudo.tipo === "paragrafo" && (
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Cor do Texto
-                        </label>
-                        <select
-                          value={editandoConteudo.corTexto || "preto"}
-                          onChange={(e) =>
-                            setEditandoConteudo({
-                              ...editandoConteudo,
-                              corTexto: e.target.value as any,
-                            })
-                          }
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                        >
-                          <option value="preto">Preto</option>
-                          <option value="cinza">Cinza</option>
-                          <option value="azul">Azul</option>
-                          <option value="verde">Verde</option>
-                          <option value="vermelho">Vermelho</option>
-                          <option value="roxo">Roxo</option>
-                        </select>
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Alinhamento
-                        </label>
-                        <select
-                          value={editandoConteudo.alinhamento || "esquerda"}
-                          onChange={(e) =>
-                            setEditandoConteudo({
-                              ...editandoConteudo,
-                              alinhamento: e.target.value as any,
-                            })
-                          }
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                        >
-                          <option value="esquerda">Esquerda</option>
-                          <option value="centro">Centro</option>
-                          <option value="direita">Direita</option>
-                          <option value="justificado">Justificado</option>
-                        </select>
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Largura (Colunas)
-                        </label>
-                        <select
-                          value={editandoConteudo.colunas || 12}
-                          onChange={(e) =>
-                            setEditandoConteudo({
-                              ...editandoConteudo,
-                              colunas: parseInt(e.target.value) as 6 | 12,
-                            })
-                          }
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                        >
-                          <option value={6}>6 colunas (1/2 da largura)</option>
-                          <option value={12}>12 colunas (largura total)</option>
-                        </select>
+                    <div className="mt-4">
+                      {/* Barra de ferramentas */}
+                      <div className="border border-gray-200 rounded-lg p-3 bg-gray-50">
+                        <div className="flex flex-wrap gap-2">
+                          {/* Cores */}
+                          <div className="flex items-center gap-1">
+                            <Palette className="h-4 w-4 text-gray-600" />
+                            <span className="text-sm font-medium text-gray-700 mr-2">Cor:</span>
+                            {[
+                              { value: "preto", color: "bg-black", label: "Preto" },
+                              { value: "cinza", color: "bg-gray-600", label: "Cinza" },
+                              { value: "azul", color: "bg-blue-600", label: "Azul" },
+                              { value: "verde", color: "bg-green-600", label: "Verde" },
+                              { value: "vermelho", color: "bg-red-600", label: "Vermelho" },
+                              { value: "roxo", color: "bg-purple-600", label: "Roxo" },
+                            ].map((cor) => (
+                              <Tooltip key={cor.value}>
+                                <TooltipTrigger asChild>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className={`h-8 w-8 p-0 ${
+                                      editandoConteudo.corTexto === cor.value
+                                        ? "ring-2 ring-blue-500"
+                                        : ""
+                                    }`}
+                                    onClick={() =>
+                                      setEditandoConteudo({
+                                        ...editandoConteudo,
+                                        corTexto: cor.value as any,
+                                      })
+                                    }
+                                  >
+                                    <div className={`w-4 h-4 rounded ${cor.color}`}></div>
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                  <p>{cor.label}</p>
+                                </TooltipContent>
+                              </Tooltip>
+                            ))}
+                          </div>
+
+                          {/* Separador */}
+                          <div className="w-px h-8 bg-gray-300 mx-2"></div>
+
+                          {/* Alinhamento */}
+                          <div className="flex items-center gap-1">
+                            <span className="text-sm font-medium text-gray-700 mr-2">Alinhar:</span>
+                            {[
+                              { value: "esquerda", icon: AlignLeft, label: "Esquerda" },
+                              { value: "centro", icon: AlignCenter, label: "Centro" },
+                              { value: "direita", icon: AlignRight, label: "Direita" },
+                              { value: "justificado", icon: AlignJustify, label: "Justificado" },
+                            ].map((align) => (
+                              <Tooltip key={align.value}>
+                                <TooltipTrigger asChild>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className={`h-8 w-8 p-0 ${
+                                      editandoConteudo.alinhamento === align.value
+                                        ? "bg-blue-100 text-blue-600"
+                                        : ""
+                                    }`}
+                                    onClick={() =>
+                                      setEditandoConteudo({
+                                        ...editandoConteudo,
+                                        alinhamento: align.value as any,
+                                      })
+                                    }
+                                  >
+                                    <align.icon className="h-4 w-4" />
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                  <p>{align.label}</p>
+                                </TooltipContent>
+                              </Tooltip>
+                            ))}
+                          </div>
+
+                          {/* Separador */}
+                          <div className="w-px h-8 bg-gray-300 mx-2"></div>
+
+                          {/* Largura */}
+                          <div className="flex items-center gap-1">
+                            <span className="text-sm font-medium text-gray-700 mr-2">Largura:</span>
+                            {[
+                              { value: 6, label: "6 colunas (1/2)", icon: "⊞" },
+                              { value: 12, label: "12 colunas (total)", icon: "⊟" },
+                            ].map((width) => (
+                              <Tooltip key={width.value}>
+                                <TooltipTrigger asChild>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className={`h-8 w-8 p-0 ${
+                                      editandoConteudo.colunas === width.value
+                                        ? "bg-blue-100 text-blue-600"
+                                        : ""
+                                    }`}
+                                    onClick={() =>
+                                      setEditandoConteudo({
+                                        ...editandoConteudo,
+                                        colunas: width.value as 6 | 12,
+                                      })
+                                    }
+                                  >
+                                    <span className="text-xs font-bold">{width.icon}</span>
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                  <p>{width.label}</p>
+                                </TooltipContent>
+                              </Tooltip>
+                            ))}
+                          </div>
+                        </div>
                       </div>
                     </div>
                   )}
@@ -1772,66 +1836,125 @@ document.addEventListener('DOMContentLoaded', initSCORM);`;
                   />
 
                   {conteudoTemp.tipo === "paragrafo" && (
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Cor do Texto
-                        </label>
-                        <select
-                          value={conteudoTemp.corTexto || "preto"}
-                          onChange={(e) =>
-                            setConteudoTemp({
-                              ...conteudoTemp,
-                              corTexto: e.target.value as any,
-                            })
-                          }
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                        >
-                          <option value="preto">Preto</option>
-                          <option value="cinza">Cinza</option>
-                          <option value="azul">Azul</option>
-                          <option value="verde">Verde</option>
-                          <option value="vermelho">Vermelho</option>
-                          <option value="roxo">Roxo</option>
-                        </select>
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Alinhamento
-                        </label>
-                        <select
-                          value={conteudoTemp.alinhamento || "esquerda"}
-                          onChange={(e) =>
-                            setConteudoTemp({
-                              ...conteudoTemp,
-                              alinhamento: e.target.value as any,
-                            })
-                          }
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                        >
-                          <option value="esquerda">Esquerda</option>
-                          <option value="centro">Centro</option>
-                          <option value="direita">Direita</option>
-                          <option value="justificado">Justificado</option>
-                        </select>
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Largura (Colunas)
-                        </label>
-                        <select
-                          value={conteudoTemp.colunas || 12}
-                          onChange={(e) =>
-                            setConteudoTemp({
-                              ...conteudoTemp,
-                              colunas: parseInt(e.target.value) as 6 | 12,
-                            })
-                          }
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                        >
-                          <option value={6}>6 colunas (1/2 da largura)</option>
-                          <option value={12}>12 colunas (largura total)</option>
-                        </select>
+                    <div className="mt-4">
+                      {/* Barra de ferramentas */}
+                      <div className="border border-gray-200 rounded-lg p-3 bg-gray-50">
+                        <div className="flex flex-wrap gap-2">
+                          {/* Cores */}
+                          <div className="flex items-center gap-1">
+                            <Palette className="h-4 w-4 text-gray-600" />
+                            <span className="text-sm font-medium text-gray-700 mr-2">Cor:</span>
+                            {[
+                              { value: "preto", color: "bg-black", label: "Preto" },
+                              { value: "cinza", color: "bg-gray-600", label: "Cinza" },
+                              { value: "azul", color: "bg-blue-600", label: "Azul" },
+                              { value: "verde", color: "bg-green-600", label: "Verde" },
+                              { value: "vermelho", color: "bg-red-600", label: "Vermelho" },
+                              { value: "roxo", color: "bg-purple-600", label: "Roxo" },
+                            ].map((cor) => (
+                              <Tooltip key={cor.value}>
+                                <TooltipTrigger asChild>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className={`h-8 w-8 p-0 ${
+                                      conteudoTemp.corTexto === cor.value
+                                        ? "ring-2 ring-blue-500"
+                                        : ""
+                                    }`}
+                                    onClick={() =>
+                                      setConteudoTemp({
+                                        ...conteudoTemp,
+                                        corTexto: cor.value as any,
+                                      })
+                                    }
+                                  >
+                                    <div className={`w-4 h-4 rounded ${cor.color}`}></div>
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                  <p>{cor.label}</p>
+                                </TooltipContent>
+                              </Tooltip>
+                            ))}
+                          </div>
+
+                          {/* Separador */}
+                          <div className="w-px h-8 bg-gray-300 mx-2"></div>
+
+                          {/* Alinhamento */}
+                          <div className="flex items-center gap-1">
+                            <span className="text-sm font-medium text-gray-700 mr-2">Alinhar:</span>
+                            {[
+                              { value: "esquerda", icon: AlignLeft, label: "Esquerda" },
+                              { value: "centro", icon: AlignCenter, label: "Centro" },
+                              { value: "direita", icon: AlignRight, label: "Direita" },
+                              { value: "justificado", icon: AlignJustify, label: "Justificado" },
+                            ].map((align) => (
+                              <Tooltip key={align.value}>
+                                <TooltipTrigger asChild>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className={`h-8 w-8 p-0 ${
+                                      conteudoTemp.alinhamento === align.value
+                                        ? "bg-blue-100 text-blue-600"
+                                        : ""
+                                    }`}
+                                    onClick={() =>
+                                      setConteudoTemp({
+                                        ...conteudoTemp,
+                                        alinhamento: align.value as any,
+                                      })
+                                    }
+                                  >
+                                    <align.icon className="h-4 w-4" />
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                  <p>{align.label}</p>
+                                </TooltipContent>
+                              </Tooltip>
+                            ))}
+                          </div>
+
+                          {/* Separador */}
+                          <div className="w-px h-8 bg-gray-300 mx-2"></div>
+
+                          {/* Largura */}
+                          <div className="flex items-center gap-1">
+                            <span className="text-sm font-medium text-gray-700 mr-2">Largura:</span>
+                            {[
+                              { value: 6, label: "6 colunas (1/2)", icon: "⊞" },
+                              { value: 12, label: "12 colunas (total)", icon: "⊟" },
+                            ].map((width) => (
+                              <Tooltip key={width.value}>
+                                <TooltipTrigger asChild>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className={`h-8 w-8 p-0 ${
+                                      conteudoTemp.colunas === width.value
+                                        ? "bg-blue-100 text-blue-600"
+                                        : ""
+                                    }`}
+                                    onClick={() =>
+                                      setConteudoTemp({
+                                        ...conteudoTemp,
+                                        colunas: width.value as 6 | 12,
+                                      })
+                                    }
+                                  >
+                                    <span className="text-xs font-bold">{width.icon}</span>
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                  <p>{width.label}</p>
+                                </TooltipContent>
+                              </Tooltip>
+                            ))}
+                          </div>
+                        </div>
                       </div>
                     </div>
                   )}
