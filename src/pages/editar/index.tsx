@@ -562,7 +562,9 @@ export default function GeradorEditar() {
                 <Clock className="h-5 w-5 text-blue-200" />
                 <div>
                   <p className="text-sm text-blue-200">Carga Horária</p>
-                  <p className="font-semibold">{state.cursoAtual.cargaHoraria}</p>
+                  <p className="font-semibold">
+                    {state.cursoAtual.cargaHoraria}
+                  </p>
                 </div>
               </div>
 
@@ -604,7 +606,10 @@ export default function GeradorEditar() {
         {/* Lista de Unidades */}
         <div className="space-y-8">
           {(state.cursoAtual.unidades || []).map((unidade, unidadeIndex) => (
-            <Card key={unidade.id} className="group shadow-lg border-0 bg-white/80 backdrop-blur-sm">
+            <Card
+              key={unidade.id}
+              className="group shadow-lg border-0 bg-white/80 backdrop-blur-sm"
+            >
               <CardHeader className="bg-gradient-to-r from-gray-50 to-blue-50 border-b border-gray-200">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-3">
