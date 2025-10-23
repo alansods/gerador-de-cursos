@@ -117,9 +117,6 @@ export default function GeradorHome() {
                       <CardTitle className="text-lg font-semibold text-gray-900 mb-2">
                         {curso.titulo}
                       </CardTitle>
-                      <CardDescription className="text-gray-600 mb-3">
-                        {curso.descricao}
-                      </CardDescription>
                     </div>
                     <Badge variant="secondary" className="ml-2">
                       {curso.categoria}
@@ -128,23 +125,28 @@ export default function GeradorHome() {
                 </CardHeader>
 
                 <CardContent>
-                  <div className="space-y-3 mb-6">
-                    <div className="flex items-center text-sm text-gray-600">
-                      <Clock className="h-4 w-4 mr-2" />
-                      {curso.cargaHoraria}
+                  <div className="space-y-4 mb-6">
+                    <div className="text-sm text-gray-600 leading-relaxed">
+                      {curso.descricao}
                     </div>
-                    <div className="flex items-center text-sm text-gray-600">
-                      <User className="h-4 w-4 mr-2" />
-                      {curso.instrutor}
-                    </div>
-                    <div className="flex items-center text-sm text-gray-600">
-                      <Calendar className="h-4 w-4 mr-2" />
-                      {curso.modalidade}
-                    </div>
-                    <div className="flex items-center text-sm text-gray-500">
-                      <BookOpen className="h-4 w-4 mr-1" />
-                      {curso.unidades?.length || 0} unidade
-                      {curso.unidades?.length !== 1 ? "s" : ""}
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="flex items-center text-sm text-gray-600">
+                        <Clock className="h-4 w-4 mr-2" />
+                        {curso.cargaHoraria}
+                      </div>
+                      <div className="flex items-center text-sm text-gray-600">
+                        <User className="h-4 w-4 mr-2" />
+                        {curso.instrutor}
+                      </div>
+                      <div className="flex items-center text-sm text-gray-600">
+                        <Calendar className="h-4 w-4 mr-2" />
+                        {curso.modalidade}
+                      </div>
+                      <div className="flex items-center text-sm text-gray-500">
+                        <BookOpen className="h-4 w-4 mr-1" />
+                        {curso.unidades?.length || 0} unidade
+                        {curso.unidades?.length !== 1 ? "s" : ""}
+                      </div>
                     </div>
                   </div>
 

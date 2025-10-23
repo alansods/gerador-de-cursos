@@ -34,7 +34,6 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { RichTextEditor } from "@/components/ui/rich-text-editor";
 import { MenuConteudo } from "@/components/MenuConteudo";
 
 export default function GeradorEditar() {
@@ -122,6 +121,7 @@ export default function GeradorEditar() {
   const [cargaHorariaEditada, setCargaHorariaEditada] = useState("");
   const [instrutorEditado, setInstrutorEditado] = useState("");
   const [modalidadeEditada, setModalidadeEditada] = useState("");
+  const [categoriaEditada, setCategoriaEditada] = useState("");
 
   useEffect(() => {
     if (id) {
@@ -137,6 +137,7 @@ export default function GeradorEditar() {
       setCargaHorariaEditada(state.cursoAtual.cargaHoraria);
       setInstrutorEditado(state.cursoAtual.instrutor);
       setModalidadeEditada(state.cursoAtual.modalidade);
+      setCategoriaEditada(state.cursoAtual.categoria);
     }
   }, [editarCursoModal, state.cursoAtual]);
 
@@ -258,6 +259,7 @@ export default function GeradorEditar() {
         cargaHoraria: cargaHorariaEditada,
         instrutor: instrutorEditado,
         modalidade: modalidadeEditada,
+        categoria: categoriaEditada,
       });
     }
   };
@@ -708,7 +710,7 @@ export default function GeradorEditar() {
                 </div>
               </CardHeader>
 
-              <CardContent>
+              <CardContent className="pt-6">
                 {/* Lista de Conteúdo */}
                 {unidade.conteudo.length === 0 ? (
                   <div className="text-center py-8 text-gray-500">
@@ -986,6 +988,16 @@ export default function GeradorEditar() {
                   />
                 </div>
               </div>
+              <div>
+                <label className="text-sm font-medium text-gray-700 mb-2 block">
+                  Categoria
+                </label>
+                <Input
+                  value={categoriaEditada}
+                  onChange={(e) => setCategoriaEditada(e.target.value)}
+                  placeholder="Ex: Programação, Design, Marketing"
+                />
+              </div>
               <div className="flex justify-end space-x-3">
                 <Button variant="outline" onClick={closeEditarCursoModal}>
                   Cancelar
@@ -1000,7 +1012,8 @@ export default function GeradorEditar() {
                     !descricaoEditada.trim() ||
                     !cargaHorariaEditada.trim() ||
                     !instrutorEditado.trim() ||
-                    !modalidadeEditada.trim()
+                    !modalidadeEditada.trim() ||
+                    !categoriaEditada.trim()
                   }
                   className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
                 >
@@ -1138,18 +1151,6 @@ export default function GeradorEditar() {
               ) : (
                 <div>
                   {editandoConteudo.tipo === "paragrafo" ? (
-                    <RichTextEditor
-                      value={editandoConteudo.conteudo}
-                      onChange={(value) =>
-                        setEditandoConteudo({
-                          ...editandoConteudo,
-                          conteudo: value,
-                        })
-                      }
-                      placeholder="Digite o parágrafo..."
-                      height={200}
-                    />
-                  ) : (
                     <textarea
                       value={editandoConteudo.conteudo}
                       onChange={(e) =>
@@ -1158,9 +1159,25 @@ export default function GeradorEditar() {
                           conteudo: e.target.value,
                         })
                       }
-                      placeholder="Digite o conteúdo..."
-                      rows={6}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      placeholder="Digite o parágrafo..."
+                      className="w-full p-3 border border-gray-300 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      rows={8}
+                    />
+                  ) : (
+                    <Input
+                      value={editandoConteudo.conteudo}
+                      onChange={(e) =>
+                        setEditandoConteudo({
+                          ...editandoConteudo,
+                          conteudo: e.target.value,
+                        })
+                      }
+                      placeholder={`Digite o ${
+                        editandoConteudo.tipo === "titulo"
+                          ? "título"
+                          : "subtítulo"
+                      }...`}
+                      className="w-full"
                     />
                   )}
 
@@ -1388,23 +1405,85 @@ export default function GeradorEditar() {
                       className="w-full"
                     />
                   </div>
+
+                  <div className="mt-4">
+                    {/* Colunas */}
+                    <div className="border border-gray-200 rounded-lg p-3 bg-gray-50">
+                      <TooltipProvider>
+                        <div className="flex items-center gap-3">
+                          <span className="text-sm font-medium text-gray-700">
+                            Colunas:
+                          </span>
+                          <div className="flex gap-1">
+                            {[
+                              {
+                                value: 1,
+                                icon: (
+                                  <div className="flex gap-1">
+                                    <div className="w-3 h-3 bg-blue-600 rounded"></div>
+                                  </div>
+                                ),
+                                tooltip: "1 coluna (largura total)",
+                              },
+                              {
+                                value: 2,
+                                icon: (
+                                  <div className="flex gap-1">
+                                    <div className="w-2 h-3 bg-blue-600 rounded"></div>
+                                    <div className="w-2 h-3 bg-blue-600 rounded"></div>
+                                  </div>
+                                ),
+                                tooltip: "2 colunas (1/2 da largura)",
+                              },
+                            ].map(({ value, icon, tooltip }) => (
+                              <Tooltip key={value}>
+                                <TooltipTrigger asChild>
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      setConteudoTemp({
+                                        ...conteudoTemp,
+                                        colunas: value === 1 ? 12 : 6,
+                                      })
+                                    }
+                                    className={`p-2 rounded border transition-all ${
+                                      (conteudoTemp.colunas === 12 &&
+                                        value === 1) ||
+                                      (conteudoTemp.colunas === 6 &&
+                                        value === 2)
+                                        ? "bg-blue-100 border-blue-300 text-blue-700"
+                                        : "bg-white border-gray-300 text-gray-600 hover:bg-gray-50"
+                                    }`}
+                                  >
+                                    {icon}
+                                  </button>
+                                </TooltipTrigger>
+                                <TooltipContent>{tooltip}</TooltipContent>
+                              </Tooltip>
+                            ))}
+                          </div>
+                        </div>
+                      </TooltipProvider>
+                    </div>
+                  </div>
                 </div>
               ) : (
                 <div>
                   {conteudoTemp.tipo === "paragrafo" ? (
-                    <RichTextEditor
+                    <textarea
                       value={conteudoTemp.conteudo}
-                      onChange={(value) =>
+                      onChange={(e) =>
                         setConteudoTemp({
                           ...conteudoTemp,
-                          conteudo: value,
+                          conteudo: e.target.value,
                         })
                       }
                       placeholder="Digite o parágrafo..."
-                      height={200}
+                      className="w-full p-3 border border-gray-300 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      rows={8}
                     />
                   ) : (
-                    <textarea
+                    <Input
                       value={conteudoTemp.conteudo}
                       onChange={(e) =>
                         setConteudoTemp({
@@ -1415,8 +1494,7 @@ export default function GeradorEditar() {
                       placeholder={`Digite o ${
                         conteudoTemp.tipo === "titulo" ? "título" : "subtítulo"
                       }...`}
-                      rows={3}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full"
                     />
                   )}
 

@@ -7,6 +7,7 @@ interface Curso {
   cargaHoraria: string;
   instrutor: string;
   modalidade: string;
+  categoria: string;
   unidades: Array<{
     titulo: string;
     conteudo: Array<{
@@ -16,6 +17,8 @@ interface Curso {
       legenda?: string;
       fonte?: string;
       colunas?: number;
+      alinhamento?: string;
+      corTexto?: string;
     }>;
   }>;
 }
@@ -92,103 +95,16 @@ export const useSCORM = () => {
   </resources>
 </manifest>`;
 
-      // CSS simplificado
+      // CSS mínimo - apenas Tailwind base
       const cursoCSS = `
+        @import url('https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css');
+        
         body {
           font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-          line-height: 1.6;
-          color: #333;
-          background-color: #f9fafb;
-          margin: 0;
-          padding: 20px;
-        }
-        .container {
-          max-width: 800px;
-          margin: 0 auto;
-          background: white;
-          padding: 30px;
-          border-radius: 8px;
-          box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
-        h1 {
-          color: #1f2937;
-          border-bottom: 3px solid #3b82f6;
-          padding-bottom: 10px;
-          margin-bottom: 20px;
-        }
-        h2 {
-          color: #374151;
-          margin-top: 30px;
-          margin-bottom: 15px;
-        }
-        h3 {
-          color: #4b5563;
-          margin-top: 20px;
-          margin-bottom: 10px;
-        }
-        p {
-          margin-bottom: 15px;
-          line-height: 1.7;
-        }
-        .course-info {
-          background: #f3f4f6;
-          padding: 15px;
-          border-radius: 6px;
-          margin-bottom: 25px;
-        }
-        .unit {
-          border-left: 4px solid #3b82f6;
-          padding-left: 15px;
-          margin-bottom: 25px;
-        }
-        img {
-          max-width: 100%;
-          height: auto;
-          border-radius: 4px;
-          border: 1px solid #e5e7eb;
-        }
-        .image-source {
-          font-size: 0.75rem;
-          color: #6b7280;
-          margin-bottom: 5px;
-        }
-        .image-caption {
-          font-size: 0.875rem;
-          color: #6b7280;
-          font-style: italic;
-          margin-top: 5px;
-        }
-        
-        /* Grid layout for columns */
-        .unit-content {
-          display: grid !important;
-          grid-template-columns: 1fr !important;
-          gap: 0.75rem !important;
-        }
-        
-        @media (min-width: 768px) {
-          .unit-content {
-            grid-template-columns: repeat(12, 1fr) !important;
-          }
-        }
-        
-        .col-span-6 {
-          grid-column: span 6 !important;
-        }
-        
-        .col-span-12 {
-          grid-column: span 12 !important;
-        }
-        
-        @media (max-width: 767px) {
-          .col-span-6,
-          .col-span-12 {
-            grid-column: span 1 !important;
-          }
         }
       `;
 
-      // HTML simplificado
+      // HTML usando classes Tailwind inline (baseado no PreviewCurso)
       const cursoHTML = `
         <!DOCTYPE html>
         <html lang="pt-BR">
@@ -196,64 +112,121 @@ export const useSCORM = () => {
           <meta charset="UTF-8">
           <meta name="viewport" content="width=device-width, initial-scale=1.0">
           <title>${curso.titulo}</title>
-          <style>${cursoCSS}</style>
+          <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+          <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
         </head>
-        <body>
-          <div class="container">
-            <h1>${curso.titulo}</h1>
-            <div class="course-info">
-              <p><strong>Descrição:</strong> ${curso.descricao}</p>
-              <p><strong>Carga Horária:</strong> ${curso.cargaHoraria}</p>
-              <p><strong>Instrutor:</strong> ${curso.instrutor}</p>
-              <p><strong>Modalidade:</strong> ${curso.modalidade}</p>
-            </div>
-            
-            ${(curso.unidades || [])
-              .map(
-                (unidade) => `
-              <div class="unit">
-                <h2>${unidade.titulo}</h2>
-                <div class="unit-content">
-                  ${unidade.conteudo
-                    .map((item) => {
-                      const colSpanClass = (item.colunas === 6) ? "col-span-6" : "col-span-12";
-                      
-                      if (item.tipo === "titulo")
-                        return `<div class="${colSpanClass}"><h3>${item.conteudo}</h3></div>`;
-                      if (item.tipo === "subtitulo")
-                        return `<div class="${colSpanClass}"><h4>${item.conteudo}</h4></div>`;
-                      if (item.tipo === "imagem") {
-                        const tamanhoClass =
-                          item.tamanho === "pequena"
-                            ? "max-w-xs"
-                            : item.tamanho === "media"
-                            ? "max-w-md"
-                            : "max-w-full";
-                        return `<div class="${colSpanClass}">
-                          ${
-                            item.fonte
-                              ? `<p class="image-source">Fonte: ${item.fonte}</p>`
-                              : ""
-                          }
-                          <img src="${item.conteudo}" alt="${
-                          item.legenda || "Imagem"
-                        }" class="${tamanhoClass}" />
-                           ${
-                             item.legenda
-                               ? `<p class="image-caption">${item.legenda}</p>`
-                               : ""
-                           }
-                        </div>`;
-                      }
-                      return `<div class="${colSpanClass}">${item.conteudo}</div>`;
-                    })
-                    .join("")}
+        <body class="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
+          <div class="max-w-6xl mx-auto px-6 py-8">
+            <!-- Course Header -->
+            <div class="mb-8 shadow-xl border-0 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg">
+              <div class="p-8">
+                <div class="flex items-start justify-between">
+                  <div class="flex-1">
+                    <h1 class="text-3xl font-bold mb-3 flex items-center gap-3">
+                      <i data-lucide="book-open" class="h-8 w-8"></i>
+                      ${curso.titulo}
+                    </h1>
+                    <p class="text-blue-100 text-lg leading-relaxed">
+                      ${curso.descricao}
+                    </p>
+                  </div>
+                </div>
+                
+                <div class="pt-4">
+                  <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="flex items-center gap-3">
+                      <i data-lucide="clock" class="h-5 w-5 text-blue-200"></i>
+                      <div>
+                        <p class="text-sm text-blue-200">Carga Horária</p>
+                        <p class="font-semibold">${curso.cargaHoraria}</p>
+                      </div>
+                    </div>
+                    
+                    <div class="flex items-center gap-3">
+                      <i data-lucide="user" class="h-5 w-5 text-blue-200"></i>
+                      <div>
+                        <p class="text-sm text-blue-200">Instrutor</p>
+                        <p class="font-semibold">${curso.instrutor}</p>
+                      </div>
+                    </div>
+                    
+                    <div class="flex items-center gap-3">
+                      <i data-lucide="graduation-cap" class="h-5 w-5 text-blue-200"></i>
+                      <div>
+                        <p class="text-sm text-blue-200">Modalidade</p>
+                        <p class="font-semibold">${curso.modalidade}</p>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div class="mt-4 flex items-center gap-2">
+                    <span class="bg-white/20 text-white border-white/30 px-3 py-1 rounded text-sm">
+                      ${curso.categoria || 'Categoria'}
+                    </span>
+                    <span class="bg-white/20 text-white border-white/30 px-3 py-1 rounded text-sm">
+                      ${curso.unidades?.length || 0} Unidades
+                    </span>
+                  </div>
                 </div>
               </div>
-            `
-              )
-              .join("")}
+            </div>
+            
+            <!-- Course Content -->
+            <div class="space-y-8">
+              ${(curso.unidades || [])
+                .map(
+                  (unidade) => `
+                <div class="shadow-lg border-0 bg-white/80 backdrop-blur-sm rounded-lg">
+                  <div class="bg-gradient-to-r from-gray-50 to-blue-50 border-b border-gray-200 p-6 rounded-t-lg">
+                    <h2 class="text-2xl font-bold text-gray-900 flex items-center gap-3">
+                      <i data-lucide="layers" class="h-6 w-6 text-blue-600"></i>
+                      ${unidade.titulo}
+                    </h2>
+                  </div>
+                  
+                  <div class="p-8">
+                    <div class="grid grid-cols-1 md:grid-cols-12 gap-3">
+                      ${unidade.conteudo
+                        .map((item) => {
+                          const colSpanClass = item.colunas === 6 ? "md:col-span-6" : "md:col-span-12";
+                          
+                          if (item.tipo === "titulo")
+                            return `<div class="${colSpanClass}"><h3 class="text-2xl font-bold text-gray-900 mb-4 mt-8 first:mt-0">${item.conteudo}</h3></div>`;
+                          if (item.tipo === "subtitulo")
+                            return `<div class="${colSpanClass}"><h4 class="text-xl font-semibold text-gray-800 mb-3 mt-6">${item.conteudo}</h4></div>`;
+                          if (item.tipo === "imagem") {
+                            const tamanhoClass = item.tamanho === "pequena" ? "max-w-xs" : item.tamanho === "media" ? "max-w-md" : "max-w-full";
+                            return `<div class="${colSpanClass}">
+                              <div class="mb-6">
+                                ${item.fonte ? `<p class="text-xs text-gray-500 mb-2 font-medium">Fonte: ${item.fonte}</p>` : ""}
+                                <div class="flex justify-center">
+                                  <img src="${item.conteudo}" alt="${item.legenda || "Imagem"}" class="${tamanhoClass} h-auto rounded-lg shadow-md border border-gray-200" />
+                                </div>
+                                ${item.legenda ? `<p class="text-sm text-gray-600 italic text-center mt-2">${item.legenda}</p>` : ""}
+                              </div>
+                            </div>`;
+                          }
+                          const alinhamentoClass = item.alinhamento === "centro" ? "text-center" : item.alinhamento === "direita" ? "text-right" : item.alinhamento === "justificado" ? "text-justify" : "text-left";
+                          return `<div class="${colSpanClass}">
+                            <div class="text-gray-700 mb-4 leading-relaxed ${alinhamentoClass}" style="color: ${item.corTexto || 'inherit'}">
+                              ${item.conteudo}
+                            </div>
+                          </div>`;
+                        })
+                        .join("")}
+                    </div>
+                  </div>
+                </div>
+              `
+                )
+                .join("")}
+            </div>
           </div>
+          
+          <script>
+            // Inicializar ícones do Lucide
+            lucide.createIcons();
+          </script>
         </body>
         </html>
       `;
