@@ -9,7 +9,9 @@ interface WelcomeMessageProps {
 export const WelcomeMessage: React.FC<WelcomeMessageProps> = ({
   className = "",
 }) => {
+  console.log('🎨 [WelcomeMessage] Componente renderizado');
   const { studentName, isGuest } = useLMS();
+  console.log('📊 [WelcomeMessage] Dados do LMS:', { studentName, isGuest });
 
   return (
     <div

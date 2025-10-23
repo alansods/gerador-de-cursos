@@ -7,6 +7,8 @@ interface LMSInfo {
 }
 
 export const useLMS = (): LMSInfo => {
+  console.log('🚀 [useLMS] Hook inicializado');
+  
   const [lmsInfo, setLmsInfo] = useState<LMSInfo>({
     isConnected: false,
     studentName: 'Convidado',
@@ -14,6 +16,8 @@ export const useLMS = (): LMSInfo => {
   });
 
   useEffect(() => {
+    console.log('⚡ [useLMS] useEffect executado');
+    
     const checkLMSConnection = () => {
       console.log('🔍 [useLMS] Iniciando verificação de conexão LMS...');
       
