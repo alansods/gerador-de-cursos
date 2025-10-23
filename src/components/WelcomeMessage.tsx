@@ -12,6 +12,11 @@ export const WelcomeMessage: React.FC<WelcomeMessageProps> = ({
   console.log('🎨 [WelcomeMessage] Componente renderizado');
   const { studentName, isGuest } = useLMS();
   console.log('📊 [WelcomeMessage] Dados do LMS:', { studentName, isGuest });
+  
+  // Teste temporário - remover depois
+  if (typeof window !== 'undefined') {
+    console.log('🔍 [WelcomeMessage] Window disponível:', window.location.href);
+  }
 
   return (
     <div
