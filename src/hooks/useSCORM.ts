@@ -95,53 +95,118 @@ export const useSCORM = () => {
           <script>
             console.log('🚀 [SCORM] Página carregada no LMS');
             
+            // Verificar se scormconfig.js foi carregado
+            if (typeof window.API_1484_11 === 'undefined' && typeof window.API === 'undefined') {
+              console.log('⚠️ [SCORM] scormconfig.js pode não ter sido carregado');
+              console.log('⚠️ [SCORM] Verificando se o arquivo está disponível...');
+            } else {
+              console.log('✅ [SCORM] scormconfig.js carregado com sucesso');
+            }
+            
             function getScormAPI() {
+              console.log('🔍 [SCORM] Verificando API SCORM...');
+              console.log('🔍 [SCORM] window.API_1484_11:', typeof window.API_1484_11);
+              console.log('🔍 [SCORM] window.API:', typeof window.API);
+              console.log('🔍 [SCORM] window.parent.API_1484_11:', typeof (window.parent && window.parent.API_1484_11));
+              console.log('🔍 [SCORM] window.parent.API:', typeof (window.parent && window.parent.API));
+              console.log('🔍 [SCORM] window.top.API_1484_11:', typeof (window.top && window.top.API_1484_11));
+              console.log('🔍 [SCORM] window.top.API:', typeof (window.top && window.top.API));
+              
               // SCORM 2004
-              if (window.API_1484_11) return { version: '2004', api: window.API_1484_11 };
-              if (window.parent && window.parent.API_1484_11) return { version: '2004', api: window.parent.API_1484_11 };
-              if (window.top && window.top.API_1484_11) return { version: '2004', api: window.top.API_1484_11 };
+              if (window.API_1484_11) {
+                console.log('✅ [SCORM] API SCORM 2004 detectada em window');
+                return { version: '2004', api: window.API_1484_11 };
+              }
+              if (window.parent && window.parent.API_1484_11) {
+                console.log('✅ [SCORM] API SCORM 2004 detectada em window.parent');
+                return { version: '2004', api: window.parent.API_1484_11 };
+              }
+              if (window.top && window.top.API_1484_11) {
+                console.log('✅ [SCORM] API SCORM 2004 detectada em window.top');
+                return { version: '2004', api: window.top.API_1484_11 };
+              }
               // SCORM 1.2
-              if (window.API) return { version: '1.2', api: window.API };
-              if (window.parent && window.parent.API) return { version: '1.2', api: window.parent.API };
-              if (window.top && window.top.API) return { version: '1.2', api: window.top.API };
+              if (window.API) {
+                console.log('✅ [SCORM] API SCORM 1.2 detectada em window');
+                return { version: '1.2', api: window.API };
+              }
+              if (window.parent && window.parent.API) {
+                console.log('✅ [SCORM] API SCORM 1.2 detectada em window.parent');
+                return { version: '1.2', api: window.parent.API };
+              }
+              if (window.top && window.top.API) {
+                console.log('✅ [SCORM] API SCORM 1.2 detectada em window.top');
+                return { version: '1.2', api: window.top.API };
+              }
+              
+              console.log('❌ [SCORM] Nenhuma API SCORM detectada');
               return { version: null, api: null };
             }
 
             function scormInitializeIfNeeded() {
+              console.log('🔧 [SCORM] Tentando inicializar SCORM...');
               const { version, api } = getScormAPI();
+              
+              if (!api || !version) {
+                console.log('❌ [SCORM] API não disponível para inicialização');
+                return false;
+              }
+              
               try {
                 if (version === '2004') {
+                  console.log('🔧 [SCORM] Inicializando SCORM 2004...');
                   const ok = api.Initialize ? api.Initialize('') : 'false';
+                  console.log('🔧 [SCORM] Resultado Initialize:', ok);
                   return ok === 'true' || ok === true;
                 }
                 if (version === '1.2') {
+                  console.log('🔧 [SCORM] Inicializando SCORM 1.2...');
                   const ok = api.LMSInitialize ? api.LMSInitialize('') : 'false';
+                  console.log('🔧 [SCORM] Resultado LMSInitialize:', ok);
                   return ok === 'true' || ok === true;
                 }
-              } catch (_) {}
+              } catch (error) {
+                console.log('❌ [SCORM] Erro na inicialização:', error);
+              }
               return false;
             }
 
             function scormGetStudentName() {
+              console.log('👤 [SCORM] Tentando obter nome do aluno...');
               const { version, api } = getScormAPI();
-              if (!api || !version) return null;
+              
+              if (!api || !version) {
+                console.log('❌ [SCORM] API não disponível para obter nome');
+                return null;
+              }
 
               try {
                 if (version === '2004') {
-                  // Nome: cmi.learner_name
+                  console.log('👤 [SCORM] Tentando obter nome via SCORM 2004 (cmi.learner_name)...');
                   if (api.GetValue) {
                     const v = api.GetValue('cmi.learner_name');
-                    if (v && v !== 'undefined' && v !== 'null') return v;
+                    console.log('👤 [SCORM] Valor obtido (2004):', v);
+                    if (v && v !== 'undefined' && v !== 'null') {
+                      console.log('✅ [SCORM] Nome obtido via SCORM 2004:', v);
+                      return v;
+                    }
                   }
                 } else if (version === '1.2') {
-                  // Nome: cmi.core.student_name
+                  console.log('👤 [SCORM] Tentando obter nome via SCORM 1.2 (cmi.core.student_name)...');
                   if (api.LMSGetValue) {
                     const v = api.LMSGetValue('cmi.core.student_name');
-                    if (v && v !== 'undefined' && v !== 'null') return v;
+                    console.log('👤 [SCORM] Valor obtido (1.2):', v);
+                    if (v && v !== 'undefined' && v !== 'null') {
+                      console.log('✅ [SCORM] Nome obtido via SCORM 1.2:', v);
+                      return v;
+                    }
                   }
                 }
-              } catch (_) {}
+              } catch (error) {
+                console.log('❌ [SCORM] Erro ao obter nome:', error);
+              }
 
+              console.log('❌ [SCORM] Nome não encontrado na API SCORM');
               return null;
             }
 
@@ -194,9 +259,59 @@ export const useSCORM = () => {
                 } else {
                   welcomeTitle.textContent = 'Bem-vindo!';
                   welcomeMessage.textContent = 'Olá, Convidado! Você está visualizando este curso em modo de demonstração.';
+                  
+                  // Adicionar interface para inserir nome manualmente
+                  if (!document.getElementById('name-input-container')) {
+                    criarInterfaceNome();
+                  }
                 }
               }
             }
+            
+            // Função para criar interface de entrada de nome
+            function criarInterfaceNome() {
+              const welcomeContainer = document.getElementById('welcome-message');
+              if (welcomeContainer && !document.getElementById('name-input-container')) {
+                const container = document.createElement('div');
+                container.id = 'name-input-container';
+                container.innerHTML = \`
+                  <div style="margin-top: 10px; padding: 10px; background: rgba(255,255,255,0.1); border-radius: 8px;">
+                    <p style="font-size: 12px; margin-bottom: 8px;">Para personalizar sua experiência, insira seu nome:</p>
+                    <div style="display: flex; gap: 8px;">
+                      <input type="text" id="student-name-input" placeholder="Seu nome" style="flex: 1; padding: 6px; border: none; border-radius: 4px; font-size: 12px;">
+                      <button onclick="salvarNome()" style="padding: 6px 12px; background: rgba(255,255,255,0.2); border: none; border-radius: 4px; color: white; cursor: pointer; font-size: 12px;">Salvar</button>
+                    </div>
+                  </div>
+                \`;
+                welcomeContainer.appendChild(container);
+              }
+            }
+            
+            // Função para salvar nome
+            window.salvarNome = function() {
+              const input = document.getElementById('student-name-input');
+              const nome = input.value.trim();
+              if (nome) {
+                // Salvar no localStorage
+                localStorage.setItem('lms_student_name', nome);
+                
+                // Atualizar mensagem
+                const welcomeTitle = document.getElementById('welcome-title');
+                const welcomeMessage = document.getElementById('welcome-message');
+                if (welcomeTitle && welcomeMessage) {
+                  welcomeTitle.textContent = 'Bem-vindo ao curso!';
+                  welcomeMessage.textContent = \`Olá, \${nome}! Estamos felizes em tê-lo(a) conosco neste curso.\`;
+                }
+                
+                // Remover interface de entrada
+                const container = document.getElementById('name-input-container');
+                if (container) {
+                  container.remove();
+                }
+                
+                console.log('✅ [SCORM] Nome salvo pelo usuário:', nome);
+              }
+            };
             
             // Executar detecção imediatamente
             let { studentName, isConnected } = detectarNomeAluno();
