@@ -116,6 +116,105 @@ export const useSCORM = () => {
           <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
         </head>
         <body class="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
+          <script>
+            console.log('🚀 [SCORM] Página carregada no LMS');
+            
+            // Função para detectar nome do aluno no LMS
+            function detectarNomeAluno() {
+              console.log('🔍 [SCORM] Iniciando detecção do nome do aluno...');
+              
+              let studentName = 'Convidado';
+              let isConnected = false;
+              
+              // Verificar API SCORM
+              if (typeof window.API !== 'undefined' && window.API) {
+                console.log('✅ [SCORM] API SCORM detectada');
+                try {
+                  const learnerName = window.API.get('cmi.learner_name');
+                  const learnerId = window.API.get('cmi.learner_id');
+                  const studentName = window.API.get('cmi.student_name');
+                  const userName = window.API.get('cmi.user_name');
+                  
+                  console.log('📊 [SCORM] Dados SCORM:', {
+                    learnerName,
+                    learnerId,
+                    studentName,
+                    userName
+                  });
+                  
+                  if (learnerName && learnerName !== '') {
+                    studentName = learnerName;
+                    isConnected = true;
+                    console.log('✅ [SCORM] Nome obtido via learner_name:', learnerName);
+                  } else if (studentName && studentName !== '') {
+                    studentName = studentName;
+                    isConnected = true;
+                    console.log('✅ [SCORM] Nome obtido via student_name:', studentName);
+                  } else if (userName && userName !== '') {
+                    studentName = userName;
+                    isConnected = true;
+                    console.log('✅ [SCORM] Nome obtido via user_name:', userName);
+                  } else if (learnerId && learnerId !== '') {
+                    studentName = learnerId;
+                    isConnected = true;
+                    console.log('✅ [SCORM] ID obtido via learner_id:', learnerId);
+                  } else {
+                    console.log('⚠️ [SCORM] Nenhum dado de aluno encontrado na API SCORM');
+                  }
+                } catch (error) {
+                  console.log('❌ [SCORM] Erro ao acessar API SCORM:', error);
+                }
+              } else {
+                console.log('⚠️ [SCORM] API SCORM não disponível');
+              }
+              
+              // Verificar URL parameters
+              const urlParams = new URLSearchParams(window.location.search);
+              const nameParam = urlParams.get('name') || urlParams.get('student') || urlParams.get('learner') || urlParams.get('user');
+              console.log('🔗 [SCORM] Parâmetros da URL:', {
+                search: window.location.search,
+                nameParam,
+                allParams: Object.fromEntries(urlParams.entries())
+              });
+              if (nameParam) {
+                studentName = decodeURIComponent(nameParam);
+                isConnected = true;
+                console.log('✅ [SCORM] Nome obtido via URL:', nameParam);
+              }
+              
+              console.log('🎯 [SCORM] Resultado final:', {
+                isConnected,
+                studentName,
+                isGuest: !isConnected,
+                windowLocation: window.location.href,
+                windowParent: window.parent !== window,
+                windowTop: window.top !== window,
+                documentReferrer: document.referrer
+              });
+              
+              return { studentName, isConnected };
+            }
+            
+            // Executar detecção quando a página carregar
+            document.addEventListener('DOMContentLoaded', function() {
+              const { studentName, isConnected } = detectarNomeAluno();
+              
+              // Atualizar a mensagem de boas-vindas
+              const welcomeTitle = document.getElementById('welcome-title');
+              const welcomeMessage = document.getElementById('welcome-message');
+              
+              if (welcomeTitle && welcomeMessage) {
+                if (isConnected) {
+                  welcomeTitle.textContent = 'Bem-vindo ao curso!';
+                  welcomeMessage.textContent = \`Olá, \${studentName}! Estamos felizes em tê-lo(a) conosco neste curso.\`;
+                } else {
+                  welcomeTitle.textContent = 'Bem-vindo!';
+                  welcomeMessage.textContent = 'Olá, Convidado! Você está visualizando este curso em modo de demonstração.';
+                }
+              }
+            });
+          </script>
+          
           <div class="max-w-6xl mx-auto px-6 py-8">
             <!-- Welcome Message -->
             <div class="bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg p-4 mb-6">
@@ -124,8 +223,8 @@ export const useSCORM = () => {
                   <i data-lucide="user" class="h-6 w-6 text-blue-200"></i>
                 </div>
                 <div class="flex-1">
-                  <h2 class="text-lg font-semibold mb-1">Bem-vindo ao curso!</h2>
-                  <p class="text-blue-100 text-sm">
+                  <h2 id="welcome-title" class="text-lg font-semibold mb-1">Bem-vindo ao curso!</h2>
+                  <p id="welcome-message" class="text-blue-100 text-sm">
                     Olá! Estamos felizes em tê-lo(a) conosco neste curso. Aproveite o aprendizado!
                   </p>
                 </div>
