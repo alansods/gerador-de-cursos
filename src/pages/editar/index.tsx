@@ -38,8 +38,6 @@ import { MenuConteudo } from "@/components/MenuConteudo";
 import { WelcomeMessage } from "@/components/WelcomeMessage";
 
 export default function GeradorEditar() {
-  console.log('📄 [GeradorEditar] Página de edição carregada');
-  
   const {
     state,
     adicionarUnidade,

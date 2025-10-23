@@ -3,4 +3,3 @@ export * from "./usePreview";
 export * from "./useSCORM";
 export * from "./useModalAnimation";
 export * from "./useUnidadeFromRoute";
-export * from "./useLMS";
