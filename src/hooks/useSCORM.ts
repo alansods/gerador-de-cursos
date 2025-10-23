@@ -105,36 +105,37 @@ export const useSCORM = () => {
             
             function getScormAPI() {
               console.log('🔍 [SCORM] Verificando API SCORM...');
-              console.log('🔍 [SCORM] window.API_1484_11:', typeof window.API_1484_11);
-              console.log('🔍 [SCORM] window.API:', typeof window.API);
-              console.log('🔍 [SCORM] window.parent.API_1484_11:', typeof (window.parent && window.parent.API_1484_11));
-              console.log('🔍 [SCORM] window.parent.API:', typeof (window.parent && window.parent.API));
-              console.log('🔍 [SCORM] window.top.API_1484_11:', typeof (window.top && window.top.API_1484_11));
-              console.log('🔍 [SCORM] window.top.API:', typeof (window.top && window.top.API));
+              console.log('🔍 [SCORM] window.API_1484_11:', typeof window.API_1484_11, window.API_1484_11 !== null ? 'not null' : 'null');
+              console.log('🔍 [SCORM] window.API:', typeof window.API, window.API !== null ? 'not null' : 'null');
+              console.log('🔍 [SCORM] window.parent.API_1484_11:', typeof (window.parent && window.parent.API_1484_11), (window.parent && window.parent.API_1484_11 !== null) ? 'not null' : 'null');
+              console.log('🔍 [SCORM] window.parent.API:', typeof (window.parent && window.parent.API), (window.parent && window.parent.API !== null) ? 'not null' : 'null');
+              console.log('🔍 [SCORM] window.top.API_1484_11:', typeof (window.top && window.top.API_1484_11), (window.top && window.top.API_1484_11 !== null) ? 'not null' : 'null');
+              console.log('🔍 [SCORM] window.top.API:', typeof (window.top && window.top.API), (window.top && window.top.API !== null) ? 'not null' : 'null');
               
-              // SCORM 2004
-              if (window.API_1484_11) {
+              // SCORM 2004 - checagem explícita de null
+              if (typeof window.API_1484_11 !== 'undefined' && window.API_1484_11 !== null) {
                 console.log('✅ [SCORM] API SCORM 2004 detectada em window');
                 return { version: '2004', api: window.API_1484_11 };
               }
-              if (window.parent && window.parent.API_1484_11) {
+              if (window.parent && typeof window.parent.API_1484_11 !== 'undefined' && window.parent.API_1484_11 !== null) {
                 console.log('✅ [SCORM] API SCORM 2004 detectada em window.parent');
                 return { version: '2004', api: window.parent.API_1484_11 };
               }
-              if (window.top && window.top.API_1484_11) {
+              if (window.top && typeof window.top.API_1484_11 !== 'undefined' && window.top.API_1484_11 !== null) {
                 console.log('✅ [SCORM] API SCORM 2004 detectada em window.top');
                 return { version: '2004', api: window.top.API_1484_11 };
               }
-              // SCORM 1.2
-              if (window.API) {
+              
+              // SCORM 1.2 - checagem explícita de null
+              if (typeof window.API !== 'undefined' && window.API !== null) {
                 console.log('✅ [SCORM] API SCORM 1.2 detectada em window');
                 return { version: '1.2', api: window.API };
               }
-              if (window.parent && window.parent.API) {
+              if (window.parent && typeof window.parent.API !== 'undefined' && window.parent.API !== null) {
                 console.log('✅ [SCORM] API SCORM 1.2 detectada em window.parent');
                 return { version: '1.2', api: window.parent.API };
               }
-              if (window.top && window.top.API) {
+              if (window.top && typeof window.top.API !== 'undefined' && window.top.API !== null) {
                 console.log('✅ [SCORM] API SCORM 1.2 detectada em window.top');
                 return { version: '1.2', api: window.top.API };
               }
@@ -470,105 +471,103 @@ export const useSCORM = () => {
 
       // JavaScript SCORM
       const scormJS = `
-        // SCORM 1.2 API
-        var API = null;
-        var isInitialized = false;
-        var isCompleted = false;
+        // SCORM 1.2 API - NÃO tocar em window.API do LMS
+        (function () {
+          var apiHandle = null;
+          var isInitialized = false;
+          var isCompleted = false;
 
-        function findAPI(win) {
-          var findAttempts = 0;
-          while ((win.API == null) && (win.parent != null) && (win.parent != win)) {
-            findAttempts++;
-            if (findAttempts > 7) {
+          function findAPI(win) {
+            var findAttempts = 0;
+            try {
+              while (!win.API && win.parent && win.parent !== win) {
+                findAttempts++;
+                if (findAttempts > 7) return null;
+                win = win.parent;
+              }
+              return win.API || null;
+            } catch (e) {
               return null;
             }
-            win = win.parent;
           }
-          return win.API;
-        }
 
-        function getAPI() {
-          if (API == null) {
-            API = findAPI(window);
-            if (API == null) {
-              API = findAPI(window.top);
+          function getAPI() {
+            if (apiHandle) return apiHandle;
+            // tenta na janela atual
+            if (typeof window !== 'undefined') {
+              apiHandle = (typeof window.API !== 'undefined' && window.API !== null) ? window.API : null;
             }
+            // tenta subir a árvore (pode ser o LMS)
+            if (!apiHandle) apiHandle = findAPI(window);
+            if (!apiHandle) {
+              try { apiHandle = findAPI(window.top); } catch (e) {}
+            }
+            return apiHandle;
           }
-          return API;
-        }
 
-        function initialize() {
-          var api = getAPI();
-          if (api == null) {
-            return "false";
+          function initialize() {
+            var api = getAPI();
+            if (!api || !api.LMSInitialize) return "false";
+            var result = api.LMSInitialize("");
+            if (result === "true" || result === true) isInitialized = true;
+            return result;
           }
-          var result = api.LMSInitialize("");
-          if (result == "true") {
-            isInitialized = true;
+
+          function terminate() {
+            var api = getAPI();
+            if (!api || !api.LMSFinish) return "false";
+            return api.LMSFinish("");
           }
-          return result;
-        }
 
-        function terminate() {
-          var api = getAPI();
-          if (api == null) {
-            return "false";
+          function setValue(element, value) {
+            var api = getAPI();
+            if (!api || !api.LMSSetValue) return "false";
+            return api.LMSSetValue(element, value);
           }
-          var result = api.LMSFinish("");
-          return result;
-        }
 
-        function setValue(element, value) {
-          var api = getAPI();
-          if (api == null) {
-            return "false";
+          function getValue(element) {
+            var api = getAPI();
+            if (!api || !api.LMSGetValue) return "";
+            return api.LMSGetValue(element);
           }
-          var result = api.LMSSetValue(element, value);
-          return result;
-        }
 
-        function getValue(element) {
-          var api = getAPI();
-          if (api == null) {
-            return "";
+          function setCompleted() {
+            setValue("cmi.core.lesson_status", "completed");
+            isCompleted = true;
           }
-          var result = api.LMSGetValue(element);
-          return result;
-        }
-
-        function setCompleted() {
-          setValue("cmi.core.lesson_status", "completed");
-          isCompleted = true;
-        }
-
-        function setIncomplete() {
-          setValue("cmi.core.lesson_status", "incomplete");
-          isCompleted = false;
-        }
-
-        function setPassed() {
-          setValue("cmi.core.lesson_status", "passed");
-          isCompleted = true;
-        }
-
-        function setFailed() {
-          setValue("cmi.core.lesson_status", "failed");
-          isCompleted = false;
-        }
-
-        // Inicializar SCORM quando a página carregar
-        window.onload = function() {
-          initialize();
-          setValue("cmi.core.lesson_status", "incomplete");
-        };
-
-        // Marcar como completo quando sair
-        window.onbeforeunload = function() {
-          if (isInitialized) {
-            setCompleted();
-            terminate();
+          function setIncomplete() {
+            setValue("cmi.core.lesson_status", "incomplete");
+            isCompleted = false;
           }
-        };
+          function setPassed() {
+            setValue("cmi.core.lesson_status", "passed");
+            isCompleted = true;
+          }
+          function setFailed() {
+            setValue("cmi.core.lesson_status", "failed");
+            isCompleted = false;
+          }
+
+          // expõe um namespace próprio (não colide com o LMS)
+          window.SCORM12 = {
+            initialize, terminate, setValue, getValue,
+            setCompleted, setIncomplete, setPassed, setFailed,
+            _getAPI: getAPI
+          };
+
+          // Inicialização padrão
+          window.addEventListener('load', function () {
+            initialize();
+            setValue("cmi.core.lesson_status", "incomplete");
+          });
+
+          window.addEventListener('beforeunload', function () {
+            if (isInitialized) {
+              setCompleted();
+              terminate();
+            }
+          });
+        })();
       `;
 
       // XSD Schemas (conteúdo simplificado)
