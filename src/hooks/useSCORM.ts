@@ -104,40 +104,31 @@ export const useSCORM = () => {
             }
             
             function getScormAPI() {
-              console.log('🔍 [SCORM] Verificando API SCORM...');
-              console.log('🔍 [SCORM] window.API_1484_11:', typeof window.API_1484_11, window.API_1484_11 !== null ? 'not null' : 'null');
-              console.log('🔍 [SCORM] window.API:', typeof window.API, window.API !== null ? 'not null' : 'null');
-              console.log('🔍 [SCORM] window.parent.API_1484_11:', typeof (window.parent && window.parent.API_1484_11), (window.parent && window.parent.API_1484_11 !== null) ? 'not null' : 'null');
-              console.log('🔍 [SCORM] window.parent.API:', typeof (window.parent && window.parent.API), (window.parent && window.parent.API !== null) ? 'not null' : 'null');
-              console.log('🔍 [SCORM] window.top.API_1484_11:', typeof (window.top && window.top.API_1484_11), (window.top && window.top.API_1484_11 !== null) ? 'not null' : 'null');
-              console.log('🔍 [SCORM] window.top.API:', typeof (window.top && window.top.API), (window.top && window.top.API !== null) ? 'not null' : 'null');
+              console.log('🔍 [SCORM] Iniciando busca da API SCORM...');
               
-              // SCORM 2004 - checagem explícita de null
-              if (typeof window.API_1484_11 !== 'undefined' && window.API_1484_11 !== null) {
-                console.log('✅ [SCORM] API SCORM 2004 detectada em window');
-                return { version: '2004', api: window.API_1484_11 };
-              }
-              if (window.parent && typeof window.parent.API_1484_11 !== 'undefined' && window.parent.API_1484_11 !== null) {
-                console.log('✅ [SCORM] API SCORM 2004 detectada em window.parent');
-                return { version: '2004', api: window.parent.API_1484_11 };
-              }
-              if (window.top && typeof window.top.API_1484_11 !== 'undefined' && window.top.API_1484_11 !== null) {
-                console.log('✅ [SCORM] API SCORM 2004 detectada em window.top');
-                return { version: '2004', api: window.top.API_1484_11 };
+              // Usar a mesma lógica do projeto funcionando
+              if (typeof SCORM !== 'undefined' && SCORM.API) {
+                console.log('✅ [SCORM] API encontrada via SCORM object');
+                return { version: '1.2', api: SCORM.API };
               }
               
-              // SCORM 1.2 - checagem explícita de null
-              if (typeof window.API !== 'undefined' && window.API !== null) {
-                console.log('✅ [SCORM] API SCORM 1.2 detectada em window');
-                return { version: '1.2', api: window.API };
+              // Fallback: busca direta
+              var api = null;
+              var win = window;
+              var attempts = 0;
+              
+              while (!api && win.parent && win.parent != win && attempts < 10) {
+                attempts++;
+                if (win.API) {
+                  api = win.API;
+                  console.log('✅ [SCORM] API encontrada após ' + attempts + ' tentativas');
+                  break;
+                }
+                win = win.parent;
               }
-              if (window.parent && typeof window.parent.API !== 'undefined' && window.parent.API !== null) {
-                console.log('✅ [SCORM] API SCORM 1.2 detectada em window.parent');
-                return { version: '1.2', api: window.parent.API };
-              }
-              if (window.top && typeof window.top.API !== 'undefined' && window.top.API !== null) {
-                console.log('✅ [SCORM] API SCORM 1.2 detectada em window.top');
-                return { version: '1.2', api: window.top.API };
+              
+              if (api) {
+                return { version: '1.2', api: api };
               }
               
               console.log('❌ [SCORM] Nenhuma API SCORM detectada');
@@ -146,26 +137,27 @@ export const useSCORM = () => {
 
             function scormInitializeIfNeeded() {
               console.log('🔧 [SCORM] Tentando inicializar SCORM...');
-              const { version, api } = getScormAPI();
               
+              // Usar a mesma abordagem do projeto funcionando
+              if (typeof SCORM !== 'undefined') {
+                console.log('🔧 [SCORM] Inicializando via SCORM.init()...');
+                const result = SCORM.init();
+                console.log('🔧 [SCORM] Resultado SCORM.init():', result);
+                return result;
+              }
+              
+              // Fallback: inicialização direta
+              const { version, api } = getScormAPI();
               if (!api || !version) {
                 console.log('❌ [SCORM] API não disponível para inicialização');
                 return false;
               }
               
               try {
-                if (version === '2004') {
-                  console.log('🔧 [SCORM] Inicializando SCORM 2004...');
-                  const ok = api.Initialize ? api.Initialize('') : 'false';
-                  console.log('🔧 [SCORM] Resultado Initialize:', ok);
-                  return ok === 'true' || ok === true;
-                }
-                if (version === '1.2') {
-                  console.log('🔧 [SCORM] Inicializando SCORM 1.2...');
-                  const ok = api.LMSInitialize ? api.LMSInitialize('') : 'false';
-                  console.log('🔧 [SCORM] Resultado LMSInitialize:', ok);
-                  return ok === 'true' || ok === true;
-                }
+                console.log('🔧 [SCORM] Inicializando SCORM 1.2...');
+                const ok = api.LMSInitialize ? api.LMSInitialize('') : 'false';
+                console.log('🔧 [SCORM] Resultado LMSInitialize:', ok);
+                return ok === 'true' || ok === true;
               } catch (error) {
                 console.log('❌ [SCORM] Erro na inicialização:', error);
               }
@@ -174,37 +166,41 @@ export const useSCORM = () => {
 
             function scormGetStudentName() {
               console.log('👤 [SCORM] Tentando obter nome do aluno...');
-              const { version, api } = getScormAPI();
               
+              // Usar a mesma abordagem do projeto funcionando
+              if (typeof SCORM !== 'undefined' && SCORM.API) {
+                console.log('👤 [SCORM] Tentando obter nome via SCORM.getValue()...');
+                try {
+                  const v = SCORM.getValue('cmi.core.student_name');
+                  console.log('👤 [SCORM] Valor obtido via SCORM.getValue():', v);
+                  if (v && v !== 'undefined' && v !== 'null' && v !== '') {
+                    console.log('✅ [SCORM] Nome obtido via SCORM.getValue():', v);
+                    return v;
+                  }
+                } catch (error) {
+                  console.log('❌ [SCORM] Erro ao obter nome via SCORM.getValue():', error);
+                }
+              }
+              
+              // Fallback: API direta
+              const { version, api } = getScormAPI();
               if (!api || !version) {
                 console.log('❌ [SCORM] API não disponível para obter nome');
                 return null;
               }
 
               try {
-                if (version === '2004') {
-                  console.log('👤 [SCORM] Tentando obter nome via SCORM 2004 (cmi.learner_name)...');
-                  if (api.GetValue) {
-                    const v = api.GetValue('cmi.learner_name');
-                    console.log('👤 [SCORM] Valor obtido (2004):', v);
-                    if (v && v !== 'undefined' && v !== 'null') {
-                      console.log('✅ [SCORM] Nome obtido via SCORM 2004:', v);
-                      return v;
-                    }
-                  }
-                } else if (version === '1.2') {
-                  console.log('👤 [SCORM] Tentando obter nome via SCORM 1.2 (cmi.core.student_name)...');
-                  if (api.LMSGetValue) {
-                    const v = api.LMSGetValue('cmi.core.student_name');
-                    console.log('👤 [SCORM] Valor obtido (1.2):', v);
-                    if (v && v !== 'undefined' && v !== 'null') {
-                      console.log('✅ [SCORM] Nome obtido via SCORM 1.2:', v);
-                      return v;
-                    }
+                console.log('👤 [SCORM] Tentando obter nome via API direta (cmi.core.student_name)...');
+                if (api.LMSGetValue) {
+                  const v = api.LMSGetValue('cmi.core.student_name');
+                  console.log('👤 [SCORM] Valor obtido (API direta):', v);
+                  if (v && v !== 'undefined' && v !== 'null' && v !== '') {
+                    console.log('✅ [SCORM] Nome obtido via API direta:', v);
+                    return v;
                   }
                 }
               } catch (error) {
-                console.log('❌ [SCORM] Erro ao obter nome:', error);
+                console.log('❌ [SCORM] Erro ao obter nome via API direta:', error);
               }
 
               console.log('❌ [SCORM] Nome não encontrado na API SCORM');
@@ -469,105 +465,65 @@ export const useSCORM = () => {
         </html>
       `;
 
-      // JavaScript SCORM
+      // JavaScript SCORM - Usando a abordagem do projeto funcionando
       const scormJS = `
-        // SCORM 1.2 API - NÃO tocar em window.API do LMS
-        (function () {
-          var apiHandle = null;
-          var isInitialized = false;
-          var isCompleted = false;
-
-          function findAPI(win) {
-            var findAttempts = 0;
-            try {
-              while (!win.API && win.parent && win.parent !== win) {
-                findAttempts++;
-                if (findAttempts > 7) return null;
-                win = win.parent;
-              }
-              return win.API || null;
-            } catch (e) {
-              return null;
+        // Simplified SCORM 1.2 API - Baseado no projeto funcionando
+        var SCORM = {
+            API: null,
+            
+            // Find SCORM API
+            findAPI: function(win) {
+                let findAttempts = 0;
+                
+                while (!win.API && win.parent && win.parent != win && findAttempts < 10) {
+                    findAttempts++;
+                    win = win.parent;
+                }
+                
+                return win.API || null;
+            },
+            
+            // Initialize SCORM
+            init: function() {
+                this.API = this.findAPI(window);
+                
+                if (this.API) {
+                    this.API.LMSInitialize("");
+                    return true;
+                }
+                
+                return false;
+            },
+            
+            // Set value
+            setValue: function(param, value) {
+                if (this.API) {
+                    this.API.LMSSetValue(param, value);
+                }
+            },
+            
+            // Get value
+            getValue: function(param) {
+                if (this.API) {
+                    return this.API.LMSGetValue(param);
+                }
+                return "";
+            },
+            
+            // Save data
+            save: function() {
+                if (this.API) {
+                    this.API.LMSCommit("");
+                }
+            },
+            
+            // End session
+            terminate: function() {
+                if (this.API) {
+                    this.API.LMSFinish("");
+                }
             }
-          }
-
-          function getAPI() {
-            if (apiHandle) return apiHandle;
-            // tenta na janela atual
-            if (typeof window !== 'undefined') {
-              apiHandle = (typeof window.API !== 'undefined' && window.API !== null) ? window.API : null;
-            }
-            // tenta subir a árvore (pode ser o LMS)
-            if (!apiHandle) apiHandle = findAPI(window);
-            if (!apiHandle) {
-              try { apiHandle = findAPI(window.top); } catch (e) {}
-            }
-            return apiHandle;
-          }
-
-          function initialize() {
-            var api = getAPI();
-            if (!api || !api.LMSInitialize) return "false";
-            var result = api.LMSInitialize("");
-            if (result === "true" || result === true) isInitialized = true;
-            return result;
-          }
-
-          function terminate() {
-            var api = getAPI();
-            if (!api || !api.LMSFinish) return "false";
-            return api.LMSFinish("");
-          }
-
-          function setValue(element, value) {
-            var api = getAPI();
-            if (!api || !api.LMSSetValue) return "false";
-            return api.LMSSetValue(element, value);
-          }
-
-          function getValue(element) {
-            var api = getAPI();
-            if (!api || !api.LMSGetValue) return "";
-            return api.LMSGetValue(element);
-          }
-
-          function setCompleted() {
-            setValue("cmi.core.lesson_status", "completed");
-            isCompleted = true;
-          }
-          function setIncomplete() {
-            setValue("cmi.core.lesson_status", "incomplete");
-            isCompleted = false;
-          }
-          function setPassed() {
-            setValue("cmi.core.lesson_status", "passed");
-            isCompleted = true;
-          }
-          function setFailed() {
-            setValue("cmi.core.lesson_status", "failed");
-            isCompleted = false;
-          }
-
-          // expõe um namespace próprio (não colide com o LMS)
-          window.SCORM12 = {
-            initialize, terminate, setValue, getValue,
-            setCompleted, setIncomplete, setPassed, setFailed,
-            _getAPI: getAPI
-          };
-
-          // Inicialização padrão
-          window.addEventListener('load', function () {
-            initialize();
-            setValue("cmi.core.lesson_status", "incomplete");
-          });
-
-          window.addEventListener('beforeunload', function () {
-            if (isInitialized) {
-              setCompleted();
-              terminate();
-            }
-          });
-        })();
+        };
       `;
 
       // XSD Schemas (conteúdo simplificado)
