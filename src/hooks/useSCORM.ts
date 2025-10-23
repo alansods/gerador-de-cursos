@@ -182,6 +182,52 @@ export const useSCORM = () => {
                 console.log('✅ [SCORM] Nome obtido via URL:', nameParam);
               }
               
+              // Verificar se há dados no localStorage (alguns LMSs usam)
+              try {
+                const storedName = localStorage.getItem('lms_student_name') || 
+                                 localStorage.getItem('student_name') || 
+                                 localStorage.getItem('learner_name');
+                console.log('💾 [SCORM] localStorage:', { storedName });
+                if (storedName && !isConnected) {
+                  studentName = storedName;
+                  isConnected = true;
+                  console.log('✅ [SCORM] Nome obtido via localStorage:', storedName);
+                }
+              } catch (e) {
+                console.log('⚠️ [SCORM] Erro ao acessar localStorage:', e);
+              }
+              
+              // Verificar se há dados no sessionStorage
+              try {
+                const sessionName = sessionStorage.getItem('student_name') || 
+                                  sessionStorage.getItem('learner_name');
+                console.log('🗂️ [SCORM] sessionStorage:', { sessionName });
+                if (sessionName && !isConnected) {
+                  studentName = sessionName;
+                  isConnected = true;
+                  console.log('✅ [SCORM] Nome obtido via sessionStorage:', sessionName);
+                }
+              } catch (e) {
+                console.log('⚠️ [SCORM] Erro ao acessar sessionStorage:', e);
+              }
+              
+              // Verificar se há dados em cookies
+              try {
+                const cookies = document.cookie.split(';');
+                console.log('🍪 [SCORM] Cookies:', { cookies: document.cookie });
+                for (const cookie of cookies) {
+                  const [name, value] = cookie.trim().split('=');
+                  if ((name === 'student_name' || name === 'learner_name' || name === 'user_name') && !isConnected) {
+                    studentName = decodeURIComponent(value);
+                    isConnected = true;
+                    console.log('✅ [SCORM] Nome obtido via cookie:', { name, value });
+                    break;
+                  }
+                }
+              } catch (e) {
+                console.log('⚠️ [SCORM] Erro ao acessar cookies:', e);
+              }
+              
               console.log('🎯 [SCORM] Resultado final:', {
                 isConnected,
                 studentName,
@@ -195,11 +241,8 @@ export const useSCORM = () => {
               return { studentName, isConnected };
             }
             
-            // Executar detecção quando a página carregar
-            document.addEventListener('DOMContentLoaded', function() {
-              const { studentName, isConnected } = detectarNomeAluno();
-              
-              // Atualizar a mensagem de boas-vindas
+            // Função para atualizar a mensagem
+            function atualizarMensagem(studentName, isConnected) {
               const welcomeTitle = document.getElementById('welcome-title');
               const welcomeMessage = document.getElementById('welcome-message');
               
@@ -212,7 +255,31 @@ export const useSCORM = () => {
                   welcomeMessage.textContent = 'Olá, Convidado! Você está visualizando este curso em modo de demonstração.';
                 }
               }
-            });
+            }
+            
+            // Executar detecção imediatamente
+            let { studentName, isConnected } = detectarNomeAluno();
+            atualizarMensagem(studentName, isConnected);
+            
+            // Tentar novamente após 1 segundo (API SCORM pode carregar depois)
+            setTimeout(function() {
+              console.log('🔄 [SCORM] Tentativa 2 - Verificando API SCORM novamente...');
+              const result2 = detectarNomeAluno();
+              if (result2.isConnected && !isConnected) {
+                console.log('✅ [SCORM] API SCORM carregada na segunda tentativa!');
+                atualizarMensagem(result2.studentName, result2.isConnected);
+              }
+            }, 1000);
+            
+            // Tentar novamente após 3 segundos
+            setTimeout(function() {
+              console.log('🔄 [SCORM] Tentativa 3 - Verificando API SCORM novamente...');
+              const result3 = detectarNomeAluno();
+              if (result3.isConnected && !isConnected) {
+                console.log('✅ [SCORM] API SCORM carregada na terceira tentativa!');
+                atualizarMensagem(result3.studentName, result3.isConnected);
+              }
+            }, 3000);
           </script>
           
           <div class="max-w-6xl mx-auto px-6 py-8">
