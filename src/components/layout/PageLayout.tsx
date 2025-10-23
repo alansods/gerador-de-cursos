@@ -1,5 +1,4 @@
 import React from "react";
-import { Navbar } from "./Navbar";
 
 interface PageLayoutProps {
   children: React.ReactNode;
