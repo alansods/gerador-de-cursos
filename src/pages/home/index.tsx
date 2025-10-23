@@ -150,6 +150,8 @@ export default function GeradorHome() {
                     </div>
                   </div>
 
+                  <div className="border-t border-gray-200 my-4"></div>
+
                   <div className="flex space-x-2">
                     <Button
                       variant="outline"
