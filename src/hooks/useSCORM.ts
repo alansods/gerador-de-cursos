@@ -92,8 +92,43 @@ export const useSCORM = () => {
           <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
         </head>
         <body class="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
+          <!-- Instruções para configuração do LMS -->
+          <div id="lms-config-info" style="display: none; position: fixed; top: 10px; right: 10px; background: #f0f9ff; border: 1px solid #0ea5e9; border-radius: 8px; padding: 12px; max-width: 300px; font-size: 12px; z-index: 1000;">
+            <strong>💡 Configuração LMS:</strong><br>
+            • <strong>Pop-up:</strong> Funciona automaticamente<br>
+            • <strong>Frame:</strong> Recomendado para melhor performance<br>
+            • <strong>Altura:</strong> 800px mínimo<br>
+            • <strong>Largura:</strong> 100%
+          </div>
+          
           <script>
             console.log('🚀 [SCORM] Página carregada no LMS');
+            console.log('🔍 [SCORM] window.opener:', !!window.opener);
+            console.log('🔍 [SCORM] window.top:', !!window.top);
+            console.log('🔍 [SCORM] window.parent:', !!window.parent);
+            
+            // Detectar tipo de abertura
+            if (window.opener && window.opener !== window) {
+              console.log('🪟 [SCORM] Detectado: Pop-up window');
+            } else if (window.top && window.top !== window) {
+              console.log('🖼️ [SCORM] Detectado: Frame/iframe');
+            } else {
+              console.log('🖥️ [SCORM] Detectado: Window direto');
+            }
+            
+            // Adicionar botão de ajuda para configuração LMS
+            setTimeout(function() {
+              var helpButton = document.createElement('button');
+              helpButton.innerHTML = '💡 LMS Config';
+              helpButton.style.cssText = 'position: fixed; top: 10px; right: 10px; background: #0ea5e9; color: white; border: none; border-radius: 6px; padding: 8px 12px; font-size: 12px; cursor: pointer; z-index: 1001;';
+              helpButton.onclick = function() {
+                var info = document.getElementById('lms-config-info');
+                if (info) {
+                  info.style.display = info.style.display === 'none' ? 'block' : 'none';
+                }
+              };
+              document.body.appendChild(helpButton);
+            }, 1000);
             
             // Verificar se scormconfig.js foi carregado
             if (typeof window.API_1484_11 === 'undefined' && typeof window.API === 'undefined') {
@@ -114,27 +149,53 @@ export const useSCORM = () => {
                 return { version: '1.2', api: SCORM.API };
               }
               
-              // Fallback: busca direta mais robusta
+              // Fallback: busca direta mais robusta - Cobertura completa para pop-ups e frames
               console.log('🔍 [SCORM] Tentando busca direta...');
               var api = null;
               var win = window;
               var attempts = 0;
               
-              // Verificar window atual primeiro
+              // 1) Verificar window atual primeiro
               if (win.API) {
-                console.log('✅ [SCORM] API encontrada em window atual');
+                console.log('✅ [SCORM] API encontrada em window atual (busca direta)');
                 return { version: '1.2', api: win.API };
               }
               
-              // Buscar em window.parent
+              // 2) Verificar window.opener (pop-ups)
+              if (window.opener && window.opener !== window) {
+                console.log('🔍 [SCORM] Verificando window.opener (pop-up) - busca direta...');
+                try {
+                  if (window.opener.API) {
+                    console.log('✅ [SCORM] API encontrada em window.opener (pop-up) - busca direta');
+                    return { version: '1.2', api: window.opener.API };
+                  }
+                } catch (e) {
+                  console.log('⚠️ [SCORM] Erro ao acessar window.opener (cross-origin?):', e.message);
+                }
+              }
+              
+              // 3) Verificar window.top (frame principal)
+              if (window.top && window.top !== window) {
+                console.log('🔍 [SCORM] Verificando window.top (frame principal) - busca direta...');
+                try {
+                  if (window.top.API) {
+                    console.log('✅ [SCORM] API encontrada em window.top (frame principal) - busca direta');
+                    return { version: '1.2', api: window.top.API };
+                  }
+                } catch (e) {
+                  console.log('⚠️ [SCORM] Erro ao acessar window.top (cross-origin?):', e.message);
+                }
+              }
+              
+              // 4) Buscar em window.parent (frames aninhados)
               while (!api && win.parent && win.parent != win && attempts < 10) {
                 attempts++;
-                console.log('🔍 [SCORM] Tentativa ' + attempts + ' - verificando window.parent');
+                console.log('🔍 [SCORM] Tentativa ' + attempts + ' - verificando window.parent (busca direta)');
                 win = win.parent;
                 
                 if (win.API) {
                   api = win.API;
-                  console.log('✅ [SCORM] API encontrada em window.parent após ' + attempts + ' tentativas');
+                  console.log('✅ [SCORM] API encontrada em window.parent após ' + attempts + ' tentativas (busca direta)');
                   break;
                 }
               }
@@ -499,9 +560,46 @@ export const useSCORM = () => {
         var SCORM = {
             API: null,
             
-            // Find SCORM API com logs detalhados
+            // Find SCORM API com logs detalhados - Cobertura completa para pop-ups e frames
             findAPI: function(win) {
                 console.log('🔍 [SCORM] findAPI iniciado');
+                console.log('🔍 [SCORM] window.opener:', !!window.opener);
+                console.log('🔍 [SCORM] window.top:', !!window.top);
+                console.log('🔍 [SCORM] window.parent:', !!window.parent);
+                
+                // 1) Verificar window atual primeiro
+                if (win.API) {
+                    console.log('✅ [SCORM] API encontrada em window atual');
+                    return win.API;
+                }
+                
+                // 2) Verificar window.opener (pop-ups)
+                if (window.opener && window.opener !== window) {
+                    console.log('🔍 [SCORM] Verificando window.opener (pop-up)...');
+                    try {
+                        if (window.opener.API) {
+                            console.log('✅ [SCORM] API encontrada em window.opener (pop-up)');
+                            return window.opener.API;
+                        }
+                    } catch (e) {
+                        console.log('⚠️ [SCORM] Erro ao acessar window.opener (cross-origin?):', e.message);
+                    }
+                }
+                
+                // 3) Verificar window.top (frame principal)
+                if (window.top && window.top !== window) {
+                    console.log('🔍 [SCORM] Verificando window.top (frame principal)...');
+                    try {
+                        if (window.top.API) {
+                            console.log('✅ [SCORM] API encontrada em window.top (frame principal)');
+                            return window.top.API;
+                        }
+                    } catch (e) {
+                        console.log('⚠️ [SCORM] Erro ao acessar window.top (cross-origin?):', e.message);
+                    }
+                }
+                
+                // 4) Busca recursiva em window.parent (frames aninhados)
                 let findAttempts = 0;
                 let currentWin = win;
                 
@@ -516,13 +614,7 @@ export const useSCORM = () => {
                     }
                 }
                 
-                // Verificar window atual também
-                if (win.API) {
-                    console.log('✅ [SCORM] API encontrada em window atual');
-                    return win.API;
-                }
-                
-                console.log('❌ [SCORM] API não encontrada após ' + findAttempts + ' tentativas');
+                console.log('❌ [SCORM] API não encontrada em nenhum local');
                 return null;
             },
             
