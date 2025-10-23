@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { useProgresso } from '@/context/ProgressoContext';
-import { infoCurso } from '@/data/info-curso';
+import { cursoInfo } from '@/data/info-curso';
 import { CursoInfo, UnidadeInfo } from '@/types/curso';
 
 export function useCurso() {
@@ -8,19 +8,9 @@ export function useCurso() {
 
   // Combinar dados estáticos com progresso dinâmico
   const cursoCompleto = useMemo(() => {
-    const cursoInfo: CursoInfo = {
-      titulo: infoCurso.titulo,
-      categoria: infoCurso.categoria,
-      descricao: infoCurso.descricao,
-      cargaHoraria: infoCurso.cargaHoraria,
-      modalidade: infoCurso.modalidade,
-      instrutor: infoCurso.instrutor,
-      unidades: infoCurso.unidades
-    };
-
     // Combinar unidades estáticas com progresso
-    const unidadesComProgresso = infoCurso.unidades.map((unidadeInfo: UnidadeInfo) => {
-      const progressoUnidade = progresso.unidades.find(p => p.id === unidadeInfo.id);
+    const unidadesComProgresso = cursoInfo.unidades.map((unidadeInfo: any) => {
+      const progressoUnidade = progresso.unidades?.find((p: any) => p.id === unidadeInfo.id);
       return {
         ...unidadeInfo,
         status: progressoUnidade?.status || 'nao-iniciado',
@@ -33,9 +23,9 @@ export function useCurso() {
     return {
       ...cursoInfo,
       unidades: unidadesComProgresso,
-      progressoGeral: progresso.progressoGeral,
-      unidadeAtual: progresso.unidadeAtual,
-      ultimaAtualizacao: progresso.ultimaAtualizacao
+      progressoGeral: progresso.progressoGeral || 0,
+      unidadeAtual: progresso.unidadeAtual || 1,
+      ultimaAtualizacao: progresso.ultimaAtualizacao || new Date()
     };
   }, [progresso]);
 
