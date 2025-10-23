@@ -195,6 +195,45 @@ export const useSCORM = () => {
                 } catch (e) {
                   console.log('⚠️ [SCORM] Erro ao acessar window.top.API:', e);
                 }
+                
+                // Tentar acessar API SCORM via outros métodos (SCORM Cloud)
+                try {
+                  if (window.parent && window.parent.parent && window.parent.parent.API) {
+                    console.log('🔍 [SCORM] Tentando acessar API via window.parent.parent');
+                    const parentParentLearnerName = window.parent.parent.API.get('cmi.learner_name');
+                    if (parentParentLearnerName && parentParentLearnerName !== '') {
+                      studentName = parentParentLearnerName;
+                      isConnected = true;
+                      console.log('✅ [SCORM] Nome obtido via window.parent.parent.API:', parentParentLearnerName);
+                    }
+                  }
+                } catch (e) {
+                  console.log('⚠️ [SCORM] Erro ao acessar window.parent.parent.API:', e);
+                }
+                
+                // Tentar acessar via frames
+                try {
+                  if (window.frames && window.frames.length > 0) {
+                    console.log('🔍 [SCORM] Tentando acessar API via frames');
+                    for (let i = 0; i < window.frames.length; i++) {
+                      try {
+                        if (window.frames[i].API) {
+                          const frameLearnerName = window.frames[i].API.get('cmi.learner_name');
+                          if (frameLearnerName && frameLearnerName !== '') {
+                            studentName = frameLearnerName;
+                            isConnected = true;
+                            console.log('✅ [SCORM] Nome obtido via frame API:', frameLearnerName);
+                            break;
+                          }
+                        }
+                      } catch (e) {
+                        // Ignorar erros de frame
+                      }
+                    }
+                  }
+                } catch (e) {
+                  console.log('⚠️ [SCORM] Erro ao acessar frames:', e);
+                }
               }
               
               // Verificar URL parameters
@@ -271,6 +310,25 @@ export const useSCORM = () => {
                     isConnected = true;
                     console.log('✅ [SCORM] Nome obtido via cookie:', { name, value });
                     break;
+                  }
+                }
+                
+                // Tentar extrair nome de cookies do SCORM Cloud
+                if (!isConnected) {
+                  console.log('🔍 [SCORM] Tentando extrair nome de cookies do SCORM Cloud...');
+                  for (const cookie of cookies) {
+                    const [name, value] = cookie.trim().split('=');
+                    console.log('🍪 [SCORM] Cookie:', { name, value: value.substring(0, 50) + '...' });
+                    
+                    // Tentar decodificar cookies que podem conter nome
+                    try {
+                      const decodedValue = decodeURIComponent(value);
+                      if (decodedValue.includes('name') || decodedValue.includes('user') || decodedValue.includes('student')) {
+                        console.log('🔍 [SCORM] Cookie pode conter nome:', { name, decodedValue: decodedValue.substring(0, 100) + '...' });
+                      }
+                    } catch (e) {
+                      // Ignorar erros de decodificação
+                    }
                   }
                 }
               } catch (e) {
