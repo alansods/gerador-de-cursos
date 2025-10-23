@@ -528,7 +528,7 @@ export default function GeradorEditar() {
       <div className="max-w-6xl mx-auto px-6 py-8">
         {/* Mensagem de Boas-vindas */}
         <WelcomeMessage />
-        
+
         {/* Card de Informações do Curso */}
         <Card className="mb-8 shadow-xl border-0 bg-gradient-to-r from-blue-600 to-purple-600 text-white">
           <CardHeader className="pb-4">

@@ -17,11 +17,10 @@ export const WelcomeMessage: React.FC<WelcomeMessageProps> = ({
           <User className="h-6 w-6 text-blue-200" />
         </div>
         <div className="flex-1">
-          <h2 className="text-lg font-semibold mb-1">
-            Bem-vindo!
-          </h2>
+          <h2 className="text-lg font-semibold mb-1">Bem-vindo!</h2>
           <p className="text-blue-100 text-sm">
-            Olá, Convidado! Você está visualizando este curso em modo de demonstração.
+            Olá, Convidado! Você está visualizando este curso em modo de
+            demonstração.
           </p>
         </div>
       </div>

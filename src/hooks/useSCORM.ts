@@ -36,29 +36,6 @@ export const useSCORM = () => {
 
       // Gerar manifest SCORM 1.2 funcional
       const sanitizedId = curso.id.replace(/[^a-zA-Z0-9_-]/g, "_");
-      const unidadeItems = (curso.unidades || [])
-        .map(
-          (unidade, idx) =>
-            `<item identifier="unidade_${
-              idx + 1
-            }" isvisible="true" identifierref="resource_unidade_${idx + 1}">
-          <title>${unidade.titulo}</title>
-        </item>`
-        )
-        .join("\n");
-
-      const recursoItems = (curso.unidades || [])
-        .map(
-          (_, idx) =>
-            `<resource identifier="resource_unidade_${
-              idx + 1
-            }" type="webcontent" href="index.html" adlcp:scormtype="sco">
-      <file href="index.html" />
-      <file href="scormconfig.js" />
-      <file href="style.css" />
-    </resource>`
-        )
-        .join("\n");
 
       const manifestXML = `<?xml version="1.0" encoding="UTF-8"?>
 <manifest xmlns="http://www.imsproject.org/xsd/imscp_rootv1p1p2" xmlns:imsmd="http://www.imsglobal.org/xsd/imsmd_rootv1p2p1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:adlcp="http://www.adlnet.org/xsd/adlcp_rootv1p2" identifier="MANIFEST-${sanitizedId}" version="1.0">
@@ -81,7 +58,6 @@ export const useSCORM = () => {
       <title>${curso.titulo}</title>
       <item identifier="ITEM1" isvisible="true" identifierref="RESOURCE1">
         <title>${curso.titulo}</title>
-        ${unidadeItems}
       </item>
     </organization>
   </organizations>
@@ -91,7 +67,6 @@ export const useSCORM = () => {
       <file href="scormconfig.js" />
       <file href="style.css" />
     </resource>
-    ${recursoItems}
   </resources>
 </manifest>`;
 
@@ -113,236 +88,95 @@ export const useSCORM = () => {
           <meta name="viewport" content="width=device-width, initial-scale=1.0">
           <title>${curso.titulo}</title>
           <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+          <script src="scormconfig.js"></script>
           <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
         </head>
         <body class="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
           <script>
             console.log('🚀 [SCORM] Página carregada no LMS');
             
-            // Função para detectar nome do aluno no LMS
+            function getScormAPI() {
+              // SCORM 2004
+              if (window.API_1484_11) return { version: '2004', api: window.API_1484_11 };
+              if (window.parent && window.parent.API_1484_11) return { version: '2004', api: window.parent.API_1484_11 };
+              if (window.top && window.top.API_1484_11) return { version: '2004', api: window.top.API_1484_11 };
+              // SCORM 1.2
+              if (window.API) return { version: '1.2', api: window.API };
+              if (window.parent && window.parent.API) return { version: '1.2', api: window.parent.API };
+              if (window.top && window.top.API) return { version: '1.2', api: window.top.API };
+              return { version: null, api: null };
+            }
+
+            function scormInitializeIfNeeded() {
+              const { version, api } = getScormAPI();
+              try {
+                if (version === '2004') {
+                  const ok = api.Initialize ? api.Initialize('') : 'false';
+                  return ok === 'true' || ok === true;
+                }
+                if (version === '1.2') {
+                  const ok = api.LMSInitialize ? api.LMSInitialize('') : 'false';
+                  return ok === 'true' || ok === true;
+                }
+              } catch (_) {}
+              return false;
+            }
+
+            function scormGetStudentName() {
+              const { version, api } = getScormAPI();
+              if (!api || !version) return null;
+
+              try {
+                if (version === '2004') {
+                  // Nome: cmi.learner_name
+                  if (api.GetValue) {
+                    const v = api.GetValue('cmi.learner_name');
+                    if (v && v !== 'undefined' && v !== 'null') return v;
+                  }
+                } else if (version === '1.2') {
+                  // Nome: cmi.core.student_name
+                  if (api.LMSGetValue) {
+                    const v = api.LMSGetValue('cmi.core.student_name');
+                    if (v && v !== 'undefined' && v !== 'null') return v;
+                  }
+                }
+              } catch (_) {}
+
+              return null;
+            }
+
             function detectarNomeAluno() {
               console.log('🔍 [SCORM] Iniciando detecção do nome do aluno...');
               
               let studentName = 'Convidado';
               let isConnected = false;
-              
-              // Verificar API SCORM
-              if (typeof window.API !== 'undefined' && window.API) {
-                console.log('✅ [SCORM] API SCORM detectada');
-                try {
-                  const learnerName = window.API.get('cmi.learner_name');
-                  const learnerId = window.API.get('cmi.learner_id');
-                  const studentName = window.API.get('cmi.student_name');
-                  const userName = window.API.get('cmi.user_name');
-                  
-                  console.log('📊 [SCORM] Dados SCORM:', {
-                    learnerName,
-                    learnerId,
-                    studentName,
-                    userName
-                  });
-                  
-                  if (learnerName && learnerName !== '') {
-                    studentName = learnerName;
-                    isConnected = true;
-                    console.log('✅ [SCORM] Nome obtido via learner_name:', learnerName);
-                  } else if (studentName && studentName !== '') {
-                    studentName = studentName;
-                    isConnected = true;
-                    console.log('✅ [SCORM] Nome obtido via student_name:', studentName);
-                  } else if (userName && userName !== '') {
-                    studentName = userName;
-                    isConnected = true;
-                    console.log('✅ [SCORM] Nome obtido via user_name:', userName);
-                  } else if (learnerId && learnerId !== '') {
-                    studentName = learnerId;
-                    isConnected = true;
-                    console.log('✅ [SCORM] ID obtido via learner_id:', learnerId);
-                  } else {
-                    console.log('⚠️ [SCORM] Nenhum dado de aluno encontrado na API SCORM');
-                  }
-                } catch (error) {
-                  console.log('❌ [SCORM] Erro ao acessar API SCORM:', error);
-                }
-              } else {
-                console.log('⚠️ [SCORM] API SCORM não disponível');
-                
-                // Tentar acessar API SCORM de outras formas (SCORM Cloud)
-                try {
-                  if (window.parent && window.parent.API) {
-                    console.log('🔍 [SCORM] Tentando acessar API via window.parent');
-                    const parentLearnerName = window.parent.API.get('cmi.learner_name');
-                    if (parentLearnerName && parentLearnerName !== '') {
-                      studentName = parentLearnerName;
-                      isConnected = true;
-                      console.log('✅ [SCORM] Nome obtido via window.parent.API:', parentLearnerName);
-                    }
-                  }
-                } catch (e) {
-                  console.log('⚠️ [SCORM] Erro ao acessar window.parent.API:', e);
-                }
-                
-                try {
-                  if (window.top && window.top.API) {
-                    console.log('🔍 [SCORM] Tentando acessar API via window.top');
-                    const topLearnerName = window.top.API.get('cmi.learner_name');
-                    if (topLearnerName && topLearnerName !== '') {
-                      studentName = topLearnerName;
-                      isConnected = true;
-                      console.log('✅ [SCORM] Nome obtido via window.top.API:', topLearnerName);
-                    }
-                  }
-                } catch (e) {
-                  console.log('⚠️ [SCORM] Erro ao acessar window.top.API:', e);
-                }
-                
-                // Tentar acessar API SCORM via outros métodos (SCORM Cloud)
-                try {
-                  if (window.parent && window.parent.parent && window.parent.parent.API) {
-                    console.log('🔍 [SCORM] Tentando acessar API via window.parent.parent');
-                    const parentParentLearnerName = window.parent.parent.API.get('cmi.learner_name');
-                    if (parentParentLearnerName && parentParentLearnerName !== '') {
-                      studentName = parentParentLearnerName;
-                      isConnected = true;
-                      console.log('✅ [SCORM] Nome obtido via window.parent.parent.API:', parentParentLearnerName);
-                    }
-                  }
-                } catch (e) {
-                  console.log('⚠️ [SCORM] Erro ao acessar window.parent.parent.API:', e);
-                }
-                
-                // Tentar acessar via frames
-                try {
-                  if (window.frames && window.frames.length > 0) {
-                    console.log('🔍 [SCORM] Tentando acessar API via frames');
-                    for (let i = 0; i < window.frames.length; i++) {
-                      try {
-                        if (window.frames[i].API) {
-                          const frameLearnerName = window.frames[i].API.get('cmi.learner_name');
-                          if (frameLearnerName && frameLearnerName !== '') {
-                            studentName = frameLearnerName;
-                            isConnected = true;
-                            console.log('✅ [SCORM] Nome obtido via frame API:', frameLearnerName);
-                            break;
-                          }
-                        }
-                      } catch (e) {
-                        // Ignorar erros de frame
-                      }
-                    }
-                  }
-                } catch (e) {
-                  console.log('⚠️ [SCORM] Erro ao acessar frames:', e);
-                }
-              }
-              
-              // Verificar URL parameters
-              const urlParams = new URLSearchParams(window.location.search);
-              const nameParam = urlParams.get('name') || urlParams.get('student') || urlParams.get('learner') || urlParams.get('user');
-              console.log('🔗 [SCORM] Parâmetros da URL:', {
-                search: window.location.search,
-                nameParam,
-                allParams: Object.fromEntries(urlParams.entries())
-              });
-              if (nameParam) {
-                studentName = decodeURIComponent(nameParam);
-                isConnected = true;
-                console.log('✅ [SCORM] Nome obtido via URL:', nameParam);
-              }
-              
-              // Verificar se há dados no referrer (SCORM Cloud)
-              if (document.referrer && document.referrer.includes('cloud.scorm.com')) {
-                console.log('☁️ [SCORM] SCORM Cloud detectado');
-                try {
-                  const referrerUrl = new URL(document.referrer);
-                  const referrerParams = new URLSearchParams(referrerUrl.search);
-                  console.log('🔍 [SCORM] Parâmetros do referrer:', Object.fromEntries(referrerParams.entries()));
-                  
-                  // Tentar extrair nome do referrer
-                  const referrerName = referrerParams.get('name') || referrerParams.get('student') || referrerParams.get('learner');
-                  if (referrerName && !isConnected) {
-                    studentName = decodeURIComponent(referrerName);
-                    isConnected = true;
-                    console.log('✅ [SCORM] Nome obtido via referrer:', referrerName);
-                  }
-                } catch (e) {
-                  console.log('⚠️ [SCORM] Erro ao processar referrer:', e);
-                }
-              }
-              
-              // Verificar se há dados no localStorage (alguns LMSs usam)
-              try {
-                const storedName = localStorage.getItem('lms_student_name') || 
-                                 localStorage.getItem('student_name') || 
-                                 localStorage.getItem('learner_name');
-                console.log('💾 [SCORM] localStorage:', { storedName });
-                if (storedName && !isConnected) {
-                  studentName = storedName;
+
+              // 1) Tenta SCORM
+              const inited = scormInitializeIfNeeded();
+              if (inited) {
+                const scormName = scormGetStudentName();
+                if (scormName) {
+                  studentName = scormName;
                   isConnected = true;
-                  console.log('✅ [SCORM] Nome obtido via localStorage:', storedName);
+                  console.log('✅ [SCORM] Nome obtido via SCORM:', scormName);
                 }
-              } catch (e) {
-                console.log('⚠️ [SCORM] Erro ao acessar localStorage:', e);
               }
-              
-              // Verificar se há dados no sessionStorage
-              try {
-                const sessionName = sessionStorage.getItem('student_name') || 
-                                  sessionStorage.getItem('learner_name');
-                console.log('🗂️ [SCORM] sessionStorage:', { sessionName });
-                if (sessionName && !isConnected) {
-                  studentName = sessionName;
-                  isConnected = true;
-                  console.log('✅ [SCORM] Nome obtido via sessionStorage:', sessionName);
+
+              // 2) Fallbacks (URL/localStorage/session/cookies)
+              if (!isConnected) {
+                const urlParams = new URLSearchParams(window.location.search);
+                const alt = urlParams.get('name') || urlParams.get('student') || urlParams.get('learner') || urlParams.get('user');
+                if (alt) { 
+                  studentName = decodeURIComponent(alt); 
+                  isConnected = true; 
+                  console.log('✅ [SCORM] Nome obtido via URL:', alt);
                 }
-              } catch (e) {
-                console.log('⚠️ [SCORM] Erro ao acessar sessionStorage:', e);
               }
-              
-              // Verificar se há dados em cookies
-              try {
-                const cookies = document.cookie.split(';');
-                console.log('🍪 [SCORM] Cookies:', { cookies: document.cookie });
-                for (const cookie of cookies) {
-                  const [name, value] = cookie.trim().split('=');
-                  if ((name === 'student_name' || name === 'learner_name' || name === 'user_name') && !isConnected) {
-                    studentName = decodeURIComponent(value);
-                    isConnected = true;
-                    console.log('✅ [SCORM] Nome obtido via cookie:', { name, value });
-                    break;
-                  }
-                }
-                
-                // Tentar extrair nome de cookies do SCORM Cloud
-                if (!isConnected) {
-                  console.log('🔍 [SCORM] Tentando extrair nome de cookies do SCORM Cloud...');
-                  for (const cookie of cookies) {
-                    const [name, value] = cookie.trim().split('=');
-                    console.log('🍪 [SCORM] Cookie:', { name, value: value.substring(0, 50) + '...' });
-                    
-                    // Tentar decodificar cookies que podem conter nome
-                    try {
-                      const decodedValue = decodeURIComponent(value);
-                      if (decodedValue.includes('name') || decodedValue.includes('user') || decodedValue.includes('student')) {
-                        console.log('🔍 [SCORM] Cookie pode conter nome:', { name, decodedValue: decodedValue.substring(0, 100) + '...' });
-                      }
-                    } catch (e) {
-                      // Ignorar erros de decodificação
-                    }
-                  }
-                }
-              } catch (e) {
-                console.log('⚠️ [SCORM] Erro ao acessar cookies:', e);
-              }
-              
+
               console.log('🎯 [SCORM] Resultado final:', {
                 isConnected,
                 studentName,
-                isGuest: !isConnected,
-                windowLocation: window.location.href,
-                windowParent: window.parent !== window,
-                windowTop: window.top !== window,
-                documentReferrer: document.referrer
+                isGuest: !isConnected
               });
               
               return { studentName, isConnected };
