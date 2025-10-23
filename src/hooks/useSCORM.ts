@@ -166,6 +166,35 @@ export const useSCORM = () => {
                 }
               } else {
                 console.log('⚠️ [SCORM] API SCORM não disponível');
+                
+                // Tentar acessar API SCORM de outras formas (SCORM Cloud)
+                try {
+                  if (window.parent && window.parent.API) {
+                    console.log('🔍 [SCORM] Tentando acessar API via window.parent');
+                    const parentLearnerName = window.parent.API.get('cmi.learner_name');
+                    if (parentLearnerName && parentLearnerName !== '') {
+                      studentName = parentLearnerName;
+                      isConnected = true;
+                      console.log('✅ [SCORM] Nome obtido via window.parent.API:', parentLearnerName);
+                    }
+                  }
+                } catch (e) {
+                  console.log('⚠️ [SCORM] Erro ao acessar window.parent.API:', e);
+                }
+                
+                try {
+                  if (window.top && window.top.API) {
+                    console.log('🔍 [SCORM] Tentando acessar API via window.top');
+                    const topLearnerName = window.top.API.get('cmi.learner_name');
+                    if (topLearnerName && topLearnerName !== '') {
+                      studentName = topLearnerName;
+                      isConnected = true;
+                      console.log('✅ [SCORM] Nome obtido via window.top.API:', topLearnerName);
+                    }
+                  }
+                } catch (e) {
+                  console.log('⚠️ [SCORM] Erro ao acessar window.top.API:', e);
+                }
               }
               
               // Verificar URL parameters
@@ -180,6 +209,26 @@ export const useSCORM = () => {
                 studentName = decodeURIComponent(nameParam);
                 isConnected = true;
                 console.log('✅ [SCORM] Nome obtido via URL:', nameParam);
+              }
+              
+              // Verificar se há dados no referrer (SCORM Cloud)
+              if (document.referrer && document.referrer.includes('cloud.scorm.com')) {
+                console.log('☁️ [SCORM] SCORM Cloud detectado');
+                try {
+                  const referrerUrl = new URL(document.referrer);
+                  const referrerParams = new URLSearchParams(referrerUrl.search);
+                  console.log('🔍 [SCORM] Parâmetros do referrer:', Object.fromEntries(referrerParams.entries()));
+                  
+                  // Tentar extrair nome do referrer
+                  const referrerName = referrerParams.get('name') || referrerParams.get('student') || referrerParams.get('learner');
+                  if (referrerName && !isConnected) {
+                    studentName = decodeURIComponent(referrerName);
+                    isConnected = true;
+                    console.log('✅ [SCORM] Nome obtido via referrer:', referrerName);
+                  }
+                } catch (e) {
+                  console.log('⚠️ [SCORM] Erro ao processar referrer:', e);
+                }
               }
               
               // Verificar se há dados no localStorage (alguns LMSs usam)
