@@ -1,7 +1,6 @@
 import { useMemo } from 'react';
 import { useProgresso } from '@/context/ProgressoContext';
 import { cursoInfo } from '@/data/info-curso';
-import { CursoInfo, UnidadeInfo } from '@/types/curso';
 
 export function useCurso() {
   const { progresso } = useProgresso();

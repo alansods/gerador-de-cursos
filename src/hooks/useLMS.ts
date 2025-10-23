@@ -15,24 +15,16 @@ export const useLMS = (): LMSInfo => {
 
   useEffect(() => {
     const checkLMSConnection = () => {
-      // Verificar se está em um ambiente SCORM/LMS
-      const isSCORM = typeof window !== 'undefined' && 
-        (window.parent !== window || 
-         window.top !== window ||
-         document.referrer !== '' ||
-         window.location.href.includes('lms') ||
-         window.location.href.includes('scorm'));
-
       // Tentar obter informações do LMS
       let studentName = 'Convidado';
       let isConnected = false;
 
       // Verificar se há API do SCORM disponível
-      if (typeof window.API !== 'undefined' && window.API) {
+      if (typeof window !== 'undefined' && (window as any).API) {
         try {
           // Tentar obter dados do estudante do SCORM
-          const learnerName = window.API.get('cmi.learner_name');
-          const learnerId = window.API.get('cmi.learner_id');
+          const learnerName = (window as any).API.get('cmi.learner_name');
+          const learnerId = (window as any).API.get('cmi.learner_id');
           
           if (learnerName && learnerName !== '') {
             studentName = learnerName;

@@ -7,7 +7,7 @@ interface WelcomeMessageProps {
 }
 
 export const WelcomeMessage: React.FC<WelcomeMessageProps> = ({ className = '' }) => {
-  const { studentName, isConnected, isGuest } = useLMS();
+  const { studentName, isGuest } = useLMS();
 
   return (
     <div className={`bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg p-4 mb-6 ${className}`}>

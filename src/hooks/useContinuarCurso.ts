@@ -23,8 +23,8 @@ export function useContinuarCurso() {
     }
 
     // Encontrar a primeira unidade não concluída
-    const unidadeNaoConcluida = progresso.unidades.find(
-      (unidade) => unidade.status !== 'concluido'
+    const unidadeNaoConcluida = progresso.unidades?.find(
+      (unidade: any) => unidade.status !== 'concluido'
     );
 
     if (!unidadeNaoConcluida) {
@@ -43,7 +43,7 @@ export function useContinuarCurso() {
       if (aulasUnidade) {
         // Encontrar a primeira aula não concluída
         const aulaNaoConcluida = Object.entries(aulasUnidade).find(
-          ([_, aulaStatus]) => aulaStatus.status !== 'concluida'
+          ([_, aulaStatus]: [string, any]) => aulaStatus.status !== 'concluida'
         );
 
         if (aulaNaoConcluida) {
