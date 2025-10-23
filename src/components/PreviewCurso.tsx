@@ -2,6 +2,7 @@ import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { WelcomeMessage } from "@/components/WelcomeMessage";
 import {
   BookOpen,
   Clock,
@@ -155,6 +156,9 @@ export const PreviewCurso: React.FC<PreviewCursoProps> = ({
 
       {/* Main Content */}
       <div className="max-w-6xl mx-auto px-6 py-8">
+        {/* Mensagem de Boas-vindas */}
+        <WelcomeMessage />
+        
         {/* Course Header */}
         <Card className="mb-8 shadow-xl border-0 bg-gradient-to-r from-blue-600 to-purple-600 text-white">
           <CardHeader className="pb-4">

@@ -117,6 +117,21 @@ export const useSCORM = () => {
         </head>
         <body class="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
           <div class="max-w-6xl mx-auto px-6 py-8">
+            <!-- Welcome Message -->
+            <div class="bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg p-4 mb-6">
+              <div class="flex items-center gap-3">
+                <div class="flex-shrink-0">
+                  <i data-lucide="user" class="h-6 w-6 text-blue-200"></i>
+                </div>
+                <div class="flex-1">
+                  <h2 class="text-lg font-semibold mb-1">Bem-vindo ao curso!</h2>
+                  <p class="text-blue-100 text-sm">
+                    Olá! Estamos felizes em tê-lo(a) conosco neste curso. Aproveite o aprendizado!
+                  </p>
+                </div>
+              </div>
+            </div>
+            
             <!-- Course Header -->
             <div class="mb-8 shadow-xl border-0 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg">
               <div class="p-8">
