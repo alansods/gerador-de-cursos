@@ -70,12 +70,112 @@ export const useSCORM = () => {
   </resources>
 </manifest>`;
 
-      // CSS mínimo - apenas Tailwind base
+      // CSS otimizado para SCORM
       const cursoCSS = `
-        @import url('https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css');
+        /* Reset e base */
+        * {
+          box-sizing: border-box;
+        }
         
         body {
-          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+          line-height: 1.6;
+          color: #374151;
+          background: linear-gradient(135deg, #f0f9ff 0%, #ffffff 50%, #faf5ff 100%);
+          margin: 0;
+          padding: 0;
+        }
+        
+        /* Componentes personalizados */
+        .scorm-container {
+          max-width: 1200px;
+          margin: 0 auto;
+          padding: 2rem;
+        }
+        
+        .course-header {
+          background: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%);
+          color: white;
+          border-radius: 1rem;
+          padding: 2rem;
+          margin-bottom: 2rem;
+          box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+        
+        .unit-card {
+          background: rgba(255, 255, 255, 0.8);
+          backdrop-filter: blur(10px);
+          border-radius: 1rem;
+          padding: 2rem;
+          margin-bottom: 2rem;
+          box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+          border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .content-grid {
+          display: grid;
+          grid-template-columns: repeat(12, 1fr);
+          gap: 1rem;
+        }
+        
+        .content-item {
+          padding: 1rem;
+          border-radius: 0.5rem;
+          background: rgba(255, 255, 255, 0.5);
+        }
+        
+        .content-item.col-span-6 {
+          grid-column: span 6;
+        }
+        
+        .content-item.col-span-12 {
+          grid-column: span 12;
+        }
+        
+        /* Responsividade */
+        @media (max-width: 768px) {
+          .content-grid {
+            grid-template-columns: 1fr;
+          }
+          
+          .content-item.col-span-6,
+          .content-item.col-span-12 {
+            grid-column: span 1;
+          }
+          
+          .scorm-container {
+            padding: 1rem;
+          }
+        }
+        
+        /* Animações suaves */
+        .unit-card {
+          transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+        }
+        
+        .unit-card:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+        
+        /* Loading states */
+        .loading {
+          opacity: 0.6;
+          pointer-events: none;
+        }
+        
+        /* SCORM specific styles */
+        .scorm-debug {
+          position: fixed;
+          bottom: 10px;
+          right: 10px;
+          background: rgba(0, 0, 0, 0.8);
+          color: white;
+          padding: 0.5rem;
+          border-radius: 0.25rem;
+          font-size: 0.75rem;
+          z-index: 1000;
+          max-width: 300px;
         }
       `;
 
@@ -87,18 +187,69 @@ export const useSCORM = () => {
           <meta charset="UTF-8">
           <meta name="viewport" content="width=device-width, initial-scale=1.0">
           <title>${curso.titulo}</title>
+          <meta name="description" content="${curso.descricao}">
+          <meta name="theme-color" content="#2563eb">
+          
+          <!-- CSS -->
           <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-          <script src="scormconfig.js"></script>
+          <link href="style.css" rel="stylesheet">
+          
+          <!-- JavaScript Libraries -->
+          <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+          <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
           <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+          <script src="scormconfig.js"></script>
         </head>
-        <body class="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
-          <!-- Instruções para configuração do LMS -->
-          <div id="lms-config-info" style="display: none; position: fixed; top: 10px; right: 10px; background: #f0f9ff; border: 1px solid #0ea5e9; border-radius: 8px; padding: 12px; max-width: 300px; font-size: 12px; z-index: 1000;">
-            <strong>💡 Configuração LMS:</strong><br>
-            • <strong>Pop-up:</strong> Funciona automaticamente<br>
-            • <strong>Frame:</strong> Recomendado para melhor performance<br>
-            • <strong>Altura:</strong> 800px mínimo<br>
-            • <strong>Largura:</strong> 100%
+        <body>
+          <div class="scorm-container">
+            <!-- Header do Curso -->
+            <div class="course-header">
+              <h1 class="text-4xl font-bold mb-4">${curso.titulo}</h1>
+              <p class="text-xl opacity-90 mb-6">${curso.descricao}</p>
+              
+              <!-- Informações do Curso -->
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="bg-white/10 rounded-lg p-3 flex items-center">
+                  <i data-lucide="clock" class="w-5 h-5 mr-2"></i>
+                  <span class="font-medium">Carga Horária: ${curso.cargaHoraria}</span>
+                </div>
+                <div class="bg-white/10 rounded-lg p-3 flex items-center">
+                  <i data-lucide="user" class="w-5 h-5 mr-2"></i>
+                  <span class="font-medium">Instrutor: ${curso.instrutor}</span>
+                </div>
+                <div class="bg-white/10 rounded-lg p-3 flex items-center">
+                  <i data-lucide="graduation-cap" class="w-5 h-5 mr-2"></i>
+                  <span class="font-medium">Modalidade: ${curso.modalidade}</span>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Unidades -->
+            ${curso.unidades.map((unidade) => `
+              <div class="unit-card">
+                <h2 class="text-2xl font-bold mb-4 text-gray-800">${unidade.titulo}</h2>
+                <div class="content-grid">
+                  ${unidade.conteudo.map(item => `
+                    <div class="content-item ${item.colunas === 6 ? 'col-span-6' : 'col-span-12'}">
+                      ${item.tipo === 'titulo' ? `
+                        <h3 class="text-xl font-semibold mb-2 text-gray-800">${item.conteudo}</h3>
+                      ` : item.tipo === 'subtitulo' ? `
+                        <h4 class="text-lg font-medium mb-2 text-gray-700">${item.conteudo}</h4>
+                      ` : item.tipo === 'paragrafo' ? `
+                        <div class="prose max-w-none">
+                          <p class="text-gray-600 leading-relaxed">${item.conteudo}</p>
+                        </div>
+                      ` : item.tipo === 'imagem' ? `
+                        <div class="text-center">
+                          <img src="${item.conteudo}" alt="${item.legenda || ''}" class="max-w-full h-auto rounded-lg shadow-md mx-auto">
+                          ${item.legenda ? `<p class="text-sm text-gray-500 mt-2 italic">${item.legenda}</p>` : ''}
+                        </div>
+                      ` : ''}
+                    </div>
+                  `).join('')}
+                </div>
+              </div>
+            `).join('')}
           </div>
           
           <script>
@@ -115,20 +266,6 @@ export const useSCORM = () => {
             } else {
               console.log('🖥️ [SCORM] Detectado: Window direto');
             }
-            
-            // Adicionar botão de ajuda para configuração LMS
-            setTimeout(function() {
-              var helpButton = document.createElement('button');
-              helpButton.innerHTML = '💡 LMS Config';
-              helpButton.style.cssText = 'position: fixed; top: 10px; right: 10px; background: #0ea5e9; color: white; border: none; border-radius: 6px; padding: 8px 12px; font-size: 12px; cursor: pointer; z-index: 1001;';
-              helpButton.onclick = function() {
-                var info = document.getElementById('lms-config-info');
-                if (info) {
-                  info.style.display = info.style.display === 'none' ? 'block' : 'none';
-                }
-              };
-              document.body.appendChild(helpButton);
-            }, 1000);
             
             // Verificar se scormconfig.js foi carregado
             if (typeof window.API_1484_11 === 'undefined' && typeof window.API === 'undefined') {
