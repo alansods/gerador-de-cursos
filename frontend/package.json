@@ -21,7 +21,6 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "embla-carousel-react": "^8.6.0",
-    "jszip": "^3.10.1",
     "lucide-react": "^0.544.0",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
@@ -41,10 +40,8 @@
     "lint": "eslint src --ext ts,tsx --report-unused-disable-directives --max-warnings 50",
     "lint:fix": "eslint src --ext ts,tsx --fix",
     "type-check": "tsc --noEmit",
-    "package-scorm": "npm run build:scorm && node package-scorm.js",
     "ci:lint": "pnpm run type-check && pnpm run lint",
-    "ci:build": "pnpm run ci:lint && pnpm run build",
-    "ci:build-scorm": "pnpm run ci:lint && pnpm run build:scorm && pnpm run package-scorm"
+    "ci:build": "pnpm run ci:lint && pnpm run build"
   },
   "eslintConfig": {
     "extends": [
@@ -70,7 +67,6 @@
     "@typescript-eslint/eslint-plugin": "^8.46.2",
     "@typescript-eslint/parser": "^8.46.2",
     "@vitejs/plugin-react": "^5.0.2",
-    "archiver": "^7.0.1",
     "autoprefixer": "^10.4.21",
     "eslint": "^9.38.0",
     "eslint-plugin-react-hooks": "^7.0.0",

@@ -1,71 +1,146 @@
 # 🎓 Gerador de Cursos
 
-Um sistema completo para criação e exportação de cursos em formato SCORM, desenvolvido em React e TypeScript.
+Sistema fullstack para criação e exportação de cursos em formato SCORM, com interface React e backend Express.
 
-## ✨ Funcionalidades
-
-- **Criação de Cursos**: Interface intuitiva para criar cursos com informações básicas
-- **Editor de Conteúdo**: Adicione unidades e conteúdo com drag-and-drop
-- **Preview em Tempo Real**: Visualize o curso antes de exportar
-- **Exportação SCORM**: Gere pacotes SCORM completos e válidos
-- **Interface Responsiva**: Design moderno e adaptável
-
-## 🚀 Tecnologias
-
-- **React 19** - Framework principal
-- **TypeScript** - Tipagem estática
-- **Tailwind CSS** - Estilização
-- **Vite** - Build tool
-- **@dnd-kit** - Drag and drop
-- **JSZip** - Geração de pacotes ZIP
-
-## 📦 Instalação
+## 🚀 Início Rápido
 
 ```bash
-# Instalar dependências
-pnpm install
+# Instalação automática
+./start-dev.sh
 
-# Executar em desenvolvimento
-pnpm dev
+# Ou manual:
+# Terminal 1 - Backend
+cd backend && npm install && npm run dev
 
-# Build para produção
-pnpm build
+# Terminal 2 - Frontend  
+cd frontend && npm install && npm run dev
 ```
 
-## 🎯 Como Usar
+## 🌐 URLs
 
-1. **Criar Curso**: Clique em "Criar Novo Curso" e preencha as informações básicas
-2. **Adicionar Conteúdo**: Crie unidades e adicione parágrafos e subtítulos
-3. **Organizar**: Use drag-and-drop para reordenar o conteúdo
-4. **Preview**: Visualize como ficará o curso final
-5. **Exportar**: Gere o pacote SCORM para importar em LMS
+- **Frontend**: http://localhost:3000
+- **Backend**: http://localhost:5001
 
-## 📋 Estrutura do Projeto
+## 📦 Funcionalidades Atuais
+
+- ✅ Interface para criação de cursos
+- ✅ Gerenciamento de unidades e conteúdos
+- ✅ Preview de cursos
+- ✅ Geração de pacotes SCORM
+- ✅ Download automático
+
+## 🛠️ Arquitetura
 
 ```
-src/
-├── components/          # Componentes reutilizáveis
-├── context/            # Context API para estado global
-├── pages/              # Páginas da aplicação
-│   ├── gerador-home/   # Lista de cursos
-│   ├── gerador-novo/   # Criação de curso
-│   └── gerador-editar/ # Editor de conteúdo
-├── types/              # Definições TypeScript
-└── utils/              # Funções utilitárias
+Gerador-de-Cursos/
+├── frontend/          # React + Vite + TypeScript
+├── backend/           # Express.js + Node.js
+└── start-dev.sh      # Script de inicialização
 ```
 
-## 🔧 Scripts Disponíveis
+## 🚀 Roadmap MVP
 
-- `pnpm dev` - Servidor de desenvolvimento
-- `pnpm build` - Build para produção
-- `pnpm build:scorm` - Build otimizado para SCORM
-- `pnpm preview` - Preview do build
-- `pnpm lint` - Verificação de código
+### Próximas Funcionalidades
 
-## 📄 Licença
+#### 📄 **Exportação PDF** (Próxima)
+- Geração de PDFs dos cursos
+- Layout responsivo para impressão
+- Índice automático
+- Watermark opcional
 
-Este projeto é privado e desenvolvido para uso interno.
+#### 🎨 **Componentes Avançados**
+- **Accordion**: Conteúdo expansível
+- **Slideshow**: Apresentações interativas
+- **Timeline**: Linha do tempo de progresso
+- **Quiz**: Questionários integrados
+
+#### 🎯 **Melhorias de UX**
+- Drag & drop para reordenar conteúdo
+- Templates pré-definidos
+- Preview em tempo real
+- Temas personalizáveis
+
+#### 📊 **Analytics**
+- Relatórios de progresso
+- Métricas de engajamento
+- Dashboard de estatísticas
+
+### 🔧 Sistema de Funcionalidades
+
+O sistema inclui um controle de funcionalidades que permite:
+- Habilitar/desabilitar funcionalidades
+- Desenvolvimento incremental
+- Roadmap visual no frontend
+
+**Endpoint**: `GET /api/features` - Status das funcionalidades
+
+## 🔧 Desenvolvimento
+
+### Estrutura do Projeto
+
+```
+frontend/src/
+├── components/        # Componentes React
+├── hooks/            # Hooks customizados
+├── pages/            # Páginas da aplicação
+└── types/            # Definições TypeScript
+
+backend/src/
+├── server.js         # Servidor Express
+├── services/         # Lógica de negócio
+└── config.js         # Configurações
+```
+
+### Adicionando Novas Funcionalidades
+
+1. **Frontend**: Crie componentes em `src/components/`
+2. **Backend**: Adicione endpoints em `src/server.js`
+3. **Integração**: Use hooks para comunicação
+
+## 🧪 Testes
+
+```bash
+# Testar backend
+cd backend && node test-scorm.js
+
+# Testar integração
+# 1. Inicie backend e frontend
+# 2. Crie um curso
+# 3. Clique em "Baixar SCORM"
+```
+
+## 📋 Scripts
+
+### Frontend
+- `npm run dev` - Desenvolvimento
+- `npm run build` - Build para produção
+
+### Backend
+- `npm run dev` - Desenvolvimento
+- `node test-scorm.js` - Teste SCORM
+
+## 🚀 Deploy
+
+### Frontend (Vercel)
+```bash
+cd frontend && vercel --prod
+```
+
+### Backend (Heroku/Railway)
+```bash
+cd backend
+# Configure variáveis de ambiente
+# Deploy com sua plataforma preferida
+```
+
+## 📞 Suporte
+
+Para dúvidas ou problemas:
+1. Verifique os logs do backend
+2. Teste a API com `curl` ou Postman
+3. Execute `./start-dev.sh` para setup completo
 
 ---
 
-**Desenvolvido com ❤️ para facilitar a criação de cursos online**
+**Status**: MVP funcional ✅  
+**Próximo**: Implementar exportação PDF e componentes avançados 🚀

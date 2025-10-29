@@ -1,13 +1,5 @@
-# Dependencies
-node_modules/
-
-# Build outputs
-dist/
-build/
-
-# Environment variables
-.env
-.env.local
+# Global ignore patterns
+# (Specific patterns are handled by individual .gitignore files in frontend/ and backend/)
 
 # IDE files
 .vscode/
@@ -20,7 +12,9 @@ Thumbs.db
 # Logs
 *.log
 
-# SCORM packages
-*.zip
-*.scorm
+# Coverage
 coverage/
+
+# Temporary files
+*.tmp
+*.temp
