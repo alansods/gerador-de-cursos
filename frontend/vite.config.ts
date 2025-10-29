@@ -18,7 +18,7 @@ export default defineConfig(({ command, mode }) => {
     base: isSCORM ? './' : '/', // Condicional para SCORM vs Vercel
     publicDir: 'public',
     build: {
-      outDir: 'build',
+      outDir: 'dist',
       sourcemap: isSCORM ? false : true, // Desabilitar sourcemap para SCORM
       minify: 'terser',
       rollupOptions: {

@@ -1,53 +1,59 @@
+// Este arquivo é o "adaptador" para a Vercel.
+// Ele importa a lógica real do seu backend.
+
+// O caminho correto para o seu serviço
 import { generateAdvancedSCORMPackage } from '../backend/src/services/scormAdvancedService.js';
 
+// Handler serverless da Vercel
 export default async function handler(req, res) {
-  // Configurar CORS
+  // 1. Configurar CORS manualmente para a Vercel
+  // (Permite que seu front-end chame esta API)
   res.setHeader('Access-Control-Allow-Credentials', true);
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
-  res.setHeader('Access-Control-Allow-Headers', 'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version');
+  res.setHeader('Access-Control-Allow-Origin', '*'); // Ou seu domínio: 'https://gerador-de-cursos.vercel.app'
+  res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,POST');
+  res.setHeader(
+    'Access-Control-Allow-Headers',
+    'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version'
+  );
 
+  // 2. Tratar a requisição OPTIONS (pré-flight)
+  // O erro CORS que você viu acontece aqui.
   if (req.method === 'OPTIONS') {
     res.status(200).end();
     return;
   }
 
+  // 3. Tratar a requisição POST
   if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
+    return res.status(405).json({ error: 'Method Not Allowed' });
   }
 
+  // 4. Obter o body
+  const { curso } = req.body;
+
+  // 5. Validar
+  if (!curso || !curso.titulo || !curso.id) {
+    return res.status(400).json({ error: 'Dados do curso são obrigatórios' });
+  }
+
+  // 6. Executar a lógica de serviço
   try {
-    const { curso } = req.body;
-    
-    if (!curso) {
-      return res.status(400).json({ 
-        error: 'Dados do curso são obrigatórios' 
-      });
-    }
-
-    if (!curso.titulo || !curso.id) {
-      return res.status(400).json({ 
-        error: 'Título e ID do curso são obrigatórios' 
-      });
-    }
-
-    console.log(`📦 [SCORM-ADVANCED] Iniciando geração avançada para curso: ${curso.titulo}`);
-    
+    console.log(`📦 [Vercel Function] Iniciando geração avançada para: ${curso.titulo}`);
     const scormBuffer = await generateAdvancedSCORMPackage(curso);
-    
-    const filename = `${curso.titulo.replace(/[^a-zA-Z0-9]/g, "_")}_SCORM_Advanced.zip`;
+
+    // 7. Retornar o ZIP
+    const filename = `${curso.titulo.replace(/[^a-zA-Z0-9]/g, '_')}_SCORM_Advanced.zip`;
     res.setHeader('Content-Type', 'application/zip');
     res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
     res.setHeader('Content-Length', scormBuffer.length);
-    
-    console.log(`✅ [SCORM-ADVANCED] Pacote avançado gerado: ${filename} (${scormBuffer.length} bytes)`);
     res.send(scormBuffer);
-    
+  
   } catch (error) {
-    console.error('❌ [SCORM-ADVANCED] Erro na geração avançada:', error);
-    res.status(500).json({ 
+    console.error('❌ [Vercel Function] Erro na geração avançada:', error);
+    // Erros como "module not found" (ex: 'jszip') aparecerão aqui
+    res.status(500).json({
       error: 'Erro interno do servidor ao gerar SCORM avançado',
-      details: error.message 
+      details: error.message,
     });
   }
 }
