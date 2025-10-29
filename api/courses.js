@@ -70,7 +70,9 @@ export default async function handler(req, res) {
         return res.status(400).json({ error: 'Dados do curso são obrigatórios' });
       }
 
-      // Inserir curso
+      // Inserir curso (aceita tanto modulos quanto unidades)
+      const unidades = curso.modulos || curso.unidades || [];
+      
       await sql`
         INSERT INTO cursos (id, titulo, descricao, duracao, nivel, idioma, versao_scorm, cor_tema, logo_url)
         VALUES (
@@ -100,9 +102,9 @@ export default async function handler(req, res) {
       await sql`DELETE FROM modulos WHERE curso_id = ${curso.id}`;
 
       // Inserir módulos e aulas
-      if (curso.modulos && curso.modulos.length > 0) {
-        for (let i = 0; i < curso.modulos.length; i++) {
-          const modulo = curso.modulos[i];
+      if (unidades && unidades.length > 0) {
+        for (let i = 0; i < unidades.length; i++) {
+          const modulo = unidades[i];
 
           // Inserir módulo
           await sql`
