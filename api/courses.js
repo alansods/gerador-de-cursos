@@ -74,11 +74,15 @@ export default async function handler(req, res) {
       const unidades = curso.modulos || curso.unidades || [];
       
       await sql`
-        INSERT INTO cursos (id, titulo, descricao, duracao, nivel, idioma, versao_scorm, cor_tema, logo_url)
+        INSERT INTO cursos (id, titulo, descricao, carga_horaria, modalidade, instrutor, categoria, duracao, nivel, idioma, versao_scorm, cor_tema, logo_url)
         VALUES (
           ${curso.id},
           ${curso.titulo},
           ${curso.descricao || null},
+          ${curso.cargaHoraria || null},
+          ${curso.modalidade || null},
+          ${curso.instrutor || null},
+          ${curso.categoria || null},
           ${curso.duracao || null},
           ${curso.nivel || null},
           ${curso.idioma || 'pt-BR'},
@@ -89,6 +93,10 @@ export default async function handler(req, res) {
         ON CONFLICT (id) DO UPDATE SET
           titulo = EXCLUDED.titulo,
           descricao = EXCLUDED.descricao,
+          carga_horaria = EXCLUDED.carga_horaria,
+          modalidade = EXCLUDED.modalidade,
+          instrutor = EXCLUDED.instrutor,
+          categoria = EXCLUDED.categoria,
           duracao = EXCLUDED.duracao,
           nivel = EXCLUDED.nivel,
           idioma = EXCLUDED.idioma,
