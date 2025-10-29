@@ -1,4 +1,4 @@
-import { generateSCORMPackage } from '../src/services/scormService.js';
+import { generateAdvancedSCORMPackage } from '../backend/src/services/scormAdvancedService.js';
 
 export default async function handler(req, res) {
   // Configurar CORS
@@ -31,24 +31,22 @@ export default async function handler(req, res) {
       });
     }
 
-    console.log(`📦 [SCORM] Gerando pacote para: ${curso.titulo}`);
+    console.log(`📦 [SCORM-ADVANCED] Iniciando geração avançada para curso: ${curso.titulo}`);
     
-    // Generate SCORM package
-    const scormBuffer = await generateSCORMPackage(curso);
+    const scormBuffer = await generateAdvancedSCORMPackage(curso);
     
-    // Set headers for file download
-    const filename = `${curso.titulo.replace(/[^a-zA-Z0-9]/g, "_")}_SCORM.zip`;
+    const filename = `${curso.titulo.replace(/[^a-zA-Z0-9]/g, "_")}_SCORM_Advanced.zip`;
     res.setHeader('Content-Type', 'application/zip');
     res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
     res.setHeader('Content-Length', scormBuffer.length);
     
-    console.log(`✅ [SCORM] Pacote gerado: ${filename} (${scormBuffer.length} bytes)`);
+    console.log(`✅ [SCORM-ADVANCED] Pacote avançado gerado: ${filename} (${scormBuffer.length} bytes)`);
     res.send(scormBuffer);
     
   } catch (error) {
-    console.error('❌ [SCORM] Erro na geração:', error);
+    console.error('❌ [SCORM-ADVANCED] Erro na geração avançada:', error);
     res.status(500).json({ 
-      error: 'Erro interno do servidor ao gerar SCORM',
+      error: 'Erro interno do servidor ao gerar SCORM avançado',
       details: error.message 
     });
   }
