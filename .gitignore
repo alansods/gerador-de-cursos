@@ -1,6 +1,9 @@
 # Global ignore patterns
 # (Specific patterns are handled by individual .gitignore files in frontend/ and backend/)
 
+# Root node_modules (for Vercel Functions dependencies)
+/node_modules/
+
 # IDE files
 .vscode/
 .idea/
