@@ -16,6 +16,8 @@ import { fetchCursos, saveCurso, deleteCurso as deleteCursoAPI } from "@/lib/api
 
 // Ações do reducer
 type GeradorCursoAction =
+  | { type: "SET_LOADING"; payload: boolean }
+  | { type: "SET_ERROR"; payload: string | null }
   | { type: "CARREGAR_CURSOS"; payload: CursoGerado[] }
   | { type: "CRIAR_CURSO"; payload: CursoGerado }
   | {
@@ -76,6 +78,8 @@ const initialState: GeradorCursoState = {
   cursos: [],
   cursoAtual: null,
   modoEdicao: false,
+  loading: false,
+  error: null,
 };
 
 // Reducer
@@ -84,6 +88,19 @@ function geradorCursoReducer(
   action: GeradorCursoAction
 ): GeradorCursoState {
   switch (action.type) {
+    case "SET_LOADING":
+      return {
+        ...state,
+        loading: action.payload,
+      };
+
+    case "SET_ERROR":
+      return {
+        ...state,
+        error: action.payload,
+        loading: false,
+      };
+
     case "CARREGAR_CURSOS":
       return {
         ...state,
@@ -91,6 +108,8 @@ function geradorCursoReducer(
           ...curso,
           unidades: curso.unidades || [],
         })),
+        loading: false,
+        error: null,
       };
 
     case "CRIAR_CURSO":
@@ -397,6 +416,8 @@ export function GeradorCursoProvider({
   // Carregar cursos do banco de dados na inicialização
   useEffect(() => {
     const carregarCursosDoBanco = async () => {
+      dispatch({ type: "SET_LOADING", payload: true });
+      
       try {
         console.log('📦 [Context] Carregando cursos do banco de dados...');
         const cursos = await fetchCursos();
@@ -404,6 +425,7 @@ export function GeradorCursoProvider({
         console.log('✅ [Context] Cursos carregados:', cursos.length);
       } catch (error) {
         console.error("❌ [Context] Erro ao carregar cursos:", error);
+        
         // Fallback para localStorage em caso de erro
         const cursosSalvos = localStorage.getItem("gerador-cursos");
         if (cursosSalvos) {
@@ -411,9 +433,17 @@ export function GeradorCursoProvider({
             const cursos = JSON.parse(cursosSalvos);
             dispatch({ type: "CARREGAR_CURSOS", payload: cursos });
             console.log('⚠️ [Context] Cursos carregados do localStorage (fallback)');
-          } catch (error) {
-            console.error("❌ [Context] Erro ao carregar do localStorage:", error);
+          } catch (localError) {
+            console.error("❌ [Context] Erro ao carregar do localStorage:", localError);
+            dispatch({ 
+              type: "SET_ERROR", 
+              payload: "Erro ao carregar cursos. Por favor, configure o Vercel Postgres." 
+            });
           }
+        } else {
+          // Se não tem localStorage, mostrar array vazio (sem erro)
+          dispatch({ type: "CARREGAR_CURSOS", payload: [] });
+          console.log('ℹ️ [Context] Nenhum curso encontrado');
         }
       }
     };

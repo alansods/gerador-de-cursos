@@ -39,6 +39,8 @@ export interface GeradorCursoState {
   cursos: CursoGerado[];
   cursoAtual: CursoGerado | null;
   modoEdicao: boolean;
+  loading: boolean;
+  error: string | null;
 }
 
 export interface GeradorCursoContextType {

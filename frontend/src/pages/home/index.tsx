@@ -19,6 +19,8 @@ import {
   User,
   Download,
   BookOpen,
+  Loader2,
+  AlertCircle,
 } from "lucide-react";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -57,6 +59,21 @@ export default function GeradorHome() {
     }
   };
 
+  // Loading state
+  if (state.loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="h-12 w-12 animate-spin text-blue-600 mx-auto mb-4" />
+          <p className="text-gray-600">Carregando cursos...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Error state (opcional, mostra mas não bloqueia)
+  const showError = state.error && state.cursos.length === 0;
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
@@ -84,6 +101,27 @@ export default function GeradorHome() {
 
       {/* Conteúdo Principal */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Error Alert */}
+        {showError && (
+          <div className="mb-6 bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+            <div className="flex items-start">
+              <AlertCircle className="h-5 w-5 text-yellow-600 mt-0.5 mr-3 flex-shrink-0" />
+              <div>
+                <h3 className="text-sm font-medium text-yellow-800">
+                  Banco de dados não configurado
+                </h3>
+                <p className="text-sm text-yellow-700 mt-1">
+                  {state.error}
+                  <br />
+                  <span className="text-xs">
+                    Os cursos serão salvos localmente no navegador até que o banco seja configurado.
+                  </span>
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
         {state.cursos.length === 0 ? (
           <div className="text-center py-12">
             <div className="mx-auto w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mb-6">
