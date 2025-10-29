@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { GeradorCursoProvider } from "./context/GeradorCursoContext";
+import { DatabaseInit } from "./components/DatabaseInit";
 
 import Home from "./pages/home/index";
 import Novo from "./pages/novo/index";
@@ -13,6 +14,7 @@ function App() {
     <GeradorCursoProvider>
       <BrowserRouter>
         <div className="min-h-screen bg-gray-50">
+          <DatabaseInit />
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/cursos" element={<Home />} />

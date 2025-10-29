@@ -11,13 +11,18 @@
     "install:all": "npm install && cd frontend && npm install && cd ../backend && npm install"
   },
   "dependencies": {
+    "@vercel/postgres": "^0.10.0",
     "archiver": "^7.0.1",
-    "jszip": "^3.10.1",
     "fs-extra": "^11.1.1",
+    "jszip": "^3.10.1",
     "uuid": "^9.0.1"
   },
-  "keywords": ["scorm", "education", "frontend", "backend"],
+  "keywords": [
+    "scorm",
+    "education",
+    "frontend",
+    "backend"
+  ],
   "author": "FIEC SENAI UNED",
   "license": "MIT"
 }
-

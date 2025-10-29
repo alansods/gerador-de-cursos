@@ -12,6 +12,7 @@ import {
   GeradorCursoState,
   GeradorCursoContextType,
 } from "@/types/gerador-curso";
+import { fetchCursos, saveCurso, deleteCurso as deleteCursoAPI } from "@/lib/api";
 
 // Ações do reducer
 type GeradorCursoAction =
@@ -393,24 +394,52 @@ export function GeradorCursoProvider({
 }) {
   const [state, dispatch] = useReducer(geradorCursoReducer, initialState);
 
-  // Carregar cursos do localStorage na inicialização
+  // Carregar cursos do banco de dados na inicialização
   useEffect(() => {
-    const cursosSalvos = localStorage.getItem("gerador-cursos");
-    if (cursosSalvos) {
+    const carregarCursosDoBanco = async () => {
       try {
-        const cursos = JSON.parse(cursosSalvos);
+        console.log('📦 [Context] Carregando cursos do banco de dados...');
+        const cursos = await fetchCursos();
         dispatch({ type: "CARREGAR_CURSOS", payload: cursos });
+        console.log('✅ [Context] Cursos carregados:', cursos.length);
       } catch (error) {
-        console.error("Erro ao carregar cursos:", error);
+        console.error("❌ [Context] Erro ao carregar cursos:", error);
+        // Fallback para localStorage em caso de erro
+        const cursosSalvos = localStorage.getItem("gerador-cursos");
+        if (cursosSalvos) {
+          try {
+            const cursos = JSON.parse(cursosSalvos);
+            dispatch({ type: "CARREGAR_CURSOS", payload: cursos });
+            console.log('⚠️ [Context] Cursos carregados do localStorage (fallback)');
+          } catch (error) {
+            console.error("❌ [Context] Erro ao carregar do localStorage:", error);
+          }
+        }
       }
-    }
+    };
+    carregarCursosDoBanco();
   }, []);
 
-  // Salvar cursos no localStorage sempre que o estado mudar
+  // Salvar cursos no banco de dados sempre que o estado mudar
   useEffect(() => {
-    if (state.cursos.length > 0) {
-      localStorage.setItem("gerador-cursos", JSON.stringify(state.cursos));
-    }
+    const salvarCursosNoBanco = async () => {
+      if (state.cursos.length > 0) {
+        try {
+          // Salvar apenas o último curso modificado para evitar muitas chamadas
+          const ultimoCurso = state.cursos[state.cursos.length - 1];
+          await saveCurso(ultimoCurso);
+          
+          // Manter localStorage como backup
+          localStorage.setItem("gerador-cursos", JSON.stringify(state.cursos));
+        } catch (error) {
+          console.error("❌ [Context] Erro ao salvar cursos:", error);
+        }
+      }
+    };
+    
+    // Debounce para não fazer muitas chamadas
+    const timeoutId = setTimeout(salvarCursosNoBanco, 1000);
+    return () => clearTimeout(timeoutId);
   }, [state.cursos]);
 
   // Funções do contexto
@@ -432,8 +461,16 @@ export function GeradorCursoProvider({
     dispatch({ type: "EDITAR_CURSO", payload: { id, curso } });
   };
 
-  const deletarCurso = (id: string) => {
-    dispatch({ type: "DELETAR_CURSO", payload: id });
+  const deletarCurso = async (id: string) => {
+    try {
+      await deleteCursoAPI(id);
+      dispatch({ type: "DELETAR_CURSO", payload: id });
+      console.log('✅ [Context] Curso deletado com sucesso:', id);
+    } catch (error) {
+      console.error("❌ [Context] Erro ao deletar curso:", error);
+      // Em caso de erro, ainda remove localmente
+      dispatch({ type: "DELETAR_CURSO", payload: id });
+    }
   };
 
   const selecionarCurso = useCallback(
