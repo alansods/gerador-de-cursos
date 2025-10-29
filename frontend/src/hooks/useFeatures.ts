@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { FEATURES, isFeatureEnabled, type FeatureKey } from '../config/features';
+import { useState } from 'react';
+import { FEATURES, type FeatureKey } from '../config/features';
 
 /**
  * 🚀 Hook para gerenciar funcionalidades
