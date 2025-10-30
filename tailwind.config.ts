@@ -1,5 +1,4 @@
 import type { Config } from "tailwindcss"
-import tailwindcssAnimate from "tailwindcss-animate"
 
 const config = {
   darkMode: ["class"],
@@ -8,7 +7,7 @@ const config = {
     './components/**/*.{ts,tsx}',
     './app/**/*.{ts,tsx}',
     './src/**/*.{ts,tsx}',
-  ],
+	],
   prefix: "",
   theme: {
     container: {
@@ -20,38 +19,38 @@ const config = {
     },
     extend: {
       colors: {
-        border: "hsl(214.3 31.8% 91.4%)",
-        input: "hsl(214.3 31.8% 91.4%)",
-        ring: "hsl(221.2 83.2% 53.3%)",
+        border: "hsl(220 13% 91%)",
+        input: "hsl(220 13% 91%)",
+        ring: "hsl(215 20.2% 65.1%)",
         background: "hsl(0 0% 100%)",
-        foreground: "hsl(222.2 84% 4.9%)",
+        foreground: "hsl(224 71.4% 4.1%)",
         primary: {
-          DEFAULT: "hsl(221.2 83.2% 53.3%)",
-          foreground: "hsl(210 40% 98%)",
+          DEFAULT: "hsl(220.9 39.3% 11%)",
+          foreground: "hsl(210 20% 98%)",
         },
         secondary: {
-          DEFAULT: "hsl(210 40% 96%)",
-          foreground: "hsl(222.2 84% 4.9%)",
+          DEFAULT: "hsl(220 14.3% 95.9%)",
+          foreground: "hsl(220.9 39.3% 11%)",
         },
         destructive: {
           DEFAULT: "hsl(0 84.2% 60.2%)",
-          foreground: "hsl(210 40% 98%)",
+          foreground: "hsl(210 20% 98%)",
         },
         muted: {
-          DEFAULT: "hsl(210 40% 96%)",
-          foreground: "hsl(215.4 16.3% 46.9%)",
+          DEFAULT: "hsl(220 14.3% 95.9%)",
+          foreground: "hsl(220 8.9% 46.1%)",
         },
         accent: {
-          DEFAULT: "hsl(210 40% 96%)",
-          foreground: "hsl(222.2 84% 4.9%)",
+          DEFAULT: "hsl(220 14.3% 95.9%)",
+          foreground: "hsl(220.9 39.3% 11%)",
         },
         popover: {
           DEFAULT: "hsl(0 0% 100%)",
-          foreground: "hsl(222.2 84% 4.9%)",
+          foreground: "hsl(224 71.4% 4.1%)",
         },
         card: {
           DEFAULT: "hsl(0 0% 100%)",
-          foreground: "hsl(222.2 84% 4.9%)",
+          foreground: "hsl(224 71.4% 4.1%)",
         },
       },
       borderRadius: {
@@ -75,7 +74,7 @@ const config = {
       },
     },
   },
-  plugins: [tailwindcssAnimate],
+  plugins: [require("tailwindcss-animate")],
 } satisfies Config
 
 export default config

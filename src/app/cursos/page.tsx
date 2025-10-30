@@ -7,7 +7,15 @@ import { Badge } from '@/components/ui/badge'
 import { Plus, Edit, Trash2, Eye, Download } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
-import { ConfirmModal } from '@/components/ui/modal'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog'
 
 export default function CursosPage() {
   const { state, deletarCurso, selecionarCurso } = useGeradorCurso()
@@ -162,16 +170,27 @@ export default function CursosPage() {
           </div>
         )}
 
-        <ConfirmModal
-          isOpen={cursoParaDeletar !== null}
-          onClose={() => setCursoParaDeletar(null)}
-          onConfirm={confirmarDelecao}
-          title="Confirmar Exclusão"
-          message="Tem certeza que deseja excluir este curso? Esta ação não pode ser desfeita."
-          confirmText="Excluir"
-          cancelText="Cancelar"
-          variant="destructive"
-        />
+        <Dialog
+          open={cursoParaDeletar !== null}
+          onOpenChange={setCursoParaDeletar}
+        >
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Confirmar Exclusão</DialogTitle>
+              <DialogDescription>
+                Tem certeza que deseja excluir este curso? Esta ação não pode ser desfeita.
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setCursoParaDeletar(null)}>
+                Cancelar
+              </Button>
+              <Button variant="destructive" onClick={confirmarDelecao}>
+                Excluir
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   )
