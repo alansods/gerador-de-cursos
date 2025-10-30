@@ -1,0 +1,13 @@
+{
+  "/_global-error/page": "/_global-error",
+  "/_not-found/page": "/_not-found",
+  "/api/courses/route": "/api/courses",
+  "/api/generate-scorm-advanced/route": "/api/generate-scorm-advanced",
+  "/api/generate-scorm/route": "/api/generate-scorm",
+  "/api/init-db/route": "/api/init-db",
+  "/cursos/[id]/editar/page": "/cursos/[id]/editar",
+  "/cursos/[id]/preview/page": "/cursos/[id]/preview",
+  "/cursos/novo/page": "/cursos/novo",
+  "/cursos/page": "/cursos",
+  "/page": "/"
+}

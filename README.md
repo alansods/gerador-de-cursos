@@ -1,146 +1,36 @@
-# 🎓 Gerador de Cursos
+This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
-Sistema fullstack para criação e exportação de cursos em formato SCORM, com interface React e backend Express.
+## Getting Started
 
-## 🚀 Início Rápido
-
-```bash
-# Instalação automática
-./start-dev.sh
-
-# Ou manual:
-# Terminal 1 - Backend
-cd backend && npm install && npm run dev
-
-# Terminal 2 - Frontend  
-cd frontend && npm install && npm run dev
-```
-
-## 🌐 URLs
-
-- **Frontend**: http://localhost:3000
-- **Backend**: http://localhost:5001
-
-## 📦 Funcionalidades Atuais
-
-- ✅ Interface para criação de cursos
-- ✅ Gerenciamento de unidades e conteúdos
-- ✅ Preview de cursos
-- ✅ Geração de pacotes SCORM
-- ✅ Download automático
-
-## 🛠️ Arquitetura
-
-```
-Gerador-de-Cursos/
-├── frontend/          # React + Vite + TypeScript
-├── backend/           # Express.js + Node.js
-└── start-dev.sh      # Script de inicialização
-```
-
-## 🚀 Roadmap MVP
-
-### Próximas Funcionalidades
-
-#### 📄 **Exportação PDF** (Próxima)
-- Geração de PDFs dos cursos
-- Layout responsivo para impressão
-- Índice automático
-- Watermark opcional
-
-#### 🎨 **Componentes Avançados**
-- **Accordion**: Conteúdo expansível
-- **Slideshow**: Apresentações interativas
-- **Timeline**: Linha do tempo de progresso
-- **Quiz**: Questionários integrados
-
-#### 🎯 **Melhorias de UX**
-- Drag & drop para reordenar conteúdo
-- Templates pré-definidos
-- Preview em tempo real
-- Temas personalizáveis
-
-#### 📊 **Analytics**
-- Relatórios de progresso
-- Métricas de engajamento
-- Dashboard de estatísticas
-
-### 🔧 Sistema de Funcionalidades
-
-O sistema inclui um controle de funcionalidades que permite:
-- Habilitar/desabilitar funcionalidades
-- Desenvolvimento incremental
-- Roadmap visual no frontend
-
-**Endpoint**: `GET /api/features` - Status das funcionalidades
-
-## 🔧 Desenvolvimento
-
-### Estrutura do Projeto
-
-```
-frontend/src/
-├── components/        # Componentes React
-├── hooks/            # Hooks customizados
-├── pages/            # Páginas da aplicação
-└── types/            # Definições TypeScript
-
-backend/src/
-├── server.js         # Servidor Express
-├── services/         # Lógica de negócio
-└── config.js         # Configurações
-```
-
-### Adicionando Novas Funcionalidades
-
-1. **Frontend**: Crie componentes em `src/components/`
-2. **Backend**: Adicione endpoints em `src/server.js`
-3. **Integração**: Use hooks para comunicação
-
-## 🧪 Testes
+First, run the development server:
 
 ```bash
-# Testar backend
-cd backend && node test-scorm.js
-
-# Testar integração
-# 1. Inicie backend e frontend
-# 2. Crie um curso
-# 3. Clique em "Baixar SCORM"
+npm run dev
+# or
+yarn dev
+# or
+pnpm dev
+# or
+bun dev
 ```
 
-## 📋 Scripts
+Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-### Frontend
-- `npm run dev` - Desenvolvimento
-- `npm run build` - Build para produção
+You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
-### Backend
-- `npm run dev` - Desenvolvimento
-- `node test-scorm.js` - Teste SCORM
+This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
-## 🚀 Deploy
+## Learn More
 
-### Frontend (Vercel)
-```bash
-cd frontend && vercel --prod
-```
+To learn more about Next.js, take a look at the following resources:
 
-### Backend (Heroku/Railway)
-```bash
-cd backend
-# Configure variáveis de ambiente
-# Deploy com sua plataforma preferida
-```
+- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
+- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
 
-## 📞 Suporte
+You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
 
-Para dúvidas ou problemas:
-1. Verifique os logs do backend
-2. Teste a API com `curl` ou Postman
-3. Execute `./start-dev.sh` para setup completo
+## Deploy on Vercel
 
----
+The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
-**Status**: MVP funcional ✅  
-**Próximo**: Implementar exportação PDF e componentes avançados 🚀
+Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.

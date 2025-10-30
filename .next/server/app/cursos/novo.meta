@@ -1,0 +1,15 @@
+{
+  "headers": {
+    "x-nextjs-stale-time": "300",
+    "x-nextjs-prerender": "1",
+    "x-next-cache-tags": "_N_T_/layout,_N_T_/cursos/layout,_N_T_/cursos/novo/layout,_N_T_/cursos/novo/page,_N_T_/cursos/novo"
+  },
+  "segmentPaths": [
+    "/_tree",
+    "/_full",
+    "/cursos/novo/__PAGE__",
+    "/cursos/novo",
+    "/cursos",
+    "/_index"
+  ]
+}
