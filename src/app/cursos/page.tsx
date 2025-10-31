@@ -3,6 +3,7 @@
 import { useGeradorCurso } from "@/context/GeradorCursoContext";
 import { usePreview } from "@/hooks/usePreview";
 import { useSCORM } from "@/hooks/useSCORM";
+import { usePDF } from "@/hooks/usePDF";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -18,6 +19,7 @@ import {
   BookOpen,
   Loader2,
   AlertCircle,
+  FileText,
 } from "lucide-react";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -26,6 +28,7 @@ export default function CursosPage() {
   const { state, deletarCurso, selecionarCurso } = useGeradorCurso();
   const { openPreview } = usePreview();
   const { generateSCORMPackage } = useSCORM();
+  const { generatePDF } = usePDF();
   const router = useRouter();
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(
     null
@@ -208,6 +211,14 @@ export default function CursosPage() {
                     >
                       <Trash2 className="h-4 w-4 mr-1" />
                       <span className="hidden sm:inline">Excluir</span>
+                    </Button>
+                    <Button
+                      size="sm"
+                      onClick={() => generatePDF(curso)}
+                      className="flex-1 min-w-[100px] bg-green-600 hover:bg-green-700 text-white"
+                    >
+                      <FileText className="h-4 w-4 mr-1" />
+                      <span className="hidden sm:inline">PDF</span>
                     </Button>
                     <Button
                       size="sm"
