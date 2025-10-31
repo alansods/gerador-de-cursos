@@ -276,8 +276,8 @@ function createAdvancedMainHTML(curso: any): string {
             </div>
         </div>
 
-        <!-- Units Section -->
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <!-- HOME PAGE (Units List) -->
+        <div id="homePage" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
             <!-- Welcome Message -->
             <div class="bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg p-4 mb-8">
                 <div class="flex items-center gap-3">
@@ -297,7 +297,7 @@ function createAdvancedMainHTML(curso: any): string {
 
             <div class="space-y-6">
                 ${unidades.map((unidade: any, unidadeIndex: number) => `
-                <div id="unidade-${unidade.id}" class="bg-white rounded-lg overflow-hidden hover:shadow-xl transition-shadow border-2 border-orange-200 hover:border-orange-400 animate-fade-in">
+                <div class="bg-white rounded-lg overflow-hidden hover:shadow-xl transition-shadow border-2 border-orange-200 hover:border-orange-400 animate-fade-in">
                     <!-- Unit Header -->
                     <div class="bg-gradient-to-r from-orange-50 to-orange-100 border-b border-orange-200 p-6">
                         <div class="flex items-center gap-4">
@@ -338,25 +338,18 @@ function createAdvancedMainHTML(curso: any): string {
                         `}
                     </div>
 
-                    <!-- View Full Content Section -->
+                    <!-- View Full Content Button -->
                     ${unidade.conteudo && unidade.conteudo.length > 0 ? `
                     <div class="px-6 pb-6">
                         <button 
-                            onclick="toggleFullContent('${unidade.id}')"
+                            onclick="navigateToUnit('${unidade.id}')"
                             class="w-full md:w-auto px-4 py-2 border border-orange-500 text-orange-600 hover:bg-orange-50 hover:border-orange-600 rounded-lg transition-colors inline-flex items-center justify-center gap-2"
                         >
-                            <span id="btn-text-${unidade.id}">Ver Conteúdo Completo</span>
-                            <svg id="chevron-${unidade.id}" class="w-4 h-4 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <span>Ver Conteúdo Completo</span>
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
                             </svg>
                         </button>
-                        
-                        <!-- Full Content (Initially Hidden) -->
-                        <div id="full-content-${unidade.id}" class="hidden mt-6 border-t border-gray-200 pt-6">
-                            <div class="grid grid-cols-1 md:grid-cols-12 gap-6">
-                                ${renderFullContent(unidade.conteudo)}
-                            </div>
-                        </div>
                     </div>
                     ` : ''}
                 </div>
@@ -374,25 +367,156 @@ function createAdvancedMainHTML(curso: any): string {
                 </div>
             </div>
         </div>
+
+        <!-- UNIT PAGES (Individual Units) -->
+        ${unidades.map((unidade: any, unidadeIndex: number) => `
+        <div id="unitPage-${unidade.id}" class="hidden">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                <!-- Back Button -->
+                <button 
+                    onclick="navigateToHome()"
+                    class="inline-flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-6 transition-colors"
+                >
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+                    </svg>
+                    <span class="font-medium">Voltar</span>
+                </button>
+
+                <!-- Unit Card -->
+                <div class="bg-white rounded-lg overflow-hidden shadow-lg border-2 border-orange-200">
+                    <!-- Unit Header -->
+                    <div class="bg-gradient-to-r from-orange-50 to-orange-100 border-b border-orange-200 p-6">
+                        <div class="flex items-center gap-4">
+                            <div class="flex items-center justify-center w-12 h-12 bg-orange-500 rounded-full text-white shadow-lg flex-shrink-0">
+                                <svg class="w-6 h-6 fill-white" viewBox="0 0 24 24">
+                                    <path d="M8 5v14l11-7z"/>
+                                </svg>
+                            </div>
+                            <div class="flex-1">
+                                <div class="flex items-center gap-3 mb-1">
+                                    <span class="text-sm font-bold text-orange-700 uppercase tracking-wide">
+                                        UNIDADE ${String(unidadeIndex + 1).padStart(2, '0')}
+                                    </span>
+                                </div>
+                                <h1 class="text-2xl md:text-3xl font-bold text-gray-900">
+                                    ${unidade.titulo || `Unidade ${unidadeIndex + 1}`}
+                                </h1>
+                                ${unidade.descricao ? `
+                                <p class="mt-2 text-gray-600 text-sm md:text-base">
+                                    ${unidade.descricao}
+                                </p>
+                                ` : ''}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Unit Full Content -->
+                    <div class="p-6">
+                        ${unidade.conteudo && unidade.conteudo.length > 0 ? `
+                        <div class="grid grid-cols-1 md:grid-cols-12 gap-6">
+                            ${renderFullContent(unidade.conteudo)}
+                        </div>
+                        ` : `
+                        <div class="text-center py-12 text-gray-500">
+                            <p>Nenhum conteúdo adicionado ainda.</p>
+                        </div>
+                        `}
+                    </div>
+                </div>
+
+                <!-- Navigation Buttons -->
+                <div class="flex justify-between items-center mt-8">
+                    ${unidadeIndex > 0 ? `
+                    <button 
+                        onclick="navigateToUnit('${unidades[unidadeIndex - 1].id}')"
+                        class="inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                    >
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                        </svg>
+                        <span>Unidade Anterior</span>
+                    </button>
+                    ` : '<div></div>'}
+
+                    ${unidadeIndex < unidades.length - 1 ? `
+                    <button 
+                        onclick="navigateToUnit('${unidades[unidadeIndex + 1].id}')"
+                        class="inline-flex items-center gap-2 px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors"
+                    >
+                        <span>Próxima Unidade</span>
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                        </svg>
+                    </button>
+                    ` : '<div></div>'}
+                </div>
+            </div>
+        </div>
+        `).join('')}
     </main>
 
     <script>
+        // Navigation functions
+        function navigateToHome() {
+            // Hide all unit pages
+            document.querySelectorAll('[id^="unitPage-"]').forEach(function(page) {
+                page.classList.add('hidden');
+            });
+            
+            // Show home page
+            document.getElementById('homePage').classList.remove('hidden');
+            
+            // Scroll to top
+            window.scrollTo(0, 0);
+            
+            // Close menu if open
+            closeMenu();
+        }
+
+        function navigateToUnit(unitId) {
+            // Hide home page
+            document.getElementById('homePage').classList.add('hidden');
+            
+            // Hide all unit pages
+            document.querySelectorAll('[id^="unitPage-"]').forEach(function(page) {
+                page.classList.add('hidden');
+            });
+            
+            // Show selected unit page
+            const unitPage = document.getElementById('unitPage-' + unitId);
+            if (unitPage) {
+                unitPage.classList.remove('hidden');
+            }
+            
+            // Scroll to top
+            window.scrollTo(0, 0);
+            
+            // Close menu if open
+            closeMenu();
+        }
+
+        // Menu functions
         function toggleMenu() {
             const menu = document.getElementById('sideMenu');
             const content = document.getElementById('menuContent');
             
             menu.classList.remove('hidden');
-            setTimeout(() => {
+            setTimeout(function() {
                 content.style.transform = 'translateX(0)';
             }, 10);
         }
 
         function closeMenu() {
             const content = document.getElementById('menuContent');
-            content.style.transform = 'translateX(-100%)';
-            setTimeout(() => {
-                document.getElementById('sideMenu').classList.add('hidden');
-            }, 300);
+            const menu = document.getElementById('sideMenu');
+            
+            if (content && menu) {
+                content.style.transform = 'translateX(-100%)';
+                setTimeout(function() {
+                    menu.classList.add('hidden');
+                }, 300);
+            }
         }
 
         function closeMenuIfOverlay(event) {
@@ -401,23 +525,23 @@ function createAdvancedMainHTML(curso: any): string {
             }
         }
 
-        function toggleFullContent(unidadeId) {
-            const fullContent = document.getElementById('full-content-' + unidadeId);
-            const btnText = document.getElementById('btn-text-' + unidadeId);
-            const chevron = document.getElementById('chevron-' + unidadeId);
-            
-            if (fullContent.classList.contains('hidden')) {
-                fullContent.classList.remove('hidden');
-                btnText.textContent = 'Ocultar Conteúdo';
-                chevron.style.transform = 'rotate(90deg)';
-            } else {
-                fullContent.classList.add('hidden');
-                btnText.textContent = 'Ver Conteúdo Completo';
-                chevron.style.transform = 'rotate(0deg)';
-            }
-        }
-
+        // Initialize
         document.getElementById('menuBtn').addEventListener('click', toggleMenu);
+        
+        // Update menu links to use navigation
+        document.querySelectorAll('#menuContent a').forEach(function(link) {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                const href = this.getAttribute('href');
+                
+                if (href === '#home') {
+                    navigateToHome();
+                } else if (href.startsWith('#unidade-')) {
+                    const unitId = href.replace('#unidade-', '');
+                    navigateToUnit(unitId);
+                }
+            });
+        });
     </script>
 
     <!-- SCORM API Wrapper -->
