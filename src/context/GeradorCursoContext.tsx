@@ -33,7 +33,7 @@ const initialState: GeradorCursoState = {
   cursos: [],
   cursoAtual: null,
   modoEdicao: false,
-  loading: false,
+  loading: true, // Inicia como true porque sempre carregamos os cursos ao montar
   error: null,
 }
 

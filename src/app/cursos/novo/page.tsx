@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useGeradorCurso } from '@/context/GeradorCursoContext'
+import { PageTransition } from '@/components/PageTransition'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -228,7 +229,8 @@ export default function NovoCursoPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <PageTransition>
+      <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <div className="bg-white border-b">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
@@ -482,6 +484,7 @@ export default function NovoCursoPage() {
           </CardContent>
         </Card>
       </div>
-    </div>
+      </div>
+    </PageTransition>
   )
 }

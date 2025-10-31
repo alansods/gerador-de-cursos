@@ -5,6 +5,7 @@ import { usePreview } from "@/hooks/usePreview";
 import { useSCORM } from "@/hooks/useSCORM";
 import { usePDF } from "@/hooks/usePDF";
 import { ExportModal } from "@/components/ExportModal";
+import { PageTransition } from "@/components/PageTransition";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -89,7 +90,8 @@ export default function CursosPage() {
   const showError = state.error && state.cursos.length === 0;
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <PageTransition>
+      <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <div className="bg-white shadow-sm border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -178,7 +180,7 @@ export default function CursosPage() {
           </div>
         )}
 
-        {!state.loading && state.cursos.length === 0 ? (
+        {!state.loading && !showError && state.cursos.length === 0 ? (
           <div className="text-center py-24">
             <div className="mx-auto w-40 h-40 bg-gray-100 rounded-full flex items-center justify-center mb-8">
               <Plus className="h-12 w-12 text-gray-400" />
@@ -352,6 +354,7 @@ export default function CursosPage() {
         courseName={selectedCursoForExport?.titulo || "Curso"}
         isGeneratingPDF={isGeneratingPDF}
       />
-    </div>
+      </div>
+    </PageTransition>
   );
 }

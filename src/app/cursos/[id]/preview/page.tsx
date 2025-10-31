@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useGeradorCurso } from "@/context/GeradorCursoContext";
+import { PageTransition } from "@/components/PageTransition";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import {
   Sheet,
@@ -77,7 +78,8 @@ export default function PreviewCursoPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <PageTransition>
+      <div className="min-h-screen bg-gray-50">
       {/* Navbar Fixed Top */}
       <nav className="fixed top-0 left-0 right-0 bg-white border-b border-gray-200 z-50 h-16 flex items-center px-4 shadow-sm">
         <Sheet open={menuOpen} onOpenChange={setMenuOpen}>
@@ -283,6 +285,7 @@ export default function PreviewCursoPage() {
           </div>
         </div>
       </main>
-    </div>
+      </div>
+    </PageTransition>
   );
 }
