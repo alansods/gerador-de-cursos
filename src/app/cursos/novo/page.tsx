@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Progress } from '@/components/ui/progress'
-import { ArrowLeft, Save, Upload, FileText, Sparkles, CheckCircle2, AlertCircle, Info } from 'lucide-react'
+import { ArrowLeft, Save, Upload, FileText, Sparkles, CheckCircle2, AlertCircle, Info, Download } from 'lucide-react'
 
 export default function NovoCursoPage() {
   const router = useRouter()
@@ -98,6 +98,30 @@ export default function NovoCursoPage() {
       setSelectedFile(file)
     } else {
       setSelectedFile(null)
+    }
+  }
+
+  const handleDownloadExample = async () => {
+    try {
+      // Buscar o arquivo de exemplo
+      const response = await fetch('/roteiro/exemplo-curso-nextjs.md')
+      if (!response.ok) throw new Error('Erro ao buscar exemplo')
+      
+      const blob = await response.blob()
+      const url = window.URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = 'exemplo-curso-nextjs.md'
+      document.body.appendChild(a)
+      a.click()
+      window.URL.revokeObjectURL(url)
+      document.body.removeChild(a)
+    } catch (error) {
+      console.error('Erro ao baixar exemplo:', error)
+      setValidationMessage({
+        type: 'error',
+        message: 'Erro ao baixar arquivo de exemplo. Tente novamente.'
+      })
     }
   }
 
@@ -270,7 +294,7 @@ export default function NovoCursoPage() {
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                 <div className="flex items-start gap-3">
                   <Info className="h-5 w-5 text-blue-600 shrink-0 mt-0.5" />
-                  <div className="space-y-2">
+                  <div className="flex-1 space-y-2">
                     <h3 className="font-semibold text-blue-900">Como funciona a geração por IA?</h3>
                     <p className="text-sm text-blue-800">
                       Envie um documento (PDF, DOCX ou TXT) estruturado com o conteúdo do curso.
@@ -280,6 +304,16 @@ export default function NovoCursoPage() {
                       📋 Use os templates da pasta <code className="bg-blue-100 px-1 py-0.5 rounded">roteiro/</code> como referência!
                     </p>
                   </div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={handleDownloadExample}
+                    className="gap-2 shrink-0 bg-white hover:bg-blue-50 border-blue-300 text-blue-700 hover:text-blue-800"
+                  >
+                    <Download className="h-4 w-4" />
+                    Baixar Exemplo
+                  </Button>
                 </div>
               </div>
 
