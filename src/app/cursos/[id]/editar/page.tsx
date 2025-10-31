@@ -7,6 +7,7 @@ import { usePreview } from "@/hooks/usePreview";
 import { useSCORM } from "@/hooks/useSCORM";
 import { usePDF } from "@/hooks/usePDF";
 import { ExportModal } from "@/components/ExportModal";
+import { PageTransition } from "@/components/PageTransition";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -476,7 +477,8 @@ export default function EditarCursoPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
+    <PageTransition>
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
       {/* Header */}
       <div className="bg-white/80 backdrop-blur-sm border-b border-gray-200 sticky top-0 z-50">
         <div className="max-w-6xl mx-auto px-6 py-4">
@@ -1480,6 +1482,7 @@ export default function EditarCursoPage() {
         courseName={state.cursoAtual?.titulo || 'Curso'}
         isGeneratingPDF={isGeneratingPDF}
       />
-    </div>
+      </div>
+    </PageTransition>
   );
 }
