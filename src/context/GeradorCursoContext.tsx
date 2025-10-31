@@ -112,51 +112,109 @@ const GeradorCursoContext = createContext<GeradorCursoContextType | undefined>(u
 export function GeradorCursoProvider({ children }: { children: React.ReactNode }) {
   const [state, dispatch] = useReducer(geradorCursoReducer, initialState)
 
-  // Carregar cursos do localStorage na inicialização
+  // Carregar cursos da API na inicialização
   useEffect(() => {
-    const carregarCursosDoLocalStorage = () => {
+    const carregarCursos = async () => {
+      dispatch({ type: "SET_LOADING", payload: true })
+      
       try {
-        const cursosSalvos = localStorage.getItem('gerador-cursos')
-        if (cursosSalvos) {
-          const cursos = JSON.parse(cursosSalvos)
-          dispatch({ type: "CARREGAR_CURSOS", payload: cursos })
+        const response = await fetch('/api/cursos')
+        const data = await response.json()
+        
+        if (data.success) {
+          dispatch({ type: "CARREGAR_CURSOS", payload: data.cursos || [] })
+        } else {
+          // Se precisa configuração, mostrar mensagem específica
+          if (data.needsConfiguration) {
+            dispatch({ 
+              type: "SET_ERROR", 
+              payload: "⚠️ Banco de dados não configurado. Configure DATABASE_URL no .env.local e execute: npx prisma migrate dev" 
+            })
+            dispatch({ type: "CARREGAR_CURSOS", payload: [] })
+          } else if (data.needsMigration) {
+            dispatch({ 
+              type: "SET_ERROR", 
+              payload: "⚠️ Tabelas não criadas. Execute: npx prisma migrate dev" 
+            })
+            dispatch({ type: "CARREGAR_CURSOS", payload: [] })
+          } else {
+            throw new Error(data.error || 'Erro ao carregar cursos')
+          }
         }
       } catch (error) {
-        console.error('Erro ao carregar cursos do localStorage:', error)
-        dispatch({ type: "SET_ERROR", payload: "Erro ao carregar cursos" })
+        console.error('Erro ao carregar cursos da API:', error)
+        dispatch({ type: "SET_ERROR", payload: "Erro ao conectar com banco de dados. Verifique a configuração." })
+      } finally {
+        dispatch({ type: "SET_LOADING", payload: false })
       }
     }
 
-    carregarCursosDoLocalStorage()
+    carregarCursos()
   }, [])
 
-  // Salvar cursos no localStorage sempre que o estado mudar
-  useEffect(() => {
-    if (state.cursos.length > 0) {
-      try {
-        localStorage.setItem('gerador-cursos', JSON.stringify(state.cursos))
-      } catch (error) {
-        console.error('Erro ao salvar cursos no localStorage:', error)
+  const criarCurso = useCallback(async (curso: Omit<CursoGerado, 'id' | 'dataCriacao' | 'dataModificacao'>) => {
+    try {
+      const response = await fetch('/api/cursos', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(curso),
+      })
+
+      const data = await response.json()
+
+      if (data.success && data.curso) {
+        dispatch({ type: "CRIAR_CURSO", payload: data.curso })
+        return data.curso.id
+      } else {
+        throw new Error(data.error || 'Erro ao criar curso')
       }
+    } catch (error) {
+      console.error('Erro ao criar curso:', error)
+      dispatch({ type: "SET_ERROR", payload: "Erro ao criar curso no banco de dados" })
+      throw error
     }
-  }, [state.cursos])
-
-  const criarCurso = useCallback((curso: Omit<CursoGerado, 'id' | 'dataCriacao' | 'dataModificacao'>) => {
-    const novoCurso: CursoGerado = {
-      ...curso,
-      id: Date.now().toString(),
-      dataCriacao: new Date(),
-      dataModificacao: new Date(),
-    }
-    dispatch({ type: "CRIAR_CURSO", payload: novoCurso })
   }, [])
 
-  const editarCurso = useCallback((id: string, curso: Partial<CursoGerado>) => {
-    dispatch({ type: "EDITAR_CURSO", payload: { id, curso } })
+  const editarCurso = useCallback(async (id: string, curso: Partial<CursoGerado>) => {
+    try {
+      const response = await fetch('/api/cursos', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, ...curso }),
+      })
+
+      const data = await response.json()
+
+      if (data.success && data.curso) {
+        dispatch({ type: "EDITAR_CURSO", payload: { id, curso: data.curso } })
+      } else {
+        throw new Error(data.error || 'Erro ao editar curso')
+      }
+    } catch (error) {
+      console.error('Erro ao editar curso:', error)
+      dispatch({ type: "SET_ERROR", payload: "Erro ao editar curso no banco de dados" })
+      throw error
+    }
   }, [])
 
-  const deletarCurso = useCallback((id: string) => {
-    dispatch({ type: "DELETAR_CURSO", payload: id })
+  const deletarCurso = useCallback(async (id: string) => {
+    try {
+      const response = await fetch(`/api/cursos?id=${id}`, {
+        method: 'DELETE',
+      })
+
+      const data = await response.json()
+
+      if (data.success) {
+        dispatch({ type: "DELETAR_CURSO", payload: id })
+      } else {
+        throw new Error(data.error || 'Erro ao deletar curso')
+      }
+    } catch (error) {
+      console.error('Erro ao deletar curso:', error)
+      dispatch({ type: "SET_ERROR", payload: "Erro ao deletar curso no banco de dados" })
+      throw error
+    }
   }, [])
 
   const selecionarCurso = useCallback((id: string) => {
@@ -173,15 +231,107 @@ export function GeradorCursoProvider({ children }: { children: React.ReactNode }
     console.log('Carregando cursos...')
   }, [])
 
-  // Funções vazias para compatibilidade
-  const adicionarUnidade = useCallback(() => {}, [])
-  const editarUnidade = useCallback(() => {}, [])
-  const deletarUnidade = useCallback(() => {}, [])
-  const reordenarUnidades = useCallback(() => {}, [])
-  const adicionarConteudo = useCallback(() => {}, [])
-  const editarConteudo = useCallback(() => {}, [])
-  const deletarConteudo = useCallback(() => {}, [])
-  const reordenarConteudo = useCallback(() => {}, [])
+  // Gerenciamento de unidades
+  const adicionarUnidade = useCallback((unidade: Omit<Unidade, 'id' | 'ordem'>) => {
+    if (!state.cursoAtual) return;
+    
+    const novaUnidade: Unidade = {
+      ...unidade,
+      id: Date.now().toString(),
+      ordem: (state.cursoAtual.unidades?.length || 0),
+    };
+    
+    const unidadesAtualizadas = [...(state.cursoAtual.unidades || []), novaUnidade];
+    editarCurso(state.cursoAtual.id, { unidades: unidadesAtualizadas });
+  }, [state.cursoAtual, editarCurso]);
+
+  const editarUnidade = useCallback((unidadeId: string, dados: Partial<Unidade>) => {
+    if (!state.cursoAtual) return;
+    
+    const unidadesAtualizadas = state.cursoAtual.unidades?.map(u =>
+      u.id === unidadeId ? { ...u, ...dados } : u
+    );
+    
+    editarCurso(state.cursoAtual.id, { unidades: unidadesAtualizadas });
+  }, [state.cursoAtual, editarCurso]);
+
+  const deletarUnidade = useCallback((unidadeId: string) => {
+    if (!state.cursoAtual) return;
+    
+    const unidadesAtualizadas = state.cursoAtual.unidades?.filter(u => u.id !== unidadeId);
+    editarCurso(state.cursoAtual.id, { unidades: unidadesAtualizadas });
+  }, [state.cursoAtual, editarCurso]);
+
+  const reordenarUnidades = useCallback((unidades: Unidade[]) => {
+    if (!state.cursoAtual) return;
+    editarCurso(state.cursoAtual.id, { unidades });
+  }, [state.cursoAtual, editarCurso]);
+
+  // Gerenciamento de conteúdos
+  const adicionarConteudo = useCallback((unidadeId: string, conteudo: Omit<ConteudoUnidade, 'id' | 'ordem'>) => {
+    if (!state.cursoAtual) return;
+    
+    const unidadesAtualizadas = state.cursoAtual.unidades?.map(unidade => {
+      if (unidade.id === unidadeId) {
+        const novoConteudo: ConteudoUnidade = {
+          ...conteudo,
+          id: Date.now().toString(),
+          ordem: unidade.conteudo?.length || 0,
+        };
+        return {
+          ...unidade,
+          conteudo: [...(unidade.conteudo || []), novoConteudo],
+        };
+      }
+      return unidade;
+    });
+    
+    editarCurso(state.cursoAtual.id, { unidades: unidadesAtualizadas });
+  }, [state.cursoAtual, editarCurso]);
+
+  const editarConteudo = useCallback((unidadeId: string, conteudoId: string, dados: Partial<ConteudoUnidade>) => {
+    if (!state.cursoAtual) return;
+    
+    const unidadesAtualizadas = state.cursoAtual.unidades?.map(unidade => {
+      if (unidade.id === unidadeId) {
+        return {
+          ...unidade,
+          conteudo: unidade.conteudo?.map(c =>
+            c.id === conteudoId ? { ...c, ...dados } : c
+          ),
+        };
+      }
+      return unidade;
+    });
+    
+    editarCurso(state.cursoAtual.id, { unidades: unidadesAtualizadas });
+  }, [state.cursoAtual, editarCurso]);
+
+  const deletarConteudo = useCallback((unidadeId: string, conteudoId: string) => {
+    if (!state.cursoAtual) return;
+    
+    const unidadesAtualizadas = state.cursoAtual.unidades?.map(unidade => {
+      if (unidade.id === unidadeId) {
+        return {
+          ...unidade,
+          conteudo: unidade.conteudo?.filter(c => c.id !== conteudoId),
+        };
+      }
+      return unidade;
+    });
+    
+    editarCurso(state.cursoAtual.id, { unidades: unidadesAtualizadas });
+  }, [state.cursoAtual, editarCurso]);
+
+  const reordenarConteudo = useCallback((unidadeId: string, conteudos: ConteudoUnidade[]) => {
+    if (!state.cursoAtual) return;
+    
+    const unidadesAtualizadas = state.cursoAtual.unidades?.map(unidade =>
+      unidade.id === unidadeId ? { ...unidade, conteudo: conteudos } : unidade
+    );
+    
+    editarCurso(state.cursoAtual.id, { unidades: unidadesAtualizadas });
+  }, [state.cursoAtual, editarCurso])
 
   const value: GeradorCursoContextType = {
     state,

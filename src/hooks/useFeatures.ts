@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { FEATURES, type FeatureKey } from '../config/features'
+import { useState } from 'react';
+import { FEATURES, type FeatureKey } from '../config/features';
 
 /**
  * 🚀 Hook para gerenciar funcionalidades
@@ -8,14 +8,14 @@ import { FEATURES, type FeatureKey } from '../config/features'
  * estão habilitadas no sistema.
  */
 export const useFeatures = () => {
-  const [features, setFeatures] = useState(FEATURES)
+  const [features, setFeatures] = useState(FEATURES);
 
   /**
    * Verifica se uma funcionalidade está habilitada
    */
   const isEnabled = (feature: FeatureKey): boolean => {
-    return features[feature]
-  }
+    return features[feature];
+  };
 
   /**
    * Habilita uma funcionalidade
@@ -24,8 +24,8 @@ export const useFeatures = () => {
     setFeatures(prev => ({
       ...prev,
       [feature]: true
-    }))
-  }
+    }));
+  };
 
   /**
    * Desabilita uma funcionalidade
@@ -34,8 +34,8 @@ export const useFeatures = () => {
     setFeatures(prev => ({
       ...prev,
       [feature]: false
-    }))
-  }
+    }));
+  };
 
   /**
    * Lista funcionalidades habilitadas
@@ -43,8 +43,8 @@ export const useFeatures = () => {
   const getEnabled = (): FeatureKey[] => {
     return Object.keys(features).filter(
       key => features[key as FeatureKey]
-    ) as FeatureKey[]
-  }
+    ) as FeatureKey[];
+  };
 
   /**
    * Lista funcionalidades planejadas
@@ -52,15 +52,15 @@ export const useFeatures = () => {
   const getPlanned = (): FeatureKey[] => {
     return Object.keys(features).filter(
       key => !features[key as FeatureKey]
-    ) as FeatureKey[]
-  }
+    ) as FeatureKey[];
+  };
 
   /**
    * Verifica se há funcionalidades planejadas
    */
   const hasPlannedFeatures = (): boolean => {
-    return getPlanned().length > 0
-  }
+    return getPlanned().length > 0;
+  };
 
   return {
     features,
@@ -70,17 +70,17 @@ export const useFeatures = () => {
     getEnabled,
     getPlanned,
     hasPlannedFeatures
-  }
-}
+  };
+};
 
 /**
  * Hook para verificar uma funcionalidade específica
  */
 export const useFeature = (feature: FeatureKey) => {
-  const { isEnabled } = useFeatures()
+  const { isEnabled } = useFeatures();
   
   return {
     isEnabled: isEnabled(feature),
     feature
-  }
-}
+  };
+};

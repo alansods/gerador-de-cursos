@@ -1,0 +1,38 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Modelo de Comentários (exemplo do prompt)
+model Comment {
+  id        Int      @id @default(autoincrement())
+  text      String
+  createdAt DateTime @default(now())
+
+  @@map("comments")
+}
+
+// Modelo de Cursos (adaptado do sistema existente)
+model Curso {
+  id               String   @id @default(cuid())
+  titulo           String
+  descricao        String
+  cargaHoraria     String   @map("carga_horaria")
+  instrutor        String
+  modalidade       String
+  categoria        String
+  unidades         Json     @default("[]")
+  dataCriacao      DateTime @default(now()) @map("data_criacao")
+  dataModificacao  DateTime @updatedAt @map("data_modificacao")
+
+  @@index([titulo])
+  @@index([categoria])
+  @@map("cursos")
+}
