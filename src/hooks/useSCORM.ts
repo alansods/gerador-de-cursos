@@ -24,7 +24,7 @@ interface Curso {
 }
 
 export const useSCORM = () => {
-  const generateSCORMPackage = async (curso: Curso) => {
+  const generateSCORMPackage = async (curso: Curso, filename?: string) => {
     try {
       // Mostrar loading
       const loadingButton = document.querySelector(".scorm-button");
@@ -62,7 +62,15 @@ export const useSCORM = () => {
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `${curso.titulo.replace(/[^a-zA-Z0-9]/g, "_")}_SCORM_Advanced.zip`;
+      
+      // Usar filename personalizado se fornecido, senão usar padrão
+      if (filename) {
+        // Garantir que termina com .zip
+        a.download = filename.endsWith('.zip') ? filename : `${filename}.zip`;
+      } else {
+        a.download = `${curso.titulo.replace(/[^a-zA-Z0-9]/g, "_")}_SCORM_Advanced.zip`;
+      }
+      
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);

@@ -59,15 +59,15 @@ export default function CursosPage() {
     setSelectedCursoForExport(curso);
     setExportModalOpen(true);
   };
-  const handleExportPDF = () => {
+  const handleExportPDF = (filename: string) => {
     if (selectedCursoForExport) {
-      generatePDF(selectedCursoForExport);
+      generatePDF(selectedCursoForExport, filename);
       setExportModalOpen(false);
     }
   };
-  const handleExportSCORM = () => {
+  const handleExportSCORM = (filename: string) => {
     if (selectedCursoForExport) {
-      generateSCORMPackage(selectedCursoForExport);
+      generateSCORMPackage(selectedCursoForExport, filename);
       setExportModalOpen(false);
     }
   };
@@ -297,6 +297,7 @@ export default function CursosPage() {
         onClose={() => setExportModalOpen(false)}
         onExportPDF={handleExportPDF}
         onExportSCORM={handleExportSCORM}
+        courseName={selectedCursoForExport?.titulo || 'Curso'}
         isGeneratingPDF={isGeneratingPDF}
       />
     </div>

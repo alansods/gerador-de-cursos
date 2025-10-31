@@ -1449,14 +1449,15 @@ export default function EditarCursoPage() {
       <ExportModal
         isOpen={exportModalOpen}
         onClose={() => setExportModalOpen(false)}
-        onExportPDF={() => {
-          generatePDF(state.cursoAtual!);
+        onExportPDF={(filename) => {
+          generatePDF(state.cursoAtual!, filename);
           setExportModalOpen(false);
         }}
-        onExportSCORM={() => {
-          generateSCORMPackage(state.cursoAtual!);
+        onExportSCORM={(filename) => {
+          generateSCORMPackage(state.cursoAtual!, filename);
           setExportModalOpen(false);
         }}
+        courseName={state.cursoAtual?.titulo || 'Curso'}
         isGeneratingPDF={isGeneratingPDF}
       />
     </div>

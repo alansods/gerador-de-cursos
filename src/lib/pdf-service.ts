@@ -24,7 +24,7 @@ interface ConteudoUnidade {
   fonte?: string;
 }
 
-export async function generateCoursePDF(curso: Curso): Promise<void> {
+export async function generateCoursePDF(curso: Curso, filename?: string): Promise<void> {
   const doc = new jsPDF({
     orientation: 'portrait',
     unit: 'mm',
@@ -295,7 +295,14 @@ export async function generateCoursePDF(curso: Curso): Promise<void> {
   }
 
   // Salvar o PDF
-  const fileName = `${curso.titulo.replace(/[^a-z0-9]/gi, '_')}.pdf`;
+  let fileName: string;
+  if (filename) {
+    // Usar filename personalizado, garantir que termina com .pdf
+    fileName = filename.endsWith('.pdf') ? filename : `${filename}.pdf`;
+  } else {
+    // Usar nome padrão baseado no título
+    fileName = `${curso.titulo.replace(/[^a-z0-9]/gi, '_')}.pdf`;
+  }
   doc.save(fileName);
 }
 
