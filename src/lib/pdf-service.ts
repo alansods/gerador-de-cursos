@@ -72,12 +72,9 @@ export async function generateCoursePDF(curso: Curso): Promise<void> {
   };
 
   // =============== CAPA ===============
-  // Gradiente simulado com retângulos
+  // Fundo azul sólido
   doc.setFillColor(37, 99, 235); // blue-600
-  doc.rect(0, 0, pageWidth, 80, 'F');
-  
-  doc.setFillColor(147, 51, 234); // purple-600
-  doc.rect(0, 80, pageWidth, 40, 'F');
+  doc.rect(0, 0, pageWidth, 120, 'F');
 
   // Título do curso
   doc.setTextColor(255, 255, 255);
