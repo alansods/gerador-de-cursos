@@ -4,11 +4,6 @@ import OpenAI from 'openai';
 // Configuração para Vercel
 export const maxDuration = 60; // 60s para plano Pro (10s para Hobby)
 
-// Inicializar OpenAI
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
-
 // Schema esperado para o curso
 interface CursoGenerado {
   titulo: string;
@@ -30,6 +25,18 @@ interface CursoGenerado {
 
 export async function POST(req: NextRequest) {
   try {
+    // Verificar API key PRIMEIRO (antes de qualquer coisa)
+    if (!process.env.OPENAI_API_KEY || process.env.OPENAI_API_KEY.trim() === '') {
+      console.error('[Generate Course] OPENAI_API_KEY não configurada!');
+      return NextResponse.json(
+        {
+          error: 'API Key não configurada',
+          message: 'Por favor, configure OPENAI_API_KEY no arquivo .env.local. Acesse: https://platform.openai.com/api-keys',
+        },
+        { status: 500 }
+      );
+    }
+
     const { text } = await req.json();
 
     if (!text || typeof text !== 'string' || text.trim().length === 0) {
@@ -39,18 +46,12 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Verificar se a API key está configurada
-    if (!process.env.OPENAI_API_KEY) {
-      return NextResponse.json(
-        {
-          error: 'API Key não configurada',
-          message: 'Por favor, configure OPENAI_API_KEY no arquivo .env.local',
-        },
-        { status: 500 }
-      );
-    }
-
     console.log(`[Generate Course] Processando texto com ${text.length} caracteres...`);
+
+    // Inicializar OpenAI com a chave validada
+    const openai = new OpenAI({
+      apiKey: process.env.OPENAI_API_KEY,
+    });
 
     // Prompt para a IA
     const systemPrompt = `Você é um especialista em design instrucional e criação de cursos online. 
