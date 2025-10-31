@@ -56,17 +56,17 @@ function createAdvancedManifest(curso: any): string {
   <organizations default="${identifier}">
     <organization identifier="${identifier}">
       <title>${title}</title>
-      <item identifier="item1" identifierref="resource1">
-        <title>${title}</title>
-        <adlcp:masteryscore>80</adlcp:masteryscore>
-      </item>
+        <item identifier="item1" identifierref="resource1">
+          <title>${title}</title>
+          <adlcp:masteryscore>80</adlcp:masteryscore>
+        </item>
     </organization>
   </organizations>
   <resources>
-    <resource identifier="resource1" type="webcontent" adlcp:scormtype="sco" href="index.html">
-      <file href="index.html"/>
-      <file href="scorm-advanced.js"/>
-    </resource>
+      <resource identifier="resource1" type="webcontent" adlcp:scormtype="sco" href="index.html">
+        <file href="index.html"/>
+        <file href="scorm-advanced.js"/>
+      </resource>
   </resources>
 </manifest>`
 }
@@ -86,6 +86,54 @@ function createAdvancedContentFiles(curso: any): Record<string, string> {
 function createAdvancedMainHTML(curso: any): string {
   const unidades = curso.unidades || [];
   
+  // Helper function to render content preview
+  const renderPreview = (conteudo: any[]) => {
+    return conteudo.slice(0, 2).map((item: any) => {
+      if (item.tipo === 'titulo') {
+        return `<h4 class="text-lg font-semibold text-gray-900 mb-2">${item.conteudo}</h4>`;
+      } else if (item.tipo === 'subtitulo') {
+        return `<h5 class="text-base font-semibold text-gray-800 mb-2">${item.conteudo}</h5>`;
+      } else if (item.tipo === 'paragrafo') {
+        const cleanText = (item.conteudo || '').replace(/<[^>]*>/g, '');
+        return `<p class="text-gray-700 line-clamp-3">${cleanText}</p>`;
+      }
+      return '';
+    }).join('');
+  };
+  
+  // Helper function to render full content
+  const renderFullContent = (conteudo: any[]) => {
+    return conteudo.map((item: any) => {
+      const colClass = item.colunas === 6 ? 'md:col-span-6' : 'md:col-span-12';
+      
+      if (item.tipo === 'titulo') {
+        return `<div class="${colClass}"><h3 class="text-2xl font-bold text-gray-900 mb-4">${item.conteudo || ''}</h3></div>`;
+      } else if (item.tipo === 'subtitulo') {
+        return `<div class="${colClass}"><h4 class="text-xl font-semibold text-gray-800 mb-3">${item.conteudo || ''}</h4></div>`;
+      } else if (item.tipo === 'imagem') {
+        const sizeClass = item.tamanho === 'pequena' ? 'max-w-xs' : item.tamanho === 'media' ? 'max-w-md' : 'max-w-full';
+        return `<div class="${colClass}">
+          <div class="space-y-2">
+            ${item.fonte ? `<p class="text-xs text-gray-500">Fonte: ${item.fonte}</p>` : ''}
+            <img src="${item.conteudo}" alt="${item.legenda || 'Imagem'}" 
+                 class="h-auto object-contain border border-gray-200 rounded-lg shadow-sm ${sizeClass}"
+                 onerror="this.style.display='none'">
+            ${item.legenda ? `<p class="text-sm text-gray-600 italic mt-2">${item.legenda}</p>` : ''}
+          </div>
+        </div>`;
+      } else {
+        const alignClass = item.alinhamento === 'centro' ? 'text-center' :
+                          item.alinhamento === 'direita' ? 'text-right' :
+                          item.alinhamento === 'justificado' ? 'text-justify' : 'text-left';
+        return `<div class="${colClass}">
+          <div class="text-gray-700 leading-relaxed ${alignClass}" style="color: ${item.corTexto || 'inherit'}">
+            ${item.conteudo || ''}
+          </div>
+        </div>`;
+      }
+    }).join('');
+  };
+  
   return `<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -94,251 +142,286 @@ function createAdvancedMainHTML(curso: any): string {
     <title>${curso.titulo || 'Curso SCORM'}</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        /* Smooth scroll */
         html {
             scroll-behavior: smooth;
         }
         
-        /* Custom animations */
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
         }
         
         .animate-fade-in {
-            animation: fadeIn 0.3s ease-out;
+            animation: fadeIn 0.5s ease-out;
+        }
+        
+        .line-clamp-3 {
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
         }
     </style>
 </head>
-<body class="bg-gray-50">
-    <!-- Navbar -->
-    <nav class="bg-white border-b border-gray-200 sticky top-0 z-50 shadow-sm">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between items-center h-16">
-                <div class="flex items-center gap-3">
-                    <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-                    </svg>
-                    <span class="text-xl font-bold text-gray-900">${curso.titulo || 'Curso SCORM'}</span>
-                </div>
-                
-                <button id="menuBtn" class="p-2 rounded-lg hover:bg-gray-100 transition-colors">
-                    <svg class="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
-                    </svg>
-                </button>
-            </div>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Navbar Fixed Top -->
+    <nav class="fixed top-0 left-0 right-0 bg-white border-b border-gray-200 z-50 h-16 flex items-center px-4 shadow-sm">
+        <button id="menuBtn" class="p-2 hover:bg-gray-100 rounded-md transition-colors">
+            <svg class="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+            </svg>
+            <span class="sr-only">Abrir menu</span>
+        </button>
+        
+        <div class="ml-4">
+            <h2 class="text-lg font-semibold text-gray-900 line-clamp-1">
+                ${curso.titulo || 'Curso SCORM'}
+            </h2>
         </div>
     </nav>
 
-    <!-- Sidebar Menu (Mobile) -->
-    <div id="sideMenu" class="fixed inset-0 z-50 hidden">
-        <div class="fixed inset-0 bg-black bg-opacity-50" id="menuOverlay"></div>
-        <div class="fixed right-0 top-0 bottom-0 w-80 bg-white shadow-xl transform transition-transform duration-300 translate-x-full" id="menuPanel">
-            <div class="flex flex-col h-full">
-                <div class="flex items-center justify-between p-4 border-b">
-                    <h2 class="text-lg font-bold text-gray-900">Menu</h2>
-                    <button id="closeMenuBtn" class="p-2 rounded-lg hover:bg-gray-100">
+    <!-- Side Menu -->
+    <div id="sideMenu" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden" onclick="closeMenuIfOverlay(event)">
+        <div id="menuContent" class="fixed left-0 top-0 bottom-0 w-80 bg-white shadow-xl transform transition-transform duration-300 overflow-y-auto" style="transform: translateX(-100%)" onclick="event.stopPropagation()">
+            <div class="p-6">
+                <div class="flex items-center justify-between mb-6">
+                    <h3 class="text-xl font-semibold text-gray-900">Navegação</h3>
+                    <button onclick="closeMenu()" class="p-2 hover:bg-gray-100 rounded-md transition-colors">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
                         </svg>
                     </button>
                 </div>
                 
-                <div class="flex-1 overflow-y-auto p-4">
-                    <div class="space-y-2">
-                        <a href="#curso-info" class="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-100 transition-colors text-gray-700">
+                <nav class="space-y-4">
+                    <a href="#home" onclick="closeMenu()" class="flex items-center gap-3 text-gray-600 hover:text-blue-600 transition-colors p-2 rounded-md hover:bg-gray-100">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+                        </svg>
+                        <span>Home</span>
+                    </a>
+                    
+                    <div>
+                        <h3 class="flex items-center gap-3 text-lg font-semibold text-gray-700 mb-3 px-2">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
                             </svg>
-                            Home
-                        </a>
-                        
-                        ${unidades.map((unidade: any, index: number) => `
-                        <a href="#${unidade.id}" class="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-100 transition-colors text-gray-700">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-                            </svg>
-                            ${unidade.titulo || `Unidade ${index + 1}`}
-                        </a>
-                        `).join('')}
+                            <span>Unidades</span>
+                        </h3>
+                        <ul class="space-y-2 pl-4 border-l-2 border-gray-200">
+                            ${unidades.map((unidade: any) => `
+                            <li>
+                                <a href="#unidade-${unidade.id}" onclick="closeMenu()" class="block text-gray-600 hover:text-blue-600 transition-colors p-2 rounded-md hover:bg-gray-100">
+                                    ${unidade.titulo || 'Unidade'}
+                                </a>
+                            </li>
+                            `).join('')}
+                        </ul>
                     </div>
-                </div>
+                </nav>
             </div>
         </div>
     </div>
 
     <!-- Main Content -->
-    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <!-- Course Info -->
-        <div id="curso-info" class="mb-8 scroll-mt-20">
-            <div class="bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl p-8 shadow-lg">
-                <h1 class="text-4xl font-bold mb-4">${curso.titulo || 'Curso SCORM'}</h1>
-                <p class="text-blue-100 text-lg mb-6">${curso.descricao || ''}</p>
-                
-                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-                    <div class="bg-white bg-opacity-10 rounded-lg p-4 backdrop-blur-sm">
-                        <div class="flex items-center gap-2 text-blue-200 text-sm mb-1">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
-                            Carga Horária
-                        </div>
-                        <p class="font-semibold">${curso.cargaHoraria || 'N/A'}</p>
+    <main class="pt-16" id="home">
+        <!-- Hero Section -->
+        <div class="bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 text-white">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-16">
+                <!-- Category Badge -->
+                <div class="mb-4">
+                    <span class="inline-block bg-white/20 text-white border border-white/30 hover:bg-white/30 px-3 py-1 rounded-full text-sm font-medium">
+                        ${curso.categoria || 'Categoria'}
+                    </span>
+                </div>
+
+                <!-- Course Title -->
+                <h1 class="text-3xl md:text-5xl font-bold mb-4">
+                    ${curso.titulo || 'Curso SCORM'}
+                </h1>
+
+                <!-- Course Description -->
+                <p class="text-lg md:text-xl text-blue-100 mb-8 max-w-3xl">
+                    ${curso.descricao || ''}
+                </p>
+
+                <!-- Course Metadata -->
+                <div class="flex flex-wrap gap-6 mb-8">
+                    <div class="flex items-center gap-2">
+                        <svg class="w-5 h-5 text-blue-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                        <span class="text-blue-100">${curso.cargaHoraria || 'N/A'}</span>
                     </div>
-                    
-                    <div class="bg-white bg-opacity-10 rounded-lg p-4 backdrop-blur-sm">
-                        <div class="flex items-center gap-2 text-blue-200 text-sm mb-1">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                            </svg>
-                            Instrutor
-                        </div>
-                        <p class="font-semibold">${curso.instrutor || 'N/A'}</p>
+                    <div class="flex items-center gap-2">
+                        <svg class="w-5 h-5 text-blue-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l9-5-9-5-9 5 9 5z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l9-5-9-5-9 5 9 5zm0 0l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14zm-4 6v-7.5l4-2.222"/>
+                        </svg>
+                        <span class="text-blue-100">${curso.modalidade || 'N/A'}</span>
                     </div>
-                    
-                    <div class="bg-white bg-opacity-10 rounded-lg p-4 backdrop-blur-sm">
-                        <div class="flex items-center gap-2 text-blue-200 text-sm mb-1">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l9-5-9-5-9 5 9 5z" />
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z" />
-                            </svg>
-                            Modalidade
-                        </div>
-                        <p class="font-semibold">${curso.modalidade || 'N/A'}</p>
-                    </div>
-                    
-                    <div class="bg-white bg-opacity-10 rounded-lg p-4 backdrop-blur-sm">
-                        <div class="flex items-center gap-2 text-blue-200 text-sm mb-1">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                            </svg>
-                            Categoria
-                        </div>
-                        <p class="font-semibold">${curso.categoria || 'N/A'}</p>
+                    <div class="flex items-center gap-2">
+                        <span class="text-blue-100">Instrutor: ${curso.instrutor || 'N/A'}</span>
                     </div>
                 </div>
-            </div>
-        </div>
 
-        <!-- Welcome Message -->
-        <div class="bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg p-4 mb-6">
-            <div class="flex items-center gap-3">
-                <div class="shrink-0">
-                    <svg class="h-6 w-6 text-blue-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                <!-- Continue Button -->
+                ${unidades.length > 0 ? `
+                <a href="#unidade-${unidades[0].id}" class="inline-flex items-center gap-2 px-6 py-3 bg-white text-slate-900 hover:bg-gray-100 font-semibold rounded-lg transition-colors">
+                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M8 5v14l11-7z"/>
                     </svg>
-                </div>
-                <div class="flex-1">
-                    <h2 class="text-lg font-semibold mb-1">Bem-vindo!</h2>
-                    <p class="text-blue-100 text-sm">
-                        Olá, Convidado! Você está visualizando este curso em modo de demonstração.
-                    </p>
-                </div>
+                    Começar Curso
+                </a>
+                ` : ''}
             </div>
         </div>
 
-        <!-- Units Title -->
-        <h2 class="text-2xl font-bold text-gray-900 mb-6">Unidades do Curso</h2>
-
-        <!-- Units -->
-        <div class="space-y-6">
-            ${unidades.map((unidade: any, index: number) => `
-            <div id="${unidade.id}" class="bg-white rounded-xl shadow-md overflow-hidden scroll-mt-20 animate-fade-in">
-                <div class="bg-gradient-to-r from-gray-50 to-gray-100 border-b border-gray-200 p-6">
-                    <div class="flex items-start gap-3">
-                        <div class="flex items-center justify-center w-10 h-10 bg-blue-600 text-white rounded-full font-bold shrink-0">
-                            ${index + 1}
-                        </div>
-                        <div class="flex-1">
-                            <h2 class="text-2xl font-bold text-gray-900">${unidade.titulo || `Unidade ${index + 1}`}</h2>
-                            <p class="mt-2 text-gray-600 text-sm">${unidade.descricao || ''}</p>
-                        </div>
+        <!-- Units Section -->
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+            <!-- Welcome Message -->
+            <div class="bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg p-4 mb-8">
+                <div class="flex items-center gap-3">
+                    <svg class="w-8 h-8 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                    </svg>
+                    <div>
+                        <h2 class="text-xl font-bold">Bem-vindo!</h2>
+                        <p class="text-sm opacity-90 mt-1">Olá, Convidado! Você está visualizando este curso em modo de demonstração.</p>
                     </div>
-                </div>
-                
-                <div class="p-6">
-                    ${unidade.conteudo && unidade.conteudo.length > 0 ? `
-                    <div class="grid grid-cols-1 md:grid-cols-12 gap-6">
-                        ${unidade.conteudo.map((item: any) => `
-                        <div class="${item.colunas === 6 ? 'md:col-span-6' : 'md:col-span-12'}">
-                            ${item.tipo === 'titulo' ? `
-                                <h3 class="text-2xl font-bold text-gray-900 mb-4">${item.conteudo || ''}</h3>
-                            ` : item.tipo === 'subtitulo' ? `
-                                <h4 class="text-xl font-semibold text-gray-800 mb-3">${item.conteudo || ''}</h4>
-                            ` : item.tipo === 'imagem' ? `
-                                <div class="space-y-2">
-                                    ${item.fonte ? `<p class="text-xs text-gray-500">Fonte: ${item.fonte}</p>` : ''}
-                                    <img src="${item.conteudo}" alt="${item.legenda || 'Imagem'}" 
-                                         class="h-auto object-contain border border-gray-200 rounded-lg shadow-sm ${
-                                           item.tamanho === 'pequena' ? 'max-w-xs' : 
-                                           item.tamanho === 'media' ? 'max-w-md' : 'max-w-full'
-                                         }"
-                                         onerror="this.style.display='none'">
-                                    ${item.legenda ? `<p class="text-sm text-gray-600 italic mt-2">${item.legenda}</p>` : ''}
-                                </div>
-                            ` : `
-                                <div class="text-gray-700 leading-relaxed ${
-                                  item.alinhamento === 'centro' ? 'text-center' :
-                                  item.alinhamento === 'direita' ? 'text-right' :
-                                  item.alinhamento === 'justificado' ? 'text-justify' : 'text-left'
-                                }" style="color: ${item.corTexto || 'inherit'}">
-                                    ${item.conteudo || ''}
-                                </div>
-                            `}
-                        </div>
-                        `).join('')}
-                    </div>
-                    ` : `
-                    <div class="text-center py-8 text-gray-500">
-                        <p>Nenhum conteúdo adicionado.</p>
-                    </div>
-                    `}
                 </div>
             </div>
-            `).join('')}
+            
+            <h2 class="text-3xl font-bold text-gray-900 mb-8 text-center">
+                Unidades do Curso
+            </h2>
+
+            <div class="space-y-6">
+                ${unidades.map((unidade: any, unidadeIndex: number) => `
+                <div id="unidade-${unidade.id}" class="bg-white rounded-lg overflow-hidden hover:shadow-xl transition-shadow border-2 border-orange-200 hover:border-orange-400 animate-fade-in">
+                    <!-- Unit Header -->
+                    <div class="bg-gradient-to-r from-orange-50 to-orange-100 border-b border-orange-200 p-6">
+                        <div class="flex items-center gap-4">
+                            <!-- Play Icon Circle -->
+                            <div class="flex items-center justify-center w-12 h-12 bg-orange-500 rounded-full text-white shadow-lg flex-shrink-0">
+                                <svg class="w-6 h-6 fill-white" viewBox="0 0 24 24">
+                                    <path d="M8 5v14l11-7z"/>
+                                </svg>
+                            </div>
+                            <div class="flex-1">
+                                <div class="flex items-center gap-3 mb-1">
+                                    <span class="text-sm font-bold text-orange-700 uppercase tracking-wide">
+                                        UNIDADE ${String(unidadeIndex + 1).padStart(2, '0')}
+                                    </span>
+                                </div>
+                                <h3 class="text-xl md:text-2xl font-bold text-gray-900">
+                                    ${unidade.titulo || `Unidade ${unidadeIndex + 1}`}
+                                </h3>
+                                ${unidade.descricao ? `
+                                <p class="mt-2 text-gray-600 text-sm md:text-base">
+                                    ${unidade.descricao}
+                                </p>
+                                ` : ''}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Unit Content Preview -->
+                    <div class="pt-6 px-6">
+                        ${unidade.conteudo && unidade.conteudo.length > 0 ? `
+                        <div class="space-y-4 mb-6">
+                            ${renderPreview(unidade.conteudo)}
+                        </div>
+                        ` : `
+                        <div class="text-center py-12 text-gray-500">
+                            <p>Nenhum conteúdo adicionado ainda.</p>
+                        </div>
+                        `}
+                    </div>
+
+                    <!-- View Full Content Section -->
+                    ${unidade.conteudo && unidade.conteudo.length > 0 ? `
+                    <div class="px-6 pb-6">
+                        <button 
+                            onclick="toggleFullContent('${unidade.id}')"
+                            class="w-full md:w-auto px-4 py-2 border border-orange-500 text-orange-600 hover:bg-orange-50 hover:border-orange-600 rounded-lg transition-colors inline-flex items-center justify-center gap-2"
+                        >
+                            <span id="btn-text-${unidade.id}">Ver Conteúdo Completo</span>
+                            <svg id="chevron-${unidade.id}" class="w-4 h-4 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                            </svg>
+                        </button>
+                        
+                        <!-- Full Content (Initially Hidden) -->
+                        <div id="full-content-${unidade.id}" class="hidden mt-6 border-t border-gray-200 pt-6">
+                            <div class="grid grid-cols-1 md:grid-cols-12 gap-6">
+                                ${renderFullContent(unidade.conteudo)}
+                            </div>
+                        </div>
+                    </div>
+                    ` : ''}
+                </div>
+                `).join('')}
+            </div>
+
+            <!-- Progress Footer -->
+            <div class="mt-12 p-6 bg-white rounded-lg border border-gray-200 shadow-sm">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-sm font-medium text-gray-700">Progresso do Curso</span>
+                    <span id="progressText" class="text-sm font-medium text-gray-700">0%</span>
+                </div>
+                <div class="w-full bg-gray-200 rounded-full h-2.5">
+                    <div id="progressBar" class="bg-blue-600 h-2.5 rounded-full" style="width: 0%"></div>
+                </div>
+            </div>
         </div>
     </main>
 
-    <!-- Footer -->
-    <footer class="bg-white border-t border-gray-200 mt-12 py-6">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-gray-600">
-            <p>Progresso: <span id="progress" class="font-semibold text-blue-600">0%</span></p>
-        </div>
-    </footer>
-
-    <script src="scorm-advanced.js"></script>
     <script>
-        // Menu toggle
-        const menuBtn = document.getElementById('menuBtn');
-        const closeMenuBtn = document.getElementById('closeMenuBtn');
-        const sideMenu = document.getElementById('sideMenu');
-        const menuPanel = document.getElementById('menuPanel');
-        const menuOverlay = document.getElementById('menuOverlay');
-
-        function openMenu() {
-            sideMenu.classList.remove('hidden');
+        function toggleMenu() {
+            const menu = document.getElementById('sideMenu');
+            const content = document.getElementById('menuContent');
+            
+            menu.classList.remove('hidden');
             setTimeout(() => {
-                menuPanel.classList.remove('translate-x-full');
+                content.style.transform = 'translateX(0)';
             }, 10);
         }
 
         function closeMenu() {
-            menuPanel.classList.add('translate-x-full');
+            const content = document.getElementById('menuContent');
+            content.style.transform = 'translateX(-100%)';
             setTimeout(() => {
-                sideMenu.classList.add('hidden');
+                document.getElementById('sideMenu').classList.add('hidden');
             }, 300);
         }
 
-        menuBtn.addEventListener('click', openMenu);
-        closeMenuBtn.addEventListener('click', closeMenu);
-        menuOverlay.addEventListener('click', closeMenu);
+        function closeMenuIfOverlay(event) {
+            if (event.target.id === 'sideMenu') {
+                closeMenu();
+            }
+        }
 
-        // Close menu when clicking on a link
-        document.querySelectorAll('#menuPanel a').forEach(link => {
-            link.addEventListener('click', closeMenu);
-        });
+        function toggleFullContent(unidadeId) {
+            const fullContent = document.getElementById('full-content-' + unidadeId);
+            const btnText = document.getElementById('btn-text-' + unidadeId);
+            const chevron = document.getElementById('chevron-' + unidadeId);
+            
+            if (fullContent.classList.contains('hidden')) {
+                fullContent.classList.remove('hidden');
+                btnText.textContent = 'Ocultar Conteúdo';
+                chevron.style.transform = 'rotate(90deg)';
+            } else {
+                fullContent.classList.add('hidden');
+                btnText.textContent = 'Ver Conteúdo Completo';
+                chevron.style.transform = 'rotate(0deg)';
+            }
+        }
+
+        document.getElementById('menuBtn').addEventListener('click', toggleMenu);
     </script>
+
+    <!-- SCORM API Wrapper -->
+    <script src="scorm-advanced.js"></script>
 </body>
 </html>`
 }
