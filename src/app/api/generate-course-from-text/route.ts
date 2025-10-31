@@ -162,6 +162,9 @@ ${text}
     }
 
     // Validar e adicionar IDs únicos para cada unidade e conteúdo
+    const timestamp = Date.now();
+    const randomSuffix = Math.random().toString(36).substring(2, 9);
+    
     for (let i = 0; i < courseData.unidades.length; i++) {
       const unidade = courseData.unidades[i];
       
@@ -170,14 +173,15 @@ ${text}
         unidade.descricao = 'Descrição não fornecida';
       }
       
-      // Adicionar ID único para a unidade
-      (unidade as any).id = `unidade-${Date.now()}-${i}`;
+      // Adicionar ID único para a unidade (timestamp + random + índice)
+      (unidade as any).id = `unidade-${timestamp}-${randomSuffix}-${i}`;
       
       // Adicionar IDs únicos para cada item de conteúdo
       if (unidade.conteudo && Array.isArray(unidade.conteudo)) {
         for (let j = 0; j < unidade.conteudo.length; j++) {
           const item = unidade.conteudo[j];
-          (item as any).id = `conteudo-${Date.now()}-${i}-${j}`;
+          // ID único: timestamp + random + índice da unidade + índice do conteúdo
+          (item as any).id = `conteudo-${timestamp}-${randomSuffix}-${i}-${j}`;
         }
       }
     }
