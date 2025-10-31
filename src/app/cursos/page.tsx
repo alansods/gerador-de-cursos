@@ -4,9 +4,18 @@ import { useGeradorCurso } from "@/context/GeradorCursoContext";
 import { usePreview } from "@/hooks/usePreview";
 import { useSCORM } from "@/hooks/useSCORM";
 import { usePDF } from "@/hooks/usePDF";
+import { ExportModal } from "@/components/ExportModal";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import {
   Plus,
   Edit,
@@ -19,7 +28,6 @@ import {
   BookOpen,
   Loader2,
   AlertCircle,
-  FileText,
 } from "lucide-react";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -28,11 +36,13 @@ export default function CursosPage() {
   const { state, deletarCurso, selecionarCurso } = useGeradorCurso();
   const { openPreview } = usePreview();
   const { generateSCORMPackage } = useSCORM();
-  const { generatePDF } = usePDF();
+  const { generatePDF, isGenerating: isGeneratingPDF } = usePDF();
   const router = useRouter();
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(
     null
   );
+  const [exportModalOpen, setExportModalOpen] = useState(false);
+  const [selectedCursoForExport, setSelectedCursoForExport] = useState<any>(null);
 
   const handleCriarCurso = () => router.push("/cursos/novo");
   const handleEditarCurso = (id: string) => {
@@ -43,6 +53,22 @@ export default function CursosPage() {
     const curso = state.cursos.find((c) => c.id === id);
     if (curso) {
       openPreview(curso);
+    }
+  };
+  const handleOpenExportModal = (curso: any) => {
+    setSelectedCursoForExport(curso);
+    setExportModalOpen(true);
+  };
+  const handleExportPDF = () => {
+    if (selectedCursoForExport) {
+      generatePDF(selectedCursoForExport);
+      setExportModalOpen(false);
+    }
+  };
+  const handleExportSCORM = () => {
+    if (selectedCursoForExport) {
+      generateSCORMPackage(selectedCursoForExport);
+      setExportModalOpen(false);
     }
   };
 
@@ -214,20 +240,11 @@ export default function CursosPage() {
                     </Button>
                     <Button
                       size="sm"
-                      onClick={() => generatePDF(curso)}
-                      className="flex-1 min-w-[100px] bg-green-600 hover:bg-green-700 text-white"
-                    >
-                      <FileText className="h-4 w-4 mr-1" />
-                      <span className="hidden sm:inline">PDF</span>
-                    </Button>
-                    <Button
-                      size="sm"
-                      onClick={() => generateSCORMPackage(curso)}
-                      className="flex-1 min-w-[100px] bg-purple-600 hover:bg-purple-700 text-white scorm-button"
-                      data-curso-id={curso.id}
+                      onClick={() => handleOpenExportModal(curso)}
+                      className="flex-1 min-w-[100px] bg-blue-600 hover:bg-blue-700 text-white"
                     >
                       <Download className="h-4 w-4 mr-1" />
-                      <span className="hidden sm:inline">SCORM</span>
+                      <span className="hidden sm:inline">Exportar</span>
                     </Button>
                   </div>
                 </CardContent>
@@ -237,41 +254,51 @@ export default function CursosPage() {
         )}
       </div>
 
-      {showDeleteConfirm && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">
-              Confirmar Exclusão
-            </h3>
-            <p className="text-gray-600 mb-6">
-              Tem certeza que deseja deletar esse elemento?
-            </p>
-            <div className="flex space-x-3">
-              <Button
-                variant="outline"
-                onClick={() => setShowDeleteConfirm(null)}
-                className="flex-1"
-              >
-                Cancelar
-              </Button>
-              <Button
-                onClick={async () => {
-                  try {
+      {/* Modal de Confirmação de Exclusão */}
+      <Dialog open={!!showDeleteConfirm} onOpenChange={() => setShowDeleteConfirm(null)}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Confirmar Exclusão</DialogTitle>
+            <DialogDescription>
+              Tem certeza que deseja deletar este curso? Esta ação não pode ser desfeita.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="flex-col sm:flex-row gap-2">
+            <Button
+              variant="outline"
+              onClick={() => setShowDeleteConfirm(null)}
+              className="w-full sm:w-auto"
+            >
+              Cancelar
+            </Button>
+            <Button
+              onClick={async () => {
+                try {
+                  if (showDeleteConfirm) {
                     await deletarCurso(showDeleteConfirm);
-                  } catch (error) {
-                    console.error('Erro ao deletar curso:', error);
-                  } finally {
-                    setShowDeleteConfirm(null);
                   }
-                }}
-                className="flex-1 bg-red-600 hover:bg-red-700"
-              >
-                Excluir
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
+                } catch (error) {
+                  console.error('Erro ao deletar curso:', error);
+                } finally {
+                  setShowDeleteConfirm(null);
+                }
+              }}
+              className="w-full sm:w-auto bg-red-600 hover:bg-red-700"
+            >
+              Excluir
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal de Exportação */}
+      <ExportModal
+        isOpen={exportModalOpen}
+        onClose={() => setExportModalOpen(false)}
+        onExportPDF={handleExportPDF}
+        onExportSCORM={handleExportSCORM}
+        isGeneratingPDF={isGeneratingPDF}
+      />
     </div>
   );
 }

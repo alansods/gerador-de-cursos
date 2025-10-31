@@ -6,10 +6,19 @@ import { useGeradorCurso } from "@/context/GeradorCursoContext";
 import { usePreview } from "@/hooks/usePreview";
 import { useSCORM } from "@/hooks/useSCORM";
 import { usePDF } from "@/hooks/usePDF";
+import { ExportModal } from "@/components/ExportModal";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import {
   ArrowLeft,
   Plus,
@@ -29,7 +38,6 @@ import {
   Clock,
   User,
   GraduationCap,
-  FileText,
 } from "lucide-react";
 import {
   Tooltip,
@@ -97,6 +105,7 @@ export default function EditarCursoPage() {
   const [unidadeParaEditar, setUnidadeParaEditar] = useState<string | null>(
     null
   );
+  const [exportModalOpen, setExportModalOpen] = useState(false);
   const [tituloUnidadeEditando, setTituloUnidadeEditando] = useState("");
   const [confirmarDeletarUnidade, setConfirmarDeletarUnidade] = useState(false);
   const [unidadeParaDeletar, setUnidadeParaDeletar] = useState<string | null>(
@@ -108,16 +117,7 @@ export default function EditarCursoPage() {
   } | null>(null);
   const [confirmarDeletarConteudo, setConfirmarDeletarConteudo] =
     useState(false);
-  const [closingAdicionarUnidade, setClosingAdicionarUnidade] = useState(false);
-  const [closingEditarUnidade, setClosingEditarUnidade] = useState(false);
-  const [closingConfirmarDeletar, setClosingConfirmarDeletar] = useState(false);
-  const [closingConfirmarDeletarConteudo, setClosingConfirmarDeletarConteudo] =
-    useState(false);
-  const [closingEditarConteudo, setClosingEditarConteudo] = useState(false);
-  const [closingAdicionarConteudo, setClosingAdicionarConteudo] =
-    useState(false);
   const [editarCursoModal, setEditarCursoModal] = useState(false);
-  const [closingEditarCurso, setClosingEditarCurso] = useState(false);
 
   const [cargaHorariaEditada, setCargaHorariaEditada] = useState("");
   const [instrutorEditado, setInstrutorEditado] = useState("");
@@ -161,13 +161,9 @@ export default function EditarCursoPage() {
   const handleVoltar = () => router.push("/cursos");
 
   const closeAdicionarUnidadeModal = () => {
-    setClosingAdicionarUnidade(true);
-    setTimeout(() => {
-      setAdicionarUnidadeModal(false);
-      setClosingAdicionarUnidade(false);
-      setNovaUnidade("");
-      setNovaUnidadeDescricao("");
-    }, 200);
+    setAdicionarUnidadeModal(false);
+    setNovaUnidade("");
+    setNovaUnidadeDescricao("");
   };
 
   const openEditarUnidadeModal = (unidadeId: string) => {
@@ -181,66 +177,42 @@ export default function EditarCursoPage() {
   };
 
   const closeEditarUnidadeModal = () => {
-    setClosingEditarUnidade(true);
-    setTimeout(() => {
-      setEditarUnidadeModal(false);
-      setClosingEditarUnidade(false);
-      setUnidadeParaEditar(null);
-      setTituloUnidadeEditando("");
-      setDescricaoUnidadeEditando("");
-    }, 200);
+    setEditarUnidadeModal(false);
+    setUnidadeParaEditar(null);
+    setTituloUnidadeEditando("");
+    setDescricaoUnidadeEditando("");
   };
 
   const closeConfirmarDeletarUnidadeModal = () => {
-    setClosingConfirmarDeletar(true);
-    setTimeout(() => {
-      setConfirmarDeletarUnidade(false);
-      setClosingConfirmarDeletar(false);
-      setUnidadeParaDeletar(null);
-    }, 200);
+    setConfirmarDeletarUnidade(false);
+    setUnidadeParaDeletar(null);
   };
 
   const closeConfirmarDeletarConteudoModal = () => {
-    setClosingConfirmarDeletarConteudo(true);
-    setTimeout(() => {
-      setConfirmarDeletarConteudo(false);
-      setClosingConfirmarDeletarConteudo(false);
-      setConteudoParaDeletar(null);
-    }, 200);
+    setConfirmarDeletarConteudo(false);
+    setConteudoParaDeletar(null);
   };
 
   const closeEditarConteudoModal = () => {
-    setClosingEditarConteudo(true);
-    setTimeout(() => {
-      setEditandoConteudo(null);
-      setClosingEditarConteudo(false);
-    }, 200);
+    setEditandoConteudo(null);
   };
 
   const closeAdicionarConteudoModal = () => {
-    setClosingAdicionarConteudo(true);
-    setTimeout(() => {
-      setConteudoTemp({
-        tipo: "paragrafo",
-        conteudo: "",
-        unidadeId: "",
-        tamanho: "media",
-        legenda: "",
-        fonte: "",
-        corTexto: "#000000",
-        alinhamento: "esquerda",
-        colunas: 12,
-      });
-      setClosingAdicionarConteudo(false);
-    }, 200);
+    setConteudoTemp({
+      tipo: "paragrafo",
+      conteudo: "",
+      unidadeId: "",
+      tamanho: "media",
+      legenda: "",
+      fonte: "",
+      corTexto: "#000000",
+      alinhamento: "esquerda",
+      colunas: 12,
+    });
   };
 
   const closeEditarCursoModal = () => {
-    setClosingEditarCurso(true);
-    setTimeout(() => {
-      setEditarCursoModal(false);
-      setClosingEditarCurso(false);
-    }, 200);
+    setEditarCursoModal(false);
   };
 
   const handleSalvarEdicaoCurso = async () => {
@@ -254,7 +226,7 @@ export default function EditarCursoPage() {
           modalidade: modalidadeEditada,
           categoria: categoriaEditada,
         });
-      } catch (error) {
+    } catch (error) {
         console.error('Erro ao salvar edição do curso:', error);
       }
     }
@@ -461,14 +433,14 @@ export default function EditarCursoPage() {
             </h1>
             <Button onClick={handleVoltar} variant="outline">
               Voltar para lista de cursos
-            </Button>
-          </div>
+          </Button>
         </div>
+      </div>
       );
-    }
-    
+  }
+
     // Se encontrou mas ainda não selecionou, mostrar loading enquanto seleciona
-    return (
+  return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
@@ -514,19 +486,11 @@ export default function EditarCursoPage() {
                 </Tooltip>
               </TooltipProvider>
               <Button
-                onClick={() => generatePDF(state.cursoAtual!)}
-                disabled={isGeneratingPDF}
-                className="bg-green-600 hover:bg-green-700 text-white disabled:bg-gray-400"
-              >
-                <FileText className="h-4 w-4 mr-2" />
-                {isGeneratingPDF ? 'Gerando...' : 'Baixar PDF'}
-              </Button>
-              <Button
-                onClick={() => generateSCORMPackage(state.cursoAtual!)}
-                className="bg-purple-600 hover:bg-purple-700 text-white"
+                onClick={() => setExportModalOpen(true)}
+                className="bg-blue-600 hover:bg-blue-700 text-white"
               >
                 <Download className="h-4 w-4 mr-2" />
-                Baixar SCORM
+                Exportar
               </Button>
             </div>
           </div>
@@ -552,14 +516,14 @@ export default function EditarCursoPage() {
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <Button
-                        variant="outline"
-                        size="sm"
+            <Button
+              variant="outline"
+              size="sm"
                         onClick={() => setEditarCursoModal(true)}
                         className="p-2 bg-white/10 border-white/20 text-white hover:bg-white/20"
-                      >
+            >
                         <Edit className="h-4 w-4" />
-                      </Button>
+            </Button>
                     </TooltipTrigger>
                     <TooltipContent>Editar curso</TooltipContent>
                   </Tooltip>
@@ -572,13 +536,13 @@ export default function EditarCursoPage() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="flex items-center gap-3 bg-white/10 rounded-lg p-3">
                 <Clock className="h-5 w-5 text-blue-200" />
-                <div>
+            <div>
                   <p className="text-sm text-blue-200">Carga Horária</p>
                   <p className="font-semibold">
                     {state.cursoAtual.cargaHoraria}
                   </p>
-                </div>
-              </div>
+            </div>
+          </div>
 
               <div className="flex items-center gap-3 bg-white/10 rounded-lg p-3">
                 <User className="h-5 w-5 text-blue-200" />
@@ -846,740 +810,655 @@ export default function EditarCursoPage() {
       </div>
 
       {/* Modal para editar curso */}
-      {editarCursoModal && (
-        <div
-          className={`fixed inset-0 bg-black flex items-center justify-center p-4 z-50 ${
-            closingEditarCurso
-              ? "animate-out fade-out duration-200"
-              : "animate-in fade-in duration-200"
-          } ${closingEditarCurso ? "bg-opacity-0" : "bg-opacity-50"}`}
-          onClick={closeEditarCursoModal}
-        >
-          <Card
-            className={`w-full max-w-2xl ${
-              closingEditarCurso
-                ? "animate-out zoom-out-95 duration-200"
-                : "animate-in zoom-in-95 duration-200"
-            }`}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Edit className="h-5 w-5 text-blue-600" />
-                Editar Curso
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
+      <Dialog open={editarCursoModal} onOpenChange={() => setEditarCursoModal(false)}>
+        <DialogContent className="sm:max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Edit className="h-5 w-5 text-blue-600" />
+              Editar Curso
+            </DialogTitle>
+            <DialogDescription>
+              Atualize as informações do curso
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div>
+              <label className="text-sm font-medium text-gray-700 mb-2 block">
+                Título do Curso <span className="text-red-500">*</span>
+              </label>
+              <Input
+                value={tituloEditado}
+                onChange={(e) => setTituloEditado(e.target.value)}
+                placeholder="Título do curso"
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium text-gray-700 mb-2 block">
+                Descrição do Curso <span className="text-red-500">*</span>
+              </label>
+              <textarea
+                value={descricaoEditada}
+                onChange={(e) => setDescricaoEditada(e.target.value)}
+                placeholder="Descrição do curso"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
+                rows={3}
+              />
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
                 <label className="text-sm font-medium text-gray-700 mb-2 block">
-                  Título do Curso
+                  Carga Horária <span className="text-red-500">*</span>
                 </label>
                 <Input
-                  value={tituloEditado}
-                  onChange={(e) => setTituloEditado(e.target.value)}
-                  placeholder="Título do curso"
+                  value={cargaHorariaEditada}
+                  onChange={(e) => setCargaHorariaEditada(e.target.value)}
+                  placeholder="Ex: 40 horas"
                 />
               </div>
               <div>
                 <label className="text-sm font-medium text-gray-700 mb-2 block">
-                  Descrição do Curso
-                </label>
-                <textarea
-                  value={descricaoEditada}
-                  onChange={(e) => setDescricaoEditada(e.target.value)}
-                  placeholder="Descrição do curso"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
-                  rows={3}
-                />
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div>
-                  <label className="text-sm font-medium text-gray-700 mb-2 block">
-                    Carga Horária
-                  </label>
-                  <Input
-                    value={cargaHorariaEditada}
-                    onChange={(e) => setCargaHorariaEditada(e.target.value)}
-                    placeholder="Ex: 40 horas"
-                  />
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-gray-700 mb-2 block">
-                    Instrutor
-                  </label>
-                  <Input
-                    value={instrutorEditado}
-                    onChange={(e) => setInstrutorEditado(e.target.value)}
-                    placeholder="Nome do instrutor"
-                  />
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-gray-700 mb-2 block">
-                    Modalidade
-                  </label>
-                  <Input
-                    value={modalidadeEditada}
-                    onChange={(e) => setModalidadeEditada(e.target.value)}
-                    placeholder="Ex: EAD, Presencial"
-                  />
-                </div>
-              </div>
-              <div>
-                <label className="text-sm font-medium text-gray-700 mb-2 block">
-                  Categoria
+                  Instrutor <span className="text-red-500">*</span>
                 </label>
                 <Input
-                  value={categoriaEditada}
-                  onChange={(e) => setCategoriaEditada(e.target.value)}
-                  placeholder="Ex: Programação, Design, Marketing"
+                  value={instrutorEditado}
+                  onChange={(e) => setInstrutorEditado(e.target.value)}
+                  placeholder="Nome do instrutor"
                 />
               </div>
-              <div className="flex justify-end space-x-3">
-                <Button variant="outline" onClick={closeEditarCursoModal}>
-                  Cancelar
-                </Button>
-                <Button
-                  onClick={() => {
-                    handleSalvarEdicaoCurso();
-                    closeEditarCursoModal();
-                  }}
-                  disabled={
-                    !tituloEditado.trim() ||
-                    !descricaoEditada.trim() ||
-                    !cargaHorariaEditada.trim() ||
-                    !instrutorEditado.trim() ||
-                    !modalidadeEditada.trim() ||
-                    !categoriaEditada.trim()
-                  }
-                  className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
-                >
-                  Salvar
-                </Button>
+              <div>
+                <label className="text-sm font-medium text-gray-700 mb-2 block">
+                  Modalidade <span className="text-red-500">*</span>
+                </label>
+                <Input
+                  value={modalidadeEditada}
+                  onChange={(e) => setModalidadeEditada(e.target.value)}
+                  placeholder="Ex: EAD, Presencial"
+                />
               </div>
-            </CardContent>
-          </Card>
-        </div>
-      )}
+            </div>
+            <div>
+              <label className="text-sm font-medium text-gray-700 mb-2 block">
+                Categoria <span className="text-red-500">*</span>
+              </label>
+              <Input
+                value={categoriaEditada}
+                onChange={(e) => setCategoriaEditada(e.target.value)}
+                placeholder="Ex: Programação, Design, Marketing"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={closeEditarCursoModal}>
+              Cancelar
+            </Button>
+            <Button
+              onClick={() => {
+                handleSalvarEdicaoCurso();
+                closeEditarCursoModal();
+              }}
+              disabled={
+                !tituloEditado.trim() ||
+                !descricaoEditada.trim() ||
+                !cargaHorariaEditada.trim() ||
+                !instrutorEditado.trim() ||
+                !modalidadeEditada.trim() ||
+                !categoriaEditada.trim()
+              }
+              className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
+            >
+              Salvar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Modal para adicionar conteúdo */}
-      {conteudoTemp.unidadeId && (
-        <div
-          className={`fixed inset-0 bg-black flex items-center justify-center p-4 z-50 ${
-            closingAdicionarConteudo
-              ? "animate-out fade-out duration-200"
-              : "animate-in fade-in duration-200"
-          } ${closingAdicionarConteudo ? "bg-opacity-0" : "bg-opacity-50"}`}
-          onClick={closeAdicionarConteudoModal}
-        >
-          <Card
-            className={`w-full max-w-2xl ${
-              closingAdicionarConteudo
-                ? "animate-out zoom-out-95 duration-200"
-                : "animate-in zoom-in-95 duration-200"
-            }`}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                {conteudoTemp.tipo === "titulo" ? (
-                  <>
-                    <Heading2 className="h-5 w-5 text-blue-600" />
-                    Adicionar Título
-                  </>
-                ) : conteudoTemp.tipo === "subtitulo" ? (
-                  <>
-                    <Heading3 className="h-5 w-5 text-blue-600" />
-                    Adicionar Subtítulo
-                  </>
-                ) : conteudoTemp.tipo === "imagem" ? (
-                  <>
-                    <Image className="h-5 w-5 text-blue-600" />
-                    Adicionar Imagem
-                  </>
-                ) : (
-                  <>
-                    <Type className="h-5 w-5 text-blue-600" />
-                    Adicionar Parágrafo
-                  </>
-                )}
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {conteudoTemp.tipo === "imagem" ? (
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      URL da Imagem *
-                    </label>
-                    <Input
-                      value={conteudoTemp.conteudo}
-                      onChange={(e) =>
-                        setConteudoTemp({
-                          ...conteudoTemp,
-                          conteudo: e.target.value,
-                        })
-                      }
-                      placeholder="Cole a URL da imagem..."
-                      className="w-full"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Tamanho da Imagem *
-                    </label>
-                    <select
-                      value={conteudoTemp.tamanho || ""}
-                      onChange={(e) =>
-                        setConteudoTemp({
-                          ...conteudoTemp,
-                          tamanho: e.target.value as
-                            | "pequena"
-                            | "media"
-                            | "grande",
-                        })
-                      }
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    >
-                      <option value="">Selecione o tamanho</option>
-                      <option value="pequena">Pequena (25%)</option>
-                      <option value="media">Média (50%)</option>
-                      <option value="grande">Grande (100%)</option>
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Legenda *
-                    </label>
-                    <Input
-                      value={conteudoTemp.legenda || ""}
-                      onChange={(e) =>
-                        setConteudoTemp({
-                          ...conteudoTemp,
-                          legenda: e.target.value,
-                        })
-                      }
-                      placeholder="Digite a legenda da imagem..."
-                      className="w-full"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Fonte *
-                    </label>
-                    <Input
-                      value={conteudoTemp.fonte || ""}
-                      onChange={(e) =>
-                        setConteudoTemp({
-                          ...conteudoTemp,
-                          fonte: e.target.value,
-                        })
-                      }
-                      placeholder="Digite a fonte da imagem..."
-                      className="w-full"
-                    />
-                  </div>
-                </div>
+      <Dialog open={!!conteudoTemp.unidadeId} onOpenChange={closeAdicionarConteudoModal}>
+        <DialogContent className="sm:max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              {conteudoTemp.tipo === "titulo" ? (
+                <>
+                  <Heading2 className="h-5 w-5 text-blue-600" />
+                  Adicionar Título
+                </>
+              ) : conteudoTemp.tipo === "subtitulo" ? (
+                <>
+                  <Heading3 className="h-5 w-5 text-blue-600" />
+                  Adicionar Subtítulo
+                </>
+              ) : conteudoTemp.tipo === "imagem" ? (
+                <>
+                  <Image className="h-5 w-5 text-blue-600" />
+                  Adicionar Imagem
+                </>
               ) : (
-                <div>
-                  {conteudoTemp.tipo === "paragrafo" ? (
-                    <textarea
-                      value={conteudoTemp.conteudo}
-                      onChange={(e) =>
-                        setConteudoTemp({
-                          ...conteudoTemp,
-                          conteudo: e.target.value,
-                        })
-                      }
-                      placeholder="Digite o parágrafo..."
-                      className="w-full p-3 border border-gray-300 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      rows={8}
-                    />
-                  ) : (
-                    <Input
-                      value={conteudoTemp.conteudo}
-                      onChange={(e) =>
-                        setConteudoTemp({
-                          ...conteudoTemp,
-                          conteudo: e.target.value,
-                        })
-                      }
-                      placeholder={`Digite o ${
-                        conteudoTemp.tipo === "titulo" ? "título" : "subtítulo"
-                      }...`}
-                      className="w-full"
-                    />
-                  )}
-                </div>
+                <>
+                  <Type className="h-5 w-5 text-blue-600" />
+                  Adicionar Parágrafo
+                </>
               )}
+            </DialogTitle>
+            <DialogDescription>
+              Preencha os campos abaixo para adicionar o conteúdo
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            {conteudoTemp.tipo === "imagem" ? (
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    URL da Imagem <span className="text-red-500">*</span>
+                  </label>
+                  <Input
+                    value={conteudoTemp.conteudo}
+                    onChange={(e) =>
+                      setConteudoTemp({
+                        ...conteudoTemp,
+                        conteudo: e.target.value,
+                      })
+                    }
+                    placeholder="Cole a URL da imagem..."
+                  />
+                </div>
 
-              <div className="flex justify-end space-x-3">
-                <Button variant="outline" onClick={closeAdicionarConteudoModal}>
-                  Cancelar
-                </Button>
-                <Button
-                  onClick={() => {
-                    handleSalvarConteudo();
-                    closeAdicionarConteudoModal();
-                  }}
-                  className="bg-blue-600 hover:bg-blue-700"
-                  disabled={
-                    !conteudoTemp.conteudo.trim() ||
-                    (conteudoTemp.tipo === "imagem" &&
-                      (!conteudoTemp.tamanho ||
-                        !conteudoTemp.legenda ||
-                        !conteudoTemp.fonte))
-                  }
-                >
-                  Adicionar
-                </Button>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Tamanho da Imagem <span className="text-red-500">*</span>
+                  </label>
+                  <select
+                    value={conteudoTemp.tamanho || ""}
+                    onChange={(e) =>
+                      setConteudoTemp({
+                        ...conteudoTemp,
+                        tamanho: e.target.value as
+                          | "pequena"
+                          | "media"
+                          | "grande",
+                      })
+                    }
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  >
+                    <option value="">Selecione o tamanho</option>
+                    <option value="pequena">Pequena (25%)</option>
+                    <option value="media">Média (50%)</option>
+                    <option value="grande">Grande (100%)</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Legenda <span className="text-red-500">*</span>
+                  </label>
+                  <Input
+                    value={conteudoTemp.legenda || ""}
+                    onChange={(e) =>
+                      setConteudoTemp({
+                        ...conteudoTemp,
+                        legenda: e.target.value,
+                      })
+                    }
+                    placeholder="Digite a legenda da imagem..."
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Fonte <span className="text-red-500">*</span>
+                  </label>
+                  <Input
+                    value={conteudoTemp.fonte || ""}
+                    onChange={(e) =>
+                      setConteudoTemp({
+                        ...conteudoTemp,
+                        fonte: e.target.value,
+                      })
+                    }
+                    placeholder="Digite a fonte da imagem..."
+                  />
+                </div>
               </div>
-            </CardContent>
-          </Card>
-        </div>
-      )}
+            ) : (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Conteúdo <span className="text-red-500">*</span>
+                </label>
+                {conteudoTemp.tipo === "paragrafo" ? (
+                  <textarea
+                    value={conteudoTemp.conteudo}
+                    onChange={(e) =>
+                      setConteudoTemp({
+                        ...conteudoTemp,
+                        conteudo: e.target.value,
+                      })
+                    }
+                    placeholder="Digite o parágrafo..."
+                    className="w-full p-3 border border-gray-300 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    rows={8}
+                  />
+                ) : (
+                  <Input
+                    value={conteudoTemp.conteudo}
+                    onChange={(e) =>
+                      setConteudoTemp({
+                        ...conteudoTemp,
+                        conteudo: e.target.value,
+                      })
+                    }
+                    placeholder={`Digite o ${
+                      conteudoTemp.tipo === "titulo" ? "título" : "subtítulo"
+                    }...`}
+                  />
+                )}
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={closeAdicionarConteudoModal}>
+              Cancelar
+            </Button>
+            <Button
+              onClick={() => {
+                handleSalvarConteudo();
+                closeAdicionarConteudoModal();
+              }}
+              className="bg-blue-600 hover:bg-blue-700"
+              disabled={
+                !conteudoTemp.conteudo.trim() ||
+                (conteudoTemp.tipo === "imagem" &&
+                  (!conteudoTemp.tamanho ||
+                    !conteudoTemp.legenda ||
+                    !conteudoTemp.fonte))
+              }
+            >
+              Adicionar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Modal para adicionar unidade */}
-      {adicionarUnidadeModal && (
-        <div
-          className={`fixed inset-0 bg-black flex items-center justify-center p-4 z-50 ${
-            closingAdicionarUnidade
-              ? "animate-out fade-out duration-200"
-              : "animate-in fade-in duration-200"
-          } ${closingAdicionarUnidade ? "bg-opacity-0" : "bg-opacity-50"}`}
-          onClick={closeAdicionarUnidadeModal}
-        >
-          <Card
-            className={`w-full max-w-2xl ${
-              closingAdicionarUnidade
-                ? "animate-out zoom-out-95 duration-200"
-                : "animate-in zoom-in-95 duration-200"
-            }`}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Layers className="h-5 w-5 text-blue-600" />
-                Adicionar Nova Unidade
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Título da Unidade *
-                </label>
-                <Input
-                  value={novaUnidade}
-                  onChange={(e) => setNovaUnidade(e.target.value)}
-                  placeholder="Título da unidade"
-                  onKeyPress={(e) =>
-                    e.key === "Enter" && handleAdicionarUnidade()
-                  }
-                />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Descrição da Unidade *
-                </label>
-                <textarea
-                  value={novaUnidadeDescricao}
-                  onChange={(e) => setNovaUnidadeDescricao(e.target.value)}
-                  placeholder="Descreva o que os alunos aprenderão nesta unidade..."
-                  className="w-full p-3 border border-gray-300 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  rows={4}
-                  required
-                />
-              </div>
+      <Dialog open={adicionarUnidadeModal} onOpenChange={() => setAdicionarUnidadeModal(false)}>
+        <DialogContent className="sm:max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Layers className="h-5 w-5 text-blue-600" />
+              Adicionar Nova Unidade
+            </DialogTitle>
+            <DialogDescription>
+              Crie uma nova unidade para o curso
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Título da Unidade <span className="text-red-500">*</span>
+              </label>
+              <Input
+                value={novaUnidade}
+                onChange={(e) => setNovaUnidade(e.target.value)}
+                placeholder="Título da unidade"
+                onKeyPress={(e) =>
+                  e.key === "Enter" && handleAdicionarUnidade()
+                }
+              />
+            </div>
 
-              <div className="flex justify-end space-x-3">
-                <Button variant="outline" onClick={closeAdicionarUnidadeModal}>
-                  Cancelar
-                </Button>
-                <Button
-                  onClick={() => {
-                    handleAdicionarUnidade();
-                    closeAdicionarUnidadeModal();
-                  }}
-                  className="bg-blue-600 hover:bg-blue-700"
-                  disabled={!novaUnidade.trim() || !novaUnidadeDescricao.trim()}
-                >
-                  Adicionar
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      )}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Descrição da Unidade <span className="text-red-500">*</span>
+              </label>
+              <textarea
+                value={novaUnidadeDescricao}
+                onChange={(e) => setNovaUnidadeDescricao(e.target.value)}
+                placeholder="Descreva o que os alunos aprenderão nesta unidade..."
+                className="w-full p-3 border border-gray-300 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                rows={4}
+                required
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={closeAdicionarUnidadeModal}>
+              Cancelar
+            </Button>
+            <Button
+              onClick={() => {
+                handleAdicionarUnidade();
+                closeAdicionarUnidadeModal();
+              }}
+              className="bg-blue-600 hover:bg-blue-700"
+              disabled={!novaUnidade.trim() || !novaUnidadeDescricao.trim()}
+            >
+              Adicionar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Modal para editar unidade */}
-      {editarUnidadeModal && unidadeParaEditar && (
-        <div
-          className={`fixed inset-0 bg-black flex items-center justify-center p-4 z-50 ${
-            closingEditarUnidade
-              ? "animate-out fade-out duration-200"
-              : "animate-in fade-in duration-200"
-          } ${closingEditarUnidade ? "bg-opacity-0" : "bg-opacity-50"}`}
-          onClick={closeEditarUnidadeModal}
-        >
-          <Card
-            className={`w-full max-w-2xl ${
-              closingEditarUnidade
-                ? "animate-out zoom-out-95 duration-200"
-                : "animate-in zoom-in-95 duration-200"
-            }`}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Edit className="h-5 w-5 text-blue-600" />
-                Editar Unidade
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Título da Unidade *
-                </label>
-                <Input
-                  value={tituloUnidadeEditando}
-                  onChange={(e) => setTituloUnidadeEditando(e.target.value)}
-                  placeholder="Digite o título da unidade..."
-                  className="w-full"
-                  onKeyPress={(e) =>
-                    e.key === "Enter" && handleSalvarEdicaoUnidade()
-                  }
-                />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Descrição da Unidade *
-                </label>
-                <textarea
-                  value={descricaoUnidadeEditando}
-                  onChange={(e) => setDescricaoUnidadeEditando(e.target.value)}
-                  placeholder="Descreva o que os alunos aprenderão nesta unidade..."
-                  className="w-full p-3 border border-gray-300 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  rows={4}
-                  required
-                />
-              </div>
-
-              <div className="flex justify-end space-x-3">
-                <Button variant="outline" onClick={closeEditarUnidadeModal}>
-                  Cancelar
-                </Button>
-                <Button
-                  onClick={handleSalvarEdicaoUnidade}
-                  className="bg-blue-600 hover:bg-blue-700"
-                  disabled={!tituloUnidadeEditando.trim() || !descricaoUnidadeEditando.trim()}
-                >
-                  Salvar
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      )}
+      <Dialog open={editarUnidadeModal && !!unidadeParaEditar} onOpenChange={() => setEditarUnidadeModal(false)}>
+        <DialogContent className="sm:max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Edit className="h-5 w-5 text-blue-600" />
+              Editar Unidade
+            </DialogTitle>
+            <DialogDescription>
+              Atualize as informações da unidade
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Título da Unidade <span className="text-red-500">*</span>
+              </label>
+              <Input
+                value={tituloUnidadeEditando}
+                onChange={(e) => setTituloUnidadeEditando(e.target.value)}
+                placeholder="Digite o título da unidade..."
+                onKeyPress={(e) =>
+                  e.key === "Enter" && handleSalvarEdicaoUnidade()
+                }
+              />
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Descrição da Unidade <span className="text-red-500">*</span>
+              </label>
+              <textarea
+                value={descricaoUnidadeEditando}
+                onChange={(e) => setDescricaoUnidadeEditando(e.target.value)}
+                placeholder="Descreva o que os alunos aprenderão nesta unidade..."
+                className="w-full p-3 border border-gray-300 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                rows={4}
+                required
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={closeEditarUnidadeModal}>
+              Cancelar
+            </Button>
+            <Button
+              onClick={handleSalvarEdicaoUnidade}
+              className="bg-blue-600 hover:bg-blue-700"
+              disabled={!tituloUnidadeEditando.trim() || !descricaoUnidadeEditando.trim()}
+            >
+              Salvar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Modal de confirmação para deletar unidade */}
-      {confirmarDeletarUnidade && unidadeParaDeletar && (
-        <div
-          className={`fixed inset-0 bg-black flex items-center justify-center p-4 z-50 ${
-            closingConfirmarDeletar
-              ? "animate-out fade-out duration-200"
-              : "animate-in fade-in duration-200"
-          } ${closingConfirmarDeletar ? "bg-opacity-0" : "bg-opacity-50"}`}
-          onClick={closeConfirmarDeletarUnidadeModal}
-        >
-          <Card
-            className={`w-full max-w-md ${
-              closingConfirmarDeletar
-                ? "animate-out zoom-out-95 duration-200"
-                : "animate-in zoom-in-95 duration-200"
-            }`}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Trash2 className="h-5 w-5 text-red-600" />
-                Confirmar Exclusão
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <p>Tem certeza que deseja deletar esse elemento?</p>
-              <div className="flex justify-end space-x-3">
-                <Button
-                  variant="outline"
-                  onClick={closeConfirmarDeletarUnidadeModal}
-                >
-                  Cancelar
-                </Button>
-                <Button
-                  onClick={() => {
-                    deletarUnidade(unidadeParaDeletar);
-                    closeConfirmarDeletarUnidadeModal();
-                  }}
-                  className="bg-red-600 hover:bg-red-700"
-                >
-                  Excluir
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      )}
+      <Dialog open={confirmarDeletarUnidade && !!unidadeParaDeletar} onOpenChange={() => setConfirmarDeletarUnidade(false)}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Trash2 className="h-5 w-5 text-red-600" />
+              Confirmar Exclusão
+            </DialogTitle>
+            <DialogDescription>
+              Tem certeza que deseja deletar esta unidade? Todos os conteúdos da unidade serão removidos e esta ação não pode ser desfeita.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={closeConfirmarDeletarUnidadeModal}
+            >
+              Cancelar
+            </Button>
+            <Button
+              onClick={() => {
+                if (unidadeParaDeletar) {
+                  deletarUnidade(unidadeParaDeletar);
+                }
+                closeConfirmarDeletarUnidadeModal();
+              }}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              Excluir
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Modal de confirmação para deletar conteúdo */}
-      {confirmarDeletarConteudo && conteudoParaDeletar && (
-        <div
-          className={`fixed inset-0 bg-black flex items-center justify-center p-4 z-50 ${
-            closingConfirmarDeletarConteudo
-              ? "animate-out fade-out duration-200"
-              : "animate-in fade-in duration-200"
-          } ${
-            closingConfirmarDeletarConteudo ? "bg-opacity-0" : "bg-opacity-50"
-          }`}
-          onClick={closeConfirmarDeletarConteudoModal}
-        >
-          <Card
-            className={`w-full max-w-md ${
-              closingConfirmarDeletarConteudo
-                ? "animate-out zoom-out-95 duration-200"
-                : "animate-in zoom-in-95 duration-200"
-            }`}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Trash2 className="h-5 w-5 text-red-600" />
-                Confirmar Exclusão
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <p>Tem certeza que deseja deletar esse elemento?</p>
-              <div className="flex justify-end space-x-3">
-                <Button
-                  variant="outline"
-                  onClick={closeConfirmarDeletarConteudoModal}
-                >
-                  Cancelar
-                </Button>
-                <Button
-                  onClick={() => {
-                    deletarConteudo(
-                      conteudoParaDeletar.unidadeId,
-                      conteudoParaDeletar.conteudoId
-                    );
-                    closeConfirmarDeletarConteudoModal();
-                  }}
-                  className="bg-red-600 hover:bg-red-700"
-                >
-                  Excluir
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      )}
+      <Dialog open={confirmarDeletarConteudo && !!conteudoParaDeletar} onOpenChange={() => setConfirmarDeletarConteudo(false)}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Trash2 className="h-5 w-5 text-red-600" />
+              Confirmar Exclusão
+            </DialogTitle>
+            <DialogDescription>
+              Tem certeza que deseja deletar este conteúdo? Esta ação não pode ser desfeita.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={closeConfirmarDeletarConteudoModal}
+            >
+              Cancelar
+            </Button>
+            <Button
+              onClick={() => {
+                if (conteudoParaDeletar) {
+                  deletarConteudo(
+                    conteudoParaDeletar.unidadeId,
+                    conteudoParaDeletar.conteudoId
+                  );
+                }
+                closeConfirmarDeletarConteudoModal();
+              }}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              Excluir
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Modal para editar conteúdo */}
-      {editandoConteudo && (
-        <div
-          className={`fixed inset-0 bg-black flex items-center justify-center p-4 z-50 ${
-            closingEditarConteudo
-              ? "animate-out fade-out duration-200"
-              : "animate-in fade-in duration-200"
-          } ${closingEditarConteudo ? "bg-opacity-0" : "bg-opacity-50"}`}
-          onClick={closeEditarConteudoModal}
-        >
-          <Card
-            className={`w-full max-w-2xl ${
-              closingEditarConteudo
-                ? "animate-out zoom-out-95 duration-200"
-                : "animate-in zoom-in-95 duration-200"
-            }`}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Edit className="h-5 w-5 text-blue-600" />
-                Editar{" "}
-                {editandoConteudo.tipo === "titulo" ? (
-                  <>
-                    <Heading2 className="h-4 w-4 text-blue-600" />
-                    Título
-                  </>
-                ) : editandoConteudo.tipo === "subtitulo" ? (
-                  <>
-                    <Heading3 className="h-4 w-4 text-blue-600" />
-                    Subtítulo
-                  </>
-                ) : editandoConteudo.tipo === "imagem" ? (
-                  <>
-                    <Image className="h-4 w-4 text-blue-600" />
-                    Imagem
-                  </>
-                ) : (
-                  <>
-                    <Type className="h-4 w-4 text-blue-600" />
-                    Parágrafo
-                  </>
-                )}
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {editandoConteudo.tipo === "imagem" ? (
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      URL da Imagem *
-                    </label>
-                    <Input
-                      value={editandoConteudo.conteudo}
-                      onChange={(e) =>
-                        setEditandoConteudo({
-                          ...editandoConteudo,
-                          conteudo: e.target.value,
-                        })
-                      }
-                      placeholder="Cole a URL da imagem..."
-                      className="w-full"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Tamanho da Imagem *
-                    </label>
-                    <select
-                      value={editandoConteudo.tamanho || ""}
-                      onChange={(e) =>
-                        setEditandoConteudo({
-                          ...editandoConteudo,
-                          tamanho: e.target.value as
-                            | "pequena"
-                            | "media"
-                            | "grande",
-                        })
-                      }
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    >
-                      <option value="">Selecione o tamanho</option>
-                      <option value="pequena">Pequena (25%)</option>
-                      <option value="media">Média (50%)</option>
-                      <option value="grande">Grande (100%)</option>
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Legenda *
-                    </label>
-                    <Input
-                      value={editandoConteudo.legenda || ""}
-                      onChange={(e) =>
-                        setEditandoConteudo({
-                          ...editandoConteudo,
-                          legenda: e.target.value,
-                        })
-                      }
-                      placeholder="Digite a legenda da imagem..."
-                      className="w-full"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Fonte *
-                    </label>
-                    <Input
-                      value={editandoConteudo.fonte || ""}
-                      onChange={(e) =>
-                        setEditandoConteudo({
-                          ...editandoConteudo,
-                          fonte: e.target.value,
-                        })
-                      }
-                      placeholder="Digite a fonte da imagem..."
-                      className="w-full"
-                    />
-                  </div>
-                </div>
+      <Dialog open={!!editandoConteudo} onOpenChange={closeEditarConteudoModal}>
+        <DialogContent className="sm:max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Edit className="h-5 w-5 text-blue-600" />
+              Editar{" "}
+              {editandoConteudo?.tipo === "titulo" ? (
+                <>
+                  <Heading2 className="h-4 w-4 text-blue-600" />
+                  Título
+                </>
+              ) : editandoConteudo?.tipo === "subtitulo" ? (
+                <>
+                  <Heading3 className="h-4 w-4 text-blue-600" />
+                  Subtítulo
+                </>
+              ) : editandoConteudo?.tipo === "imagem" ? (
+                <>
+                  <Image className="h-4 w-4 text-blue-600" />
+                  Imagem
+                </>
               ) : (
-                <div>
-                  {editandoConteudo.tipo === "paragrafo" ? (
-                    <textarea
-                      value={editandoConteudo.conteudo}
-                      onChange={(e) =>
-                        setEditandoConteudo({
-                          ...editandoConteudo,
-                          conteudo: e.target.value,
-                        })
-                      }
-                      placeholder="Digite o parágrafo..."
-                      className="w-full p-3 border border-gray-300 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      rows={8}
-                    />
-                  ) : (
-                    <Input
-                      value={editandoConteudo.conteudo}
-                      onChange={(e) =>
-                        setEditandoConteudo({
-                          ...editandoConteudo,
-                          conteudo: e.target.value,
-                        })
-                      }
-                      placeholder={`Digite o ${
-                        editandoConteudo.tipo === "titulo"
-                          ? "título"
-                          : "subtítulo"
-                      }...`}
-                      className="w-full"
-                    />
-                  )}
-                </div>
+                <>
+                  <Type className="h-4 w-4 text-blue-600" />
+                  Parágrafo
+                </>
               )}
+            </DialogTitle>
+            <DialogDescription>
+              Atualize o conteúdo abaixo
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            {editandoConteudo?.tipo === "imagem" ? (
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    URL da Imagem <span className="text-red-500">*</span>
+                  </label>
+                  <Input
+                    value={editandoConteudo.conteudo}
+                    onChange={(e) =>
+                      setEditandoConteudo({
+                        ...editandoConteudo,
+                        conteudo: e.target.value,
+                      })
+                    }
+                    placeholder="Cole a URL da imagem..."
+                  />
+                </div>
 
-              <div className="flex justify-end space-x-3">
-                <Button variant="outline" onClick={closeEditarConteudoModal}>
-                  Cancelar
-                </Button>
-                <Button
-                  onClick={() => {
-                    handleEditarConteudo(
-                      editandoConteudo.unidadeId,
-                      editandoConteudo.conteudoId,
-                      editandoConteudo.tipo,
-                      editandoConteudo.conteudo,
-                      editandoConteudo.tamanho,
-                      editandoConteudo.legenda,
-                      editandoConteudo.fonte,
-                      editandoConteudo.corTexto,
-                      editandoConteudo.alinhamento,
-                      editandoConteudo.colunas
-                    );
-                    closeEditarConteudoModal();
-                  }}
-                  className="bg-blue-600 hover:bg-blue-700"
-                  disabled={
-                    !editandoConteudo.conteudo?.trim() ||
-                    (editandoConteudo.tipo === "imagem" &&
-                      (!editandoConteudo.tamanho ||
-                        !editandoConteudo.legenda ||
-                        !editandoConteudo.fonte))
-                  }
-                >
-                  Salvar
-                </Button>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Tamanho da Imagem <span className="text-red-500">*</span>
+                  </label>
+                  <select
+                    value={editandoConteudo.tamanho || ""}
+                    onChange={(e) =>
+                      setEditandoConteudo({
+                        ...editandoConteudo,
+                        tamanho: e.target.value as
+                          | "pequena"
+                          | "media"
+                          | "grande",
+                      })
+                    }
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  >
+                    <option value="">Selecione o tamanho</option>
+                    <option value="pequena">Pequena (25%)</option>
+                    <option value="media">Média (50%)</option>
+                    <option value="grande">Grande (100%)</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Legenda <span className="text-red-500">*</span>
+                  </label>
+                  <Input
+                    value={editandoConteudo.legenda || ""}
+                    onChange={(e) =>
+                      setEditandoConteudo({
+                        ...editandoConteudo,
+                        legenda: e.target.value,
+                      })
+                    }
+                    placeholder="Digite a legenda da imagem..."
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Fonte <span className="text-red-500">*</span>
+                  </label>
+                  <Input
+                    value={editandoConteudo.fonte || ""}
+                    onChange={(e) =>
+                      setEditandoConteudo({
+                        ...editandoConteudo,
+                        fonte: e.target.value,
+                      })
+                    }
+                    placeholder="Digite a fonte da imagem..."
+                  />
+                </div>
               </div>
-            </CardContent>
-          </Card>
-        </div>
-      )}
+            ) : (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Conteúdo <span className="text-red-500">*</span>
+                </label>
+                {editandoConteudo?.tipo === "paragrafo" ? (
+                  <textarea
+                    value={editandoConteudo.conteudo}
+                    onChange={(e) =>
+                      setEditandoConteudo({
+                        ...editandoConteudo,
+                        conteudo: e.target.value,
+                      })
+                    }
+                    placeholder="Digite o parágrafo..."
+                    className="w-full p-3 border border-gray-300 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    rows={8}
+                  />
+                ) : (
+                  <Input
+                    value={editandoConteudo?.conteudo || ""}
+                    onChange={(e) =>
+                      editandoConteudo && setEditandoConteudo({
+                        ...editandoConteudo,
+                        conteudo: e.target.value,
+                      })
+                    }
+                    placeholder={`Digite o ${
+                      editandoConteudo?.tipo === "titulo"
+                        ? "título"
+                        : "subtítulo"
+                    }...`}
+                  />
+                )}
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={closeEditarConteudoModal}>
+              Cancelar
+            </Button>
+            <Button
+              onClick={() => {
+                if (editandoConteudo) {
+                  handleEditarConteudo(
+                    editandoConteudo.unidadeId,
+                    editandoConteudo.conteudoId,
+                    editandoConteudo.tipo,
+                    editandoConteudo.conteudo,
+                    editandoConteudo.tamanho,
+                    editandoConteudo.legenda,
+                    editandoConteudo.fonte,
+                    editandoConteudo.corTexto,
+                    editandoConteudo.alinhamento,
+                    editandoConteudo.colunas
+                  );
+                  closeEditarConteudoModal();
+                }
+              }}
+              className="bg-blue-600 hover:bg-blue-700"
+              disabled={
+                !editandoConteudo?.conteudo?.trim() ||
+                (editandoConteudo?.tipo === "imagem" &&
+                  (!editandoConteudo.tamanho ||
+                    !editandoConteudo.legenda ||
+                    !editandoConteudo.fonte))
+              }
+            >
+              Salvar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal de Exportação */}
+      <ExportModal
+        isOpen={exportModalOpen}
+        onClose={() => setExportModalOpen(false)}
+        onExportPDF={() => {
+          generatePDF(state.cursoAtual!);
+          setExportModalOpen(false);
+        }}
+        onExportSCORM={() => {
+          generateSCORMPackage(state.cursoAtual!);
+          setExportModalOpen(false);
+        }}
+        isGeneratingPDF={isGeneratingPDF}
+      />
     </div>
   );
 }
