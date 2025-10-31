@@ -50,7 +50,15 @@ export async function POST(req: NextRequest) {
 
     // Inicializar Google Gemini com a chave validada
     const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+    const model = genAI.getGenerativeModel({ 
+      model: 'gemini-1.5-pro-latest',
+      generationConfig: {
+        temperature: 0.7,
+        topK: 40,
+        topP: 0.95,
+        maxOutputTokens: 8192,
+      }
+    });
 
     // Prompt para a IA
     const systemPrompt = `Você é um especialista em design instrucional e criação de cursos online. 
@@ -169,7 +177,7 @@ ${text}`;
       stats: {
         duration: `${duration}s`,
         unidades: courseData.unidades.length,
-        model: 'gemini-1.5-flash',
+        model: 'gemini-1.5-pro-latest',
         tokensUsed: 0, // Gemini não retorna contagem de tokens facilmente
       },
     });
