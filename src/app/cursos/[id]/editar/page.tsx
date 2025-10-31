@@ -36,7 +36,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { MenuConteudo } from "@/components/MenuConteudo";
-import { WelcomeMessage } from "@/components/WelcomeMessage";
+import { MenuUnidade } from "@/components/MenuUnidade";
 
 export default function EditarCursoPage() {
   const {
@@ -623,74 +623,15 @@ export default function EditarCursoPage() {
                       {unidade.descricao}
                     </p>
                   </div>
-                  <div className="flex items-center space-x-2">
-                    <div className="flex space-x-1">
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() =>
-                                handleMoverUnidadeAcima(unidadeIndex)
-                              }
-                              disabled={unidadeIndex === 0}
-                            >
-                              <ArrowUp className="h-4 w-4" />
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent>Subir unidade</TooltipContent>
-                        </Tooltip>
-
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() =>
-                                handleMoverUnidadeAbaixo(unidadeIndex)
-                              }
-                              disabled={
-                                unidadeIndex ===
-                                (state.cursoAtual?.unidades || []).length - 1
-                              }
-                            >
-                              <ArrowDown className="h-4 w-4" />
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent>Descer unidade</TooltipContent>
-                        </Tooltip>
-
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => openEditarUnidadeModal(unidade.id)}
-                              className="p-2"
-                            >
-                              <Edit className="h-4 w-4" />
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent>Editar unidade</TooltipContent>
-                        </Tooltip>
-
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => handleDeletarUnidade(unidade.id)}
-                              className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent>Deletar unidade</TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
-                    </div>
-                  </div>
+                  <MenuUnidade
+                    unidadeId={unidade.id}
+                    unidadeIndex={unidadeIndex}
+                    totalUnidades={(state.cursoAtual?.unidades || []).length}
+                    onMoverAcima={handleMoverUnidadeAcima}
+                    onMoverAbaixo={handleMoverUnidadeAbaixo}
+                    onEditar={openEditarUnidadeModal}
+                    onDeletar={handleDeletarUnidade}
+                  />
                 </div>
               </CardHeader>
 
