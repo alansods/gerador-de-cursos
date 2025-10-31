@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import OpenAI from 'openai';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 
 // Configuração para Vercel
 export const maxDuration = 60; // 60s para plano Pro (10s para Hobby)
@@ -26,12 +26,12 @@ interface CursoGenerado {
 export async function POST(req: NextRequest) {
   try {
     // Verificar API key PRIMEIRO (antes de qualquer coisa)
-    if (!process.env.OPENAI_API_KEY || process.env.OPENAI_API_KEY.trim() === '') {
-      console.error('[Generate Course] OPENAI_API_KEY não configurada!');
+    if (!process.env.GEMINI_API_KEY || process.env.GEMINI_API_KEY.trim() === '') {
+      console.error('[Generate Course] GEMINI_API_KEY não configurada!');
       return NextResponse.json(
         {
           error: 'API Key não configurada',
-          message: 'Por favor, configure OPENAI_API_KEY no arquivo .env.local. Acesse: https://platform.openai.com/api-keys',
+          message: 'Por favor, configure GEMINI_API_KEY no arquivo .env.local. Acesse: https://aistudio.google.com/app/apikey',
         },
         { status: 500 }
       );
@@ -48,10 +48,9 @@ export async function POST(req: NextRequest) {
 
     console.log(`[Generate Course] Processando texto com ${text.length} caracteres...`);
 
-    // Inicializar OpenAI com a chave validada
-    const openai = new OpenAI({
-      apiKey: process.env.OPENAI_API_KEY,
-    });
+    // Inicializar Google Gemini com a chave validada
+    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
 
     // Prompt para a IA
     const systemPrompt = `Você é um especialista em design instrucional e criação de cursos online. 
@@ -103,37 +102,36 @@ FORMATO DE RESPOSTA (JSON):
 
 Retorne APENAS o JSON, sem texto adicional antes ou depois.`;
 
-    const userPrompt = `Analise o seguinte conteúdo e crie um curso estruturado:
+    const fullPrompt = `${systemPrompt}
 
 ${text}`;
 
-    // Chamar a API da OpenAI
+    // Chamar a API do Google Gemini
     const startTime = Date.now();
-    const completion = await openai.chat.completions.create({
-      model: 'gpt-3.5-turbo-16k', // Ou gpt-4-turbo para melhor qualidade
-      messages: [
-        { role: 'system', content: systemPrompt },
-        { role: 'user', content: userPrompt },
-      ],
-      temperature: 0.7,
-      max_tokens: 8000, // Limite para resposta rápida
-      response_format: { type: 'json_object' }, // Força resposta em JSON
-    });
+    const result = await model.generateContent(fullPrompt);
+    const response = await result.response;
+    const responseContent = response.text();
 
     const endTime = Date.now();
     const duration = ((endTime - startTime) / 1000).toFixed(2);
 
     console.log(`[Generate Course] IA respondeu em ${duration}s`);
 
-    // Extrair e parsear resposta
-    const responseContent = completion.choices[0].message.content;
     if (!responseContent) {
       throw new Error('IA não retornou conteúdo');
     }
 
     let courseData: CursoGenerado;
     try {
-      courseData = JSON.parse(responseContent);
+      // Limpar resposta do Gemini (pode ter ```json ... ```)
+      let cleanedResponse = responseContent.trim();
+      if (cleanedResponse.startsWith('```json')) {
+        cleanedResponse = cleanedResponse.replace(/^```json\s*/, '').replace(/\s*```$/, '');
+      } else if (cleanedResponse.startsWith('```')) {
+        cleanedResponse = cleanedResponse.replace(/^```\s*/, '').replace(/\s*```$/, '');
+      }
+      
+      courseData = JSON.parse(cleanedResponse);
     } catch (parseError) {
       console.error('Erro ao parsear resposta da IA:', responseContent);
       return NextResponse.json(
@@ -171,26 +169,14 @@ ${text}`;
       stats: {
         duration: `${duration}s`,
         unidades: courseData.unidades.length,
-        model: completion.model,
-        tokensUsed: completion.usage?.total_tokens || 0,
+        model: 'gemini-1.5-flash',
+        tokensUsed: 0, // Gemini não retorna contagem de tokens facilmente
       },
     });
   } catch (error) {
     console.error('Erro no generate-course-from-text:', error);
 
-    // Erros específicos da OpenAI
-    if (error instanceof OpenAI.APIError) {
-      return NextResponse.json(
-        {
-          error: 'Erro na API da OpenAI',
-          message: error.message,
-          type: error.type,
-          code: error.code,
-        },
-        { status: error.status || 500 }
-      );
-    }
-
+    // Erro genérico
     return NextResponse.json(
       {
         error: 'Erro interno ao gerar curso',
