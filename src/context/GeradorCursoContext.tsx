@@ -206,7 +206,7 @@ export function GeradorCursoProvider({ children }: { children: React.ReactNode }
       const data = await response.json()
 
       if (data.success) {
-        dispatch({ type: "DELETAR_CURSO", payload: id })
+    dispatch({ type: "DELETAR_CURSO", payload: id })
       } else {
         throw new Error(data.error || 'Erro ao deletar curso')
       }
