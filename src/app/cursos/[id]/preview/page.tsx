@@ -19,6 +19,7 @@ import {
   GraduationCap,
   Play,
   ChevronRight,
+  Loader2,
 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -50,6 +51,19 @@ export default function PreviewCursoPage() {
     }
   }, [curso, router, state.loading, state.cursos.length]);
 
+  // Loading state
+  if (state.loading || (!curso && state.cursos.length === 0)) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="h-12 w-12 animate-spin text-blue-600 mx-auto mb-4" />
+          <p className="text-gray-600">Carregando curso...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Curso não encontrado (após loading)
   if (!curso) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -120,7 +134,7 @@ export default function PreviewCursoPage() {
       {/* Main Content */}
       <main className="pt-16">
         {/* Hero Section - Dark Background */}
-        <div className="bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 text-white">
+        <div className="bg-linear-to-br from-slate-900 via-blue-900 to-slate-900 text-white">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-16">
             {/* Category Badge */}
             <div className="mb-4">
@@ -195,7 +209,7 @@ export default function PreviewCursoPage() {
                   key={unidade.id}
                   className="overflow-hidden hover:shadow-xl transition-shadow border-2 border-orange-200 hover:border-orange-400"
                 >
-                  <CardHeader className="bg-gradient-to-r from-orange-50 to-orange-100 border-b border-orange-200">
+                  <CardHeader className="bg-linear-to-r from-orange-50 to-orange-100 border-b border-orange-200">
                     <div className="flex items-center gap-4">
                       {/* Play Icon Circle */}
                       <div className="flex items-center justify-center w-12 h-12 bg-orange-500 rounded-full text-white shadow-lg">

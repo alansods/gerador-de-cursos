@@ -178,7 +178,7 @@ export default function CursosPage() {
           </div>
         )}
 
-        {state.cursos.length === 0 ? (
+        {!state.loading && state.cursos.length === 0 ? (
           <div className="text-center py-24">
             <div className="mx-auto w-40 h-40 bg-gray-100 rounded-full flex items-center justify-center mb-8">
               <Plus className="h-12 w-12 text-gray-400" />
