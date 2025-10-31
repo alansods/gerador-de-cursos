@@ -11,7 +11,7 @@ interface UnidadeConteudoProps {
 export function UnidadeConteudo({ unidade, unidadeIndex }: UnidadeConteudoProps) {
   return (
     <Card key={unidade.id} id={unidade.id} className="overflow-hidden scroll-mt-20">
-      <CardHeader className="bg-gradient-to-r from-gray-50 to-gray-100 border-b">
+      <CardHeader className="bg-linear-to-r from-gray-50 to-gray-100 border-b">
         <div className="flex items-start gap-3">
           <div className="flex items-center justify-center w-10 h-10 bg-blue-600 text-white rounded-full font-bold shrink-0">
             {unidadeIndex + 1}
