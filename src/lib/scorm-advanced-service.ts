@@ -431,51 +431,149 @@ function createAdvancedSCORMJS(): string {
   return `// SCORM 1.2 Advanced API Implementation
 var SCORM = {
     API: null,
-    API_1484_11: null,
+    version: null,
     isInitialized: false,
+    learnerName: "Convidado",
     
     init: function() {
+        console.log("[SCORM] Iniciando busca pela API...");
         this.API = this.findAPI(window);
+        
         if (this.API == null) {
-            console.log("SCORM API not found");
+            console.warn("[SCORM] API não encontrada - modo standalone");
+            this.updateWelcomeMessage();
             return false;
         }
         
+        console.log("[SCORM] API encontrada! Versão: " + this.version);
+        
         try {
-            var result = this.API.Initialize("");
-            if (result == "true") {
+            var initMethod = this.version === "2004" ? "Initialize" : "LMSInitialize";
+            var result = this.API[initMethod]("");
+            
+            if (result === "true" || result === true) {
                 this.isInitialized = true;
-                console.log("SCORM initialized successfully");
+                console.log("[SCORM] Inicialização bem-sucedida!");
+                
+                // Buscar informações do aluno
+                this.getLearnerInfo();
+                
+                // Carregar progresso
                 this.loadProgress();
+                
+                // Atualizar mensagem de boas-vindas
+                this.updateWelcomeMessage();
+                
                 return true;
             } else {
-                console.log("SCORM initialization failed: " + result);
+                console.error("[SCORM] Falha na inicialização: " + result);
+                var errorCode = this.getLastError();
+                var errorString = this.getErrorString(errorCode);
+                console.error("[SCORM] Erro " + errorCode + ": " + errorString);
                 return false;
             }
         } catch (error) {
-            console.log("SCORM initialization error: " + error);
+            console.error("[SCORM] Exceção durante inicialização: " + error);
             return false;
         }
     },
     
     findAPI: function(win) {
         var findAttempts = 0;
-        var findAttemptLimit = 7;
+        var findAttemptLimit = 500;
         
-        while ((win.API_1484_11 == null) && (win.API == null) && (win.parent != null) && (win.parent != win)) {
-            findAttempts++;
-            if (findAttempts > findAttemptLimit) {
-                return null;
-            }
-            win = win.parent;
+        console.log("[SCORM] Procurando API na janela atual...");
+        
+        // Primeiro, verifica a janela atual
+        if (win.API_1484_11) {
+            console.log("[SCORM] API_1484_11 (SCORM 2004) encontrada na janela atual");
+            this.version = "2004";
+            return win.API_1484_11;
         }
         
-        if (win.API_1484_11 != null) {
-            return win.API_1484_11;
-        } else if (win.API != null) {
+        if (win.API) {
+            console.log("[SCORM] API (SCORM 1.2) encontrada na janela atual");
+            this.version = "1.2";
             return win.API;
-        } else {
-            return null;
+        }
+        
+        // Procura nas janelas pai
+        console.log("[SCORM] API não encontrada na janela atual, procurando nas janelas pai...");
+        while (win.parent != null && win.parent != win && findAttempts < findAttemptLimit) {
+            findAttempts++;
+            win = win.parent;
+            
+            if (win.API_1484_11) {
+                console.log("[SCORM] API_1484_11 (SCORM 2004) encontrada após " + findAttempts + " tentativas");
+                this.version = "2004";
+                return win.API_1484_11;
+            }
+            
+            if (win.API) {
+                console.log("[SCORM] API (SCORM 1.2) encontrada após " + findAttempts + " tentativas");
+                this.version = "1.2";
+                return win.API;
+            }
+        }
+        
+        // Procura no opener (caso seja popup)
+        if (window.opener) {
+            console.log("[SCORM] Procurando na janela opener...");
+            if (window.opener.API_1484_11) {
+                console.log("[SCORM] API_1484_11 (SCORM 2004) encontrada no opener");
+                this.version = "2004";
+                return window.opener.API_1484_11;
+            }
+            if (window.opener.API) {
+                console.log("[SCORM] API (SCORM 1.2) encontrada no opener");
+                this.version = "1.2";
+                return window.opener.API;
+            }
+        }
+        
+        console.warn("[SCORM] API não encontrada após " + findAttempts + " tentativas");
+        return null;
+    },
+    
+    getLearnerInfo: function() {
+        if (!this.isInitialized) return;
+        
+        try {
+            var nameField = this.version === "2004" ? "cmi.learner_name" : "cmi.core.student_name";
+            var learnerName = this.getValue(nameField);
+            
+            if (learnerName && learnerName !== "" && learnerName !== "undefined") {
+                this.learnerName = learnerName;
+                console.log("[SCORM] Nome do aluno: " + learnerName);
+            } else {
+                console.warn("[SCORM] Nome do aluno não disponível");
+            }
+            
+            // Tentar também pegar o ID
+            var idField = this.version === "2004" ? "cmi.learner_id" : "cmi.core.student_id";
+            var learnerId = this.getValue(idField);
+            if (learnerId && learnerId !== "" && learnerId !== "undefined") {
+                console.log("[SCORM] ID do aluno: " + learnerId);
+            }
+        } catch (error) {
+            console.error("[SCORM] Erro ao buscar informações do aluno: " + error);
+        }
+    },
+    
+    updateWelcomeMessage: function() {
+        // Atualizar o texto de boas-vindas com o nome do aluno
+        var welcomeTexts = document.querySelectorAll(".welcome-text, [class*='text-sm'][class*='opacity-90']");
+        for (var i = 0; i < welcomeTexts.length; i++) {
+            var text = welcomeTexts[i].textContent || welcomeTexts[i].innerText;
+            if (text && text.indexOf("Convidado") > -1) {
+                var newText = text.replace("Convidado", this.learnerName);
+                if (this.isInitialized) {
+                    newText = newText.replace("modo de demonstração", "modo SCORM");
+                }
+                welcomeTexts[i].textContent = newText;
+                console.log("[SCORM] Mensagem de boas-vindas atualizada");
+                break;
+            }
         }
     },
     
@@ -483,63 +581,150 @@ var SCORM = {
         if (!this.isInitialized) return false;
         
         try {
-            var result = this.API.SetValue(element, value);
-            if (result == "true") {
-                console.log("Set " + element + " to: " + value);
+            var setMethod = this.version === "2004" ? "SetValue" : "LMSSetValue";
+            var result = this.API[setMethod](element, value);
+            
+            if (result === "true" || result === true) {
+                console.log("[SCORM] Definido " + element + " = " + value);
                 return true;
             } else {
-                console.log("Failed to set " + element + ": " + result);
+                console.warn("[SCORM] Falha ao definir " + element + ": " + result);
+                var errorCode = this.getLastError();
+                console.error("[SCORM] Código de erro: " + errorCode);
                 return false;
             }
         } catch (error) {
-            console.log("Error setting " + element + ": " + error);
+            console.error("[SCORM] Exceção ao definir " + element + ": " + error);
             return false;
         }
     },
     
     getValue: function(element) {
-        if (!this.isInitialized) return null;
+        if (!this.isInitialized) return "";
         
         try {
-            var result = this.API.GetValue(element);
+            var getMethod = this.version === "2004" ? "GetValue" : "LMSGetValue";
+            var result = this.API[getMethod](element);
+            
+            if (result !== null && result !== undefined && result !== "") {
+                console.log("[SCORM] Obtido " + element + " = " + result);
+            }
+            
             return result;
         } catch (error) {
-            console.log("Error getting " + element + ": " + error);
-            return null;
+            console.error("[SCORM] Exceção ao obter " + element + ": " + error);
+            return "";
+        }
+    },
+    
+    getLastError: function() {
+        if (!this.API) return "0";
+        
+        try {
+            var errorMethod = this.version === "2004" ? "GetLastError" : "LMSGetLastError";
+            return this.API[errorMethod]();
+        } catch (error) {
+            console.error("[SCORM] Erro ao obter último erro: " + error);
+            return "0";
+        }
+    },
+    
+    getErrorString: function(errorCode) {
+        if (!this.API) return "API não disponível";
+        
+        try {
+            var errorStringMethod = this.version === "2004" ? "GetErrorString" : "LMSGetErrorString";
+            return this.API[errorStringMethod](errorCode);
+        } catch (error) {
+            console.error("[SCORM] Erro ao obter descrição do erro: " + error);
+            return "Descrição não disponível";
+        }
+    },
+    
+    getDiagnostic: function(errorCode) {
+        if (!this.API) return "";
+        
+        try {
+            var diagnosticMethod = this.version === "2004" ? "GetDiagnostic" : "LMSGetDiagnostic";
+            return this.API[diagnosticMethod](errorCode);
+        } catch (error) {
+            console.error("[SCORM] Erro ao obter diagnóstico: " + error);
+            return "";
         }
     },
     
     setCompletionStatus: function(status) {
-        return this.setValue("cmi.completion_status", status);
+        // SCORM 2004: cmi.completion_status (incomplete, completed, not attempted, unknown)
+        // SCORM 1.2: cmi.core.lesson_status (passed, completed, failed, incomplete, browsed, not attempted)
+        if (this.version === "2004") {
+            return this.setValue("cmi.completion_status", status);
+        } else {
+            // Para SCORM 1.2, mapear o status
+            var mappedStatus = status === "complete" ? "completed" : status;
+            return this.setValue("cmi.core.lesson_status", mappedStatus);
+        }
     },
     
     setSuccessStatus: function(status) {
-        return this.setValue("cmi.success_status", status);
+        // Apenas SCORM 2004 tem success_status
+        // SCORM 1.2 usa lesson_status para tudo
+        if (this.version === "2004") {
+            return this.setValue("cmi.success_status", status);
+        } else {
+            // Para SCORM 1.2, usar lesson_status
+            return this.setValue("cmi.core.lesson_status", status);
+        }
     },
     
     setProgress: function(progress) {
-        return this.setValue("cmi.progress_measure", progress.toString());
+        // SCORM 2004: cmi.progress_measure
+        // SCORM 1.2: não tem campo de progresso padrão, usar suspend_data
+        if (this.version === "2004") {
+            return this.setValue("cmi.progress_measure", progress.toString());
+        } else {
+            // Para SCORM 1.2, guardar no suspend_data
+            var progressData = JSON.stringify({ progress: progress });
+            return this.setValue("cmi.suspend_data", progressData);
+        }
     },
     
     getProgress: function() {
-        var progress = this.getValue("cmi.progress_measure");
-        return progress ? parseFloat(progress) : 0;
+        if (this.version === "2004") {
+            var progress = this.getValue("cmi.progress_measure");
+            return progress ? parseFloat(progress) : 0;
+        } else {
+            // Para SCORM 1.2, tentar pegar do suspend_data
+            var suspendData = this.getValue("cmi.suspend_data");
+            if (suspendData) {
+                try {
+                    var data = JSON.parse(suspendData);
+                    return data.progress || 0;
+                } catch (e) {
+                    return 0;
+                }
+            }
+            return 0;
+        }
     },
     
     commit: function() {
         if (!this.isInitialized) return false;
         
         try {
-            var result = this.API.Commit("");
-            if (result == "true") {
-                console.log("SCORM data committed successfully");
+            var commitMethod = this.version === "2004" ? "Commit" : "LMSCommit";
+            var result = this.API[commitMethod]("");
+            
+            if (result === "true" || result === true) {
+                console.log("[SCORM] Dados salvos com sucesso");
                 return true;
             } else {
-                console.log("Failed to commit SCORM data: " + result);
+                console.warn("[SCORM] Falha ao salvar dados: " + result);
+                var errorCode = this.getLastError();
+                console.error("[SCORM] Código de erro: " + errorCode);
                 return false;
             }
         } catch (error) {
-            console.log("Error committing SCORM data: " + error);
+            console.error("[SCORM] Exceção ao salvar dados: " + error);
             return false;
         }
     },
@@ -548,17 +733,21 @@ var SCORM = {
         if (!this.isInitialized) return false;
         
         try {
-            var result = this.API.Terminate("");
-            if (result == "true") {
+            var terminateMethod = this.version === "2004" ? "Terminate" : "LMSFinish";
+            var result = this.API[terminateMethod]("");
+            
+            if (result === "true" || result === true) {
                 this.isInitialized = false;
-                console.log("SCORM terminated successfully");
+                console.log("[SCORM] Sessão finalizada com sucesso");
                 return true;
             } else {
-                console.log("Failed to terminate SCORM: " + result);
+                console.warn("[SCORM] Falha ao finalizar sessão: " + result);
+                var errorCode = this.getLastError();
+                console.error("[SCORM] Código de erro: " + errorCode);
                 return false;
             }
         } catch (error) {
-            console.log("Error terminating SCORM: " + error);
+            console.error("[SCORM] Exceção ao finalizar sessão: " + error);
             return false;
         }
     },
