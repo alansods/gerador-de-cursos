@@ -4,11 +4,12 @@ Esta pasta contém templates e exemplos para criar cursos usando inteligência a
 
 ## 🎯 Como Usar
 
-1. **Baixe um template**: Use `template-curso.md` como base
-2. **Preencha o conteúdo**: Siga a estrutura do template
-3. **Upload no sistema**: Vá em "Novo Curso" → "Gerar por IA"
-4. **Aguarde processamento**: A IA vai estruturar automaticamente (30-60s)
-5. **Revise e edite**: Faça ajustes finais no editor
+1. **Baixe o exemplo**: Clique em "Baixar Exemplo" na página de novo curso
+2. **Edite no Word ou Google Docs**: Mantenha a estrutura e adicione seu conteúdo
+3. **Salve como .docx**: Se usar Google Docs, faça download como Word (.docx)
+4. **Upload no sistema**: Vá em "Novo Curso" → "Gerar por IA"
+5. **Aguarde processamento**: A IA vai estruturar automaticamente (30-60s)
+6. **Revise e edite**: Faça ajustes finais no editor
 
 ## 📋 Estrutura do Documento
 
@@ -46,17 +47,12 @@ Esta pasta contém templates e exemplos para criar cursos usando inteligência a
 
 ## 🖼️ Incluindo Imagens
 
-### Opção 1: URLs (Recomendado)
-```markdown
-![Descrição da imagem](https://exemplo.com/imagem.png)
-```
+### Como adicionar no Word/Google Docs:
 
-### Opção 2: Placeholder (IA sugere)
-```markdown
-[IMAGEM: Descrição detalhada do que a imagem deve mostrar]
-```
+1. **Insira a imagem diretamente** no documento (será processada como placeholder)
+2. **Ou use texto descritivo**: `[IMAGEM: Descrição detalhada do que a imagem mostra]`
 
-**Nota:** Após a geração, você pode editar e adicionar as URLs reais das imagens no editor.
+**Nota:** Após a geração, você pode editar e adicionar as imagens reais no editor do sistema.
 
 ## 📏 Limites de Tamanho
 
@@ -68,59 +64,60 @@ Esta pasta contém templates e exemplos para criar cursos usando inteligência a
 
 ## ✅ Boas Práticas
 
-- ✅ Use títulos claros e hierárquicos (`#`, `##`, `###`)
-- ✅ Divida conteúdo em seções lógicas
-- ✅ Escreva descrições detalhadas das unidades
+- ✅ Use **estilos de título** do Word/Google Docs (Título 1, Título 2, Título 3)
+- ✅ Divida conteúdo em seções lógicas e bem estruturadas
+- ✅ Escreva descrições detalhadas das unidades (obrigatório)
 - ✅ Use listas e bullet points para facilitar leitura
-- ✅ Inclua exemplos práticos
+- ✅ Inclua exemplos práticos e didáticos
 - ✅ Mantenha parágrafos curtos (3-5 linhas)
-- ✅ Comece sempre com os metadados
+- ✅ Comece sempre com os metadados em negrito
 
 ## 🚫 Evite
 
-- ❌ Documentos sem estrutura clara
+- ❌ Documentos sem usar estilos de título
 - ❌ Textos muito longos sem quebras de seção
 - ❌ Falta de metadados no início
 - ❌ Menos de 3 unidades
-- ❌ Unidades sem descrição
-- ❌ Imagens muito grandes (use URLs otimizadas)
+- ❌ Unidades sem descrição (obrigatório)
+- ❌ Imagens muito pesadas incorporadas (> 2MB cada)
+- ❌ Tabelas muito complexas (use listas simples)
 
 ## 📁 Exemplos Inclusos
 
-- **`template-curso.md`** - Template básico para começar
-- **`exemplo-curso-nextjs.md`** - Curso completo de Next.js
-- **`exemplo-curso-python.md`** - Curso completo de Python
+- **`exemplo-curso-nextjs.docx`** - Curso completo de Next.js (formato Word)
+- **`template-curso.md`** - Template de referência (use o .docx baixado do sistema)
+- **`exemplo-curso-nextjs.md`** - Versão Markdown de referência
+- **`exemplo-curso-python.md`** - Versão Markdown de referência
 
 ## 💡 Dicas para Reduzir Tamanho
 
 Se seu documento for muito grande (> 10MB):
 
 1. **Remova imagens desnecessárias** do documento
-2. **Use URLs de imagens** em vez de incorporar
-3. **Comprima imagens** antes de inserir (JPG 70-80% qualidade)
-4. **Divida em múltiplos documentos** menores
-5. **Use ferramentas online**:
-   - PDF: [iLovePDF](https://www.ilovepdf.com/pt/comprimir_pdf)
-   - PDF: [Smallpdf](https://smallpdf.com/pt/comprimir-pdf)
+2. **Comprima imagens** antes de inserir (JPG 70-80% qualidade)
+3. **Divida em múltiplos documentos** menores (um curso por vez)
+4. **No Google Docs**: File → Download → Microsoft Word (.docx)
+5. **Evite** incorporar vídeos ou arquivos pesados
 
 ## 🎓 Formatos Aceitos
 
-| Formato | Extensão | Recomendado |
-|---------|----------|-------------|
-| PDF | `.pdf` | ✅ Sim |
-| Word | `.docx` | ✅ Sim |
-| Texto | `.txt` | ✅ Sim (Markdown) |
+| Formato | Extensão | Status |
+|---------|----------|--------|
+| Word 2007+ | `.docx` | ✅ **Recomendado** |
+| Word 97-2003 | `.doc` | ✅ Aceito |
+| Google Docs | Download como .docx | ✅ Perfeito! |
 
 ## 🤖 Como a IA Processa
 
-1. **Extrai metadados** do início do documento
-2. **Identifica unidades** através dos títulos `# UNIDADE X:`
-3. **Captura descrições** das seções `## Descrição da Unidade`
+1. **Extrai metadados** do início do documento (palavras em negrito)
+2. **Identifica unidades** através de **Título 1** ou texto "UNIDADE X:"
+3. **Captura descrições** das seções com **Título 2**
 4. **Estrutura conteúdo**:
-   - `## Título` → tipo "titulo"
-   - `### Subtítulo` → tipo "subtitulo"
-   - Parágrafos normais → tipo "paragrafo"
-   - `![texto](url)` ou `[IMAGEM:...]` → tipo "imagem"
+   - **Título 1** → Unidade principal
+   - **Título 2** → Seções da unidade
+   - **Título 3** → Subtópicos
+   - Parágrafos normais → Conteúdo
+   - Listas → Mantidas como parágrafos
 
 ## 📞 Precisa de Ajuda?
 

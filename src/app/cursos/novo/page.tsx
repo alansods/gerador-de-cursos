@@ -83,12 +83,15 @@ export default function NovoCursoPage() {
     const file = e.target.files?.[0]
     if (!file) return
 
-    // Validar tipo
-    const allowedTypes = ['application/pdf', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'text/plain', 'application/msword']
+    // Validar tipo - APENAS DOCX/DOC
+    const allowedTypes = [
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document', // .docx
+      'application/msword' // .doc
+    ]
     if (!allowedTypes.includes(file.type)) {
       setValidationMessage({
         type: 'error',
-        message: 'Tipo de arquivo não suportado. Use PDF, DOCX ou TXT.'
+        message: 'Tipo de arquivo não suportado. Use apenas documentos Word (.doc ou .docx).'
       })
       return
     }
@@ -103,15 +106,15 @@ export default function NovoCursoPage() {
 
   const handleDownloadExample = async () => {
     try {
-      // Buscar o arquivo de exemplo
-      const response = await fetch('/roteiro/exemplo-curso-nextjs.md')
+      // Buscar o arquivo de exemplo em DOCX
+      const response = await fetch('/roteiro/exemplo-curso-nextjs.docx')
       if (!response.ok) throw new Error('Erro ao buscar exemplo')
       
       const blob = await response.blob()
       const url = window.URL.createObjectURL(blob)
       const a = document.createElement('a')
       a.href = url
-      a.download = 'exemplo-curso-nextjs.md'
+      a.download = 'exemplo-curso-nextjs.docx'
       document.body.appendChild(a)
       a.click()
       window.URL.revokeObjectURL(url)
@@ -297,11 +300,11 @@ export default function NovoCursoPage() {
                   <div className="flex-1 space-y-2">
                     <h3 className="font-semibold text-blue-900">Como funciona a geração por IA?</h3>
                     <p className="text-sm text-blue-800">
-                      Envie um documento (PDF, DOCX ou TXT) estruturado com o conteúdo do curso.
+                      Envie um documento Word (.docx ou .doc) estruturado com o conteúdo do curso.
                       A IA irá processar o documento e criar automaticamente o curso com unidades e conteúdo organizados.
                     </p>
                     <p className="text-sm text-blue-800 font-medium">
-                      📋 Use os templates da pasta <code className="bg-blue-100 px-1 py-0.5 rounded">roteiro/</code> como referência!
+                      💡 Use Google Docs ou Microsoft Word para criar seu documento!
                     </p>
                   </div>
                   <Button
@@ -324,21 +327,21 @@ export default function NovoCursoPage() {
                     <Upload className="h-8 w-8 text-blue-600" />
                   </div>
                   <div className="text-center">
-                    <h3 className="font-semibold text-gray-900 mb-1">Envie seu documento</h3>
+                    <h3 className="font-semibold text-gray-900 mb-1">Envie seu documento Word</h3>
                     <p className="text-sm text-gray-600 mb-4">
-                      PDF, DOCX ou TXT • Máximo 10MB
+                      Apenas .docx ou .doc • Máximo 10MB
                     </p>
                     <label htmlFor="file-upload" className="cursor-pointer">
                       <Button type="button" variant="outline" className="gap-2" disabled={isProcessing} asChild>
                         <span>
                           <FileText className="h-4 w-4" />
-                          Selecionar Arquivo
+                          Selecionar Documento
                         </span>
                       </Button>
                       <input
                         id="file-upload"
                         type="file"
-                        accept=".pdf,.docx,.doc,.txt"
+                        accept=".docx,.doc"
                         onChange={handleFileSelect}
                         className="hidden"
                         disabled={isProcessing}
@@ -458,12 +461,12 @@ export default function NovoCursoPage() {
               <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
                 <h4 className="font-semibold text-gray-900 mb-2">💡 Dicas para melhores resultados:</h4>
                 <ul className="text-sm text-gray-700 space-y-1">
-                  <li>• Use o template da pasta <code className="bg-gray-200 px-1 py-0.5 rounded">roteiro/</code> como base</li>
+                  <li>• Baixe o exemplo e use como base para seu curso</li>
                   <li>• Inclua metadados no início (título, categoria, instrutor, etc.)</li>
-                  <li>• Organize o conteúdo em seções claras com títulos</li>
-                  <li>• Cada unidade deve ter uma descrição</li>
+                  <li>• Use <strong>Título 1</strong> para unidades e <strong>Título 2</strong> para seções</li>
+                  <li>• Cada unidade deve ter uma descrição clara</li>
                   <li>• Arquivos menores que 5MB processam mais rápido</li>
-                  <li>• Use Markdown para melhor estruturação</li>
+                  <li>• Crie no Google Docs e baixe como .docx ou use Word</li>
                 </ul>
               </div>
             </div>

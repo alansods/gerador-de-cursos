@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server';
-import pdf from 'pdf-parse';
 import mammoth from 'mammoth';
 
 // Configuração do tamanho máximo do body (10MB)
@@ -40,19 +39,17 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Validar tipo do arquivo
+    // Validar tipo do arquivo - APENAS WORD
     const allowedTypes = [
-      'application/pdf',
-      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-      'text/plain',
-      'application/msword',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document', // .docx
+      'application/msword', // .doc
     ];
 
     if (!allowedTypes.includes(file.type)) {
       return NextResponse.json(
         {
           error: 'Tipo de arquivo não suportado',
-          message: 'Apenas arquivos PDF, DOCX e TXT são aceitos.',
+          message: 'Apenas arquivos Word (.doc ou .docx) são aceitos.',
           receivedType: file.type,
         },
         { status: 415 } // Unsupported Media Type
@@ -68,34 +65,19 @@ export async function POST(req: NextRequest) {
 
     let extractedText = '';
 
-    // Extrair texto baseado no tipo do arquivo
-    if (file.type === 'application/pdf') {
-      try {
-        const data = await pdf(buffer);
-        extractedText = data.text;
-      } catch (error) {
-        console.error('Erro ao processar PDF:', error);
-        return NextResponse.json(
-          { error: 'Erro ao processar PDF', message: 'Não foi possível extrair o texto do PDF. Verifique se o arquivo não está corrompido.' },
-          { status: 500 }
-        );
-      }
-    } else if (
-      file.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' ||
-      file.type === 'application/msword'
-    ) {
-      try {
-        const result = await mammoth.extractRawText({ buffer });
-        extractedText = result.value;
-      } catch (error) {
-        console.error('Erro ao processar DOCX:', error);
-        return NextResponse.json(
-          { error: 'Erro ao processar DOCX', message: 'Não foi possível extrair o texto do documento Word.' },
-          { status: 500 }
-        );
-      }
-    } else if (file.type === 'text/plain') {
-      extractedText = buffer.toString('utf-8');
+    // Extrair texto do documento Word
+    try {
+      const result = await mammoth.extractRawText({ buffer });
+      extractedText = result.value;
+    } catch (error) {
+      console.error('Erro ao processar documento Word:', error);
+      return NextResponse.json(
+        { 
+          error: 'Erro ao processar documento', 
+          message: 'Não foi possível extrair o texto do documento Word. Verifique se o arquivo não está corrompido ou protegido por senha.' 
+        },
+        { status: 500 }
+      );
     }
 
     // Validar se o texto foi extraído
