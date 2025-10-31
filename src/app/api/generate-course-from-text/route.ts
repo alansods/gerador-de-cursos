@@ -50,8 +50,9 @@ export async function POST(req: NextRequest) {
 
     // Inicializar Google Gemini com a chave validada
     const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+    // Usar gemini-1.5-flash (grátis e rápido) ou gemini-1.5-pro (melhor qualidade)
     const model = genAI.getGenerativeModel({ 
-      model: 'gemini-1.5-pro-latest',
+      model: 'gemini-1.5-flash',  // Modelo gratuito e rápido
       generationConfig: {
         temperature: 0.7,
         topK: 40,
@@ -177,7 +178,7 @@ ${text}`;
       stats: {
         duration: `${duration}s`,
         unidades: courseData.unidades.length,
-        model: 'gemini-1.5-pro-latest',
+        model: 'gemini-1.5-flash',
         tokensUsed: 0, // Gemini não retorna contagem de tokens facilmente
       },
     });
