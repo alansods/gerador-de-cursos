@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Progress } from '@/components/ui/progress'
 import { ArrowLeft, Save, Upload, FileText, Sparkles, CheckCircle2, AlertCircle, Info, Download } from 'lucide-react'
+import { toast } from 'sonner'
 
 export default function NovoCursoPage() {
   const router = useRouter()
@@ -107,14 +108,14 @@ export default function NovoCursoPage() {
   const handleDownloadExample = async () => {
     try {
       // Buscar o arquivo de exemplo em DOCX
-      const response = await fetch('/roteiro/exemplo-curso-nextjs.docx')
+      const response = await fetch('/roteiro/exemplo-curso-pizza.docx')
       if (!response.ok) throw new Error('Erro ao buscar exemplo')
       
       const blob = await response.blob()
       const url = window.URL.createObjectURL(blob)
       const a = document.createElement('a')
       a.href = url
-      a.download = 'exemplo-curso-nextjs.docx'
+      a.download = 'exemplo-curso-pizza.docx'
       document.body.appendChild(a)
       a.click()
       window.URL.revokeObjectURL(url)
@@ -177,16 +178,28 @@ export default function NovoCursoPage() {
       setProgress(100)
       setProcessingStep('done')
 
-      // Aguardar 1s para o usuário ver o sucesso
+      // Toast de sucesso
+      toast.success('Curso gerado com sucesso! 🎉', {
+        description: `"${course.titulo}" foi criado e está pronto para edição.`
+      })
+
+      // Aguardar 1.5s para o usuário ver o sucesso
       setTimeout(() => {
         router.push('/cursos')
-      }, 1000)
+      }, 1500)
     } catch (error) {
       console.error('Erro ao gerar curso:', error)
+      const errorMessage = error instanceof Error ? error.message : 'Erro ao processar documento'
+      
       setValidationMessage({
         type: 'error',
-        message: error instanceof Error ? error.message : 'Erro ao processar documento'
+        message: errorMessage
       })
+      
+      toast.error('Erro ao gerar curso', {
+        description: errorMessage
+      })
+      
       setIsProcessing(false)
       setProcessingStep('idle')
       setProgress(0)
@@ -200,10 +213,15 @@ export default function NovoCursoPage() {
     setIsLoading(true)
     try {
       await criarCurso({ ...formData, unidades: [] })
+      toast.success('Curso criado com sucesso! 🎉', {
+        description: `"${formData.titulo}" foi criado e está pronto para adicionar unidades.`
+      })
       router.push('/cursos')
     } catch (error) {
       console.error('Erro ao criar curso:', error)
-      // Poderia adicionar um toast aqui
+      toast.error('Erro ao criar curso', {
+        description: error instanceof Error ? error.message : 'Ocorreu um erro inesperado'
+      })
     } finally {
       setIsLoading(false)
     }

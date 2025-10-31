@@ -50,70 +50,61 @@ export async function POST(req: NextRequest) {
 
     // Inicializar Google Gemini com a chave validada
     const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-    // Usar gemini-1.5-flash (grátis e rápido) ou gemini-1.5-pro (melhor qualidade)
+    
+    // Usar gemini-2.5-pro (modelo mais capaz para tarefas complexas)
     const model = genAI.getGenerativeModel({ 
-      model: 'gemini-1.5-flash',  // Modelo gratuito e rápido
+      model: 'gemini-2.0-flash-exp',
       generationConfig: {
-        temperature: 0.7,
-        topK: 40,
-        topP: 0.95,
-        maxOutputTokens: 8192,
+        responseMimeType: "application/json", // Solicita resposta em JSON
       }
     });
 
-    // Prompt para a IA
-    const systemPrompt = `Você é um especialista em design instrucional e criação de cursos online. 
-Sua tarefa é analisar o conteúdo fornecido e criar um curso estruturado seguindo EXATAMENTE o formato JSON especificado.
+    // Prompt otimizado para Gemini 2.0
+    const systemPrompt = `Você é um gerador de cursos profissional especializado em design instrucional. 
+Analise o documento abaixo e crie um curso estruturado, extraindo os metadados e organizando o conteúdo em unidades de aprendizado.
 
-IMPORTANTE: O documento pode estar em qualquer formato. Identifique os metadados do curso (título, categoria, etc.) no início do texto, e depois estruture as unidades baseado nos títulos e seções encontrados.
+**INSTRUÇÕES:**
+1. Identifique os METADADOS do curso no início do documento (título, categoria, carga horária, modalidade, instrutor)
+2. Estruture o conteúdo em UNIDADES (módulos/capítulos) baseado nos títulos principais encontrados
+3. Cada unidade DEVE ter:
+   - titulo: Nome da unidade
+   - descricao: OBRIGATÓRIA - O que o aluno aprenderá nesta unidade
+   - conteudo: Array de elementos formatados
+4. Cada elemento de conteúdo deve ter:
+   - tipo: "titulo", "subtitulo", "paragrafo" ou "imagem"
+   - conteudo: O texto/URL do elemento
+   - ordem: Número sequencial (0, 1, 2, ...)
+5. MANTENHA o conteúdo original do documento, apenas estruture-o
+6. Crie pelo menos 3 unidades de aprendizado
+7. Se encontrar referências a imagens, crie elementos tipo "imagem"
 
-REGRAS OBRIGATÓRIAS:
-1. Extraia os metadados do curso (título, descrição, categoria, etc.) do início do documento
-2. Identifique e crie pelo menos 3 unidades de aprendizado
-3. Cada unidade DEVE ter: titulo, descricao (obrigatória) e conteudo
-4. O conteúdo deve ser dividido em elementos com tipo: "titulo", "subtitulo", "paragrafo" ou "imagem"
-5. Cada elemento de conteúdo deve ter: tipo, conteudo e ordem (numérica sequencial)
-6. Mantenha o conteúdo original, apenas estruture-o adequadamente
-7. Se encontrar menções a imagens (como [IMAGEM:...] ou ![...](url)), crie elementos tipo "imagem" com a URL ou descrição
-
-FORMATO DE RESPOSTA (JSON):
+**FORMATO DE SAÍDA OBRIGATÓRIO (JSON):**
 {
   "titulo": "Título do Curso",
-  "descricao": "Descrição completa do curso",
-  "categoria": "Categoria (ex: Programação, Design, Marketing)",
+  "descricao": "Descrição completa do curso (o que será aprendido)",
+  "categoria": "Categoria (ex: Programação, Design, Marketing, Segurança)",
   "cargaHoraria": "XX horas",
-  "modalidade": "Online/Presencial/Híbrido",
+  "modalidade": "Online ou Presencial ou Híbrido",
   "instrutor": "Nome do Instrutor",
   "unidades": [
     {
-      "titulo": "Nome da Unidade 1",
-      "descricao": "Descrição da unidade (OBRIGATÓRIA - o que o aluno aprenderá)",
+      "titulo": "Nome da Unidade",
+      "descricao": "Descrição detalhada do que será aprendido nesta unidade",
       "conteudo": [
-        {
-          "tipo": "titulo",
-          "conteudo": "Título Principal",
-          "ordem": 0
-        },
-        {
-          "tipo": "paragrafo",
-          "conteudo": "Texto do parágrafo...",
-          "ordem": 1
-        },
-        {
-          "tipo": "subtitulo",
-          "conteudo": "Subtítulo",
-          "ordem": 2
-        }
+        { "tipo": "titulo", "conteudo": "Título Principal", "ordem": 0 },
+        { "tipo": "paragrafo", "conteudo": "Texto explicativo...", "ordem": 1 },
+        { "tipo": "subtitulo", "conteudo": "Subtópico", "ordem": 2 }
       ]
     }
   ]
 }
 
-Retorne APENAS o JSON, sem texto adicional antes ou depois.`;
+**CONTEÚDO DO DOCUMENTO:**
+---
+${text}
+---`;
 
-    const fullPrompt = `${systemPrompt}
-
-${text}`;
+    const fullPrompt = systemPrompt;
 
     // Chamar a API do Google Gemini
     const startTime = Date.now();
@@ -132,8 +123,11 @@ ${text}`;
 
     let courseData: CursoGenerado;
     try {
-      // Limpar resposta do Gemini (pode ter ```json ... ```)
+      // Com responseMimeType: "application/json", a resposta já vem em JSON puro
+      // Mas fazemos limpeza por segurança
       let cleanedResponse = responseContent.trim();
+      
+      // Remover wrappers de código se existirem
       if (cleanedResponse.startsWith('```json')) {
         cleanedResponse = cleanedResponse.replace(/^```json\s*/, '').replace(/\s*```$/, '');
       } else if (cleanedResponse.startsWith('```')) {
@@ -141,12 +135,16 @@ ${text}`;
       }
       
       courseData = JSON.parse(cleanedResponse);
+      
+      console.log('[Generate Course] JSON parseado com sucesso');
     } catch (parseError) {
-      console.error('Erro ao parsear resposta da IA:', responseContent);
+      console.error('[Generate Course] Erro ao parsear JSON:', parseError);
+      console.error('[Generate Course] Resposta recebida:', responseContent.substring(0, 500));
       return NextResponse.json(
         {
           error: 'Erro ao processar resposta da IA',
           message: 'A IA retornou um formato inválido. Tente novamente.',
+          details: parseError instanceof Error ? parseError.message : 'Erro desconhecido'
         },
         { status: 500 }
       );
@@ -163,10 +161,24 @@ ${text}`;
       );
     }
 
-    // Validar que todas as unidades têm descrição
-    for (const unidade of courseData.unidades) {
+    // Validar e adicionar IDs únicos para cada unidade e conteúdo
+    for (let i = 0; i < courseData.unidades.length; i++) {
+      const unidade = courseData.unidades[i];
+      
+      // Validar descrição
       if (!unidade.descricao || unidade.descricao.trim() === '') {
         unidade.descricao = 'Descrição não fornecida';
+      }
+      
+      // Adicionar ID único para a unidade
+      (unidade as any).id = `unidade-${Date.now()}-${i}`;
+      
+      // Adicionar IDs únicos para cada item de conteúdo
+      if (unidade.conteudo && Array.isArray(unidade.conteudo)) {
+        for (let j = 0; j < unidade.conteudo.length; j++) {
+          const item = unidade.conteudo[j];
+          (item as any).id = `conteudo-${Date.now()}-${i}-${j}`;
+        }
       }
     }
 
@@ -178,8 +190,7 @@ ${text}`;
       stats: {
         duration: `${duration}s`,
         unidades: courseData.unidades.length,
-        model: 'gemini-1.5-flash',
-        tokensUsed: 0, // Gemini não retorna contagem de tokens facilmente
+        model: 'gemini-2.0-flash-exp',
       },
     });
   } catch (error) {

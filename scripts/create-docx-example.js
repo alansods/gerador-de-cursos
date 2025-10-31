@@ -1,5 +1,5 @@
 /**
- * Script para criar o arquivo exemplo-curso-nextjs.docx
+ * Script para criar o arquivo exemplo-curso-pizza.docx
  * Execute: node scripts/create-docx-example.js
  */
 
@@ -7,7 +7,7 @@ const { Document, Packer, Paragraph, TextRun, HeadingLevel } = require('docx');
 const fs = require('fs');
 const path = require('path');
 
-// Conteúdo do curso de exemplo
+// Conteúdo do curso de exemplo - Pizza de Carne de Sol
 const doc = new Document({
   sections: [
     {
@@ -21,31 +21,31 @@ const doc = new Document({
         new Paragraph({
           children: [
             new TextRun({ text: 'Título: ', bold: true }),
-            new TextRun('Introdução ao Next.js 14'),
+            new TextRun('Fabricação de Pizza Artesanal de Carne de Sol'),
           ],
         }),
         new Paragraph({
           children: [
             new TextRun({ text: 'Categoria: ', bold: true }),
-            new TextRun('Programação'),
+            new TextRun('Gastronomia'),
           ],
         }),
         new Paragraph({
           children: [
             new TextRun({ text: 'Carga Horária: ', bold: true }),
-            new TextRun('20 horas'),
+            new TextRun('16 horas'),
           ],
         }),
         new Paragraph({
           children: [
             new TextRun({ text: 'Modalidade: ', bold: true }),
-            new TextRun('Online'),
+            new TextRun('Presencial'),
           ],
         }),
         new Paragraph({
           children: [
             new TextRun({ text: 'Instrutor: ', bold: true }),
-            new TextRun('João Silva'),
+            new TextRun('Chef Maria Santos'),
           ],
         }),
         new Paragraph({ text: '' }), // Linha vazia
@@ -56,7 +56,7 @@ const doc = new Document({
           heading: HeadingLevel.HEADING_2,
         }),
         new Paragraph({
-          text: 'Este curso introduz os fundamentos do Next.js 14, o framework React para produção. Os alunos aprenderão sobre Server Components, App Router, otimização de imagens, e deploy na Vercel. Ao final, serão capazes de criar aplicações web modernas, performáticas e otimizadas para SEO.',
+          text: 'Aprenda a preparar pizzas artesanais com o tradicional sabor nordestino da carne de sol. Este curso aborda desde a preparação da massa até a montagem final, incluindo técnicas de dessalgue, preparo da carne de sol e harmonização de ingredientes. Ideal para pizzaiolos, empreendedores gastronômicos e entusiastas da culinária regional brasileira.',
         }),
         new Paragraph({ text: '' }),
         new Paragraph({ text: '---' }),
@@ -64,7 +64,7 @@ const doc = new Document({
 
         // UNIDADE 1
         new Paragraph({
-          text: 'UNIDADE 1: Fundamentos do Next.js',
+          text: 'UNIDADE 1: Preparação da Massa de Pizza Artesanal',
           heading: HeadingLevel.HEADING_1,
         }),
         new Paragraph({
@@ -72,40 +72,44 @@ const doc = new Document({
           heading: HeadingLevel.HEADING_2,
         }),
         new Paragraph({
-          text: 'Nesta unidade, você aprenderá os conceitos básicos do Next.js, incluindo instalação, estrutura de pastas e diferenças entre o App Router e Pages Router. Entenderá por que Next.js é uma escolha popular para aplicações React em produção.',
+          text: 'Nesta unidade, você aprenderá a preparar a massa de pizza artesanal perfeita, com foco em técnicas de fermentação, hidratação adequada e manejo da massa. Conhecerá os ingredientes essenciais e suas funções no desenvolvimento do sabor e textura.',
         }),
         new Paragraph({ text: '' }),
 
         new Paragraph({
-          text: 'O que é Next.js?',
+          text: 'Ingredientes para a Massa',
           heading: HeadingLevel.HEADING_2,
         }),
         new Paragraph({
-          text: 'Next.js é um framework React criado pela Vercel que permite criar aplicações web full-stack com funcionalidades como Server-Side Rendering (SSR), Static Site Generation (SSG), e muito mais. Ele resolve muitos problemas comuns do desenvolvimento React, oferecendo uma experiência otimizada tanto para desenvolvedores quanto para usuários finais.',
+          text: 'A massa de pizza artesanal requer ingredientes de qualidade e proporções precisas. Para 4 pizzas médias (aproximadamente 300g cada), você precisará de:',
+        }),
+        new Paragraph({ text: '' }),
+        new Paragraph({
+          text: '• 500g de farinha de trigo tipo 00 (ou farinha de trigo especial para pizza)',
         }),
         new Paragraph({
-          text: 'O framework é usado por empresas como Netflix, TikTok, Nike e Twitch, demonstrando sua capacidade de escalar para milhões de usuários.',
+          text: '• 325ml de água filtrada em temperatura ambiente (65% de hidratação)',
+        }),
+        new Paragraph({
+          text: '• 10g de sal refinado (2% do peso da farinha)',
+        }),
+        new Paragraph({
+          text: '• 3g de fermento biológico seco instantâneo (0,6% do peso da farinha)',
+        }),
+        new Paragraph({
+          text: '• 15ml de azeite de oliva extra virgem',
         }),
         new Paragraph({ text: '' }),
 
         new Paragraph({
-          text: 'Principais Características',
+          text: 'Técnica de Preparação',
           heading: HeadingLevel.HEADING_3,
         }),
         new Paragraph({
-          text: 'Next.js oferece diversas funcionalidades prontas para uso que aceleram o desenvolvimento:',
+          text: 'Misture a farinha com o fermento em uma tigela grande. Adicione gradualmente a água, mexendo com as mãos até formar uma massa úmida. Adicione o sal e continue sovando por 10 minutos até a massa ficar lisa e elástica. Incorpore o azeite nos últimos 2 minutos.',
         }),
         new Paragraph({
-          text: '• Renderização híbrida: Combine SSR, SSG e CSR conforme necessário',
-        }),
-        new Paragraph({
-          text: '• Otimização automática: Imagens, fontes e código são otimizados automaticamente',
-        }),
-        new Paragraph({
-          text: '• Roteamento baseado em arquivos: Sem necessidade de configuração manual de rotas',
-        }),
-        new Paragraph({
-          text: '• API Routes: Crie APIs diretamente no seu projeto',
+          text: 'Divida a massa em 4 porções iguais (aproximadamente 210g cada) e faça bolinhas. Coloque em um recipiente untado com azeite, cubra com filme plástico e deixe fermentar em temperatura ambiente por 2 horas, ou na geladeira por 24-48 horas para melhor desenvolvimento de sabor.',
         }),
         new Paragraph({ text: '' }),
         new Paragraph({ text: '---' }),
@@ -113,7 +117,7 @@ const doc = new Document({
 
         // UNIDADE 2
         new Paragraph({
-          text: 'UNIDADE 2: App Router e Roteamento',
+          text: 'UNIDADE 2: Preparo da Carne de Sol',
           heading: HeadingLevel.HEADING_1,
         }),
         new Paragraph({
@@ -121,16 +125,44 @@ const doc = new Document({
           heading: HeadingLevel.HEADING_2,
         }),
         new Paragraph({
-          text: 'Aprenda sobre o novo App Router do Next.js 14, incluindo layouts, páginas aninhadas, loading states e error handling. Domine a criação de rotas dinâmicas e entenda como o sistema de roteamento funciona internamente.',
+          text: 'Aprenda as técnicas corretas para dessalgar, cozinhar e desfiar a carne de sol, garantindo textura macia e sabor equilibrado. Esta etapa é fundamental para o sucesso da pizza e requer atenção aos detalhes de tempo e temperatura.',
         }),
         new Paragraph({ text: '' }),
 
         new Paragraph({
-          text: 'Estrutura de Pastas do App Router',
+          text: 'Processo de Dessalgue',
           heading: HeadingLevel.HEADING_2,
         }),
         new Paragraph({
-          text: 'O App Router utiliza a pasta app/ como raiz de todas as rotas. Cada pasta representa um segmento de rota e pode conter arquivos especiais que definem o comportamento da aplicação.',
+          text: 'A carne de sol possui alto teor de sal, sendo essencial o processo de dessalgue antes do preparo. Para 500g de carne de sol:',
+        }),
+        new Paragraph({ text: '' }),
+        new Paragraph({
+          text: '1. Corte a carne em pedaços médios de aproximadamente 200g',
+        }),
+        new Paragraph({
+          text: '2. Coloque em uma tigela com água filtrada, cobrindo completamente a carne',
+        }),
+        new Paragraph({
+          text: '3. Leve à geladeira por no mínimo 12 horas, trocando a água a cada 4 horas',
+        }),
+        new Paragraph({
+          text: '4. Após o período, prove um pequeno pedaço para avaliar o sal',
+        }),
+        new Paragraph({
+          text: '5. Se ainda estiver muito salgada, repita o processo por mais 4-6 horas',
+        }),
+        new Paragraph({ text: '' }),
+
+        new Paragraph({
+          text: 'Cozimento e Preparo Final',
+          heading: HeadingLevel.HEADING_3,
+        }),
+        new Paragraph({
+          text: 'Após dessalgar, cozinhe a carne de sol em panela de pressão com água fresca por aproximadamente 40 minutos após iniciar a pressão. A carne deve ficar macia e fácil de desfiar. Escorra completamente e, quando esfriar o suficiente para manusear, desfie em tiras finas usando as mãos ou dois garfos.',
+        }),
+        new Paragraph({
+          text: 'Em uma frigideira quente com um fio de azeite, refogue a carne desfiada com cebola picada, alho e pimenta do reino a gosto. Este refogado rápido adiciona sabor e textura crocante à carne. Reserve em temperatura ambiente até o momento de montar as pizzas.',
         }),
         new Paragraph({ text: '' }),
         new Paragraph({ text: '---' }),
@@ -138,7 +170,7 @@ const doc = new Document({
 
         // UNIDADE 3
         new Paragraph({
-          text: 'UNIDADE 3: Server Components e Data Fetching',
+          text: 'UNIDADE 3: Montagem e Assamento da Pizza',
           heading: HeadingLevel.HEADING_1,
         }),
         new Paragraph({
@@ -146,19 +178,61 @@ const doc = new Document({
           heading: HeadingLevel.HEADING_2,
         }),
         new Paragraph({
-          text: 'Entenda os Server Components do React e como buscar dados de forma eficiente no Next.js. Aprenda as diferenças entre Server e Client Components e quando usar cada um.',
+          text: 'Domine a arte de abrir a massa, distribuir os ingredientes de forma equilibrada e assar a pizza em alta temperatura. Aprenda a criar a combinação perfeita de sabores e texturas que fazem da pizza de carne de sol um sucesso.',
         }),
         new Paragraph({ text: '' }),
 
         new Paragraph({
-          text: 'React Server Components',
+          text: 'Abertura da Massa',
           heading: HeadingLevel.HEADING_2,
         }),
         new Paragraph({
-          text: 'React Server Components (RSC) são uma nova funcionalidade que permite renderizar componentes no servidor, reduzindo o JavaScript enviado ao cliente e melhorando a performance.',
+          text: 'Retire a massa da geladeira 1 hora antes de usar para que atinja temperatura ambiente. Polvilhe farinha em uma superfície lisa e coloque a bolinha de massa. Com as pontas dos dedos, pressione suavemente do centro para as bordas, deixando aproximadamente 2cm de borda sem pressionar.',
         }),
         new Paragraph({
-          text: 'Por padrão, todos os componentes no App Router são Server Components, a menos que você adicione a diretiva "use client".',
+          text: 'Continue abrindo a massa com movimentos circulares até atingir cerca de 30cm de diâmetro. Evite usar o rolo, pois pode tirar o ar da massa. A borda deve ficar levemente mais alta que o centro.',
+        }),
+        new Paragraph({ text: '' }),
+
+        new Paragraph({
+          text: 'Montagem dos Ingredientes',
+          heading: HeadingLevel.HEADING_3,
+        }),
+        new Paragraph({
+          text: 'Sobre a massa aberta, espalhe primeiro uma fina camada de molho de tomate temperado (cerca de 80g). Distribua 150g de muçarela ralada por toda a superfície. Adicione a carne de sol refogada (aproximadamente 100g) de forma uniforme.',
+        }),
+        new Paragraph({
+          text: 'Finalize com rodelas finas de cebola roxa, tomate cereja cortado ao meio e azeitonas pretas fatiadas. Regue com um fio de azeite extra virgem e polvilhe orégano.',
+        }),
+        new Paragraph({ text: '' }),
+
+        new Paragraph({
+          text: 'Assamento',
+          heading: HeadingLevel.HEADING_3,
+        }),
+        new Paragraph({
+          text: 'Pré-aqueça o forno na temperatura máxima (idealmente 280-300°C) por pelo menos 30 minutos com a pedra de pizza ou assadeira dentro. Transfira cuidadosamente a pizza montada para a pedra quente usando uma pá de pizza.',
+        }),
+        new Paragraph({
+          text: 'Asse por 8-12 minutos, dependendo do seu forno, até que a borda fique dourada e a base crocante. Retire do forno, adicione folhas frescas de rúcula por cima e finalize com lascas de queijo parmesão. Sirva imediatamente.',
+        }),
+        new Paragraph({ text: '' }),
+
+        new Paragraph({
+          text: 'Dicas Profissionais',
+          heading: HeadingLevel.HEADING_3,
+        }),
+        new Paragraph({
+          text: '• Use pedra refratária para um resultado profissional',
+        }),
+        new Paragraph({
+          text: '• Não exagere nos ingredientes - menos é mais',
+        }),
+        new Paragraph({
+          text: '• Sirva a pizza quente, logo após sair do forno',
+        }),
+        new Paragraph({
+          text: '• Harmonize com uma cerveja gelada ou caipirinha de limão',
         }),
       ],
     },
@@ -173,10 +247,10 @@ if (!fs.existsSync(publicDir)) {
 
 // Salvar o arquivo
 Packer.toBuffer(doc).then((buffer) => {
-  const filePath = path.join(publicDir, 'exemplo-curso-nextjs.docx');
+  const filePath = path.join(publicDir, 'exemplo-curso-pizza.docx');
   fs.writeFileSync(filePath, buffer);
   console.log('✅ Arquivo criado com sucesso:', filePath);
+  console.log('📄 Curso: Fabricação de Pizza Artesanal de Carne de Sol');
 }).catch((error) => {
   console.error('❌ Erro ao criar arquivo:', error);
 });
-

@@ -8,6 +8,8 @@ import { ExportModal } from "@/components/ExportModal";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { toast } from "sonner";
+import type { CursoGerado } from "@/types/gerador-curso";
 import {
   Dialog,
   DialogContent,
@@ -42,7 +44,8 @@ export default function CursosPage() {
     null
   );
   const [exportModalOpen, setExportModalOpen] = useState(false);
-  const [selectedCursoForExport, setSelectedCursoForExport] = useState<any>(null);
+  const [selectedCursoForExport, setSelectedCursoForExport] =
+    useState<CursoGerado | null>(null);
 
   const handleCriarCurso = () => router.push("/cursos/novo");
   const handleEditarCurso = (id: string) => {
@@ -55,7 +58,7 @@ export default function CursosPage() {
       openPreview(curso);
     }
   };
-  const handleOpenExportModal = (curso: any) => {
+  const handleOpenExportModal = (curso: CursoGerado) => {
     setSelectedCursoForExport(curso);
     setExportModalOpen(true);
   };
@@ -120,24 +123,55 @@ export default function CursosPage() {
                 <h3 className="text-base font-semibold text-blue-900 mb-2">
                   🔧 Configuração do Banco de Dados Necessária
                 </h3>
-                <p className="text-sm text-blue-800 mb-3">
-                  {state.error}
-                </p>
+                <p className="text-sm text-blue-800 mb-3">{state.error}</p>
                 <div className="bg-white rounded border border-blue-200 p-4 mb-3">
                   <p className="text-xs font-semibold text-blue-900 mb-2">
                     📋 Passos para configurar:
                   </p>
                   <ol className="text-xs text-blue-800 space-y-1 list-decimal list-inside">
-                    <li>Criar conta no <a href="https://neon.tech" target="_blank" rel="noopener noreferrer" className="underline font-medium">Neon.tech</a></li>
+                    <li>
+                      Criar conta no{" "}
+                      <a
+                        href="https://neon.tech"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="underline font-medium"
+                      >
+                        Neon.tech
+                      </a>
+                    </li>
                     <li>Copiar a connection string do Neon</li>
-                    <li>Criar arquivo <code className="bg-blue-100 px-1 rounded">.env.local</code> com <code className="bg-blue-100 px-1 rounded">DATABASE_URL="..."</code></li>
-                    <li>Executar: <code className="bg-blue-100 px-1 rounded">npx prisma migrate dev</code></li>
-                    <li>Executar: <code className="bg-blue-100 px-1 rounded">pnpm db:seed</code></li>
+                    <li>
+                      Criar arquivo{" "}
+                      <code className="bg-blue-100 px-1 rounded">
+                        .env.local
+                      </code>{" "}
+                      com{" "}
+                      <code className="bg-blue-100 px-1 rounded">
+                        DATABASE_URL=&quot;...&quot;
+                      </code>
+                    </li>
+                    <li>
+                      Executar:{" "}
+                      <code className="bg-blue-100 px-1 rounded">
+                        npx prisma migrate dev
+                      </code>
+                    </li>
+                    <li>
+                      Executar:{" "}
+                      <code className="bg-blue-100 px-1 rounded">
+                        pnpm db:seed
+                      </code>
+                    </li>
                     <li>Reiniciar o servidor</li>
                   </ol>
                 </div>
                 <p className="text-xs text-blue-700">
-                  📚 Veja o arquivo <code className="bg-blue-100 px-1 rounded">QUICK_START.md</code> para instruções detalhadas.
+                  📚 Veja o arquivo{" "}
+                  <code className="bg-blue-100 px-1 rounded">
+                    QUICK_START.md
+                  </code>{" "}
+                  para instruções detalhadas.
                 </p>
               </div>
             </div>
@@ -255,12 +289,16 @@ export default function CursosPage() {
       </div>
 
       {/* Modal de Confirmação de Exclusão */}
-      <Dialog open={!!showDeleteConfirm} onOpenChange={() => setShowDeleteConfirm(null)}>
+      <Dialog
+        open={!!showDeleteConfirm}
+        onOpenChange={() => setShowDeleteConfirm(null)}
+      >
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Confirmar Exclusão</DialogTitle>
             <DialogDescription>
-              Tem certeza que deseja deletar este curso? Esta ação não pode ser desfeita.
+              Tem certeza que deseja deletar este curso? Esta ação não pode ser
+              desfeita.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="flex-col sm:flex-row gap-2">
@@ -275,10 +313,24 @@ export default function CursosPage() {
               onClick={async () => {
                 try {
                   if (showDeleteConfirm) {
+                    const curso = state.cursos.find(
+                      (c) => c.id === showDeleteConfirm
+                    );
                     await deletarCurso(showDeleteConfirm);
+                    toast.success("Curso excluído com sucesso! 🗑️", {
+                      description: curso?.titulo
+                        ? `"${curso.titulo}" foi removido.`
+                        : "O curso foi removido.",
+                    });
                   }
                 } catch (error) {
-                  console.error('Erro ao deletar curso:', error);
+                  console.error("Erro ao deletar curso:", error);
+                  toast.error("Erro ao excluir curso", {
+                    description:
+                      error instanceof Error
+                        ? error.message
+                        : "Ocorreu um erro inesperado",
+                  });
                 } finally {
                   setShowDeleteConfirm(null);
                 }
@@ -297,7 +349,7 @@ export default function CursosPage() {
         onClose={() => setExportModalOpen(false)}
         onExportPDF={handleExportPDF}
         onExportSCORM={handleExportSCORM}
-        courseName={selectedCursoForExport?.titulo || 'Curso'}
+        courseName={selectedCursoForExport?.titulo || "Curso"}
         isGeneratingPDF={isGeneratingPDF}
       />
     </div>

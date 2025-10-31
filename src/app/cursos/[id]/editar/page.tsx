@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { toast } from "sonner";
 import {
   Dialog,
   DialogContent,
@@ -239,6 +240,9 @@ export default function EditarCursoPage() {
         descricao: novaUnidadeDescricao.trim(),
         conteudo: [] 
       });
+      toast.success('Unidade adicionada com sucesso! ✅', {
+        description: `"${novaUnidade.trim()}" foi criada.`
+      });
       setNovaUnidade("");
       setNovaUnidadeDescricao("");
       setAdicionarUnidadeModal(false);
@@ -250,6 +254,9 @@ export default function EditarCursoPage() {
       editarUnidade(unidadeParaEditar, {
         titulo: tituloUnidadeEditando.trim(),
         descricao: descricaoUnidadeEditando.trim(),
+      });
+      toast.success('Unidade atualizada com sucesso! ✏️', {
+        description: `"${tituloUnidadeEditando.trim()}" foi atualizada.`
       });
       closeEditarUnidadeModal();
     }
@@ -284,6 +291,9 @@ export default function EditarCursoPage() {
         corTexto: conteudoTemp.corTexto,
         alinhamento: conteudoTemp.alinhamento,
         colunas: conteudoTemp.colunas,
+      });
+      toast.success('Conteúdo adicionado! ✅', {
+        description: `${conteudoTemp.tipo === 'titulo' ? 'Título' : conteudoTemp.tipo === 'subtitulo' ? 'Subtítulo' : conteudoTemp.tipo === 'paragrafo' ? 'Parágrafo' : 'Imagem'} adicionado à unidade.`
       });
       setConteudoTemp({
         tipo: "paragrafo",
@@ -320,6 +330,9 @@ export default function EditarCursoPage() {
       corTexto,
       alinhamento,
       colunas,
+    });
+    toast.success('Conteúdo atualizado! ✏️', {
+      description: 'As alterações foram salvas.'
     });
     setEditandoConteudo(null);
   };
@@ -1213,8 +1226,12 @@ export default function EditarCursoPage() {
             </Button>
             <Button
               onClick={() => {
-                if (unidadeParaDeletar) {
+                if (unidadeParaDeletar && state.cursoAtual) {
+                  const unidade = state.cursoAtual.unidades.find(u => u.id === unidadeParaDeletar);
                   deletarUnidade(unidadeParaDeletar);
+                  toast.success('Unidade excluída com sucesso! 🗑️', {
+                    description: unidade?.titulo ? `"${unidade.titulo}" foi removida.` : 'A unidade foi removida.'
+                  });
                 }
                 closeConfirmarDeletarUnidadeModal();
               }}
@@ -1252,6 +1269,9 @@ export default function EditarCursoPage() {
                     conteudoParaDeletar.unidadeId,
                     conteudoParaDeletar.conteudoId
                   );
+                  toast.success('Conteúdo excluído! 🗑️', {
+                    description: 'O conteúdo foi removido da unidade.'
+                  });
                 }
                 closeConfirmarDeletarConteudoModal();
               }}
