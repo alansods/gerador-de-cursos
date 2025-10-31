@@ -57,17 +57,25 @@ export function ExportModal({
         .trim();
       
       const extension = selectedType === 'pdf' ? '.pdf' : '.zip';
-      setFilename(sanitizedName + extension);
+      const prefix = selectedType === 'scorm' ? 'scorm-' : '';
+      setFilename(prefix + sanitizedName + extension);
     }
   }, [selectedType, courseName]);
 
   const handleExport = () => {
     if (!filename.trim()) return;
 
+    let finalFilename = filename;
+
+    // Para SCORM, garantir que sempre tenha o prefixo "scorm-"
+    if (selectedType === 'scorm' && !finalFilename.startsWith('scorm-')) {
+      finalFilename = 'scorm-' + finalFilename;
+    }
+
     if (selectedType === 'pdf') {
-      onExportPDF(filename);
+      onExportPDF(finalFilename);
     } else if (selectedType === 'scorm') {
-      onExportSCORM(filename);
+      onExportSCORM(finalFilename);
     }
     
     // Resetar após exportar
@@ -193,12 +201,15 @@ export function ExportModal({
               <Input
                 value={filename}
                 onChange={(e) => setFilename(e.target.value)}
-                placeholder={`nome-do-arquivo${selectedType === 'pdf' ? '.pdf' : '.zip'}`}
+                placeholder={`${selectedType === 'scorm' ? 'scorm-' : ''}nome-do-arquivo${selectedType === 'pdf' ? '.pdf' : '.zip'}`}
                 className="w-full"
                 autoFocus
               />
               <p className="mt-1 text-xs text-gray-500">
-                O arquivo será baixado com este nome
+                {selectedType === 'scorm' 
+                  ? 'Arquivos SCORM sempre iniciam com "scorm-"'
+                  : 'O arquivo será baixado com este nome'
+                }
               </p>
             </div>
           </div>
