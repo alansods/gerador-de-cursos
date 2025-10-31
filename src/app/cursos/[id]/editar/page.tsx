@@ -5,6 +5,7 @@ import { useRouter, useParams } from "next/navigation";
 import { useGeradorCurso } from "@/context/GeradorCursoContext";
 import { usePreview } from "@/hooks/usePreview";
 import { useSCORM } from "@/hooks/useSCORM";
+import { usePDF } from "@/hooks/usePDF";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -28,6 +29,7 @@ import {
   Clock,
   User,
   GraduationCap,
+  FileText,
 } from "lucide-react";
 import {
   Tooltip,
@@ -53,6 +55,7 @@ export default function EditarCursoPage() {
   } = useGeradorCurso();
   const { openPreview } = usePreview();
   const { generateSCORMPackage } = useSCORM();
+  const { generatePDF, isGenerating: isGeneratingPDF } = usePDF();
   const router = useRouter();
   const params = useParams();
 
@@ -510,6 +513,14 @@ export default function EditarCursoPage() {
                   <TooltipContent>Preview</TooltipContent>
                 </Tooltip>
               </TooltipProvider>
+              <Button
+                onClick={() => generatePDF(state.cursoAtual!)}
+                disabled={isGeneratingPDF}
+                className="bg-green-600 hover:bg-green-700 text-white disabled:bg-gray-400"
+              >
+                <FileText className="h-4 w-4 mr-2" />
+                {isGeneratingPDF ? 'Gerando...' : 'Baixar PDF'}
+              </Button>
               <Button
                 onClick={() => generateSCORMPackage(state.cursoAtual!)}
                 className="bg-purple-600 hover:bg-purple-700 text-white"
