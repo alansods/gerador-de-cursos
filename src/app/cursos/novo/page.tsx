@@ -315,26 +315,28 @@ export default function NovoCursoPage() {
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                 <div className="flex items-start gap-3">
                   <Info className="h-5 w-5 text-blue-600 shrink-0 mt-0.5" />
-                  <div className="flex-1 space-y-2">
-                    <h3 className="font-semibold text-blue-900">Como funciona a geração por IA?</h3>
-                    <p className="text-sm text-blue-800">
-                      Envie um documento Word (.docx ou .doc) estruturado com o conteúdo do curso.
-                      A IA irá processar o documento e criar automaticamente o curso com unidades e conteúdo organizados.
-                    </p>
-                    <p className="text-sm text-blue-800 font-medium">
-                      💡 Use Google Docs ou Microsoft Word para criar seu documento!
-                    </p>
+                  <div className="flex-1 space-y-3">
+                    <div className="space-y-2">
+                      <h3 className="font-semibold text-blue-900">Como funciona a geração por IA?</h3>
+                      <p className="text-sm text-blue-800">
+                        Envie um documento Word (.docx ou .doc) estruturado com o conteúdo do curso.
+                        A IA irá processar o documento e criar automaticamente o curso com unidades e conteúdo organizados.
+                      </p>
+                      <p className="text-sm text-blue-800 font-medium">
+                        💡 Use Google Docs ou Microsoft Word para criar seu documento!
+                      </p>
+                    </div>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={handleDownloadExample}
+                      className="gap-2 bg-white hover:bg-blue-50 border-blue-300 text-blue-700 hover:text-blue-800"
+                    >
+                      <Download className="h-4 w-4" />
+                      Baixar Exemplo
+                    </Button>
                   </div>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={handleDownloadExample}
-                    className="gap-2 shrink-0 bg-white hover:bg-blue-50 border-blue-300 text-blue-700 hover:text-blue-800"
-                  >
-                    <Download className="h-4 w-4" />
-                    Baixar Exemplo
-                  </Button>
                 </div>
               </div>
 
@@ -473,19 +475,6 @@ export default function NovoCursoPage() {
                   <Sparkles className="h-4 w-4" />
                   {isProcessing ? 'Processando...' : 'Gerar Curso'}
                 </Button>
-              </div>
-
-              {/* Dicas */}
-              <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
-                <h4 className="font-semibold text-gray-900 mb-2">💡 Dicas para melhores resultados:</h4>
-                <ul className="text-sm text-gray-700 space-y-1">
-                  <li>• Baixe o exemplo e use como base para seu curso</li>
-                  <li>• Inclua metadados no início (título, categoria, instrutor, etc.)</li>
-                  <li>• Use <strong>Título 1</strong> para unidades e <strong>Título 2</strong> para seções</li>
-                  <li>• Cada unidade deve ter uma descrição clara</li>
-                  <li>• Arquivos menores que 5MB processam mais rápido</li>
-                  <li>• Crie no Google Docs e baixe como .docx ou use Word</li>
-                </ul>
               </div>
             </div>
           </TabsContent>
