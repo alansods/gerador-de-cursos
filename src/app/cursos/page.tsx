@@ -181,39 +181,42 @@ export default function CursosPage() {
 
                   <div className="border-t border-gray-200 my-4"></div>
 
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                  <div className="flex flex-wrap items-center gap-2">
                     <Button
                       variant="outline"
                       size="sm"
                       onClick={() => handlePreviewCurso(curso.id)}
-                      className="w-full"
+                      className="flex-1 min-w-[100px]"
                     >
-                      <Eye className="h-4 w-4 mr-1" /> Preview
+                      <Eye className="h-4 w-4 mr-1" />
+                      <span className="hidden sm:inline">Preview</span>
                     </Button>
                     <Button
                       variant="outline"
                       size="sm"
                       onClick={() => handleEditarCurso(curso.id)}
-                      className="w-full"
+                      className="flex-1 min-w-[100px]"
                     >
-                      <Edit className="h-4 w-4 mr-1" /> Editar
+                      <Edit className="h-4 w-4 mr-1" />
+                      <span className="hidden sm:inline">Editar</span>
                     </Button>
                     <Button
                       variant="outline"
                       size="sm"
                       onClick={() => setShowDeleteConfirm(curso.id)}
-                      className="w-full text-red-600 hover:text-red-700 hover:bg-red-50"
+                      className="flex-1 min-w-[100px] text-red-600 hover:text-red-700 hover:bg-red-50"
                     >
-                      {/* Texto adicionado para consistência */}
-                      <Trash2 className="h-4 w-4 mr-1" /> Excluir
+                      <Trash2 className="h-4 w-4 mr-1" />
+                      <span className="hidden sm:inline">Excluir</span>
                     </Button>
                     <Button
                       size="sm"
                       onClick={() => generateSCORMPackage(curso)}
-                      className="w-full bg-purple-600 hover:bg-purple-700 text-white scorm-button"
+                      className="flex-1 min-w-[100px] bg-purple-600 hover:bg-purple-700 text-white scorm-button"
                       data-curso-id={curso.id}
                     >
-                      <Download className="h-4 w-4 mr-1" /> SCORM
+                      <Download className="h-4 w-4 mr-1" />
+                      <span className="hidden sm:inline">SCORM</span>
                     </Button>
                   </div>
                 </CardContent>

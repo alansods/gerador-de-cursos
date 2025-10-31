@@ -57,9 +57,11 @@ export default function EditarCursoPage() {
   const params = useParams();
 
   const [novaUnidade, setNovaUnidade] = useState("");
+  const [novaUnidadeDescricao, setNovaUnidadeDescricao] = useState("");
   const [editandoUnidade, setEditandoUnidade] = useState<string | null>(null);
   const [tituloEditado, setTituloEditado] = useState("");
   const [descricaoEditada, setDescricaoEditada] = useState("");
+  const [descricaoUnidadeEditando, setDescricaoUnidadeEditando] = useState("");
   const [editandoConteudo, setEditandoConteudo] = useState<{
     unidadeId: string;
     conteudoId: string;
@@ -121,11 +123,15 @@ export default function EditarCursoPage() {
 
   const cursoId = params.id as string;
 
+  // Aguardar os cursos carregarem antes de selecionar
   useEffect(() => {
-    if (cursoId) {
-      selecionarCurso(cursoId);
+    if (cursoId && !state.loading && state.cursos.length > 0) {
+      // Verificar se o curso não está selecionado ainda
+      if (!state.cursoAtual || state.cursoAtual.id !== cursoId) {
+        selecionarCurso(cursoId);
+      }
     }
-  }, [cursoId, selecionarCurso]);
+  }, [cursoId, selecionarCurso, state.loading, state.cursos, state.cursoAtual]);
 
   useEffect(() => {
     if (editarCursoModal && state.cursoAtual) {
@@ -157,6 +163,7 @@ export default function EditarCursoPage() {
       setAdicionarUnidadeModal(false);
       setClosingAdicionarUnidade(false);
       setNovaUnidade("");
+      setNovaUnidadeDescricao("");
     }, 200);
   };
 
@@ -165,6 +172,7 @@ export default function EditarCursoPage() {
     if (unidade) {
       setUnidadeParaEditar(unidadeId);
       setTituloUnidadeEditando(unidade.titulo);
+      setDescricaoUnidadeEditando(unidade.descricao);
       setEditarUnidadeModal(true);
     }
   };
@@ -176,6 +184,7 @@ export default function EditarCursoPage() {
       setClosingEditarUnidade(false);
       setUnidadeParaEditar(null);
       setTituloUnidadeEditando("");
+      setDescricaoUnidadeEditando("");
     }, 200);
   };
 
@@ -249,17 +258,23 @@ export default function EditarCursoPage() {
   };
 
   const handleAdicionarUnidade = () => {
-    if (novaUnidade.trim()) {
-      adicionarUnidade({ titulo: novaUnidade.trim(), conteudo: [] });
+    if (novaUnidade.trim() && novaUnidadeDescricao.trim()) {
+      adicionarUnidade({ 
+        titulo: novaUnidade.trim(), 
+        descricao: novaUnidadeDescricao.trim(),
+        conteudo: [] 
+      });
       setNovaUnidade("");
+      setNovaUnidadeDescricao("");
       setAdicionarUnidadeModal(false);
     }
   };
 
   const handleSalvarEdicaoUnidade = () => {
-    if (unidadeParaEditar && tituloUnidadeEditando.trim()) {
+    if (unidadeParaEditar && tituloUnidadeEditando.trim() && descricaoUnidadeEditando.trim()) {
       editarUnidade(unidadeParaEditar, {
         titulo: tituloUnidadeEditando.trim(),
+        descricao: descricaoUnidadeEditando.trim(),
       });
       closeEditarUnidadeModal();
     }
@@ -419,10 +434,55 @@ export default function EditarCursoPage() {
     }
   };
 
+  // Verificar se está carregando ou se o curso não foi encontrado
+  if (state.loading || (!state.cursoAtual && state.cursos.length === 0)) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-500">Carregando...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Se os cursos foram carregados mas o curso atual não foi encontrado
+  if (!state.loading && !state.cursoAtual && state.cursos.length > 0) {
+    const cursoEncontrado = state.cursos.find(c => c.id === cursoId);
+    if (!cursoEncontrado) {
+      return (
+        <div className="min-h-screen flex items-center justify-center bg-gray-50">
+          <div className="text-center">
+            <h1 className="text-2xl font-bold text-gray-900 mb-4">
+              Curso não encontrado
+            </h1>
+            <Button onClick={handleVoltar} variant="outline">
+              Voltar para lista de cursos
+            </Button>
+          </div>
+        </div>
+      );
+    }
+    
+    // Se encontrou mas ainda não selecionou, mostrar loading enquanto seleciona
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-500">Carregando curso...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Fallback para garantir que sempre mostra algo
   if (!state.cursoAtual) {
     return (
-      <div className="text-center py-12">
-        <p className="text-gray-500">Carregando...</p>
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-500">Carregando...</p>
+        </div>
       </div>
     );
   }
@@ -555,11 +615,16 @@ export default function EditarCursoPage() {
             >
               <CardHeader className="bg-gradient-to-r from-gray-50 to-blue-50 border-b border-gray-200">
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-3">
-                    <Layers className="h-6 w-6 text-blue-600" />
-                    <h3 className="text-2xl font-bold text-gray-900">
-                      {unidade.titulo}
-                    </h3>
+                  <div className="flex-1">
+                    <div className="flex items-center space-x-3">
+                      <Layers className="h-6 w-6 text-blue-600" />
+                      <h3 className="text-2xl font-bold text-gray-900">
+                        {unidade.titulo}
+                      </h3>
+                    </div>
+                    <p className="mt-2 ml-9 text-gray-600 text-sm">
+                      {unidade.descricao}
+                    </p>
                   </div>
                   <div className="flex items-center space-x-2">
                     <div className="flex space-x-1">
@@ -1152,14 +1217,33 @@ export default function EditarCursoPage() {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <Input
-                value={novaUnidade}
-                onChange={(e) => setNovaUnidade(e.target.value)}
-                placeholder="Título da unidade"
-                onKeyPress={(e) =>
-                  e.key === "Enter" && handleAdicionarUnidade()
-                }
-              />
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Título da Unidade *
+                </label>
+                <Input
+                  value={novaUnidade}
+                  onChange={(e) => setNovaUnidade(e.target.value)}
+                  placeholder="Título da unidade"
+                  onKeyPress={(e) =>
+                    e.key === "Enter" && handleAdicionarUnidade()
+                  }
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Descrição da Unidade *
+                </label>
+                <textarea
+                  value={novaUnidadeDescricao}
+                  onChange={(e) => setNovaUnidadeDescricao(e.target.value)}
+                  placeholder="Descreva o que os alunos aprenderão nesta unidade..."
+                  className="w-full p-3 border border-gray-300 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  rows={4}
+                  required
+                />
+              </div>
 
               <div className="flex justify-end space-x-3">
                 <Button variant="outline" onClick={closeAdicionarUnidadeModal}>
@@ -1171,7 +1255,7 @@ export default function EditarCursoPage() {
                     closeAdicionarUnidadeModal();
                   }}
                   className="bg-blue-600 hover:bg-blue-700"
-                  disabled={!novaUnidade.trim()}
+                  disabled={!novaUnidade.trim() || !novaUnidadeDescricao.trim()}
                 >
                   Adicionar
                 </Button>
@@ -1220,6 +1304,20 @@ export default function EditarCursoPage() {
                   }
                 />
               </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Descrição da Unidade *
+                </label>
+                <textarea
+                  value={descricaoUnidadeEditando}
+                  onChange={(e) => setDescricaoUnidadeEditando(e.target.value)}
+                  placeholder="Descreva o que os alunos aprenderão nesta unidade..."
+                  className="w-full p-3 border border-gray-300 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  rows={4}
+                  required
+                />
+              </div>
 
               <div className="flex justify-end space-x-3">
                 <Button variant="outline" onClick={closeEditarUnidadeModal}>
@@ -1228,7 +1326,7 @@ export default function EditarCursoPage() {
                 <Button
                   onClick={handleSalvarEdicaoUnidade}
                   className="bg-blue-600 hover:bg-blue-700"
-                  disabled={!tituloUnidadeEditando.trim()}
+                  disabled={!tituloUnidadeEditando.trim() || !descricaoUnidadeEditando.trim()}
                 >
                   Salvar
                 </Button>
@@ -1519,7 +1617,7 @@ export default function EditarCursoPage() {
                   }}
                   className="bg-blue-600 hover:bg-blue-700"
                   disabled={
-                    !editandoConteudo.conteudo.trim() ||
+                    !editandoConteudo.conteudo?.trim() ||
                     (editandoConteudo.tipo === "imagem" &&
                       (!editandoConteudo.tamanho ||
                         !editandoConteudo.legenda ||

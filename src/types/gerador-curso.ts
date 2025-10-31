@@ -18,6 +18,7 @@ export interface ConteudoUnidade {
 export interface Unidade {
   id: string
   titulo: string
+  descricao: string
   conteudo: ConteudoUnidade[]
   ordem: number
 }

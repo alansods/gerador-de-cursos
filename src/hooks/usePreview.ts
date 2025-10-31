@@ -1,13 +1,9 @@
 'use client'
 
-import { useRouter } from "next/navigation";
-
 export const usePreview = () => {
-  const router = useRouter();
-
   const openPreview = (curso: any) => {
-    // Navegar para a página de preview
-    router.push(`/cursos/${curso.id}/preview`);
+    // Abrir preview em nova aba
+    window.open(`/cursos/${curso.id}/preview`, '_blank');
   };
 
   return { openPreview };

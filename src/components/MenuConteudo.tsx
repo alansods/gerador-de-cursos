@@ -113,7 +113,7 @@ export function MenuConteudo({
                 unidadeId: unidade.id,
                 conteudoId: item.id,
                 tipo: item.tipo,
-                conteudo: item.conteudo,
+                conteudo: item.conteudo || "",
                 tamanho: item.tamanho,
                 legenda: item.legenda,
                 fonte: item.fonte,

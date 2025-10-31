@@ -1,14 +1,5 @@
-import { PrismaClient } from '@prisma/client';
-import { config } from 'dotenv';
-import { resolve } from 'path';
-
-// Carregar variáveis de ambiente - tenta .env.local primeiro, depois .env
-config({ path: resolve(process.cwd(), '.env.local') });
-config({ path: resolve(process.cwd(), '.env') });
-
-const prisma = new PrismaClient({
-  log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
-});
+import { NextRequest, NextResponse } from 'next/server';
+import { prisma } from '@/lib/prisma';
 
 const unidadesExemplo = [
   {
@@ -202,22 +193,24 @@ const unidadesExemplo = [
   },
 ];
 
-async function main() {
-  console.log('🌱 Iniciando seed do banco de dados...\n');
+export async function POST(request: NextRequest) {
+  try {
+    // Buscar curso de exemplo
+    const cursoExistente = await prisma.curso.findFirst({
+      where: {
+        titulo: 'Introdução ao Next.js 14'
+      }
+    });
 
-  // Verificar se já existe um curso de exemplo
-  const cursoExistente = await prisma.curso.findFirst({
-    where: {
-      titulo: 'Introdução ao Next.js 14'
+    if (!cursoExistente) {
+      return NextResponse.json(
+        { success: false, error: 'Curso não encontrado' },
+        { status: 404 }
+      );
     }
-  });
 
-  let cursoExemplo;
-  
-  if (cursoExistente) {
-    // Atualizar curso existente com unidades e conteúdo
-    console.log('📝 Curso já existe, atualizando com unidades e conteúdos...\n');
-    cursoExemplo = await prisma.curso.update({
+    // Atualizar curso com unidades e conteúdos
+    const cursoAtualizado = await prisma.curso.update({
       where: {
         id: cursoExistente.id
       },
@@ -225,57 +218,22 @@ async function main() {
         unidades: unidadesExemplo,
       },
     });
-    console.log('✅ Curso atualizado com sucesso!');
-  } else {
-    // Criar novo curso de exemplo
-    console.log('✨ Criando novo curso de exemplo...\n');
-    cursoExemplo = await prisma.curso.create({
-      data: {
-        titulo: 'Introdução ao Next.js 14',
-        descricao: 'Aprenda a construir aplicações modernas com Next.js 14, incluindo App Router, Server Components e muito mais.',
-        cargaHoraria: '40 horas',
-        instrutor: 'João Silva',
-        modalidade: 'Online',
-        categoria: 'Desenvolvimento Web',
-        unidades: unidadesExemplo,
-      },
+
+    return NextResponse.json({
+      success: true,
+      message: 'Curso atualizado com sucesso!',
+      curso: {
+        id: cursoAtualizado.id,
+        titulo: cursoAtualizado.titulo,
+        unidades: (cursoAtualizado.unidades as any[]).length,
+      }
     });
-    console.log('✅ Curso criado com sucesso!');
+  } catch (error: any) {
+    console.error('Erro ao atualizar curso:', error);
+    return NextResponse.json(
+      { success: false, error: error.message || 'Erro ao atualizar curso' },
+      { status: 500 }
+    );
   }
-
-  console.log('\n📊 Informações do curso:');
-  console.log(`   ID: ${cursoExemplo.id}`);
-  console.log(`   Título: ${cursoExemplo.titulo}`);
-  console.log(`   Instrutor: ${cursoExemplo.instrutor}`);
-  console.log(`   Unidades: ${(cursoExemplo.unidades as any[]).length}`);
-  console.log(`   Total de conteúdos: ${(cursoExemplo.unidades as any[]).reduce((acc, u) => acc + (u.conteudo?.length || 0), 0)}`);
-
-  // Criar alguns comentários de exemplo (apenas se não existirem)
-  const comentariosExistentes = await prisma.comment.count();
-  if (comentariosExistentes === 0) {
-    const comentarios = [
-      'Primeiro comentário de teste!',
-      'Prisma + Neon funcionando perfeitamente!',
-      'Sistema configurado com sucesso 🎉',
-    ];
-
-    for (const texto of comentarios) {
-      await prisma.comment.create({
-        data: { text: texto },
-      });
-    }
-
-    console.log(`\n✅ ${comentarios.length} comentários de exemplo criados`);
-  }
-
-  console.log('\n🎉 Seed concluído com sucesso!\n');
 }
 
-main()
-  .catch((e) => {
-    console.error('❌ Erro durante seed:', e);
-    process.exit(1);
-  })
-  .finally(async () => {
-    await prisma.$disconnect();
-  });
