@@ -160,6 +160,14 @@ export function GeradorCursoProvider({ children }: { children: React.ReactNode }
         body: JSON.stringify(curso),
       })
 
+      // Verificar se a resposta é JSON
+      const contentType = response.headers.get('content-type')
+      if (!contentType || !contentType.includes('application/json')) {
+        const text = await response.text()
+        console.error('Resposta não é JSON:', text.substring(0, 200))
+        throw new Error('Resposta inválida do servidor. Verifique os logs do servidor.')
+      }
+
       const data = await response.json()
 
       if (data.success && data.curso) {
@@ -170,7 +178,8 @@ export function GeradorCursoProvider({ children }: { children: React.ReactNode }
       }
     } catch (error) {
       console.error('Erro ao criar curso:', error)
-      dispatch({ type: "SET_ERROR", payload: "Erro ao criar curso no banco de dados" })
+      const errorMessage = error instanceof Error ? error.message : 'Erro ao criar curso no banco de dados'
+      dispatch({ type: "SET_ERROR", payload: errorMessage })
       throw error
     }
   }, [])

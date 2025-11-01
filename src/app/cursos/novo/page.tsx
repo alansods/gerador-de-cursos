@@ -165,8 +165,16 @@ export default function NovoCursoPage() {
       })
 
       if (!generateResponse.ok) {
-        const error = await generateResponse.json()
-        throw new Error(error.message || 'Erro ao gerar curso')
+        // Verificar se a resposta é JSON antes de parsear
+        const contentType = generateResponse.headers.get('content-type')
+        if (contentType && contentType.includes('application/json')) {
+          const error = await generateResponse.json()
+          throw new Error(error.message || error.error || 'Erro ao gerar curso')
+        } else {
+          const text = await generateResponse.text()
+          console.error('Erro não-JSON da API:', text.substring(0, 200))
+          throw new Error(`Erro ao gerar curso (${generateResponse.status}): ${text.substring(0, 100)}`)
+        }
       }
 
       const { course } = await generateResponse.json()
