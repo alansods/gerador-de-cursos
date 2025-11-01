@@ -40,6 +40,8 @@ import {
   Clock,
   User,
   GraduationCap,
+  Upload,
+  Loader2,
 } from "lucide-react";
 import {
   Tooltip,
@@ -110,6 +112,8 @@ export default function EditarCursoPage() {
   const [exportModalOpen, setExportModalOpen] = useState(false);
   const [tituloUnidadeEditando, setTituloUnidadeEditando] = useState("");
   const [confirmarDeletarUnidade, setConfirmarDeletarUnidade] = useState(false);
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
+  const [imagePreviewUrl, setImagePreviewUrl] = useState<string | null>(null);
   const [unidadeParaDeletar, setUnidadeParaDeletar] = useState<string | null>(
     null
   );
@@ -137,6 +141,30 @@ export default function EditarCursoPage() {
       }
     }
   }, [cursoId, selecionarCurso, state.loading, state.cursos, state.cursoAtual]);
+
+  // Atualizar preview da imagem ao editar conteúdo
+  useEffect(() => {
+    if (editandoConteudo?.tipo === "imagem" && editandoConteudo.conteudo) {
+      if (editandoConteudo.conteudo.startsWith('http')) {
+        setImagePreviewUrl(editandoConteudo.conteudo);
+      } else {
+        setImagePreviewUrl(null);
+      }
+    } else if (!editandoConteudo) {
+      setImagePreviewUrl(null);
+    }
+  }, [editandoConteudo]);
+
+  // Atualizar preview da imagem ao adicionar conteúdo
+  useEffect(() => {
+    if (conteudoTemp.tipo === "imagem" && conteudoTemp.conteudo) {
+      if (conteudoTemp.conteudo.startsWith('http')) {
+        setImagePreviewUrl(conteudoTemp.conteudo);
+      }
+    } else if (conteudoTemp.tipo !== "imagem") {
+      setImagePreviewUrl(null);
+    }
+  }, [conteudoTemp.tipo, conteudoTemp.conteudo]);
 
   useEffect(() => {
     if (editarCursoModal && state.cursoAtual) {
@@ -262,6 +290,66 @@ export default function EditarCursoPage() {
   const handleDeletarUnidade = (unidadeId: string) => {
     setUnidadeParaDeletar(unidadeId);
     setConfirmarDeletarUnidade(true);
+  };
+
+  const handleUploadImage = async (file: File, forEdit: boolean = false) => {
+    if (!file) return;
+
+    // Validar tipo
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml'];
+    if (!allowedTypes.includes(file.type)) {
+      toast.error('Tipo de arquivo inválido. Use JPG, PNG, GIF, WEBP ou SVG.');
+      return;
+    }
+
+    // Validar tamanho (10MB)
+    const maxSize = 10 * 1024 * 1024;
+    if (file.size > maxSize) {
+      toast.error('Arquivo muito grande. Máximo: 10MB');
+      return;
+    }
+
+    setIsUploadingImage(true);
+    setImagePreviewUrl(null);
+
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const response = await fetch('/api/upload-image', {
+        method: 'POST',
+        body: formData,
+      });
+
+      const data = await response.json();
+
+      if (!response.ok || !data.success) {
+        throw new Error(data.error || 'Erro ao fazer upload');
+      }
+
+      // Atualizar URL da imagem no estado correto
+      if (forEdit && editandoConteudo) {
+        setEditandoConteudo({
+          ...editandoConteudo,
+          conteudo: data.url,
+        });
+      } else {
+        setConteudoTemp({
+          ...conteudoTemp,
+          conteudo: data.url,
+        });
+      }
+
+      // Mostrar preview
+      setImagePreviewUrl(data.url);
+
+      toast.success('Imagem enviada');
+    } catch (error) {
+      console.error('Erro ao fazer upload:', error);
+      toast.error('Erro ao enviar imagem');
+    } finally {
+      setIsUploadingImage(false);
+    }
   };
 
   const handleSalvarConteudo = () => {
@@ -615,7 +703,7 @@ export default function EditarCursoPage() {
                     onDeletar={handleDeletarUnidade}
                   />
                 </div>
-              </CardHeader>
+            </CardHeader>
 
               <CardContent className="pt-6">
                 {/* Lista de Conteúdo */}
@@ -656,7 +744,7 @@ export default function EditarCursoPage() {
                                 {item.conteudo}
                               </h4>
                             ) : item.tipo === "imagem" ? (
-                              <div className="space-y-2">
+                  <div className="space-y-2">
                                 {item.fonte && (
                                   <p className="text-xs text-gray-500">
                                     Fonte: {item.fonte}
@@ -832,13 +920,13 @@ export default function EditarCursoPage() {
             <div>
               <label className="text-sm font-medium text-gray-700 mb-2 block">
                 Título do Curso <span className="text-red-500">*</span>
-              </label>
-              <Input
+                    </label>
+                    <Input
                 value={tituloEditado}
                 onChange={(e) => setTituloEditado(e.target.value)}
                 placeholder="Título do curso"
-              />
-            </div>
+                    />
+                  </div>
             <div>
               <label className="text-sm font-medium text-gray-700 mb-2 block">
                 Descrição do Curso <span className="text-red-500">*</span>
@@ -953,20 +1041,85 @@ export default function EditarCursoPage() {
           <div className="space-y-4 py-4">
             {conteudoTemp.tipo === "imagem" ? (
               <div className="space-y-4">
+                {/* Upload ou URL */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    URL da Imagem <span className="text-red-500">*</span>
+                    Imagem <span className="text-red-500">*</span>
                   </label>
-                  <Input
-                    value={conteudoTemp.conteudo}
-                    onChange={(e) =>
-                      setConteudoTemp({
-                        ...conteudoTemp,
-                        conteudo: e.target.value,
-                      })
-                    }
-                    placeholder="Cole a URL da imagem..."
-                  />
+                  <div className="space-y-3">
+                    {/* Upload de Arquivo */}
+                    <div>
+                      <label className="flex items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-blue-400 transition-colors bg-gray-50">
+                        {isUploadingImage ? (
+                          <div className="flex flex-col items-center gap-2">
+                            <Loader2 className="h-6 w-6 animate-spin text-blue-600" />
+                            <span className="text-sm text-gray-600">Enviando...</span>
+                          </div>
+                        ) : (
+                          <div className="flex flex-col items-center gap-2">
+                            <Upload className="h-6 w-6 text-gray-400" />
+                            <span className="text-sm text-gray-600">Clique para fazer upload</span>
+                            <span className="text-xs text-gray-500">ou arraste a imagem aqui</span>
+                            <span className="text-xs text-gray-400">JPG, PNG, GIF, WEBP, SVG (máx. 10MB)</span>
+                          </div>
+                        )}
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) {
+                              handleUploadImage(file);
+                            }
+                          }}
+                          disabled={isUploadingImage}
+                        />
+                      </label>
+                    </div>
+
+                    {/* Divisor */}
+                    <div className="relative">
+                      <div className="absolute inset-0 flex items-center">
+                        <div className="w-full border-t border-gray-300"></div>
+                      </div>
+                      <div className="relative flex justify-center text-sm">
+                        <span className="bg-white px-2 text-gray-500">ou</span>
+                      </div>
+                    </div>
+
+                    {/* Input de URL */}
+                    <div>
+                      <Input
+                        value={conteudoTemp.conteudo}
+                        onChange={(e) => {
+                          setConteudoTemp({
+                            ...conteudoTemp,
+                            conteudo: e.target.value,
+                          });
+                          // Atualizar preview se for URL válida
+                          if (e.target.value.startsWith('http')) {
+                            setImagePreviewUrl(e.target.value);
+                          } else {
+                            setImagePreviewUrl(null);
+                          }
+                        }}
+                        placeholder="Cole a URL da imagem..."
+                      />
+                    </div>
+
+                    {/* Preview da Imagem */}
+                    {(imagePreviewUrl || conteudoTemp.conteudo) && (
+                      <div className="mt-3">
+                        <img
+                          src={imagePreviewUrl || conteudoTemp.conteudo}
+                          alt="Preview"
+                          className="w-full h-auto rounded-lg border border-gray-300 max-h-64 object-contain bg-gray-50"
+                          onError={() => setImagePreviewUrl(null)}
+                        />
+                      </div>
+                    )}
+                  </div>
                 </div>
 
                 <div>
@@ -1008,12 +1161,12 @@ export default function EditarCursoPage() {
                     placeholder="Digite a legenda da imagem..."
                   />
                 </div>
-                
+
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Fonte <span className="text-red-500">*</span>
-                  </label>
-                  <Input
+                    </label>
+                    <Input
                     value={conteudoTemp.fonte || ""}
                     onChange={(e) =>
                       setConteudoTemp({
@@ -1022,8 +1175,8 @@ export default function EditarCursoPage() {
                       })
                     }
                     placeholder="Digite a fonte da imagem..."
-                  />
-                </div>
+                    />
+                  </div>
               </div>
             ) : (
               <div>
@@ -1100,16 +1253,16 @@ export default function EditarCursoPage() {
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Título da Unidade <span className="text-red-500">*</span>
-              </label>
-              <Input
+                    </label>
+                    <Input
                 value={novaUnidade}
                 onChange={(e) => setNovaUnidade(e.target.value)}
                 placeholder="Título da unidade"
                 onKeyPress={(e) =>
                   e.key === "Enter" && handleAdicionarUnidade()
                 }
-              />
-            </div>
+                    />
+                  </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -1123,7 +1276,7 @@ export default function EditarCursoPage() {
                 rows={4}
                 required
               />
-            </div>
+                </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={closeAdicionarUnidadeModal}>
@@ -1159,17 +1312,17 @@ export default function EditarCursoPage() {
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Título da Unidade <span className="text-red-500">*</span>
-              </label>
-              <Input
+                  </label>
+                  <Input
                 value={tituloUnidadeEditando}
                 onChange={(e) => setTituloUnidadeEditando(e.target.value)}
                 placeholder="Digite o título da unidade..."
                 onKeyPress={(e) =>
                   e.key === "Enter" && handleSalvarEdicaoUnidade()
                 }
-              />
-            </div>
-            
+                  />
+                </div>
+
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Descrição da Unidade <span className="text-red-500">*</span>
@@ -1188,13 +1341,13 @@ export default function EditarCursoPage() {
             <Button variant="outline" onClick={closeEditarUnidadeModal}>
               Cancelar
             </Button>
-            <Button
+                  <Button
               onClick={handleSalvarEdicaoUnidade}
               className="bg-blue-600 hover:bg-blue-700"
               disabled={!tituloUnidadeEditando.trim() || !descricaoUnidadeEditando.trim()}
             >
               Salvar
-            </Button>
+                  </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -1212,12 +1365,12 @@ export default function EditarCursoPage() {
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <Button
-              variant="outline"
+                  <Button
+                    variant="outline"
               onClick={closeConfirmarDeletarUnidadeModal}
-            >
-              Cancelar
-            </Button>
+                  >
+                    Cancelar
+                  </Button>
             <Button
               onClick={() => {
                 if (unidadeParaDeletar && state.cursoAtual) {
@@ -1309,20 +1462,85 @@ export default function EditarCursoPage() {
           <div className="space-y-4 py-4">
             {editandoConteudo?.tipo === "imagem" ? (
               <div className="space-y-4">
+                {/* Upload ou URL */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    URL da Imagem <span className="text-red-500">*</span>
+                    Imagem <span className="text-red-500">*</span>
                   </label>
-                  <Input
-                    value={editandoConteudo.conteudo}
-                    onChange={(e) =>
-                      setEditandoConteudo({
-                        ...editandoConteudo,
-                        conteudo: e.target.value,
-                      })
-                    }
-                    placeholder="Cole a URL da imagem..."
-                  />
+                  <div className="space-y-3">
+                    {/* Upload de Arquivo */}
+                    <div>
+                      <label className="flex items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-blue-400 transition-colors bg-gray-50">
+                        {isUploadingImage ? (
+                          <div className="flex flex-col items-center gap-2">
+                            <Loader2 className="h-6 w-6 animate-spin text-blue-600" />
+                            <span className="text-sm text-gray-600">Enviando...</span>
+                          </div>
+                        ) : (
+                          <div className="flex flex-col items-center gap-2">
+                            <Upload className="h-6 w-6 text-gray-400" />
+                            <span className="text-sm text-gray-600">Clique para fazer upload</span>
+                            <span className="text-xs text-gray-500">ou arraste a imagem aqui</span>
+                            <span className="text-xs text-gray-400">JPG, PNG, GIF, WEBP, SVG (máx. 10MB)</span>
+                          </div>
+                        )}
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) {
+                              handleUploadImage(file, true);
+                            }
+                          }}
+                          disabled={isUploadingImage}
+                        />
+                      </label>
+                    </div>
+
+                    {/* Divisor */}
+                    <div className="relative">
+                      <div className="absolute inset-0 flex items-center">
+                        <div className="w-full border-t border-gray-300"></div>
+                      </div>
+                      <div className="relative flex justify-center text-sm">
+                        <span className="bg-white px-2 text-gray-500">ou</span>
+                      </div>
+                    </div>
+
+                    {/* Input de URL */}
+                    <div>
+                      <Input
+                        value={editandoConteudo.conteudo}
+                        onChange={(e) => {
+                          setEditandoConteudo({
+                            ...editandoConteudo,
+                            conteudo: e.target.value,
+                          });
+                          // Atualizar preview se for URL válida
+                          if (e.target.value.startsWith('http')) {
+                            setImagePreviewUrl(e.target.value);
+                          } else {
+                            setImagePreviewUrl(null);
+                          }
+                        }}
+                        placeholder="Cole a URL da imagem..."
+                      />
+                    </div>
+
+                    {/* Preview da Imagem */}
+                    {(imagePreviewUrl || editandoConteudo.conteudo) && (
+                      <div className="mt-3">
+                        <img
+                          src={imagePreviewUrl || editandoConteudo.conteudo}
+                          alt="Preview"
+                          className="w-full h-auto rounded-lg border border-gray-300 max-h-64 object-contain bg-gray-50"
+                          onError={() => setImagePreviewUrl(null)}
+                        />
+                      </div>
+                    )}
+                  </div>
                 </div>
 
                 <div>
@@ -1347,7 +1565,7 @@ export default function EditarCursoPage() {
                     <option value="media">Média (50%)</option>
                     <option value="grande">Grande (100%)</option>
                   </select>
-                </div>
+        </div>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -1363,7 +1581,7 @@ export default function EditarCursoPage() {
                     }
                     placeholder="Digite a legenda da imagem..."
                   />
-                </div>
+      </div>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -1379,7 +1597,7 @@ export default function EditarCursoPage() {
                     }
                     placeholder="Digite a fonte da imagem..."
                   />
-                </div>
+    </div>
               </div>
             ) : (
               <div>
