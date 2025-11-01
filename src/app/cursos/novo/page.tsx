@@ -172,8 +172,13 @@ export default function NovoCursoPage() {
       const { course } = await generateResponse.json()
       setProgress(80)
 
-      // Passo 3: Criar curso no banco
-      await criarCurso(course)
+      // Passo 3: Criar curso no banco (remover instrutor se existir)
+      const cursoParaSalvar = { ...course }
+      // Remover instrutor se existir (campo foi removido do schema)
+      if ('instrutor' in cursoParaSalvar) {
+        delete (cursoParaSalvar as any).instrutor
+      }
+      await criarCurso(cursoParaSalvar)
       setProgress(100)
       setProcessingStep('done')
 

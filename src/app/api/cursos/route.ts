@@ -57,8 +57,16 @@ export async function POST(request: NextRequest) {
       cargaHoraria, 
       modalidade, 
       categoria, 
-      unidades = [] 
+      unidades = [],
+      // Remover instrutor se existir (campo foi removido do schema)
+      instrutor,
+      ...rest
     } = body;
+    
+    // Garantir que instrutor não seja passado para o Prisma
+    if (instrutor) {
+      console.warn('[API Cursos] Campo instrutor removido do body (campo foi removido do schema)');
+    }
 
     // Validações
     if (!titulo || !descricao || !cargaHoraria || !modalidade || !categoria) {
