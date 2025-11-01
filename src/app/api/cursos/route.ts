@@ -50,6 +50,13 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
+    
+    // Remover instrutor se existir (campo foi removido do schema)
+    const { instrutor, ...bodySemInstrutor } = body;
+    if (instrutor) {
+      console.warn('[API Cursos] Campo instrutor removido do body (campo foi removido do schema)');
+    }
+    
     const { 
       id, 
       titulo, 
@@ -57,16 +64,8 @@ export async function POST(request: NextRequest) {
       cargaHoraria, 
       modalidade, 
       categoria, 
-      unidades = [],
-      // Remover instrutor se existir (campo foi removido do schema)
-      instrutor,
-      ...rest
-    } = body;
-    
-    // Garantir que instrutor não seja passado para o Prisma
-    if (instrutor) {
-      console.warn('[API Cursos] Campo instrutor removido do body (campo foi removido do schema)');
-    }
+      unidades = []
+    } = bodySemInstrutor;
 
     // Validações
     if (!titulo || !descricao || !cargaHoraria || !modalidade || !categoria) {
