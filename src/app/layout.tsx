@@ -33,7 +33,7 @@ export default function RootLayout({
             {children}
           </ProgressoProvider>
         </GeradorCursoProvider>
-        <Toaster position="top-right" richColors />
+        <Toaster position="top-right" richColors closeButton />
       </body>
     </html>
   );
