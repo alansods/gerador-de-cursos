@@ -5,7 +5,6 @@ interface Curso {
   titulo: string;
   descricao: string;
   cargaHoraria: string;
-  instrutor: string;
   modalidade: string;
   categoria: string;
   unidades: Array<{

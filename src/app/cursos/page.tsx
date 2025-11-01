@@ -229,10 +229,6 @@ export default function CursosPage() {
                           {curso.cargaHoraria}
                         </div>
                         <div className="flex items-center text-sm text-gray-600">
-                          <User className="h-4 w-4 mr-2" />
-                          {curso.instrutor}
-                        </div>
-                        <div className="flex items-center text-sm text-gray-600">
                           <Calendar className="h-4 w-4 mr-2" />
                           {curso.modalidade}
                         </div>

@@ -11,20 +11,30 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import {
   Menu,
   Home,
-  Book,
+  User,
+  LogOut,
   ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { UnidadeConteudo } from "@/components/UnidadeConteudo";
+import { useLMS } from "@/hooks/useLMS";
 
 export default function PreviewUnidadePage() {
   const params = useParams();
   const router = useRouter();
   const { state, selecionarCurso } = useGeradorCurso();
   const [menuOpen, setMenuOpen] = useState(false);
+  const { learnerName, isConnected } = useLMS();
 
   const cursoId = params.id as string;
   const unidadeId = params.unidadeId as string;
@@ -63,6 +73,8 @@ export default function PreviewUnidadePage() {
   }
 
   const unidadeIndex = curso.unidades.findIndex((u) => u.id === unidadeId);
+  const unidadeAnterior = unidadeIndex > 0 ? curso.unidades[unidadeIndex - 1] : null;
+  const proximaUnidade = unidadeIndex < curso.unidades.length - 1 ? curso.unidades[unidadeIndex + 1] : null;
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -75,58 +87,103 @@ export default function PreviewUnidadePage() {
               <span className="sr-only">Abrir menu</span>
             </Button>
           </SheetTrigger>
-          <SheetContent side="left" className="w-[300px] sm:w-[400px]">
-            <SheetHeader>
-              <SheetTitle className="text-left">Navegação</SheetTitle>
+          <SheetContent side="left" className="w-[320px] sm:w-[400px] p-0 bg-linear-to-b from-gray-50 to-white">
+            <SheetHeader className="px-6 pt-6 pb-4 border-b border-gray-100 bg-white">
+              <SheetTitle className="text-left text-xl font-bold text-gray-900">
+                Unidades do curso
+              </SheetTitle>
             </SheetHeader>
-            <nav className="mt-8 space-y-4">
+            <nav className="px-4 py-6 space-y-2 overflow-y-auto max-h-[calc(100vh-120px)]">
+              {/* Home Button */}
               <Link
                 href={`/cursos/${cursoId}/preview`}
                 onClick={() => setMenuOpen(false)}
-                className="flex items-center gap-3 text-gray-600 hover:text-blue-600 transition-colors p-2 rounded-md hover:bg-gray-100"
+                className="group flex items-center gap-3 p-4 rounded-xl border border-gray-200 hover:border-orange-300 hover:bg-orange-50/50 transition-all duration-200"
               >
-                <Home className="w-5 h-5" />
-                <span>Home</span>
+                <div className="shrink-0 w-10 h-10 rounded-lg bg-linear-to-br from-orange-400 to-orange-600 flex items-center justify-center text-white">
+                  <Home className="w-5 h-5" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <span className="block font-semibold text-gray-900 group-hover:text-orange-600 transition-colors line-clamp-2 text-sm leading-snug">
+                    Página inicial
+                  </span>
+                </div>
               </Link>
-              <div>
-                <h3 className="flex items-center gap-3 text-lg font-semibold text-gray-700 mb-3 px-2">
-                  <Book className="w-5 h-5" />
-                  <span>Unidades</span>
-                </h3>
-                <ul className="space-y-2 pl-4 border-l-2 border-gray-200">
-                  {(curso.unidades || []).map((u) => (
-                    <li key={u.id}>
-                      <Link
-                        href={`/cursos/${cursoId}/preview/unidade/${u.id}`}
-                        onClick={() => setMenuOpen(false)}
-                        className={`block text-gray-600 hover:text-blue-600 transition-colors p-2 rounded-md hover:bg-gray-100 ${
-                          u.id === unidadeId ? "bg-blue-50 text-blue-600 font-semibold" : ""
-                        }`}
-                      >
+
+              {/* Units Section */}
+              {(curso.unidades || []).map((u, index) => {
+                const isActive = u.id === unidadeId;
+                return (
+                  <Link
+                    key={u.id}
+                    href={`/cursos/${cursoId}/preview/unidade/${u.id}`}
+                    onClick={() => setMenuOpen(false)}
+                    className={`group flex items-center gap-3 p-4 rounded-xl border transition-all duration-200 ${
+                      isActive
+                        ? "border-orange-500 bg-orange-50/50"
+                        : "border-gray-200 hover:border-orange-300 hover:bg-orange-50/50"
+                    }`}
+                  >
+                    {/* Badge with number */}
+                    <div className="shrink-0 w-10 h-10 rounded-lg bg-linear-to-br from-orange-400 to-orange-600 flex items-center justify-center text-white font-bold text-sm">
+                      {String(index + 1).padStart(2, "0")}
+                    </div>
+                    {/* Content */}
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold text-gray-900 group-hover:text-orange-600 transition-colors line-clamp-2 text-sm leading-snug">
                         {u.titulo}
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              </div>
+                      </p>
+                    </div>
+                  </Link>
+                );
+              })}
             </nav>
           </SheetContent>
         </Sheet>
-
-        {/* Botão voltar para home do curso */}
-        <Link
-          href={`/cursos/${cursoId}/preview`}
-          className="ml-4 flex items-center gap-2 text-gray-600 hover:text-blue-600 transition-colors"
-        >
-          <ChevronLeft className="w-5 h-5" />
-          <span className="text-sm font-medium">Voltar</span>
-        </Link>
 
         {/* Course Title in Navbar */}
         <div className="ml-4 flex-1">
           <h2 className="text-lg font-semibold text-gray-900 line-clamp-1">
             {curso.titulo}
           </h2>
+        </div>
+
+        {/* User Info and Logout */}
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 text-gray-700">
+            <User className="h-5 w-5" />
+            <span className="text-sm font-medium">{learnerName}</span>
+          </div>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => {
+                    if (isConnected && typeof window !== 'undefined' && (window as any).SCORM) {
+                      try {
+                        (window as any).SCORM.terminate();
+                      } catch (error) {
+                        console.error('[LMS] Erro ao sair:', error);
+                      }
+                    }
+                    // Fechar a janela ou redirecionar
+                    if (window.parent !== window) {
+                      window.close();
+                    } else {
+                      router.push('/cursos');
+                    }
+                  }}
+                  className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                >
+                  <LogOut className="h-5 w-5" />
+                  <span className="sr-only">Sair</span>
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Sair</TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
         </div>
       </nav>
 
@@ -138,6 +195,52 @@ export default function PreviewUnidadePage() {
             unidade={unidade}
             unidadeIndex={unidadeIndex}
           />
+
+          {/* Navigation Buttons */}
+          <div className="flex items-center justify-between gap-4 mt-8 pt-8 border-t-[1px] border-[#e5e7eb]">
+            {/* Previous Button */}
+            <Link
+              href={
+                unidadeAnterior
+                  ? `/cursos/${cursoId}/preview/unidade/${unidadeAnterior.id}`
+                  : '#'
+              }
+              className={unidadeAnterior ? '' : 'pointer-events-none'}
+            >
+              <Button
+                disabled={!unidadeAnterior}
+                className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <ChevronLeft className="h-4 w-4" />
+                Unidade Anterior
+              </Button>
+            </Link>
+
+            {/* Unit Counter */}
+            <div className="flex-1 text-center">
+              <span className="text-sm text-gray-600">
+                {unidadeIndex + 1} de {curso.unidades.length}
+              </span>
+            </div>
+
+            {/* Next Button */}
+            <Link
+              href={
+                proximaUnidade
+                  ? `/cursos/${cursoId}/preview/unidade/${proximaUnidade.id}`
+                  : '#'
+              }
+              className={proximaUnidade ? '' : 'pointer-events-none'}
+            >
+              <Button
+                disabled={!proximaUnidade}
+                className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Próxima Unidade
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </Link>
+          </div>
         </div>
       </main>
     </div>

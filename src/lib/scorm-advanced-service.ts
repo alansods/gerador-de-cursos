@@ -259,9 +259,6 @@ function createAdvancedMainHTML(curso: any): string {
                         </svg>
                         <span class="text-blue-100">${curso.modalidade || 'N/A'}</span>
                     </div>
-                    <div class="flex items-center gap-2">
-                        <span class="text-blue-100">Instrutor: ${curso.instrutor || 'N/A'}</span>
-                    </div>
                 </div>
 
                 <!-- Continue Button -->

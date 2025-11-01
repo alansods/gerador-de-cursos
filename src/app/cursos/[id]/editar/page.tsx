@@ -126,7 +126,6 @@ export default function EditarCursoPage() {
   const [editarCursoModal, setEditarCursoModal] = useState(false);
 
   const [cargaHorariaEditada, setCargaHorariaEditada] = useState("");
-  const [instrutorEditado, setInstrutorEditado] = useState("");
   const [modalidadeEditada, setModalidadeEditada] = useState("");
   const [categoriaEditada, setCategoriaEditada] = useState("");
 
@@ -171,7 +170,6 @@ export default function EditarCursoPage() {
       setTituloEditado(state.cursoAtual.titulo);
       setDescricaoEditada(state.cursoAtual.descricao);
       setCargaHorariaEditada(state.cursoAtual.cargaHoraria);
-      setInstrutorEditado(state.cursoAtual.instrutor);
       setModalidadeEditada(state.cursoAtual.modalidade);
       setCategoriaEditada(state.cursoAtual.categoria);
     }
@@ -252,7 +250,6 @@ export default function EditarCursoPage() {
           titulo: tituloEditado,
           descricao: descricaoEditada,
           cargaHoraria: cargaHorariaEditada,
-          instrutor: instrutorEditado,
           modalidade: modalidadeEditada,
           categoria: categoriaEditada,
         });
@@ -650,15 +647,6 @@ export default function EditarCursoPage() {
             </div>
           </div>
 
-                <div className="flex items-center gap-3 bg-white/10 rounded-lg p-3">
-                  <User className="h-5 w-5 text-blue-200" />
-                  <div>
-                    <p className="text-sm text-blue-200">Instrutor</p>
-                    <p className="font-semibold">
-                      {state.cursoAtual.instrutor}
-                    </p>
-                  </div>
-                </div>
 
                 <div className="flex items-center gap-3 bg-white/10 rounded-lg p-3">
                   <GraduationCap className="h-5 w-5 text-blue-200" />
@@ -970,16 +958,6 @@ export default function EditarCursoPage() {
                 </div>
                 <div>
                   <label className="text-sm font-medium text-gray-700 mb-2 block">
-                    Instrutor <span className="text-red-500">*</span>
-                  </label>
-                  <Input
-                    value={instrutorEditado}
-                    onChange={(e) => setInstrutorEditado(e.target.value)}
-                    placeholder="Nome do instrutor"
-                  />
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-gray-700 mb-2 block">
                     Modalidade <span className="text-red-500">*</span>
                   </label>
                   <Input
@@ -1013,7 +991,6 @@ export default function EditarCursoPage() {
                   !tituloEditado.trim() ||
                   !descricaoEditada.trim() ||
                   !cargaHorariaEditada.trim() ||
-                  !instrutorEditado.trim() ||
                   !modalidadeEditada.trim() ||
                   !categoriaEditada.trim()
                 }

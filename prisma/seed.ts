@@ -234,7 +234,6 @@ async function main() {
         titulo: 'Introdução ao Next.js 14',
         descricao: 'Aprenda a construir aplicações modernas com Next.js 14, incluindo App Router, Server Components e muito mais.',
         cargaHoraria: '40 horas',
-        instrutor: 'João Silva',
         modalidade: 'Online',
         categoria: 'Desenvolvimento Web',
         unidades: unidadesExemplo,
@@ -246,7 +245,6 @@ async function main() {
   console.log('\n📊 Informações do curso:');
   console.log(`   ID: ${cursoExemplo.id}`);
   console.log(`   Título: ${cursoExemplo.titulo}`);
-  console.log(`   Instrutor: ${cursoExemplo.instrutor}`);
   console.log(`   Unidades: ${(cursoExemplo.unidades as any[]).length}`);
   console.log(`   Total de conteúdos: ${(cursoExemplo.unidades as any[]).reduce((acc, u) => acc + (u.conteudo?.length || 0), 0)}`);
 

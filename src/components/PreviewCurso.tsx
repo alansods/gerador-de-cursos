@@ -38,7 +38,6 @@ interface Curso {
   titulo: string;
   descricao: string;
   cargaHoraria: string;
-  instrutor: string;
   modalidade: string;
   categoria: string;
   unidades: Unidade[];
@@ -182,14 +181,6 @@ export const PreviewCurso: React.FC<PreviewCursoProps> = ({
                 <div>
                   <p className="text-sm text-blue-200">Carga Horária</p>
                   <p className="font-semibold">{curso.cargaHoraria}</p>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-3 bg-white/10 rounded-lg p-3">
-                <User className="h-5 w-5 text-blue-200" />
-                <div>
-                  <p className="text-sm text-blue-200">Instrutor</p>
-                  <p className="font-semibold">{curso.instrutor}</p>
                 </div>
               </div>
 

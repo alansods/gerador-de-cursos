@@ -11,7 +11,6 @@ interface CursoGenerado {
   categoria: string;
   cargaHoraria: string;
   modalidade: string;
-  instrutor: string;
   unidades: Array<{
     titulo: string;
     descricao: string;
@@ -64,7 +63,7 @@ export async function POST(req: NextRequest) {
 Analise o documento abaixo e crie um curso estruturado, extraindo os metadados e organizando o conteúdo em unidades de aprendizado.
 
 **INSTRUÇÕES:**
-1. Identifique os METADADOS do curso no início do documento (título, categoria, carga horária, modalidade, instrutor)
+1. Identifique os METADADOS do curso no início do documento (título, categoria, carga horária, modalidade)
 2. Estruture o conteúdo em UNIDADES (módulos/capítulos) baseado nos títulos principais encontrados
 3. Cada unidade DEVE ter:
    - titulo: Nome da unidade
@@ -85,7 +84,6 @@ Analise o documento abaixo e crie um curso estruturado, extraindo os metadados e
   "categoria": "Categoria (ex: Programação, Design, Marketing, Segurança)",
   "cargaHoraria": "XX horas",
   "modalidade": "Online ou Presencial ou Híbrido",
-  "instrutor": "Nome do Instrutor",
   "unidades": [
     {
       "titulo": "Nome da Unidade",

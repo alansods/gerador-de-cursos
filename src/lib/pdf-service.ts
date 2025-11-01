@@ -6,7 +6,6 @@ interface Curso {
   categoria: string;
   cargaHoraria: string;
   modalidade: string;
-  instrutor: string;
   unidades?: Unidade[];
 }
 
@@ -104,7 +103,6 @@ export async function generateCoursePDF(curso: Curso, filename?: string): Promis
     `Categoria: ${curso.categoria || 'N/A'}`,
     `Carga Horária: ${curso.cargaHoraria || 'N/A'}`,
     `Modalidade: ${curso.modalidade || 'N/A'}`,
-    `Instrutor: ${curso.instrutor || 'N/A'}`,
   ];
   
   infos.forEach((info) => {

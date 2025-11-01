@@ -29,7 +29,6 @@ export interface CursoGerado {
   descricao: string
   cargaHoraria: string
   modalidade: string
-  instrutor: string
   categoria: string
   dataCriacao: Date
   dataModificacao: Date

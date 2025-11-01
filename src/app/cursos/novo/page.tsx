@@ -21,8 +21,7 @@ export default function NovoCursoPage() {
     categoria: '',
     descricao: '',
     cargaHoraria: '',
-    modalidade: '',
-    instrutor: ''
+    modalidade: ''
   })
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [isLoading, setIsLoading] = useState(false)
@@ -48,7 +47,6 @@ export default function NovoCursoPage() {
     if (!formData.descricao.trim()) next.descricao = 'Descrição é obrigatória'
     if (!formData.cargaHoraria.trim()) next.cargaHoraria = 'Carga horária é obrigatória'
     if (!formData.modalidade.trim()) next.modalidade = 'Modalidade é obrigatória'
-    if (!formData.instrutor.trim()) next.instrutor = 'Instrutor é obrigatório'
     if (!formData.categoria.trim()) next.categoria = 'Categoria é obrigatória'
     setErrors(next)
     return Object.keys(next).length === 0
@@ -284,11 +282,6 @@ export default function NovoCursoPage() {
                   <label htmlFor="modalidade" className="text-sm font-medium text-gray-700">Modalidade *</label>
                   <Input id="modalidade" value={formData.modalidade} onChange={(e) => setField('modalidade', e.target.value)} placeholder="Ex: Online, Presencial, Híbrido" className={errors.modalidade ? 'border-red-500' : ''} />
                   {errors.modalidade && <p className="text-sm text-red-600">{errors.modalidade}</p>}
-                </div>
-                <div className="space-y-2">
-                  <label htmlFor="instrutor" className="text-sm font-medium text-gray-700">Instrutor *</label>
-                  <Input id="instrutor" value={formData.instrutor} onChange={(e) => setField('instrutor', e.target.value)} placeholder="Nome do instrutor" className={errors.instrutor ? 'border-red-500' : ''} />
-                  {errors.instrutor && <p className="text-sm text-red-600">{errors.instrutor}</p>}
                 </div>
               </div>
 

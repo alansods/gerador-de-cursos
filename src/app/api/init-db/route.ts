@@ -10,7 +10,6 @@ export async function GET() {
         titulo TEXT NOT NULL,
         descricao TEXT NOT NULL,
         carga_horaria TEXT NOT NULL,
-        instrutor TEXT NOT NULL,
         modalidade TEXT NOT NULL,
         categoria TEXT NOT NULL,
         unidades JSONB DEFAULT '[]',

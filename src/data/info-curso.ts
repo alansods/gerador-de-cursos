@@ -4,7 +4,6 @@ export interface CursoInfo {
   descricao: string
   cargaHoraria: string
   modalidade: string
-  instrutor: string
   categoria: string
   unidades: any[]
 }
@@ -15,7 +14,6 @@ export const cursoInfo: CursoInfo = {
   descricao: 'Descrição do curso de exemplo',
   cargaHoraria: '40 horas',
   modalidade: 'Online',
-  instrutor: 'Instrutor Exemplo',
   categoria: 'Tecnologia',
   unidades: []
 }

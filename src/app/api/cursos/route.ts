@@ -55,14 +55,13 @@ export async function POST(request: NextRequest) {
       titulo, 
       descricao, 
       cargaHoraria, 
-      instrutor, 
       modalidade, 
       categoria, 
       unidades = [] 
     } = body;
 
     // Validações
-    if (!titulo || !descricao || !cargaHoraria || !instrutor || !modalidade || !categoria) {
+    if (!titulo || !descricao || !cargaHoraria || !modalidade || !categoria) {
       return NextResponse.json(
         { success: false, error: 'Missing required fields' },
         { status: 400 }
@@ -75,7 +74,6 @@ export async function POST(request: NextRequest) {
         titulo,
         descricao,
         cargaHoraria,
-        instrutor,
         modalidade,
         categoria,
         unidades: unidades as Prisma.JsonArray,
@@ -117,7 +115,6 @@ export async function PUT(request: NextRequest) {
     if (updates.titulo !== undefined) updateData.titulo = updates.titulo;
     if (updates.descricao !== undefined) updateData.descricao = updates.descricao;
     if (updates.cargaHoraria !== undefined) updateData.cargaHoraria = updates.cargaHoraria;
-    if (updates.instrutor !== undefined) updateData.instrutor = updates.instrutor;
     if (updates.modalidade !== undefined) updateData.modalidade = updates.modalidade;
     if (updates.categoria !== undefined) updateData.categoria = updates.categoria;
     if (updates.unidades !== undefined) updateData.unidades = updates.unidades as Prisma.JsonArray;

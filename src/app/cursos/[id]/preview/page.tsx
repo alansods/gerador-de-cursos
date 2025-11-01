@@ -13,26 +13,33 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import {
   Menu,
   Home,
-  Book,
   Clock,
   GraduationCap,
-  Play,
-  ChevronRight,
+  ArrowRight,
   Loader2,
   Layers,
+  User,
+  LogOut,
 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { WelcomeMessage } from "@/components/WelcomeMessage";
+import { useLMS } from "@/hooks/useLMS";
 
 export default function PreviewCursoPage() {
   const params = useParams();
   const router = useRouter();
   const { state, selecionarCurso } = useGeradorCurso();
   const [menuOpen, setMenuOpen] = useState(false);
+  const { learnerName, isConnected } = useLMS();
 
   const cursoId = params.id as string;
 
@@ -89,55 +96,111 @@ export default function PreviewCursoPage() {
                 <span className="sr-only">Abrir menu</span>
               </Button>
             </SheetTrigger>
-            <SheetContent side="left" className="w-[300px] sm:w-[400px]">
-              <SheetHeader>
-                <SheetTitle className="text-left">Navegação</SheetTitle>
+            <SheetContent
+              side="left"
+              className="w-[320px] sm:w-[400px] p-0 bg-linear-to-b from-gray-50 to-white"
+            >
+              <SheetHeader className="px-6 pt-6 pb-4 border-b border-gray-100 bg-white">
+                <SheetTitle className="text-left text-xl font-bold text-gray-900">
+                  Unidades do curso
+                </SheetTitle>
               </SheetHeader>
-              <nav className="mt-8 space-y-4">
+              <nav className="px-4 py-6 space-y-2 overflow-y-auto max-h-[calc(100vh-120px)]">
+                {/* Home Button */}
                 <Link
                   href={`/cursos/${cursoId}/preview`}
                   onClick={() => setMenuOpen(false)}
-                  className="flex items-center gap-3 text-gray-600 hover:text-blue-600 transition-colors p-2 rounded-md hover:bg-gray-100"
+                  className="group flex items-center gap-3 p-4 rounded-xl border border-orange-500 bg-orange-50/50 transition-all duration-200"
                 >
-                  <Home className="w-5 h-5" />
-                  <span>Home</span>
+                  <div className="shrink-0 w-10 h-10 rounded-lg bg-linear-to-br from-orange-400 to-orange-600 flex items-center justify-center text-white">
+                    <Home className="w-5 h-5" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <span className="block font-semibold text-gray-900 group-hover:text-orange-600 transition-colors line-clamp-2 text-sm leading-snug">
+                      Página inicial
+                    </span>
+                  </div>
                 </Link>
-                <div>
-                  <h3 className="flex items-center gap-3 text-lg font-semibold text-gray-700 mb-3 px-2">
-                    <Book className="w-5 h-5" />
-                    <span>Unidades</span>
-                  </h3>
-                  <ul className="space-y-2 pl-4 border-l-2 border-gray-200">
-                    {(curso.unidades || []).map((unidade) => (
-                      <li key={unidade.id}>
-                        <Link
-                          href={`/cursos/${cursoId}/preview/unidade/${unidade.id}`}
-                          onClick={() => setMenuOpen(false)}
-                          className="block text-gray-600 hover:text-blue-600 transition-colors p-2 rounded-md hover:bg-gray-100"
-                        >
-                          {unidade.titulo}
-                        </Link>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
+
+                {/* Units Section */}
+                {(curso.unidades || []).map((unidade, index) => (
+                  <Link
+                    key={unidade.id}
+                    href={`/cursos/${cursoId}/preview/unidade/${unidade.id}`}
+                    onClick={() => setMenuOpen(false)}
+                    className="group flex items-center gap-3 p-4 rounded-xl border border-gray-200 hover:border-orange-300 hover:bg-orange-50/50 transition-all duration-200"
+                  >
+                    {/* Badge with number */}
+                    <div className="shrink-0 w-10 h-10 rounded-lg bg-linear-to-br from-orange-400 to-orange-600 flex items-center justify-center text-white font-bold text-sm">
+                      {String(index + 1).padStart(2, "0")}
+                    </div>
+                    {/* Content */}
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold text-gray-900 group-hover:text-orange-600 transition-colors line-clamp-2 text-sm leading-snug">
+                        {unidade.titulo}
+                      </p>
+                    </div>
+                  </Link>
+                ))}
               </nav>
             </SheetContent>
           </Sheet>
 
           {/* Course Title in Navbar */}
-          <div className="ml-4">
+          <div className="ml-4 flex-1">
             <h2 className="text-lg font-semibold text-gray-900 line-clamp-1">
               {curso.titulo}
             </h2>
+          </div>
+
+          {/* User Info and Logout */}
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 text-gray-700">
+              <User className="h-5 w-5" />
+              <span className="text-sm font-medium">{learnerName}</span>
+            </div>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => {
+                      if (
+                        isConnected &&
+                        typeof window !== "undefined" &&
+                        (window as any).SCORM
+                      ) {
+                        try {
+                          (window as any).SCORM.terminate();
+                        } catch (error) {
+                          console.error("[LMS] Erro ao sair:", error);
+                        }
+                      }
+                      // Fechar a janela ou redirecionar
+                      if (window.parent !== window) {
+                        window.close();
+                      } else {
+                        router.push("/cursos");
+                      }
+                    }}
+                    className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                  >
+                    <LogOut className="h-5 w-5" />
+                    <span className="sr-only">Sair</span>
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Sair</TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
           </div>
         </nav>
 
         {/* Main Content */}
         <main className="pt-16">
           {/* Hero Section - Dark Background */}
-          <div className="bg-linear-to-br from-slate-900 via-blue-900 to-slate-900 text-white">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-16">
+          <div className="bg-gradient-to-br from-blue-950 via-blue-900 to-blue-800 dark:from-gray-950 dark:via-gray-900 dark:to-gray-800 text-white py-16">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
               {/* Category Badge */}
               <div className="mb-4">
                 <Badge className="bg-white/20 text-white border-white/30 hover:bg-white/30">
@@ -156,7 +219,7 @@ export default function PreviewCursoPage() {
               </p>
 
               {/* Course Metadata */}
-              <div className="flex flex-wrap gap-6 mb-8">
+              <div className="flex flex-wrap gap-6">
                 <div className="flex items-center gap-2">
                   <Clock className="w-5 h-5 text-blue-300" />
                   <span className="text-blue-100">{curso.cargaHoraria}</span>
@@ -165,39 +228,12 @@ export default function PreviewCursoPage() {
                   <GraduationCap className="w-5 h-5 text-blue-300" />
                   <span className="text-blue-100">{curso.modalidade}</span>
                 </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-blue-100">
-                    Instrutor: {curso.instrutor}
-                  </span>
-                </div>
               </div>
-
-              {/* Continue Button */}
-              {curso.unidades && curso.unidades.length > 0 && (
-                <Button
-                  size="lg"
-                  className="bg-white text-slate-900 hover:bg-gray-100 font-semibold"
-                  onClick={() => {
-                    const primeiraUnidade = curso.unidades?.[0];
-                    if (primeiraUnidade) {
-                      router.push(
-                        `/cursos/${cursoId}/preview/unidade/${primeiraUnidade.id}`
-                      );
-                    }
-                  }}
-                >
-                  <Play className="w-5 h-5 mr-2" />
-                  Começar Curso
-                </Button>
-              )}
             </div>
           </div>
 
           {/* Units Section */}
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-            {/* Welcome Message */}
-            <WelcomeMessage className="mb-8" />
-
             <h2 className="text-3xl font-bold text-gray-900 mb-8 text-center">
               Unidades do Curso
             </h2>
@@ -211,57 +247,56 @@ export default function PreviewCursoPage() {
                 </Card>
               ) : (
                 curso.unidades.map((unidade, unidadeIndex) => (
-                  <Card
+                  <Link
                     key={unidade.id}
-                    className="overflow-hidden bg-white"
+                    href={`/cursos/${cursoId}/preview/unidade/${unidade.id}`}
+                    className="block"
                   >
-                    <CardContent className="p-6">
-                      <div className="flex gap-5">
-                        {/* Icon Circle */}
-                        <div className="shrink-0">
-                          <div className="flex items-center justify-center w-14 h-14 bg-linear-to-br from-orange-500 to-orange-600 rounded-xl text-white">
-                            <Layers className="w-7 h-7" />
-                          </div>
-                        </div>
-
-                        {/* Content */}
-                        <div className="flex-1 ">
-                          {/* Unit Label */}
-                          <div>
-                            <span className="text-xs font-bold text-orange-600 uppercase tracking-wide">
-                              UNIDADE{" "}
-                              {String(unidadeIndex + 1).padStart(2, "0")}
-                            </span>
+                    <Card className="overflow-hidden bg-white hover:border-orange-600 transition-all duration-200 cursor-pointer">
+                      <CardContent className="p-6">
+                        <div className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-5">
+                          {/* Icon Circle */}
+                          <div className="shrink-0">
+                            <div className="flex items-center justify-center w-12 h-12 rounded-full bg-orange-600">
+                              <Layers className="w-6 h-6 text-white" />
+                            </div>
                           </div>
 
-                          {/* Unit Title */}
-                          <h3 className="text-xl md:text-2xl font-bold text-gray-900 leading-tight">
-                            {unidade.titulo}
-                          </h3>
+                          {/* Content */}
+                          <div className="flex-1 text-center sm:text-left">
+                            {/* Unit Label */}
+                            <div>
+                              <span className="text-xs font-bold text-orange-600 uppercase tracking-wide">
+                                UNIDADE{" "}
+                                {String(unidadeIndex + 1).padStart(2, "0")}
+                              </span>
+                            </div>
 
-                          {/* Unit Description */}
-                          <p className="text-gray-600 text-base leading-relaxed my-2">
-                            {unidade.descricao}
-                          </p>
+                            {/* Unit Title */}
+                            <h3 className="text-xl md:text-2xl font-bold text-gray-900 leading-tight">
+                              {unidade.titulo}
+                            </h3>
 
-                          {/* View Full Content Button */}
-                          <div className="pt-2">
-                            <Link
-                              href={`/cursos/${cursoId}/preview/unidade/${unidade.id}`}
+                            {/* Unit Description */}
+                            <p className="text-gray-600 text-base leading-relaxed my-2">
+                              {unidade.descricao}
+                            </p>
+                          </div>
+
+                          {/* Access Icon */}
+                          <div className="shrink-0">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="text-orange-600 hover:text-orange-700 hover:bg-orange-50 h-10 w-10 pointer-events-none"
                             >
-                              <Button
-                                variant="outline"
-                                className="border-orange-500 text-orange-600 hover:bg-orange-50 hover:border-orange-600 hover:text-orange-700 font-medium"
-                              >
-                                Ver Conteúdo Completo
-                                <ChevronRight className="w-4 h-4 ml-2" />
-                              </Button>
-                            </Link>
+                              <ArrowRight className="w-6 h-6" />
+                            </Button>
                           </div>
                         </div>
-                      </div>
-                    </CardContent>
-                  </Card>
+                      </CardContent>
+                    </Card>
+                  </Link>
                 ))
               )}
             </div>

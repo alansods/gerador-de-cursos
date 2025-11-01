@@ -25,7 +25,6 @@ model Curso {
   titulo           String
   descricao        String
   cargaHoraria     String   @map("carga_horaria")
-  instrutor        String
   modalidade       String
   categoria        String
   unidades         Json     @default("[]")

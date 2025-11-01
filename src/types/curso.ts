@@ -12,7 +12,6 @@ export interface CursoInfo {
   descricao: string
   cargaHoraria: string
   modalidade: string
-  instrutor: string
   unidades: UnidadeInfo[]
 }
 
