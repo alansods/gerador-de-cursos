@@ -75,14 +75,15 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Garantir que nenhum campo extra seja passado ao Prisma
     const curso = await prisma.curso.create({
       data: {
         id: id || undefined, // Se não fornecer ID, Prisma gera automaticamente
-        titulo,
-        descricao,
-        cargaHoraria,
-        modalidade,
-        categoria,
+        titulo: String(titulo),
+        descricao: String(descricao),
+        cargaHoraria: String(cargaHoraria),
+        modalidade: String(modalidade),
+        categoria: String(categoria),
         unidades: unidades as Prisma.JsonArray,
       },
     });
@@ -93,10 +94,45 @@ export async function POST(request: NextRequest) {
     }, { status: 201 });
   } catch (error) {
     console.error('Error creating course:', error);
+    
+    // Tratar erros específicos do Prisma
+    if (error instanceof Prisma.PrismaClientKnownRequestError) {
+      if (error.code === 'P2002') {
+        return NextResponse.json(
+          { 
+            success: false, 
+            error: 'Já existe um curso com este ID ou título' 
+          },
+          { status: 400 }
+        );
+      }
+      
+      // Se o erro for sobre campo faltando (como instrutor), informar sobre a migração do banco
+      if (error.message && error.message.includes('instrutor')) {
+        return NextResponse.json(
+          { 
+            success: false, 
+            error: 'O banco de dados ainda possui a coluna "instrutor". Execute o SQL: ALTER TABLE cursos DROP COLUMN IF EXISTS instrutor;',
+            needsMigration: true
+          },
+          { status: 500 }
+        );
+      }
+    }
+    
+    // Log detalhado do erro para debug
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    console.error('Erro completo ao criar curso:', {
+      message: errorMessage,
+      stack: error instanceof Error ? error.stack : undefined,
+      error: error
+    });
+    
     return NextResponse.json(
       { 
         success: false, 
-        error: error instanceof Error ? error.message : 'Unknown error' 
+        error: errorMessage,
+        details: process.env.NODE_ENV === 'development' ? (error instanceof Error ? error.stack : undefined) : undefined
       },
       { status: 500 }
     );
