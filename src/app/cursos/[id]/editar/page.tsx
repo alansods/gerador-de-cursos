@@ -42,6 +42,7 @@ import {
   GraduationCap,
   Upload,
   Loader2,
+  ChevronDown,
 } from "lucide-react";
 import {
   Tooltip,
@@ -49,6 +50,12 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 import { MenuConteudo } from "@/components/MenuConteudo";
 import { MenuUnidade } from "@/components/MenuUnidade";
 
@@ -80,7 +87,7 @@ export default function EditarCursoPage() {
   const [editandoConteudo, setEditandoConteudo] = useState<{
     unidadeId: string;
     conteudoId: string;
-    tipo: "paragrafo" | "subtitulo" | "titulo" | "imagem";
+    tipo: "paragrafo" | "subtitulo" | "titulo" | "imagem" | "accordion";
     conteudo: string;
     tamanho?: "pequena" | "media" | "grande";
     legenda?: string;
@@ -88,9 +95,10 @@ export default function EditarCursoPage() {
     corTexto?: string;
     alinhamento?: "esquerda" | "centro" | "direita" | "justificado";
     colunas?: 6 | 12;
+    items?: Array<{ id: string; titulo: string; conteudo: string }>;
   } | null>(null);
   const [conteudoTemp, setConteudoTemp] = useState({
-    tipo: "paragrafo" as "paragrafo" | "subtitulo" | "titulo" | "imagem",
+    tipo: "paragrafo" as "paragrafo" | "subtitulo" | "titulo" | "imagem" | "accordion",
     conteudo: "",
     unidadeId: "",
     tamanho: "media" as "pequena" | "media" | "grande",
@@ -103,6 +111,7 @@ export default function EditarCursoPage() {
       | "direita"
       | "justificado",
     colunas: 12 as 6 | 12,
+    items: [] as Array<{ id: string; titulo: string; conteudo: string }>,
   });
   const [adicionarUnidadeModal, setAdicionarUnidadeModal] = useState(false);
   const [editarUnidadeModal, setEditarUnidadeModal] = useState(false);
@@ -236,6 +245,7 @@ export default function EditarCursoPage() {
       corTexto: "#000000",
       alinhamento: "esquerda",
       colunas: 12,
+      items: [],
     });
   };
 
@@ -361,56 +371,75 @@ export default function EditarCursoPage() {
   };
 
   const handleSalvarConteudo = () => {
-    if (conteudoTemp.conteudo.trim()) {
-      if (conteudoTemp.tipo === "imagem") {
-        if (
-          !conteudoTemp.tamanho ||
-          !conteudoTemp.legenda ||
-          !conteudoTemp.fonte
-        ) {
-          alert(
-            "Por favor, preencha todos os campos obrigatórios para a imagem."
-          );
-          return;
-        }
+    if (conteudoTemp.tipo === "accordion") {
+      // Validar accordion
+      if (!conteudoTemp.items || conteudoTemp.items.length === 0) {
+        alert("Adicione pelo menos um item ao accordion.");
+        return;
       }
-
-      adicionarConteudo(conteudoTemp.unidadeId, {
-        tipo: conteudoTemp.tipo,
-        conteudo: conteudoTemp.conteudo,
-        tamanho: conteudoTemp.tamanho,
-        legenda: conteudoTemp.legenda,
-        fonte: conteudoTemp.fonte,
-        corTexto: conteudoTemp.corTexto,
-        alinhamento: conteudoTemp.alinhamento,
-        colunas: conteudoTemp.colunas,
-      });
-      toast.success("Conteúdo adicionado");
-      setConteudoTemp({
-        tipo: "paragrafo",
-        conteudo: "",
-        unidadeId: "",
-        tamanho: "media",
-        legenda: "",
-        fonte: "",
-        corTexto: "#000000",
-        alinhamento: "esquerda",
-        colunas: 12,
-      });
+      // Verificar se todos os itens têm título e conteúdo
+      const itensInvalidos = conteudoTemp.items.some(
+        (item) => !item.titulo.trim() || !item.conteudo.trim()
+      );
+      if (itensInvalidos) {
+        alert("Todos os itens do accordion devem ter título e conteúdo preenchidos.");
+        return;
+      }
+    } else if (conteudoTemp.tipo === "imagem") {
+      if (
+        !conteudoTemp.tamanho ||
+        !conteudoTemp.legenda ||
+        !conteudoTemp.fonte
+      ) {
+        alert(
+          "Por favor, preencha todos os campos obrigatórios para a imagem."
+        );
+        return;
+      }
+    } else {
+      if (!conteudoTemp.conteudo.trim()) {
+        return;
+      }
     }
+
+    adicionarConteudo(conteudoTemp.unidadeId, {
+      tipo: conteudoTemp.tipo,
+      conteudo: conteudoTemp.conteudo || "",
+      tamanho: conteudoTemp.tamanho,
+      legenda: conteudoTemp.legenda,
+      fonte: conteudoTemp.fonte,
+      corTexto: conteudoTemp.corTexto,
+      alinhamento: conteudoTemp.alinhamento,
+      colunas: conteudoTemp.colunas,
+      items: conteudoTemp.items,
+    });
+    toast.success("Conteúdo adicionado");
+    setConteudoTemp({
+      tipo: "paragrafo",
+      conteudo: "",
+      unidadeId: "",
+      tamanho: "media",
+      legenda: "",
+      fonte: "",
+      corTexto: "#000000",
+      alinhamento: "esquerda",
+      colunas: 12,
+      items: [],
+    });
   };
 
   const handleEditarConteudo = (
     unidadeId: string,
     conteudoId: string,
-    tipo: "paragrafo" | "subtitulo" | "titulo" | "imagem",
+    tipo: "paragrafo" | "subtitulo" | "titulo" | "imagem" | "accordion",
     conteudo: string,
     tamanho?: "pequena" | "media" | "grande",
     legenda?: string,
     fonte?: string,
     corTexto?: string,
     alinhamento?: "esquerda" | "centro" | "direita" | "justificado",
-    colunas?: 6 | 12
+    colunas?: 6 | 12,
+    items?: Array<{ id: string; titulo: string; conteudo: string }>
   ) => {
     editarConteudo(unidadeId, conteudoId, {
       tipo,
@@ -421,9 +450,43 @@ export default function EditarCursoPage() {
       corTexto,
       alinhamento,
       colunas,
+      items,
     });
     toast.success("Conteúdo atualizado");
     setEditandoConteudo(null);
+  };
+
+  // Funções para gerenciar itens do accordion
+  const handleAdicionarItemAccordion = () => {
+    const novoItem = {
+      id: `accordion-item-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
+      titulo: "",
+      conteudo: "",
+    };
+    setConteudoTemp({
+      ...conteudoTemp,
+      items: [...(conteudoTemp.items || []), novoItem],
+    });
+  };
+
+  const handleRemoverItemAccordion = (itemId: string) => {
+    setConteudoTemp({
+      ...conteudoTemp,
+      items: conteudoTemp.items?.filter((item) => item.id !== itemId) || [],
+    });
+  };
+
+  const handleAtualizarItemAccordion = (
+    itemId: string,
+    campo: "titulo" | "conteudo",
+    valor: string
+  ) => {
+    setConteudoTemp({
+      ...conteudoTemp,
+      items: conteudoTemp.items?.map((item) =>
+        item.id === itemId ? { ...item, [campo]: valor } : item
+      ) || [],
+    });
   };
 
   const handleDeletarConteudo = (unidadeId: string, conteudoId: string) => {
@@ -432,7 +495,7 @@ export default function EditarCursoPage() {
   };
 
   const handleSelecionarTipoConteudo = (
-    tipo: "titulo" | "subtitulo" | "paragrafo" | "imagem",
+    tipo: "titulo" | "subtitulo" | "paragrafo" | "imagem" | "accordion",
     unidadeId?: string
   ) => {
     if (unidadeId) {
@@ -446,6 +509,7 @@ export default function EditarCursoPage() {
         corTexto: "#000000",
         alinhamento: "esquerda",
         colunas: 12,
+        items: tipo === "accordion" ? [] : undefined,
       });
     }
   };
@@ -733,6 +797,8 @@ export default function EditarCursoPage() {
                                 <Heading3 className="h-4 w-4 text-blue-600" />
                               ) : item.tipo === "imagem" ? (
                                 <Image className="h-4 w-4 text-green-600" />
+                              ) : item.tipo === "accordion" ? (
+                                <ChevronDown className="h-4 w-4 text-orange-600" />
                               ) : (
                                 <Type className="h-4 w-4 text-gray-600" />
                               )}
@@ -746,6 +812,26 @@ export default function EditarCursoPage() {
                                 <h4 className="font-semibold text-gray-900">
                                   {item.conteudo}
                                 </h4>
+                              ) : item.tipo === "accordion" ? (
+                                <div className="space-y-2">
+                                  <p className="text-sm font-semibold text-gray-700">
+                                    Accordion ({item.items?.length || 0} {item.items?.length === 1 ? "item" : "itens"})
+                                  </p>
+                                  {item.items && item.items.length > 0 && (
+                                    <div className="text-xs text-gray-500 space-y-1">
+                                      {item.items.slice(0, 2).map((accordionItem, idx) => (
+                                        <div key={accordionItem.id || idx}>
+                                          • {accordionItem.titulo}
+                                        </div>
+                                      ))}
+                                      {item.items.length > 2 && (
+                                        <div className="text-gray-400">
+                                          +{item.items.length - 2} mais
+                                        </div>
+                                      )}
+                                    </div>
+                                  )}
+                                </div>
                               ) : item.tipo === "imagem" ? (
                   <div className="space-y-2">
                                   {item.fonte && (
@@ -861,6 +947,17 @@ export default function EditarCursoPage() {
                       >
                         <Image className="h-4 w-4 mr-2" />
                         Imagem
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() =>
+                          handleSelecionarTipoConteudo("accordion", unidade.id)
+                        }
+                        className="text-blue-600 border-blue-200 hover:bg-blue-50"
+                      >
+                        <ChevronDown className="h-4 w-4 mr-2" />
+                        Accordion
                       </Button>
                     </div>
                   </div>
@@ -1025,6 +1122,11 @@ export default function EditarCursoPage() {
                     <Image className="h-5 w-5 text-blue-600" />
                     Adicionar Imagem
                   </>
+                ) : conteudoTemp.tipo === "accordion" ? (
+                  <>
+                    <ChevronDown className="h-5 w-5 text-blue-600" />
+                    Adicionar Accordion
+                  </>
                 ) : (
                   <>
                     <Type className="h-5 w-5 text-blue-600" />
@@ -1186,6 +1288,91 @@ export default function EditarCursoPage() {
                     />
                   </div>
                 </div>
+              ) : conteudoTemp.tipo === "accordion" ? (
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <label className="block text-sm font-medium text-gray-700">
+                      Itens do Accordion <span className="text-red-500">*</span>
+                    </label>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={handleAdicionarItemAccordion}
+                      className="text-blue-600 border-blue-200 hover:bg-blue-50"
+                    >
+                      <Plus className="h-4 w-4 mr-2" />
+                      Adicionar Item
+                    </Button>
+                  </div>
+                  
+                  {conteudoTemp.items && conteudoTemp.items.length > 0 ? (
+                    <div className="space-y-3 max-h-[400px] overflow-y-auto">
+                      {conteudoTemp.items.map((item, index) => (
+                        <Card key={item.id} className="p-4">
+                          <div className="flex items-center justify-between mb-3">
+                            <span className="text-sm font-semibold text-gray-700">
+                              Item {index + 1}
+                            </span>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleRemoverItemAccordion(item.id)}
+                              className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                          <div className="space-y-3">
+                            <div>
+                              <label className="block text-xs font-medium text-gray-600 mb-1">
+                                Título <span className="text-red-500">*</span>
+                              </label>
+                              <Input
+                                value={item.titulo}
+                                onChange={(e) =>
+                                  handleAtualizarItemAccordion(
+                                    item.id,
+                                    "titulo",
+                                    e.target.value
+                                  )
+                                }
+                                placeholder="Título do item..."
+                                className="text-sm"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-xs font-medium text-gray-600 mb-1">
+                                Conteúdo <span className="text-red-500">*</span>
+                              </label>
+                              <textarea
+                                value={item.conteudo}
+                                onChange={(e) =>
+                                  handleAtualizarItemAccordion(
+                                    item.id,
+                                    "conteudo",
+                                    e.target.value
+                                  )
+                                }
+                                placeholder="Conteúdo do item..."
+                                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none text-sm"
+                                rows={3}
+                              />
+                            </div>
+                          </div>
+                        </Card>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-8 text-gray-500 text-sm border-2 border-dashed border-gray-300 rounded-lg">
+                      <p>Nenhum item adicionado ainda.</p>
+                      <p className="text-xs mt-1">
+                        Clique em "Adicionar Item" para começar.
+                      </p>
+                    </div>
+                  )}
+                </div>
               ) : (
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -1232,7 +1419,13 @@ export default function EditarCursoPage() {
                 }}
                 className="bg-blue-600 hover:bg-blue-700"
                 disabled={
-                  !conteudoTemp.conteudo.trim() ||
+                  (conteudoTemp.tipo === "accordion"
+                    ? !conteudoTemp.items ||
+                      conteudoTemp.items.length === 0 ||
+                      conteudoTemp.items.some(
+                        (item) => !item.titulo.trim() || !item.conteudo.trim()
+                      )
+                    : !conteudoTemp.conteudo.trim()) ||
                   (conteudoTemp.tipo === "imagem" &&
                     (!conteudoTemp.tamanho ||
                       !conteudoTemp.legenda ||
@@ -1478,6 +1671,11 @@ export default function EditarCursoPage() {
                     <Image className="h-4 w-4 text-blue-600" />
                     Imagem
                   </>
+                ) : editandoConteudo?.tipo === "accordion" ? (
+                  <>
+                    <ChevronDown className="h-4 w-4 text-blue-600" />
+                    Accordion
+                  </>
                 ) : (
                   <>
                     <Type className="h-4 w-4 text-blue-600" />
@@ -1637,6 +1835,116 @@ export default function EditarCursoPage() {
                     />
                   </div>
                 </div>
+              ) : editandoConteudo?.tipo === "accordion" ? (
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <label className="block text-sm font-medium text-gray-700">
+                      Itens do Accordion <span className="text-red-500">*</span>
+                    </label>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        if (editandoConteudo) {
+                          const novoItem = {
+                            id: `accordion-item-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
+                            titulo: "",
+                            conteudo: "",
+                          };
+                          setEditandoConteudo({
+                            ...editandoConteudo,
+                            items: [...(editandoConteudo.items || []), novoItem],
+                          });
+                        }
+                      }}
+                      className="text-blue-600 border-blue-200 hover:bg-blue-50"
+                    >
+                      <Plus className="h-4 w-4 mr-2" />
+                      Adicionar Item
+                    </Button>
+                  </div>
+                  
+                  {editandoConteudo.items && editandoConteudo.items.length > 0 ? (
+                    <div className="space-y-3 max-h-[400px] overflow-y-auto">
+                      {editandoConteudo.items.map((item, index) => (
+                        <Card key={item.id} className="p-4">
+                          <div className="flex items-center justify-between mb-3">
+                            <span className="text-sm font-semibold text-gray-700">
+                              Item {index + 1}
+                            </span>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => {
+                                if (editandoConteudo) {
+                                  setEditandoConteudo({
+                                    ...editandoConteudo,
+                                    items: editandoConteudo.items?.filter((i) => i.id !== item.id) || [],
+                                  });
+                                }
+                              }}
+                              className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                          <div className="space-y-3">
+                            <div>
+                              <label className="block text-xs font-medium text-gray-600 mb-1">
+                                Título <span className="text-red-500">*</span>
+                              </label>
+                              <Input
+                                value={item.titulo}
+                                onChange={(e) => {
+                                  if (editandoConteudo) {
+                                    setEditandoConteudo({
+                                      ...editandoConteudo,
+                                      items: editandoConteudo.items?.map((i) =>
+                                        i.id === item.id ? { ...i, titulo: e.target.value } : i
+                                      ) || [],
+                                    });
+                                  }
+                                }}
+                                placeholder="Título do item..."
+                                className="text-sm"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-xs font-medium text-gray-600 mb-1">
+                                Conteúdo <span className="text-red-500">*</span>
+                              </label>
+                              <textarea
+                                value={item.conteudo}
+                                onChange={(e) => {
+                                  if (editandoConteudo) {
+                                    setEditandoConteudo({
+                                      ...editandoConteudo,
+                                      items: editandoConteudo.items?.map((i) =>
+                                        i.id === item.id ? { ...i, conteudo: e.target.value } : i
+                                      ) || [],
+                                    });
+                                  }
+                                }}
+                                placeholder="Conteúdo do item..."
+                                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none text-sm"
+                                rows={3}
+                              />
+                            </div>
+                          </div>
+                        </Card>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-8 text-gray-500 text-sm border-2 border-dashed border-gray-300 rounded-lg">
+                      <p>Nenhum item adicionado ainda.</p>
+                      <p className="text-xs mt-1">
+                        Clique em "Adicionar Item" para começar.
+                      </p>
+                    </div>
+                  )}
+                </div>
               ) : (
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -1686,20 +1994,27 @@ export default function EditarCursoPage() {
                       editandoConteudo.unidadeId,
                       editandoConteudo.conteudoId,
                       editandoConteudo.tipo,
-                      editandoConteudo.conteudo,
+                      editandoConteudo.conteudo || "",
                       editandoConteudo.tamanho,
                       editandoConteudo.legenda,
                       editandoConteudo.fonte,
                       editandoConteudo.corTexto,
                       editandoConteudo.alinhamento,
-                      editandoConteudo.colunas
+                      editandoConteudo.colunas,
+                      editandoConteudo.items
                     );
                     closeEditarConteudoModal();
                   }
                 }}
                 className="bg-blue-600 hover:bg-blue-700"
                 disabled={
-                  !editandoConteudo?.conteudo?.trim() ||
+                  (editandoConteudo?.tipo === "accordion"
+                    ? !editandoConteudo.items ||
+                      editandoConteudo.items.length === 0 ||
+                      editandoConteudo.items.some(
+                        (item) => !item.titulo.trim() || !item.conteudo.trim()
+                      )
+                    : !editandoConteudo?.conteudo?.trim()) ||
                   (editandoConteudo?.tipo === "imagem" &&
                     (!editandoConteudo.tamanho ||
                       !editandoConteudo.legenda ||

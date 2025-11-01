@@ -15,7 +15,7 @@ import { MoreHorizontal, ArrowUp, ArrowDown, Edit, Trash2 } from "lucide-react";
 
 interface Conteudo {
   id: string;
-  tipo: "paragrafo" | "subtitulo" | "titulo" | "imagem";
+  tipo: "paragrafo" | "subtitulo" | "titulo" | "imagem" | "accordion";
   conteudo: string;
   tamanho?: "pequena" | "media" | "grande";
   legenda?: string;
@@ -24,6 +24,7 @@ interface Conteudo {
   alinhamento?: "esquerda" | "centro" | "direita" | "justificado";
   colunas?: 6 | 12;
   ordem?: number;
+  items?: Array<{ id: string; titulo: string; conteudo: string }>;
 }
 
 interface Unidade {
@@ -63,6 +64,7 @@ export function MenuConteudo({
     corTexto?: string;
     alinhamento?: Conteudo["alinhamento"];
     colunas?: Conteudo["colunas"];
+    items?: Conteudo["items"];
   }) => void;
 }) {
   return (
@@ -120,6 +122,7 @@ export function MenuConteudo({
                 corTexto: item.corTexto,
                 alinhamento: item.alinhamento,
                 colunas: item.colunas,
+                items: item.items,
               })
             }
             className="cursor-pointer"

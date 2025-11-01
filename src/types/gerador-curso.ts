@@ -1,7 +1,13 @@
 // Tipos para o gerador de cursos
+export interface AccordionItem {
+  id: string
+  titulo: string
+  conteudo: string
+}
+
 export interface ConteudoUnidade {
   id: string
-  tipo: 'titulo' | 'paragrafo' | 'subtitulo' | 'imagem'
+  tipo: 'titulo' | 'paragrafo' | 'subtitulo' | 'imagem' | 'accordion'
   conteudo: string
   ordem: number
   // Propriedades específicas para imagens
@@ -13,6 +19,8 @@ export interface ConteudoUnidade {
   alinhamento?: 'esquerda' | 'centro' | 'direita' | 'justificado'
   // Propriedades de layout
   colunas?: 6 | 12
+  // Propriedades específicas para accordion
+  items?: AccordionItem[]
 }
 
 export interface Unidade {

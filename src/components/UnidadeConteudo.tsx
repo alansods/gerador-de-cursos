@@ -1,6 +1,12 @@
 'use client'
 
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 import { Unidade } from "@/types/gerador-curso";
 
 interface UnidadeConteudoProps {
@@ -78,6 +84,32 @@ export function UnidadeConteudo({ unidade, unidadeIndex }: UnidadeConteudoProps)
                       <p className="text-sm text-gray-600 italic mt-2">
                         {item.legenda}
                       </p>
+                    )}
+                  </div>
+                ) : item.tipo === "accordion" ? (
+                  <div className="mb-6">
+                    {item.items && item.items.length > 0 ? (
+                      <Accordion type="single" collapsible className="w-full">
+                        {item.items.map((accordionItem, idx) => (
+                          <AccordionItem key={accordionItem.id || idx} value={`item-${idx}`}>
+                            <AccordionTrigger className="text-left font-semibold">
+                              {accordionItem.titulo}
+                            </AccordionTrigger>
+                            <AccordionContent>
+                              <div
+                                className="text-gray-700 leading-relaxed"
+                                dangerouslySetInnerHTML={{
+                                  __html: accordionItem.conteudo,
+                                }}
+                              />
+                            </AccordionContent>
+                          </AccordionItem>
+                        ))}
+                      </Accordion>
+                    ) : (
+                      <div className="text-gray-500 text-sm italic">
+                        Accordion vazio
+                      </div>
                     )}
                   </div>
                 ) : (
