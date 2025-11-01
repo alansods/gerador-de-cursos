@@ -73,9 +73,10 @@ Analise o documento abaixo e crie um curso estruturado, extraindo os metadados e
    - tipo: "titulo", "subtitulo", "paragrafo" ou "imagem"
    - conteudo: O texto/URL do elemento
    - ordem: Número sequencial (0, 1, 2, ...)
-5. MANTENHA o conteúdo original do documento, apenas estruture-o
-6. Crie pelo menos 3 unidades de aprendizado
-7. Se encontrar referências a imagens, crie elementos tipo "imagem"
+5. **IMPORTANTE: NÃO inclua o título da unidade como primeiro item do conteúdo!** O título já está no campo "titulo" da unidade. Comece o conteúdo diretamente com o conteúdo real (parágrafos, subtítulos, etc.)
+6. MANTENHA o conteúdo original do documento, apenas estruture-o
+7. Crie pelo menos 3 unidades de aprendizado
+8. Se encontrar referências a imagens, crie elementos tipo "imagem"
 
 **FORMATO DE SAÍDA OBRIGATÓRIO (JSON):**
 {
@@ -89,9 +90,9 @@ Analise o documento abaixo e crie um curso estruturado, extraindo os metadados e
       "titulo": "Nome da Unidade",
       "descricao": "Descrição detalhada do que será aprendido nesta unidade",
       "conteudo": [
-        { "tipo": "titulo", "conteudo": "Título Principal", "ordem": 0 },
-        { "tipo": "paragrafo", "conteudo": "Texto explicativo...", "ordem": 1 },
-        { "tipo": "subtitulo", "conteudo": "Subtópico", "ordem": 2 }
+        { "tipo": "paragrafo", "conteudo": "Texto explicativo...", "ordem": 0 },
+        { "tipo": "subtitulo", "conteudo": "Subtópico", "ordem": 1 },
+        { "tipo": "paragrafo", "conteudo": "Mais conteúdo...", "ordem": 2 }
       ]
     }
   ]
@@ -174,10 +175,23 @@ ${text}
       // Adicionar ID único para a unidade (timestamp + random + índice)
       (unidade as any).id = `unidade-${timestamp}-${randomSuffix}-${i}`;
       
-      // Adicionar IDs únicos para cada item de conteúdo
+      // Adicionar IDs únicos para cada item de conteúdo e remover duplicações
       if (unidade.conteudo && Array.isArray(unidade.conteudo)) {
+        // Filtrar conteúdo que seja idêntico ao título da unidade (evitar duplicação)
+        const tituloNormalizado = unidade.titulo.trim().toLowerCase();
+        const conteudoFiltrado = unidade.conteudo.filter((item) => {
+          const conteudoItem = item.conteudo?.trim().toLowerCase() || '';
+          // Remover se for idêntico ao título da unidade
+          return conteudoItem !== tituloNormalizado;
+        });
+        
+        // Reatribuir o conteúdo filtrado
+        unidade.conteudo = conteudoFiltrado;
+        
+        // Reordenar e adicionar IDs únicos
         for (let j = 0; j < unidade.conteudo.length; j++) {
           const item = unidade.conteudo[j];
+          item.ordem = j; // Reordenar após filtro
           // ID único: timestamp + random + índice da unidade + índice do conteúdo
           (item as any).id = `conteudo-${timestamp}-${randomSuffix}-${i}-${j}`;
         }
