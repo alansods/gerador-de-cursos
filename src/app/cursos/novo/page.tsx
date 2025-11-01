@@ -180,9 +180,7 @@ export default function NovoCursoPage() {
       setProcessingStep('done')
 
       // Toast de sucesso
-      toast.success('Curso gerado com sucesso! 🎉', {
-        description: `"${course.titulo}" foi criado e está pronto para edição.`
-      })
+      toast.success('Curso gerado')
 
       // Aguardar 1.5s para o usuário ver o sucesso
       setTimeout(() => {
@@ -197,9 +195,7 @@ export default function NovoCursoPage() {
         message: errorMessage
       })
       
-      toast.error('Erro ao gerar curso', {
-        description: errorMessage
-      })
+      toast.error('Erro ao gerar')
       
       setIsProcessing(false)
       setProcessingStep('idle')
@@ -214,15 +210,11 @@ export default function NovoCursoPage() {
     setIsLoading(true)
     try {
       await criarCurso({ ...formData, unidades: [] })
-      toast.success('Curso criado com sucesso! 🎉', {
-        description: `"${formData.titulo}" foi criado e está pronto para adicionar unidades.`
-      })
+      toast.success('Curso criado')
       router.push('/cursos')
     } catch (error) {
       console.error('Erro ao criar curso:', error)
-      toast.error('Erro ao criar curso', {
-        description: error instanceof Error ? error.message : 'Ocorreu um erro inesperado'
-      })
+      toast.error('Erro ao criar')
     } finally {
       setIsLoading(false)
     }

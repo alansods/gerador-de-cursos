@@ -241,9 +241,7 @@ export default function EditarCursoPage() {
         descricao: novaUnidadeDescricao.trim(),
         conteudo: [] 
       });
-      toast.success('Unidade adicionada com sucesso! ✅', {
-        description: `"${novaUnidade.trim()}" foi criada.`
-      });
+      toast.success('Unidade adicionada');
       setNovaUnidade("");
       setNovaUnidadeDescricao("");
       setAdicionarUnidadeModal(false);
@@ -256,9 +254,7 @@ export default function EditarCursoPage() {
         titulo: tituloUnidadeEditando.trim(),
         descricao: descricaoUnidadeEditando.trim(),
       });
-      toast.success('Unidade atualizada com sucesso! ✏️', {
-        description: `"${tituloUnidadeEditando.trim()}" foi atualizada.`
-      });
+      toast.success('Unidade atualizada');
       closeEditarUnidadeModal();
     }
   };
@@ -293,9 +289,7 @@ export default function EditarCursoPage() {
         alinhamento: conteudoTemp.alinhamento,
         colunas: conteudoTemp.colunas,
       });
-      toast.success('Conteúdo adicionado! ✅', {
-        description: `${conteudoTemp.tipo === 'titulo' ? 'Título' : conteudoTemp.tipo === 'subtitulo' ? 'Subtítulo' : conteudoTemp.tipo === 'paragrafo' ? 'Parágrafo' : 'Imagem'} adicionado à unidade.`
-      });
+      toast.success('Conteúdo adicionado');
       setConteudoTemp({
         tipo: "paragrafo",
         conteudo: "",
@@ -332,9 +326,7 @@ export default function EditarCursoPage() {
       alinhamento,
       colunas,
     });
-    toast.success('Conteúdo atualizado! ✏️', {
-      description: 'As alterações foram salvas.'
-    });
+    toast.success('Conteúdo atualizado');
     setEditandoConteudo(null);
   };
 
@@ -1231,9 +1223,7 @@ export default function EditarCursoPage() {
                 if (unidadeParaDeletar && state.cursoAtual) {
                   const unidade = state.cursoAtual.unidades.find(u => u.id === unidadeParaDeletar);
                   deletarUnidade(unidadeParaDeletar);
-                  toast.success('Unidade excluída com sucesso! 🗑️', {
-                    description: unidade?.titulo ? `"${unidade.titulo}" foi removida.` : 'A unidade foi removida.'
-                  });
+                  toast.success('Unidade excluída');
                 }
                 closeConfirmarDeletarUnidadeModal();
               }}
@@ -1271,9 +1261,7 @@ export default function EditarCursoPage() {
                     conteudoParaDeletar.unidadeId,
                     conteudoParaDeletar.conteudoId
                   );
-                  toast.success('Conteúdo excluído! 🗑️', {
-                    description: 'O conteúdo foi removido da unidade.'
-                  });
+                  toast.success('Conteúdo excluído');
                 }
                 closeConfirmarDeletarConteudoModal();
               }}

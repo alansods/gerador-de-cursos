@@ -315,24 +315,12 @@ export default function CursosPage() {
                 onClick={async () => {
                   try {
                     if (showDeleteConfirm) {
-                      const curso = state.cursos.find(
-                        (c) => c.id === showDeleteConfirm
-                      );
                       await deletarCurso(showDeleteConfirm);
-                      toast.success("Curso excluído com sucesso! 🗑️", {
-                        description: curso?.titulo
-                          ? `"${curso.titulo}" foi removido.`
-                          : "O curso foi removido.",
-                      });
+                      toast.success("Curso excluído");
                     }
                   } catch (error) {
                     console.error("Erro ao deletar curso:", error);
-                    toast.error("Erro ao excluir curso", {
-                      description:
-                        error instanceof Error
-                          ? error.message
-                          : "Ocorreu um erro inesperado",
-                    });
+                    toast.error("Erro ao excluir");
                   } finally {
                     setShowDeleteConfirm(null);
                   }
