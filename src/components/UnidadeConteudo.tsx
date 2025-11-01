@@ -11,29 +11,29 @@ interface UnidadeConteudoProps {
 export function UnidadeConteudo({ unidade, unidadeIndex }: UnidadeConteudoProps) {
   return (
     <Card key={unidade.id} id={unidade.id} className="overflow-hidden scroll-mt-20">
-      <CardHeader className="bg-linear-to-r from-gray-50 to-gray-100 border-b">
-        <div className="flex items-start gap-3">
-          <div className="flex items-center justify-center w-10 h-10 bg-blue-600 text-white rounded-full font-bold shrink-0">
+      <CardHeader className="bg-linear-to-r from-gray-50 to-gray-100 border-b px-6 py-5">
+        <div className="flex items-start gap-4">
+          <div className="flex items-center justify-center w-12 h-12 bg-blue-600 text-white rounded-full font-bold shrink-0 text-lg">
             {unidadeIndex + 1}
           </div>
           <div className="flex-1">
-            <h2 className="text-2xl font-bold text-gray-900">
+            <h2 className="text-2xl font-bold text-gray-900 mb-3">
               {unidade.titulo}
             </h2>
-            <p className="mt-2 text-gray-600 text-sm">
+            <p className="text-gray-600 text-base leading-relaxed">
               {unidade.descricao}
             </p>
           </div>
         </div>
       </CardHeader>
 
-      <CardContent className="pt-6">
+      <CardContent className="px-6 py-8">
         {unidade.conteudo.length === 0 ? (
-          <div className="text-center py-8 text-gray-500">
+          <div className="text-center py-12 text-gray-500">
             <p>Nenhum conteúdo adicionado.</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-8">
             {unidade.conteudo.map((item) => (
               <div
                 key={item.id}
@@ -44,34 +44,36 @@ export function UnidadeConteudo({ unidade, unidadeIndex }: UnidadeConteudoProps)
                 }`}
               >
                 {item.tipo === "titulo" ? (
-                  <h3 className="text-2xl font-bold text-gray-900 mb-4">
+                  <h3 className="text-2xl font-bold text-gray-900 mb-6 mt-2">
                     {item.conteudo}
                   </h3>
                 ) : item.tipo === "subtitulo" ? (
-                  <h4 className="text-xl font-semibold text-gray-800 mb-3">
+                  <h4 className="text-xl font-semibold text-gray-800 mb-4 mt-1">
                     {item.conteudo}
                   </h4>
                 ) : item.tipo === "imagem" ? (
-                  <div className="space-y-2">
+                  <div className="space-y-3">
                     {item.fonte && (
-                      <p className="text-xs text-gray-500">
+                      <p className="text-xs text-gray-500 mb-2">
                         Fonte: {item.fonte}
                       </p>
                     )}
-                    <img
-                      src={item.conteudo}
-                      alt={item.legenda || "Imagem"}
-                      className={`h-auto object-contain border border-gray-200 rounded-lg shadow-sm ${
-                        item.tamanho === "pequena"
-                          ? "max-w-xs"
-                          : item.tamanho === "media"
-                          ? "max-w-md"
-                          : "max-w-full"
-                      }`}
-                      onError={(e) => {
-                        e.currentTarget.style.display = "none";
-                      }}
-                    />
+                    <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
+                      <img
+                        src={item.conteudo}
+                        alt={item.legenda || "Imagem"}
+                        className={`h-auto object-contain rounded-lg ${
+                          item.tamanho === "pequena"
+                            ? "max-w-xs"
+                            : item.tamanho === "media"
+                            ? "max-w-md"
+                            : "max-w-full"
+                        }`}
+                        onError={(e) => {
+                          e.currentTarget.style.display = "none";
+                        }}
+                      />
+                    </div>
                     {item.legenda && (
                       <p className="text-sm text-gray-600 italic mt-2">
                         {item.legenda}
@@ -80,7 +82,7 @@ export function UnidadeConteudo({ unidade, unidadeIndex }: UnidadeConteudoProps)
                   </div>
                 ) : (
                   <div
-                    className={`text-gray-700 leading-relaxed ${
+                    className={`text-gray-700 leading-relaxed text-base mb-4 ${
                       item.alinhamento === "centro"
                         ? "text-center"
                         : item.alinhamento === "direita"
