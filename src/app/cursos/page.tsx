@@ -93,7 +93,7 @@ export default function CursosPage() {
     <PageTransition>
       <div className="min-h-screen bg-gray-50">
         {/* Header */}
-        <div className="bg-white shadow-sm border-b">
+        <div className="bg-white border-b-[1px] border-[#e5e7eb]">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex justify-between items-center py-6">
               <div>
@@ -204,7 +204,7 @@ export default function CursosPage() {
               {state.cursos.map((curso) => (
                 <Card
                   key={curso.id}
-                  className="hover:shadow-lg transition-shadow"
+                  className=""
                 >
                   <CardHeader>
                     <div className="flex justify-between items-start">

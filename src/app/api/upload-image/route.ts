@@ -56,9 +56,9 @@ export async function POST(req: NextRequest) {
     const fileName = `cursos/${timestamp}-${sanitizedName}`;
 
     // Upload para Vercel Blob
+    // O token é lido automaticamente de BLOB_READ_WRITE_TOKEN se não passado explicitamente
     const blob = await put(fileName, file, {
       access: 'public',
-      token: process.env.BLOB_READ_WRITE_TOKEN,
     });
 
     console.log(`[Upload Image] Upload concluído: ${blob.url}`);
