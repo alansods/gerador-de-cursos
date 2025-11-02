@@ -358,7 +358,7 @@ const doc = new Document({
         new Paragraph({
           children: [
             new TextRun({ text: 'Imagem da Frente: ', bold: true }),
-            new TextRun('[IMAGEM: Foto de uma pizza de carne de sol recém-assada com borda dourada]'),
+            new TextRun('https://swiftbr.vteximg.com.br/arquivos/ids/208740-636-636/618283-pizza-artesanal-calabresa_inn.jpg?v=638870725352100000'),
           ],
         }),
         new Paragraph({
