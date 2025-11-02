@@ -956,12 +956,41 @@ export default function EditarCursoPage() {
                 <CardContent className="pt-6">
                   {/* Lista de Conteúdo */}
                   {unidade.conteudo.length === 0 ? (
-                    <div className="text-center py-8 text-gray-500">
-                      <p>Nenhum conteúdo adicionado.</p>
+                    <div className="relative overflow-hidden rounded-xl border-2 border-dashed border-blue-300 bg-gradient-to-br from-blue-50 via-white to-purple-50 py-12 px-6">
+                      {/* Decorative elements */}
+                      <div className="absolute top-0 left-0 w-full h-full opacity-5">
+                        <div className="absolute top-4 left-4 w-32 h-32 bg-blue-500 rounded-full blur-3xl"></div>
+                        <div className="absolute bottom-4 right-4 w-40 h-40 bg-purple-500 rounded-full blur-3xl"></div>
+                      </div>
+                      
+                      <div className="relative text-center space-y-4">
+                        {/* Icon */}
+                        <div className="flex justify-center">
+                          <div className="p-4 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full shadow-lg">
+                            <Plus className="h-8 w-8 text-white" />
+                          </div>
+                        </div>
+                        
+                        {/* Title and Description */}
+                        <div className="space-y-2">
+                          <h3 className="text-xl font-bold text-gray-900">
+                            Comece a criar seu conteúdo!
+                          </h3>
+                          <p className="text-gray-600 max-w-md mx-auto">
+                            Esta unidade ainda está vazia. Use os botões abaixo para adicionar títulos, parágrafos, imagens e muito mais.
+                          </p>
+                        </div>
+                        
+                        {/* Hint */}
+                        <div className="flex items-center justify-center gap-2 text-sm text-blue-600 font-medium pt-2">
+                          <Type className="h-4 w-4" />
+                          <span>Escolha um tipo de conteúdo para começar</span>
+                        </div>
+                      </div>
                     </div>
                   ) : (
                     <div className="grid grid-cols-1 md:grid-cols-12 gap-3">
-                      {unidade.conteudo.map((item, itemIndex) => (
+                        {unidade.conteudo.map((item, itemIndex) => (
                         <div
                           key={item.id}
                           className={`group ${
@@ -1152,86 +1181,126 @@ export default function EditarCursoPage() {
                     </div>
                   )}
 
-                  {/* Botão para adicionar conteúdo */}
-                  <div className="mt-4 pt-4 border-t border-[#e5e7eb]">
-                    <div className="flex flex-wrap gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() =>
-                          handleSelecionarTipoConteudo("titulo", unidade.id)
-                        }
-                        className="text-blue-600 border-blue-200 hover:bg-blue-50"
-                      >
-                        <Heading2 className="h-4 w-4 mr-2" />
-                        Título
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() =>
-                          handleSelecionarTipoConteudo("subtitulo", unidade.id)
-                        }
-                        className="text-blue-600 border-blue-200 hover:bg-blue-50"
-                      >
-                        <Heading3 className="h-4 w-4 mr-2" />
-                        Subtítulo
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() =>
-                          handleSelecionarTipoConteudo("paragrafo", unidade.id)
-                        }
-                        className="text-blue-600 border-blue-200 hover:bg-blue-50"
-                      >
-                        <Type className="h-4 w-4 mr-2" />
-                        Parágrafo
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() =>
-                          handleSelecionarTipoConteudo("imagem", unidade.id)
-                        }
-                        className="text-blue-600 border-blue-200 hover:bg-blue-50"
-                      >
-                        <Image className="h-4 w-4 mr-2" />
-                        Imagem
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() =>
-                          handleSelecionarTipoConteudo("accordion", unidade.id)
-                        }
-                        className="text-blue-600 border-blue-200 hover:bg-blue-50"
-                      >
-                        <ChevronDown className="h-4 w-4 mr-2" />
-                        Accordion
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() =>
-                          handleSelecionarTipoConteudo("flipcard", unidade.id)
-                        }
-                        className="text-blue-600 border-blue-200 hover:bg-blue-50"
-                      >
-                        <RotateCcw className="h-4 w-4 mr-2" />
-                        FlipCard
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() =>
-                          handleSelecionarTipoConteudo("lista", unidade.id)
-                        }
-                        className="text-blue-600 border-blue-200 hover:bg-blue-50"
-                      >
-                        <List className="h-4 w-4 mr-2" />
-                        Lista
-                      </Button>
+                  {/* Área de Criação de Conteúdo */}
+                  <div className={`mt-6 ${unidade.conteudo.length === 0 ? '' : 'pt-6 border-t border-[#e5e7eb]'}`}>
+                    <div className="bg-gradient-to-br from-blue-50 via-white to-purple-50 rounded-xl border-2 border-blue-200 shadow-lg p-6">
+                      {/* Header */}
+                      <div className="mb-6">
+                        <div className="flex items-center gap-3 mb-2">
+                          <div className="p-2 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg shadow-md">
+                            <Plus className="h-5 w-5 text-white" />
+                          </div>
+                          <div>
+                            <h3 className="text-lg font-bold text-gray-900">
+                              Adicionar Novo Conteúdo
+                            </h3>
+                            <p className="text-sm text-gray-600 mt-1">
+                              Escolha o tipo de conteúdo que deseja adicionar a esta unidade
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Botões de Conteúdo */}
+                      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-7 gap-3">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() =>
+                            handleSelecionarTipoConteudo("titulo", unidade.id)
+                          }
+                          className="h-auto py-4 px-3 flex flex-col items-center gap-2 bg-white hover:bg-blue-50 hover:border-blue-400 hover:shadow-md transition-all border-2 border-blue-200 group"
+                        >
+                          <div className="p-2 bg-blue-100 rounded-lg group-hover:bg-blue-200 transition-colors">
+                            <Heading2 className="h-5 w-5 text-blue-600" />
+                          </div>
+                          <span className="text-xs font-semibold text-gray-700">Título</span>
+                        </Button>
+                        
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() =>
+                            handleSelecionarTipoConteudo("subtitulo", unidade.id)
+                          }
+                          className="h-auto py-4 px-3 flex flex-col items-center gap-2 bg-white hover:bg-blue-50 hover:border-blue-400 hover:shadow-md transition-all border-2 border-blue-200 group"
+                        >
+                          <div className="p-2 bg-blue-100 rounded-lg group-hover:bg-blue-200 transition-colors">
+                            <Heading3 className="h-5 w-5 text-blue-600" />
+                          </div>
+                          <span className="text-xs font-semibold text-gray-700">Subtítulo</span>
+                        </Button>
+                        
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() =>
+                            handleSelecionarTipoConteudo("paragrafo", unidade.id)
+                          }
+                          className="h-auto py-4 px-3 flex flex-col items-center gap-2 bg-white hover:bg-blue-50 hover:border-blue-400 hover:shadow-md transition-all border-2 border-blue-200 group"
+                        >
+                          <div className="p-2 bg-blue-100 rounded-lg group-hover:bg-blue-200 transition-colors">
+                            <Type className="h-5 w-5 text-blue-600" />
+                          </div>
+                          <span className="text-xs font-semibold text-gray-700">Parágrafo</span>
+                        </Button>
+                        
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() =>
+                            handleSelecionarTipoConteudo("imagem", unidade.id)
+                          }
+                          className="h-auto py-4 px-3 flex flex-col items-center gap-2 bg-white hover:bg-green-50 hover:border-green-400 hover:shadow-md transition-all border-2 border-green-200 group"
+                        >
+                          <div className="p-2 bg-green-100 rounded-lg group-hover:bg-green-200 transition-colors">
+                            <Image className="h-5 w-5 text-green-600" />
+                          </div>
+                          <span className="text-xs font-semibold text-gray-700">Imagem</span>
+                        </Button>
+                        
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() =>
+                            handleSelecionarTipoConteudo("accordion", unidade.id)
+                          }
+                          className="h-auto py-4 px-3 flex flex-col items-center gap-2 bg-white hover:bg-orange-50 hover:border-orange-400 hover:shadow-md transition-all border-2 border-orange-200 group"
+                        >
+                          <div className="p-2 bg-orange-100 rounded-lg group-hover:bg-orange-200 transition-colors">
+                            <ChevronDown className="h-5 w-5 text-orange-600" />
+                          </div>
+                          <span className="text-xs font-semibold text-gray-700">Accordion</span>
+                        </Button>
+                        
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() =>
+                            handleSelecionarTipoConteudo("flipcard", unidade.id)
+                          }
+                          className="h-auto py-4 px-3 flex flex-col items-center gap-2 bg-white hover:bg-pink-50 hover:border-pink-400 hover:shadow-md transition-all border-2 border-pink-200 group"
+                        >
+                          <div className="p-2 bg-pink-100 rounded-lg group-hover:bg-pink-200 transition-colors">
+                            <RotateCcw className="h-5 w-5 text-pink-600" />
+                          </div>
+                          <span className="text-xs font-semibold text-gray-700">FlipCard</span>
+                        </Button>
+                        
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() =>
+                            handleSelecionarTipoConteudo("lista", unidade.id)
+                          }
+                          className="h-auto py-4 px-3 flex flex-col items-center gap-2 bg-white hover:bg-purple-50 hover:border-purple-400 hover:shadow-md transition-all border-2 border-purple-200 group"
+                        >
+                          <div className="p-2 bg-purple-100 rounded-lg group-hover:bg-purple-200 transition-colors">
+                            <List className="h-5 w-5 text-purple-600" />
+                          </div>
+                          <span className="text-xs font-semibold text-gray-700">Lista</span>
+                        </Button>
+                      </div>
                     </div>
                   </div>
                 </CardContent>

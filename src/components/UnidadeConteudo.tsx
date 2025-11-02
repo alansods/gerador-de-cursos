@@ -40,7 +40,7 @@ export function UnidadeConteudo({ unidade, unidadeIndex }: UnidadeConteudoProps)
             <p>Nenhum conteúdo adicionado.</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-12 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
             {unidade.conteudo.map((item) => (
               <div
                 key={item.id}
@@ -51,11 +51,11 @@ export function UnidadeConteudo({ unidade, unidadeIndex }: UnidadeConteudoProps)
                 }`}
               >
                 {item.tipo === "titulo" ? (
-                  <h3 className="text-2xl font-bold text-gray-900 mb-6 mt-2">
+                  <h3 className="text-2xl font-bold text-gray-900 mb-3 mt-4 first:mt-0">
                     {item.conteudo}
                   </h3>
                 ) : item.tipo === "subtitulo" ? (
-                  <h4 className="text-xl font-semibold text-gray-800 mb-4 mt-1">
+                  <h4 className="text-xl font-semibold text-gray-800 mb-2 mt-3">
                     {item.conteudo}
                   </h4>
                 ) : item.tipo === "imagem" ? (
@@ -88,7 +88,7 @@ export function UnidadeConteudo({ unidade, unidadeIndex }: UnidadeConteudoProps)
                     )}
                   </div>
                 ) : item.tipo === "accordion" ? (
-                  <div className="mb-6">
+                  <div className="mb-4">
                     {item.items && item.items.length > 0 ? (
                       <Accordion type="single" collapsible className="w-full">
                         {item.items.map((accordionItem, idx) => (
@@ -114,7 +114,7 @@ export function UnidadeConteudo({ unidade, unidadeIndex }: UnidadeConteudoProps)
                     )}
                   </div>
                 ) : item.tipo === "flipcard" ? (
-                  <div className="mb-6">
+                  <div className="mb-4">
                     {item.tipoFrente && item.conteudoVerso ? (
                       <FlipCard
                         tipoFrente={item.tipoFrente}
@@ -130,7 +130,7 @@ export function UnidadeConteudo({ unidade, unidadeIndex }: UnidadeConteudoProps)
                     )}
                   </div>
                 ) : item.tipo === "lista" ? (
-                  <div className="mb-6">
+                  <div className="mb-4">
                     {item.itensLista && item.itensLista.length > 0 ? (
                       item.tipoLista === "ordenada" ? (
                         <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-6 border border-blue-200 shadow-sm">
@@ -206,7 +206,7 @@ export function UnidadeConteudo({ unidade, unidadeIndex }: UnidadeConteudoProps)
                   </div>
                 ) : (
                   <div
-                    className={`text-gray-700 leading-relaxed text-base mb-4 ${
+                    className={`text-gray-700 leading-relaxed text-base mb-3 ${
                       item.alinhamento === "centro"
                         ? "text-center"
                         : item.alinhamento === "direita"
