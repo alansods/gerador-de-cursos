@@ -3,7 +3,6 @@
 **Categoria:** Programação
 **Carga Horária:** 20 horas
 **Modalidade:** Online
-**Instrutor:** João Silva
 
 ## DESCRIÇÃO DO CURSO
 Este curso introduz os fundamentos do Next.js 14, o framework React para produção. Os alunos aprenderão sobre Server Components, App Router, otimização de imagens, e deploy na Vercel. Ao final, serão capazes de criar aplicações web modernas, performáticas e otimizadas para SEO.
@@ -23,14 +22,25 @@ O framework é usado por empresas como Netflix, TikTok, Nike e Twitch, demonstra
 
 ### Principais Características
 
-Next.js oferece diversas funcionalidades prontas para uso que aceleram o desenvolvimento:
+**ACCORDION_INICIO**
+**Título do Item 1:** Renderização Híbrida
+**Conteúdo do Item 1:** Next.js permite combinar Server-Side Rendering (SSR), Static Site Generation (SSG) e Client-Side Rendering (CSR) conforme necessário em uma única aplicação. Isso oferece máxima flexibilidade para otimizar cada página individualmente.
 
-- **Renderização híbrida**: Combine SSR, SSG e CSR conforme necessário em uma única aplicação
-- **Otimização automática**: Imagens, fontes e código são otimizados automaticamente sem configuração extra
-- **Roteamento baseado em arquivos**: Sem necessidade de configuração manual de rotas, apenas crie arquivos
-- **API Routes**: Crie APIs diretamente no seu projeto sem precisar de um servidor separado
-- **TypeScript nativo**: Suporte completo para TypeScript sem configuração adicional
-- **CSS Modules e Tailwind**: Suporte integrado para as principais soluções de estilização
+**Título do Item 2:** Otimização Automática
+**Conteúdo do Item 2:** Imagens, fontes e código são otimizados automaticamente sem configuração extra. O Next.js detecta recursos e aplica as melhores práticas de performance automaticamente.
+
+**Título do Item 3:** Roteamento Baseado em Arquivos
+**Conteúdo do Item 3:** Sem necessidade de configuração manual de rotas. Apenas crie arquivos na pasta `app/` e o Next.js cria as rotas automaticamente. Isso torna o desenvolvimento mais rápido e intuitivo.
+
+**Título do Item 4:** API Routes
+**Conteúdo do Item 4:** Crie APIs diretamente no seu projeto sem precisar de um servidor separado. Basta criar arquivos `route.ts` na pasta `app/api/` e ter endpoints REST funcionando.
+
+**Título do Item 5:** TypeScript Nativo
+**Conteúdo do Item 5:** Suporte completo para TypeScript sem configuração adicional. O Next.js é desenvolvido com TypeScript e oferece tipagem automática em todo o projeto.
+
+**Título do Item 6:** CSS Modules e Tailwind
+**Conteúdo do Item 6:** Suporte integrado para CSS Modules e Tailwind CSS. Escolha a abordagem que preferir ou combine ambas conforme necessário.
+**ACCORDION_FIM**
 
 ### Instalação e Configuração
 
@@ -61,14 +71,24 @@ Esta nova abordagem traz melhor organização, loading states automáticos e mel
 
 ### Arquivos Especiais
 
-O Next.js reconhece alguns arquivos especiais dentro da pasta `app/`:
+**FLIPCARD_INICIO**
+**Tipo de Frente:** imagem-titulo
+**Imagem da Frente (se aplicável):** [Imagem representando a estrutura de pastas do Next.js com ícones de arquivos especiais]
+**Título da Frente:** Arquivos Especiais do Next.js
+**Conteúdo do Verso:** O Next.js reconhece alguns arquivos especiais dentro da pasta `app/` que controlam o comportamento da aplicação:
 
-- **`page.tsx`**: Define a UI da rota e torna o segmento publicamente acessível
-- **`layout.tsx`**: Define um layout compartilhado entre páginas
-- **`loading.tsx`**: UI de loading automática exibida durante carregamento
-- **`error.tsx`**: UI de erro automática para tratamento de erros
-- **`not-found.tsx`**: UI exibida quando uma rota não é encontrada
-- **`template.tsx`**: Similar ao layout mas cria uma nova instância ao navegar
+**`page.tsx`**: Define a UI da rota e torna o segmento publicamente acessível. Cada pasta que contém um `page.tsx` se torna uma rota navegável.
+
+**`layout.tsx`**: Define um layout compartilhado entre páginas. Útil para componentes comuns como headers, footers e navegação.
+
+**`loading.tsx`**: UI de loading automática exibida durante carregamento. O Next.js mostra este componente automaticamente enquanto dados são carregados.
+
+**`error.tsx`**: UI de erro automática para tratamento de erros. Captura erros em componentes filhos e permite criar páginas de erro customizadas.
+
+**`not-found.tsx`**: UI exibida quando uma rota não é encontrada. Permite criar páginas 404 personalizadas.
+
+**`template.tsx`**: Similar ao layout mas cria uma nova instância ao navegar. Útil quando você precisa remontar componentes a cada navegação.
+**FLIPCARD_FIM**
 
 ### Criando Rotas
 

@@ -107,14 +107,14 @@ export default function NovoCursoPage() {
   const handleDownloadExample = async () => {
     try {
       // Buscar o arquivo de exemplo em DOCX
-      const response = await fetch('/roteiro/exemplo-curso-pizza.docx')
+      const response = await fetch('/roteiro/exemplo-curso.docx')
       if (!response.ok) throw new Error('Erro ao buscar exemplo')
       
       const blob = await response.blob()
       const url = window.URL.createObjectURL(blob)
       const a = document.createElement('a')
       a.href = url
-      a.download = 'exemplo-curso-pizza.docx'
+      a.download = 'exemplo-curso.docx'
       document.body.appendChild(a)
       a.click()
       window.URL.revokeObjectURL(url)

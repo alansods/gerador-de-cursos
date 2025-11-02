@@ -3,7 +3,6 @@
 **Categoria:** [Programação/Design/Marketing/Negócios/Saúde/etc]
 **Carga Horária:** [X horas]
 **Modalidade:** [Online/Presencial/Híbrido]
-**Instrutor:** [Nome do Instrutor]
 
 ## DESCRIÇÃO DO CURSO
 [Escreva aqui uma descrição clara e objetiva do que os alunos aprenderão neste curso. 
@@ -35,6 +34,17 @@ Inclua exemplos práticos quando possível.]
 - Item 2
 - Item 3]
 
+**ACCORDION_INICIO**
+**Título do Item 1:** [Título do primeiro item do accordion]
+**Conteúdo do Item 1:** [Conteúdo detalhado do primeiro item...]
+
+**Título do Item 2:** [Título do segundo item do accordion]
+**Conteúdo do Item 2:** [Conteúdo detalhado do segundo item...]
+
+**Título do Item 3:** [Título do terceiro item do accordion]
+**Conteúdo do Item 3:** [Conteúdo detalhado do terceiro item...]
+**ACCORDION_FIM**
+
 ### Tópico 1.3: [Nome do Terceiro Subtópico]
 [Desenvolva o conteúdo deste subtópico.]
 
@@ -57,6 +67,13 @@ Inclua exemplos práticos quando possível.]
 [Ou sugira uma imagem para ser adicionada depois:]
 [IMAGEM: Descrição detalhada do que a imagem deveria mostrar, por exemplo:
 Diagrama mostrando a arquitetura do sistema com três camadas: frontend, backend e banco de dados]
+
+**FLIPCARD_INICIO**
+**Tipo de Frente:** [imagem / imagem-titulo / titulo]
+**Imagem da Frente (se aplicável):** [URL da imagem ou descrição]
+**Título da Frente (se aplicável):** [Título que aparecerá na frente do card]
+**Conteúdo do Verso:** [Conteúdo completo que aparecerá no verso do card quando clicado. Este conteúdo será apresentado em um card que pode ser girado. Use parágrafos, listas ou qualquer formatação necessária.]
+**FLIPCARD_FIM**
 
 ### Tópico 2.2: [Nome do Subtópico]
 [Conteúdo explicativo...]
@@ -116,6 +133,30 @@ Recomendado: 3-6 unidades para um curso completo.]
 4. Crie entre 3-6 unidades
 5. Use parágrafos curtos (3-5 linhas)
 6. Remova esta seção de instruções antes de fazer upload
+
+**INDICADORES ESPECIAIS:**
+
+Para criar conteúdo interativo, use os seguintes marcadores:
+
+**ACCORDION_INICIO** e **ACCORDION_FIM**
+- Use para criar um accordion (conteúdo expansível/colapsável)
+- Entre os marcadores, crie itens no formato:
+  **Título do Item X:** [Título]
+  **Conteúdo do Item X:** [Conteúdo]
+- A IA criará um accordion com múltiplos itens que podem ser expandidos
+
+**FLIPCARD_INICIO** e **FLIPCARD_FIM**
+- Use para criar um flipcard (card que pode ser girado)
+- Entre os marcadores, especifique:
+  **Tipo de Frente:** imagem / imagem-titulo / titulo
+  **Imagem da Frente (se aplicável):** [URL ou descrição]
+  **Título da Frente (se aplicável):** [Texto do título]
+  **Conteúdo do Verso:** [Conteúdo completo que aparece quando o card é virado]
+- A IA criará um card clicável que mostra o conteúdo do verso quando girado
+
+**Exemplos de uso:**
+- Use ACCORDION para listas de perguntas frequentes, conceitos relacionados, ou passos de um processo
+- Use FLIPCARD para apresentar conceitos de forma interativa, com uma imagem ou título na frente e explicação detalhada no verso
 
 **Bom curso!** 🚀
 

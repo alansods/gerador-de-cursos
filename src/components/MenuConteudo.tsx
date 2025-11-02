@@ -15,7 +15,7 @@ import { MoreHorizontal, ArrowUp, ArrowDown, Edit, Trash2 } from "lucide-react";
 
 interface Conteudo {
   id: string;
-  tipo: "paragrafo" | "subtitulo" | "titulo" | "imagem" | "accordion";
+  tipo: "paragrafo" | "subtitulo" | "titulo" | "imagem" | "accordion" | "flipcard";
   conteudo: string;
   tamanho?: "pequena" | "media" | "grande";
   legenda?: string;
@@ -25,6 +25,11 @@ interface Conteudo {
   colunas?: 6 | 12;
   ordem?: number;
   items?: Array<{ id: string; titulo: string; conteudo: string }>;
+  tipoFrente?: "imagem" | "imagem-titulo" | "titulo";
+  imagemFrente?: string;
+  tituloFrente?: string;
+  conteudoVerso?: string;
+  alturaCard?: string;
 }
 
 interface Unidade {
@@ -65,6 +70,11 @@ export function MenuConteudo({
     alinhamento?: Conteudo["alinhamento"];
     colunas?: Conteudo["colunas"];
     items?: Conteudo["items"];
+    tipoFrente?: Conteudo["tipoFrente"];
+    imagemFrente?: Conteudo["imagemFrente"];
+    tituloFrente?: Conteudo["tituloFrente"];
+    conteudoVerso?: Conteudo["conteudoVerso"];
+    alturaCard?: Conteudo["alturaCard"];
   }) => void;
 }) {
   return (
@@ -123,6 +133,11 @@ export function MenuConteudo({
                 alinhamento: item.alinhamento,
                 colunas: item.colunas,
                 items: item.items,
+                tipoFrente: item.tipoFrente,
+                imagemFrente: item.imagemFrente,
+                tituloFrente: item.tituloFrente,
+                conteudoVerso: item.conteudoVerso,
+                alturaCard: item.alturaCard,
               })
             }
             className="cursor-pointer"

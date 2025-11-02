@@ -234,6 +234,178 @@ const doc = new Document({
         new Paragraph({
           text: '• Harmonize com uma cerveja gelada ou caipirinha de limão',
         }),
+        new Paragraph({ text: '' }),
+
+        // EXEMPLO DE ACCORDION
+        new Paragraph({
+          text: '💡 INDICADORES ESPECIAIS - Exemplo de ACCORDION',
+          heading: HeadingLevel.HEADING_2,
+        }),
+        new Paragraph({
+          text: 'Para criar conteúdo expansível/colapsável (accordion), use os marcadores abaixo:',
+        }),
+        new Paragraph({ text: '' }),
+        new Paragraph({
+          children: [
+            new TextRun({ text: 'ACCORDION_INICIO', bold: true }),
+          ],
+        }),
+        new Paragraph({
+          children: [
+            new TextRun({ text: 'Título do Item 1: ', bold: true }),
+            new TextRun('Erros Comuns ao Preparar a Massa'),
+          ],
+        }),
+        new Paragraph({
+          children: [
+            new TextRun({ text: 'Conteúdo do Item 1: ', bold: true }),
+            new TextRun('Usar água muito quente mata o fermento. Sempre use água em temperatura ambiente ou levemente morna. Sovar demais também pode deixar a massa dura. O ideal é sovar por 8-12 minutos até a massa ficar lisa e elástica, não mais do que isso.'),
+          ],
+        }),
+        new Paragraph({
+          children: [
+            new TextRun({ text: 'Título do Item 2: ', bold: true }),
+            new TextRun('Temperaturas Ideais de Assamento'),
+          ],
+        }),
+        new Paragraph({
+          children: [
+            new TextRun({ text: 'Conteúdo do Item 2: ', bold: true }),
+            new TextRun('A temperatura ideal para assar pizza artesanal é entre 280-300°C. Fornos domésticos geralmente atingem no máximo 250°C. Neste caso, aumente o tempo de assamento para 12-15 minutos e use a função grill nos últimos 2 minutos para dourar a borda.'),
+          ],
+        }),
+        new Paragraph({
+          children: [
+            new TextRun({ text: 'Título do Item 3: ', bold: true }),
+            new TextRun('Como Armazenar Pizza Assada'),
+          ],
+        }),
+        new Paragraph({
+          children: [
+            new TextRun({ text: 'Conteúdo do Item 3: ', bold: true }),
+            new TextRun('Pizza deve ser consumida imediatamente após o assamento para melhor sabor. Se precisar armazenar, congele crua antes de assar. Massa já assada pode ser congelada por até 1 mês e reaquecida em forno pré-aquecido por 5-7 minutos.'),
+          ],
+        }),
+        new Paragraph({
+          children: [
+            new TextRun({ text: 'ACCORDION_FIM', bold: true }),
+          ],
+        }),
+        new Paragraph({ text: '' }),
+        new Paragraph({
+          text: '📝 OBSERVAÇÃO: A IA irá transformar o conteúdo entre ACCORDION_INICIO e ACCORDION_FIM em um accordion interativo com os itens criados.',
+        }),
+        new Paragraph({ text: '' }),
+
+        // EXEMPLO DE FLIPCARD
+        new Paragraph({
+          text: '💡 INDICADORES ESPECIAIS - Exemplo de FLIPCARD',
+          heading: HeadingLevel.HEADING_2,
+        }),
+        new Paragraph({
+          text: 'Para criar cards interativos que podem ser girados (flip cards), use os marcadores abaixo:',
+        }),
+        new Paragraph({ text: '' }),
+        new Paragraph({
+          children: [
+            new TextRun({ text: 'FLIPCARD_INICIO', bold: true }),
+          ],
+        }),
+        new Paragraph({
+          children: [
+            new TextRun({ text: 'Tipo de Frente: ', bold: true }),
+            new TextRun('titulo'),
+          ],
+        }),
+        new Paragraph({
+          children: [
+            new TextRun({ text: 'Título da Frente: ', bold: true }),
+            new TextRun('Proporção Hidratação'),
+          ],
+        }),
+        new Paragraph({
+          children: [
+            new TextRun({ text: 'Conteúdo do Verso: ', bold: true }),
+            new TextRun('A hidratação é o percentual de água em relação à farinha. Para pizza artesanal, recomenda-se 60-65% de hidratação. Isso significa: para 500g de farinha, use 300-325ml de água. Massas mais hidratadas (65%+) são mais fáceis de trabalhar e resultam em textura mais aerada, mas requerem mais prática para manusear. Massas menos hidratadas (60%) são mais fáceis de controlar, ideais para iniciantes.',
+          ),
+          ],
+        }),
+        new Paragraph({
+          children: [
+            new TextRun({ text: 'FLIPCARD_FIM', bold: true }),
+          ],
+        }),
+        new Paragraph({ text: '' }),
+        new Paragraph({
+          text: '📝 OBSERVAÇÃO: A IA irá transformar o conteúdo entre FLIPCARD_INICIO e FLIPCARD_FIM em um card interativo. Tipos disponíveis: "titulo" (apenas título na frente), "imagem" (imagem na frente), "imagem-titulo" (imagem + título na frente).',
+        }),
+        new Paragraph({ text: '' }),
+        new Paragraph({
+          text: 'Exemplo de FlipCard com imagem e título:',
+        }),
+        new Paragraph({ text: '' }),
+        new Paragraph({
+          children: [
+            new TextRun({ text: 'FLIPCARD_INICIO', bold: true }),
+          ],
+        }),
+        new Paragraph({
+          children: [
+            new TextRun({ text: 'Tipo de Frente: ', bold: true }),
+            new TextRun('imagem-titulo'),
+          ],
+        }),
+        new Paragraph({
+          children: [
+            new TextRun({ text: 'Imagem da Frente: ', bold: true }),
+            new TextRun('[IMAGEM: Foto de uma pizza de carne de sol recém-assada com borda dourada]'),
+          ],
+        }),
+        new Paragraph({
+          children: [
+            new TextRun({ text: 'Título da Frente: ', bold: true }),
+            new TextRun('Pizza Artesanal Pronta'),
+          ],
+        }),
+        new Paragraph({
+          children: [
+            new TextRun({ text: 'Conteúdo do Verso: ', bold: true }),
+            new TextRun('Uma pizza artesanal bem feita apresenta: borda alta e dourada (resultado da fermentação adequada), base crocante mas não dura, distribuição uniforme dos ingredientes, e queijo derretido sem queimar. O segredo está na temperatura alta do forno (280-300°C) e no tempo de assamento curto (8-12 minutos), que preserva a umidade dos ingredientes enquanto cria a textura crocante desejada.',
+          ),
+          ],
+        }),
+        new Paragraph({
+          children: [
+            new TextRun({ text: 'FLIPCARD_FIM', bold: true }),
+          ],
+        }),
+        new Paragraph({ text: '' }),
+        new Paragraph({ text: '---' }),
+        new Paragraph({ text: '' }),
+
+        // INSTRUÇÕES FINAIS
+        new Paragraph({
+          text: '📋 INSTRUÇÕES PARA USO DOS INDICADORES',
+          heading: HeadingLevel.HEADING_1,
+        }),
+        new Paragraph({
+          text: '• Use ACCORDION_INICIO e ACCORDION_FIM para criar conteúdo expansível',
+        }),
+        new Paragraph({
+          text: '• Dentro do accordion, use "Título do Item X:" e "Conteúdo do Item X:" para cada item',
+        }),
+        new Paragraph({
+          text: '• Use FLIPCARD_INICIO e FLIPCARD_FIM para criar cards interativos',
+        }),
+        new Paragraph({
+          text: '• Especifique o Tipo de Frente: "titulo", "imagem" ou "imagem-titulo"',
+        }),
+        new Paragraph({
+          text: '• Para imagens, use URLs ou [IMAGEM: descrição] para placeholders',
+        }),
+        new Paragraph({
+          text: '• A IA processará esses marcadores e criará os componentes interativos automaticamente',
+        }),
       ],
     },
   ],
@@ -247,7 +419,7 @@ if (!fs.existsSync(publicDir)) {
 
 // Salvar o arquivo
 Packer.toBuffer(doc).then((buffer) => {
-  const filePath = path.join(publicDir, 'exemplo-curso-pizza.docx');
+  const filePath = path.join(publicDir, 'exemplo-curso.docx');
   fs.writeFileSync(filePath, buffer);
   console.log('✅ Arquivo criado com sucesso:', filePath);
   console.log('📄 Curso: Fabricação de Pizza Artesanal de Carne de Sol');

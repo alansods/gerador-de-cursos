@@ -7,6 +7,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import { FlipCard } from "@/components/flipcard";
 import { Unidade } from "@/types/gerador-curso";
 
 interface UnidadeConteudoProps {
@@ -109,6 +110,22 @@ export function UnidadeConteudo({ unidade, unidadeIndex }: UnidadeConteudoProps)
                     ) : (
                       <div className="text-gray-500 text-sm italic">
                         Accordion vazio
+                      </div>
+                    )}
+                  </div>
+                ) : item.tipo === "flipcard" ? (
+                  <div className="mb-6">
+                    {item.tipoFrente && item.conteudoVerso ? (
+                      <FlipCard
+                        tipoFrente={item.tipoFrente}
+                        imagemFrente={item.imagemFrente}
+                        tituloFrente={item.tituloFrente}
+                        conteudoVerso={item.conteudoVerso}
+                        alturaCard={item.alturaCard}
+                      />
+                    ) : (
+                      <div className="text-gray-500 text-sm italic p-4 border border-gray-300 rounded-lg">
+                        FlipCard vazio ou incompleto
                       </div>
                     )}
                   </div>

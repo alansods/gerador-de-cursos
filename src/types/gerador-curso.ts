@@ -7,7 +7,7 @@ export interface AccordionItem {
 
 export interface ConteudoUnidade {
   id: string
-  tipo: 'titulo' | 'paragrafo' | 'subtitulo' | 'imagem' | 'accordion'
+  tipo: 'titulo' | 'paragrafo' | 'subtitulo' | 'imagem' | 'accordion' | 'flipcard'
   conteudo: string
   ordem: number
   // Propriedades específicas para imagens
@@ -21,6 +21,12 @@ export interface ConteudoUnidade {
   colunas?: 6 | 12
   // Propriedades específicas para accordion
   items?: AccordionItem[]
+  // Propriedades específicas para flipcard
+  tipoFrente?: 'imagem' | 'imagem-titulo' | 'titulo'
+  imagemFrente?: string
+  tituloFrente?: string
+  conteudoVerso?: string
+  alturaCard?: string // altura do card em pixels ou viewport units
 }
 
 export interface Unidade {

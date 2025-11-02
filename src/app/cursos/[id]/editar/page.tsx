@@ -43,6 +43,7 @@ import {
   Upload,
   Loader2,
   ChevronDown,
+  RotateCcw,
 } from "lucide-react";
 import {
   Tooltip,
@@ -87,7 +88,7 @@ export default function EditarCursoPage() {
   const [editandoConteudo, setEditandoConteudo] = useState<{
     unidadeId: string;
     conteudoId: string;
-    tipo: "paragrafo" | "subtitulo" | "titulo" | "imagem" | "accordion";
+    tipo: "paragrafo" | "subtitulo" | "titulo" | "imagem" | "accordion" | "flipcard";
     conteudo: string;
     tamanho?: "pequena" | "media" | "grande";
     legenda?: string;
@@ -96,9 +97,14 @@ export default function EditarCursoPage() {
     alinhamento?: "esquerda" | "centro" | "direita" | "justificado";
     colunas?: 6 | 12;
     items?: Array<{ id: string; titulo: string; conteudo: string }>;
+    tipoFrente?: "imagem" | "imagem-titulo" | "titulo";
+    imagemFrente?: string;
+    tituloFrente?: string;
+    conteudoVerso?: string;
+    alturaCard?: string;
   } | null>(null);
   const [conteudoTemp, setConteudoTemp] = useState({
-    tipo: "paragrafo" as "paragrafo" | "subtitulo" | "titulo" | "imagem" | "accordion",
+    tipo: "paragrafo" as "paragrafo" | "subtitulo" | "titulo" | "imagem" | "accordion" | "flipcard",
     conteudo: "",
     unidadeId: "",
     tamanho: "media" as "pequena" | "media" | "grande",
@@ -112,6 +118,11 @@ export default function EditarCursoPage() {
       | "justificado",
     colunas: 12 as 6 | 12,
     items: [] as Array<{ id: string; titulo: string; conteudo: string }>,
+    tipoFrente: "titulo" as "imagem" | "imagem-titulo" | "titulo",
+    imagemFrente: "",
+    tituloFrente: "",
+    conteudoVerso: "",
+    alturaCard: "300px",
   });
   const [adicionarUnidadeModal, setAdicionarUnidadeModal] = useState(false);
   const [editarUnidadeModal, setEditarUnidadeModal] = useState(false);
@@ -246,6 +257,11 @@ export default function EditarCursoPage() {
       alinhamento: "esquerda",
       colunas: 12,
       items: [],
+      tipoFrente: "titulo",
+      imagemFrente: "",
+      tituloFrente: "",
+      conteudoVerso: "",
+      alturaCard: "300px",
     });
   };
 
@@ -303,7 +319,7 @@ export default function EditarCursoPage() {
     setConfirmarDeletarUnidade(true);
   };
 
-  const handleUploadImage = async (file: File, forEdit: boolean = false) => {
+  const handleUploadImage = async (file: File, forEdit: boolean = false, forFlipcard: boolean = false) => {
     if (!file) return;
 
     // Validar tipo
@@ -346,7 +362,20 @@ export default function EditarCursoPage() {
       }
 
       // Atualizar URL da imagem no estado correto
-      if (forEdit && editandoConteudo) {
+      if (forFlipcard) {
+        // Para flipcard, atualizar imagemFrente
+        if (forEdit && editandoConteudo) {
+          setEditandoConteudo({
+            ...editandoConteudo,
+            imagemFrente: data.url,
+          });
+        } else {
+          setConteudoTemp({
+            ...conteudoTemp,
+            imagemFrente: data.url,
+          });
+        }
+      } else if (forEdit && editandoConteudo) {
         setEditandoConteudo({
           ...editandoConteudo,
           conteudo: data.url,
@@ -385,6 +414,28 @@ export default function EditarCursoPage() {
         alert("Todos os itens do accordion devem ter título e conteúdo preenchidos.");
         return;
       }
+    } else if (conteudoTemp.tipo === "flipcard") {
+      // Validar flipcard
+      if (!conteudoTemp.tipoFrente) {
+        alert("Selecione o tipo de frente do flipcard.");
+        return;
+      }
+      if (conteudoTemp.tipoFrente === "imagem" && !conteudoTemp.imagemFrente?.trim()) {
+        alert("Adicione uma imagem para a frente do flipcard.");
+        return;
+      }
+      if (conteudoTemp.tipoFrente === "imagem-titulo" && (!conteudoTemp.imagemFrente?.trim() || !conteudoTemp.tituloFrente?.trim())) {
+        alert("Adicione uma imagem e um título para a frente do flipcard.");
+        return;
+      }
+      if (conteudoTemp.tipoFrente === "titulo" && !conteudoTemp.tituloFrente?.trim()) {
+        alert("Adicione um título para a frente do flipcard.");
+        return;
+      }
+      if (!conteudoTemp.conteudoVerso?.trim()) {
+        alert("Adicione o conteúdo do verso do flipcard.");
+        return;
+      }
     } else if (conteudoTemp.tipo === "imagem") {
       if (
         !conteudoTemp.tamanho ||
@@ -412,6 +463,11 @@ export default function EditarCursoPage() {
       alinhamento: conteudoTemp.alinhamento,
       colunas: conteudoTemp.colunas,
       items: conteudoTemp.items,
+      tipoFrente: conteudoTemp.tipoFrente,
+      imagemFrente: conteudoTemp.imagemFrente,
+      tituloFrente: conteudoTemp.tituloFrente,
+      conteudoVerso: conteudoTemp.conteudoVerso,
+      alturaCard: conteudoTemp.alturaCard,
     });
     toast.success("Conteúdo adicionado");
     setConteudoTemp({
@@ -431,7 +487,7 @@ export default function EditarCursoPage() {
   const handleEditarConteudo = (
     unidadeId: string,
     conteudoId: string,
-    tipo: "paragrafo" | "subtitulo" | "titulo" | "imagem" | "accordion",
+    tipo: "paragrafo" | "subtitulo" | "titulo" | "imagem" | "accordion" | "flipcard",
     conteudo: string,
     tamanho?: "pequena" | "media" | "grande",
     legenda?: string,
@@ -439,7 +495,12 @@ export default function EditarCursoPage() {
     corTexto?: string,
     alinhamento?: "esquerda" | "centro" | "direita" | "justificado",
     colunas?: 6 | 12,
-    items?: Array<{ id: string; titulo: string; conteudo: string }>
+    items?: Array<{ id: string; titulo: string; conteudo: string }>,
+    tipoFrente?: "imagem" | "imagem-titulo" | "titulo",
+    imagemFrente?: string,
+    tituloFrente?: string,
+    conteudoVerso?: string,
+    alturaCard?: string
   ) => {
     editarConteudo(unidadeId, conteudoId, {
       tipo,
@@ -451,6 +512,11 @@ export default function EditarCursoPage() {
       alinhamento,
       colunas,
       items,
+      tipoFrente,
+      imagemFrente,
+      tituloFrente,
+      conteudoVerso,
+      alturaCard,
     });
     toast.success("Conteúdo atualizado");
     setEditandoConteudo(null);
@@ -495,7 +561,7 @@ export default function EditarCursoPage() {
   };
 
   const handleSelecionarTipoConteudo = (
-    tipo: "titulo" | "subtitulo" | "paragrafo" | "imagem" | "accordion",
+    tipo: "titulo" | "subtitulo" | "paragrafo" | "imagem" | "accordion" | "flipcard",
     unidadeId?: string
   ) => {
     if (unidadeId) {
@@ -510,6 +576,11 @@ export default function EditarCursoPage() {
         alinhamento: "esquerda",
         colunas: 12,
         items: tipo === "accordion" ? [] : undefined,
+        tipoFrente: tipo === "flipcard" ? "titulo" : undefined,
+        imagemFrente: tipo === "flipcard" ? "" : undefined,
+        tituloFrente: tipo === "flipcard" ? "" : undefined,
+        conteudoVerso: tipo === "flipcard" ? "" : undefined,
+        alturaCard: tipo === "flipcard" ? "300px" : undefined,
       });
     }
   };
@@ -799,6 +870,8 @@ export default function EditarCursoPage() {
                                 <Image className="h-4 w-4 text-green-600" />
                               ) : item.tipo === "accordion" ? (
                                 <ChevronDown className="h-4 w-4 text-orange-600" />
+                              ) : item.tipo === "flipcard" ? (
+                                <RotateCcw className="h-4 w-4 text-pink-600" />
                               ) : (
                                 <Type className="h-4 w-4 text-gray-600" />
                               )}
@@ -812,6 +885,17 @@ export default function EditarCursoPage() {
                                 <h4 className="font-semibold text-gray-900">
                                   {item.conteudo}
                                 </h4>
+                              ) : item.tipo === "flipcard" ? (
+                                <div className="space-y-2">
+                                  <p className="text-sm font-semibold text-gray-700">
+                                    FlipCard ({item.tipoFrente === "imagem" ? "Imagem" : item.tipoFrente === "imagem-titulo" ? "Imagem + Título" : "Título"})
+                                  </p>
+                                  {item.tituloFrente && (
+                                    <p className="text-xs text-gray-500">
+                                      Frente: {item.tituloFrente}
+                                    </p>
+                                  )}
+                                </div>
                               ) : item.tipo === "accordion" ? (
                                 <div className="space-y-2">
                                   <p className="text-sm font-semibold text-gray-700">
@@ -958,6 +1042,17 @@ export default function EditarCursoPage() {
                       >
                         <ChevronDown className="h-4 w-4 mr-2" />
                         Accordion
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() =>
+                          handleSelecionarTipoConteudo("flipcard", unidade.id)
+                        }
+                        className="text-blue-600 border-blue-200 hover:bg-blue-50"
+                      >
+                        <RotateCcw className="h-4 w-4 mr-2" />
+                        FlipCard
                       </Button>
                     </div>
                   </div>
@@ -1126,6 +1221,11 @@ export default function EditarCursoPage() {
                   <>
                     <ChevronDown className="h-5 w-5 text-blue-600" />
                     Adicionar Accordion
+                  </>
+                ) : conteudoTemp.tipo === "flipcard" ? (
+                  <>
+                    <RotateCcw className="h-5 w-5 text-blue-600" />
+                    Adicionar FlipCard
                   </>
                 ) : (
                   <>
@@ -1373,6 +1473,162 @@ export default function EditarCursoPage() {
                     </div>
                   )}
                 </div>
+              ) : conteudoTemp.tipo === "flipcard" ? (
+                <div className="space-y-4">
+                  {/* Tipo de Frente */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Tipo de Frente <span className="text-red-500">*</span>
+                    </label>
+                    <select
+                      value={conteudoTemp.tipoFrente || "titulo"}
+                      onChange={(e) =>
+                        setConteudoTemp({
+                          ...conteudoTemp,
+                          tipoFrente: e.target.value as "imagem" | "imagem-titulo" | "titulo",
+                        })
+                      }
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    >
+                      <option value="imagem">Apenas Imagem</option>
+                      <option value="imagem-titulo">Imagem com Título no Rodapé</option>
+                      <option value="titulo">Apenas Título Centralizado</option>
+                    </select>
+                  </div>
+
+                  {/* Imagem (se necessário) */}
+                  {(conteudoTemp.tipoFrente === "imagem" || conteudoTemp.tipoFrente === "imagem-titulo") && (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Imagem da Frente <span className="text-red-500">*</span>
+                      </label>
+                      <div className="space-y-3">
+                        {/* Upload de Arquivo */}
+                        <div>
+                          <label className="flex items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-blue-400 transition-colors bg-gray-50">
+                            {isUploadingImage ? (
+                              <div className="flex flex-col items-center gap-2">
+                                <Loader2 className="h-6 w-6 animate-spin text-blue-600" />
+                                <span className="text-sm text-gray-600">Enviando...</span>
+                              </div>
+                            ) : (
+                              <div className="flex flex-col items-center gap-2">
+                                <Upload className="h-6 w-6 text-gray-400" />
+                                <span className="text-sm text-gray-600">Clique para fazer upload</span>
+                                <span className="text-xs text-gray-500">ou arraste a imagem aqui</span>
+                                <span className="text-xs text-gray-400">JPG, PNG, GIF, WEBP, SVG (máx. 10MB)</span>
+                              </div>
+                            )}
+                            <input
+                              type="file"
+                              accept="image/*"
+                              className="hidden"
+                              onChange={(e) => {
+                                const file = e.target.files?.[0];
+                                if (file) {
+                                  handleUploadImage(file, false, true);
+                                }
+                              }}
+                              disabled={isUploadingImage}
+                            />
+                          </label>
+                        </div>
+
+                        {/* Divisor */}
+                        <div className="relative">
+                          <div className="absolute inset-0 flex items-center">
+                            <div className="w-full border-t border-gray-300"></div>
+                          </div>
+                          <div className="relative flex justify-center text-sm">
+                            <span className="bg-white px-2 text-gray-500">ou</span>
+                          </div>
+                        </div>
+
+                        {/* Input de URL */}
+                        <Input
+                          value={conteudoTemp.imagemFrente || ""}
+                          onChange={(e) =>
+                            setConteudoTemp({
+                              ...conteudoTemp,
+                              imagemFrente: e.target.value,
+                            })
+                          }
+                          placeholder="Cole a URL da imagem..."
+                        />
+
+                        {/* Preview da Imagem */}
+                        {(imagePreviewUrl || conteudoTemp.imagemFrente) && (
+                          <div className="mt-3">
+                            <img
+                              src={imagePreviewUrl || conteudoTemp.imagemFrente}
+                              alt="Preview"
+                              className="w-full h-auto rounded-lg border border-gray-300 max-h-40 object-contain bg-gray-50"
+                              onError={() => setImagePreviewUrl(null)}
+                            />
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Título (se necessário) */}
+                  {(conteudoTemp.tipoFrente === "imagem-titulo" || conteudoTemp.tipoFrente === "titulo") && (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Título da Frente <span className="text-red-500">*</span>
+                      </label>
+                      <Input
+                        value={conteudoTemp.tituloFrente || ""}
+                        onChange={(e) =>
+                          setConteudoTemp({
+                            ...conteudoTemp,
+                            tituloFrente: e.target.value,
+                          })
+                        }
+                        placeholder="Digite o título da frente do card..."
+                      />
+                    </div>
+                  )}
+
+                  {/* Conteúdo do Verso */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Conteúdo do Verso <span className="text-red-500">*</span>
+                    </label>
+                    <textarea
+                      value={conteudoTemp.conteudoVerso || ""}
+                      onChange={(e) =>
+                        setConteudoTemp({
+                          ...conteudoTemp,
+                          conteudoVerso: e.target.value,
+                        })
+                      }
+                      placeholder="Digite o conteúdo do verso do card..."
+                      className="w-full p-3 border border-gray-300 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      rows={8}
+                    />
+                  </div>
+
+                  {/* Altura do Card */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Altura do Card (opcional)
+                    </label>
+                    <Input
+                      value={conteudoTemp.alturaCard || "300px"}
+                      onChange={(e) =>
+                        setConteudoTemp({
+                          ...conteudoTemp,
+                          alturaCard: e.target.value,
+                        })
+                      }
+                      placeholder="Ex: 300px, 400px, 50vh"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">
+                      Use valores como "300px", "400px" ou "50vh" (viewport height)
+                    </p>
+                  </div>
+                </div>
               ) : (
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -1425,6 +1681,12 @@ export default function EditarCursoPage() {
                       conteudoTemp.items.some(
                         (item) => !item.titulo.trim() || !item.conteudo.trim()
                       )
+                    : conteudoTemp.tipo === "flipcard"
+                    ? !conteudoTemp.tipoFrente ||
+                      !conteudoTemp.conteudoVerso?.trim() ||
+                      (conteudoTemp.tipoFrente === "imagem" && !conteudoTemp.imagemFrente?.trim()) ||
+                      (conteudoTemp.tipoFrente === "imagem-titulo" && (!conteudoTemp.imagemFrente?.trim() || !conteudoTemp.tituloFrente?.trim())) ||
+                      (conteudoTemp.tipoFrente === "titulo" && !conteudoTemp.tituloFrente?.trim())
                     : !conteudoTemp.conteudo.trim()) ||
                   (conteudoTemp.tipo === "imagem" &&
                     (!conteudoTemp.tamanho ||
@@ -1675,6 +1937,11 @@ export default function EditarCursoPage() {
                   <>
                     <ChevronDown className="h-4 w-4 text-blue-600" />
                     Accordion
+                  </>
+                ) : editandoConteudo?.tipo === "flipcard" ? (
+                  <>
+                    <RotateCcw className="h-4 w-4 text-blue-600" />
+                    FlipCard
                   </>
                 ) : (
                   <>
@@ -1945,6 +2212,167 @@ export default function EditarCursoPage() {
                     </div>
                   )}
                 </div>
+              ) : editandoConteudo?.tipo === "flipcard" ? (
+                <div className="space-y-4">
+                  {/* Tipo de Frente */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Tipo de Frente <span className="text-red-500">*</span>
+                    </label>
+                    <select
+                      value={editandoConteudo.tipoFrente || "titulo"}
+                      onChange={(e) =>
+                        editandoConteudo &&
+                        setEditandoConteudo({
+                          ...editandoConteudo,
+                          tipoFrente: e.target.value as "imagem" | "imagem-titulo" | "titulo",
+                        })
+                      }
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    >
+                      <option value="imagem">Apenas Imagem</option>
+                      <option value="imagem-titulo">Imagem com Título no Rodapé</option>
+                      <option value="titulo">Apenas Título Centralizado</option>
+                    </select>
+                  </div>
+
+                  {/* Imagem (se necessário) */}
+                  {(editandoConteudo.tipoFrente === "imagem" || editandoConteudo.tipoFrente === "imagem-titulo") && (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Imagem da Frente <span className="text-red-500">*</span>
+                      </label>
+                      <div className="space-y-3">
+                        {/* Upload de Arquivo */}
+                        <div>
+                          <label className="flex items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-blue-400 transition-colors bg-gray-50">
+                            {isUploadingImage ? (
+                              <div className="flex flex-col items-center gap-2">
+                                <Loader2 className="h-6 w-6 animate-spin text-blue-600" />
+                                <span className="text-sm text-gray-600">Enviando...</span>
+                              </div>
+                            ) : (
+                              <div className="flex flex-col items-center gap-2">
+                                <Upload className="h-6 w-6 text-gray-400" />
+                                <span className="text-sm text-gray-600">Clique para fazer upload</span>
+                                <span className="text-xs text-gray-500">ou arraste a imagem aqui</span>
+                                <span className="text-xs text-gray-400">JPG, PNG, GIF, WEBP, SVG (máx. 10MB)</span>
+                              </div>
+                            )}
+                            <input
+                              type="file"
+                              accept="image/*"
+                              className="hidden"
+                              onChange={(e) => {
+                                const file = e.target.files?.[0];
+                                if (file) {
+                                  handleUploadImage(file, true, true);
+                                }
+                              }}
+                              disabled={isUploadingImage}
+                            />
+                          </label>
+                        </div>
+
+                        {/* Divisor */}
+                        <div className="relative">
+                          <div className="absolute inset-0 flex items-center">
+                            <div className="w-full border-t border-gray-300"></div>
+                          </div>
+                          <div className="relative flex justify-center text-sm">
+                            <span className="bg-white px-2 text-gray-500">ou</span>
+                          </div>
+                        </div>
+
+                        {/* Input de URL */}
+                        <Input
+                          value={editandoConteudo.imagemFrente || ""}
+                          onChange={(e) =>
+                            editandoConteudo &&
+                            setEditandoConteudo({
+                              ...editandoConteudo,
+                              imagemFrente: e.target.value,
+                            })
+                          }
+                          placeholder="Cole a URL da imagem..."
+                        />
+
+                        {/* Preview da Imagem */}
+                        {(imagePreviewUrl || editandoConteudo.imagemFrente) && (
+                          <div className="mt-3">
+                            <img
+                              src={imagePreviewUrl || editandoConteudo.imagemFrente}
+                              alt="Preview"
+                              className="w-full h-auto rounded-lg border border-gray-300 max-h-40 object-contain bg-gray-50"
+                              onError={() => setImagePreviewUrl(null)}
+                            />
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Título (se necessário) */}
+                  {(editandoConteudo.tipoFrente === "imagem-titulo" || editandoConteudo.tipoFrente === "titulo") && (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Título da Frente <span className="text-red-500">*</span>
+                      </label>
+                      <Input
+                        value={editandoConteudo.tituloFrente || ""}
+                        onChange={(e) =>
+                          editandoConteudo &&
+                          setEditandoConteudo({
+                            ...editandoConteudo,
+                            tituloFrente: e.target.value,
+                          })
+                        }
+                        placeholder="Digite o título da frente do card..."
+                      />
+                    </div>
+                  )}
+
+                  {/* Conteúdo do Verso */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Conteúdo do Verso <span className="text-red-500">*</span>
+                    </label>
+                    <textarea
+                      value={editandoConteudo.conteudoVerso || ""}
+                      onChange={(e) =>
+                        editandoConteudo &&
+                        setEditandoConteudo({
+                          ...editandoConteudo,
+                          conteudoVerso: e.target.value,
+                        })
+                      }
+                      placeholder="Digite o conteúdo do verso do card..."
+                      className="w-full p-3 border border-gray-300 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      rows={8}
+                    />
+                  </div>
+
+                  {/* Altura do Card */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Altura do Card (opcional)
+                    </label>
+                    <Input
+                      value={editandoConteudo.alturaCard || "300px"}
+                      onChange={(e) =>
+                        editandoConteudo &&
+                        setEditandoConteudo({
+                          ...editandoConteudo,
+                          alturaCard: e.target.value,
+                        })
+                      }
+                      placeholder="Ex: 300px, 400px, 50vh"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">
+                      Use valores como "300px", "400px" ou "50vh" (viewport height)
+                    </p>
+                  </div>
+                </div>
               ) : (
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -2001,7 +2429,12 @@ export default function EditarCursoPage() {
                       editandoConteudo.corTexto,
                       editandoConteudo.alinhamento,
                       editandoConteudo.colunas,
-                      editandoConteudo.items
+                      editandoConteudo.items,
+                      editandoConteudo.tipoFrente,
+                      editandoConteudo.imagemFrente,
+                      editandoConteudo.tituloFrente,
+                      editandoConteudo.conteudoVerso,
+                      editandoConteudo.alturaCard
                     );
                     closeEditarConteudoModal();
                   }
@@ -2014,6 +2447,12 @@ export default function EditarCursoPage() {
                       editandoConteudo.items.some(
                         (item) => !item.titulo.trim() || !item.conteudo.trim()
                       )
+                    : editandoConteudo?.tipo === "flipcard"
+                    ? !editandoConteudo.tipoFrente ||
+                      !editandoConteudo.conteudoVerso?.trim() ||
+                      (editandoConteudo.tipoFrente === "imagem" && !editandoConteudo.imagemFrente?.trim()) ||
+                      (editandoConteudo.tipoFrente === "imagem-titulo" && (!editandoConteudo.imagemFrente?.trim() || !editandoConteudo.tituloFrente?.trim())) ||
+                      (editandoConteudo.tipoFrente === "titulo" && !editandoConteudo.tituloFrente?.trim())
                     : !editandoConteudo?.conteudo?.trim()) ||
                   (editandoConteudo?.tipo === "imagem" &&
                     (!editandoConteudo.tamanho ||

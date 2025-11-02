@@ -70,13 +70,30 @@ Analise o documento abaixo e crie um curso estruturado, extraindo os metadados e
    - descricao: OBRIGATÓRIA - O que o aluno aprenderá nesta unidade
    - conteudo: Array de elementos formatados
 4. Cada elemento de conteúdo deve ter:
-   - tipo: "titulo", "subtitulo", "paragrafo" ou "imagem"
+   - tipo: "titulo", "subtitulo", "paragrafo", "imagem", "accordion" ou "flipcard"
    - conteudo: O texto/URL do elemento
    - ordem: Número sequencial (0, 1, 2, ...)
 5. **IMPORTANTE: NÃO inclua o título da unidade como primeiro item do conteúdo!** O título já está no campo "titulo" da unidade. Comece o conteúdo diretamente com o conteúdo real (parágrafos, subtítulos, etc.)
-6. MANTENHA o conteúdo original do documento, apenas estruture-o
-7. Crie pelo menos 3 unidades de aprendizado
-8. Se encontrar referências a imagens, crie elementos tipo "imagem"
+6. **INDICADORES ESPECIAIS - PROCESSAMENTO:**
+   
+   **ACCORDION_INICIO / ACCORDION_FIM:**
+   - Quando encontrar esses marcadores, crie um elemento de conteúdo do tipo "accordion"
+   - Entre os marcadores, identifique todos os itens no formato:
+     **Título do Item X:** [título]
+     **Conteúdo do Item X:** [conteúdo]
+   - Crie a estrutura: tipo: "accordion", conteudo: "", items: [{ id: "item-1", titulo: "título", conteudo: "conteúdo" }, ...]
+   
+   **FLIPCARD_INICIO / FLIPCARD_FIM:**
+   - Quando encontrar esses marcadores, crie um elemento de conteúdo do tipo "flipcard"
+   - Entre os marcadores, identifique:
+     **Tipo de Frente:** [imagem / imagem-titulo / titulo]
+     **Imagem da Frente (se aplicável):** [URL ou descrição]
+     **Título da Frente (se aplicável):** [texto]
+     **Conteúdo do Verso:** [conteúdo completo]
+   - Crie a estrutura: tipo: "flipcard", conteudo: "", tipoFrente: "...", imagemFrente: "...", tituloFrente: "...", conteudoVerso: "..."
+7. MANTENHA o conteúdo original do documento, apenas estruture-o
+8. Crie pelo menos 3 unidades de aprendizado
+9. Se encontrar referências a imagens (fora dos flipcards), crie elementos tipo "imagem"
 
 **FORMATO DE SAÍDA OBRIGATÓRIO (JSON):**
 {
@@ -92,7 +109,23 @@ Analise o documento abaixo e crie um curso estruturado, extraindo os metadados e
       "conteudo": [
         { "tipo": "paragrafo", "conteudo": "Texto explicativo...", "ordem": 0 },
         { "tipo": "subtitulo", "conteudo": "Subtópico", "ordem": 1 },
-        { "tipo": "paragrafo", "conteudo": "Mais conteúdo...", "ordem": 2 }
+        { 
+          "tipo": "accordion", 
+          "conteudo": "", 
+          "items": [
+            { "id": "item-1", "titulo": "Título do Item", "conteudo": "Conteúdo do item..." },
+            { "id": "item-2", "titulo": "Outro Item", "conteudo": "Mais conteúdo..." }
+          ],
+          "ordem": 2
+        },
+        {
+          "tipo": "flipcard",
+          "conteudo": "",
+          "tipoFrente": "titulo",
+          "tituloFrente": "Título na Frente",
+          "conteudoVerso": "Conteúdo completo do verso do card...",
+          "ordem": 3
+        }
       ]
     }
   ]
@@ -180,6 +213,10 @@ ${text}
         // Filtrar conteúdo que seja idêntico ao título da unidade (evitar duplicação)
         const tituloNormalizado = unidade.titulo.trim().toLowerCase();
         const conteudoFiltrado = unidade.conteudo.filter((item) => {
+          // Não filtrar accordion e flipcard (eles não têm conteudo string)
+          if (item.tipo === 'accordion' || item.tipo === 'flipcard') {
+            return true;
+          }
           const conteudoItem = item.conteudo?.trim().toLowerCase() || '';
           // Remover se for idêntico ao título da unidade
           return conteudoItem !== tituloNormalizado;
@@ -194,6 +231,14 @@ ${text}
           item.ordem = j; // Reordenar após filtro
           // ID único: timestamp + random + índice da unidade + índice do conteúdo
           (item as any).id = `conteudo-${timestamp}-${randomSuffix}-${i}-${j}`;
+          
+          // Para accordions, garantir IDs únicos nos itens
+          if (item.tipo === 'accordion' && item.items && Array.isArray(item.items)) {
+            item.items = item.items.map((accordionItem: any, idx: number) => ({
+              ...accordionItem,
+              id: accordionItem.id || `accordion-item-${timestamp}-${randomSuffix}-${i}-${j}-${idx}`,
+            }));
+          }
         }
       }
     }
