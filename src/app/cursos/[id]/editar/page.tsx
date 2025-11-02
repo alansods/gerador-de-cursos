@@ -267,6 +267,8 @@ export default function EditarCursoPage() {
       tituloFrente: "",
       conteudoVerso: "",
       alturaCard: "300px",
+      itensLista: [],
+      tipoLista: "nao-ordenada",
     });
   };
 
