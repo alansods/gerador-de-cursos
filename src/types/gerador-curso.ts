@@ -5,9 +5,14 @@ export interface AccordionItem {
   conteudo: string
 }
 
+export interface ListaItem {
+  id: string
+  texto: string
+}
+
 export interface ConteudoUnidade {
   id: string
-  tipo: 'titulo' | 'paragrafo' | 'subtitulo' | 'imagem' | 'accordion' | 'flipcard'
+  tipo: 'titulo' | 'paragrafo' | 'subtitulo' | 'imagem' | 'accordion' | 'flipcard' | 'lista'
   conteudo: string
   ordem: number
   // Propriedades específicas para imagens
@@ -27,6 +32,9 @@ export interface ConteudoUnidade {
   tituloFrente?: string
   conteudoVerso?: string
   alturaCard?: string // altura do card em pixels ou viewport units
+  // Propriedades específicas para lista
+  itensLista?: ListaItem[]
+  tipoLista?: 'ordenada' | 'nao-ordenada' | 'check' // lista ordenada (numerada), não ordenada (bullets) ou com ícone de check
 }
 
 export interface Unidade {

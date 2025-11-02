@@ -44,6 +44,7 @@ import {
   Loader2,
   ChevronDown,
   RotateCcw,
+  List,
 } from "lucide-react";
 import {
   Tooltip,
@@ -88,7 +89,7 @@ export default function EditarCursoPage() {
   const [editandoConteudo, setEditandoConteudo] = useState<{
     unidadeId: string;
     conteudoId: string;
-    tipo: "paragrafo" | "subtitulo" | "titulo" | "imagem" | "accordion" | "flipcard";
+    tipo: "paragrafo" | "subtitulo" | "titulo" | "imagem" | "accordion" | "flipcard" | "lista";
     conteudo: string;
     tamanho?: "pequena" | "media" | "grande";
     legenda?: string;
@@ -102,9 +103,11 @@ export default function EditarCursoPage() {
     tituloFrente?: string;
     conteudoVerso?: string;
     alturaCard?: string;
+    itensLista?: Array<{ id: string; texto: string }>;
+    tipoLista?: "ordenada" | "nao-ordenada" | "check";
   } | null>(null);
   const [conteudoTemp, setConteudoTemp] = useState({
-    tipo: "paragrafo" as "paragrafo" | "subtitulo" | "titulo" | "imagem" | "accordion" | "flipcard",
+    tipo: "paragrafo" as "paragrafo" | "subtitulo" | "titulo" | "imagem" | "accordion" | "flipcard" | "lista",
     conteudo: "",
     unidadeId: "",
     tamanho: "media" as "pequena" | "media" | "grande",
@@ -123,6 +126,8 @@ export default function EditarCursoPage() {
     tituloFrente: "",
     conteudoVerso: "",
     alturaCard: "300px",
+    itensLista: [] as Array<{ id: string; texto: string }>,
+    tipoLista: "nao-ordenada" as "ordenada" | "nao-ordenada" | "check",
   });
   const [adicionarUnidadeModal, setAdicionarUnidadeModal] = useState(false);
   const [editarUnidadeModal, setEditarUnidadeModal] = useState(false);
@@ -436,6 +441,16 @@ export default function EditarCursoPage() {
         alert("Adicione o conteúdo do verso do flipcard.");
         return;
       }
+    } else if (conteudoTemp.tipo === "lista") {
+      // Validar lista
+      if (!conteudoTemp.itensLista || conteudoTemp.itensLista.length === 0) {
+        alert("Adicione pelo menos um item à lista.");
+        return;
+      }
+      if (conteudoTemp.itensLista.some((item) => !item.texto.trim())) {
+        alert("Todos os itens da lista devem ter texto preenchido.");
+        return;
+      }
     } else if (conteudoTemp.tipo === "imagem") {
       if (
         !conteudoTemp.tamanho ||
@@ -468,6 +483,8 @@ export default function EditarCursoPage() {
       tituloFrente: conteudoTemp.tituloFrente,
       conteudoVerso: conteudoTemp.conteudoVerso,
       alturaCard: conteudoTemp.alturaCard,
+      itensLista: conteudoTemp.itensLista,
+      tipoLista: conteudoTemp.tipoLista,
     });
     toast.success("Conteúdo adicionado");
     setConteudoTemp({
@@ -487,7 +504,7 @@ export default function EditarCursoPage() {
   const handleEditarConteudo = (
     unidadeId: string,
     conteudoId: string,
-    tipo: "paragrafo" | "subtitulo" | "titulo" | "imagem" | "accordion" | "flipcard",
+    tipo: "paragrafo" | "subtitulo" | "titulo" | "imagem" | "accordion" | "flipcard" | "lista",
     conteudo: string,
     tamanho?: "pequena" | "media" | "grande",
     legenda?: string,
@@ -500,7 +517,9 @@ export default function EditarCursoPage() {
     imagemFrente?: string,
     tituloFrente?: string,
     conteudoVerso?: string,
-    alturaCard?: string
+    alturaCard?: string,
+    itensLista?: Array<{ id: string; texto: string }>,
+    tipoLista?: "ordenada" | "nao-ordenada"
   ) => {
     editarConteudo(unidadeId, conteudoId, {
       tipo,
@@ -517,6 +536,8 @@ export default function EditarCursoPage() {
       tituloFrente,
       conteudoVerso,
       alturaCard,
+      itensLista,
+      tipoLista,
     });
     toast.success("Conteúdo atualizado");
     setEditandoConteudo(null);
@@ -555,13 +576,44 @@ export default function EditarCursoPage() {
     });
   };
 
+  // Funções para gerenciar itens da lista
+  const handleAdicionarItemLista = () => {
+    const novoItem = {
+      id: `lista-item-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
+      texto: "",
+    };
+    setConteudoTemp({
+      ...conteudoTemp,
+      itensLista: [...(conteudoTemp.itensLista || []), novoItem],
+    });
+  };
+
+  const handleRemoverItemLista = (itemId: string) => {
+    setConteudoTemp({
+      ...conteudoTemp,
+      itensLista: conteudoTemp.itensLista?.filter((item) => item.id !== itemId) || [],
+    });
+  };
+
+  const handleAtualizarItemLista = (
+    itemId: string,
+    valor: string
+  ) => {
+    setConteudoTemp({
+      ...conteudoTemp,
+      itensLista: conteudoTemp.itensLista?.map((item) =>
+        item.id === itemId ? { ...item, texto: valor } : item
+      ) || [],
+    });
+  };
+
   const handleDeletarConteudo = (unidadeId: string, conteudoId: string) => {
     setConteudoParaDeletar({ unidadeId, conteudoId });
     setConfirmarDeletarConteudo(true);
   };
 
   const handleSelecionarTipoConteudo = (
-    tipo: "titulo" | "subtitulo" | "paragrafo" | "imagem" | "accordion" | "flipcard",
+    tipo: "titulo" | "subtitulo" | "paragrafo" | "imagem" | "accordion" | "flipcard" | "lista",
     unidadeId?: string
   ) => {
     if (unidadeId) {
@@ -581,6 +633,8 @@ export default function EditarCursoPage() {
         tituloFrente: tipo === "flipcard" ? "" : undefined,
         conteudoVerso: tipo === "flipcard" ? "" : undefined,
         alturaCard: tipo === "flipcard" ? "300px" : undefined,
+        itensLista: tipo === "lista" ? [] : undefined,
+        tipoLista: tipo === "lista" ? "nao-ordenada" as "ordenada" | "nao-ordenada" | "check" : undefined,
       });
     }
   };
@@ -943,6 +997,29 @@ export default function EditarCursoPage() {
                                     </p>
                                   )}
                                 </div>
+                              ) : item.tipo === "lista" ? (
+                                <div className="space-y-2">
+                                  <p className="text-sm font-semibold text-gray-700">
+                                    Lista {item.tipoLista === "ordenada" ? "Ordenada" : item.tipoLista === "check" ? "com Check" : "Não Ordenada"} ({item.itensLista?.length || 0} {item.itensLista?.length === 1 ? "item" : "itens"})
+                                  </p>
+                                  {item.itensLista && item.itensLista.length > 0 && (
+                                    <div className="text-xs text-gray-500 space-y-1 max-h-32 overflow-y-auto">
+                                      {item.itensLista.slice(0, 3).map((listaItem, idx) => (
+                                        <div key={listaItem.id || idx} className="flex items-start gap-2">
+                                          <span className="mt-0.5">
+                                            {item.tipoLista === "ordenada" ? `${idx + 1}.` : item.tipoLista === "check" ? "✓" : "•"}
+                                          </span>
+                                          <span className="line-clamp-1">{listaItem.texto}</span>
+                                        </div>
+                                      ))}
+                                      {item.itensLista.length > 3 && (
+                                        <div className="text-gray-400">
+                                          +{item.itensLista.length - 3} mais
+                                        </div>
+                                      )}
+                                    </div>
+                                  )}
+                                </div>
                               ) : (
                                 <div
                                   className={`conteudo-paragrafo ${
@@ -1053,6 +1130,17 @@ export default function EditarCursoPage() {
                       >
                         <RotateCcw className="h-4 w-4 mr-2" />
                         FlipCard
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() =>
+                          handleSelecionarTipoConteudo("lista", unidade.id)
+                        }
+                        className="text-blue-600 border-blue-200 hover:bg-blue-50"
+                      >
+                        <List className="h-4 w-4 mr-2" />
+                        Lista
                       </Button>
                     </div>
                   </div>
@@ -1226,6 +1314,11 @@ export default function EditarCursoPage() {
                   <>
                     <RotateCcw className="h-5 w-5 text-blue-600" />
                     Adicionar FlipCard
+                  </>
+                ) : conteudoTemp.tipo === "lista" ? (
+                  <>
+                    <List className="h-5 w-5 text-blue-600" />
+                    Adicionar Lista
                   </>
                 ) : (
                   <>
@@ -1629,6 +1722,89 @@ export default function EditarCursoPage() {
                     </p>
                   </div>
                 </div>
+              ) : conteudoTemp.tipo === "lista" ? (
+                <div className="space-y-4">
+                  {/* Tipo de Lista */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Tipo de Lista <span className="text-red-500">*</span>
+                    </label>
+                    <select
+                      value={conteudoTemp.tipoLista || "nao-ordenada"}
+                      onChange={(e) =>
+                        setConteudoTemp({
+                          ...conteudoTemp,
+                          tipoLista: e.target.value as "ordenada" | "nao-ordenada" | "check",
+                        })
+                      }
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    >
+                      <option value="nao-ordenada">Não Ordenada (Bullets)</option>
+                      <option value="ordenada">Ordenada (Numerada)</option>
+                      <option value="check">Com Ícone de Check</option>
+                    </select>
+                  </div>
+
+                  {/* Itens da Lista */}
+                  <div className="flex items-center justify-between">
+                    <label className="block text-sm font-medium text-gray-700">
+                      Itens da Lista <span className="text-red-500">*</span>
+                    </label>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={handleAdicionarItemLista}
+                      className="text-blue-600 border-blue-200 hover:bg-blue-50"
+                    >
+                      <Plus className="h-4 w-4 mr-2" />
+                      Adicionar Item
+                    </Button>
+                  </div>
+                  
+                  {conteudoTemp.itensLista && conteudoTemp.itensLista.length > 0 ? (
+                    <div className="space-y-3 max-h-[400px] overflow-y-auto">
+                      {conteudoTemp.itensLista.map((item, index) => (
+                        <Card key={item.id} className="p-4">
+                          <div className="flex items-center justify-between mb-3">
+                            <span className="text-sm font-semibold text-gray-700">
+                              Item {index + 1}
+                            </span>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleRemoverItemLista(item.id)}
+                              className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                          <div>
+                            <label className="block text-xs font-medium text-gray-600 mb-1">
+                              Texto do Item <span className="text-red-500">*</span>
+                            </label>
+                            <Input
+                              value={item.texto}
+                              onChange={(e) =>
+                                handleAtualizarItemLista(item.id, e.target.value)
+                              }
+                              placeholder="Digite o texto do item..."
+                              className="text-sm"
+                            />
+                          </div>
+                        </Card>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-8 text-gray-500 text-sm border-2 border-dashed border-gray-300 rounded-lg">
+                      <p>Nenhum item adicionado ainda.</p>
+                      <p className="text-xs mt-1">
+                        Clique em "Adicionar Item" para começar.
+                      </p>
+                    </div>
+                  )}
+                </div>
               ) : (
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -1687,6 +1863,10 @@ export default function EditarCursoPage() {
                       (conteudoTemp.tipoFrente === "imagem" && !conteudoTemp.imagemFrente?.trim()) ||
                       (conteudoTemp.tipoFrente === "imagem-titulo" && (!conteudoTemp.imagemFrente?.trim() || !conteudoTemp.tituloFrente?.trim())) ||
                       (conteudoTemp.tipoFrente === "titulo" && !conteudoTemp.tituloFrente?.trim())
+                    : conteudoTemp.tipo === "lista"
+                    ? !conteudoTemp.itensLista ||
+                      conteudoTemp.itensLista.length === 0 ||
+                      conteudoTemp.itensLista.some((item) => !item.texto.trim())
                     : !conteudoTemp.conteudo.trim()) ||
                   (conteudoTemp.tipo === "imagem" &&
                     (!conteudoTemp.tamanho ||
@@ -1942,6 +2122,11 @@ export default function EditarCursoPage() {
                   <>
                     <RotateCcw className="h-4 w-4 text-blue-600" />
                     FlipCard
+                  </>
+                ) : editandoConteudo?.tipo === "lista" ? (
+                  <>
+                    <List className="h-4 w-4 text-blue-600" />
+                    Lista
                   </>
                 ) : (
                   <>
@@ -2373,6 +2558,115 @@ export default function EditarCursoPage() {
                     </p>
                   </div>
                 </div>
+              ) : editandoConteudo?.tipo === "lista" ? (
+                <div className="space-y-4">
+                  {/* Tipo de Lista */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Tipo de Lista <span className="text-red-500">*</span>
+                    </label>
+                    <select
+                      value={editandoConteudo.tipoLista || "nao-ordenada"}
+                      onChange={(e) =>
+                        editandoConteudo &&
+                        setEditandoConteudo({
+                          ...editandoConteudo,
+                          tipoLista: e.target.value as "ordenada" | "nao-ordenada" | "check",
+                        })
+                      }
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    >
+                      <option value="nao-ordenada">Não Ordenada (Bullets)</option>
+                      <option value="ordenada">Ordenada (Numerada)</option>
+                      <option value="check">Com Ícone de Check</option>
+                    </select>
+                  </div>
+
+                  {/* Itens da Lista */}
+                  <div className="flex items-center justify-between">
+                    <label className="block text-sm font-medium text-gray-700">
+                      Itens da Lista <span className="text-red-500">*</span>
+                    </label>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        if (editandoConteudo) {
+                          const novoItem = {
+                            id: `lista-item-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
+                            texto: "",
+                          };
+                          setEditandoConteudo({
+                            ...editandoConteudo,
+                            itensLista: [...(editandoConteudo.itensLista || []), novoItem],
+                          });
+                        }
+                      }}
+                      className="text-blue-600 border-blue-200 hover:bg-blue-50"
+                    >
+                      <Plus className="h-4 w-4 mr-2" />
+                      Adicionar Item
+                    </Button>
+                  </div>
+                  
+                  {(editandoConteudo.itensLista && editandoConteudo.itensLista.length > 0) ? (
+                    <div className="space-y-3 max-h-[400px] overflow-y-auto">
+                      {editandoConteudo.itensLista.map((item, index) => (
+                        <Card key={item.id} className="p-4">
+                          <div className="flex items-center justify-between mb-3">
+                            <span className="text-sm font-semibold text-gray-700">
+                              Item {index + 1}
+                            </span>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => {
+                                if (editandoConteudo) {
+                                  setEditandoConteudo({
+                                    ...editandoConteudo,
+                                    itensLista: editandoConteudo.itensLista?.filter((i) => i.id !== item.id) || [],
+                                  });
+                                }
+                              }}
+                              className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                          <div>
+                            <label className="block text-xs font-medium text-gray-600 mb-1">
+                              Texto do Item <span className="text-red-500">*</span>
+                            </label>
+                            <Input
+                              value={item.texto}
+                              onChange={(e) => {
+                                if (editandoConteudo) {
+                                  setEditandoConteudo({
+                                    ...editandoConteudo,
+                                    itensLista: editandoConteudo.itensLista?.map((i) =>
+                                      i.id === item.id ? { ...i, texto: e.target.value } : i
+                                    ) || [],
+                                  });
+                                }
+                              }}
+                              placeholder="Digite o texto do item..."
+                              className="text-sm"
+                            />
+                          </div>
+                        </Card>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-8 text-gray-500 text-sm border-2 border-dashed border-gray-300 rounded-lg">
+                      <p>Nenhum item adicionado ainda.</p>
+                      <p className="text-xs mt-1">
+                        Clique em "Adicionar Item" para começar.
+                      </p>
+                    </div>
+                  )}
+                </div>
               ) : (
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -2434,7 +2728,9 @@ export default function EditarCursoPage() {
                       editandoConteudo.imagemFrente,
                       editandoConteudo.tituloFrente,
                       editandoConteudo.conteudoVerso,
-                      editandoConteudo.alturaCard
+                      editandoConteudo.alturaCard,
+                      editandoConteudo.itensLista,
+                      editandoConteudo.tipoLista
                     );
                     closeEditarConteudoModal();
                   }
@@ -2453,6 +2749,10 @@ export default function EditarCursoPage() {
                       (editandoConteudo.tipoFrente === "imagem" && !editandoConteudo.imagemFrente?.trim()) ||
                       (editandoConteudo.tipoFrente === "imagem-titulo" && (!editandoConteudo.imagemFrente?.trim() || !editandoConteudo.tituloFrente?.trim())) ||
                       (editandoConteudo.tipoFrente === "titulo" && !editandoConteudo.tituloFrente?.trim())
+                    : editandoConteudo?.tipo === "lista"
+                    ? !editandoConteudo.itensLista ||
+                      editandoConteudo.itensLista.length === 0 ||
+                      editandoConteudo.itensLista.some((item) => !item.texto.trim())
                     : !editandoConteudo?.conteudo?.trim()) ||
                   (editandoConteudo?.tipo === "imagem" &&
                     (!editandoConteudo.tamanho ||

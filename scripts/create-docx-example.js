@@ -380,6 +380,100 @@ const doc = new Document({
           ],
         }),
         new Paragraph({ text: '' }),
+
+        // EXEMPLO DE LISTA
+        new Paragraph({
+          text: '💡 INDICADORES ESPECIAIS - Exemplo de LISTA',
+          heading: HeadingLevel.HEADING_2,
+        }),
+        new Paragraph({
+          text: 'Para criar listas ordenadas ou não ordenadas, use os marcadores abaixo:',
+        }),
+        new Paragraph({ text: '' }),
+        new Paragraph({
+          children: [
+            new TextRun({ text: 'LISTA_INICIO', bold: true }),
+          ],
+        }),
+        new Paragraph({
+          children: [
+            new TextRun({ text: 'Tipo de Lista: ', bold: true }),
+            new TextRun('nao-ordenada'),
+          ],
+        }),
+        new Paragraph({
+          children: [
+            new TextRun({ text: 'Item 1: ', bold: true }),
+            new TextRun('500g de farinha de trigo tipo 00'),
+          ],
+        }),
+        new Paragraph({
+          children: [
+            new TextRun({ text: 'Item 2: ', bold: true }),
+            new TextRun('325ml de água filtrada em temperatura ambiente'),
+          ],
+        }),
+        new Paragraph({
+          children: [
+            new TextRun({ text: 'Item 3: ', bold: true }),
+            new TextRun('10g de sal refinado'),
+          ],
+        }),
+        new Paragraph({
+          children: [
+            new TextRun({ text: 'Item 4: ', bold: true }),
+            new TextRun('3g de fermento biológico seco instantâneo'),
+          ],
+        }),
+        new Paragraph({
+          children: [
+            new TextRun({ text: 'LISTA_FIM', bold: true }),
+          ],
+        }),
+        new Paragraph({ text: '' }),
+        new Paragraph({
+          text: '📝 OBSERVAÇÃO: A IA irá transformar o conteúdo entre LISTA_INICIO e LISTA_FIM em uma lista interativa. Tipos disponíveis: "nao-ordenada" (com bullets) ou "ordenada" (numerada). Use "Item X:" para cada item da lista.',
+        }),
+        new Paragraph({ text: '' }),
+        new Paragraph({
+          text: 'Exemplo de Lista Ordenada:',
+        }),
+        new Paragraph({ text: '' }),
+        new Paragraph({
+          children: [
+            new TextRun({ text: 'LISTA_INICIO', bold: true }),
+          ],
+        }),
+        new Paragraph({
+          children: [
+            new TextRun({ text: 'Tipo de Lista: ', bold: true }),
+            new TextRun('ordenada'),
+          ],
+        }),
+        new Paragraph({
+          children: [
+            new TextRun({ text: 'Item 1: ', bold: true }),
+            new TextRun('Corte a carne em pedaços médios de aproximadamente 200g'),
+          ],
+        }),
+        new Paragraph({
+          children: [
+            new TextRun({ text: 'Item 2: ', bold: true }),
+            new TextRun('Coloque em uma tigela com água filtrada, cobrindo completamente a carne'),
+          ],
+        }),
+        new Paragraph({
+          children: [
+            new TextRun({ text: 'Item 3: ', bold: true }),
+            new TextRun('Leve à geladeira por no mínimo 12 horas, trocando a água a cada 4 horas'),
+          ],
+        }),
+        new Paragraph({
+          children: [
+            new TextRun({ text: 'LISTA_FIM', bold: true }),
+          ],
+        }),
+        new Paragraph({ text: '' }),
         new Paragraph({ text: '---' }),
         new Paragraph({ text: '' }),
 
@@ -399,6 +493,12 @@ const doc = new Document({
         }),
         new Paragraph({
           text: '• Especifique o Tipo de Frente: "titulo", "imagem" ou "imagem-titulo"',
+        }),
+        new Paragraph({
+          text: '• Use LISTA_INICIO e LISTA_FIM para criar listas ordenadas ou não ordenadas',
+        }),
+        new Paragraph({
+          text: '• Especifique o Tipo de Lista: "ordenada" (numerada) ou "nao-ordenada" (bullets)',
         }),
         new Paragraph({
           text: '• Para imagens, use URLs ou [IMAGEM: descrição] para placeholders',

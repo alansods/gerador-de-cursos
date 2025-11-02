@@ -129,6 +129,81 @@ export function UnidadeConteudo({ unidade, unidadeIndex }: UnidadeConteudoProps)
                       </div>
                     )}
                   </div>
+                ) : item.tipo === "lista" ? (
+                  <div className="mb-6">
+                    {item.itensLista && item.itensLista.length > 0 ? (
+                      item.tipoLista === "ordenada" ? (
+                        <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-6 border border-blue-200 shadow-sm">
+                          <ol className="space-y-3">
+                            {item.itensLista.map((listaItem, idx) => (
+                              <li
+                                key={listaItem.id || idx}
+                                className="flex items-start gap-3 p-3 bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow border-l-4 border-blue-500"
+                              >
+                                <span className="flex items-center justify-center w-8 h-8 bg-blue-500 text-white rounded-full font-semibold text-sm shrink-0">
+                                  {idx + 1}
+                                </span>
+                                <span
+                                  className="flex-1 text-gray-700 leading-relaxed pt-1"
+                                  dangerouslySetInnerHTML={{
+                                    __html: listaItem.texto,
+                                  }}
+                                />
+                              </li>
+                            ))}
+                          </ol>
+                        </div>
+                      ) : item.tipoLista === "check" ? (
+                        <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl p-6 border border-green-200 shadow-sm">
+                          <ul className="space-y-3">
+                            {item.itensLista.map((listaItem, idx) => (
+                              <li
+                                key={listaItem.id || idx}
+                                className="flex items-start gap-3 p-3 bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow border-l-4 border-green-500"
+                              >
+                                <span className="flex items-center justify-center w-6 h-6 mt-0.5 bg-green-500 rounded shrink-0">
+                                  <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                                  </svg>
+                                </span>
+                                <span
+                                  className="flex-1 text-gray-700 leading-relaxed"
+                                  dangerouslySetInnerHTML={{
+                                    __html: listaItem.texto,
+                                  }}
+                                />
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      ) : (
+                        <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-xl p-6 border border-purple-200 shadow-sm">
+                          <ul className="space-y-3">
+                            {item.itensLista.map((listaItem, idx) => (
+                              <li
+                                key={listaItem.id || idx}
+                                className="flex items-start gap-3 p-3 bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow border-l-4 border-purple-500"
+                              >
+                                <span className="flex items-center justify-center w-6 h-6 mt-0.5 bg-purple-500 rounded-full shrink-0">
+                                  <span className="w-2 h-2 bg-white rounded-full"></span>
+                                </span>
+                                <span
+                                  className="flex-1 text-gray-700 leading-relaxed"
+                                  dangerouslySetInnerHTML={{
+                                    __html: listaItem.texto,
+                                  }}
+                                />
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )
+                    ) : (
+                      <div className="text-gray-500 text-sm italic p-4 border border-gray-300 rounded-lg">
+                        Lista vazia
+                      </div>
+                    )}
+                  </div>
                 ) : (
                   <div
                     className={`text-gray-700 leading-relaxed text-base mb-4 ${

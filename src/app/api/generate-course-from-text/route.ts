@@ -70,7 +70,7 @@ Analise o documento abaixo e crie um curso estruturado, extraindo os metadados e
    - descricao: OBRIGATÓRIA - O que o aluno aprenderá nesta unidade
    - conteudo: Array de elementos formatados
 4. Cada elemento de conteúdo deve ter:
-   - tipo: "titulo", "subtitulo", "paragrafo", "imagem", "accordion" ou "flipcard"
+   - tipo: "titulo", "subtitulo", "paragrafo", "imagem", "accordion", "flipcard" ou "lista"
    - conteudo: O texto/URL do elemento
    - ordem: Número sequencial (0, 1, 2, ...)
 5. **IMPORTANTE: NÃO inclua o título da unidade como primeiro item do conteúdo!** O título já está no campo "titulo" da unidade. Comece o conteúdo diretamente com o conteúdo real (parágrafos, subtítulos, etc.)
@@ -91,6 +91,13 @@ Analise o documento abaixo e crie um curso estruturado, extraindo os metadados e
      **Título da Frente (se aplicável):** [texto]
      **Conteúdo do Verso:** [conteúdo completo]
    - Crie a estrutura: tipo: "flipcard", conteudo: "", tipoFrente: "...", imagemFrente: "...", tituloFrente: "...", conteudoVerso: "..."
+   
+   **LISTA_INICIO / LISTA_FIM:**
+   - Quando encontrar esses marcadores, crie um elemento de conteúdo do tipo "lista"
+   - Entre os marcadores, identifique:
+     **Tipo de Lista:** [ordenada / nao-ordenada / check]
+     **Item X:** [texto do item]
+   - Crie a estrutura: tipo: "lista", conteudo: "", tipoLista: "...", itensLista: [{ id: "item-1", texto: "..." }, ...]
 7. MANTENHA o conteúdo original do documento, apenas estruture-o
 8. Crie pelo menos 3 unidades de aprendizado
 9. Se encontrar referências a imagens (fora dos flipcards), crie elementos tipo "imagem"
@@ -125,6 +132,16 @@ Analise o documento abaixo e crie um curso estruturado, extraindo os metadados e
           "tituloFrente": "Título na Frente",
           "conteudoVerso": "Conteúdo completo do verso do card...",
           "ordem": 3
+        },
+        {
+          "tipo": "lista",
+          "conteudo": "",
+          "tipoLista": "check",
+          "itensLista": [
+            { "id": "item-1", "texto": "Primeiro item da lista" },
+            { "id": "item-2", "texto": "Segundo item da lista" }
+          ],
+          "ordem": 4
         }
       ]
     }
