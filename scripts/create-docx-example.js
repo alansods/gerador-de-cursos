@@ -432,7 +432,7 @@ const doc = new Document({
         }),
         new Paragraph({ text: '' }),
         new Paragraph({
-          text: '📝 OBSERVAÇÃO: A IA irá transformar o conteúdo entre LISTA_INICIO e LISTA_FIM em uma lista interativa. Tipos disponíveis: "nao-ordenada" (com bullets) ou "ordenada" (numerada). Use "Item X:" para cada item da lista.',
+          text: '📝 OBSERVAÇÃO: A IA irá transformar o conteúdo entre LISTA_INICIO e LISTA_FIM em uma lista interativa. Tipos disponíveis: "nao-ordenada" (com bullets), "ordenada" (numerada) ou "check" (com ícone de check). Use "Item X:" para cada item da lista.',
         }),
         new Paragraph({ text: '' }),
         new Paragraph({
@@ -474,6 +474,45 @@ const doc = new Document({
           ],
         }),
         new Paragraph({ text: '' }),
+        new Paragraph({
+          text: 'Exemplo de Lista com Ícone de Check:',
+        }),
+        new Paragraph({ text: '' }),
+        new Paragraph({
+          children: [
+            new TextRun({ text: 'LISTA_INICIO', bold: true }),
+          ],
+        }),
+        new Paragraph({
+          children: [
+            new TextRun({ text: 'Tipo de Lista: ', bold: true }),
+            new TextRun('check'),
+          ],
+        }),
+        new Paragraph({
+          children: [
+            new TextRun({ text: 'Item 1: ', bold: true }),
+            new TextRun('Farinha de trigo tipo 00 verificada e peneirada'),
+          ],
+        }),
+        new Paragraph({
+          children: [
+            new TextRun({ text: 'Item 2: ', bold: true }),
+            new TextRun('Água em temperatura ambiente preparada'),
+          ],
+        }),
+        new Paragraph({
+          children: [
+            new TextRun({ text: 'Item 3: ', bold: true }),
+            new TextRun('Sal e fermento medidos e separados'),
+          ],
+        }),
+        new Paragraph({
+          children: [
+            new TextRun({ text: 'LISTA_FIM', bold: true }),
+          ],
+        }),
+        new Paragraph({ text: '' }),
         new Paragraph({ text: '---' }),
         new Paragraph({ text: '' }),
 
@@ -495,10 +534,10 @@ const doc = new Document({
           text: '• Especifique o Tipo de Frente: "titulo", "imagem" ou "imagem-titulo"',
         }),
         new Paragraph({
-          text: '• Use LISTA_INICIO e LISTA_FIM para criar listas ordenadas ou não ordenadas',
+          text: '• Use LISTA_INICIO e LISTA_FIM para criar listas ordenadas, não ordenadas ou com ícone de check',
         }),
         new Paragraph({
-          text: '• Especifique o Tipo de Lista: "ordenada" (numerada) ou "nao-ordenada" (bullets)',
+          text: '• Especifique o Tipo de Lista: "ordenada" (numerada), "nao-ordenada" (bullets) ou "check" (com ícone de check)',
         }),
         new Paragraph({
           text: '• Para imagens, use URLs ou [IMAGEM: descrição] para placeholders',
