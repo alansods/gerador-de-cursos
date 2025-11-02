@@ -1,17 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import mammoth from 'mammoth';
 
-// Configuração do tamanho máximo do body (10MB)
-export const config = {
-  api: {
-    bodyParser: {
-      sizeLimit: '10mb',
-    },
-  },
-};
-
 // Configuração para Vercel
 export const maxDuration = 60; // 60s para plano Pro (10s para Hobby)
+export const runtime = 'nodejs';
 
 export async function POST(req: NextRequest) {
   try {

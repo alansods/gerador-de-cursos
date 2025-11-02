@@ -89,7 +89,14 @@ export default function EditarCursoPage() {
   const [editandoConteudo, setEditandoConteudo] = useState<{
     unidadeId: string;
     conteudoId: string;
-    tipo: "paragrafo" | "subtitulo" | "titulo" | "imagem" | "accordion" | "flipcard" | "lista";
+    tipo:
+      | "paragrafo"
+      | "subtitulo"
+      | "titulo"
+      | "imagem"
+      | "accordion"
+      | "flipcard"
+      | "lista";
     conteudo: string;
     tamanho?: "pequena" | "media" | "grande";
     legenda?: string;
@@ -107,7 +114,14 @@ export default function EditarCursoPage() {
     tipoLista?: "ordenada" | "nao-ordenada" | "check";
   } | null>(null);
   const [conteudoTemp, setConteudoTemp] = useState({
-    tipo: "paragrafo" as "paragrafo" | "subtitulo" | "titulo" | "imagem" | "accordion" | "flipcard" | "lista",
+    tipo: "paragrafo" as
+      | "paragrafo"
+      | "subtitulo"
+      | "titulo"
+      | "imagem"
+      | "accordion"
+      | "flipcard"
+      | "lista",
     conteudo: "",
     unidadeId: "",
     tamanho: "media" as "pequena" | "media" | "grande",
@@ -286,7 +300,7 @@ export default function EditarCursoPage() {
           modalidade: modalidadeEditada,
           categoria: categoriaEditada,
         });
-    } catch (error) {
+      } catch (error) {
         console.error("Erro ao salvar edição do curso:", error);
       }
     }
@@ -326,7 +340,11 @@ export default function EditarCursoPage() {
     setConfirmarDeletarUnidade(true);
   };
 
-  const handleUploadImage = async (file: File, forEdit: boolean = false, forFlipcard: boolean = false) => {
+  const handleUploadImage = async (
+    file: File,
+    forEdit: boolean = false,
+    forFlipcard: boolean = false
+  ) => {
     if (!file) return;
 
     // Validar tipo
@@ -418,7 +436,9 @@ export default function EditarCursoPage() {
         (item) => !item.titulo.trim() || !item.conteudo.trim()
       );
       if (itensInvalidos) {
-        alert("Todos os itens do accordion devem ter título e conteúdo preenchidos.");
+        alert(
+          "Todos os itens do accordion devem ter título e conteúdo preenchidos."
+        );
         return;
       }
     } else if (conteudoTemp.tipo === "flipcard") {
@@ -427,15 +447,25 @@ export default function EditarCursoPage() {
         alert("Selecione o tipo de frente do flipcard.");
         return;
       }
-      if (conteudoTemp.tipoFrente === "imagem" && !conteudoTemp.imagemFrente?.trim()) {
+      if (
+        conteudoTemp.tipoFrente === "imagem" &&
+        !conteudoTemp.imagemFrente?.trim()
+      ) {
         alert("Adicione uma imagem para a frente do flipcard.");
         return;
       }
-      if (conteudoTemp.tipoFrente === "imagem-titulo" && (!conteudoTemp.imagemFrente?.trim() || !conteudoTemp.tituloFrente?.trim())) {
+      if (
+        conteudoTemp.tipoFrente === "imagem-titulo" &&
+        (!conteudoTemp.imagemFrente?.trim() ||
+          !conteudoTemp.tituloFrente?.trim())
+      ) {
         alert("Adicione uma imagem e um título para a frente do flipcard.");
         return;
       }
-      if (conteudoTemp.tipoFrente === "titulo" && !conteudoTemp.tituloFrente?.trim()) {
+      if (
+        conteudoTemp.tipoFrente === "titulo" &&
+        !conteudoTemp.tituloFrente?.trim()
+      ) {
         alert("Adicione um título para a frente do flipcard.");
         return;
       }
@@ -500,13 +530,27 @@ export default function EditarCursoPage() {
       alinhamento: "esquerda",
       colunas: 12,
       items: [],
+      tipoFrente: "titulo",
+      imagemFrente: "",
+      tituloFrente: "",
+      conteudoVerso: "",
+      alturaCard: "300px",
+      itensLista: [],
+      tipoLista: "nao-ordenada",
     });
   };
 
   const handleEditarConteudo = (
     unidadeId: string,
     conteudoId: string,
-    tipo: "paragrafo" | "subtitulo" | "titulo" | "imagem" | "accordion" | "flipcard" | "lista",
+    tipo:
+      | "paragrafo"
+      | "subtitulo"
+      | "titulo"
+      | "imagem"
+      | "accordion"
+      | "flipcard"
+      | "lista",
     conteudo: string,
     tamanho?: "pequena" | "media" | "grande",
     legenda?: string,
@@ -521,7 +565,7 @@ export default function EditarCursoPage() {
     conteudoVerso?: string,
     alturaCard?: string,
     itensLista?: Array<{ id: string; texto: string }>,
-    tipoLista?: "ordenada" | "nao-ordenada"
+    tipoLista?: "ordenada" | "nao-ordenada" | "check"
   ) => {
     editarConteudo(unidadeId, conteudoId, {
       tipo,
@@ -548,7 +592,9 @@ export default function EditarCursoPage() {
   // Funções para gerenciar itens do accordion
   const handleAdicionarItemAccordion = () => {
     const novoItem = {
-      id: `accordion-item-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
+      id: `accordion-item-${Date.now()}-${Math.random()
+        .toString(36)
+        .substring(2, 9)}`,
       titulo: "",
       conteudo: "",
     };
@@ -572,16 +618,19 @@ export default function EditarCursoPage() {
   ) => {
     setConteudoTemp({
       ...conteudoTemp,
-      items: conteudoTemp.items?.map((item) =>
-        item.id === itemId ? { ...item, [campo]: valor } : item
-      ) || [],
+      items:
+        conteudoTemp.items?.map((item) =>
+          item.id === itemId ? { ...item, [campo]: valor } : item
+        ) || [],
     });
   };
 
   // Funções para gerenciar itens da lista
   const handleAdicionarItemLista = () => {
     const novoItem = {
-      id: `lista-item-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
+      id: `lista-item-${Date.now()}-${Math.random()
+        .toString(36)
+        .substring(2, 9)}`,
       texto: "",
     };
     setConteudoTemp({
@@ -593,19 +642,18 @@ export default function EditarCursoPage() {
   const handleRemoverItemLista = (itemId: string) => {
     setConteudoTemp({
       ...conteudoTemp,
-      itensLista: conteudoTemp.itensLista?.filter((item) => item.id !== itemId) || [],
+      itensLista:
+        conteudoTemp.itensLista?.filter((item) => item.id !== itemId) || [],
     });
   };
 
-  const handleAtualizarItemLista = (
-    itemId: string,
-    valor: string
-  ) => {
+  const handleAtualizarItemLista = (itemId: string, valor: string) => {
     setConteudoTemp({
       ...conteudoTemp,
-      itensLista: conteudoTemp.itensLista?.map((item) =>
-        item.id === itemId ? { ...item, texto: valor } : item
-      ) || [],
+      itensLista:
+        conteudoTemp.itensLista?.map((item) =>
+          item.id === itemId ? { ...item, texto: valor } : item
+        ) || [],
     });
   };
 
@@ -615,7 +663,14 @@ export default function EditarCursoPage() {
   };
 
   const handleSelecionarTipoConteudo = (
-    tipo: "titulo" | "subtitulo" | "paragrafo" | "imagem" | "accordion" | "flipcard" | "lista",
+    tipo:
+      | "titulo"
+      | "subtitulo"
+      | "paragrafo"
+      | "imagem"
+      | "accordion"
+      | "flipcard"
+      | "lista",
     unidadeId?: string
   ) => {
     if (unidadeId) {
@@ -629,14 +684,14 @@ export default function EditarCursoPage() {
         corTexto: "#000000",
         alinhamento: "esquerda",
         colunas: 12,
-        items: tipo === "accordion" ? [] : undefined,
-        tipoFrente: tipo === "flipcard" ? "titulo" : undefined,
-        imagemFrente: tipo === "flipcard" ? "" : undefined,
-        tituloFrente: tipo === "flipcard" ? "" : undefined,
-        conteudoVerso: tipo === "flipcard" ? "" : undefined,
-        alturaCard: tipo === "flipcard" ? "300px" : undefined,
-        itensLista: tipo === "lista" ? [] : undefined,
-        tipoLista: tipo === "lista" ? "nao-ordenada" as "ordenada" | "nao-ordenada" | "check" : undefined,
+        items: tipo === "accordion" ? [] : [],
+        tipoFrente: tipo === "flipcard" ? "titulo" : "titulo",
+        imagemFrente: tipo === "flipcard" ? "" : "",
+        tituloFrente: tipo === "flipcard" ? "" : "",
+        conteudoVerso: tipo === "flipcard" ? "" : "",
+        alturaCard: tipo === "flipcard" ? "300px" : "300px",
+        itensLista: tipo === "lista" ? [] : [],
+        tipoLista: tipo === "lista" ? "nao-ordenada" : "nao-ordenada",
       });
     }
   };
@@ -726,14 +781,14 @@ export default function EditarCursoPage() {
             </h1>
             <Button onClick={handleVoltar} variant="outline">
               Voltar para lista de cursos
-          </Button>
+            </Button>
+          </div>
         </div>
-      </div>
       );
-  }
+    }
 
     // Se encontrou mas ainda não selecionou, mostrar loading enquanto seleciona
-  return (
+    return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
@@ -759,7 +814,7 @@ export default function EditarCursoPage() {
     <PageTransition>
       <div className="min-h-screen bg-linear-to-br from-blue-50 via-white to-purple-50">
         {/* Header */}
-        <div className="bg-white/80 backdrop-blur-sm border-b-[1px] border-[#e5e7eb] sticky top-0 z-50">
+        <div className="bg-white/80 backdrop-blur-sm border-b border-[#e5e7eb] sticky top-0 z-50">
           <div className="max-w-6xl mx-auto px-6 py-4">
             <div className="flex items-center justify-between">
               <Button variant="outline" size="sm" onClick={handleVoltar}>
@@ -810,14 +865,14 @@ export default function EditarCursoPage() {
                   <TooltipProvider>
                     <Tooltip>
                       <TooltipTrigger asChild>
-            <Button
-              variant="outline"
-              size="sm"
+                        <Button
+                          variant="outline"
+                          size="sm"
                           onClick={() => setEditarCursoModal(true)}
                           className="p-2 bg-white/10 border-white/20 text-white hover:bg-white/20"
-            >
+                        >
                           <Edit className="h-4 w-4" />
-            </Button>
+                        </Button>
                       </TooltipTrigger>
                       <TooltipContent>Editar curso</TooltipContent>
                     </Tooltip>
@@ -830,14 +885,13 @@ export default function EditarCursoPage() {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="flex items-center gap-3 bg-white/10 rounded-lg p-3">
                   <Clock className="h-5 w-5 text-blue-200" />
-            <div>
+                  <div>
                     <p className="text-sm text-blue-200">Carga Horária</p>
                     <p className="font-semibold">
                       {state.cursoAtual.cargaHoraria}
                     </p>
-            </div>
-          </div>
-
+                  </div>
+                </div>
 
                 <div className="flex items-center gap-3 bg-white/10 rounded-lg p-3">
                   <GraduationCap className="h-5 w-5 text-blue-200" />
@@ -874,7 +928,7 @@ export default function EditarCursoPage() {
                 key={unidade.id}
                 className="group bg-white/80 backdrop-blur-sm"
               >
-                <CardHeader className="bg-linear-to-r from-gray-50 to-blue-50 border-b-[1px] border-[#e5e7eb]">
+                <CardHeader className="bg-linear-to-r from-gray-50 to-blue-50 border-b border-[#e5e7eb]">
                   <div className="flex items-center justify-between">
                     <div className="flex-1">
                       <div className="flex items-center space-x-3">
@@ -897,7 +951,7 @@ export default function EditarCursoPage() {
                       onDeletar={handleDeletarUnidade}
                     />
                   </div>
-            </CardHeader>
+                </CardHeader>
 
                 <CardContent className="pt-6">
                   {/* Lista de Conteúdo */}
@@ -944,7 +998,13 @@ export default function EditarCursoPage() {
                               ) : item.tipo === "flipcard" ? (
                                 <div className="space-y-2">
                                   <p className="text-sm font-semibold text-gray-700">
-                                    FlipCard ({item.tipoFrente === "imagem" ? "Imagem" : item.tipoFrente === "imagem-titulo" ? "Imagem + Título" : "Título"})
+                                    FlipCard (
+                                    {item.tipoFrente === "imagem"
+                                      ? "Imagem"
+                                      : item.tipoFrente === "imagem-titulo"
+                                      ? "Imagem + Título"
+                                      : "Título"}
+                                    )
                                   </p>
                                   {item.tituloFrente && (
                                     <p className="text-xs text-gray-500">
@@ -955,15 +1015,21 @@ export default function EditarCursoPage() {
                               ) : item.tipo === "accordion" ? (
                                 <div className="space-y-2">
                                   <p className="text-sm font-semibold text-gray-700">
-                                    Accordion ({item.items?.length || 0} {item.items?.length === 1 ? "item" : "itens"})
+                                    Accordion ({item.items?.length || 0}{" "}
+                                    {item.items?.length === 1
+                                      ? "item"
+                                      : "itens"}
+                                    )
                                   </p>
                                   {item.items && item.items.length > 0 && (
                                     <div className="text-xs text-gray-500 space-y-1">
-                                      {item.items.slice(0, 2).map((accordionItem, idx) => (
-                                        <div key={accordionItem.id || idx}>
-                                          • {accordionItem.titulo}
-                                        </div>
-                                      ))}
+                                      {item.items
+                                        .slice(0, 2)
+                                        .map((accordionItem, idx) => (
+                                          <div key={accordionItem.id || idx}>
+                                            • {accordionItem.titulo}
+                                          </div>
+                                        ))}
                                       {item.items.length > 2 && (
                                         <div className="text-gray-400">
                                           +{item.items.length - 2} mais
@@ -973,7 +1039,7 @@ export default function EditarCursoPage() {
                                   )}
                                 </div>
                               ) : item.tipo === "imagem" ? (
-                  <div className="space-y-2">
+                                <div className="space-y-2">
                                   {item.fonte && (
                                     <p className="text-xs text-gray-500">
                                       Fonte: {item.fonte}
@@ -982,7 +1048,7 @@ export default function EditarCursoPage() {
                                   <img
                                     src={item.conteudo}
                                     alt={item.legenda || "Imagem"}
-                                    className={`h-auto object-contain border-[1px] border-[#e5e7eb] rounded-md ${
+                                    className={`h-auto object-contain border border-[#e5e7eb] rounded-md ${
                                       item.tamanho === "pequena"
                                         ? "max-w-xs"
                                         : item.tamanho === "media"
@@ -1002,25 +1068,47 @@ export default function EditarCursoPage() {
                               ) : item.tipo === "lista" ? (
                                 <div className="space-y-2">
                                   <p className="text-sm font-semibold text-gray-700">
-                                    Lista {item.tipoLista === "ordenada" ? "Ordenada" : item.tipoLista === "check" ? "com Check" : "Não Ordenada"} ({item.itensLista?.length || 0} {item.itensLista?.length === 1 ? "item" : "itens"})
+                                    Lista{" "}
+                                    {item.tipoLista === "ordenada"
+                                      ? "Ordenada"
+                                      : item.tipoLista === "check"
+                                      ? "com Check"
+                                      : "Não Ordenada"}{" "}
+                                    ({item.itensLista?.length || 0}{" "}
+                                    {item.itensLista?.length === 1
+                                      ? "item"
+                                      : "itens"}
+                                    )
                                   </p>
-                                  {item.itensLista && item.itensLista.length > 0 && (
-                                    <div className="text-xs text-gray-500 space-y-1 max-h-32 overflow-y-auto">
-                                      {item.itensLista.slice(0, 3).map((listaItem, idx) => (
-                                        <div key={listaItem.id || idx} className="flex items-start gap-2">
-                                          <span className="mt-0.5">
-                                            {item.tipoLista === "ordenada" ? `${idx + 1}.` : item.tipoLista === "check" ? "✓" : "•"}
-                                          </span>
-                                          <span className="line-clamp-1">{listaItem.texto}</span>
-                                        </div>
-                                      ))}
-                                      {item.itensLista.length > 3 && (
-                                        <div className="text-gray-400">
-                                          +{item.itensLista.length - 3} mais
-                                        </div>
-                                      )}
-                                    </div>
-                                  )}
+                                  {item.itensLista &&
+                                    item.itensLista.length > 0 && (
+                                      <div className="text-xs text-gray-500 space-y-1 max-h-32 overflow-y-auto">
+                                        {item.itensLista
+                                          .slice(0, 3)
+                                          .map((listaItem, idx) => (
+                                            <div
+                                              key={listaItem.id || idx}
+                                              className="flex items-start gap-2"
+                                            >
+                                              <span className="mt-0.5">
+                                                {item.tipoLista === "ordenada"
+                                                  ? `${idx + 1}.`
+                                                  : item.tipoLista === "check"
+                                                  ? "✓"
+                                                  : "•"}
+                                              </span>
+                                              <span className="line-clamp-1">
+                                                {listaItem.texto}
+                                              </span>
+                                            </div>
+                                          ))}
+                                        {item.itensLista.length > 3 && (
+                                          <div className="text-gray-400">
+                                            +{item.itensLista.length - 3} mais
+                                          </div>
+                                        )}
+                                      </div>
+                                    )}
                                 </div>
                               ) : (
                                 <div
@@ -1065,7 +1153,7 @@ export default function EditarCursoPage() {
                   )}
 
                   {/* Botão para adicionar conteúdo */}
-                  <div className="mt-4 pt-4 border-t-[1px] border-[#e5e7eb]">
+                  <div className="mt-4 pt-4 border-t border-[#e5e7eb]">
                     <div className="flex flex-wrap gap-2">
                       <Button
                         variant="outline"
@@ -1208,13 +1296,13 @@ export default function EditarCursoPage() {
               <div>
                 <label className="text-sm font-medium text-gray-700 mb-2 block">
                   Título do Curso <span className="text-red-500">*</span>
-                    </label>
-                    <Input
+                </label>
+                <Input
                   value={tituloEditado}
                   onChange={(e) => setTituloEditado(e.target.value)}
                   placeholder="Título do curso"
-                    />
-                  </div>
+                />
+              </div>
               <div>
                 <label className="text-sm font-medium text-gray-700 mb-2 block">
                   Descrição do Curso <span className="text-red-500">*</span>
@@ -1395,7 +1483,7 @@ export default function EditarCursoPage() {
 
                       {/* Input de URL */}
                       <div>
-                    <Input
+                        <Input
                           value={conteudoTemp.conteudo}
                           onChange={(e) => {
                             setConteudoTemp({
@@ -1424,13 +1512,13 @@ export default function EditarCursoPage() {
                           />
                         </div>
                       )}
+                    </div>
                   </div>
-                </div>
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Tamanho da Imagem <span className="text-red-500">*</span>
-                  </label>
+                    </label>
                     <select
                       value={conteudoTemp.tamanho || ""}
                       onChange={(e) =>
@@ -1464,8 +1552,8 @@ export default function EditarCursoPage() {
                         })
                       }
                       placeholder="Digite a legenda da imagem..."
-                  />
-                </div>
+                    />
+                  </div>
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -1500,7 +1588,7 @@ export default function EditarCursoPage() {
                       Adicionar Item
                     </Button>
                   </div>
-                  
+
                   {conteudoTemp.items && conteudoTemp.items.length > 0 ? (
                     <div className="space-y-3 max-h-[400px] overflow-y-auto">
                       {conteudoTemp.items.map((item, index) => (
@@ -1513,7 +1601,9 @@ export default function EditarCursoPage() {
                               type="button"
                               variant="ghost"
                               size="sm"
-                              onClick={() => handleRemoverItemAccordion(item.id)}
+                              onClick={() =>
+                                handleRemoverItemAccordion(item.id)
+                              }
                               className="text-red-600 hover:text-red-700 hover:bg-red-50"
                             >
                               <Trash2 className="h-4 w-4" />
@@ -1580,19 +1670,25 @@ export default function EditarCursoPage() {
                       onChange={(e) =>
                         setConteudoTemp({
                           ...conteudoTemp,
-                          tipoFrente: e.target.value as "imagem" | "imagem-titulo" | "titulo",
+                          tipoFrente: e.target.value as
+                            | "imagem"
+                            | "imagem-titulo"
+                            | "titulo",
                         })
                       }
                       className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     >
                       <option value="imagem">Apenas Imagem</option>
-                      <option value="imagem-titulo">Imagem com Título no Rodapé</option>
+                      <option value="imagem-titulo">
+                        Imagem com Título no Rodapé
+                      </option>
                       <option value="titulo">Apenas Título Centralizado</option>
                     </select>
                   </div>
 
                   {/* Imagem (se necessário) */}
-                  {(conteudoTemp.tipoFrente === "imagem" || conteudoTemp.tipoFrente === "imagem-titulo") && (
+                  {(conteudoTemp.tipoFrente === "imagem" ||
+                    conteudoTemp.tipoFrente === "imagem-titulo") && (
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
                         Imagem da Frente <span className="text-red-500">*</span>
@@ -1604,14 +1700,22 @@ export default function EditarCursoPage() {
                             {isUploadingImage ? (
                               <div className="flex flex-col items-center gap-2">
                                 <Loader2 className="h-6 w-6 animate-spin text-blue-600" />
-                                <span className="text-sm text-gray-600">Enviando...</span>
+                                <span className="text-sm text-gray-600">
+                                  Enviando...
+                                </span>
                               </div>
                             ) : (
                               <div className="flex flex-col items-center gap-2">
                                 <Upload className="h-6 w-6 text-gray-400" />
-                                <span className="text-sm text-gray-600">Clique para fazer upload</span>
-                                <span className="text-xs text-gray-500">ou arraste a imagem aqui</span>
-                                <span className="text-xs text-gray-400">JPG, PNG, GIF, WEBP, SVG (máx. 10MB)</span>
+                                <span className="text-sm text-gray-600">
+                                  Clique para fazer upload
+                                </span>
+                                <span className="text-xs text-gray-500">
+                                  ou arraste a imagem aqui
+                                </span>
+                                <span className="text-xs text-gray-400">
+                                  JPG, PNG, GIF, WEBP, SVG (máx. 10MB)
+                                </span>
                               </div>
                             )}
                             <input
@@ -1635,7 +1739,9 @@ export default function EditarCursoPage() {
                             <div className="w-full border-t border-gray-300"></div>
                           </div>
                           <div className="relative flex justify-center text-sm">
-                            <span className="bg-white px-2 text-gray-500">ou</span>
+                            <span className="bg-white px-2 text-gray-500">
+                              ou
+                            </span>
                           </div>
                         </div>
 
@@ -1667,7 +1773,8 @@ export default function EditarCursoPage() {
                   )}
 
                   {/* Título (se necessário) */}
-                  {(conteudoTemp.tipoFrente === "imagem-titulo" || conteudoTemp.tipoFrente === "titulo") && (
+                  {(conteudoTemp.tipoFrente === "imagem-titulo" ||
+                    conteudoTemp.tipoFrente === "titulo") && (
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
                         Título da Frente <span className="text-red-500">*</span>
@@ -1720,7 +1827,8 @@ export default function EditarCursoPage() {
                       placeholder="Ex: 300px, 400px, 50vh"
                     />
                     <p className="text-xs text-gray-500 mt-1">
-                      Use valores como "300px", "400px" ou "50vh" (viewport height)
+                      Use valores como "300px", "400px" ou "50vh" (viewport
+                      height)
                     </p>
                   </div>
                 </div>
@@ -1736,12 +1844,17 @@ export default function EditarCursoPage() {
                       onChange={(e) =>
                         setConteudoTemp({
                           ...conteudoTemp,
-                          tipoLista: e.target.value as "ordenada" | "nao-ordenada" | "check",
+                          tipoLista: e.target.value as
+                            | "ordenada"
+                            | "nao-ordenada"
+                            | "check",
                         })
                       }
                       className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     >
-                      <option value="nao-ordenada">Não Ordenada (Bullets)</option>
+                      <option value="nao-ordenada">
+                        Não Ordenada (Bullets)
+                      </option>
                       <option value="ordenada">Ordenada (Numerada)</option>
                       <option value="check">Com Ícone de Check</option>
                     </select>
@@ -1763,8 +1876,9 @@ export default function EditarCursoPage() {
                       Adicionar Item
                     </Button>
                   </div>
-                  
-                  {conteudoTemp.itensLista && conteudoTemp.itensLista.length > 0 ? (
+
+                  {conteudoTemp.itensLista &&
+                  conteudoTemp.itensLista.length > 0 ? (
                     <div className="space-y-3 max-h-[400px] overflow-y-auto">
                       {conteudoTemp.itensLista.map((item, index) => (
                         <Card key={item.id} className="p-4">
@@ -1784,12 +1898,16 @@ export default function EditarCursoPage() {
                           </div>
                           <div>
                             <label className="block text-xs font-medium text-gray-600 mb-1">
-                              Texto do Item <span className="text-red-500">*</span>
+                              Texto do Item{" "}
+                              <span className="text-red-500">*</span>
                             </label>
                             <Input
                               value={item.texto}
                               onChange={(e) =>
-                                handleAtualizarItemLista(item.id, e.target.value)
+                                handleAtualizarItemLista(
+                                  item.id,
+                                  e.target.value
+                                )
                               }
                               placeholder="Digite o texto do item..."
                               className="text-sm"
@@ -1862,9 +1980,13 @@ export default function EditarCursoPage() {
                     : conteudoTemp.tipo === "flipcard"
                     ? !conteudoTemp.tipoFrente ||
                       !conteudoTemp.conteudoVerso?.trim() ||
-                      (conteudoTemp.tipoFrente === "imagem" && !conteudoTemp.imagemFrente?.trim()) ||
-                      (conteudoTemp.tipoFrente === "imagem-titulo" && (!conteudoTemp.imagemFrente?.trim() || !conteudoTemp.tituloFrente?.trim())) ||
-                      (conteudoTemp.tipoFrente === "titulo" && !conteudoTemp.tituloFrente?.trim())
+                      (conteudoTemp.tipoFrente === "imagem" &&
+                        !conteudoTemp.imagemFrente?.trim()) ||
+                      (conteudoTemp.tipoFrente === "imagem-titulo" &&
+                        (!conteudoTemp.imagemFrente?.trim() ||
+                          !conteudoTemp.tituloFrente?.trim())) ||
+                      (conteudoTemp.tipoFrente === "titulo" &&
+                        !conteudoTemp.tituloFrente?.trim())
                     : conteudoTemp.tipo === "lista"
                     ? !conteudoTemp.itensLista ||
                       conteudoTemp.itensLista.length === 0 ||
@@ -1901,16 +2023,16 @@ export default function EditarCursoPage() {
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Título da Unidade <span className="text-red-500">*</span>
-                    </label>
-                    <Input
+                </label>
+                <Input
                   value={novaUnidade}
                   onChange={(e) => setNovaUnidade(e.target.value)}
                   placeholder="Título da unidade"
                   onKeyPress={(e) =>
                     e.key === "Enter" && handleAdicionarUnidade()
                   }
-                    />
-                  </div>
+                />
+              </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -1924,7 +2046,7 @@ export default function EditarCursoPage() {
                   rows={4}
                   required
                 />
-                </div>
+              </div>
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={closeAdicionarUnidadeModal}>
@@ -1963,16 +2085,16 @@ export default function EditarCursoPage() {
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Título da Unidade <span className="text-red-500">*</span>
-                  </label>
-                  <Input
+                </label>
+                <Input
                   value={tituloUnidadeEditando}
                   onChange={(e) => setTituloUnidadeEditando(e.target.value)}
                   placeholder="Digite o título da unidade..."
                   onKeyPress={(e) =>
                     e.key === "Enter" && handleSalvarEdicaoUnidade()
                   }
-                  />
-                </div>
+                />
+              </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -1992,7 +2114,7 @@ export default function EditarCursoPage() {
               <Button variant="outline" onClick={closeEditarUnidadeModal}>
                 Cancelar
               </Button>
-                  <Button
+              <Button
                 onClick={handleSalvarEdicaoUnidade}
                 className="bg-blue-600 hover:bg-blue-700"
                 disabled={
@@ -2001,7 +2123,7 @@ export default function EditarCursoPage() {
                 }
               >
                 Salvar
-                  </Button>
+              </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
@@ -2023,12 +2145,12 @@ export default function EditarCursoPage() {
               </DialogDescription>
             </DialogHeader>
             <DialogFooter>
-                  <Button
-                    variant="outline"
+              <Button
+                variant="outline"
                 onClick={closeConfirmarDeletarUnidadeModal}
-                  >
-                    Cancelar
-                  </Button>
+              >
+                Cancelar
+              </Button>
               <Button
                 onClick={() => {
                   if (unidadeParaDeletar && state.cursoAtual) {
@@ -2157,7 +2279,7 @@ export default function EditarCursoPage() {
                               <span className="text-sm text-gray-600">
                                 Enviando...
                               </span>
-                </div>
+                            </div>
                           ) : (
                             <div className="flex flex-col items-center gap-2">
                               <Upload className="h-6 w-6 text-gray-400" />
@@ -2170,7 +2292,7 @@ export default function EditarCursoPage() {
                               <span className="text-xs text-gray-400">
                                 JPG, PNG, GIF, WEBP, SVG (máx. 10MB)
                               </span>
-        </div>
+                            </div>
                           )}
                           <input
                             type="file"
@@ -2185,13 +2307,13 @@ export default function EditarCursoPage() {
                             disabled={isUploadingImage}
                           />
                         </label>
-      </div>
+                      </div>
 
                       {/* Divisor */}
                       <div className="relative">
                         <div className="absolute inset-0 flex items-center">
                           <div className="w-full border-t border-gray-300"></div>
-    </div>
+                        </div>
                         <div className="relative flex justify-center text-sm">
                           <span className="bg-white px-2 text-gray-500">
                             ou
@@ -2302,13 +2424,18 @@ export default function EditarCursoPage() {
                       onClick={() => {
                         if (editandoConteudo) {
                           const novoItem = {
-                            id: `accordion-item-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
+                            id: `accordion-item-${Date.now()}-${Math.random()
+                              .toString(36)
+                              .substring(2, 9)}`,
                             titulo: "",
                             conteudo: "",
                           };
                           setEditandoConteudo({
                             ...editandoConteudo,
-                            items: [...(editandoConteudo.items || []), novoItem],
+                            items: [
+                              ...(editandoConteudo.items || []),
+                              novoItem,
+                            ],
                           });
                         }
                       }}
@@ -2318,8 +2445,9 @@ export default function EditarCursoPage() {
                       Adicionar Item
                     </Button>
                   </div>
-                  
-                  {editandoConteudo.items && editandoConteudo.items.length > 0 ? (
+
+                  {editandoConteudo.items &&
+                  editandoConteudo.items.length > 0 ? (
                     <div className="space-y-3 max-h-[400px] overflow-y-auto">
                       {editandoConteudo.items.map((item, index) => (
                         <Card key={item.id} className="p-4">
@@ -2335,7 +2463,10 @@ export default function EditarCursoPage() {
                                 if (editandoConteudo) {
                                   setEditandoConteudo({
                                     ...editandoConteudo,
-                                    items: editandoConteudo.items?.filter((i) => i.id !== item.id) || [],
+                                    items:
+                                      editandoConteudo.items?.filter(
+                                        (i) => i.id !== item.id
+                                      ) || [],
                                   });
                                 }
                               }}
@@ -2355,9 +2486,12 @@ export default function EditarCursoPage() {
                                   if (editandoConteudo) {
                                     setEditandoConteudo({
                                       ...editandoConteudo,
-                                      items: editandoConteudo.items?.map((i) =>
-                                        i.id === item.id ? { ...i, titulo: e.target.value } : i
-                                      ) || [],
+                                      items:
+                                        editandoConteudo.items?.map((i) =>
+                                          i.id === item.id
+                                            ? { ...i, titulo: e.target.value }
+                                            : i
+                                        ) || [],
                                     });
                                   }
                                 }}
@@ -2375,9 +2509,12 @@ export default function EditarCursoPage() {
                                   if (editandoConteudo) {
                                     setEditandoConteudo({
                                       ...editandoConteudo,
-                                      items: editandoConteudo.items?.map((i) =>
-                                        i.id === item.id ? { ...i, conteudo: e.target.value } : i
-                                      ) || [],
+                                      items:
+                                        editandoConteudo.items?.map((i) =>
+                                          i.id === item.id
+                                            ? { ...i, conteudo: e.target.value }
+                                            : i
+                                        ) || [],
                                     });
                                   }
                                 }}
@@ -2412,19 +2549,25 @@ export default function EditarCursoPage() {
                         editandoConteudo &&
                         setEditandoConteudo({
                           ...editandoConteudo,
-                          tipoFrente: e.target.value as "imagem" | "imagem-titulo" | "titulo",
+                          tipoFrente: e.target.value as
+                            | "imagem"
+                            | "imagem-titulo"
+                            | "titulo",
                         })
                       }
                       className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     >
                       <option value="imagem">Apenas Imagem</option>
-                      <option value="imagem-titulo">Imagem com Título no Rodapé</option>
+                      <option value="imagem-titulo">
+                        Imagem com Título no Rodapé
+                      </option>
                       <option value="titulo">Apenas Título Centralizado</option>
                     </select>
                   </div>
 
                   {/* Imagem (se necessário) */}
-                  {(editandoConteudo.tipoFrente === "imagem" || editandoConteudo.tipoFrente === "imagem-titulo") && (
+                  {(editandoConteudo.tipoFrente === "imagem" ||
+                    editandoConteudo.tipoFrente === "imagem-titulo") && (
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
                         Imagem da Frente <span className="text-red-500">*</span>
@@ -2436,14 +2579,22 @@ export default function EditarCursoPage() {
                             {isUploadingImage ? (
                               <div className="flex flex-col items-center gap-2">
                                 <Loader2 className="h-6 w-6 animate-spin text-blue-600" />
-                                <span className="text-sm text-gray-600">Enviando...</span>
+                                <span className="text-sm text-gray-600">
+                                  Enviando...
+                                </span>
                               </div>
                             ) : (
                               <div className="flex flex-col items-center gap-2">
                                 <Upload className="h-6 w-6 text-gray-400" />
-                                <span className="text-sm text-gray-600">Clique para fazer upload</span>
-                                <span className="text-xs text-gray-500">ou arraste a imagem aqui</span>
-                                <span className="text-xs text-gray-400">JPG, PNG, GIF, WEBP, SVG (máx. 10MB)</span>
+                                <span className="text-sm text-gray-600">
+                                  Clique para fazer upload
+                                </span>
+                                <span className="text-xs text-gray-500">
+                                  ou arraste a imagem aqui
+                                </span>
+                                <span className="text-xs text-gray-400">
+                                  JPG, PNG, GIF, WEBP, SVG (máx. 10MB)
+                                </span>
                               </div>
                             )}
                             <input
@@ -2467,7 +2618,9 @@ export default function EditarCursoPage() {
                             <div className="w-full border-t border-gray-300"></div>
                           </div>
                           <div className="relative flex justify-center text-sm">
-                            <span className="bg-white px-2 text-gray-500">ou</span>
+                            <span className="bg-white px-2 text-gray-500">
+                              ou
+                            </span>
                           </div>
                         </div>
 
@@ -2488,7 +2641,9 @@ export default function EditarCursoPage() {
                         {(imagePreviewUrl || editandoConteudo.imagemFrente) && (
                           <div className="mt-3">
                             <img
-                              src={imagePreviewUrl || editandoConteudo.imagemFrente}
+                              src={
+                                imagePreviewUrl || editandoConteudo.imagemFrente
+                              }
                               alt="Preview"
                               className="w-full h-auto rounded-lg border border-gray-300 max-h-40 object-contain bg-gray-50"
                               onError={() => setImagePreviewUrl(null)}
@@ -2500,7 +2655,8 @@ export default function EditarCursoPage() {
                   )}
 
                   {/* Título (se necessário) */}
-                  {(editandoConteudo.tipoFrente === "imagem-titulo" || editandoConteudo.tipoFrente === "titulo") && (
+                  {(editandoConteudo.tipoFrente === "imagem-titulo" ||
+                    editandoConteudo.tipoFrente === "titulo") && (
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
                         Título da Frente <span className="text-red-500">*</span>
@@ -2556,7 +2712,8 @@ export default function EditarCursoPage() {
                       placeholder="Ex: 300px, 400px, 50vh"
                     />
                     <p className="text-xs text-gray-500 mt-1">
-                      Use valores como "300px", "400px" ou "50vh" (viewport height)
+                      Use valores como "300px", "400px" ou "50vh" (viewport
+                      height)
                     </p>
                   </div>
                 </div>
@@ -2573,12 +2730,17 @@ export default function EditarCursoPage() {
                         editandoConteudo &&
                         setEditandoConteudo({
                           ...editandoConteudo,
-                          tipoLista: e.target.value as "ordenada" | "nao-ordenada" | "check",
+                          tipoLista: e.target.value as
+                            | "ordenada"
+                            | "nao-ordenada"
+                            | "check",
                         })
                       }
                       className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     >
-                      <option value="nao-ordenada">Não Ordenada (Bullets)</option>
+                      <option value="nao-ordenada">
+                        Não Ordenada (Bullets)
+                      </option>
                       <option value="ordenada">Ordenada (Numerada)</option>
                       <option value="check">Com Ícone de Check</option>
                     </select>
@@ -2596,12 +2758,17 @@ export default function EditarCursoPage() {
                       onClick={() => {
                         if (editandoConteudo) {
                           const novoItem = {
-                            id: `lista-item-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
+                            id: `lista-item-${Date.now()}-${Math.random()
+                              .toString(36)
+                              .substring(2, 9)}`,
                             texto: "",
                           };
                           setEditandoConteudo({
                             ...editandoConteudo,
-                            itensLista: [...(editandoConteudo.itensLista || []), novoItem],
+                            itensLista: [
+                              ...(editandoConteudo.itensLista || []),
+                              novoItem,
+                            ],
                           });
                         }
                       }}
@@ -2611,8 +2778,9 @@ export default function EditarCursoPage() {
                       Adicionar Item
                     </Button>
                   </div>
-                  
-                  {(editandoConteudo.itensLista && editandoConteudo.itensLista.length > 0) ? (
+
+                  {editandoConteudo.itensLista &&
+                  editandoConteudo.itensLista.length > 0 ? (
                     <div className="space-y-3 max-h-[400px] overflow-y-auto">
                       {editandoConteudo.itensLista.map((item, index) => (
                         <Card key={item.id} className="p-4">
@@ -2628,7 +2796,10 @@ export default function EditarCursoPage() {
                                 if (editandoConteudo) {
                                   setEditandoConteudo({
                                     ...editandoConteudo,
-                                    itensLista: editandoConteudo.itensLista?.filter((i) => i.id !== item.id) || [],
+                                    itensLista:
+                                      editandoConteudo.itensLista?.filter(
+                                        (i) => i.id !== item.id
+                                      ) || [],
                                   });
                                 }
                               }}
@@ -2639,7 +2810,8 @@ export default function EditarCursoPage() {
                           </div>
                           <div>
                             <label className="block text-xs font-medium text-gray-600 mb-1">
-                              Texto do Item <span className="text-red-500">*</span>
+                              Texto do Item{" "}
+                              <span className="text-red-500">*</span>
                             </label>
                             <Input
                               value={item.texto}
@@ -2647,9 +2819,12 @@ export default function EditarCursoPage() {
                                 if (editandoConteudo) {
                                   setEditandoConteudo({
                                     ...editandoConteudo,
-                                    itensLista: editandoConteudo.itensLista?.map((i) =>
-                                      i.id === item.id ? { ...i, texto: e.target.value } : i
-                                    ) || [],
+                                    itensLista:
+                                      editandoConteudo.itensLista?.map((i) =>
+                                        i.id === item.id
+                                          ? { ...i, texto: e.target.value }
+                                          : i
+                                      ) || [],
                                   });
                                 }
                               }}
@@ -2748,13 +2923,19 @@ export default function EditarCursoPage() {
                     : editandoConteudo?.tipo === "flipcard"
                     ? !editandoConteudo.tipoFrente ||
                       !editandoConteudo.conteudoVerso?.trim() ||
-                      (editandoConteudo.tipoFrente === "imagem" && !editandoConteudo.imagemFrente?.trim()) ||
-                      (editandoConteudo.tipoFrente === "imagem-titulo" && (!editandoConteudo.imagemFrente?.trim() || !editandoConteudo.tituloFrente?.trim())) ||
-                      (editandoConteudo.tipoFrente === "titulo" && !editandoConteudo.tituloFrente?.trim())
+                      (editandoConteudo.tipoFrente === "imagem" &&
+                        !editandoConteudo.imagemFrente?.trim()) ||
+                      (editandoConteudo.tipoFrente === "imagem-titulo" &&
+                        (!editandoConteudo.imagemFrente?.trim() ||
+                          !editandoConteudo.tituloFrente?.trim())) ||
+                      (editandoConteudo.tipoFrente === "titulo" &&
+                        !editandoConteudo.tituloFrente?.trim())
                     : editandoConteudo?.tipo === "lista"
                     ? !editandoConteudo.itensLista ||
                       editandoConteudo.itensLista.length === 0 ||
-                      editandoConteudo.itensLista.some((item) => !item.texto.trim())
+                      editandoConteudo.itensLista.some(
+                        (item) => !item.texto.trim()
+                      )
                     : !editandoConteudo?.conteudo?.trim()) ||
                   (editandoConteudo?.tipo === "imagem" &&
                     (!editandoConteudo.tamanho ||
