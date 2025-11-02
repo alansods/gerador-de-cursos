@@ -15,9 +15,18 @@ interface CursoGenerado {
     titulo: string;
     descricao: string;
     conteudo: Array<{
-      tipo: 'titulo' | 'subtitulo' | 'paragrafo' | 'imagem';
+      tipo: 'titulo' | 'subtitulo' | 'paragrafo' | 'imagem' | 'accordion' | 'flipcard' | 'lista';
       conteudo: string;
       ordem: number;
+      items?: Array<{ id: string; titulo: string; conteudo: string }>;
+      tipoFrente?: 'imagem' | 'imagem-titulo' | 'titulo';
+      imagemFrente?: string;
+      tituloFrente?: string;
+      conteudoVerso?: string;
+      alturaCard?: string;
+      itensLista?: Array<{ id: string; texto: string }>;
+      tipoLista?: 'ordenada' | 'nao-ordenada' | 'check';
+      [key: string]: any; // Para permitir propriedades adicionais
     }>;
   }>;
 }
@@ -230,8 +239,8 @@ ${text}
         // Filtrar conteúdo que seja idêntico ao título da unidade (evitar duplicação)
         const tituloNormalizado = unidade.titulo.trim().toLowerCase();
         const conteudoFiltrado = unidade.conteudo.filter((item) => {
-          // Não filtrar accordion e flipcard (eles não têm conteudo string)
-          if (item.tipo === 'accordion' || item.tipo === 'flipcard') {
+          // Não filtrar accordion, flipcard e lista (eles não têm conteudo string obrigatório)
+          if (item.tipo === 'accordion' || item.tipo === 'flipcard' || item.tipo === 'lista') {
             return true;
           }
           const conteudoItem = item.conteudo?.trim().toLowerCase() || '';
