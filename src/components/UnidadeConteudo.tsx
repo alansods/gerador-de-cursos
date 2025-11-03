@@ -8,6 +8,7 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { FlipCard } from "@/components/flipcard";
+import { QuizConteudo } from "@/components/QuizConteudo";
 import { Unidade } from "@/types/gerador-curso";
 
 interface UnidadeConteudoProps {
@@ -201,6 +202,16 @@ export function UnidadeConteudo({ unidade, unidadeIndex }: UnidadeConteudoProps)
                     ) : (
                       <div className="text-gray-500 text-sm italic p-4 border border-gray-300 rounded-lg">
                         Lista vazia
+                      </div>
+                    )}
+                  </div>
+                ) : item.tipo === "quiz" ? (
+                  <div className="mb-4">
+                    {item.quizData ? (
+                      <QuizConteudo quizData={item.quizData} isEdicao={false} />
+                    ) : (
+                      <div className="text-gray-500 text-sm italic p-4 border border-gray-300 rounded-lg">
+                        Quiz incompleto ou sem dados
                       </div>
                     )}
                   </div>

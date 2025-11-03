@@ -435,6 +435,188 @@ const doc = new Document({
           text: '📝 OBSERVAÇÃO: A IA irá transformar o conteúdo entre LISTA_INICIO e LISTA_FIM em uma lista interativa. Tipos disponíveis: "nao-ordenada" (com bullets), "ordenada" (numerada) ou "check" (com ícone de check). Use "Item X:" para cada item da lista.',
         }),
         new Paragraph({ text: '' }),
+
+        // EXEMPLO DE QUIZ
+        new Paragraph({
+          text: '💡 INDICADORES ESPECIAIS - Exemplo de QUIZ',
+          heading: HeadingLevel.HEADING_2,
+        }),
+        new Paragraph({
+          text: 'Para criar quizzes interativos com múltiplas perguntas de múltipla escolha, use os marcadores abaixo:',
+        }),
+        new Paragraph({ text: '' }),
+        new Paragraph({
+          children: [
+            new TextRun({ text: 'QUIZ_INICIO', bold: true }),
+          ],
+        }),
+        new Paragraph({
+          children: [
+            new TextRun({ text: 'Pergunta 1: ', bold: true }),
+            new TextRun('Qual é a temperatura ideal para assar pizza artesanal?'),
+          ],
+        }),
+        new Paragraph({
+          children: [
+            new TextRun({ text: 'Dica (opcional): ', bold: true }),
+            new TextRun('Pense na temperatura de fornos profissionais e domésticos.'),
+          ],
+        }),
+        new Paragraph({
+          children: [
+            new TextRun({ text: 'Opção A: ', bold: true }),
+            new TextRun('200-220°C'),
+          ],
+        }),
+        new Paragraph({
+          children: [
+            new TextRun({ text: 'Feedback Opção A: ', bold: true }),
+            new TextRun('Incorreto. 200-220°C é muito baixa para pizza artesanal. Essa temperatura resulta em pizza com borda mole e base não crocante.'),
+          ],
+        }),
+        new Paragraph({
+          children: [
+            new TextRun({ text: 'Opção B: ', bold: true }),
+            new TextRun('280-300°C'),
+          ],
+        }),
+        new Paragraph({
+          children: [
+            new TextRun({ text: 'Feedback Opção B: ', bold: true }),
+            new TextRun('Correto! A temperatura ideal para pizza artesanal é entre 280-300°C. Esta alta temperatura permite que a pizza asse rapidamente (8-12 minutos), resultando em borda dourada e base crocante sem queimar o queijo.'),
+          ],
+        }),
+        new Paragraph({
+          children: [
+            new TextRun({ text: 'Opção C: ', bold: true }),
+            new TextRun('250-270°C'),
+          ],
+        }),
+        new Paragraph({
+          children: [
+            new TextRun({ text: 'Feedback Opção C: ', bold: true }),
+            new TextRun('Parcialmente correto. 250-270°C funciona, mas requer mais tempo de assamento (12-15 minutos) e pode não atingir a textura ideal. É uma temperatura aceitável para fornos domésticos.'),
+          ],
+        }),
+        new Paragraph({
+          children: [
+            new TextRun({ text: 'Opção D: ', bold: true }),
+            new TextRun('350-400°C'),
+          ],
+        }),
+        new Paragraph({
+          children: [
+            new TextRun({ text: 'Feedback Opção D: ', bold: true }),
+            new TextRun('Incorreto. 350-400°C é muito alta e queimaria a pizza rapidamente. Mesmo fornos profissionais de pizza raramente passam de 300°C.'),
+          ],
+        }),
+        new Paragraph({
+          children: [
+            new TextRun({ text: 'Opção E: ', bold: true }),
+            new TextRun('180-200°C'),
+          ],
+        }),
+        new Paragraph({
+          children: [
+            new TextRun({ text: 'Feedback Opção E: ', bold: true }),
+            new TextRun('Incorreto. 180-200°C é temperatura de pão, não de pizza. Resultaria em pizza mole, sem crocância e com borda não dourada.'),
+          ],
+        }),
+        new Paragraph({
+          children: [
+            new TextRun({ text: 'Resposta Correta: ', bold: true }),
+            new TextRun('B'),
+          ],
+        }),
+        new Paragraph({ text: '' }),
+        new Paragraph({
+          children: [
+            new TextRun({ text: 'Pergunta 2: ', bold: true }),
+            new TextRun('Quanto tempo de fermentação é recomendado para uma massa de pizza artesanal com melhor sabor?'),
+          ],
+        }),
+        new Paragraph({
+          children: [
+            new TextRun({ text: 'Dica (opcional): ', bold: true }),
+            new TextRun('Pense na diferença entre fermentação rápida e lenta.'),
+          ],
+        }),
+        new Paragraph({
+          children: [
+            new TextRun({ text: 'Opção A: ', bold: true }),
+            new TextRun('1-2 horas em temperatura ambiente'),
+          ],
+        }),
+        new Paragraph({
+          children: [
+            new TextRun({ text: 'Feedback Opção A: ', bold: true }),
+            new TextRun('Funcional, mas não ideal. 1-2 horas é fermentação rápida que funciona, mas não desenvolve completamente o sabor. A massa fica mais simples no paladar.'),
+          ],
+        }),
+        new Paragraph({
+          children: [
+            new TextRun({ text: 'Opção B: ', bold: true }),
+            new TextRun('24-48 horas na geladeira'),
+          ],
+        }),
+        new Paragraph({
+          children: [
+            new TextRun({ text: 'Feedback Opção B: ', bold: true }),
+            new TextRun('Correto! Fermentação lenta na geladeira por 24-48 horas desenvolve melhor o sabor, textura mais aerada e crocante. A baixa temperatura permite fermentação controlada que desenvolve compostos de sabor complexos.'),
+          ],
+        }),
+        new Paragraph({
+          children: [
+            new TextRun({ text: 'Opção C: ', bold: true }),
+            new TextRun('6-8 horas em temperatura ambiente'),
+          ],
+        }),
+        new Paragraph({
+          children: [
+            new TextRun({ text: 'Feedback Opção C: ', bold: true }),
+            new TextRun('Parcialmente correto. 6-8 horas funciona bem e já desenvolve bom sabor, mas fermentação muito longa em temperatura ambiente pode estragar ou fermentar demais.'),
+          ],
+        }),
+        new Paragraph({
+          children: [
+            new TextRun({ text: 'Opção D: ', bold: true }),
+            new TextRun('30 minutos em temperatura ambiente'),
+          ],
+        }),
+        new Paragraph({
+          children: [
+            new TextRun({ text: 'Feedback Opção D: ', bold: true }),
+            new TextRun('Incorreto. 30 minutos é tempo insuficiente para uma fermentação adequada. A massa ficará densa, sem sabor desenvolvido e com textura não ideal.'),
+          ],
+        }),
+        new Paragraph({
+          children: [
+            new TextRun({ text: 'Opção E: ', bold: true }),
+            new TextRun('72 horas ou mais na geladeira'),
+          ],
+        }),
+        new Paragraph({
+          children: [
+            new TextRun({ text: 'Feedback Opção E: ', bold: true }),
+            new TextRun('Muito longo. Após 48-72 horas, a massa pode começar a perder qualidade, desenvolver sabores ácidos excessivos ou até estragar. O ideal é 24-48 horas.'),
+          ],
+        }),
+        new Paragraph({
+          children: [
+            new TextRun({ text: 'Resposta Correta: ', bold: true }),
+            new TextRun('B'),
+          ],
+        }),
+        new Paragraph({
+          children: [
+            new TextRun({ text: 'QUIZ_FIM', bold: true }),
+          ],
+        }),
+        new Paragraph({ text: '' }),
+        new Paragraph({
+          text: '📝 OBSERVAÇÃO: A IA irá transformar o conteúdo entre QUIZ_INICIO e QUIZ_FIM em um quiz interativo. Você pode criar múltiplas perguntas no mesmo bloco. Cada pergunta deve ter exatamente 5 opções (A, B, C, D, E) e apenas 1 resposta correta. Todas as opções devem ter feedback explicativo.',
+        }),
+        new Paragraph({ text: '' }),
         new Paragraph({
           text: 'Exemplo de Lista Ordenada:',
         }),
@@ -538,6 +720,15 @@ const doc = new Document({
         }),
         new Paragraph({
           text: '• Especifique o Tipo de Lista: "ordenada" (numerada), "nao-ordenada" (bullets) ou "check" (com ícone de check)',
+        }),
+        new Paragraph({
+          text: '• Use QUIZ_INICIO e QUIZ_FIM para criar quizzes interativos com múltiplas perguntas',
+        }),
+        new Paragraph({
+          text: '• Dentro do quiz, use "Pergunta X:", "Dica (opcional):", "Opção A/B/C/D/E:", "Feedback Opção X:" e "Resposta Correta:" para cada pergunta',
+        }),
+        new Paragraph({
+          text: '• Cada pergunta deve ter exatamente 5 opções e apenas 1 resposta correta',
         }),
         new Paragraph({
           text: '• Para imagens, use URLs ou [IMAGEM: descrição] para placeholders',

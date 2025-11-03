@@ -79,7 +79,7 @@ Analise o documento abaixo e crie um curso estruturado, extraindo os metadados e
    - descricao: OBRIGATÓRIA - O que o aluno aprenderá nesta unidade
    - conteudo: Array de elementos formatados
 4. Cada elemento de conteúdo deve ter:
-   - tipo: "titulo", "subtitulo", "paragrafo", "imagem", "accordion", "flipcard" ou "lista"
+   - tipo: "titulo", "subtitulo", "paragrafo", "imagem", "accordion", "flipcard", "lista" ou "quiz"
    - conteudo: O texto/URL do elemento
    - ordem: Número sequencial (0, 1, 2, ...)
 5. **IMPORTANTE: NÃO inclua o título da unidade como primeiro item do conteúdo!** O título já está no campo "titulo" da unidade. Comece o conteúdo diretamente com o conteúdo real (parágrafos, subtítulos, etc.)
@@ -107,6 +107,28 @@ Analise o documento abaixo e crie um curso estruturado, extraindo os metadados e
      **Tipo de Lista:** [ordenada / nao-ordenada / check]
      **Item X:** [texto do item]
    - Crie a estrutura: tipo: "lista", conteudo: "", tipoLista: "...", itensLista: [{ id: "item-1", texto: "..." }, ...]
+   
+   **QUIZ_INICIO / QUIZ_FIM:**
+   - Quando encontrar esses marcadores, crie um elemento de conteúdo do tipo "quiz"
+   - Entre os marcadores, identifique todas as perguntas no formato:
+     **Pergunta X:** [texto da pergunta]
+     **Dica (opcional):** [texto da dica ou vazio]
+     **Opção A:** [texto da opção A]
+     **Feedback Opção A:** [feedback quando o aluno escolher esta opção]
+     **Opção B:** [texto da opção B]
+     **Feedback Opção B:** [feedback quando o aluno escolher esta opção]
+     **Opção C:** [texto da opção C]
+     **Feedback Opção C:** [feedback quando o aluno escolher esta opção]
+     **Opção D:** [texto da opção D]
+     **Feedback Opção D:** [feedback quando o aluno escolher esta opção]
+     **Opção E:** [texto da opção E]
+     **Feedback Opção E:** [feedback quando o aluno escolher esta opção]
+     **Resposta Correta:** [A / B / C / D / E]
+   - IMPORTANTE: Cada pergunta deve ter EXATAMENTE 5 opções de resposta (A, B, C, D, E)
+   - IMPORTANTE: Cada pergunta deve ter EXATAMENTE 1 resposta correta marcada (isCorrect: true para a opção correta, false para as outras)
+   - IMPORTANTE: Todas as opções devem ter feedback preenchido
+   - Crie a estrutura: tipo: "quiz", conteudo: "", quizData: { questions: [{ id: "question-1", pergunta: "...", dica: "...", opcoes: [{ id: "opcao-1", texto: "...", isCorrect: true/false, feedback: "..." }, ...] }, ...] }
+   - Se houver múltiplas perguntas, crie todas dentro do mesmo elemento quiz com array questions
 7. MANTENHA o conteúdo original do documento, apenas estruture-o
 8. Crie pelo menos 3 unidades de aprendizado
 9. Se encontrar referências a imagens (fora dos flipcards), crie elementos tipo "imagem"
@@ -151,6 +173,27 @@ Analise o documento abaixo e crie um curso estruturado, extraindo os metadados e
             { "id": "item-2", "texto": "Segundo item da lista" }
           ],
           "ordem": 4
+        },
+        {
+          "tipo": "quiz",
+          "conteudo": "",
+          "quizData": {
+            "questions": [
+              {
+                "id": "question-1",
+                "pergunta": "Qual é a principal diferença entre X e Y?",
+                "dica": "Pense sobre as características específicas de cada um",
+                "opcoes": [
+                  { "id": "opcao-1", "texto": "Opção A", "isCorrect": false, "feedback": "Incorreto. A opção A não é a resposta correta porque..." },
+                  { "id": "opcao-2", "texto": "Opção B", "isCorrect": true, "feedback": "Correto! A opção B é a resposta correta porque..." },
+                  { "id": "opcao-3", "texto": "Opção C", "isCorrect": false, "feedback": "Incorreto. A opção C não é a resposta correta porque..." },
+                  { "id": "opcao-4", "texto": "Opção D", "isCorrect": false, "feedback": "Incorreto. A opção D não é a resposta correta porque..." },
+                  { "id": "opcao-5", "texto": "Opção E", "isCorrect": false, "feedback": "Incorreto. A opção E não é a resposta correta porque..." }
+                ]
+              }
+            ]
+          },
+          "ordem": 5
         }
       ]
     }

@@ -45,6 +45,7 @@ import {
   ChevronDown,
   RotateCcw,
   List,
+  HelpCircle,
 } from "lucide-react";
 import {
   Tooltip,
@@ -60,6 +61,8 @@ import {
 } from "@/components/ui/accordion";
 import { MenuConteudo } from "@/components/MenuConteudo";
 import { MenuUnidade } from "@/components/MenuUnidade";
+import { QuizConteudo } from "@/components/QuizConteudo";
+import { QuizData, QuizQuestion, QuizItem } from "@/types/gerador-curso";
 
 export default function EditarCursoPage() {
   const {
@@ -96,7 +99,8 @@ export default function EditarCursoPage() {
       | "imagem"
       | "accordion"
       | "flipcard"
-      | "lista";
+      | "lista"
+      | "quiz";
     conteudo: string;
     tamanho?: "pequena" | "media" | "grande";
     legenda?: string;
@@ -112,6 +116,7 @@ export default function EditarCursoPage() {
     alturaCard?: string;
     itensLista?: Array<{ id: string; texto: string }>;
     tipoLista?: "ordenada" | "nao-ordenada" | "check";
+    quizData?: QuizData;
   } | null>(null);
   const [conteudoTemp, setConteudoTemp] = useState({
     tipo: "paragrafo" as
@@ -121,7 +126,8 @@ export default function EditarCursoPage() {
       | "imagem"
       | "accordion"
       | "flipcard"
-      | "lista",
+      | "lista"
+      | "quiz",
     conteudo: "",
     unidadeId: "",
     tamanho: "media" as "pequena" | "media" | "grande",
@@ -142,6 +148,7 @@ export default function EditarCursoPage() {
     alturaCard: "300px",
     itensLista: [] as Array<{ id: string; texto: string }>,
     tipoLista: "nao-ordenada" as "ordenada" | "nao-ordenada" | "check",
+    quizData: undefined as QuizData | undefined,
   });
   const [adicionarUnidadeModal, setAdicionarUnidadeModal] = useState(false);
   const [editarUnidadeModal, setEditarUnidadeModal] = useState(false);
@@ -283,6 +290,7 @@ export default function EditarCursoPage() {
       alturaCard: "300px",
       itensLista: [],
       tipoLista: "nao-ordenada",
+      quizData: undefined,
     });
   };
 
@@ -483,6 +491,41 @@ export default function EditarCursoPage() {
         alert("Todos os itens da lista devem ter texto preenchido.");
         return;
       }
+    } else if (conteudoTemp.tipo === "quiz") {
+      // Validar quiz
+      if (!conteudoTemp.quizData || !conteudoTemp.quizData.questions || conteudoTemp.quizData.questions.length === 0) {
+        alert("O quiz deve ter pelo menos uma pergunta.");
+        return;
+      }
+      
+      // Validar cada pergunta
+      for (const question of conteudoTemp.quizData.questions) {
+        if (!question.pergunta.trim()) {
+          alert("Todas as perguntas devem ter um texto preenchido.");
+          return;
+        }
+        if (!question.opcoes || question.opcoes.length !== 5) {
+          alert("Cada pergunta deve ter exatamente 5 opções de resposta.");
+          return;
+        }
+        if (question.opcoes.some((opcao) => !opcao.texto.trim())) {
+          alert("Todas as opções de resposta devem ter texto preenchido.");
+          return;
+        }
+        if (question.opcoes.every((opcao) => !opcao.isCorrect)) {
+          alert("Cada pergunta deve ter exatamente uma resposta correta marcada.");
+          return;
+        }
+        const correctCount = question.opcoes.filter((opcao) => opcao.isCorrect).length;
+        if (correctCount !== 1) {
+          alert("Cada pergunta deve ter exatamente uma resposta correta.");
+          return;
+        }
+        if (question.opcoes.some((opcao) => !opcao.feedback.trim())) {
+          alert("Todas as opções de resposta devem ter um feedback preenchido.");
+          return;
+        }
+      }
     } else if (conteudoTemp.tipo === "imagem") {
       if (
         !conteudoTemp.tamanho ||
@@ -517,6 +560,7 @@ export default function EditarCursoPage() {
       alturaCard: conteudoTemp.alturaCard,
       itensLista: conteudoTemp.itensLista,
       tipoLista: conteudoTemp.tipoLista,
+      quizData: conteudoTemp.quizData,
     });
     toast.success("Conteúdo adicionado");
     setConteudoTemp({
@@ -537,6 +581,7 @@ export default function EditarCursoPage() {
       alturaCard: "300px",
       itensLista: [],
       tipoLista: "nao-ordenada",
+      quizData: undefined,
     });
   };
 
@@ -550,7 +595,8 @@ export default function EditarCursoPage() {
       | "imagem"
       | "accordion"
       | "flipcard"
-      | "lista",
+      | "lista"
+      | "quiz",
     conteudo: string,
     tamanho?: "pequena" | "media" | "grande",
     legenda?: string,
@@ -565,7 +611,8 @@ export default function EditarCursoPage() {
     conteudoVerso?: string,
     alturaCard?: string,
     itensLista?: Array<{ id: string; texto: string }>,
-    tipoLista?: "ordenada" | "nao-ordenada" | "check"
+    tipoLista?: "ordenada" | "nao-ordenada" | "check",
+    quizData?: QuizData
   ) => {
     editarConteudo(unidadeId, conteudoId, {
       tipo,
@@ -584,6 +631,7 @@ export default function EditarCursoPage() {
       alturaCard,
       itensLista,
       tipoLista,
+      quizData,
     });
     toast.success("Conteúdo atualizado");
     setEditandoConteudo(null);
@@ -657,6 +705,102 @@ export default function EditarCursoPage() {
     });
   };
 
+  // Funções para gerenciar quiz
+  const handleAdicionarPerguntaQuiz = () => {
+    if (!conteudoTemp.quizData) return;
+    const novaPergunta: QuizQuestion = {
+      id: `question-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
+      pergunta: "",
+      dica: "",
+      opcoes: Array.from({ length: 5 }, (_, i) => ({
+        id: `opcao-${Date.now()}-${i}-${Math.random().toString(36).substring(2, 9)}`,
+        texto: "",
+        isCorrect: i === 0,
+        feedback: "",
+      })),
+    };
+    setConteudoTemp({
+      ...conteudoTemp,
+      quizData: {
+        ...conteudoTemp.quizData,
+        questions: [...conteudoTemp.quizData.questions, novaPergunta],
+      },
+    });
+  };
+
+  const handleRemoverPerguntaQuiz = (questionId: string) => {
+    if (!conteudoTemp.quizData || conteudoTemp.quizData.questions.length <= 1) {
+      alert("O quiz deve ter pelo menos uma pergunta.");
+      return;
+    }
+    setConteudoTemp({
+      ...conteudoTemp,
+      quizData: {
+        ...conteudoTemp.quizData,
+        questions: conteudoTemp.quizData.questions.filter((q) => q.id !== questionId),
+      },
+    });
+  };
+
+  const handleAtualizarPerguntaQuiz = (questionId: string, campo: "pergunta" | "dica", valor: string) => {
+    if (!conteudoTemp.quizData) return;
+    setConteudoTemp({
+      ...conteudoTemp,
+      quizData: {
+        ...conteudoTemp.quizData,
+        questions: conteudoTemp.quizData.questions.map((q) =>
+          q.id === questionId ? { ...q, [campo]: valor } : q
+        ),
+      },
+    });
+  };
+
+  const handleAtualizarOpcaoQuiz = (
+    questionId: string,
+    opcaoId: string,
+    campo: "texto" | "feedback",
+    valor: string
+  ) => {
+    if (!conteudoTemp.quizData) return;
+    setConteudoTemp({
+      ...conteudoTemp,
+      quizData: {
+        ...conteudoTemp.quizData,
+        questions: conteudoTemp.quizData.questions.map((q) =>
+          q.id === questionId
+            ? {
+                ...q,
+                opcoes: q.opcoes.map((opcao) =>
+                  opcao.id === opcaoId ? { ...opcao, [campo]: valor } : opcao
+                ),
+              }
+            : q
+        ),
+      },
+    });
+  };
+
+  const handleMarcarRespostaCorreta = (questionId: string, opcaoId: string) => {
+    if (!conteudoTemp.quizData) return;
+    setConteudoTemp({
+      ...conteudoTemp,
+      quizData: {
+        ...conteudoTemp.quizData,
+        questions: conteudoTemp.quizData.questions.map((q) =>
+          q.id === questionId
+            ? {
+                ...q,
+                opcoes: q.opcoes.map((opcao) => ({
+                  ...opcao,
+                  isCorrect: opcao.id === opcaoId,
+                })),
+              }
+            : q
+        ),
+      },
+    });
+  };
+
   const handleDeletarConteudo = (unidadeId: string, conteudoId: string) => {
     setConteudoParaDeletar({ unidadeId, conteudoId });
     setConfirmarDeletarConteudo(true);
@@ -670,10 +814,31 @@ export default function EditarCursoPage() {
       | "imagem"
       | "accordion"
       | "flipcard"
-      | "lista",
+      | "lista"
+      | "quiz",
     unidadeId?: string
   ) => {
     if (unidadeId) {
+      // Inicializar quizData com uma pergunta vazia se for quiz
+      const quizDataInitial: QuizData | undefined =
+        tipo === "quiz"
+          ? {
+              questions: [
+                {
+                  id: `question-${Date.now()}`,
+                  pergunta: "",
+                  dica: "",
+                  opcoes: Array.from({ length: 5 }, (_, i) => ({
+                    id: `opcao-${Date.now()}-${i}`,
+                    texto: "",
+                    isCorrect: i === 0, // primeira opção como correta por padrão
+                    feedback: "",
+                  })),
+                },
+              ],
+            }
+          : undefined;
+
       setConteudoTemp({
         tipo: tipo,
         conteudo: "",
@@ -692,6 +857,7 @@ export default function EditarCursoPage() {
         alturaCard: tipo === "flipcard" ? "300px" : "300px",
         itensLista: tipo === "lista" ? [] : [],
         tipoLista: tipo === "lista" ? "nao-ordenada" : "nao-ordenada",
+        quizData: quizDataInitial,
       });
     }
   };
@@ -849,73 +1015,84 @@ export default function EditarCursoPage() {
         {/* Conteúdo Principal */}
         <div className="max-w-6xl mx-auto px-6 py-8">
           {/* Card de Informações do Curso */}
-          <Card className="mb-8 border-0 bg-linear-to-r from-blue-600 to-purple-600 text-white">
-            <CardHeader className="pb-4">
-              <div className="flex items-start justify-between">
+          <Card className="mb-8 border-0 shadow-xl overflow-hidden bg-gradient-to-br from-blue-600 via-blue-700 to-purple-600 text-white">
+            <CardHeader className="pb-6 pt-8 px-8">
+              <div className="flex items-start justify-between gap-4">
                 <div className="flex-1">
-                  <CardTitle className="text-3xl font-bold mb-3 flex items-center gap-3">
-                    <BookOpen className="h-8 w-8" />
-                    {state.cursoAtual.titulo}
-                  </CardTitle>
-                  <p className="text-blue-100 text-lg leading-relaxed">
+                  <div className="flex items-center gap-4 mb-4">
+                    <div className="p-3 bg-white/20 backdrop-blur-sm rounded-xl shadow-lg">
+                      <BookOpen className="h-8 w-8 text-white" />
+                    </div>
+                    <CardTitle className="text-3xl md:text-4xl font-bold leading-tight">
+                      {state.cursoAtual.titulo}
+                    </CardTitle>
+                  </div>
+                  <p className="text-blue-50 text-lg leading-relaxed max-w-4xl">
                     {state.cursoAtual.descricao}
                   </p>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex-shrink-0">
                   <TooltipProvider>
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <Button
                           variant="outline"
-                          size="sm"
+                          size="lg"
                           onClick={() => setEditarCursoModal(true)}
-                          className="p-2 bg-white/10 border-white/20 text-white hover:bg-white/20"
+                          className="p-3 bg-white/10 backdrop-blur-sm border-white/30 text-white hover:bg-white/20 hover:border-white/40 shadow-md transition-all"
                         >
-                          <Edit className="h-4 w-4" />
+                          <Edit className="h-5 w-5" />
                         </Button>
                       </TooltipTrigger>
-                      <TooltipContent>Editar curso</TooltipContent>
+                      <TooltipContent>Editar informações do curso</TooltipContent>
                     </Tooltip>
                   </TooltipProvider>
                 </div>
               </div>
             </CardHeader>
 
-            <CardContent className="pt-0">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="flex items-center gap-3 bg-white/10 rounded-lg p-3">
-                  <Clock className="h-5 w-5 text-blue-200" />
-                  <div>
-                    <p className="text-sm text-blue-200">Carga Horária</p>
-                    <p className="font-semibold">
+            <CardContent className="px-8 pb-8 pt-0">
+              {/* Informações em Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                <div className="flex items-center gap-4 bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20 shadow-lg hover:bg-white/15 transition-all">
+                  <div className="p-3 bg-white/20 rounded-lg">
+                    <Clock className="h-6 w-6 text-blue-100" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-blue-200 mb-1">Carga Horária</p>
+                    <p className="text-xl font-bold text-white">
                       {state.cursoAtual.cargaHoraria}
                     </p>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-3 bg-white/10 rounded-lg p-3">
-                  <GraduationCap className="h-5 w-5 text-blue-200" />
-                  <div>
-                    <p className="text-sm text-blue-200">Modalidade</p>
-                    <p className="font-semibold">
+                <div className="flex items-center gap-4 bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20 shadow-lg hover:bg-white/15 transition-all">
+                  <div className="p-3 bg-white/20 rounded-lg">
+                    <GraduationCap className="h-6 w-6 text-blue-100" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-blue-200 mb-1">Modalidade</p>
+                    <p className="text-xl font-bold text-white">
                       {state.cursoAtual.modalidade}
                     </p>
                   </div>
                 </div>
               </div>
 
-              <div className="mt-4 flex items-center gap-2">
+              {/* Badges */}
+              <div className="flex flex-wrap items-center gap-3">
                 <Badge
                   variant="secondary"
-                  className="bg-white/20 text-white border-white/30"
+                  className="bg-white/20 backdrop-blur-sm text-white border-white/30 px-4 py-2 text-sm font-semibold shadow-md hover:bg-white/25 transition-all"
                 >
-                  {state.cursoAtual.categoria}
+                  <Layers className="h-4 w-4 mr-2" />
+                  {state.cursoAtual.unidades?.length || 0} {state.cursoAtual.unidades?.length === 1 ? 'Unidade' : 'Unidades'}
                 </Badge>
                 <Badge
                   variant="secondary"
-                  className="bg-white/20 text-white border-white/30"
+                  className="bg-white/20 backdrop-blur-sm text-white border-white/30 px-4 py-2 text-sm font-semibold shadow-md hover:bg-white/25 transition-all"
                 >
-                  {state.cursoAtual.unidades?.length || 0} Unidades
+                  {state.cursoAtual.categoria}
                 </Badge>
               </div>
             </CardContent>
@@ -1011,6 +1188,10 @@ export default function EditarCursoPage() {
                                 <ChevronDown className="h-4 w-4 text-orange-600" />
                               ) : item.tipo === "flipcard" ? (
                                 <RotateCcw className="h-4 w-4 text-pink-600" />
+                              ) : item.tipo === "lista" ? (
+                                <List className="h-4 w-4 text-purple-600" />
+                              ) : item.tipo === "quiz" ? (
+                                <HelpCircle className="h-4 w-4 text-indigo-600" />
                               ) : (
                                 <Type className="h-4 w-4 text-gray-600" />
                               )}
@@ -1119,12 +1300,20 @@ export default function EditarCursoPage() {
                                               key={listaItem.id || idx}
                                               className="flex items-start gap-2"
                                             >
-                                              <span className="mt-0.5">
-                                                {item.tipoLista === "ordenada"
-                                                  ? `${idx + 1}.`
-                                                  : item.tipoLista === "check"
-                                                  ? "✓"
-                                                  : "•"}
+                                              <span className="mt-0.5 shrink-0">
+                                                {item.tipoLista === "ordenada" ? (
+                                                  <span className="flex items-center justify-center w-5 h-5 bg-purple-500 text-white rounded-full text-xs font-semibold">
+                                                    {idx + 1}
+                                                  </span>
+                                                ) : item.tipoLista === "check" ? (
+                                                  <span className="flex items-center justify-center w-5 h-5 bg-green-500 text-white rounded">
+                                                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                                                    </svg>
+                                                  </span>
+                                                ) : (
+                                                  <span className="flex items-center justify-center w-2 h-2 bg-purple-500 rounded-full"></span>
+                                                )}
                                               </span>
                                               <span className="line-clamp-1">
                                                 {listaItem.texto}
@@ -1138,6 +1327,40 @@ export default function EditarCursoPage() {
                                         )}
                                       </div>
                                     )}
+                                </div>
+                              ) : item.tipo === "quiz" ? (
+                                <div className="space-y-2">
+                                  <p className="text-sm font-semibold text-gray-700">
+                                    Quiz: {item.quizData?.questions?.length || 0} pergunta{item.quizData?.questions?.length !== 1 ? 's' : ''}
+                                  </p>
+                                  {item.quizData?.questions && item.quizData.questions.length > 0 && (
+                                    <div className="text-xs text-gray-500 space-y-2">
+                                      {item.quizData.questions.slice(0, 2).map((question, qIdx) => (
+                                        <div key={question.id} className="space-y-1">
+                                          <p className="font-medium text-gray-700">
+                                            Pergunta {qIdx + 1}: {question.pergunta.slice(0, 50)}
+                                            {question.pergunta.length > 50 ? '...' : ''}
+                                          </p>
+                                          {question.dica && (
+                                            <p className="text-yellow-600 italic">
+                                              💡 Dica disponível
+                                            </p>
+                                          )}
+                                        </div>
+                                      ))}
+                                      {item.quizData.questions.length > 2 && (
+                                        <div className="text-gray-400">
+                                          +{item.quizData.questions.length - 2} mais pergunta{item.quizData.questions.length - 2 !== 1 ? 's' : ''}
+                                        </div>
+                                      )}
+                                    </div>
+                                  )}
+                                  {/* Preview do Quiz */}
+                                  {item.quizData && (
+                                    <div className="mt-4 pt-4 border-t border-gray-200">
+                                      <QuizConteudo quizData={item.quizData} isEdicao={true} />
+                                    </div>
+                                  )}
                                 </div>
                               ) : (
                                 <div
@@ -1202,7 +1425,7 @@ export default function EditarCursoPage() {
                       </div>
 
                       {/* Botões de Conteúdo */}
-                      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-7 gap-3">
+                      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-8 gap-3">
                         <Button
                           variant="outline"
                           size="sm"
@@ -1300,6 +1523,20 @@ export default function EditarCursoPage() {
                           </div>
                           <span className="text-xs font-semibold text-gray-700">Lista</span>
                         </Button>
+                        
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() =>
+                            handleSelecionarTipoConteudo("quiz", unidade.id)
+                          }
+                          className="h-auto py-4 px-3 flex flex-col items-center gap-2 bg-white hover:bg-indigo-50 hover:border-indigo-400 hover:shadow-md transition-all border-2 border-indigo-200 group"
+                        >
+                          <div className="p-2 bg-indigo-100 rounded-lg group-hover:bg-indigo-200 transition-colors">
+                            <HelpCircle className="h-5 w-5 text-indigo-600" />
+                          </div>
+                          <span className="text-xs font-semibold text-gray-700">Quiz</span>
+                        </Button>
                       </div>
                     </div>
                   </div>
@@ -1312,11 +1549,10 @@ export default function EditarCursoPage() {
           {(state.cursoAtual.unidades || []).length > 0 && (
             <div className="mt-6 flex justify-center">
               <Button
-                variant="outline"
                 onClick={() => setAdicionarUnidadeModal(true)}
-                className="text-blue-600 border-blue-200 hover:bg-blue-50"
+                className="bg-blue-600 hover:bg-blue-700 text-white shadow-md hover:shadow-lg transition-all font-semibold px-6 py-6 text-base"
               >
-                <Plus className="h-4 w-4 mr-2" />
+                <Plus className="h-5 w-5 mr-2" />
                 Adicionar Nova Unidade
               </Button>
             </div>
@@ -1405,16 +1641,16 @@ export default function EditarCursoPage() {
                     placeholder="Ex: EAD, Presencial"
                   />
                 </div>
-              </div>
-              <div>
-                <label className="text-sm font-medium text-gray-700 mb-2 block">
-                  Categoria <span className="text-red-500">*</span>
-                </label>
-                <Input
-                  value={categoriaEditada}
-                  onChange={(e) => setCategoriaEditada(e.target.value)}
-                  placeholder="Ex: Programação, Design, Marketing"
-                />
+                <div>
+                  <label className="text-sm font-medium text-gray-700 mb-2 block">
+                    Categoria <span className="text-red-500">*</span>
+                  </label>
+                  <Input
+                    value={categoriaEditada}
+                    onChange={(e) => setCategoriaEditada(e.target.value)}
+                    placeholder="Ex: Programação, Design, Marketing"
+                  />
+                </div>
               </div>
             </div>
             <DialogFooter>
@@ -1446,7 +1682,7 @@ export default function EditarCursoPage() {
           open={!!conteudoTemp.unidadeId}
           onOpenChange={closeAdicionarConteudoModal}
         >
-          <DialogContent className="sm:max-w-2xl">
+          <DialogContent className={`${conteudoTemp.tipo === "quiz" ? "sm:max-w-4xl max-h-[90vh]" : "sm:max-w-2xl"}`}>
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2">
                 {conteudoTemp.tipo === "titulo" ? (
@@ -1478,6 +1714,11 @@ export default function EditarCursoPage() {
                   <>
                     <List className="h-5 w-5 text-blue-600" />
                     Adicionar Lista
+                  </>
+                ) : conteudoTemp.tipo === "quiz" ? (
+                  <>
+                    <HelpCircle className="h-5 w-5 text-blue-600" />
+                    Adicionar Quiz
                   </>
                 ) : (
                   <>
@@ -1994,6 +2235,200 @@ export default function EditarCursoPage() {
                     </div>
                   )}
                 </div>
+              ) : conteudoTemp.tipo === "quiz" ? (
+                <div className="space-y-6">
+                  {/* Botão Adicionar Pergunta */}
+                  <div className="flex items-center justify-between">
+                    <label className="block text-sm font-medium text-gray-700">
+                      Perguntas do Quiz <span className="text-red-500">*</span>
+                    </label>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={handleAdicionarPerguntaQuiz}
+                      className="text-blue-600 border-blue-200 hover:bg-blue-50"
+                    >
+                      <Plus className="h-4 w-4 mr-2" />
+                      Adicionar Pergunta
+                    </Button>
+                  </div>
+
+                  {/* Lista de Perguntas */}
+                  {conteudoTemp.quizData?.questions && conteudoTemp.quizData.questions.length > 0 ? (
+                    <div className="space-y-6 max-h-[600px] overflow-y-auto pr-2">
+                      {conteudoTemp.quizData.questions.map((question, questionIndex) => (
+                        <Card
+                          key={question.id}
+                          className="p-6 border-2 border-blue-200 bg-blue-50/30"
+                        >
+                          {/* Cabeçalho da Pergunta */}
+                          <div className="flex items-center justify-between mb-4 pb-4 border-b border-blue-300">
+                            <div className="flex items-center gap-3">
+                              <div className="w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold">
+                                {questionIndex + 1}
+                              </div>
+                              <span className="text-sm font-semibold text-gray-700">
+                                Pergunta {questionIndex + 1}
+                              </span>
+                            </div>
+                            {conteudoTemp.quizData && conteudoTemp.quizData.questions.length > 1 && (
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleRemoverPerguntaQuiz(question.id)}
+                                className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            )}
+                          </div>
+
+                          <div className="space-y-6">
+                            {/* Texto da Pergunta */}
+                            <div>
+                              <label className="block text-sm font-medium text-gray-700 mb-2">
+                                Pergunta <span className="text-red-500">*</span>
+                              </label>
+                              <textarea
+                                value={question.pergunta}
+                                onChange={(e) =>
+                                  handleAtualizarPerguntaQuiz(question.id, "pergunta", e.target.value)
+                                }
+                                placeholder="Digite a pergunta do quiz..."
+                                className="w-full p-3 border border-gray-300 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                rows={3}
+                              />
+                            </div>
+
+                            {/* Dica (opcional) */}
+                            <div>
+                              <label className="block text-sm font-medium text-gray-700 mb-2">
+                                Dica <span className="text-gray-400 text-xs">(opcional)</span>
+                              </label>
+                              <textarea
+                                value={question.dica || ""}
+                                onChange={(e) =>
+                                  handleAtualizarPerguntaQuiz(question.id, "dica", e.target.value)
+                                }
+                                placeholder="Digite uma dica para o aluno..."
+                                className="w-full p-3 border border-gray-300 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                rows={2}
+                              />
+                            </div>
+
+                            {/* Opções de Resposta */}
+                            <div>
+                              <label className="block text-sm font-medium text-gray-700 mb-3">
+                                Opções de Resposta <span className="text-red-500">*</span>
+                                <span className="text-xs text-gray-500 font-normal ml-2">
+                                  (Marque exatamente uma resposta correta)
+                                </span>
+                              </label>
+                              <div className="space-y-4">
+                                {question.opcoes.map((opcao, index) => (
+                                  <Card
+                                    key={opcao.id}
+                                    className={`p-4 border-2 ${
+                                      opcao.isCorrect
+                                        ? "border-green-500 bg-green-50"
+                                        : "border-gray-200"
+                                    }`}
+                                  >
+                                    <div className="flex items-start gap-4">
+                                      {/* Label da Opção */}
+                                      <div className="shrink-0">
+                                        <div
+                                          className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-lg ${
+                                            opcao.isCorrect
+                                              ? "bg-green-500 text-white"
+                                              : "bg-blue-500 text-white"
+                                          }`}
+                                        >
+                                          {String.fromCharCode(65 + index)}
+                                        </div>
+                                      </div>
+
+                                      {/* Conteúdo da Opção */}
+                                      <div className="flex-1 space-y-3">
+                                        {/* Texto da Opção */}
+                                        <div>
+                                          <label className="block text-xs font-medium text-gray-600 mb-1">
+                                            Texto da Opção <span className="text-red-500">*</span>
+                                          </label>
+                                          <Input
+                                            value={opcao.texto}
+                                            onChange={(e) =>
+                                              handleAtualizarOpcaoQuiz(
+                                                question.id,
+                                                opcao.id,
+                                                "texto",
+                                                e.target.value
+                                              )
+                                            }
+                                            placeholder={`Digite o texto da opção ${String.fromCharCode(65 + index)}...`}
+                                            className="text-sm"
+                                          />
+                                        </div>
+
+                                        {/* Feedback da Opção */}
+                                        <div>
+                                          <label className="block text-xs font-medium text-gray-600 mb-1">
+                                            Feedback <span className="text-red-500">*</span>
+                                          </label>
+                                          <textarea
+                                            value={opcao.feedback}
+                                            onChange={(e) =>
+                                              handleAtualizarOpcaoQuiz(
+                                                question.id,
+                                                opcao.id,
+                                                "feedback",
+                                                e.target.value
+                                              )
+                                            }
+                                            placeholder="Digite o feedback que aparecerá quando o aluno escolher esta opção..."
+                                            className="w-full p-2 border border-gray-300 rounded-md resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                                            rows={2}
+                                          />
+                                        </div>
+
+                                        {/* Radio para Marcar como Correta */}
+                                        <div className="flex items-center gap-2">
+                                          <input
+                                            type="radio"
+                                            name={`correct-${question.id}`}
+                                            checked={opcao.isCorrect}
+                                            onChange={() => handleMarcarRespostaCorreta(question.id, opcao.id)}
+                                            className="w-4 h-4 text-green-600 border-gray-300 focus:ring-green-500"
+                                            id={`correct-${question.id}-${opcao.id}`}
+                                          />
+                                          <label
+                                            htmlFor={`correct-${question.id}-${opcao.id}`}
+                                            className="text-sm font-medium text-gray-700 cursor-pointer"
+                                          >
+                                            Marcar como resposta correta
+                                          </label>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </Card>
+                                ))}
+                              </div>
+                            </div>
+                          </div>
+                        </Card>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-8 text-gray-500 text-sm border-2 border-dashed border-gray-300 rounded-lg">
+                      <p>Nenhuma pergunta adicionada ainda.</p>
+                      <p className="text-xs mt-1">
+                        Clique em "Adicionar Pergunta" para começar.
+                      </p>
+                    </div>
+                  )}
+                </div>
               ) : (
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -2060,6 +2495,15 @@ export default function EditarCursoPage() {
                     ? !conteudoTemp.itensLista ||
                       conteudoTemp.itensLista.length === 0 ||
                       conteudoTemp.itensLista.some((item) => !item.texto.trim())
+                    : conteudoTemp.tipo === "quiz"
+                    ? !conteudoTemp.quizData ||
+                      !conteudoTemp.quizData.questions ||
+                      conteudoTemp.quizData.questions.length === 0 ||
+                      conteudoTemp.quizData.questions.some((q) => !q.pergunta.trim()) ||
+                      conteudoTemp.quizData.questions.some((q) => !q.opcoes || q.opcoes.length !== 5) ||
+                      conteudoTemp.quizData.questions.some((q) => q.opcoes.some((opcao) => !opcao.texto.trim())) ||
+                      conteudoTemp.quizData.questions.some((q) => q.opcoes.filter((opcao) => opcao.isCorrect).length !== 1) ||
+                      conteudoTemp.quizData.questions.some((q) => q.opcoes.some((opcao) => !opcao.feedback.trim()))
                     : !conteudoTemp.conteudo.trim()) ||
                   (conteudoTemp.tipo === "imagem" &&
                     (!conteudoTemp.tamanho ||
@@ -2286,7 +2730,7 @@ export default function EditarCursoPage() {
           open={!!editandoConteudo}
           onOpenChange={closeEditarConteudoModal}
         >
-          <DialogContent className="sm:max-w-2xl">
+          <DialogContent className={`${editandoConteudo?.tipo === "quiz" ? "sm:max-w-4xl max-h-[90vh]" : "sm:max-w-2xl"}`}>
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2">
                 <Edit className="h-5 w-5 text-blue-600" />
@@ -2321,6 +2765,11 @@ export default function EditarCursoPage() {
                     <List className="h-4 w-4 text-blue-600" />
                     Lista
                   </>
+                ) : editandoConteudo?.tipo === "quiz" ? (
+                  <>
+                    <HelpCircle className="h-4 w-4 text-blue-600" />
+                    Quiz
+                  </>
                 ) : (
                   <>
                     <Type className="h-4 w-4 text-blue-600" />
@@ -2331,7 +2780,330 @@ export default function EditarCursoPage() {
               <DialogDescription>Atualize o conteúdo abaixo</DialogDescription>
             </DialogHeader>
             <div className="space-y-4 py-4">
-              {editandoConteudo?.tipo === "imagem" ? (
+              {editandoConteudo?.tipo === "quiz" ? (
+                <div className="space-y-6">
+                  {/* Botão Adicionar Pergunta */}
+                  <div className="flex items-center justify-between">
+                    <label className="block text-sm font-medium text-gray-700">
+                      Perguntas do Quiz <span className="text-red-500">*</span>
+                    </label>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        if (!editandoConteudo.quizData) {
+                          setEditandoConteudo({
+                            ...editandoConteudo,
+                            quizData: {
+                              questions: [
+                                {
+                                  id: `question-${Date.now()}`,
+                                  pergunta: "",
+                                  dica: "",
+                                  opcoes: Array.from({ length: 5 }, (_, i) => ({
+                                    id: `opcao-${Date.now()}-${i}`,
+                                    texto: "",
+                                    isCorrect: i === 0,
+                                    feedback: "",
+                                  })),
+                                },
+                              ],
+                            },
+                          });
+                          return;
+                        }
+                        const novaPergunta: QuizQuestion = {
+                          id: `question-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
+                          pergunta: "",
+                          dica: "",
+                          opcoes: Array.from({ length: 5 }, (_, i) => ({
+                            id: `opcao-${Date.now()}-${i}-${Math.random().toString(36).substring(2, 9)}`,
+                            texto: "",
+                            isCorrect: i === 0,
+                            feedback: "",
+                          })),
+                        };
+                        setEditandoConteudo({
+                          ...editandoConteudo,
+                          quizData: {
+                            ...editandoConteudo.quizData,
+                            questions: [...editandoConteudo.quizData.questions, novaPergunta],
+                          },
+                        });
+                      }}
+                      className="text-blue-600 border-blue-200 hover:bg-blue-50"
+                    >
+                      <Plus className="h-4 w-4 mr-2" />
+                      Adicionar Pergunta
+                    </Button>
+                  </div>
+
+                  {/* Lista de Perguntas */}
+                  {editandoConteudo.quizData?.questions && editandoConteudo.quizData.questions.length > 0 ? (
+                    <div className="space-y-6 max-h-[600px] overflow-y-auto pr-2">
+                      {editandoConteudo.quizData.questions.map((question, questionIndex) => (
+                        <Card
+                          key={question.id}
+                          className="p-6 border-2 border-blue-200 bg-blue-50/30"
+                        >
+                          {/* Cabeçalho da Pergunta */}
+                          <div className="flex items-center justify-between mb-4 pb-4 border-b border-blue-300">
+                            <div className="flex items-center gap-3">
+                              <div className="w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold">
+                                {questionIndex + 1}
+                              </div>
+                              <span className="text-sm font-semibold text-gray-700">
+                                Pergunta {questionIndex + 1}
+                              </span>
+                            </div>
+                            {editandoConteudo.quizData && editandoConteudo.quizData.questions.length > 1 && (
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => {
+                                  if (editandoConteudo.quizData && editandoConteudo.quizData.questions.length <= 1) {
+                                    alert("O quiz deve ter pelo menos uma pergunta.");
+                                    return;
+                                  }
+                                  setEditandoConteudo({
+                                    ...editandoConteudo,
+                                    quizData: editandoConteudo.quizData
+                                      ? {
+                                          ...editandoConteudo.quizData,
+                                          questions: editandoConteudo.quizData.questions.filter(
+                                            (q) => q.id !== question.id
+                                          ),
+                                        }
+                                      : undefined,
+                                  });
+                                }}
+                                className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            )}
+                          </div>
+
+                          <div className="space-y-6">
+                            {/* Texto da Pergunta */}
+                            <div>
+                              <label className="block text-sm font-medium text-gray-700 mb-2">
+                                Pergunta <span className="text-red-500">*</span>
+                              </label>
+                              <textarea
+                                value={question.pergunta}
+                                onChange={(e) => {
+                                  const novasQuestions = editandoConteudo.quizData?.questions.map((q) =>
+                                    q.id === question.id ? { ...q, pergunta: e.target.value } : q
+                                  );
+                                  setEditandoConteudo({
+                                    ...editandoConteudo,
+                                    quizData: editandoConteudo.quizData
+                                      ? {
+                                          ...editandoConteudo.quizData,
+                                          questions: novasQuestions || [],
+                                        }
+                                      : undefined,
+                                  });
+                                }}
+                                placeholder="Digite a pergunta do quiz..."
+                                className="w-full p-3 border border-gray-300 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                rows={3}
+                              />
+                            </div>
+
+                            {/* Dica (opcional) */}
+                            <div>
+                              <label className="block text-sm font-medium text-gray-700 mb-2">
+                                Dica <span className="text-gray-400 text-xs">(opcional)</span>
+                              </label>
+                              <textarea
+                                value={question.dica || ""}
+                                onChange={(e) => {
+                                  const novasQuestions = editandoConteudo.quizData?.questions.map((q) =>
+                                    q.id === question.id ? { ...q, dica: e.target.value } : q
+                                  );
+                                  setEditandoConteudo({
+                                    ...editandoConteudo,
+                                    quizData: editandoConteudo.quizData
+                                      ? {
+                                          ...editandoConteudo.quizData,
+                                          questions: novasQuestions || [],
+                                        }
+                                      : undefined,
+                                  });
+                                }}
+                                placeholder="Digite uma dica para o aluno..."
+                                className="w-full p-3 border border-gray-300 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                rows={2}
+                              />
+                            </div>
+
+                            {/* Opções de Resposta */}
+                            <div>
+                              <label className="block text-sm font-medium text-gray-700 mb-3">
+                                Opções de Resposta <span className="text-red-500">*</span>
+                                <span className="text-xs text-gray-500 font-normal ml-2">
+                                  (Marque exatamente uma resposta correta)
+                                </span>
+                              </label>
+                              <div className="space-y-4">
+                                {question.opcoes.map((opcao, index) => (
+                                  <Card
+                                    key={opcao.id}
+                                    className={`p-4 border-2 ${
+                                      opcao.isCorrect
+                                        ? "border-green-500 bg-green-50"
+                                        : "border-gray-200"
+                                    }`}
+                                  >
+                                    <div className="flex items-start gap-4">
+                                      {/* Label da Opção */}
+                                      <div className="shrink-0">
+                                        <div
+                                          className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-lg ${
+                                            opcao.isCorrect
+                                              ? "bg-green-500 text-white"
+                                              : "bg-blue-500 text-white"
+                                          }`}
+                                        >
+                                          {String.fromCharCode(65 + index)}
+                                        </div>
+                                      </div>
+
+                                      {/* Conteúdo da Opção */}
+                                      <div className="flex-1 space-y-3">
+                                        {/* Texto da Opção */}
+                                        <div>
+                                          <label className="block text-xs font-medium text-gray-600 mb-1">
+                                            Texto da Opção <span className="text-red-500">*</span>
+                                          </label>
+                                          <Input
+                                            value={opcao.texto}
+                                            onChange={(e) => {
+                                              const novasQuestions = editandoConteudo.quizData?.questions.map((q) =>
+                                                q.id === question.id
+                                                  ? {
+                                                      ...q,
+                                                      opcoes: q.opcoes.map((opt) =>
+                                                        opt.id === opcao.id
+                                                          ? { ...opt, texto: e.target.value }
+                                                          : opt
+                                                      ),
+                                                    }
+                                                  : q
+                                              );
+                                              setEditandoConteudo({
+                                                ...editandoConteudo,
+                                                quizData: editandoConteudo.quizData
+                                                  ? {
+                                                      ...editandoConteudo.quizData,
+                                                      questions: novasQuestions || [],
+                                                    }
+                                                  : undefined,
+                                              });
+                                            }}
+                                            placeholder={`Digite o texto da opção ${String.fromCharCode(65 + index)}...`}
+                                            className="text-sm"
+                                          />
+                                        </div>
+
+                                        {/* Feedback da Opção */}
+                                        <div>
+                                          <label className="block text-xs font-medium text-gray-600 mb-1">
+                                            Feedback <span className="text-red-500">*</span>
+                                          </label>
+                                          <textarea
+                                            value={opcao.feedback}
+                                            onChange={(e) => {
+                                              const novasQuestions = editandoConteudo.quizData?.questions.map((q) =>
+                                                q.id === question.id
+                                                  ? {
+                                                      ...q,
+                                                      opcoes: q.opcoes.map((opt) =>
+                                                        opt.id === opcao.id
+                                                          ? { ...opt, feedback: e.target.value }
+                                                          : opt
+                                                      ),
+                                                    }
+                                                  : q
+                                              );
+                                              setEditandoConteudo({
+                                                ...editandoConteudo,
+                                                quizData: editandoConteudo.quizData
+                                                  ? {
+                                                      ...editandoConteudo.quizData,
+                                                      questions: novasQuestions || [],
+                                                    }
+                                                  : undefined,
+                                              });
+                                            }}
+                                            placeholder="Digite o feedback que aparecerá quando o aluno escolher esta opção..."
+                                            className="w-full p-2 border border-gray-300 rounded-md resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                                            rows={2}
+                                          />
+                                        </div>
+
+                                        {/* Radio para Marcar como Correta */}
+                                        <div className="flex items-center gap-2">
+                                          <input
+                                            type="radio"
+                                            name={`edit-correct-${question.id}`}
+                                            checked={opcao.isCorrect}
+                                            onChange={() => {
+                                              const novasQuestions = editandoConteudo.quizData?.questions.map((q) =>
+                                                q.id === question.id
+                                                  ? {
+                                                      ...q,
+                                                      opcoes: q.opcoes.map((opt) => ({
+                                                        ...opt,
+                                                        isCorrect: opt.id === opcao.id,
+                                                      })),
+                                                    }
+                                                  : q
+                                              );
+                                              setEditandoConteudo({
+                                                ...editandoConteudo,
+                                                quizData: editandoConteudo.quizData
+                                                  ? {
+                                                      ...editandoConteudo.quizData,
+                                                      questions: novasQuestions || [],
+                                                    }
+                                                  : undefined,
+                                              });
+                                            }}
+                                            className="w-4 h-4 text-green-600 border-gray-300 focus:ring-green-500"
+                                            id={`edit-correct-${question.id}-${opcao.id}`}
+                                          />
+                                          <label
+                                            htmlFor={`edit-correct-${question.id}-${opcao.id}`}
+                                            className="text-sm font-medium text-gray-700 cursor-pointer"
+                                          >
+                                            Marcar como resposta correta
+                                          </label>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </Card>
+                                ))}
+                              </div>
+                            </div>
+                          </div>
+                        </Card>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-8 text-gray-500 text-sm border-2 border-dashed border-gray-300 rounded-lg">
+                      <p>Nenhuma pergunta adicionada ainda.</p>
+                      <p className="text-xs mt-1">
+                        Clique em "Adicionar Pergunta" para começar.
+                      </p>
+                    </div>
+                  )}
+                </div>
+              ) : editandoConteudo?.tipo === "imagem" ? (
                 <div className="space-y-4">
                   {/* Upload ou URL */}
                   <div>
@@ -2976,7 +3748,8 @@ export default function EditarCursoPage() {
                       editandoConteudo.conteudoVerso,
                       editandoConteudo.alturaCard,
                       editandoConteudo.itensLista,
-                      editandoConteudo.tipoLista
+                      editandoConteudo.tipoLista,
+                      editandoConteudo.quizData
                     );
                     closeEditarConteudoModal();
                   }
@@ -3005,6 +3778,15 @@ export default function EditarCursoPage() {
                       editandoConteudo.itensLista.some(
                         (item) => !item.texto.trim()
                       )
+                    : editandoConteudo?.tipo === "quiz"
+                    ? !editandoConteudo.quizData ||
+                      !editandoConteudo.quizData.questions ||
+                      editandoConteudo.quizData.questions.length === 0 ||
+                      editandoConteudo.quizData.questions.some((q) => !q.pergunta.trim()) ||
+                      editandoConteudo.quizData.questions.some((q) => !q.opcoes || q.opcoes.length !== 5) ||
+                      editandoConteudo.quizData.questions.some((q) => q.opcoes.some((opcao) => !opcao.texto.trim())) ||
+                      editandoConteudo.quizData.questions.some((q) => q.opcoes.filter((opcao) => opcao.isCorrect).length !== 1) ||
+                      editandoConteudo.quizData.questions.some((q) => q.opcoes.some((opcao) => !opcao.feedback.trim()))
                     : !editandoConteudo?.conteudo?.trim()) ||
                   (editandoConteudo?.tipo === "imagem" &&
                     (!editandoConteudo.tamanho ||

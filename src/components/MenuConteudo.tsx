@@ -15,7 +15,7 @@ import { MoreHorizontal, ArrowUp, ArrowDown, Edit, Trash2 } from "lucide-react";
 
 interface Conteudo {
   id: string;
-  tipo: "paragrafo" | "subtitulo" | "titulo" | "imagem" | "accordion" | "flipcard" | "lista";
+  tipo: "paragrafo" | "subtitulo" | "titulo" | "imagem" | "accordion" | "flipcard" | "lista" | "quiz";
   conteudo: string;
   tamanho?: "pequena" | "media" | "grande";
   legenda?: string;
@@ -32,6 +32,16 @@ interface Conteudo {
   alturaCard?: string;
   itensLista?: Array<{ id: string; texto: string }>;
   tipoLista?: "ordenada" | "nao-ordenada" | "check";
+  quizData?: {
+    pergunta: string;
+    dica?: string;
+    opcoes: Array<{
+      id: string;
+      texto: string;
+      isCorrect: boolean;
+      feedback: string;
+    }>;
+  };
 }
 
 interface Unidade {
@@ -79,6 +89,7 @@ export function MenuConteudo({
     alturaCard?: Conteudo["alturaCard"];
     itensLista?: Conteudo["itensLista"];
     tipoLista?: Conteudo["tipoLista"];
+    quizData?: Conteudo["quizData"];
   }) => void;
 }) {
   return (
@@ -144,6 +155,7 @@ export function MenuConteudo({
                 alturaCard: item.alturaCard,
                 itensLista: item.itensLista || [],
                 tipoLista: item.tipoLista || "nao-ordenada",
+                quizData: item.quizData,
               })
             }
             className="cursor-pointer"

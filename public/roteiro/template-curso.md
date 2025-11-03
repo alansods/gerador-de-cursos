@@ -154,9 +154,38 @@ Para criar conteúdo interativo, use os seguintes marcadores:
   **Conteúdo do Verso:** [Conteúdo completo que aparece quando o card é virado]
 - A IA criará um card clicável que mostra o conteúdo do verso quando girado
 
+**QUIZ_INICIO** e **QUIZ_FIM**
+- Use para criar um quiz interativo com múltiplas perguntas de múltipla escolha
+- Entre os marcadores, especifique cada pergunta no formato:
+  **Pergunta X:** [Texto da pergunta]
+  **Dica (opcional):** [Texto da dica para o aluno]
+  **Opção A:** [Texto da opção A]
+  **Feedback Opção A:** [Feedback quando o aluno escolher esta opção]
+  **Opção B:** [Texto da opção B]
+  **Feedback Opção B:** [Feedback quando o aluno escolher esta opção]
+  **Opção C:** [Texto da opção C]
+  **Feedback Opção C:** [Feedback quando o aluno escolher esta opção]
+  **Opção D:** [Texto da opção D]
+  **Feedback Opção D:** [Feedback quando o aluno escolher esta opção]
+  **Opção E:** [Texto da opção E]
+  **Feedback Opção E:** [Feedback quando o aluno escolher esta opção]
+  **Resposta Correta:** [A / B / C / D / E]
+- Cada pergunta deve ter exatamente 5 opções de resposta e apenas 1 resposta correta
+- Todas as opções devem ter feedback explicativo
+- Você pode criar múltiplas perguntas separando-as no mesmo bloco QUIZ_INICIO/QUIZ_FIM
+
+**LISTA_INICIO** e **LISTA_FIM**
+- Use para criar listas formatadas
+- Entre os marcadores, especifique:
+  **Tipo de Lista:** ordenada / nao-ordenada / check
+  **Item X:** [texto do item]
+- A IA criará uma lista com os itens especificados
+
 **Exemplos de uso:**
 - Use ACCORDION para listas de perguntas frequentes, conceitos relacionados, ou passos de um processo
 - Use FLIPCARD para apresentar conceitos de forma interativa, com uma imagem ou título na frente e explicação detalhada no verso
+- Use QUIZ para testar o conhecimento do aluno com perguntas interativas após um tópico importante
+- Use LISTA para organizar informações em formato de lista
 
 **Bom curso!** 🚀
 

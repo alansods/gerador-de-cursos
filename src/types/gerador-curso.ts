@@ -10,9 +10,27 @@ export interface ListaItem {
   texto: string
 }
 
+export interface QuizItem {
+  id: string
+  texto: string // texto da opção de resposta
+  isCorrect: boolean // se esta é a resposta correta
+  feedback: string // feedback específico para esta resposta
+}
+
+export interface QuizQuestion {
+  id: string // ID único para a pergunta
+  pergunta: string // pergunta do quiz
+  dica?: string // dica opcional para a pergunta
+  opcoes: QuizItem[] // array com exatamente 5 opções
+}
+
+export interface QuizData {
+  questions: QuizQuestion[] // Array de perguntas do quiz
+}
+
 export interface ConteudoUnidade {
   id: string
-  tipo: 'titulo' | 'paragrafo' | 'subtitulo' | 'imagem' | 'accordion' | 'flipcard' | 'lista'
+  tipo: 'titulo' | 'paragrafo' | 'subtitulo' | 'imagem' | 'accordion' | 'flipcard' | 'lista' | 'quiz'
   conteudo: string
   ordem: number
   // Propriedades específicas para imagens
@@ -35,6 +53,8 @@ export interface ConteudoUnidade {
   // Propriedades específicas para lista
   itensLista?: ListaItem[]
   tipoLista?: 'ordenada' | 'nao-ordenada' | 'check' // lista ordenada (numerada), não ordenada (bullets) ou com ícone de check
+  // Propriedades específicas para quiz
+  quizData?: QuizData
 }
 
 export interface Unidade {
