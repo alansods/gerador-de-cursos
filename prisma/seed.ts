@@ -1,6 +1,7 @@
 import { PrismaClient } from '@prisma/client';
 import { config } from 'dotenv';
 import { resolve } from 'path';
+import bcrypt from 'bcryptjs';
 
 // Carregar variáveis de ambiente - tenta .env.local primeiro, depois .env
 config({ path: resolve(process.cwd(), '.env.local') });
@@ -264,6 +265,32 @@ async function main() {
     }
 
     console.log(`\n✅ ${comentarios.length} comentários de exemplo criados`);
+  }
+
+  // Criar usuário convidado (apenas se não existir)
+  const usuarioConvidadoExistente = await prisma.user.findUnique({
+    where: { usuario: 'convidado' },
+  });
+
+  if (!usuarioConvidadoExistente) {
+    console.log('\n👤 Criando usuário convidado...');
+    const senhaHash = await bcrypt.hash('senai2025', 10);
+    
+    const usuarioConvidado = await prisma.user.create({
+      data: {
+        nome: 'Usuário Convidado',
+        cargo: 'Convidado',
+        usuario: 'convidado',
+        senha: senhaHash,
+      },
+    });
+
+    console.log('✅ Usuário convidado criado com sucesso!');
+    console.log(`   Usuário: convidado`);
+    console.log(`   Senha: senai2025`);
+    console.log(`   ID: ${usuarioConvidado.id}`);
+  } else {
+    console.log('\n👤 Usuário convidado já existe, pulando criação...');
   }
 
   console.log('\n🎉 Seed concluído com sucesso!\n');

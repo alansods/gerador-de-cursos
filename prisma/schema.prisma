@@ -10,6 +10,20 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// Modelo de Usuário
+model User {
+  id        String   @id @default(cuid())
+  nome      String
+  cargo     String
+  usuario   String   @unique
+  senha     String
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([usuario])
+  @@map("users")
+}
+
 // Modelo de Comentários (exemplo do prompt)
 model Comment {
   id        Int      @id @default(autoincrement())

@@ -46,6 +46,7 @@ import {
   RotateCcw,
   List,
   HelpCircle,
+  AlertTriangle,
 } from "lucide-react";
 import {
   Tooltip,
@@ -62,6 +63,7 @@ import {
 import { MenuConteudo } from "@/components/MenuConteudo";
 import { MenuUnidade } from "@/components/MenuUnidade";
 import { QuizConteudo } from "@/components/QuizConteudo";
+import { InfoBox } from "@/components/info-box";
 import { QuizData, QuizQuestion, QuizItem } from "@/types/gerador-curso";
 
 export default function EditarCursoPage() {
@@ -100,7 +102,8 @@ export default function EditarCursoPage() {
       | "accordion"
       | "flipcard"
       | "lista"
-      | "quiz";
+      | "quiz"
+      | "info-box";
     conteudo: string;
     tamanho?: "pequena" | "media" | "grande";
     legenda?: string;
@@ -117,6 +120,8 @@ export default function EditarCursoPage() {
     itensLista?: Array<{ id: string; texto: string }>;
     tipoLista?: "ordenada" | "nao-ordenada" | "check";
     quizData?: QuizData;
+    tipoInfoBox?: "atencao" | "saiba_mais" | "info" | "curiosidade";
+    tituloInfoBox?: string;
   } | null>(null);
   const [conteudoTemp, setConteudoTemp] = useState({
     tipo: "paragrafo" as
@@ -127,7 +132,8 @@ export default function EditarCursoPage() {
       | "accordion"
       | "flipcard"
       | "lista"
-      | "quiz",
+      | "quiz"
+      | "info-box",
     conteudo: "",
     unidadeId: "",
     tamanho: "media" as "pequena" | "media" | "grande",
@@ -149,6 +155,8 @@ export default function EditarCursoPage() {
     itensLista: [] as Array<{ id: string; texto: string }>,
     tipoLista: "nao-ordenada" as "ordenada" | "nao-ordenada" | "check",
     quizData: undefined as QuizData | undefined,
+    tipoInfoBox: "info" as "atencao" | "saiba_mais" | "info" | "curiosidade",
+    tituloInfoBox: "",
   });
   const [adicionarUnidadeModal, setAdicionarUnidadeModal] = useState(false);
   const [editarUnidadeModal, setEditarUnidadeModal] = useState(false);
@@ -526,6 +534,16 @@ export default function EditarCursoPage() {
           return;
         }
       }
+    } else if (conteudoTemp.tipo === "info-box") {
+      // Validar info-box
+      if (!conteudoTemp.tipoInfoBox) {
+        alert("Selecione o tipo do Info Box.");
+        return;
+      }
+      if (!conteudoTemp.conteudo.trim()) {
+        alert("O texto do corpo do Info Box é obrigatório.");
+        return;
+      }
     } else if (conteudoTemp.tipo === "imagem") {
       if (
         !conteudoTemp.tamanho ||
@@ -561,6 +579,8 @@ export default function EditarCursoPage() {
       itensLista: conteudoTemp.itensLista,
       tipoLista: conteudoTemp.tipoLista,
       quizData: conteudoTemp.quizData,
+      tipoInfoBox: conteudoTemp.tipoInfoBox,
+      tituloInfoBox: conteudoTemp.tituloInfoBox,
     });
     toast.success("Conteúdo adicionado");
     setConteudoTemp({
@@ -596,7 +616,8 @@ export default function EditarCursoPage() {
       | "accordion"
       | "flipcard"
       | "lista"
-      | "quiz",
+      | "quiz"
+      | "info-box",
     conteudo: string,
     tamanho?: "pequena" | "media" | "grande",
     legenda?: string,
@@ -612,7 +633,9 @@ export default function EditarCursoPage() {
     alturaCard?: string,
     itensLista?: Array<{ id: string; texto: string }>,
     tipoLista?: "ordenada" | "nao-ordenada" | "check",
-    quizData?: QuizData
+    quizData?: QuizData,
+    tipoInfoBox?: "atencao" | "saiba_mais" | "info" | "curiosidade",
+    tituloInfoBox?: string
   ) => {
     editarConteudo(unidadeId, conteudoId, {
       tipo,
@@ -632,6 +655,8 @@ export default function EditarCursoPage() {
       itensLista,
       tipoLista,
       quizData,
+      tipoInfoBox,
+      tituloInfoBox,
     });
     toast.success("Conteúdo atualizado");
     setEditandoConteudo(null);
@@ -815,7 +840,8 @@ export default function EditarCursoPage() {
       | "accordion"
       | "flipcard"
       | "lista"
-      | "quiz",
+      | "quiz"
+      | "info-box",
     unidadeId?: string
   ) => {
     if (unidadeId) {
@@ -858,6 +884,8 @@ export default function EditarCursoPage() {
         itensLista: tipo === "lista" ? [] : [],
         tipoLista: tipo === "lista" ? "nao-ordenada" : "nao-ordenada",
         quizData: quizDataInitial,
+        tipoInfoBox: tipo === "info-box" ? "info" : "info",
+        tituloInfoBox: tipo === "info-box" ? "" : "",
       });
     }
   };
@@ -1192,6 +1220,8 @@ export default function EditarCursoPage() {
                                 <List className="h-4 w-4 text-purple-600" />
                               ) : item.tipo === "quiz" ? (
                                 <HelpCircle className="h-4 w-4 text-indigo-600" />
+                              ) : item.tipo === "info-box" ? (
+                                <AlertTriangle className="h-4 w-4 text-yellow-600" />
                               ) : (
                                 <Type className="h-4 w-4 text-gray-600" />
                               )}
@@ -1359,6 +1389,38 @@ export default function EditarCursoPage() {
                                   {item.quizData && (
                                     <div className="mt-4 pt-4 border-t border-gray-200">
                                       <QuizConteudo quizData={item.quizData} isEdicao={true} />
+                                    </div>
+                                  )}
+                                </div>
+                              ) : item.tipo === "info-box" ? (
+                                <div className="space-y-2">
+                                  <p className="text-sm font-semibold text-gray-700">
+                                    Info Box: {item.tipoInfoBox === "atencao" ? "Atenção" : item.tipoInfoBox === "saiba_mais" ? "Saiba mais" : item.tipoInfoBox === "curiosidade" ? "Curiosidade" : "Informação"}
+                                  </p>
+                                  {item.tituloInfoBox && (
+                                    <p className="text-xs text-gray-500">
+                                      Título: {item.tituloInfoBox}
+                                    </p>
+                                  )}
+                                  {item.conteudo && (
+                                    <div className="text-xs text-gray-500 line-clamp-2">
+                                      {item.conteudo.replace(/<[^>]*>/g, '').slice(0, 100)}
+                                      {item.conteudo.replace(/<[^>]*>/g, '').length > 100 ? '...' : ''}
+                                    </div>
+                                  )}
+                                  {/* Preview do Info Box */}
+                                  {item.tipoInfoBox && (
+                                    <div className="mt-4 pt-4 border-t border-gray-200">
+                                      <InfoBox
+                                        tipo={item.tipoInfoBox}
+                                        titulo={item.tituloInfoBox}
+                                      >
+                                        <div
+                                          dangerouslySetInnerHTML={{
+                                            __html: item.conteudo || "",
+                                          }}
+                                        />
+                                      </InfoBox>
                                     </div>
                                   )}
                                 </div>
@@ -1536,6 +1598,20 @@ export default function EditarCursoPage() {
                             <HelpCircle className="h-5 w-5 text-indigo-600" />
                           </div>
                           <span className="text-xs font-semibold text-gray-700">Quiz</span>
+                        </Button>
+                        
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() =>
+                            handleSelecionarTipoConteudo("info-box", unidade.id)
+                          }
+                          className="h-auto py-4 px-3 flex flex-col items-center gap-2 bg-white hover:bg-yellow-50 hover:border-yellow-400 hover:shadow-md transition-all border-2 border-yellow-200 group"
+                        >
+                          <div className="p-2 bg-yellow-100 rounded-lg group-hover:bg-yellow-200 transition-colors">
+                            <AlertTriangle className="h-5 w-5 text-yellow-600" />
+                          </div>
+                          <span className="text-xs font-semibold text-gray-700">Info Box</span>
                         </Button>
                       </div>
                     </div>
@@ -1719,6 +1795,11 @@ export default function EditarCursoPage() {
                   <>
                     <HelpCircle className="h-5 w-5 text-blue-600" />
                     Adicionar Quiz
+                  </>
+                ) : conteudoTemp.tipo === "info-box" ? (
+                  <>
+                    <AlertTriangle className="h-5 w-5 text-blue-600" />
+                    Adicionar Info Box
                   </>
                 ) : (
                   <>
@@ -2429,6 +2510,73 @@ export default function EditarCursoPage() {
                     </div>
                   )}
                 </div>
+              ) : conteudoTemp.tipo === "info-box" ? (
+                <div className="space-y-4">
+                  {/* Tipo do Info Box */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Tipo do Info Box <span className="text-red-500">*</span>
+                    </label>
+                    <select
+                      value={conteudoTemp.tipoInfoBox || "info"}
+                      onChange={(e) =>
+                        setConteudoTemp({
+                          ...conteudoTemp,
+                          tipoInfoBox: e.target.value as
+                            | "atencao"
+                            | "saiba_mais"
+                            | "info"
+                            | "curiosidade",
+                        })
+                      }
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    >
+                      <option value="atencao">Atenção</option>
+                      <option value="saiba_mais">Saiba mais</option>
+                      <option value="info">Informação</option>
+                      <option value="curiosidade">Curiosidade</option>
+                    </select>
+                  </div>
+
+                  {/* Título do Info Box */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Título <span className="text-gray-400 text-xs">(opcional)</span>
+                    </label>
+                    <Input
+                      value={conteudoTemp.tituloInfoBox || ""}
+                      onChange={(e) =>
+                        setConteudoTemp({
+                          ...conteudoTemp,
+                          tituloInfoBox: e.target.value,
+                        })
+                      }
+                      placeholder="Digite o título do Info Box (opcional)..."
+                    />
+                    <p className="text-xs text-gray-500 mt-1">
+                      Se deixar em branco, será usado o tipo como título
+                    </p>
+                  </div>
+
+                  {/* Texto do Corpo */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Texto do Corpo <span className="text-red-500">*</span>
+                    </label>
+                    <textarea
+                      value={conteudoTemp.conteudo}
+                      onChange={(e) =>
+                        setConteudoTemp({
+                          ...conteudoTemp,
+                          conteudo: e.target.value,
+                        })
+                      }
+                      placeholder="Digite o texto do corpo do Info Box..."
+                      className="w-full p-3 border border-gray-300 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      rows={8}
+                    />
+                  </div>
+                </div>
               ) : (
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -2504,6 +2652,8 @@ export default function EditarCursoPage() {
                       conteudoTemp.quizData.questions.some((q) => q.opcoes.some((opcao) => !opcao.texto.trim())) ||
                       conteudoTemp.quizData.questions.some((q) => q.opcoes.filter((opcao) => opcao.isCorrect).length !== 1) ||
                       conteudoTemp.quizData.questions.some((q) => q.opcoes.some((opcao) => !opcao.feedback.trim()))
+                    : conteudoTemp.tipo === "info-box"
+                    ? !conteudoTemp.tipoInfoBox || !conteudoTemp.conteudo.trim()
                     : !conteudoTemp.conteudo.trim()) ||
                   (conteudoTemp.tipo === "imagem" &&
                     (!conteudoTemp.tamanho ||
@@ -2769,6 +2919,11 @@ export default function EditarCursoPage() {
                   <>
                     <HelpCircle className="h-4 w-4 text-blue-600" />
                     Quiz
+                  </>
+                ) : editandoConteudo?.tipo === "info-box" ? (
+                  <>
+                    <AlertTriangle className="h-4 w-4 text-blue-600" />
+                    Info Box
                   </>
                 ) : (
                   <>
@@ -3685,6 +3840,76 @@ export default function EditarCursoPage() {
                     </div>
                   )}
                 </div>
+              ) : editandoConteudo?.tipo === "info-box" ? (
+                <div className="space-y-4">
+                  {/* Tipo do Info Box */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Tipo do Info Box <span className="text-red-500">*</span>
+                    </label>
+                    <select
+                      value={editandoConteudo.tipoInfoBox || "info"}
+                      onChange={(e) =>
+                        editandoConteudo &&
+                        setEditandoConteudo({
+                          ...editandoConteudo,
+                          tipoInfoBox: e.target.value as
+                            | "atencao"
+                            | "saiba_mais"
+                            | "info"
+                            | "curiosidade",
+                        })
+                      }
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    >
+                      <option value="atencao">Atenção</option>
+                      <option value="saiba_mais">Saiba mais</option>
+                      <option value="info">Informação</option>
+                      <option value="curiosidade">Curiosidade</option>
+                    </select>
+                  </div>
+
+                  {/* Título do Info Box */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Título <span className="text-gray-400 text-xs">(opcional)</span>
+                    </label>
+                    <Input
+                      value={editandoConteudo.tituloInfoBox || ""}
+                      onChange={(e) =>
+                        editandoConteudo &&
+                        setEditandoConteudo({
+                          ...editandoConteudo,
+                          tituloInfoBox: e.target.value,
+                        })
+                      }
+                      placeholder="Digite o título do Info Box (opcional)..."
+                    />
+                    <p className="text-xs text-gray-500 mt-1">
+                      Se deixar em branco, será usado o tipo como título
+                    </p>
+                  </div>
+
+                  {/* Texto do Corpo */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Texto do Corpo <span className="text-red-500">*</span>
+                    </label>
+                    <textarea
+                      value={editandoConteudo.conteudo || ""}
+                      onChange={(e) =>
+                        editandoConteudo &&
+                        setEditandoConteudo({
+                          ...editandoConteudo,
+                          conteudo: e.target.value,
+                        })
+                      }
+                      placeholder="Digite o texto do corpo do Info Box..."
+                      className="w-full p-3 border border-gray-300 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      rows={8}
+                    />
+                  </div>
+                </div>
               ) : (
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -3749,7 +3974,9 @@ export default function EditarCursoPage() {
                       editandoConteudo.alturaCard,
                       editandoConteudo.itensLista,
                       editandoConteudo.tipoLista,
-                      editandoConteudo.quizData
+                      editandoConteudo.quizData,
+                      editandoConteudo.tipoInfoBox,
+                      editandoConteudo.tituloInfoBox
                     );
                     closeEditarConteudoModal();
                   }
@@ -3787,6 +4014,8 @@ export default function EditarCursoPage() {
                       editandoConteudo.quizData.questions.some((q) => q.opcoes.some((opcao) => !opcao.texto.trim())) ||
                       editandoConteudo.quizData.questions.some((q) => q.opcoes.filter((opcao) => opcao.isCorrect).length !== 1) ||
                       editandoConteudo.quizData.questions.some((q) => q.opcoes.some((opcao) => !opcao.feedback.trim()))
+                    : editandoConteudo?.tipo === "info-box"
+                    ? !editandoConteudo.tipoInfoBox || !editandoConteudo.conteudo?.trim()
                     : !editandoConteudo?.conteudo?.trim()) ||
                   (editandoConteudo?.tipo === "imagem" &&
                     (!editandoConteudo.tamanho ||

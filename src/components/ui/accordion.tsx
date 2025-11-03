@@ -11,7 +11,7 @@ const Accordion = React.forwardRef<
   <AccordionPrimitive.Root
     ref={ref}
     className={cn(
-      "w-full max-w-4xl mx-auto rounded-xl border border-border bg-card overflow-hidden",
+      "w-full x-auto rounded-xl border border-border bg-card overflow-hidden",
       className
     )}
     {...props}

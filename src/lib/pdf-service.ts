@@ -597,4 +597,4 @@ export async function generateCoursePDF(curso: Curso, filename?: string): Promis
     fileName = `${(curso.titulo || 'curso').replace(/[^a-z0-9]/gi, '_')}.pdf`;
   }
   doc.save(fileName);
-}
+}2024

@@ -30,7 +30,7 @@ export interface QuizData {
 
 export interface ConteudoUnidade {
   id: string
-  tipo: 'titulo' | 'paragrafo' | 'subtitulo' | 'imagem' | 'accordion' | 'flipcard' | 'lista' | 'quiz'
+  tipo: 'titulo' | 'paragrafo' | 'subtitulo' | 'imagem' | 'accordion' | 'flipcard' | 'lista' | 'quiz' | 'info-box'
   conteudo: string
   ordem: number
   // Propriedades específicas para imagens
@@ -55,6 +55,9 @@ export interface ConteudoUnidade {
   tipoLista?: 'ordenada' | 'nao-ordenada' | 'check' // lista ordenada (numerada), não ordenada (bullets) ou com ícone de check
   // Propriedades específicas para quiz
   quizData?: QuizData
+  // Propriedades específicas para info-box
+  tipoInfoBox?: 'atencao' | 'saiba_mais' | 'info' | 'curiosidade'
+  tituloInfoBox?: string
 }
 
 export interface Unidade {
