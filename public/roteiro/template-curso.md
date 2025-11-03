@@ -45,6 +45,12 @@ Inclua exemplos práticos quando possível.]
 **Conteúdo do Item 3:** [Conteúdo detalhado do terceiro item...]
 **ACCORDION_FIM**
 
+**INFOBOX_INICIO**
+**Tipo do Info Box:** atencao
+**Título (opcional):** [Título personalizado, ex: "Proteja-se"]
+**Texto do Corpo:** [Conteúdo importante que deve ser destacado. Use este espaço para avisos, alertas ou informações críticas que os alunos devem prestar atenção.]
+**INFOBOX_FIM**
+
 ### Tópico 1.3: [Nome do Terceiro Subtópico]
 [Desenvolva o conteúdo deste subtópico.]
 
@@ -181,11 +187,25 @@ Para criar conteúdo interativo, use os seguintes marcadores:
   **Item X:** [texto do item]
 - A IA criará uma lista com os itens especificados
 
+**INFOBOX_INICIO** e **INFOBOX_FIM**
+- Use para criar caixas de informação destacadas com cores e ícones
+- Entre os marcadores, especifique:
+  **Tipo do Info Box:** atencao / saiba_mais / info / curiosidade
+  **Título (opcional):** [Título personalizado do Info Box. Se não fornecido, será usado o tipo como título]
+  **Texto do Corpo:** [Conteúdo completo do Info Box. Este texto aparecerá dentro da caixa colorida e pode ser expandido/colapsado]
+- A IA criará um Info Box com fundo colorido, ícone e conteúdo expansível
+- Tipos disponíveis:
+  - **atencao**: Caixa amarela com ícone de alerta, para avisos importantes
+  - **saiba_mais**: Caixa azul com ícone de lâmpada, para informações complementares
+  - **info**: Caixa cinza com ícone de informação, para informações gerais
+  - **curiosidade**: Caixa roxa com ícone de estrelas, para curiosidades e dicas interessantes
+
 **Exemplos de uso:**
 - Use ACCORDION para listas de perguntas frequentes, conceitos relacionados, ou passos de um processo
 - Use FLIPCARD para apresentar conceitos de forma interativa, com uma imagem ou título na frente e explicação detalhada no verso
 - Use QUIZ para testar o conhecimento do aluno com perguntas interativas após um tópico importante
 - Use LISTA para organizar informações em formato de lista
+- Use INFOBOX para destacar informações importantes, avisos, dicas ou curiosidades de forma visual
 
 **Bom curso!** 🚀
 

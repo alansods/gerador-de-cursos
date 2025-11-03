@@ -191,6 +191,44 @@ export default async function BlogPage() {
 }
 ```
 
+**INFOBOX_INICIO**
+**Tipo do Info Box:** saiba_mais
+**Título (opcional):** Cache e Revalidação
+**Texto do Corpo:** Por padrão, o Next.js armazena em cache os resultados de `fetch()` para melhorar a performance. Para revalidar dados periodicamente, use a opção `next: { revalidate: 60 }` para atualizar a cada 60 segundos. Para dados que mudam frequentemente, use `cache: 'no-store'` para desabilitar o cache.
+**INFOBOX_FIM**
+
+### Teste seu Conhecimento
+
+**QUIZ_INICIO**
+**Pergunta 1:** Qual é a principal diferença entre Server Components e Client Components no Next.js 14?
+**Dica:** Lembre-se que Server Components são o padrão no App Router e não precisam de diretiva especial.
+**Opção A:** Server Components só funcionam no servidor e Client Components só no cliente
+**Feedback Opção A:** Incorreto. Ambos os tipos podem ser usados, mas Server Components são renderizados no servidor e não enviam JavaScript ao cliente, enquanto Client Components precisam da diretiva 'use client' e são renderizados no navegador.
+**Opção B:** Server Components são renderizados no servidor e não enviam JavaScript ao cliente, enquanto Client Components precisam da diretiva 'use client' e são renderizados no navegador
+**Feedback Opção B:** Correto! Server Components são o padrão no App Router e permitem acesso direto a recursos do servidor sem enviar JavaScript adicional ao cliente. Client Components são usados quando você precisa de interatividade.
+**Opção C:** Server Components são mais lentos que Client Components
+**Feedback Opção C:** Incorreto. Server Components são geralmente mais rápidos porque reduzem a quantidade de JavaScript enviado ao cliente e podem acessar recursos do servidor diretamente.
+**Opção D:** Client Components são obrigatórios para qualquer interatividade
+**Feedback Opção D:** Parcialmente correto, mas não completo. Client Components são necessários para interatividade como hooks e event handlers, mas Server Components podem fazer muito trabalho no servidor antes de enviar HTML ao cliente.
+**Opção E:** Não há diferença entre eles
+**Feedback Opção E:** Incorreto. Existem diferenças significativas: Server Components são renderizados no servidor, acessam recursos do servidor diretamente e não enviam JavaScript ao cliente. Client Components são renderizados no navegador e permitem interatividade.
+**Resposta Correta:** B
+
+**Pergunta 2:** Quando você deve usar a diretiva 'use client' em um componente Next.js?
+**Dica:** Pense sobre o que precisa rodar no navegador do usuário.
+**Opção A:** Sempre que o componente usa JSX
+**Feedback Opção A:** Incorreto. A maioria dos componentes Next.js usa JSX e não precisa de 'use client', pois são Server Components por padrão.
+**Opção B:** Quando você precisa de hooks React como useState, useEffect ou event handlers
+**Feedback Opção B:** Correto! A diretiva 'use client' é necessária quando você precisa de funcionalidades que só funcionam no navegador, como hooks React, event handlers (onClick, onChange), ou acesso a APIs do navegador.
+**Opção C:** Quando você precisa buscar dados de uma API
+**Feedback Opção C:** Incorreto. Buscar dados de uma API pode ser feito em Server Components usando async/await, sem necessidade de 'use client'.
+**Opção D:** Quando você usa TypeScript
+**Feedback Opção D:** Incorreto. TypeScript funciona tanto em Server Components quanto em Client Components sem necessidade de 'use client'.
+**Opção E:** Nunca, pois todos os componentes são client components por padrão
+**Feedback Opção E:** Incorreto. No Next.js 14 com App Router, todos os componentes são Server Components por padrão. Você só precisa de 'use client' quando precisa de funcionalidades que rodam no navegador.
+**Resposta Correta:** B
+**QUIZ_FIM**
+
 ---
 
 # UNIDADE 4: Otimização e Performance
@@ -219,6 +257,12 @@ export default function Avatar() {
 ```
 
 Benefícios incluem lazy loading automático, redimensionamento responsivo e conversão para formatos modernos como WebP.
+
+**INFOBOX_INICIO**
+**Tipo do Info Box:** atencao
+**Título (opcional):** Dimensões Obrigatórias
+**Texto do Corpo:** Sempre especifique as propriedades `width` e `height` para imagens estáticas. Para imagens acima da dobra (above the fold), use a propriedade `priority` para desabilitar o lazy loading e melhorar o Largest Contentful Paint (LCP).
+**INFOBOX_FIM**
 
 ### Font Optimization
 
@@ -277,6 +321,18 @@ NEXT_PUBLIC_API_URL=https://api.exemplo.com
 ```
 
 Variáveis prefixadas com `NEXT_PUBLIC_` são expostas ao navegador.
+
+**INFOBOX_INICIO**
+**Tipo do Info Box:** info
+**Título (opcional):** 
+**Texto do Corpo:** Nunca commite arquivos `.env.local` no controle de versão. Eles contêm informações sensíveis. Use `.env.example` como template e adicione `.env.local` ao `.gitignore`.
+**INFOBOX_FIM**
+
+**INFOBOX_INICIO**
+**Tipo do Info Box:** curiosidade
+**Título (opcional):** Otimização Automática
+**Texto do Corpo:** A Vercel detecta automaticamente frameworks Next.js e configura otimizações como edge caching, CDN global e preview deployments. Cada push para a branch principal cria um novo deploy automaticamente!
+**INFOBOX_FIM**
 
 ### Analytics e Monitoring
 

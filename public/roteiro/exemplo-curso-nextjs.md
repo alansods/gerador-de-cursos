@@ -191,6 +191,12 @@ export default async function BlogPage() {
 }
 ```
 
+**INFOBOX_INICIO**
+**Tipo do Info Box:** saiba_mais
+**Título (opcional):** Cache e Revalidação
+**Texto do Corpo:** Por padrão, o Next.js armazena em cache os resultados de `fetch()` para melhorar a performance. Para revalidar dados periodicamente, use a opção `next: { revalidate: 60 }` para atualizar a cada 60 segundos. Para dados que mudam frequentemente, use `cache: 'no-store'` para desabilitar o cache.
+**INFOBOX_FIM**
+
 ### Teste seu Conhecimento
 
 **QUIZ_INICIO**
@@ -252,6 +258,12 @@ export default function Avatar() {
 
 Benefícios incluem lazy loading automático, redimensionamento responsivo e conversão para formatos modernos como WebP.
 
+**INFOBOX_INICIO**
+**Tipo do Info Box:** atencao
+**Título (opcional):** Dimensões Obrigatórias
+**Texto do Corpo:** Sempre especifique as propriedades `width` e `height` para imagens estáticas. Para imagens acima da dobra (above the fold), use a propriedade `priority` para desabilitar o lazy loading e melhorar o Largest Contentful Paint (LCP).
+**INFOBOX_FIM**
+
 ### Font Optimization
 
 Next.js otimiza fontes automaticamente com `next/font`:
@@ -309,6 +321,18 @@ NEXT_PUBLIC_API_URL=https://api.exemplo.com
 ```
 
 Variáveis prefixadas com `NEXT_PUBLIC_` são expostas ao navegador.
+
+**INFOBOX_INICIO**
+**Tipo do Info Box:** info
+**Título (opcional):** 
+**Texto do Corpo:** Nunca commite arquivos `.env.local` no controle de versão. Eles contêm informações sensíveis. Use `.env.example` como template e adicione `.env.local` ao `.gitignore`.
+**INFOBOX_FIM**
+
+**INFOBOX_INICIO**
+**Tipo do Info Box:** curiosidade
+**Título (opcional):** Otimização Automática
+**Texto do Corpo:** A Vercel detecta automaticamente frameworks Next.js e configura otimizações como edge caching, CDN global e preview deployments. Cada push para a branch principal cria um novo deploy automaticamente!
+**INFOBOX_FIM**
 
 ### Analytics e Monitoring
 

@@ -79,7 +79,7 @@ Analise o documento abaixo e crie um curso estruturado, extraindo os metadados e
    - descricao: OBRIGATÓRIA - O que o aluno aprenderá nesta unidade
    - conteudo: Array de elementos formatados
 4. Cada elemento de conteúdo deve ter:
-   - tipo: "titulo", "subtitulo", "paragrafo", "imagem", "accordion", "flipcard", "lista" ou "quiz"
+   - tipo: "titulo", "subtitulo", "paragrafo", "imagem", "accordion", "flipcard", "lista", "quiz" ou "info-box"
    - conteudo: O texto/URL do elemento
    - ordem: Número sequencial (0, 1, 2, ...)
 5. **IMPORTANTE: NÃO inclua o título da unidade como primeiro item do conteúdo!** O título já está no campo "titulo" da unidade. Comece o conteúdo diretamente com o conteúdo real (parágrafos, subtítulos, etc.)
@@ -129,6 +129,21 @@ Analise o documento abaixo e crie um curso estruturado, extraindo os metadados e
    - IMPORTANTE: Todas as opções devem ter feedback preenchido
    - Crie a estrutura: tipo: "quiz", conteudo: "", quizData: { questions: [{ id: "question-1", pergunta: "...", dica: "...", opcoes: [{ id: "opcao-1", texto: "...", isCorrect: true/false, feedback: "..." }, ...] }, ...] }
    - Se houver múltiplas perguntas, crie todas dentro do mesmo elemento quiz com array questions
+   
+   **INFOBOX_INICIO / INFOBOX_FIM:**
+   - Quando encontrar esses marcadores, crie um elemento de conteúdo do tipo "info-box"
+   - Entre os marcadores, identifique:
+     **Tipo do Info Box:** atencao / saiba_mais / info / curiosidade
+     **Título (opcional):** [Título personalizado do Info Box. Se não fornecido, será usado o tipo como título]
+     **Texto do Corpo:** [Conteúdo completo do Info Box. Este texto aparecerá dentro da caixa colorida e pode ser expandido/colapsado]
+   - IMPORTANTE: O tipo do Info Box deve ser exatamente um dos valores: "atencao", "saiba_mais", "info" ou "curiosidade"
+   - IMPORTANTE: O texto do corpo é obrigatório
+   - Crie a estrutura: tipo: "info-box", conteudo: "[texto do corpo]", tipoInfoBox: "[tipo]", tituloInfoBox: "[título ou vazio]", ordem: X
+   - Tipos disponíveis:
+     - **atencao**: Caixa amarela com ícone de alerta, para avisos importantes
+     - **saiba_mais**: Caixa azul com ícone de lâmpada, para informações complementares
+     - **info**: Caixa cinza com ícone de informação, para informações gerais
+     - **curiosidade**: Caixa roxa com ícone de estrelas, para curiosidades e dicas interessantes
 7. MANTENHA o conteúdo original do documento, apenas estruture-o
 8. Crie pelo menos 3 unidades de aprendizado
 9. Se encontrar referências a imagens (fora dos flipcards), crie elementos tipo "imagem"
@@ -194,6 +209,13 @@ Analise o documento abaixo e crie um curso estruturado, extraindo os metadados e
             ]
           },
           "ordem": 5
+        },
+        {
+          "tipo": "info-box",
+          "conteudo": "Conteúdo completo do Info Box que aparece dentro da caixa colorida e pode ser expandido/colapsado.",
+          "tipoInfoBox": "atencao",
+          "tituloInfoBox": "Título personalizado (opcional, pode ser vazio)",
+          "ordem": 6
         }
       ]
     }

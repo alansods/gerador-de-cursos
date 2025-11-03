@@ -617,6 +617,111 @@ const doc = new Document({
           text: '📝 OBSERVAÇÃO: A IA irá transformar o conteúdo entre QUIZ_INICIO e QUIZ_FIM em um quiz interativo. Você pode criar múltiplas perguntas no mesmo bloco. Cada pergunta deve ter exatamente 5 opções (A, B, C, D, E) e apenas 1 resposta correta. Todas as opções devem ter feedback explicativo.',
         }),
         new Paragraph({ text: '' }),
+
+        // EXEMPLO DE INFOBOX
+        new Paragraph({
+          text: '💡 INDICADORES ESPECIAIS - Exemplo de INFOBOX',
+          heading: HeadingLevel.HEADING_2,
+        }),
+        new Paragraph({
+          text: 'Para criar caixas de informação destacadas com cores e ícones, use os marcadores abaixo:',
+        }),
+        new Paragraph({ text: '' }),
+        new Paragraph({
+          children: [
+            new TextRun({ text: 'INFOBOX_INICIO', bold: true }),
+          ],
+        }),
+        new Paragraph({
+          children: [
+            new TextRun({ text: 'Tipo do Info Box: ', bold: true }),
+            new TextRun('atencao'),
+          ],
+        }),
+        new Paragraph({
+          children: [
+            new TextRun({ text: 'Título (opcional): ', bold: true }),
+            new TextRun('Proteja-se'),
+          ],
+        }),
+        new Paragraph({
+          children: [
+            new TextRun({ text: 'Texto do Corpo: ', bold: true }),
+            new TextRun('Sempre use luvas ao manusear ingredientes quentes e trabalhe com superfícies limpas. Mantenha a carne de sol refrigerada até o momento do uso e não deixe alimentos perecíveis em temperatura ambiente por mais de 2 horas. Higiene é fundamental na preparação de alimentos!'),
+          ],
+        }),
+        new Paragraph({
+          children: [
+            new TextRun({ text: 'INFOBOX_FIM', bold: true }),
+          ],
+        }),
+        new Paragraph({ text: '' }),
+        new Paragraph({
+          text: '📝 OBSERVAÇÃO: A IA irá transformar o conteúdo entre INFOBOX_INICIO e INFOBOX_FIM em uma caixa de informação destacada. Tipos disponíveis: "atencao" (amarelo, alerta), "saiba_mais" (azul, lâmpada), "info" (cinza, informação), "curiosidade" (roxo, estrelas).',
+        }),
+        new Paragraph({ text: '' }),
+        new Paragraph({
+          text: 'Exemplos de outros tipos de Info Box:',
+        }),
+        new Paragraph({ text: '' }),
+        new Paragraph({
+          children: [
+            new TextRun({ text: 'INFOBOX_INICIO', bold: true }),
+          ],
+        }),
+        new Paragraph({
+          children: [
+            new TextRun({ text: 'Tipo do Info Box: ', bold: true }),
+            new TextRun('saiba_mais'),
+          ],
+        }),
+        new Paragraph({
+          children: [
+            new TextRun({ text: 'Título (opcional): ', bold: true }),
+            new TextRun('Dica Profissional'),
+          ],
+        }),
+        new Paragraph({
+          children: [
+            new TextRun({ text: 'Texto do Corpo: ', bold: true }),
+            new TextRun('Para uma pizza ainda mais saborosa, experimente usar queijo coalho junto com a muçarela. O queijo coalho derrete menos que a muçarela e adiciona um sabor característico nordestino que combina perfeitamente com a carne de sol.'),
+          ],
+        }),
+        new Paragraph({
+          children: [
+            new TextRun({ text: 'INFOBOX_FIM', bold: true }),
+          ],
+        }),
+        new Paragraph({ text: '' }),
+        new Paragraph({
+          children: [
+            new TextRun({ text: 'INFOBOX_INICIO', bold: true }),
+          ],
+        }),
+        new Paragraph({
+          children: [
+            new TextRun({ text: 'Tipo do Info Box: ', bold: true }),
+            new TextRun('curiosidade'),
+          ],
+        }),
+        new Paragraph({
+          children: [
+            new TextRun({ text: 'Título (opcional): ', bold: true }),
+            new TextRun(''),
+          ],
+        }),
+        new Paragraph({
+          children: [
+            new TextRun({ text: 'Texto do Corpo: ', bold: true }),
+            new TextRun('A pizza de carne de sol é uma criação brasileira que combina técnicas italianas com ingredientes nordestinos. A carne de sol foi criada como forma de preservar a carne no sertão nordestino, onde o sal e o sol eram usados para desidratar e conservar a proteína. Hoje, é um ingrediente apreciado em todo o Brasil!'),
+          ],
+        }),
+        new Paragraph({
+          children: [
+            new TextRun({ text: 'INFOBOX_FIM', bold: true }),
+          ],
+        }),
+        new Paragraph({ text: '' }),
         new Paragraph({
           text: 'Exemplo de Lista Ordenada:',
         }),
@@ -729,6 +834,12 @@ const doc = new Document({
         }),
         new Paragraph({
           text: '• Cada pergunta deve ter exatamente 5 opções e apenas 1 resposta correta',
+        }),
+        new Paragraph({
+          text: '• Use INFOBOX_INICIO e INFOBOX_FIM para criar caixas de informação destacadas',
+        }),
+        new Paragraph({
+          text: '• Dentro do Info Box, especifique "Tipo do Info Box:" (atencao, saiba_mais, info ou curiosidade), "Título (opcional):" e "Texto do Corpo:"',
         }),
         new Paragraph({
           text: '• Para imagens, use URLs ou [IMAGEM: descrição] para placeholders',

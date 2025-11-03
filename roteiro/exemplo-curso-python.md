@@ -66,6 +66,12 @@ python ola.py
 
 Parabéns! Você acabou de executar seu primeiro programa Python!
 
+**INFOBOX_INICIO**
+**Tipo do Info Box:** atencao
+**Título (opcional):** Python 2 vs Python 3
+**Texto do Corpo:** Certifique-se de usar Python 3 (recomendado 3.11 ou superior). Python 2 foi descontinuado em 2020 e não recebe mais atualizações de segurança. Sempre use `python3` no terminal se tiver ambas as versões instaladas.
+**INFOBOX_FIM**
+
 ---
 
 # UNIDADE 2: Variáveis e Tipos de Dados
@@ -85,6 +91,12 @@ estudante = True
 ```
 
 Python aceita nomes descritivos para variáveis. Use letras minúsculas e underscores: `nome_completo`, `idade_usuario`.
+
+**INFOBOX_INICIO**
+**Tipo do Info Box:** saiba_mais
+**Título (opcional):** Convenções de Nomenclatura
+**Texto do Corpo:** Python segue a convenção PEP 8 para nomes de variáveis. Use `snake_case` para variáveis e funções (ex: `nome_completo`), `PascalCase` para classes (ex: `MinhaClasse`), e `UPPER_CASE` para constantes (ex: `PI = 3.14159`). Isso torna o código mais legível e profissional.
+**INFOBOX_FIM**
 
 ### Tipos de Dados Básicos
 
@@ -153,6 +165,12 @@ divisao_inteira = 10 // 3  # 3
 resto = 10 % 3       # 1
 potencia = 2 ** 3    # 8
 ```
+
+**INFOBOX_INICIO**
+**Tipo do Info Box:** curiosidade
+**Título (opcional):** Divisão em Python 3
+**Texto do Corpo:** Em Python 3, a divisão `/` sempre retorna um float (número decimal), mesmo quando o resultado é um número inteiro. Use `//` para divisão inteira que retorna um int. Em Python 2, `/` retornava int quando ambos os operandos eram inteiros.
+**INFOBOX_FIM**
 
 ---
 

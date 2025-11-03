@@ -122,6 +122,42 @@ Se seu documento for muito grande (> 10MB):
    - Parágrafos normais → tipo "paragrafo"
    - `![texto](url)` ou `[IMAGEM:...]` → tipo "imagem"
 
+## 📦 Conteúdo Interativo
+
+Para criar conteúdo interativo, use os marcadores especiais no documento:
+
+### **ACCORDION_INICIO** e **ACCORDION_FIM**
+Cria um accordion (conteúdo expansível/colapsável)
+
+### **FLIPCARD_INICIO** e **FLIPCARD_FIM**
+Cria um flipcard (card que pode ser girado)
+
+### **LISTA_INICIO** e **LISTA_FIM**
+Cria listas formatadas (ordenada, não-ordenada ou check)
+
+### **QUIZ_INICIO** e **QUIZ_FIM**
+Cria um quiz interativo com múltiplas perguntas
+
+### **INFOBOX_INICIO** e **INFOBOX_FIM**
+Cria uma caixa de informação destacada com cores e ícones
+
+**Formato:**
+```
+**INFOBOX_INICIO**
+**Tipo do Info Box:** atencao / saiba_mais / info / curiosidade
+**Título (opcional):** [Título personalizado]
+**Texto do Corpo:** [Conteúdo completo do Info Box]
+**INFOBOX_FIM**
+```
+
+**Tipos disponíveis:**
+- **atencao**: Caixa amarela com ícone de alerta, para avisos importantes
+- **saiba_mais**: Caixa azul com ícone de lâmpada, para informações complementares
+- **info**: Caixa cinza com ícone de informação, para informações gerais
+- **curiosidade**: Caixa roxa com ícone de estrelas, para curiosidades e dicas
+
+Veja exemplos completos em `template-curso.md` e nos arquivos de exemplo.
+
 ## 📞 Precisa de Ajuda?
 
 Se tiver dúvidas:
