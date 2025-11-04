@@ -22,17 +22,17 @@ export default function HomePage() {
   const features = [
     {
       icon: BookOpen,
-      title: "Gestão Completa",
+      title: "Padrão SCORM",
       description:
-        "Gerencie todos os seus cursos em um só lugar com ferramentas intuitivas e eficientes.",
+        "Gere cursos compatíveis com SCORM 1.2 e 2004, garantindo interoperabilidade com qualquer LMS.",
       iconBg: "bg-[#F15A29]/10",
       iconColor: "#F15A29",
     },
     {
       icon: Clock,
-      title: "Economia de Tempo",
+      title: "Criação Rápida",
       description:
-        "Automatize processos e reduza o tempo gasto em tarefas administrativas.",
+        "Automatize a geração de pacotes SCORM e reduza o tempo de produção de cursos.",
       iconBg: "bg-[#F15A29]/10",
       iconColor: "#F15A29",
     },
@@ -40,7 +40,7 @@ export default function HomePage() {
       icon: Award,
       title: "Qualidade SENAI",
       description:
-        "Mantenha o padrão de excelência SENAI em todos os seus cursos e materiais.",
+        "Mantenha o padrão de excelência SENAI com templates e estruturas validadas.",
       iconBg: "bg-[#F15A29]/10",
       iconColor: "#F15A29",
     },
@@ -91,14 +91,14 @@ export default function HomePage() {
 
             {/* Title */}
             <h1 className="text-4xl font-normal text-foreground mb-4">
-              Bem-vindo ao Gerador de Cursos
+              Gerador de Cursos SCORM SENAI
             </h1>
 
             {/* Description */}
             <p className="text-lg text-muted-foreground mb-8 max-w-3xl">
-              Crie, gerencie e publique cursos de alta qualidade com facilidade.
-              Tudo que você precisa para oferecer experiências educacionais
-              excepcionais.
+              Crie, gerencie e publique cursos SCORM compatíveis com as
+              principais plataformas LMS. Produza conteúdo educacional
+              padronizado, interoperável e de alta qualidade.
             </p>
 
             {/* Action Buttons */}
@@ -128,7 +128,7 @@ export default function HomePage() {
                 Por que usar nossa plataforma?
               </h2>
               <p className="text-base text-muted-foreground">
-                Ferramentas poderosas para transformar a educação
+                Ferramentas poderosas para criar conteúdo e-learning padronizado
               </p>
             </div>
 
@@ -179,8 +179,8 @@ export default function HomePage() {
                     Pronto para começar?
                   </h2>
                   <p className="text-base text-muted-foreground">
-                    Comece criando seu primeiro curso ou explore os cursos
-                    existentes para ver tudo que a plataforma oferece.
+                    Comece criando seu primeiro curso SCORM ou explore os
+                    pacotes existentes para ver tudo que a plataforma oferece.
                   </p>
                 </div>
                 <div className="flex gap-4">

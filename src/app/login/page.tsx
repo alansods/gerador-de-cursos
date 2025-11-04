@@ -7,12 +7,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/context/AuthContext";
-import { GraduationCap, Lock, User, Eye, EyeOff } from "lucide-react";
+import { GraduationCap, User, Lock, Eye, EyeOff } from "lucide-react";
 
 export default function LoginPage() {
   const [usuario, setUsuario] = useState("");
   const [senha, setSenha] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<{ usuario?: string; senha?: string }>(
     {}
@@ -52,29 +53,31 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 p-4">
+    <div className="min-h-screen flex items-center justify-center bg-[#F5F7FA] p-4">
       <div className="w-full max-w-md">
         {/* Logo/Header */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-900 rounded-full mb-4">
-            <GraduationCap className="w-8 h-8 text-white" />
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-[#0047BB] rounded-2xl mb-6">
+            <GraduationCap className="w-10 h-10 text-white" />
           </div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+          <h1 className="text-2xl font-normal text-[#1A202C] mb-2">
             Bem-vindo de volta
           </h1>
-          <p className="text-gray-600">Faça login para continuar</p>
+          <p className="text-base text-[#64748B]">
+            Acesse o Gerador de Cursos SCORM SENAI
+          </p>
         </div>
 
         {/* Card de Login */}
-        <div className="bg-white rounded-2xl shadow-xl p-8 border border-gray-100">
+        <div className="bg-white rounded-xl border border-[#E2E8F0] p-8 mb-8">
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Campo Usuário */}
             <div className="space-y-2">
-              <Label htmlFor="usuario" className="text-gray-700 font-medium">
+              <Label htmlFor="usuario" className="text-sm font-medium text-[#1A202C]">
                 Usuário
               </Label>
               <div className="relative">
-                <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#64748B] w-5 h-5" />
                 <Input
                   id="usuario"
                   type="text"
@@ -86,7 +89,7 @@ export default function LoginPage() {
                     }
                   }}
                   placeholder="Digite seu usuário"
-                  className={`pl-10 h-12 ${
+                  className={`pl-10 h-9 border-[#E2E8F0] ${
                     errors.usuario
                       ? "border-red-500 focus-visible:ring-red-500"
                       : ""
@@ -101,11 +104,11 @@ export default function LoginPage() {
 
             {/* Campo Senha */}
             <div className="space-y-2">
-              <Label htmlFor="senha" className="text-gray-700 font-medium">
+              <Label htmlFor="senha" className="text-sm font-medium text-[#1A202C]">
                 Senha
               </Label>
               <div className="relative">
-                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#64748B] w-5 h-5" />
                 <Input
                   id="senha"
                   type={showPassword ? "text" : "password"}
@@ -116,8 +119,8 @@ export default function LoginPage() {
                       setErrors({ ...errors, senha: undefined });
                     }
                   }}
-                  placeholder="Digite sua senha"
-                  className={`pl-10 pr-10 h-12 ${
+                  placeholder="••••••••"
+                  className={`pl-10 pr-10 h-9 border-[#E2E8F0] ${
                     errors.senha
                       ? "border-red-500 focus-visible:ring-red-500"
                       : ""
@@ -127,7 +130,7 @@ export default function LoginPage() {
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-[#64748B] hover:text-[#1A202C] transition-colors"
                   tabIndex={-1}
                 >
                   {showPassword ? (
@@ -142,15 +145,40 @@ export default function LoginPage() {
               )}
             </div>
 
+            {/* Lembrar-me e Esqueceu a senha */}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  id="rememberMe"
+                  checked={rememberMe}
+                  onChange={(e) => setRememberMe(e.target.checked)}
+                  className="w-4 h-4 border border-[#E2E8F0] rounded text-[#0047BB] focus:ring-[#0047BB] focus:ring-1"
+                />
+                <Label
+                  htmlFor="rememberMe"
+                  className="text-sm font-normal text-[#1A202C] cursor-pointer"
+                >
+                  Lembrar-me
+                </Label>
+              </div>
+              <Link
+                href="#"
+                className="text-sm font-medium text-[#0047BB] hover:underline"
+              >
+                Esqueceu a senha?
+              </Link>
+            </div>
+
             {/* Botão de Login */}
             <Button
               type="submit"
-              className="w-full h-12 bg-blue-900 hover:bg-blue-800 text-white font-semibold rounded-lg transition-all duration-200 shadow-md hover:shadow-lg"
+              className="w-full h-9 bg-[#0047BB] hover:bg-[#0047BB]/90 text-white font-medium rounded-md"
               disabled={loading}
             >
               {loading ? (
                 <span className="flex items-center gap-2">
-                  <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-white"></div>
+                  <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white"></div>
                   Entrando...
                 </span>
               ) : (
@@ -161,21 +189,31 @@ export default function LoginPage() {
 
           {/* Link para Cadastro */}
           <div className="mt-6 text-center">
-            <p className="text-gray-600 text-sm">
+            <p className="text-sm text-[#64748B]">
               Não tem uma conta?{" "}
               <Link
                 href="/cadastro"
-                className="text-blue-900 font-semibold hover:text-blue-800 hover:underline transition-colors"
+                className="text-sm font-medium text-[#0047BB] hover:underline"
               >
                 Cadastre-se
               </Link>
             </p>
           </div>
+
+          {/* Divisor */}
+          <div className="relative my-6">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-[#E2E8F0]"></div>
+            </div>
+            <div className="relative flex justify-center">
+              <span className="bg-white px-2 text-sm text-[#64748B]">ou</span>
+            </div>
+          </div>
         </div>
 
         {/* Footer */}
-        <p className="text-center text-sm text-gray-500 mt-6">
-          Gerador de Cursos SCORM © 2025
+        <p className="text-center text-sm text-[#64748B]">
+          © 2025 SENAI. Todos os direitos reservados.
         </p>
       </div>
     </div>
