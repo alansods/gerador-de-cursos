@@ -32,13 +32,10 @@ import {
   Heading2,
   BookOpen,
   Layers,
-  ArrowUp,
-  ArrowDown,
   Image,
   Download,
   BookmarkPlus,
   Clock,
-  User,
   GraduationCap,
   Upload,
   Loader2,
@@ -54,17 +51,11 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
 import { MenuConteudo } from "@/components/MenuConteudo";
 import { MenuUnidade } from "@/components/MenuUnidade";
 import { QuizConteudo } from "@/components/QuizConteudo";
 import { InfoBox } from "@/components/info-box";
-import { QuizData, QuizQuestion, QuizItem } from "@/types/gerador-curso";
+import { QuizData, QuizQuestion } from "@/types/gerador-curso";
 
 export default function EditarCursoPage() {
   const {
@@ -80,14 +71,13 @@ export default function EditarCursoPage() {
     selecionarCurso,
   } = useGeradorCurso();
   const { openPreview } = usePreview();
-  const { generateSCORMPackage } = useSCORM();
+  const { generateSCORMPackage, isGenerating: isGeneratingSCORM } = useSCORM();
   const { generatePDF, isGenerating: isGeneratingPDF } = usePDF();
   const router = useRouter();
   const params = useParams();
 
   const [novaUnidade, setNovaUnidade] = useState("");
   const [novaUnidadeDescricao, setNovaUnidadeDescricao] = useState("");
-  const [editandoUnidade, setEditandoUnidade] = useState<string | null>(null);
   const [tituloEditado, setTituloEditado] = useState("");
   const [descricaoEditada, setDescricaoEditada] = useState("");
   const [descricaoUnidadeEditando, setDescricaoUnidadeEditando] = useState("");
@@ -231,11 +221,12 @@ export default function EditarCursoPage() {
 
   useEffect(() => {
     if (state.cursoAtual) {
-      (window as any).handleGerarSCORM = () =>
+      (window as { handleGerarSCORM?: () => void }).handleGerarSCORM = () =>
         generateSCORMPackage(state.cursoAtual!);
 
       return () => {
-        delete (window as any).handleGerarSCORM;
+        const win = window as { handleGerarSCORM?: () => void }
+        delete win.handleGerarSCORM;
       };
     }
   }, [state.cursoAtual, generateSCORMPackage]);
@@ -4033,16 +4024,27 @@ export default function EditarCursoPage() {
         <ExportModal
           isOpen={exportModalOpen}
           onClose={() => setExportModalOpen(false)}
-          onExportPDF={(filename) => {
-            generatePDF(state.cursoAtual!, filename);
-            setExportModalOpen(false);
+          onExportPDF={async (filename) => {
+            try {
+              await generatePDF(state.cursoAtual!, filename);
+              setExportModalOpen(false);
+            } catch (error) {
+              // Erro já foi tratado no hook, modal permanece aberto
+              console.error('Erro ao gerar PDF:', error);
+            }
           }}
-          onExportSCORM={(filename) => {
-            generateSCORMPackage(state.cursoAtual!, filename);
-            setExportModalOpen(false);
+          onExportSCORM={async (filename) => {
+            try {
+              await generateSCORMPackage(state.cursoAtual!, filename);
+              setExportModalOpen(false);
+            } catch (error) {
+              // Erro já foi tratado no hook, modal permanece aberto
+              console.error('Erro ao gerar SCORM:', error);
+            }
           }}
           courseName={state.cursoAtual?.titulo || "Curso"}
           isGeneratingPDF={isGeneratingPDF}
+          isGeneratingSCORM={isGeneratingSCORM}
         />
       </div>
     </PageTransition>

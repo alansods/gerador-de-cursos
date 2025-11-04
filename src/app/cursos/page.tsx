@@ -26,7 +26,6 @@ import {
   Eye,
   Calendar,
   Clock,
-  User,
   Download,
   BookOpen,
   Loader2,
@@ -38,7 +37,7 @@ import { useRouter } from "next/navigation";
 export default function CursosPage() {
   const { state, deletarCurso, selecionarCurso } = useGeradorCurso();
   const { openPreview } = usePreview();
-  const { generateSCORMPackage } = useSCORM();
+  const { generateSCORMPackage, isGenerating: isGeneratingSCORM } = useSCORM();
   const { generatePDF, isGenerating: isGeneratingPDF } = usePDF();
   const router = useRouter();
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(
@@ -63,16 +62,26 @@ export default function CursosPage() {
     setSelectedCursoForExport(curso);
     setExportModalOpen(true);
   };
-  const handleExportPDF = (filename: string) => {
+  const handleExportPDF = async (filename: string) => {
     if (selectedCursoForExport) {
-      generatePDF(selectedCursoForExport, filename);
-      setExportModalOpen(false);
+      try {
+        await generatePDF(selectedCursoForExport, filename);
+        setExportModalOpen(false);
+      } catch (error) {
+        // Erro já foi tratado no hook, modal permanece aberto
+        console.error('Erro ao gerar PDF:', error);
+      }
     }
   };
-  const handleExportSCORM = (filename: string) => {
+  const handleExportSCORM = async (filename: string) => {
     if (selectedCursoForExport) {
-      generateSCORMPackage(selectedCursoForExport, filename);
-      setExportModalOpen(false);
+      try {
+        await generateSCORMPackage(selectedCursoForExport, filename);
+        setExportModalOpen(false);
+      } catch (error) {
+        // Erro já foi tratado no hook, modal permanece aberto
+        console.error('Erro ao gerar SCORM:', error);
+      }
     }
   };
 
@@ -337,6 +346,7 @@ export default function CursosPage() {
           onExportSCORM={handleExportSCORM}
           courseName={selectedCursoForExport?.titulo || "Curso"}
           isGeneratingPDF={isGeneratingPDF}
+          isGeneratingSCORM={isGeneratingSCORM}
         />
       </div>
     </PageTransition>

@@ -18,7 +18,6 @@ import Link from "next/link";
 
 export default function HomePage() {
   const { user } = useAuth();
-  const router = useRouter();
 
   const features = [
     {

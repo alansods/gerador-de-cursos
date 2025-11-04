@@ -184,7 +184,8 @@ export default function NovoCursoPage() {
       const cursoParaSalvar = { ...course }
       // Remover instrutor se existir (campo foi removido do schema)
       if ('instrutor' in cursoParaSalvar) {
-        delete (cursoParaSalvar as any).instrutor
+        const curso = cursoParaSalvar as { instrutor?: unknown; [key: string]: unknown }
+        delete curso.instrutor
       }
       await criarCurso(cursoParaSalvar)
       setProgress(100)

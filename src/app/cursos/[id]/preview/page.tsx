@@ -169,10 +169,11 @@ export default function PreviewCursoPage() {
                       if (
                         isConnected &&
                         typeof window !== "undefined" &&
-                        (window as any).SCORM
+                        'SCORM' in window &&
+                        typeof (window as { SCORM?: { terminate: () => void } }).SCORM?.terminate === 'function'
                       ) {
                         try {
-                          (window as any).SCORM.terminate();
+                          (window as { SCORM: { terminate: () => void } }).SCORM.terminate();
                         } catch (error) {
                           console.error("[LMS] Erro ao sair:", error);
                         }

@@ -1,5 +1,7 @@
 'use client'
 
+import { useState } from 'react'
+
 interface Curso {
   id: string;
   titulo: string;
@@ -23,7 +25,11 @@ interface Curso {
 }
 
 export const useSCORM = () => {
+  const [isGenerating, setIsGenerating] = useState(false)
+
   const generateSCORMPackage = async (curso: Curso, filename?: string) => {
+    setIsGenerating(true)
+    
     try {
       // Mostrar loading
       const loadingButton = document.querySelector(".scorm-button");
@@ -49,9 +55,17 @@ export const useSCORM = () => {
       console.log('📊 [SCORM] Headers da resposta:', Object.fromEntries(response.headers.entries()));
 
       if (!response.ok) {
-        const errorData = await response.json();
+        let errorData;
+        try {
+          errorData = await response.json();
+        } catch (e) {
+          // Se não conseguir parsear JSON, usar a mensagem de status
+          errorData = { error: `Erro HTTP ${response.status}: ${response.statusText}` };
+        }
+        
         console.error('❌ [SCORM] Erro da API:', errorData);
-        throw new Error(errorData.error || 'Erro ao gerar SCORM');
+        const errorMessage = errorData?.error || errorData?.message || `Erro ao gerar SCORM (HTTP ${response.status})`;
+        throw new Error(errorMessage);
       }
 
       // Obter o arquivo ZIP do backend
@@ -95,10 +109,15 @@ export const useSCORM = () => {
         (loadingButton as HTMLButtonElement).innerHTML = "SCORM";
         (loadingButton as HTMLButtonElement).disabled = false;
       }
+      
+      throw error // Re-throw para que o componente possa lidar com o erro
+    } finally {
+      setIsGenerating(false)
     }
   };
 
   return {
     generateSCORMPackage,
+    isGenerating,
   };
 };

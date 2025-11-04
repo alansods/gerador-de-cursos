@@ -25,8 +25,22 @@ export async function POST(request: NextRequest) {
     })
   } catch (error) {
     console.error('Erro ao gerar SCORM avançado:', error)
+    
+    // Extrair mensagem de erro mais específica
+    let errorMessage = 'Erro ao gerar pacote SCORM avançado'
+    if (error instanceof Error) {
+      errorMessage = error.message || errorMessage
+    } else if (typeof error === 'string') {
+      errorMessage = error
+    } else if (error && typeof error === 'object' && 'message' in error) {
+      errorMessage = String(error.message)
+    }
+    
     return NextResponse.json(
-      { error: 'Erro ao gerar pacote SCORM avançado' },
+      { 
+        error: errorMessage,
+        details: error instanceof Error ? error.stack : undefined
+      },
       { status: 500 }
     )
   }

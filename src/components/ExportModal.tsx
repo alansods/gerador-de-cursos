@@ -15,8 +15,8 @@ import { FileText, Download, Loader2, ArrowLeft } from 'lucide-react';
 interface ExportModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onExportPDF: (filename: string) => void;
-  onExportSCORM: (filename: string) => void;
+  onExportPDF: (filename: string) => Promise<void> | void;
+  onExportSCORM: (filename: string) => Promise<void> | void;
   courseName: string;
   isGeneratingPDF?: boolean;
   isGeneratingSCORM?: boolean;
@@ -62,7 +62,7 @@ export function ExportModal({
     }
   }, [selectedType, courseName]);
 
-  const handleExport = () => {
+  const handleExport = async () => {
     if (!filename.trim()) return;
 
     let finalFilename = filename;
@@ -72,23 +72,36 @@ export function ExportModal({
       finalFilename = 'scorm-' + finalFilename;
     }
 
-    if (selectedType === 'pdf') {
-      onExportPDF(finalFilename);
-    } else if (selectedType === 'scorm') {
-      onExportSCORM(finalFilename);
+    try {
+      if (selectedType === 'pdf') {
+        await onExportPDF(finalFilename);
+      } else if (selectedType === 'scorm') {
+        await onExportSCORM(finalFilename);
+      }
+      
+      // Fechar modal e resetar apenas após sucesso
+      onClose();
+      setSelectedType(null);
+      setFilename('');
+    } catch (error) {
+      // Erro já foi tratado no hook, apenas manter o modal aberto
+      console.error('Erro ao exportar:', error);
     }
-    
-    // Resetar após exportar
-    setSelectedType(null);
-    setFilename('');
   };
 
   const handleBack = () => {
     setSelectedType(null);
     setFilename('');
   };
+  // Não permitir fechar o modal durante o loading
+  const handleClose = () => {
+    if (!isGeneratingPDF && !isGeneratingSCORM) {
+      onClose();
+    }
+  };
+
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>
@@ -219,7 +232,11 @@ export function ExportModal({
         <div className="flex justify-between">
           {selectedType ? (
             <>
-              <Button variant="outline" onClick={handleBack}>
+              <Button 
+                variant="outline" 
+                onClick={handleBack}
+                disabled={isGeneratingPDF || isGeneratingSCORM}
+              >
                 <ArrowLeft className="w-4 h-4 mr-2" />
                 Voltar
               </Button>
@@ -231,7 +248,7 @@ export function ExportModal({
                 {(selectedType === 'pdf' && isGeneratingPDF) || (selectedType === 'scorm' && isGeneratingSCORM) ? (
                   <>
                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Gerando...
+                    {selectedType === 'scorm' ? 'Gerando SCORM...' : 'Gerando PDF...'}
                   </>
                 ) : (
                   <>
@@ -242,7 +259,12 @@ export function ExportModal({
               </Button>
             </>
           ) : (
-            <Button variant="outline" onClick={onClose} className="ml-auto">
+            <Button 
+              variant="outline" 
+              onClick={handleClose} 
+              className="ml-auto"
+              disabled={isGeneratingPDF || isGeneratingSCORM}
+            >
               Cancelar
             </Button>
           )}

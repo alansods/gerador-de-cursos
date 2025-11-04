@@ -161,9 +161,9 @@ export default function PreviewUnidadePage() {
                   variant="ghost"
                   size="icon"
                   onClick={() => {
-                    if (isConnected && typeof window !== 'undefined' && (window as any).SCORM) {
+                    if (isConnected && typeof window !== 'undefined' && 'SCORM' in window && typeof (window as { SCORM?: { terminate: () => void } }).SCORM?.terminate === 'function') {
                       try {
-                        (window as any).SCORM.terminate();
+                        (window as { SCORM: { terminate: () => void } }).SCORM.terminate();
                       } catch (error) {
                         console.error('[LMS] Erro ao sair:', error);
                       }
