@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
-import { NavigationDrawer } from '@/components/NavigationDrawer';
+import { Sidebar } from '@/components/Sidebar';
 
 const publicRoutes = ['/login', '/cadastro'];
 
@@ -56,9 +56,16 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
     );
   }
 
-  // Se autenticado e não é rota pública, mostrar drawer de navegação (exceto em preview)
+  // Se autenticado e não é rota pública, mostrar sidebar de navegação (exceto em preview)
   if (isAuthenticated && !isPublicRoute && !isPreviewRoute) {
-    return <NavigationDrawer>{children}</NavigationDrawer>;
+    return (
+      <div className="flex h-screen bg-background">
+        <Sidebar />
+        <main className="flex-1 overflow-auto">
+          {children}
+        </main>
+      </div>
+    );
   }
 
   // Rotas públicas e preview não precisam do drawer

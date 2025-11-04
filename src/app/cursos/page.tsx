@@ -7,8 +7,24 @@ import { usePDF } from "@/hooks/usePDF";
 import { ExportModal } from "@/components/ExportModal";
 import { PageTransition } from "@/components/PageTransition";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { CourseCard } from "@/components/CourseCard";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 import { toast } from "sonner";
 import type { CursoGerado } from "@/types/gerador-curso";
 import {
@@ -19,23 +35,28 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import {
-  Plus,
-  Edit,
-  Trash2,
-  Eye,
-  Calendar,
-  Clock,
-  Download,
-  BookOpen,
-  Loader2,
-  AlertCircle,
-} from "lucide-react";
-import { useState } from "react";
+import { Plus, Loader2, AlertCircle, Search, X } from "lucide-react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+
+const ITEMS_PER_PAGE = 6;
+
+const CATEGORIES = [
+  "Todas Categorias",
+  "Gastronomia",
+  "Tecnologia",
+  "Marketing",
+  "Design",
+  "Gestão",
+  "Arte",
+  "Idiomas",
+];
+
+const MODALIDADES = ["Todas Modalidades", "Presencial", "Online", "Híbrido"];
 
 export default function CursosPage() {
   const { state, deletarCurso, selecionarCurso } = useGeradorCurso();
+  const [cursosPaginados, setCursosPaginados] = useState<CursoGerado[]>([]);
   const { openPreview } = usePreview();
   const { generateSCORMPackage, isGenerating: isGeneratingSCORM } = useSCORM();
   const { generatePDF, isGenerating: isGeneratingPDF } = usePDF();
@@ -46,6 +67,115 @@ export default function CursosPage() {
   const [exportModalOpen, setExportModalOpen] = useState(false);
   const [selectedCursoForExport, setSelectedCursoForExport] =
     useState<CursoGerado | null>(null);
+
+  // Estados de busca e filtros
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedCategory, setSelectedCategory] =
+    useState<string>("Todas Categorias");
+  const [selectedFormat, setSelectedFormat] =
+    useState<string>("Todas Modalidades");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalCourses, setTotalCourses] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
+  const [loadingCourses, setLoadingCourses] = useState(false);
+
+  // Resetar página quando filtros mudarem
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, selectedCategory, selectedFormat]);
+
+  // Carregar cursos paginados do servidor
+  useEffect(() => {
+    const carregarCursosPaginados = async () => {
+      setLoadingCourses(true);
+      try {
+        const params = new URLSearchParams({
+          page: currentPage.toString(),
+          limit: ITEMS_PER_PAGE.toString(),
+        });
+
+        if (searchTerm) {
+          params.append("search", searchTerm);
+        }
+
+        if (selectedCategory !== "Todas Categorias") {
+          params.append("category", selectedCategory);
+        }
+
+        if (selectedFormat !== "Todas Modalidades") {
+          params.append("modality", selectedFormat);
+        }
+
+        const response = await fetch(`/api/cursos?${params.toString()}`);
+        const data = await response.json();
+
+        if (data.success) {
+          setCursosPaginados(data.cursos || []);
+          setTotalCourses(data.pagination?.total || 0);
+          setTotalPages(data.pagination?.totalPages || 1);
+        }
+      } catch (error) {
+        console.error("Erro ao carregar cursos:", error);
+      } finally {
+        setLoadingCourses(false);
+      }
+    };
+
+    carregarCursosPaginados();
+  }, [currentPage, searchTerm, selectedCategory, selectedFormat]);
+
+  // Cursos exibidos (vêm do servidor já paginados)
+  const paginatedCourses = cursosPaginados;
+
+  // Verificar se há filtros ativos
+  const hasActiveFilters =
+    searchTerm !== "" ||
+    selectedCategory !== "Todas Categorias" ||
+    selectedFormat !== "Todas Modalidades";
+
+  // Limpar filtros
+  const clearFilters = () => {
+    setSearchTerm("");
+    setSelectedCategory("Todas Categorias");
+    setSelectedFormat("Todas Modalidades");
+    setCurrentPage(1);
+  };
+
+  // Gerar números de página para exibir
+  const getPageNumbers = () => {
+    const pages: (number | "ellipsis")[] = [];
+    const maxVisible = 5;
+
+    if (totalPages <= maxVisible) {
+      for (let i = 1; i <= totalPages; i++) {
+        pages.push(i);
+      }
+    } else {
+      if (currentPage <= 3) {
+        for (let i = 1; i <= 4; i++) {
+          pages.push(i);
+        }
+        pages.push("ellipsis");
+        pages.push(totalPages);
+      } else if (currentPage >= totalPages - 2) {
+        pages.push(1);
+        pages.push("ellipsis");
+        for (let i = totalPages - 3; i <= totalPages; i++) {
+          pages.push(i);
+        }
+      } else {
+        pages.push(1);
+        pages.push("ellipsis");
+        for (let i = currentPage - 1; i <= currentPage + 1; i++) {
+          pages.push(i);
+        }
+        pages.push("ellipsis");
+        pages.push(totalPages);
+      }
+    }
+
+    return pages;
+  };
 
   const handleCriarCurso = () => router.push("/cursos/novo");
   const handleEditarCurso = (id: string) => {
@@ -68,8 +198,7 @@ export default function CursosPage() {
         await generatePDF(selectedCursoForExport, filename);
         setExportModalOpen(false);
       } catch (error) {
-        // Erro já foi tratado no hook, modal permanece aberto
-        console.error('Erro ao gerar PDF:', error);
+        console.error("Erro ao gerar PDF:", error);
       }
     }
   };
@@ -79,18 +208,17 @@ export default function CursosPage() {
         await generateSCORMPackage(selectedCursoForExport, filename);
         setExportModalOpen(false);
       } catch (error) {
-        // Erro já foi tratado no hook, modal permanece aberto
-        console.error('Erro ao gerar SCORM:', error);
+        console.error("Erro ao gerar SCORM:", error);
       }
     }
   };
 
-  if (state.loading) {
+  if (state.loading || loadingCourses) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
-          <Loader2 className="h-12 w-12 animate-spin text-blue-600 mx-auto mb-4" />
-          <p className="text-gray-600">Carregando cursos...</p>
+          <Loader2 className="h-12 w-12 animate-spin text-primary mx-auto mb-4" />
+          <p className="text-muted-foreground">Carregando cursos...</p>
         </div>
       </div>
     );
@@ -100,53 +228,50 @@ export default function CursosPage() {
 
   return (
     <PageTransition>
-      <div className="min-h-screen bg-gray-50">
-        {/* Header */}
-        <div className="bg-white border-b-[1px] border-[#e5e7eb]">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex justify-between items-center py-6">
-              <div>
-                <h1 className="text-3xl font-bold text-gray-900">
-                  Gerador de Cursos
-                </h1>
-                <p className="text-gray-600 mt-2">
-                  Crie e gerencie seus cursos online
-                </p>
-              </div>
-              <Button
-                onClick={handleCriarCurso}
-                className="bg-blue-600 hover:bg-blue-700"
-              >
-                <Plus className="h-5 w-5 mr-2" />
-                Novo Curso
-              </Button>
-            </div>
-          </div>
-        </div>
-
+      <div className="min-h-screen bg-background">
         {/* Conteúdo Principal */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          {/* Header - Integrado na página */}
+          <div className="flex justify-between items-center mb-8">
+            <div>
+              <h1 className="text-3xl font-bold text-foreground">
+                Gerador de Cursos
+              </h1>
+              <p className="text-muted-foreground mt-2">
+                Crie e gerencie seus cursos online
+              </p>
+            </div>
+            <Button
+              onClick={handleCriarCurso}
+              className="bg-primary hover:bg-primary/90 text-primary-foreground"
+            >
+              <Plus className="h-5 w-5 mr-2" />
+              Novo Curso
+            </Button>
+          </div>
           {showError && (
-            <div className="mb-6 bg-blue-50 border border-blue-200 rounded-lg p-6">
+            <div className="mb-6 bg-secondary border border-border rounded-lg p-6">
               <div className="flex items-start">
-                <AlertCircle className="h-6 w-6 text-blue-600 mt-0.5 mr-3 shrink-0" />
+                <AlertCircle className="h-6 w-6 text-primary mt-0.5 mr-3 shrink-0" />
                 <div className="flex-1">
-                  <h3 className="text-base font-semibold text-blue-900 mb-2">
+                  <h3 className="text-base font-semibold text-foreground mb-2">
                     🔧 Configuração do Banco de Dados Necessária
                   </h3>
-                  <p className="text-sm text-blue-800 mb-3">{state.error}</p>
-                  <div className="bg-white rounded border border-blue-200 p-4 mb-3">
-                    <p className="text-xs font-semibold text-blue-900 mb-2">
+                  <p className="text-sm text-muted-foreground mb-3">
+                    {state.error}
+                  </p>
+                  <div className="bg-card rounded border border-border p-4 mb-3">
+                    <p className="text-xs font-semibold text-foreground mb-2">
                       📋 Passos para configurar:
                     </p>
-                    <ol className="text-xs text-blue-800 space-y-1 list-decimal list-inside">
+                    <ol className="text-xs text-muted-foreground space-y-1 list-decimal list-inside">
                       <li>
                         Criar conta no{" "}
                         <a
                           href="https://neon.tech"
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="underline font-medium"
+                          className="underline font-medium text-primary"
                         >
                           Neon.tech
                         </a>
@@ -154,32 +279,32 @@ export default function CursosPage() {
                       <li>Copiar a connection string do Neon</li>
                       <li>
                         Criar arquivo{" "}
-                        <code className="bg-blue-100 px-1 rounded">
+                        <code className="bg-muted px-1 rounded">
                           .env.local
                         </code>{" "}
                         com{" "}
-                        <code className="bg-blue-100 px-1 rounded">
+                        <code className="bg-muted px-1 rounded">
                           DATABASE_URL=&quot;...&quot;
                         </code>
                       </li>
                       <li>
                         Executar:{" "}
-                        <code className="bg-blue-100 px-1 rounded">
+                        <code className="bg-muted px-1 rounded">
                           npx prisma migrate dev
                         </code>
                       </li>
                       <li>
                         Executar:{" "}
-                        <code className="bg-blue-100 px-1 rounded">
+                        <code className="bg-muted px-1 rounded">
                           pnpm db:seed
                         </code>
                       </li>
                       <li>Reiniciar o servidor</li>
                     </ol>
                   </div>
-                  <p className="text-xs text-blue-700">
+                  <p className="text-xs text-muted-foreground">
                     📚 Veja o arquivo{" "}
-                    <code className="bg-blue-100 px-1 rounded">
+                    <code className="bg-muted px-1 rounded">
                       QUICK_START.md
                     </code>{" "}
                     para instruções detalhadas.
@@ -189,109 +314,205 @@ export default function CursosPage() {
             </div>
           )}
 
-          {!state.loading && !showError && state.cursos.length === 0 ? (
-            <div className="text-center py-24">
-              <div className="mx-auto w-40 h-40 bg-gray-100 rounded-full flex items-center justify-center mb-8">
-                <Plus className="h-12 w-12 text-gray-400" />
+          {/* Busca e Filtros */}
+          {!showError && (
+            <div className="mb-6 space-y-4">
+              <div className="flex flex-col sm:flex-row gap-4">
+                {/* Barra de Busca */}
+                <div className="relative flex-1">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground z-10" />
+                  <Input
+                    type="text"
+                    placeholder="Buscar cursos..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-10 bg-card dark:bg-card border border-border"
+                  />
+                </div>
+
+                {/* Filtro por Categoria */}
+                <Select
+                  value={selectedCategory}
+                  onValueChange={setSelectedCategory}
+                >
+                  <SelectTrigger className="w-[180px] bg-card dark:bg-card border border-border">
+                    <SelectValue placeholder="Categoria" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {CATEGORIES.map((category) => (
+                      <SelectItem key={category} value={category}>
+                        {category}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+
+                {/* Filtro por Modalidade */}
+                <Select
+                  value={selectedFormat}
+                  onValueChange={setSelectedFormat}
+                >
+                  <SelectTrigger className="w-[180px] bg-card dark:bg-card border border-border">
+                    <SelectValue placeholder="Modalidade" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {MODALIDADES.map((modalidade) => (
+                      <SelectItem key={modalidade} value={modalidade}>
+                        {modalidade}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+
+                {/* Botão Limpar Filtros */}
+                {hasActiveFilters && (
+                  <Button
+                    variant="ghost"
+                    onClick={clearFilters}
+                    className="w-full sm:w-auto"
+                  >
+                    <X className="h-4 w-4 mr-2" />
+                    Limpar Filtros
+                  </Button>
+                )}
               </div>
-              <h3 className="text-2xl font-semibold text-gray-900 mb-2">
-                Nenhum curso criado ainda
+            </div>
+          )}
+
+          {/* Seção Seus Cursos */}
+          {!showError && (
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-lg font-medium text-foreground">
+                Seus Cursos
+              </h2>
+              <div className="text-sm text-muted-foreground">
+                {totalCourses === 1
+                  ? "1 curso encontrado"
+                  : `${totalCourses} cursos encontrados`}
+              </div>
+            </div>
+          )}
+
+          {/* Grid de Cursos */}
+          {!state.loading &&
+          !loadingCourses &&
+          !showError &&
+          paginatedCourses.length === 0 ? (
+            <div className="text-center py-24">
+              <div className="mx-auto w-40 h-40 bg-muted rounded-full flex items-center justify-center mb-8">
+                <Plus className="h-12 w-12 text-muted-foreground" />
+              </div>
+              <h3 className="text-2xl font-semibold text-foreground mb-2">
+                {hasActiveFilters
+                  ? "Nenhum curso encontrado"
+                  : "Nenhum curso criado ainda"}
               </h3>
-              <p className="text-gray-600 mb-8">
-                Comece criando seu primeiro curso
+              <p className="text-muted-foreground mb-8">
+                {hasActiveFilters
+                  ? "Tente ajustar os filtros de busca"
+                  : "Comece criando seu primeiro curso"}
               </p>
-              <Button
-                onClick={handleCriarCurso}
-                className="bg-blue-600 hover:bg-blue-700"
-              >
-                <Plus className="h-5 w-5 mr-2" />
-                Criar Primeiro Curso
-              </Button>
+              {!hasActiveFilters && (
+                <Button
+                  onClick={handleCriarCurso}
+                  className="bg-primary hover:bg-primary/90 text-primary-foreground"
+                >
+                  <Plus className="h-5 w-5 mr-2" />
+                  Criar Primeiro Curso
+                </Button>
+              )}
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-1 lg:grid-cols-2 gap-6">
-              {state.cursos.map((curso) => (
-                <Card
-                  key={curso.id}
-                  className=""
-                >
-                  <CardHeader>
-                    <div className="flex justify-between items-start">
-                      <div className="flex-1">
-                        <CardTitle className="text-lg font-semibold text-gray-900 mb-2">
-                          {curso.titulo}
-                        </CardTitle>
-                      </div>
-                      <Badge variant="secondary" className="ml-2">
-                        {curso.categoria}
-                      </Badge>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4 mb-6">
-                      <div className="text-sm text-gray-600 leading-relaxed">
-                        {curso.descricao}
-                      </div>
-                      <div className="grid grid-cols-2 gap-3">
-                        <div className="flex items-center text-sm text-gray-600">
-                          <Clock className="h-4 w-4 mr-2" />
-                          {curso.cargaHoraria}
-                        </div>
-                        <div className="flex items-center text-sm text-gray-600">
-                          <Calendar className="h-4 w-4 mr-2" />
-                          {curso.modalidade}
-                        </div>
-                        <div className="flex items-center text-sm text-gray-500">
-                          <BookOpen className="h-4 w-4 mr-1" />
-                          {curso.unidades?.length || 0} unidade
-                          {(curso.unidades?.length || 0) !== 1 ? "s" : ""}
-                        </div>
-                      </div>
-                    </div>
+            <>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {paginatedCourses.map((curso) => (
+                  <CourseCard
+                    key={curso.id}
+                    title={curso.titulo}
+                    description={curso.descricao}
+                    category={curso.categoria}
+                    duration={curso.cargaHoraria}
+                    units={curso.unidades?.length || 0}
+                    format={curso.modalidade}
+                    onPreview={() => handlePreviewCurso(curso.id)}
+                    onEdit={() => handleEditarCurso(curso.id)}
+                    onDelete={() => setShowDeleteConfirm(curso.id)}
+                    onExport={() => handleOpenExportModal(curso)}
+                  />
+                ))}
+              </div>
 
-                    <div className="border-t border-gray-200 my-4"></div>
+              {/* Paginação */}
+              {totalPages > 1 && (
+                <div className="flex justify-center mt-8">
+                  <Pagination>
+                    <PaginationContent>
+                      <PaginationItem>
+                        <PaginationPrevious
+                          href="#"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            if (currentPage > 1) {
+                              setCurrentPage(currentPage - 1);
+                              window.scrollTo({ top: 0, behavior: "smooth" });
+                            }
+                          }}
+                          className={
+                            currentPage === 1
+                              ? "pointer-events-none opacity-50"
+                              : ""
+                          }
+                        />
+                      </PaginationItem>
 
-                    <div className="flex flex-wrap items-center gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handlePreviewCurso(curso.id)}
-                        className="flex-1 min-w-[100px]"
-                      >
-                        <Eye className="h-4 w-4 mr-1" />
-                        <span className="hidden sm:inline">Preview</span>
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleEditarCurso(curso.id)}
-                        className="flex-1 min-w-[100px]"
-                      >
-                        <Edit className="h-4 w-4 mr-1" />
-                        <span className="hidden sm:inline">Editar</span>
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setShowDeleteConfirm(curso.id)}
-                        className="flex-1 min-w-[100px] text-red-600 hover:text-red-700 hover:bg-red-50"
-                      >
-                        <Trash2 className="h-4 w-4 mr-1" />
-                        <span className="hidden sm:inline">Excluir</span>
-                      </Button>
-                      <Button
-                        size="sm"
-                        onClick={() => handleOpenExportModal(curso)}
-                        className="flex-1 min-w-[100px] bg-blue-600 hover:bg-blue-700 text-white"
-                      >
-                        <Download className="h-4 w-4 mr-1" />
-                        <span className="hidden sm:inline">Exportar</span>
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
+                      {getPageNumbers().map((page, index) => {
+                        if (page === "ellipsis") {
+                          return (
+                            <PaginationItem key={`ellipsis-${index}`}>
+                              <PaginationEllipsis />
+                            </PaginationItem>
+                          );
+                        }
+
+                        return (
+                          <PaginationItem key={page}>
+                            <PaginationLink
+                              href="#"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                setCurrentPage(page);
+                                window.scrollTo({ top: 0, behavior: "smooth" });
+                              }}
+                              isActive={currentPage === page}
+                            >
+                              {page}
+                            </PaginationLink>
+                          </PaginationItem>
+                        );
+                      })}
+
+                      <PaginationItem>
+                        <PaginationNext
+                          href="#"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            if (currentPage < totalPages) {
+                              setCurrentPage(currentPage + 1);
+                              window.scrollTo({ top: 0, behavior: "smooth" });
+                            }
+                          }}
+                          className={
+                            currentPage === totalPages
+                              ? "pointer-events-none opacity-50"
+                              : ""
+                          }
+                        />
+                      </PaginationItem>
+                    </PaginationContent>
+                  </Pagination>
+                </div>
+              )}
+            </>
           )}
         </div>
 
@@ -330,7 +551,7 @@ export default function CursosPage() {
                     setShowDeleteConfirm(null);
                   }
                 }}
-                className="w-full sm:w-auto bg-red-600 hover:bg-red-700"
+                className="w-full sm:w-auto bg-destructive hover:bg-destructive/90 text-destructive-foreground"
               >
                 Excluir
               </Button>

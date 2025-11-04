@@ -4,8 +4,22 @@ import { resolve } from 'path';
 import bcrypt from 'bcryptjs';
 
 // Carregar variáveis de ambiente - tenta .env.local primeiro, depois .env
-config({ path: resolve(process.cwd(), '.env.local') });
-config({ path: resolve(process.cwd(), '.env') });
+// IMPORTANTE: Carregar ANTES de criar o PrismaClient
+const envPath = resolve(process.cwd(), '.env.local');
+const envFallback = resolve(process.cwd(), '.env');
+config({ path: envPath, override: true });
+config({ path: envFallback });
+
+// Verificar se DATABASE_URL foi carregado
+const databaseUrl = process.env.DATABASE_URL;
+if (!databaseUrl || databaseUrl.includes('placeholder')) {
+  console.error('❌ DATABASE_URL não configurado ou está como placeholder');
+  console.error(`   Valor atual: ${databaseUrl || 'não encontrado'}`);
+  console.error('   Configure DATABASE_URL no arquivo .env.local');
+  process.exit(1);
+}
+
+console.log(`✅ DATABASE_URL carregado: ${databaseUrl.substring(0, 30)}...`);
 
 const prisma = new PrismaClient({
   log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
@@ -203,51 +217,154 @@ const unidadesExemplo = [
   },
 ];
 
+const cursosExemplo = [
+  {
+    titulo: 'Fabricação de Pizza Artesanal de Carne de Sol',
+    descricao: 'Aprenda a preparar pizzas artesanais com o tradicional sabor nordestino da carne de sol. Este curso aborda desde a preparação da massa até a montagem final da pizza.',
+    cargaHoraria: '16 horas',
+    modalidade: 'Presencial',
+    categoria: 'Gastronomia',
+    unidades: unidadesExemplo,
+  },
+  {
+    titulo: 'Fundamentos de Desenvolvimento Web',
+    descricao: 'Domine os conceitos essenciais do desenvolvimento web moderno. Aprenda HTML5, CSS3, JavaScript e frameworks populares. Construa projetos práticos e desenvolva habilidades profissionais.',
+    cargaHoraria: '40 horas',
+    modalidade: 'Online',
+    categoria: 'Tecnologia',
+    unidades: unidadesExemplo,
+  },
+  {
+    titulo: 'Marketing Digital para Iniciantes',
+    descricao: 'Descubra estratégias eficazes de marketing digital para alavancar seu negócio online. Conheça SEO, redes sociais, email marketing e análise de métricas.',
+    cargaHoraria: '24 horas',
+    modalidade: 'Híbrido',
+    categoria: 'Marketing',
+    unidades: unidadesExemplo,
+  },
+  {
+    titulo: 'Design UX/UI Avançado',
+    descricao: 'Aprenda os princípios fundamentais de design de experiência do usuário e interface. Crie protótipos interativos, conduza pesquisas com usuários e desenvolva interfaces modernas.',
+    cargaHoraria: '32 horas',
+    modalidade: 'Online',
+    categoria: 'Design',
+    unidades: unidadesExemplo,
+  },
+  {
+    titulo: 'Gestão de Projetos Ágeis',
+    descricao: 'Domine metodologias ágeis como Scrum e Kanban. Aprenda a gerenciar times, sprints, backlogs e entregas contínuas. Ideal para gerentes de projeto e líderes de equipe.',
+    cargaHoraria: '20 horas',
+    modalidade: 'Híbrido',
+    categoria: 'Gestão',
+    unidades: unidadesExemplo,
+  },
+  {
+    titulo: 'Fotografia Digital Profissional',
+    descricao: 'Desenvolva suas habilidades fotográficas do básico ao avançado. Aprenda sobre composição, iluminação, edição e diferentes estilos de fotografia profissional.',
+    cargaHoraria: '28 horas',
+    modalidade: 'Presencial',
+    categoria: 'Arte',
+    unidades: unidadesExemplo,
+  },
+  {
+    titulo: 'Introdução ao Next.js 14',
+    descricao: 'Aprenda a construir aplicações modernas com Next.js 14, incluindo App Router, Server Components e muito mais.',
+    cargaHoraria: '40 horas',
+    modalidade: 'Online',
+    categoria: 'Tecnologia',
+    unidades: unidadesExemplo,
+  },
+  {
+    titulo: 'Culinária Italiana Autêntica',
+    descricao: 'Aprenda a preparar pratos tradicionais da culinária italiana. Massas frescas, molhos autênticos e técnicas de cozinha profissional.',
+    cargaHoraria: '18 horas',
+    modalidade: 'Presencial',
+    categoria: 'Gastronomia',
+    unidades: unidadesExemplo,
+  },
+  {
+    titulo: 'Redes Sociais e Influência Digital',
+    descricao: 'Domine estratégias de conteúdo para redes sociais. Aprenda a criar campanhas virais, engajar audiências e construir uma marca pessoal forte.',
+    cargaHoraria: '22 horas',
+    modalidade: 'Online',
+    categoria: 'Marketing',
+    unidades: unidadesExemplo,
+  },
+  {
+    titulo: 'Figma para Designers',
+    descricao: 'Aprenda a usar o Figma para criar interfaces modernas. Prototipagem, design systems e colaboração em equipe.',
+    cargaHoraria: '30 horas',
+    modalidade: 'Online',
+    categoria: 'Design',
+    unidades: unidadesExemplo,
+  },
+  {
+    titulo: 'Liderança e Gestão de Times',
+    descricao: 'Desenvolva habilidades de liderança e gestão. Aprenda a motivar equipes, resolver conflitos e alcançar resultados extraordinários.',
+    cargaHoraria: '26 horas',
+    modalidade: 'Híbrido',
+    categoria: 'Gestão',
+    unidades: unidadesExemplo,
+  },
+  {
+    titulo: 'Pintura Digital e Ilustração',
+    descricao: 'Domine técnicas de pintura digital e ilustração. Use ferramentas profissionais como Photoshop e Illustrator para criar arte digital.',
+    cargaHoraria: '34 horas',
+    modalidade: 'Online',
+    categoria: 'Arte',
+    unidades: unidadesExemplo,
+  },
+  {
+    titulo: 'React Avançado e Hooks',
+    descricao: 'Aprofunde-se no React com hooks avançados, context API, performance e padrões de código. Construa aplicações escaláveis e eficientes.',
+    cargaHoraria: '36 horas',
+    modalidade: 'Online',
+    categoria: 'Tecnologia',
+    unidades: unidadesExemplo,
+  },
+];
+
 async function main() {
   console.log('🌱 Iniciando seed do banco de dados...\n');
 
-  // Verificar se já existe um curso de exemplo
-  const cursoExistente = await prisma.curso.findFirst({
-    where: {
-      titulo: 'Introdução ao Next.js 14'
-    }
-  });
+  // Verificar quantos cursos já existem
+  const cursosExistentes = await prisma.curso.count();
+  console.log(`📊 Cursos existentes no banco: ${cursosExistentes}`);
 
-  let cursoExemplo;
+  // Criar os cursos de exemplo
+  console.log('\n✨ Criando cursos de exemplo...\n');
   
-  if (cursoExistente) {
-    // Atualizar curso existente com unidades e conteúdo
-    console.log('📝 Curso já existe, atualizando com unidades e conteúdos...\n');
-    cursoExemplo = await prisma.curso.update({
-      where: {
-        id: cursoExistente.id
-      },
-      data: {
-        unidades: unidadesExemplo,
-      },
-    });
-    console.log('✅ Curso atualizado com sucesso!');
-  } else {
-    // Criar novo curso de exemplo
-    console.log('✨ Criando novo curso de exemplo...\n');
-    cursoExemplo = await prisma.curso.create({
-      data: {
-        titulo: 'Introdução ao Next.js 14',
-        descricao: 'Aprenda a construir aplicações modernas com Next.js 14, incluindo App Router, Server Components e muito mais.',
-        cargaHoraria: '40 horas',
-        modalidade: 'Online',
-        categoria: 'Desenvolvimento Web',
-        unidades: unidadesExemplo,
-      },
-    });
-    console.log('✅ Curso criado com sucesso!');
+  let cursosCriados = 0;
+  let cursosExistentesCount = 0;
+  
+  for (const cursoData of cursosExemplo) {
+    try {
+      // Verificar se o curso já existe pelo título
+      const cursoExistente = await prisma.curso.findFirst({
+        where: { titulo: cursoData.titulo },
+      });
+      
+      if (cursoExistente) {
+        cursosExistentesCount++;
+        console.log(`ℹ️  Curso já existe: ${cursoData.titulo}`);
+      } else {
+        // Criar o curso
+        const curso = await prisma.curso.create({
+          data: cursoData,
+        });
+        cursosCriados++;
+        console.log(`✅ Curso criado: ${curso.titulo}`);
+      }
+    } catch (error) {
+      console.error(`❌ Erro ao criar curso ${cursoData.titulo}:`, error);
+    }
   }
+  
+  console.log(`\n✅ ${cursosCriados} cursos criados, ${cursosExistentesCount} já existiam`);
 
-  console.log('\n📊 Informações do curso:');
-  console.log(`   ID: ${cursoExemplo.id}`);
-  console.log(`   Título: ${cursoExemplo.titulo}`);
-  console.log(`   Unidades: ${(cursoExemplo.unidades as any[]).length}`);
-  console.log(`   Total de conteúdos: ${(cursoExemplo.unidades as any[]).reduce((acc, u) => acc + (u.conteudo?.length || 0), 0)}`);
+  // Mostrar estatísticas
+  const totalCursos = await prisma.curso.count();
+  console.log(`\n📊 Total de cursos no banco: ${totalCursos}`);
 
   // Criar alguns comentários de exemplo (apenas se não existirem)
   const comentariosExistentes = await prisma.comment.count();

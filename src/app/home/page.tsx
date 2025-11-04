@@ -1,166 +1,267 @@
 "use client";
 
-import { useAuth } from "@/context/AuthContext";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 import {
   GraduationCap,
   BookOpen,
-  FileText,
-  Download,
-  Zap,
-  Shield,
-  CheckCircle,
+  Clock,
+  Award,
+  Plus,
   ArrowRight,
+  CheckCircle2,
+  Users,
+  FileCheck,
 } from "lucide-react";
-import Link from "next/link";
+import { PageTransition } from "@/components/PageTransition";
 
 export default function HomePage() {
-  const { user } = useAuth();
+  const router = useRouter();
 
   const features = [
     {
       icon: BookOpen,
-      title: "Criação de Cursos",
+      title: "Gestão Completa",
       description:
-        "Crie cursos completos com unidades, aulas e conteúdo rico de forma simples e intuitiva.",
+        "Gerencie todos os seus cursos em um só lugar com ferramentas intuitivas e eficientes.",
+      iconBg: "bg-[#F15A29]/10",
+      iconColor: "#F15A29",
     },
     {
-      icon: FileText,
-      title: "Editor Avançado",
+      icon: Clock,
+      title: "Economia de Tempo",
       description:
-        "Edite e personalize seu conteúdo com componentes interativos, quizzes e muito mais.",
+        "Automatize processos e reduza o tempo gasto em tarefas administrativas.",
+      iconBg: "bg-[#F15A29]/10",
+      iconColor: "#F15A29",
     },
     {
-      icon: Download,
-      title: "Exportação SCORM",
+      icon: Award,
+      title: "Qualidade SENAI",
       description:
-        "Exporte seus cursos no formato SCORM padrão para integração com LMS (Learning Management Systems).",
+        "Mantenha o padrão de excelência SENAI em todos os seus cursos e materiais.",
+      iconBg: "bg-[#F15A29]/10",
+      iconColor: "#F15A29",
+    },
+  ];
+
+  const recentActivities = [
+    {
+      icon: CheckCircle2,
+      title: "Novo curso publicado:",
+      subtitle: "Fundamentos de Desenvolvimento Web",
+      time: "Há 2 horas",
+      iconBg: "bg-[#0047BB]/10",
+      iconColor: "#0047BB",
     },
     {
-      icon: Zap,
-      title: "Performance",
-      description:
-        "Interface rápida e responsiva para uma experiência fluida na criação e visualização de cursos.",
+      icon: Users,
+      title: "128 novos alunos",
+      subtitle: "matriculados hoje",
+      time: "Há 5 horas",
+      iconBg: "bg-[#F15A29]/10",
+      iconColor: "#F15A29",
     },
     {
-      icon: Shield,
-      title: "Seguro",
-      description:
-        "Seus cursos são salvos de forma segura e você tem controle total sobre seu conteúdo.",
-    },
-    {
-      icon: CheckCircle,
-      title: "Padrões Educacionais",
-      description:
-        "Crie cursos que seguem os padrões educacionais mais modernos e eficazes.",
+      icon: FileCheck,
+      title: "45 certificados",
+      subtitle: "emitidos esta semana",
+      time: "Ontem",
+      iconBg: "bg-[#0047BB]/10",
+      iconColor: "#0047BB",
     },
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        {/* Header */}
-        <div className="text-center mb-12">
-          <div className="inline-flex items-center justify-center w-20 h-20 bg-blue-900 rounded-full mb-6">
-            <GraduationCap className="w-10 h-10 text-white" />
-          </div>
-          <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
-            Bem-vindo{user ? `, ${user.nome.split(" ")[0]}` : ""}! 👋
-          </h1>
-          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-            Sistema completo para criação, gerenciamento e exportação de cursos
-            em formato SCORM
-          </p>
-        </div>
+    <PageTransition>
+      <div className="min-h-screen bg-background">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          {/* Header Section */}
+          <div className="mb-12">
+            {/* Badge */}
+            <div className="mb-6">
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#0047BB]/10">
+                <GraduationCap className="w-4 h-4 text-[#0047BB]" />
+                <span className="text-sm text-[#0047BB]">
+                  Plataforma SENAI 2025
+                </span>
+              </div>
+            </div>
 
-        {/* Sobre o Sistema */}
-        <Card className="mb-12 border-2 border-blue-200 shadow-lg">
-          <CardHeader>
-            <CardTitle className="text-2xl flex items-center gap-2">
-              <GraduationCap className="w-6 h-6 text-blue-900" />
-              Sobre o Sistema
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4 text-gray-700">
-              <p className="text-lg leading-relaxed">
-                O <strong>Gerador de Cursos SCORM</strong> é uma plataforma
-                completa e intuitiva projetada para educadores, instrutores e
-                criadores de conteúdo que desejam desenvolver cursos online
-                profissionais e exportá-los no formato SCORM (Sharable Content
-                Object Reference Model).
-              </p>
-              <p className="leading-relaxed">
-                Com nosso sistema, você pode criar cursos estruturados com
-                múltiplas unidades e aulas, adicionar conteúdo rico incluindo
-                textos, imagens, vídeos, quizzes interativos e muito mais.
-                Tudo isso em uma interface amigável que não requer conhecimento
-                técnico avançado.
-              </p>
-              <p className="leading-relaxed">
-                O sistema permite exportar seus cursos no formato SCORM, o que
-                significa que você pode integrá-los facilmente com qualquer LMS
-                (Learning Management System) popular, como Moodle, Canvas,
-                Blackboard, entre outros. Isso garante compatibilidade e
-                portabilidade do seu conteúdo educacional.
+            {/* Title */}
+            <h1 className="text-4xl font-normal text-foreground mb-4">
+              Bem-vindo ao Gerador de Cursos
+            </h1>
+
+            {/* Description */}
+            <p className="text-lg text-muted-foreground mb-8 max-w-3xl">
+              Crie, gerencie e publique cursos de alta qualidade com facilidade.
+              Tudo que você precisa para oferecer experiências educacionais
+              excepcionais.
+            </p>
+
+            {/* Action Buttons */}
+            <div className="flex gap-4">
+              <Button
+                onClick={() => router.push("/cursos/novo")}
+                className="bg-[#0047BB] hover:bg-[#0047BB]/90 text-white h-10 px-6"
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Criar Novo Curso
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => router.push("/cursos")}
+                className="h-10 px-6 border-border"
+              >
+                Ver Todos os Cursos
+                <ArrowRight className="w-4 h-4 ml-2" />
+              </Button>
+            </div>
+          </div>
+
+          {/* Why Use Section */}
+          <div className="mb-12">
+            <div className="mb-8">
+              <h2 className="text-xl font-medium text-foreground mb-2">
+                Por que usar nossa plataforma?
+              </h2>
+              <p className="text-base text-muted-foreground">
+                Ferramentas poderosas para transformar a educação
               </p>
             </div>
-          </CardContent>
-        </Card>
 
-        {/* Funcionalidades */}
-        <div className="mb-12">
-          <h2 className="text-3xl font-bold text-gray-900 text-center mb-8">
-            Funcionalidades Principais
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {features.map((feature, index) => {
-              const Icon = feature.icon;
-              return (
-                <Card
-                  key={index}
-                  className="hover:shadow-lg transition-shadow border border-gray-200"
-                >
-                  <CardHeader>
-                    <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-2">
-                      <Icon className="w-6 h-6 text-blue-900" />
-                    </div>
-                    <CardTitle className="text-xl">{feature.title}</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-gray-600">{feature.description}</p>
-                  </CardContent>
-                </Card>
-              );
-            })}
+            {/* Features Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {features.map((feature, index) => {
+                const Icon = feature.icon;
+                return (
+                  <Card
+                    key={index}
+                    className="border border-border hover:shadow-md transition-shadow"
+                  >
+                    <CardContent className="p-6">
+                      <div className="flex flex-col gap-10">
+                        {/* Icon */}
+                        <div
+                          className={`w-12 h-12 rounded-lg ${feature.iconBg} flex items-center justify-center`}
+                        >
+                          <Icon
+                            className="w-6 h-6"
+                            style={{ color: feature.iconColor }}
+                          />
+                        </div>
+
+                        {/* Content */}
+                        <div className="space-y-2">
+                          <h3 className="text-base font-normal text-foreground">
+                            {feature.title}
+                          </h3>
+                          <p className="text-sm text-muted-foreground leading-relaxed">
+                            {feature.description}
+                          </p>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* CTA Card */}
+          <Card className="mb-12 border border-[#0047BB]/20 bg-gradient-to-br from-[#0047BB]/5 to-[#F15A29]/5">
+            <CardContent className="p-8">
+              <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+                <div className="flex-1">
+                  <h2 className="text-xl font-medium text-foreground mb-2">
+                    Pronto para começar?
+                  </h2>
+                  <p className="text-base text-muted-foreground">
+                    Comece criando seu primeiro curso ou explore os cursos
+                    existentes para ver tudo que a plataforma oferece.
+                  </p>
+                </div>
+                <div className="flex gap-4">
+                  <Button
+                    onClick={() => router.push("/cursos/novo")}
+                    className="bg-[#F15A29] hover:bg-[#F15A29]/90 text-white h-10 px-6"
+                  >
+                    <Plus className="w-4 h-4 mr-2" />
+                    Criar Curso
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => router.push("/cursos")}
+                    className="h-10 px-6 border-border"
+                  >
+                    Explorar Cursos
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Recent Activity Section */}
+          <div>
+            <div className="mb-6">
+              <h3 className="text-lg font-medium text-foreground mb-2">
+                Atividade Recente
+              </h3>
+              <p className="text-sm text-muted-foreground">
+                Últimas atualizações na plataforma
+              </p>
+            </div>
+
+            {/* Activity Cards */}
+            <div className="space-y-4">
+              {recentActivities.map((activity, index) => {
+                const Icon = activity.icon;
+                return (
+                  <Card
+                    key={index}
+                    className="border border-border hover:shadow-md transition-shadow"
+                  >
+                    <CardContent className="p-4">
+                      <div className="flex gap-4">
+                        {/* Icon */}
+                        <div
+                          className={`w-10 h-10 rounded-full ${activity.iconBg} flex items-center justify-center shrink-0`}
+                        >
+                          <Icon
+                            className="w-5 h-5"
+                            style={{ color: activity.iconColor }}
+                          />
+                        </div>
+
+                        {/* Content */}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex flex-col gap-1">
+                            <div className="flex flex-wrap items-baseline gap-1">
+                              <span className="text-base font-normal text-foreground">
+                                {activity.title}
+                              </span>
+                              {activity.subtitle && (
+                                <span className="text-base font-normal text-foreground">
+                                  {activity.subtitle}
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-sm text-muted-foreground">
+                              {activity.time}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
           </div>
         </div>
-
-        {/* CTA */}
-        <Card className="bg-gradient-to-r from-blue-900 to-indigo-900 text-white border-0 shadow-xl">
-          <CardContent className="p-8 text-center">
-            <h3 className="text-2xl font-bold mb-4">
-              Pronto para começar a criar seus cursos?
-            </h3>
-            <p className="text-blue-100 mb-6 max-w-2xl mx-auto">
-              Acesse a página de cursos para criar seu primeiro curso ou
-              gerenciar cursos existentes.
-            </p>
-            <Link href="/cursos">
-              <Button
-                size="lg"
-                className="bg-white text-blue-900 hover:bg-gray-100 font-semibold"
-              >
-                Ir para Cursos
-                <ArrowRight className="ml-2 w-5 h-5" />
-              </Button>
-            </Link>
-          </CardContent>
-        </Card>
       </div>
-    </div>
+    </PageTransition>
   );
 }
-

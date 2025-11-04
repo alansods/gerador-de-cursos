@@ -2,15 +2,61 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma, ensureConnection } from '@/lib/prisma';
 import { Prisma } from '@prisma/client';
 
-// GET - Listar todos os cursos
-export async function GET() {
+// GET - Listar todos os cursos (com suporte a paginação)
+export async function GET(request: NextRequest) {
   try {
     await ensureConnection();
+    
+    // Obter parâmetros de query
+    const { searchParams } = new URL(request.url);
+    const page = parseInt(searchParams.get('page') || '1', 10);
+    const limit = parseInt(searchParams.get('limit') || '6', 10);
+    const search = searchParams.get('search') || '';
+    const category = searchParams.get('category') || '';
+    const modality = searchParams.get('modality') || '';
+    
+    // Construir filtros
+    const where: Prisma.CursoWhereInput = {};
+    
+    if (search) {
+      where.OR = [
+        { titulo: { contains: search, mode: 'insensitive' } },
+        { descricao: { contains: search, mode: 'insensitive' } },
+      ];
+    }
+    
+    if (category && category !== 'Todas Categorias') {
+      where.categoria = category;
+    }
+    
+    if (modality && modality !== 'Todas Modalidades') {
+      where.modalidade = modality;
+    }
+    
+    // Contar total de cursos (com filtros)
+    const total = await prisma.curso.count({ where });
+    
+    // Buscar cursos paginados
+    const skip = (page - 1) * limit;
     const cursos = await prisma.curso.findMany({
+      where,
       orderBy: { dataModificacao: 'desc' },
+      skip,
+      take: limit,
     });
 
-    return NextResponse.json({ success: true, cursos });
+    const totalPages = Math.ceil(total / limit);
+
+    return NextResponse.json({ 
+      success: true, 
+      cursos,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages,
+      },
+    });
   } catch (error) {
     console.error('Error fetching courses:', error);
     

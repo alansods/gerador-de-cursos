@@ -7,3 +7,5 @@ export * from "./tooltip";
 export * from "./dialog";
 export * from "./modal";
 export * from "./floating-action-button";
+export * from "./select";
+export * from "./pagination";
