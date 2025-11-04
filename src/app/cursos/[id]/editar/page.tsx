@@ -290,6 +290,8 @@ export default function EditarCursoPage() {
       itensLista: [],
       tipoLista: "nao-ordenada",
       quizData: undefined,
+      tipoInfoBox: "info",
+      tituloInfoBox: "",
     });
   };
 
@@ -593,6 +595,8 @@ export default function EditarCursoPage() {
       itensLista: [],
       tipoLista: "nao-ordenada",
       quizData: undefined,
+      tipoInfoBox: "info",
+      tituloInfoBox: "",
     });
   };
 
