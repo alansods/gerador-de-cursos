@@ -5,6 +5,7 @@ import { useRouter, useParams } from "next/navigation";
 import { useGeradorCurso } from "@/context/GeradorCursoContext";
 import { usePreview } from "@/hooks/usePreview";
 import { usePDF } from "@/hooks/usePDF";
+import { useSCORM } from "@/hooks/useSCORM";
 import { ExportModal } from "@/components/ExportModal";
 import { PageTransition } from "@/components/PageTransition";
 import { Button } from "@/components/ui/button";
@@ -71,6 +72,7 @@ export default function EditarCursoPage() {
   } = useGeradorCurso();
   const { openPreview } = usePreview();
   const { generatePDF, isGenerating: isGeneratingPDF } = usePDF();
+  const { generateSCORM, isGeneratingSCORM } = useSCORM();
   const router = useRouter();
   const params = useParams();
 
@@ -4021,8 +4023,21 @@ export default function EditarCursoPage() {
               console.error('Erro ao gerar PDF:', error);
             }
           }}
+          onExportSCORM={async (filename) => {
+            try {
+              if (state.cursoAtual) {
+                await generateSCORM(state.cursoAtual, filename);
+                setExportModalOpen(false);
+              }
+            } catch (error) {
+              // Erro já foi tratado no hook, modal permanece aberto
+              console.error('Erro ao gerar SCORM:', error);
+            }
+          }}
           courseName={state.cursoAtual?.titulo || "Curso"}
+          courseId={state.cursoAtual?.id}
           isGeneratingPDF={isGeneratingPDF}
+          isGeneratingSCORM={isGeneratingSCORM}
         />
       </div>
     </PageTransition>

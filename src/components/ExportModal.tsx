@@ -19,6 +19,7 @@ interface ExportModalProps {
   onExportPDF: (filename: string) => Promise<void> | void;
   onExportSCORM?: (filename: string) => Promise<void> | void;
   courseName: string;
+  courseId?: string; // ID do curso para SCORM
   isGeneratingPDF?: boolean;
   isGeneratingSCORM?: boolean;
 }

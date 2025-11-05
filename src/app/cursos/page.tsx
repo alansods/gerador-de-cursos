@@ -3,6 +3,7 @@
 import { useGeradorCurso } from "@/context/GeradorCursoContext";
 import { usePreview } from "@/hooks/usePreview";
 import { usePDF } from "@/hooks/usePDF";
+import { useSCORM } from "@/hooks/useSCORM";
 import { ExportModal } from "@/components/ExportModal";
 import { PageTransition } from "@/components/PageTransition";
 import { Button } from "@/components/ui/button";
@@ -58,6 +59,7 @@ export default function CursosPage() {
   const [cursosPaginados, setCursosPaginados] = useState<CursoGerado[]>([]);
   const { openPreview } = usePreview();
   const { generatePDF, isGenerating: isGeneratingPDF } = usePDF();
+  const { generateSCORM, isGeneratingSCORM } = useSCORM();
   const router = useRouter();
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(
     null
@@ -552,8 +554,20 @@ export default function CursosPage() {
           isOpen={exportModalOpen}
           onClose={() => setExportModalOpen(false)}
           onExportPDF={handleExportPDF}
+          onExportSCORM={async (filename) => {
+            if (selectedCursoForExport) {
+              try {
+                await generateSCORM(selectedCursoForExport, filename);
+                setExportModalOpen(false);
+              } catch (error) {
+                console.error('Erro ao gerar SCORM:', error);
+              }
+            }
+          }}
           courseName={selectedCursoForExport?.titulo || "Curso"}
+          courseId={selectedCursoForExport?.id}
           isGeneratingPDF={isGeneratingPDF}
+          isGeneratingSCORM={isGeneratingSCORM}
         />
       </div>
     </PageTransition>
