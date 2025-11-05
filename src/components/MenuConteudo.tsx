@@ -12,44 +12,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { MoreHorizontal, ArrowUp, ArrowDown, Edit, Trash2 } from "lucide-react";
-
-interface Conteudo {
-  id: string;
-  tipo: "paragrafo" | "subtitulo" | "titulo" | "imagem" | "accordion" | "flipcard" | "lista" | "quiz" | "info-box";
-  conteudo: string;
-  tamanho?: "pequena" | "media" | "grande";
-  legenda?: string;
-  fonte?: string;
-  corTexto?: string;
-  alinhamento?: "esquerda" | "centro" | "direita" | "justificado";
-  colunas?: 6 | 12;
-  ordem?: number;
-  items?: Array<{ id: string; titulo: string; conteudo: string }>;
-  tipoFrente?: "imagem" | "imagem-titulo" | "titulo";
-  imagemFrente?: string;
-  tituloFrente?: string;
-  conteudoVerso?: string;
-  alturaCard?: string;
-  itensLista?: Array<{ id: string; texto: string }>;
-  tipoLista?: "ordenada" | "nao-ordenada" | "check";
-  quizData?: {
-    pergunta: string;
-    dica?: string;
-    opcoes: Array<{
-      id: string;
-      texto: string;
-      isCorrect: boolean;
-      feedback: string;
-    }>;
-  };
-  tipoInfoBox?: "atencao" | "saiba_mais" | "info" | "curiosidade";
-  tituloInfoBox?: string;
-}
-
-interface Unidade {
-  id: string;
-  conteudo: Conteudo[];
-}
+import type { ConteudoUnidade, Unidade } from "@/types/gerador-curso";
 
 export function MenuConteudo({
   unidade,
@@ -62,7 +25,7 @@ export function MenuConteudo({
   setEditandoConteudo,
 }: {
   unidade: Unidade;
-  item: Conteudo;
+  item: ConteudoUnidade;
   itemIndex: number;
   handleMoverConteudoAcima: (unidadeId: string, index: number) => void;
   handleMoverConteudoAbaixo: (unidadeId: string, index: number) => void;
@@ -70,30 +33,30 @@ export function MenuConteudo({
   editarConteudo: (
     unidadeId: string,
     conteudoId: string,
-    data: Partial<Conteudo>
+    data: Partial<ConteudoUnidade>
   ) => void;
   setEditandoConteudo: (data: {
     unidadeId: string;
     conteudoId: string;
-    tipo: Conteudo["tipo"];
+    tipo: ConteudoUnidade["tipo"];
     conteudo: string;
-    tamanho?: Conteudo["tamanho"];
+    tamanho?: ConteudoUnidade["tamanho"];
     legenda?: string;
     fonte?: string;
     corTexto?: string;
-    alinhamento?: Conteudo["alinhamento"];
-    colunas?: Conteudo["colunas"];
-    items?: Conteudo["items"];
-    tipoFrente?: Conteudo["tipoFrente"];
-    imagemFrente?: Conteudo["imagemFrente"];
-    tituloFrente?: Conteudo["tituloFrente"];
-    conteudoVerso?: Conteudo["conteudoVerso"];
-    alturaCard?: Conteudo["alturaCard"];
-    itensLista?: Conteudo["itensLista"];
-    tipoLista?: Conteudo["tipoLista"];
-    quizData?: Conteudo["quizData"];
-    tipoInfoBox?: Conteudo["tipoInfoBox"];
-    tituloInfoBox?: Conteudo["tituloInfoBox"];
+    alinhamento?: ConteudoUnidade["alinhamento"];
+    colunas?: ConteudoUnidade["colunas"];
+    items?: ConteudoUnidade["items"];
+    tipoFrente?: ConteudoUnidade["tipoFrente"];
+    imagemFrente?: ConteudoUnidade["imagemFrente"];
+    tituloFrente?: ConteudoUnidade["tituloFrente"];
+    conteudoVerso?: ConteudoUnidade["conteudoVerso"];
+    alturaCard?: ConteudoUnidade["alturaCard"];
+    itensLista?: ConteudoUnidade["itensLista"];
+    tipoLista?: ConteudoUnidade["tipoLista"];
+    quizData?: ConteudoUnidade["quizData"];
+    tipoInfoBox?: ConteudoUnidade["tipoInfoBox"];
+    tituloInfoBox?: ConteudoUnidade["tituloInfoBox"];
   }) => void;
 }) {
   return (

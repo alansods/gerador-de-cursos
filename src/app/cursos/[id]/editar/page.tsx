@@ -4,7 +4,6 @@ import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { useGeradorCurso } from "@/context/GeradorCursoContext";
 import { usePreview } from "@/hooks/usePreview";
-import { useSCORM } from "@/hooks/useSCORM";
 import { usePDF } from "@/hooks/usePDF";
 import { ExportModal } from "@/components/ExportModal";
 import { PageTransition } from "@/components/PageTransition";
@@ -71,7 +70,6 @@ export default function EditarCursoPage() {
     selecionarCurso,
   } = useGeradorCurso();
   const { openPreview } = usePreview();
-  const { generateSCORMPackage, isGenerating: isGeneratingSCORM } = useSCORM();
   const { generatePDF, isGenerating: isGeneratingPDF } = usePDF();
   const router = useRouter();
   const params = useParams();
@@ -219,17 +217,6 @@ export default function EditarCursoPage() {
     }
   }, [editarCursoModal, state.cursoAtual]);
 
-  useEffect(() => {
-    if (state.cursoAtual) {
-      (window as { handleGerarSCORM?: () => void }).handleGerarSCORM = () =>
-        generateSCORMPackage(state.cursoAtual!);
-
-      return () => {
-        const win = window as { handleGerarSCORM?: () => void }
-        delete win.handleGerarSCORM;
-      };
-    }
-  }, [state.cursoAtual, generateSCORMPackage]);
 
   const handleVoltar = () => router.push("/cursos");
 
@@ -2039,7 +2026,7 @@ export default function EditarCursoPage() {
                     <div className="text-center py-8 text-gray-500 text-sm border-2 border-dashed border-gray-300 rounded-lg">
                       <p>Nenhum item adicionado ainda.</p>
                       <p className="text-xs mt-1">
-                        Clique em "Adicionar Item" para começar.
+                        Clique em &quot;Adicionar Item&quot; para começar.
                       </p>
                     </div>
                   )}
@@ -2213,7 +2200,7 @@ export default function EditarCursoPage() {
                       placeholder="Ex: 300px, 400px, 50vh"
                     />
                     <p className="text-xs text-gray-500 mt-1">
-                      Use valores como "300px", "400px" ou "50vh" (viewport
+                      Use valores como &quot;300px&quot;, &quot;400px&quot; ou &quot;50vh&quot; (viewport
                       height)
                     </p>
                   </div>
@@ -2306,7 +2293,7 @@ export default function EditarCursoPage() {
                     <div className="text-center py-8 text-gray-500 text-sm border-2 border-dashed border-gray-300 rounded-lg">
                       <p>Nenhum item adicionado ainda.</p>
                       <p className="text-xs mt-1">
-                        Clique em "Adicionar Item" para começar.
+                        Clique em &quot;Adicionar Item&quot; para começar.
                       </p>
                     </div>
                   )}
@@ -2500,7 +2487,7 @@ export default function EditarCursoPage() {
                     <div className="text-center py-8 text-gray-500 text-sm border-2 border-dashed border-gray-300 rounded-lg">
                       <p>Nenhuma pergunta adicionada ainda.</p>
                       <p className="text-xs mt-1">
-                        Clique em "Adicionar Pergunta" para começar.
+                        Clique em &quot;Adicionar Pergunta&quot; para começar.
                       </p>
                     </div>
                   )}
@@ -2812,9 +2799,6 @@ export default function EditarCursoPage() {
               <Button
                 onClick={() => {
                   if (unidadeParaDeletar && state.cursoAtual) {
-                    const unidade = state.cursoAtual.unidades.find(
-                      (u) => u.id === unidadeParaDeletar
-                    );
                     deletarUnidade(unidadeParaDeletar);
                     toast.success("Unidade excluída");
                   }
@@ -3248,7 +3232,7 @@ export default function EditarCursoPage() {
                     <div className="text-center py-8 text-gray-500 text-sm border-2 border-dashed border-gray-300 rounded-lg">
                       <p>Nenhuma pergunta adicionada ainda.</p>
                       <p className="text-xs mt-1">
-                        Clique em "Adicionar Pergunta" para começar.
+                        Clique em &quot;Adicionar Pergunta&quot; para começar.
                       </p>
                     </div>
                   )}
@@ -3522,7 +3506,7 @@ export default function EditarCursoPage() {
                     <div className="text-center py-8 text-gray-500 text-sm border-2 border-dashed border-gray-300 rounded-lg">
                       <p>Nenhum item adicionado ainda.</p>
                       <p className="text-xs mt-1">
-                        Clique em "Adicionar Item" para começar.
+                        Clique em &quot;Adicionar Item&quot; para começar.
                       </p>
                     </div>
                   )}
@@ -3703,7 +3687,7 @@ export default function EditarCursoPage() {
                       placeholder="Ex: 300px, 400px, 50vh"
                     />
                     <p className="text-xs text-gray-500 mt-1">
-                      Use valores como "300px", "400px" ou "50vh" (viewport
+                      Use valores como &quot;300px&quot;, &quot;400px&quot; ou &quot;50vh&quot; (viewport
                       height)
                     </p>
                   </div>
@@ -3830,7 +3814,7 @@ export default function EditarCursoPage() {
                     <div className="text-center py-8 text-gray-500 text-sm border-2 border-dashed border-gray-300 rounded-lg">
                       <p>Nenhum item adicionado ainda.</p>
                       <p className="text-xs mt-1">
-                        Clique em "Adicionar Item" para começar.
+                        Clique em &quot;Adicionar Item&quot; para começar.
                       </p>
                     </div>
                   )}
@@ -4037,18 +4021,8 @@ export default function EditarCursoPage() {
               console.error('Erro ao gerar PDF:', error);
             }
           }}
-          onExportSCORM={async (filename) => {
-            try {
-              await generateSCORMPackage(state.cursoAtual!, filename);
-              setExportModalOpen(false);
-            } catch (error) {
-              // Erro já foi tratado no hook, modal permanece aberto
-              console.error('Erro ao gerar SCORM:', error);
-            }
-          }}
           courseName={state.cursoAtual?.titulo || "Curso"}
           isGeneratingPDF={isGeneratingPDF}
-          isGeneratingSCORM={isGeneratingSCORM}
         />
       </div>
     </PageTransition>

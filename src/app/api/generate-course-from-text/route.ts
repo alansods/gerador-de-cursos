@@ -26,7 +26,7 @@ interface CursoGenerado {
       alturaCard?: string;
       itensLista?: Array<{ id: string; texto: string }>;
       tipoLista?: 'ordenada' | 'nao-ordenada' | 'check';
-      [key: string]: any; // Para permitir propriedades adicionais
+      [key: string]: unknown; // Para permitir propriedades adicionais
     }>;
   }>;
 }
@@ -297,7 +297,7 @@ ${text}
       }
       
       // Adicionar ID único para a unidade (timestamp + random + índice)
-      (unidade as any).id = `unidade-${timestamp}-${randomSuffix}-${i}`;
+      (unidade as { id?: string }).id = `unidade-${timestamp}-${randomSuffix}-${i}`;
       
       // Adicionar IDs únicos para cada item de conteúdo e remover duplicações
       if (unidade.conteudo && Array.isArray(unidade.conteudo)) {
@@ -321,11 +321,11 @@ ${text}
           const item = unidade.conteudo[j];
           item.ordem = j; // Reordenar após filtro
           // ID único: timestamp + random + índice da unidade + índice do conteúdo
-          (item as any).id = `conteudo-${timestamp}-${randomSuffix}-${i}-${j}`;
+          (item as { id?: string }).id = `conteudo-${timestamp}-${randomSuffix}-${i}-${j}`;
           
           // Para accordions, garantir IDs únicos nos itens
           if (item.tipo === 'accordion' && item.items && Array.isArray(item.items)) {
-            item.items = item.items.map((accordionItem: any, idx: number) => ({
+            item.items = item.items.map((accordionItem: { id?: string; titulo: string; conteudo: string }, idx: number) => ({
               ...accordionItem,
               id: accordionItem.id || `accordion-item-${timestamp}-${randomSuffix}-${i}-${j}-${idx}`,
             }));

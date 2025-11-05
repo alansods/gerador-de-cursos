@@ -11,12 +11,13 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { FileText, Download, Loader2, ArrowLeft } from 'lucide-react';
+import { toast } from 'sonner';
 
 interface ExportModalProps {
   isOpen: boolean;
   onClose: () => void;
   onExportPDF: (filename: string) => Promise<void> | void;
-  onExportSCORM: (filename: string) => Promise<void> | void;
+  onExportSCORM?: (filename: string) => Promise<void> | void;
   courseName: string;
   isGeneratingPDF?: boolean;
   isGeneratingSCORM?: boolean;
@@ -75,8 +76,12 @@ export function ExportModal({
     try {
       if (selectedType === 'pdf') {
         await onExportPDF(finalFilename);
-      } else if (selectedType === 'scorm') {
+      } else if (selectedType === 'scorm' && onExportSCORM) {
         await onExportSCORM(finalFilename);
+      } else if (selectedType === 'scorm') {
+        // SCORM desabilitado temporariamente
+        toast.error('Exportação SCORM temporariamente indisponível');
+        return;
       }
       
       // Fechar modal e resetar apenas após sucesso
@@ -121,7 +126,7 @@ export function ExportModal({
             {/* Botão PDF */}
             <button
               onClick={() => setSelectedType('pdf')}
-              disabled={isGeneratingPDF || isGeneratingSCORM}
+              disabled={isGeneratingPDF}
               className="w-full flex items-center gap-4 p-4 rounded-lg border-2 border-gray-200 hover:border-green-500 hover:bg-green-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed group"
             >
               <div className="flex items-center justify-center w-12 h-12 bg-green-100 group-hover:bg-green-500 rounded-lg transition-colors">

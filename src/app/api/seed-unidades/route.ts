@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 
 const unidadesExemplo = [
@@ -193,7 +193,7 @@ const unidadesExemplo = [
   },
 ];
 
-export async function POST(request: NextRequest) {
+export async function POST() {
   try {
     // Buscar curso de exemplo
     const cursoExistente = await prisma.curso.findFirst({
@@ -225,13 +225,14 @@ export async function POST(request: NextRequest) {
       curso: {
         id: cursoAtualizado.id,
         titulo: cursoAtualizado.titulo,
-        unidades: (cursoAtualizado.unidades as any[]).length,
+        unidades: Array.isArray(cursoAtualizado.unidades) ? cursoAtualizado.unidades.length : 0,
       }
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Erro ao atualizar curso:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Erro ao atualizar curso';
     return NextResponse.json(
-      { success: false, error: error.message || 'Erro ao atualizar curso' },
+      { success: false, error: errorMessage },
       { status: 500 }
     );
   }

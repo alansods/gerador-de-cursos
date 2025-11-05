@@ -116,7 +116,7 @@ export function CourseCard({
             <Button 
               variant="outline" 
               size="sm" 
-              className="gap-2 h-8 border border-border"
+              className="gap-2 h-8 border-0"
               onClick={onDelete}
             >
               <Trash2 className="w-4 h-4 text-destructive shrink-0" />

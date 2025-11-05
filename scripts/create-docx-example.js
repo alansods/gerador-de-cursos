@@ -3,6 +3,7 @@
  * Execute: node scripts/create-docx-example.js
  */
 
+/* eslint-disable @typescript-eslint/no-require-imports */
 const { Document, Packer, Paragraph, TextRun, HeadingLevel } = require('docx');
 const fs = require('fs');
 const path = require('path');

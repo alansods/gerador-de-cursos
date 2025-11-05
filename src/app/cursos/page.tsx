@@ -2,7 +2,6 @@
 
 import { useGeradorCurso } from "@/context/GeradorCursoContext";
 import { usePreview } from "@/hooks/usePreview";
-import { useSCORM } from "@/hooks/useSCORM";
 import { usePDF } from "@/hooks/usePDF";
 import { ExportModal } from "@/components/ExportModal";
 import { PageTransition } from "@/components/PageTransition";
@@ -58,7 +57,6 @@ export default function CursosPage() {
   const { state, deletarCurso, selecionarCurso } = useGeradorCurso();
   const [cursosPaginados, setCursosPaginados] = useState<CursoGerado[]>([]);
   const { openPreview } = usePreview();
-  const { generateSCORMPackage, isGenerating: isGeneratingSCORM } = useSCORM();
   const { generatePDF, isGenerating: isGeneratingPDF } = usePDF();
   const router = useRouter();
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(
@@ -199,16 +197,6 @@ export default function CursosPage() {
         setExportModalOpen(false);
       } catch (error) {
         console.error("Erro ao gerar PDF:", error);
-      }
-    }
-  };
-  const handleExportSCORM = async (filename: string) => {
-    if (selectedCursoForExport) {
-      try {
-        await generateSCORMPackage(selectedCursoForExport, filename);
-        setExportModalOpen(false);
-      } catch (error) {
-        console.error("Erro ao gerar SCORM:", error);
       }
     }
   };
@@ -564,10 +552,8 @@ export default function CursosPage() {
           isOpen={exportModalOpen}
           onClose={() => setExportModalOpen(false)}
           onExportPDF={handleExportPDF}
-          onExportSCORM={handleExportSCORM}
           courseName={selectedCursoForExport?.titulo || "Curso"}
           isGeneratingPDF={isGeneratingPDF}
-          isGeneratingSCORM={isGeneratingSCORM}
         />
       </div>
     </PageTransition>

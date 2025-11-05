@@ -390,12 +390,24 @@ export async function generateCoursePDF(curso: Curso, filename?: string): Promis
         return renderList(item.itensLista || [], item.tipoLista, y);
 
       case 'quiz':
+        if (!item.quizData) {
+          return renderText('Quiz sem dados configurados', y, {
+            fontSize: 12,
+            color: THEME.colors.textMuted,
+          });
+        }
         return renderQuizBox(item.quizData, y);
 
       default: // Parágrafo
+        const alignMap: Record<string, 'left' | 'center' | 'right' | 'justify'> = {
+          'esquerda': 'left',
+          'centro': 'center',
+          'direita': 'right',
+          'justificado': 'justify',
+        };
         return renderText(item.conteudo, y, {
           ...THEME.fonts.body,
-          align: item.alinhamento || 'left',
+          align: item.alinhamento ? (alignMap[item.alinhamento] || 'left') : 'left',
           color: item.corTexto ? item.corTexto.split(',').map(Number) : THEME.colors.text, 
           isHtml: true,
         });

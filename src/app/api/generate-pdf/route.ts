@@ -55,7 +55,7 @@ export async function POST(request: NextRequest) {
 
     console.log('[PDF] Página carregada, aguardando renderização...');
     // Aguardar um pouco para garantir que tudo está renderizado
-    await page.waitForTimeout(2000);
+    await new Promise(resolve => setTimeout(resolve, 2000));
 
     // Gerar PDF
     console.log('[PDF] Gerando PDF...');
@@ -74,7 +74,8 @@ export async function POST(request: NextRequest) {
     await browser.close();
 
     // Retornar o PDF como resposta
-    return new NextResponse(pdf, {
+    const pdfBuffer = Buffer.from(pdf);
+    return new NextResponse(pdfBuffer, {
       headers: {
         'Content-Type': 'application/pdf',
         'Content-Disposition': `attachment; filename="${(curso.titulo || 'curso').replace(/[^a-z0-9]/gi, '_')}.pdf"`

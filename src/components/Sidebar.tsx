@@ -86,7 +86,7 @@ export function Sidebar() {
 
         {/* Navigation */}
         <nav className="flex-1 p-4 pt-6">
-          <div className="space-y-1">
+          <div className="space-y-3">
             {navItems.map((item) => {
               const Icon = item.icon;
               const isActive =
@@ -103,7 +103,7 @@ export function Sidebar() {
                     <Link href={item.href}>
                       <Button
                         variant={isActive ? "secondary" : "ghost"}
-                        className={`w-full gap-3 ${
+                        className={`w-full gap-3 py-3 my-0.5 ${
                           isExpanded ? "justify-start" : "justify-center"
                         }`}
                       >
@@ -207,7 +207,7 @@ export function Sidebar() {
                   className="text-muted-foreground truncate"
                   style={{ fontSize: "0.875rem" }}
                 >
-                  {user?.email || "natalia@edu.com"}
+                  {user?.usuario || "admin@edu.com"}
                 </p>
               </div>
             )}
