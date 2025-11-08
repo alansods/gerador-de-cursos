@@ -2,27 +2,20 @@ import { NextRequest, NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import { SignJWT } from 'jose';
 import { prisma, ensureConnection } from '@/lib/prisma';
-
-const SECRET = new TextEncoder().encode(
-  process.env.JWT_SECRET || 'your-secret-key-change-in-production'
-);
+import { JWT_SECRET, createErrorResponse } from '@/lib/auth';
+import { EXPIRATION_TIMES, ERROR_MESSAGES } from '@/lib/constants';
+import { validateLoginData } from '@/lib/validations';
 
 export async function POST(req: NextRequest) {
   try {
     await ensureConnection();
     const { usuario, senha } = await req.json();
 
-    // Validações
-    if (!usuario || !senha) {
+    // Validações usando helper centralizado
+    const validation = validateLoginData(usuario, senha);
+    if (!validation.valid) {
       return NextResponse.json(
-        { error: 'Usuário e senha são obrigatórios' },
-        { status: 400 }
-      );
-    }
-
-    if (typeof usuario !== 'string' || typeof senha !== 'string') {
-      return NextResponse.json(
-        { error: 'Dados inválidos' },
+        { error: Object.values(validation.errors)[0] },
         { status: 400 }
       );
     }
@@ -33,20 +26,14 @@ export async function POST(req: NextRequest) {
     });
 
     if (!user) {
-      return NextResponse.json(
-        { error: 'Usuário ou senha incorretos' },
-        { status: 401 }
-      );
+      return createErrorResponse(ERROR_MESSAGES.AUTH.INVALID_CREDENTIALS, 401);
     }
 
     // Verificar senha
     const senhaValida = await bcrypt.compare(senha, user.senha);
 
     if (!senhaValida) {
-      return NextResponse.json(
-        { error: 'Usuário ou senha incorretos' },
-        { status: 401 }
-      );
+      return createErrorResponse(ERROR_MESSAGES.AUTH.INVALID_CREDENTIALS, 401);
     }
 
     // Criar token JWT
@@ -58,8 +45,8 @@ export async function POST(req: NextRequest) {
     })
       .setProtectedHeader({ alg: 'HS256' })
       .setIssuedAt()
-      .setExpirationTime('7d')
-      .sign(SECRET);
+      .setExpirationTime(EXPIRATION_TIMES.JWT_TOKEN)
+      .sign(JWT_SECRET);
 
     // Criar resposta com cookie
     const response = NextResponse.json({
@@ -76,7 +63,7 @@ export async function POST(req: NextRequest) {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
-      maxAge: 60 * 60 * 24 * 7, // 7 dias
+      maxAge: EXPIRATION_TIMES.COOKIE_MAX_AGE,
       path: '/',
     });
 
