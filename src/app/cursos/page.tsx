@@ -38,6 +38,7 @@ import {
 import { Plus, Loader2, AlertCircle, Search, X } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useDebounce } from "@/hooks/useDebounce";
 
 const ITEMS_PER_PAGE = 6;
 
@@ -79,10 +80,13 @@ export default function CursosPage() {
   const [totalPages, setTotalPages] = useState(1);
   const [loadingCourses, setLoadingCourses] = useState(false);
 
+  // Debounce do searchTerm para evitar múltiplas requisições
+  const debouncedSearchTerm = useDebounce(searchTerm, 500);
+
   // Resetar página quando filtros mudarem
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchTerm, selectedCategory, selectedFormat]);
+  }, [debouncedSearchTerm, selectedCategory, selectedFormat]);
 
   // Carregar cursos paginados do servidor
   useEffect(() => {
@@ -94,8 +98,8 @@ export default function CursosPage() {
           limit: ITEMS_PER_PAGE.toString(),
         });
 
-        if (searchTerm) {
-          params.append("search", searchTerm);
+        if (debouncedSearchTerm) {
+          params.append("search", debouncedSearchTerm);
         }
 
         if (selectedCategory !== "Todas Categorias") {
@@ -122,14 +126,14 @@ export default function CursosPage() {
     };
 
     carregarCursosPaginados();
-  }, [currentPage, searchTerm, selectedCategory, selectedFormat]);
+  }, [currentPage, debouncedSearchTerm, selectedCategory, selectedFormat]);
 
   // Cursos exibidos (vêm do servidor já paginados)
   const paginatedCourses = cursosPaginados;
 
   // Verificar se há filtros ativos
   const hasActiveFilters =
-    searchTerm !== "" ||
+    debouncedSearchTerm !== "" ||
     selectedCategory !== "Todas Categorias" ||
     selectedFormat !== "Todas Modalidades";
 

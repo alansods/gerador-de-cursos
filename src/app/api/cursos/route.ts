@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma, ensureConnection } from '@/lib/prisma';
 import { Prisma } from '@prisma/client';
+import { requireAuth } from '@/lib/auth';
 
 // GET - Listar todos os cursos (com suporte a paginação)
 export async function GET(request: NextRequest) {
@@ -96,6 +97,10 @@ export async function GET(request: NextRequest) {
 // POST - Criar novo curso
 export async function POST(request: NextRequest) {
   try {
+    // Verificar autenticação
+    const authResult = await requireAuth(request);
+    if (authResult instanceof NextResponse) return authResult;
+
     // Garantir conexão ativa antes de criar o curso
     await ensureConnection();
     
@@ -192,6 +197,10 @@ export async function POST(request: NextRequest) {
 // PUT - Atualizar curso
 export async function PUT(request: NextRequest) {
   try {
+    // Verificar autenticação
+    const authResult = await requireAuth(request);
+    if (authResult instanceof NextResponse) return authResult;
+
     await ensureConnection();
     const body = await request.json();
     const { id, ...updates } = body;
@@ -252,6 +261,10 @@ export async function PUT(request: NextRequest) {
 // DELETE - Deletar curso
 export async function DELETE(request: NextRequest) {
   try {
+    // Verificar autenticação
+    const authResult = await requireAuth(request);
+    if (authResult instanceof NextResponse) return authResult;
+
     await ensureConnection();
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');

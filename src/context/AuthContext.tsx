@@ -46,8 +46,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   useEffect(() => {
-    checkAuth();
-  }, []);
+    // OTIMIZAÇÃO: Não chamar /me em páginas públicas
+    const publicRoutes = ['/login', '/cadastro'];
+    const isPublicRoute = publicRoutes.some(route => pathname?.startsWith(route));
+
+    if (isPublicRoute) {
+      // Em páginas públicas, apenas marca como não-carregando
+      setLoading(false);
+      setUser(null);
+    } else {
+      // Em páginas privadas, verifica autenticação
+      checkAuth();
+    }
+  }, [pathname]);
 
   const login = async (usuario: string, senha: string): Promise<boolean> => {
     try {

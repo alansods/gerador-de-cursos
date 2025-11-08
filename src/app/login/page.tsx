@@ -13,7 +13,6 @@ export default function LoginPage() {
   const [usuario, setUsuario] = useState("");
   const [senha, setSenha] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [rememberMe, setRememberMe] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<{ usuario?: string; senha?: string }>(
     {}
@@ -145,30 +144,6 @@ export default function LoginPage() {
               )}
             </div>
 
-            {/* Lembrar-me e Esqueceu a senha */}
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  id="rememberMe"
-                  checked={rememberMe}
-                  onChange={(e) => setRememberMe(e.target.checked)}
-                  className="w-4 h-4 border border-[#E2E8F0] rounded text-[#0047BB] focus:ring-[#0047BB] focus:ring-1"
-                />
-                <Label
-                  htmlFor="rememberMe"
-                  className="text-sm font-normal text-[#1A202C] cursor-pointer"
-                >
-                  Lembrar-me
-                </Label>
-              </div>
-              <Link
-                href="#"
-                className="text-sm font-medium text-[#0047BB] hover:underline"
-              >
-                Esqueceu a senha?
-              </Link>
-            </div>
 
             {/* Botão de Login */}
             <Button
