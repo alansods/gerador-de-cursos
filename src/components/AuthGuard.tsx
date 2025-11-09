@@ -14,12 +14,14 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    let cancelled = false;
+
     const checkAuth = async () => {
       const isPublicRoute = PUBLIC_ROUTES.includes(pathname || '');
 
       // Se for rota pública, não verificar auth
       if (isPublicRoute) {
-        setIsLoading(false);
+        if (!cancelled) setIsLoading(false);
         return;
       }
 
@@ -27,6 +29,8 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
       if (!isAuthenticated) {
         try {
           const response = await fetch('/api/auth/me');
+
+          if (cancelled) return;
 
           if (response.ok) {
             const data = await response.json();
@@ -37,15 +41,20 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
             router.push('/login');
           }
         } catch (error) {
+          if (cancelled) return;
           console.error('Erro ao verificar autenticação:', error);
           router.push('/login');
         }
       } else {
-        setIsLoading(false);
+        if (!cancelled) setIsLoading(false);
       }
     };
 
     checkAuth();
+
+    return () => {
+      cancelled = true;
+    };
   }, [pathname, isAuthenticated, router, setUser]);
 
   // Mostrar loading enquanto verifica

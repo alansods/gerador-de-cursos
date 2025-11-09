@@ -36,7 +36,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Plus, Loader2, AlertCircle, Search, X } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useDebounce } from "@/hooks/useDebounce";
 
@@ -83,6 +83,10 @@ export default function CursosPage() {
   // Debounce do searchTerm para evitar múltiplas requisições
   const debouncedSearchTerm = useDebounce(searchTerm, 500);
 
+  // Ref para prevenir múltiplas requisições simultâneas
+  const isLoadingRef = useRef(false);
+  const abortControllerRef = useRef<AbortController | null>(null);
+
   // Resetar página quando filtros mudarem
   useEffect(() => {
     setCurrentPage(1);
@@ -90,8 +94,24 @@ export default function CursosPage() {
 
   // Carregar cursos paginados do servidor
   useEffect(() => {
+    // Prevenir múltiplas requisições simultâneas
+    if (isLoadingRef.current) {
+      return;
+    }
+
+    // Cancelar requisição anterior se existir
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+
     const carregarCursosPaginados = async () => {
+      isLoadingRef.current = true;
       setLoadingCourses(true);
+
+      // Criar novo AbortController para esta requisição
+      const controller = new AbortController();
+      abortControllerRef.current = controller;
+
       try {
         const params = new URLSearchParams({
           page: currentPage.toString(),
@@ -110,22 +130,40 @@ export default function CursosPage() {
           params.append("modality", selectedFormat);
         }
 
-        const response = await fetch(`/api/cursos?${params.toString()}`);
+        const response = await fetch(`/api/cursos?${params.toString()}`, {
+          signal: controller.signal,
+        });
+
         const data = await response.json();
 
-        if (data.success) {
+        // Verificar se a requisição não foi cancelada
+        if (!controller.signal.aborted && data.success) {
           setCursosPaginados(data.cursos || []);
           setTotalCourses(data.pagination?.total || 0);
           setTotalPages(data.pagination?.totalPages || 1);
         }
       } catch (error) {
-        console.error("Erro ao carregar cursos:", error);
+        // Ignorar erros de abort
+        if (error instanceof Error && error.name !== 'AbortError') {
+          console.error("Erro ao carregar cursos:", error);
+        }
       } finally {
+        isLoadingRef.current = false;
         setLoadingCourses(false);
+        abortControllerRef.current = null;
       }
     };
 
     carregarCursosPaginados();
+
+    // Cleanup: cancelar requisição se o component desmontar ou effect rodar novamente
+    return () => {
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+        abortControllerRef.current = null;
+      }
+      isLoadingRef.current = false;
+    };
   }, [currentPage, debouncedSearchTerm, selectedCategory, selectedFormat]);
 
   // Cursos exibidos (vêm do servidor já paginados)
