@@ -72,7 +72,10 @@ export default function LoginPage() {
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Campo Usuário */}
             <div className="space-y-2">
-              <Label htmlFor="usuario" className="text-sm font-medium text-[#1A202C]">
+              <Label
+                htmlFor="usuario"
+                className="text-sm font-medium text-[#1A202C]"
+              >
                 Usuário
               </Label>
               <div className="relative">
@@ -103,7 +106,10 @@ export default function LoginPage() {
 
             {/* Campo Senha */}
             <div className="space-y-2">
-              <Label htmlFor="senha" className="text-sm font-medium text-[#1A202C]">
+              <Label
+                htmlFor="senha"
+                className="text-sm font-medium text-[#1A202C]"
+              >
                 Senha
               </Label>
               <div className="relative">
@@ -144,7 +150,6 @@ export default function LoginPage() {
               )}
             </div>
 
-
             {/* Botão de Login */}
             <Button
               type="submit"
@@ -173,16 +178,6 @@ export default function LoginPage() {
                 Cadastre-se
               </Link>
             </p>
-          </div>
-
-          {/* Divisor */}
-          <div className="relative my-6">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-[#E2E8F0]"></div>
-            </div>
-            <div className="relative flex justify-center">
-              <span className="bg-white px-2 text-sm text-[#64748B]">ou</span>
-            </div>
           </div>
         </div>
 
