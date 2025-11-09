@@ -22,8 +22,20 @@ export function AuthGuard({ children }: AuthGuardProps) {
     '/cadastro',
   ];
 
+  // Rotas de autenticação (login/cadastro)
+  const authRoutes = ['/login', '/cadastro'];
+
   // Verificar se é uma rota pública
   const isPublicRoute = publicRoutes.some(route => pathname?.includes(route));
+  const isAuthRoute = authRoutes.some(route => pathname?.includes(route));
+
+  // Redirecionar usuários autenticados que tentam acessar login/cadastro
+  useEffect(() => {
+    if (!loading && isAuthenticated && isAuthRoute) {
+      console.log('[AuthGuard] ℹ️ Usuário já autenticado, redirecionando para home');
+      router.push('/home');
+    }
+  }, [loading, isAuthenticated, isAuthRoute, router]);
 
   // Redirecionar para login se não autenticado e não for rota pública
   useEffect(() => {
