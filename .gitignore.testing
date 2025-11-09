@@ -1,0 +1,12 @@
+# Adicione estas linhas ao seu .gitignore existente
+
+# Testes
+coverage/
+.nyc_output/
+test-results/
+playwright-report/
+*.lcov
+
+# Playwright
+/test-results/
+/playwright/.cache/
