@@ -5,38 +5,51 @@ import { useRouter, usePathname } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { Sidebar } from '@/components/Sidebar';
 
-const publicRoutes = ['/login', '/cadastro', '/'];
+const PUBLIC_ROUTES = ['/login', '/cadastro', '/'];
 
 export function AuthGuard({ children }: { children: React.ReactNode }) {
-  const { isAuthenticated, loading } = useAuth();
+  const { isAuthenticated, setUser } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
-  const [isChecking, setIsChecking] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    if (loading) {
-      setIsChecking(true);
-      return;
-    }
+    const checkAuth = async () => {
+      const isPublicRoute = PUBLIC_ROUTES.includes(pathname || '');
 
-    const isPublicRoute = publicRoutes.includes(pathname || '');
+      // Se for rota pública, não verificar auth
+      if (isPublicRoute) {
+        setIsLoading(false);
+        return;
+      }
 
-    if (!isAuthenticated && !isPublicRoute) {
-      router.push('/login');
-      setIsChecking(false);
-      return;
-    }
+      // Se não estiver autenticado, verificar com o servidor
+      if (!isAuthenticated) {
+        try {
+          const response = await fetch('/api/auth/me');
 
-    if (isAuthenticated && isPublicRoute) {
-      router.push('/home');
-      setIsChecking(false);
-      return;
-    }
+          if (response.ok) {
+            const data = await response.json();
+            setUser(data.user);
+            setIsLoading(false);
+          } else {
+            // Não autenticado, redirecionar para login
+            router.push('/login');
+          }
+        } catch (error) {
+          console.error('Erro ao verificar autenticação:', error);
+          router.push('/login');
+        }
+      } else {
+        setIsLoading(false);
+      }
+    };
 
-    setIsChecking(false);
-  }, [isAuthenticated, loading, pathname, router]);
+    checkAuth();
+  }, [pathname, isAuthenticated, router, setUser]);
 
-  if (loading || isChecking) {
+  // Mostrar loading enquanto verifica
+  if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-900"></div>
@@ -44,18 +57,10 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
     );
   }
 
-  const isPublicRoute = publicRoutes.includes(pathname || '');
+  const isPublicRoute = PUBLIC_ROUTES.includes(pathname || '');
   const isPreviewRoute = pathname?.includes('/preview') || false;
 
-  // Renderizar apenas se não estiver redirecionando
-  if ((!isAuthenticated && !isPublicRoute) || (isAuthenticated && isPublicRoute)) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-900"></div>
-      </div>
-    );
-  }
-
+  // Se for rota pública ou já está autenticado e em rota privada, renderizar
   // Se autenticado e não é rota pública, mostrar sidebar de navegação (exceto em preview)
   if (isAuthenticated && !isPublicRoute && !isPreviewRoute) {
     return (
@@ -71,4 +76,3 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
   // Rotas públicas e preview não precisam do drawer
   return <>{children}</>;
 }
-

@@ -1,7 +1,7 @@
 'use client';
 
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { useRouter, usePathname } from 'next/navigation';
+import { createContext, useContext, useState, ReactNode } from 'react';
+import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 
 interface User {
@@ -17,50 +17,18 @@ interface AuthContextType {
   isAuthenticated: boolean;
   login: (usuario: string, senha: string) => Promise<boolean>;
   logout: () => Promise<void>;
-  checkAuth: () => Promise<void>;
+  setUser: (user: User | null) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const router = useRouter();
-  const pathname = usePathname();
-
-  const checkAuth = async () => {
-    try {
-      const response = await fetch('/api/auth/me');
-      if (response.ok) {
-        const data = await response.json();
-        setUser(data.user);
-      } else {
-        setUser(null);
-      }
-    } catch (error) {
-      console.error('Erro ao verificar autenticação:', error);
-      setUser(null);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    // OTIMIZAÇÃO: Não chamar /me em páginas públicas
-    const publicRoutes = ['/login', '/cadastro', '/'];
-    const isPublicRoute = publicRoutes.includes(pathname || '');
-
-    if (isPublicRoute) {
-      // Em páginas públicas, apenas marca como não-carregando
-      setLoading(false);
-      setUser(null);
-    } else {
-      // Em páginas privadas, verifica autenticação
-      checkAuth();
-    }
-  }, [pathname]);
 
   const login = async (usuario: string, senha: string): Promise<boolean> => {
+    setLoading(true);
     try {
       const response = await fetch('/api/auth/login', {
         method: 'POST',
@@ -84,6 +52,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       console.error('Erro no login:', error);
       toast.error('Erro ao conectar com o servidor');
       return false;
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -111,7 +81,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         isAuthenticated,
         login,
         logout,
-        checkAuth,
+        setUser,
       }}
     >
       {children}
@@ -126,4 +96,3 @@ export function useAuth() {
   }
   return context;
 }
-
