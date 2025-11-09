@@ -1,42 +1,66 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma, ensureConnection } from '@/lib/prisma';
 import { Prisma } from '@prisma/client';
-import { requireAuth } from '@/lib/auth';
+
+// Tratamento de CORS para requisições OPTIONS
+export async function OPTIONS() {
+  return new NextResponse(null, {
+    status: 200,
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type, Cookie',
+      'Access-Control-Allow-Credentials': 'true',
+    },
+  });
+}
 
 // GET - Listar todos os cursos (com suporte a paginação)
 export async function GET(request: NextRequest) {
+  const requestId = Date.now().toString(36);
+
   try {
-    await ensureConnection();
-    
-    // Obter parâmetros de query
-    const { searchParams } = new URL(request.url);
+    // Log de início da requisição
+    const searchParams = request.nextUrl.searchParams;
     const page = parseInt(searchParams.get('page') || '1', 10);
     const limit = parseInt(searchParams.get('limit') || '6', 10);
     const search = searchParams.get('search') || '';
     const category = searchParams.get('category') || '';
     const modality = searchParams.get('modality') || '';
-    
+
+    console.log(`[API /cursos] 🚀 Requisição #${requestId} recebida:`, {
+      page,
+      limit,
+      search,
+      category,
+      modality,
+      timestamp: new Date().toISOString(),
+    });
+
+    // Verificar conexão com banco de dados
+    await ensureConnection();
+
     // Construir filtros
     const where: Prisma.CursoWhereInput = {};
-    
+
     if (search) {
       where.OR = [
         { titulo: { contains: search, mode: 'insensitive' } },
         { descricao: { contains: search, mode: 'insensitive' } },
       ];
     }
-    
+
     if (category && category !== 'Todas Categorias') {
       where.categoria = category;
     }
-    
+
     if (modality && modality !== 'Todas Modalidades') {
       where.modalidade = modality;
     }
-    
+
     // Contar total de cursos (com filtros)
     const total = await prisma.curso.count({ where });
-    
+
     // Buscar cursos paginados
     const skip = (page - 1) * limit;
     const cursos = await prisma.curso.findMany({
@@ -48,20 +72,38 @@ export async function GET(request: NextRequest) {
 
     const totalPages = Math.ceil(total / limit);
 
-    return NextResponse.json({ 
-      success: true, 
-      cursos,
-      pagination: {
-        page,
-        limit,
-        total,
-        totalPages,
-      },
+    console.log(`[API /cursos] ✅ Requisição #${requestId} concluída:`, {
+      cursosRetornados: cursos.length,
+      total,
+      totalPages,
     });
+
+    return NextResponse.json(
+      {
+        success: true,
+        cursos,
+        pagination: {
+          page,
+          limit,
+          total,
+          totalPages,
+        },
+      },
+      {
+        status: 200,
+        headers: {
+          'Content-Type': 'application/json',
+          'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0',
+          'X-Request-ID': requestId,
+        },
+      }
+    );
   } catch (error) {
-    console.error('Error fetching courses:', error);
+    console.error('[API /cursos] Erro:', error);
     
-    // Se não consegue conectar ao banco (placeholder ou não configurado)
+    // Se não consegue conectar ao banco
     if (error instanceof Error && 
         (error.message.includes('placeholder') || 
          error.message.includes("Can't reach database"))) {
@@ -73,7 +115,7 @@ export async function GET(request: NextRequest) {
       }, { status: 503 });
     }
     
-    // Se a tabela não existe, sugerir migração
+    // Se a tabela não existe
     if (error instanceof Error && error.message.includes('does not exist')) {
       return NextResponse.json({ 
         success: false,
@@ -97,10 +139,6 @@ export async function GET(request: NextRequest) {
 // POST - Criar novo curso
 export async function POST(request: NextRequest) {
   try {
-    // Verificar autenticação
-    const authResult = await requireAuth(request);
-    if (authResult instanceof NextResponse) return authResult;
-
     // Garantir conexão ativa antes de criar o curso
     await ensureConnection();
     
@@ -109,7 +147,7 @@ export async function POST(request: NextRequest) {
     // Remover instrutor se existir (campo foi removido do schema)
     const { instrutor, ...bodySemInstrutor } = body;
     if (instrutor) {
-      console.warn('[API Cursos] Campo instrutor removido do body (campo foi removido do schema)');
+      console.warn('[API Cursos] Campo instrutor removido do body');
     }
     
     const { 
@@ -130,10 +168,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Garantir que nenhum campo extra seja passado ao Prisma
+    // Criar curso
     const curso = await prisma.curso.create({
       data: {
-        id: id || undefined, // Se não fornecer ID, Prisma gera automaticamente
+        id: id || undefined,
         titulo: String(titulo),
         descricao: String(descricao),
         cargaHoraria: String(cargaHoraria),
@@ -148,7 +186,7 @@ export async function POST(request: NextRequest) {
       curso 
     }, { status: 201 });
   } catch (error) {
-    console.error('Error creating course:', error);
+    console.error('[API /cursos] Erro ao criar curso:', error);
     
     // Tratar erros específicos do Prisma
     if (error instanceof Prisma.PrismaClientKnownRequestError) {
@@ -161,33 +199,12 @@ export async function POST(request: NextRequest) {
           { status: 400 }
         );
       }
-      
-      // Se o erro for sobre campo faltando (como instrutor), informar sobre a migração do banco
-      if (error.message && error.message.includes('instrutor')) {
-        return NextResponse.json(
-          { 
-            success: false, 
-            error: 'O banco de dados ainda possui a coluna "instrutor". Execute o SQL: ALTER TABLE cursos DROP COLUMN IF EXISTS instrutor;',
-            needsMigration: true
-          },
-          { status: 500 }
-        );
-      }
     }
-    
-    // Log detalhado do erro para debug
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    console.error('Erro completo ao criar curso:', {
-      message: errorMessage,
-      stack: error instanceof Error ? error.stack : undefined,
-      error: error
-    });
     
     return NextResponse.json(
       { 
         success: false, 
-        error: errorMessage,
-        details: process.env.NODE_ENV === 'development' ? (error instanceof Error ? error.stack : undefined) : undefined
+        error: error instanceof Error ? error.message : 'Unknown error'
       },
       { status: 500 }
     );
@@ -197,10 +214,6 @@ export async function POST(request: NextRequest) {
 // PUT - Atualizar curso
 export async function PUT(request: NextRequest) {
   try {
-    // Verificar autenticação
-    const authResult = await requireAuth(request);
-    if (authResult instanceof NextResponse) return authResult;
-
     await ensureConnection();
     const body = await request.json();
     const { id, ...updates } = body;
@@ -239,7 +252,7 @@ export async function PUT(request: NextRequest) {
       curso 
     });
   } catch (error) {
-    console.error('Error updating course:', error);
+    console.error('[API /cursos] Erro ao atualizar curso:', error);
     
     if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2025') {
       return NextResponse.json(
@@ -261,10 +274,6 @@ export async function PUT(request: NextRequest) {
 // DELETE - Deletar curso
 export async function DELETE(request: NextRequest) {
   try {
-    // Verificar autenticação
-    const authResult = await requireAuth(request);
-    if (authResult instanceof NextResponse) return authResult;
-
     await ensureConnection();
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
@@ -285,7 +294,7 @@ export async function DELETE(request: NextRequest) {
       message: 'Course deleted successfully' 
     });
   } catch (error) {
-    console.error('Error deleting course:', error);
+    console.error('[API /cursos] Erro ao deletar curso:', error);
     
     if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2025') {
       return NextResponse.json(

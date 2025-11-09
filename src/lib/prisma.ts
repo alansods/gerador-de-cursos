@@ -18,15 +18,36 @@ if (process.env.NODE_ENV !== 'production') {
 // Helper para garantir conexão ativa antes de operações
 export async function ensureConnection() {
   try {
+    // Verificar se DATABASE_URL está configurado
+    if (!process.env.DATABASE_URL) {
+      throw new Error('DATABASE_URL não está configurado no .env.local');
+    }
+
+    // Tentar conectar
     await prisma.$connect();
+    
+    // Verificar se a conexão está ativa fazendo uma query simples
+    await prisma.$queryRaw`SELECT 1`;
   } catch (error) {
     // Se a conexão estiver fechada, reconectar
     if (error instanceof Error && error.message.includes('Closed')) {
       console.log('[Prisma] Reconectando ao banco de dados...');
-      await prisma.$disconnect();
-      await prisma.$connect();
-    } else {
+      try {
+        await prisma.$disconnect();
+        await prisma.$connect();
+        // Verificar novamente após reconectar
+        await prisma.$queryRaw`SELECT 1`;
+      } catch (reconnectError) {
+        console.error('[Prisma] Erro ao reconectar:', reconnectError);
+        throw reconnectError;
+      }
+    } else if (error instanceof Error && error.message.includes('DATABASE_URL')) {
+      // Erro de configuração
       throw error;
+    } else {
+      // Outros erros de conexão
+      console.error('[Prisma] Erro ao conectar ao banco de dados:', error);
+      throw new Error(`Erro ao conectar ao banco de dados: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
     }
   }
 }

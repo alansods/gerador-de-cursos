@@ -35,10 +35,11 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Plus, Loader2, AlertCircle, Search, X } from "lucide-react";
+import { Plus, Loader2, AlertCircle, Search, X, Bug } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useDebounce } from "@/hooks/useDebounce";
+import { clearBrowserCache, runDiagnostics } from "@/lib/browser-cache";
 
 const ITEMS_PER_PAGE = 6;
 
@@ -69,6 +70,9 @@ export default function CursosPage() {
   const [selectedCursoForExport, setSelectedCursoForExport] =
     useState<CursoGerado | null>(null);
 
+  // Debug
+  const [showDebug, setShowDebug] = useState(false);
+
   // Estados de busca e filtros
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] =
@@ -86,6 +90,11 @@ export default function CursosPage() {
   // Ref para prevenir múltiplas requisições simultâneas
   const isLoadingRef = useRef(false);
   const abortControllerRef = useRef<AbortController | null>(null);
+  const lastRequestIdRef = useRef(0);
+  const requestCacheRef = useRef<Map<string, { data: any; timestamp: number }>>(new Map());
+
+  // Cache duration: 5 seconds
+  const CACHE_DURATION = 5000;
 
   // Resetar página quando filtros mudarem
   useEffect(() => {
@@ -96,15 +105,33 @@ export default function CursosPage() {
   useEffect(() => {
     // Prevenir múltiplas requisições simultâneas
     if (isLoadingRef.current) {
+      console.log('[CursosPage] 🚫 Requisição bloqueada - já existe uma requisição em andamento');
       return;
     }
 
     // Cancelar requisição anterior se existir
     if (abortControllerRef.current) {
+      console.log('[CursosPage] ⏹️ Cancelando requisição anterior');
       abortControllerRef.current.abort();
     }
 
+    let cancelled = false;
+    const requestId = ++lastRequestIdRef.current;
+
     const carregarCursosPaginados = async () => {
+      // Construir chave de cache
+      const cacheKey = `${currentPage}-${debouncedSearchTerm}-${selectedCategory}-${selectedFormat}`;
+      const cachedData = requestCacheRef.current.get(cacheKey);
+
+      // Verificar se há cache válido
+      if (cachedData && Date.now() - cachedData.timestamp < CACHE_DURATION) {
+        console.log('[CursosPage] ⚡ Usando cache para requisição:', cacheKey);
+        setCursosPaginados(cachedData.data.cursos || []);
+        setTotalCourses(cachedData.data.pagination?.total || 0);
+        setTotalPages(cachedData.data.pagination?.totalPages || 1);
+        return;
+      }
+
       isLoadingRef.current = true;
       setLoadingCourses(true);
 
@@ -112,45 +139,108 @@ export default function CursosPage() {
       const controller = new AbortController();
       abortControllerRef.current = controller;
 
+      const params = new URLSearchParams({
+        page: currentPage.toString(),
+        limit: ITEMS_PER_PAGE.toString(),
+      });
+
+      if (debouncedSearchTerm) {
+        params.append("search", debouncedSearchTerm);
+      }
+
+      if (selectedCategory !== "Todas Categorias") {
+        params.append("category", selectedCategory);
+      }
+
+      if (selectedFormat !== "Todas Modalidades") {
+        params.append("modality", selectedFormat);
+      }
+
+      // Construir URL da API
+      const apiUrl = `/api/cursos?${params.toString()}`;
+
+      console.log(`[CursosPage] 🚀 Iniciando requisição #${requestId}:`, apiUrl);
+
       try {
-        const params = new URLSearchParams({
-          page: currentPage.toString(),
-          limit: ITEMS_PER_PAGE.toString(),
-        });
-
-        if (debouncedSearchTerm) {
-          params.append("search", debouncedSearchTerm);
-        }
-
-        if (selectedCategory !== "Todas Categorias") {
-          params.append("category", selectedCategory);
-        }
-
-        if (selectedFormat !== "Todas Modalidades") {
-          params.append("modality", selectedFormat);
-        }
-
-        const response = await fetch(`/api/cursos?${params.toString()}`, {
+        const response = await fetch(apiUrl, {
           signal: controller.signal,
+          credentials: 'include',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'Cache-Control': 'no-cache',
+          },
         });
-
-        const data = await response.json();
 
         // Verificar se a requisição não foi cancelada
-        if (!controller.signal.aborted && data.success) {
+        if (cancelled || controller.signal.aborted) {
+          console.log(`[CursosPage] ⏹️ Requisição #${requestId} cancelada`);
+          return;
+        }
+
+        // Verificar se esta é a requisição mais recente
+        if (requestId !== lastRequestIdRef.current) {
+          console.log(`[CursosPage] 🚫 Requisição #${requestId} descartada (não é a mais recente)`);
+          return;
+        }
+
+        // Verificar se a resposta foi bem-sucedida
+        if (!response.ok) {
+          const errorText = await response.text().catch(() => 'Erro desconhecido');
+          console.error(`[CursosPage] ❌ Requisição #${requestId} falhou:`, response.status, errorText);
+          throw new Error(`Erro ao carregar cursos: ${response.status}`);
+        }
+
+        const data = await response.json();
+        console.log(`[CursosPage] ✅ Requisição #${requestId} concluída com sucesso`, {
+          cursos: data.cursos?.length || 0,
+          total: data.pagination?.total || 0
+        });
+
+        // Verificar se a requisição não foi cancelada
+        if (!cancelled && !controller.signal.aborted && data.success) {
+          // Salvar no cache
+          requestCacheRef.current.set(cacheKey, {
+            data,
+            timestamp: Date.now()
+          });
+
+          // Limpar cache antigo (mais de 1 minuto)
+          for (const [key, value] of requestCacheRef.current.entries()) {
+            if (Date.now() - value.timestamp > 60000) {
+              requestCacheRef.current.delete(key);
+            }
+          }
+
           setCursosPaginados(data.cursos || []);
           setTotalCourses(data.pagination?.total || 0);
           setTotalPages(data.pagination?.totalPages || 1);
         }
       } catch (error) {
         // Ignorar erros de abort
-        if (error instanceof Error && error.name !== 'AbortError') {
-          console.error("Erro ao carregar cursos:", error);
+        if (error instanceof Error && error.name === 'AbortError') {
+          console.log(`[CursosPage] ⏹️ Requisição #${requestId} abortada`);
+          return;
+        }
+
+        // Log de erro para debug
+        console.error(`[CursosPage] ❌ Erro na requisição #${requestId}:`, error);
+
+        // Não atualizar estado se a requisição foi cancelada
+        if (!cancelled && !controller.signal.aborted) {
+          // Manter estado anterior em caso de erro
+          setCursosPaginados([]);
+          setTotalCourses(0);
+          setTotalPages(1);
         }
       } finally {
-        isLoadingRef.current = false;
-        setLoadingCourses(false);
-        abortControllerRef.current = null;
+        if (!cancelled) {
+          isLoadingRef.current = false;
+          setLoadingCourses(false);
+        }
+        if (!controller.signal.aborted) {
+          abortControllerRef.current = null;
+        }
       }
     };
 
@@ -158,7 +248,9 @@ export default function CursosPage() {
 
     // Cleanup: cancelar requisição se o component desmontar ou effect rodar novamente
     return () => {
+      cancelled = true;
       if (abortControllerRef.current) {
+        console.log(`[CursosPage] 🧹 Cleanup: cancelando requisição #${requestId}`);
         abortControllerRef.current.abort();
         abortControllerRef.current = null;
       }
@@ -230,6 +322,20 @@ export default function CursosPage() {
       openPreview(curso);
     }
   };
+
+  // Debug functions
+  const handleRunDiagnostics = async () => {
+    const result = await runDiagnostics();
+    toast.info(`Cache: ${result.stats.cookies} cookies, ${result.stats.localStorage} localStorage items. ${result.corruption.hasIssues ? `⚠️ ${result.corruption.issues.length} problemas detectados` : '✅ Sem problemas'}`);
+  };
+
+  const handleClearCache = async () => {
+    await clearBrowserCache();
+    toast.success('Cache limpo com sucesso! Recarregue a página.');
+    setTimeout(() => {
+      window.location.reload();
+    }, 1500);
+  };
   const handleOpenExportModal = (curso: CursoGerado) => {
     setSelectedCursoForExport(curso);
     setExportModalOpen(true);
@@ -273,14 +379,70 @@ export default function CursosPage() {
                 Crie e gerencie seus cursos online
               </p>
             </div>
-            <Button
-              onClick={handleCriarCurso}
-              className="bg-primary hover:bg-primary/90 text-primary-foreground"
-            >
-              <Plus className="h-5 w-5 mr-2" />
-              Novo Curso
-            </Button>
+            <div className="flex gap-2 items-center">
+              {/* Debug button - only in development */}
+              {process.env.NODE_ENV === 'development' && (
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => setShowDebug(!showDebug)}
+                  title="Debug Tools"
+                  className="border-dashed"
+                >
+                  <Bug className="h-4 w-4" />
+                </Button>
+              )}
+              <Button
+                onClick={handleCriarCurso}
+                className="bg-primary hover:bg-primary/90 text-primary-foreground"
+              >
+                <Plus className="h-5 w-5 mr-2" />
+                Novo Curso
+              </Button>
+            </div>
           </div>
+
+          {/* Debug Panel */}
+          {showDebug && process.env.NODE_ENV === 'development' && (
+            <div className="mb-6 bg-yellow-50 dark:bg-yellow-900/20 border-2 border-yellow-400 dark:border-yellow-600 rounded-lg p-4">
+              <div className="flex items-start justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  <Bug className="h-5 w-5 text-yellow-600 dark:text-yellow-400" />
+                  <h3 className="font-semibold text-yellow-900 dark:text-yellow-100">
+                    Debug Tools
+                  </h3>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowDebug(false)}
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+              <p className="text-sm text-yellow-800 dark:text-yellow-200 mb-3">
+                Ferramentas de diagnóstico para resolver problemas de requisições duplicadas e cache.
+              </p>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleRunDiagnostics}
+                  className="border-yellow-600 text-yellow-900 dark:text-yellow-100 hover:bg-yellow-100 dark:hover:bg-yellow-900/40"
+                >
+                  Executar Diagnóstico
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleClearCache}
+                  className="border-red-600 text-red-900 dark:text-red-100 hover:bg-red-100 dark:hover:bg-red-900/40"
+                >
+                  Limpar Cache do Navegador
+                </Button>
+              </div>
+            </div>
+          )}
           {showError && (
             <div className="mb-6 bg-secondary border border-border rounded-lg p-6">
               <div className="flex items-start">

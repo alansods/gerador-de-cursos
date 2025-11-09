@@ -3,8 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { GeradorCursoProvider } from "@/context/GeradorCursoContext";
 import { ProgressoProvider } from "@/context/ProgressoContext";
-import { AuthProvider } from "@/context/AuthContext";
-import { AuthGuard } from "@/components/AuthGuard";
+import { AuthProviderWrapper } from "@/components/AuthProviderWrapper";
 import { Toaster } from "sonner";
 
 const geistSans = Geist({
@@ -30,15 +29,13 @@ export default function RootLayout({
   return (
     <html lang="pt-BR">
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-        <AuthProvider>
-          <AuthGuard>
-            <GeradorCursoProvider>
-              <ProgressoProvider>
-                {children}
-              </ProgressoProvider>
-            </GeradorCursoProvider>
-          </AuthGuard>
-        </AuthProvider>
+        <AuthProviderWrapper>
+          <GeradorCursoProvider>
+            <ProgressoProvider>
+              {children}
+            </ProgressoProvider>
+          </GeradorCursoProvider>
+        </AuthProviderWrapper>
         <Toaster position="top-right" richColors closeButton />
       </body>
     </html>
