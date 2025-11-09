@@ -112,44 +112,12 @@ const GeradorCursoContext = createContext<GeradorCursoContextType | undefined>(u
 export function GeradorCursoProvider({ children }: { children: React.ReactNode }) {
   const [state, dispatch] = useReducer(geradorCursoReducer, initialState)
 
-  // Carregar cursos da API na inicialização
+  // REMOVIDO: Carregamento inicial de cursos
+  // A página de cursos agora gerencia sua própria paginação e busca
+  // O contexto apenas mantém o estado local para edição
   useEffect(() => {
-    const carregarCursos = async () => {
-      dispatch({ type: "SET_LOADING", payload: true })
-      
-      try {
-        const response = await fetch('/api/cursos')
-        const data = await response.json()
-        
-        if (data.success) {
-          dispatch({ type: "CARREGAR_CURSOS", payload: data.cursos || [] })
-        } else {
-          // Se precisa configuração, mostrar mensagem específica
-          if (data.needsConfiguration) {
-            dispatch({ 
-              type: "SET_ERROR", 
-              payload: "⚠️ Banco de dados não configurado. Configure DATABASE_URL no .env.local e execute: npx prisma migrate dev" 
-            })
-            dispatch({ type: "CARREGAR_CURSOS", payload: [] })
-          } else if (data.needsMigration) {
-            dispatch({ 
-              type: "SET_ERROR", 
-              payload: "⚠️ Tabelas não criadas. Execute: npx prisma migrate dev" 
-            })
-            dispatch({ type: "CARREGAR_CURSOS", payload: [] })
-          } else {
-            throw new Error(data.error || 'Erro ao carregar cursos')
-          }
-        }
-      } catch (error) {
-        console.error('Erro ao carregar cursos da API:', error)
-        dispatch({ type: "SET_ERROR", payload: "Erro ao conectar com banco de dados. Verifique a configuração." })
-      } finally {
-        dispatch({ type: "SET_LOADING", payload: false })
-      }
-    }
-
-    carregarCursos()
+    // Apenas marca como não-carregando, sem fazer requisições
+    dispatch({ type: "SET_LOADING", payload: false })
   }, [])
 
   const criarCurso = useCallback(async (curso: Omit<CursoGerado, 'id' | 'dataCriacao' | 'dataModificacao'>) => {
@@ -171,7 +139,10 @@ export function GeradorCursoProvider({ children }: { children: React.ReactNode }
       const data = await response.json()
 
       if (data.success && data.curso) {
-        dispatch({ type: "CRIAR_CURSO", payload: data.curso })
+        // OTIMIZAÇÃO: Não adiciona ao state.cursos global
+        // Apenas adiciona ao state temporariamente para edição se necessário
+        dispatch({ type: "CARREGAR_CURSOS", payload: [data.curso] })
+        dispatch({ type: "SELECIONAR_CURSO", payload: data.curso.id })
         return data.curso.id
       } else {
         throw new Error(data.error || 'Erro ao criar curso')
@@ -226,9 +197,24 @@ export function GeradorCursoProvider({ children }: { children: React.ReactNode }
     }
   }, [])
 
-  const selecionarCurso = useCallback((id: string) => {
+  const selecionarCurso = useCallback(async (id: string) => {
+    // Buscar o curso do servidor se não estiver no state
+    if (!state.cursos.find(c => c.id === id)) {
+      try {
+        const response = await fetch(`/api/cursos/${id}`)
+        const data = await response.json()
+
+        if (data.success && data.curso) {
+          // Adiciona o curso ao state temporariamente para edição
+          dispatch({ type: "CARREGAR_CURSOS", payload: [data.curso] })
+        }
+      } catch (error) {
+        console.error('Erro ao carregar curso:', error)
+      }
+    }
+
     dispatch({ type: "SELECIONAR_CURSO", payload: id })
-  }, [])
+  }, [state.cursos])
 
   const salvarCurso = useCallback(() => {
     // Implementação para salvar no backend se necessário
