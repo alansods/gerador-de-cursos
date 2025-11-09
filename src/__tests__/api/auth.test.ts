@@ -62,6 +62,9 @@ describe('API - Authentication', () => {
         cargo: 'Desenvolvedor',
       })
       expect(response.headers.get('Set-Cookie')).toContain('token=')
+
+      // CRÍTICO: Verificar que não houve requisições duplicadas ao banco
+      expect(mockPrisma.user.findUnique).toHaveBeenCalledTimes(1)
     })
 
     it('deve retornar erro com credenciais inválidas', async () => {
@@ -87,6 +90,9 @@ describe('API - Authentication', () => {
       expect(response.status).toBe(401)
       expect(data.success).toBe(false)
       expect(data.error).toBe('Credenciais inválidas')
+
+      // CRÍTICO: Verificar que foi feita apenas UMA consulta ao banco
+      expect(mockPrisma.user.findUnique).toHaveBeenCalledTimes(1)
     })
 
     it('deve retornar erro com senha incorreta', async () => {
@@ -189,6 +195,9 @@ describe('API - Authentication', () => {
         nome: 'Test User',
         cargo: 'Desenvolvedor',
       })
+
+      // CRÍTICO: Verificar que foi feita apenas UMA consulta ao banco
+      expect(mockPrisma.user.findUnique).toHaveBeenCalledTimes(1)
     })
 
     it('deve retornar erro sem token', async () => {
