@@ -10,12 +10,27 @@ interface AuthGuardProps {
 
 export function AuthGuard({ children }: AuthGuardProps) {
   const pathname = usePathname();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, loading } = useAuth();
 
-  const isPreviewRoute = pathname?.includes('/preview') || false;
+  // Rotas públicas que não exigem autenticação e não mostram sidebar
+  const publicRoutes = [
+    '/preview',
+    '/pdf-preview',
+    '/login',
+    '/cadastro',
+  ];
 
-  // Se for preview, renderizar sem sidebar
-  if (isPreviewRoute) {
+  // Verificar se é uma rota pública
+  const isPublicRoute = publicRoutes.some(route => pathname?.includes(route));
+
+  // Se for rota pública, renderizar sem sidebar
+  if (isPublicRoute) {
+    return <>{children}</>;
+  }
+
+  // Se ainda está carregando, mostrar loading ou renderizar sem sidebar
+  // (evita flash de conteúdo)
+  if (loading) {
     return <>{children}</>;
   }
 
@@ -31,6 +46,7 @@ export function AuthGuard({ children }: AuthGuardProps) {
     );
   }
 
-  // Renderizar sem sidebar
+  // Não autenticado - renderizar sem sidebar
+  // (permite navegação livre, mas sem sidebar)
   return <>{children}</>;
 }
