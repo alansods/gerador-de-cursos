@@ -29,14 +29,6 @@ export function AuthGuard({ children }: AuthGuardProps) {
   const isPublicRoute = publicRoutes.some(route => pathname?.includes(route));
   const isAuthRoute = authRoutes.some(route => pathname?.includes(route));
 
-  // Redirecionar usuários autenticados que tentam acessar login/cadastro
-  useEffect(() => {
-    if (!loading && isAuthenticated && isAuthRoute) {
-      console.log('[AuthGuard] ℹ️ Usuário já autenticado, redirecionando para home');
-      router.push('/home');
-    }
-  }, [loading, isAuthenticated, isAuthRoute, router]);
-
   // Redirecionar para login se não autenticado e não for rota pública
   useEffect(() => {
     if (!loading && !isAuthenticated && !isPublicRoute) {
@@ -45,10 +37,13 @@ export function AuthGuard({ children }: AuthGuardProps) {
     }
   }, [loading, isAuthenticated, isPublicRoute, router]);
 
-  // Se for rota pública, renderizar sem sidebar
-  if (isPublicRoute) {
-    return <>{children}</>;
-  }
+  // Redirecionar usuários autenticados que tentam acessar login/cadastro
+  useEffect(() => {
+    if (!loading && isAuthenticated && isAuthRoute) {
+      console.log('[AuthGuard] ℹ️ Usuário já autenticado, redirecionando para home');
+      router.push('/home');
+    }
+  }, [loading, isAuthenticated, isAuthRoute, router]);
 
   // Se ainda está carregando, mostrar loading
   if (loading) {
@@ -62,7 +57,18 @@ export function AuthGuard({ children }: AuthGuardProps) {
     );
   }
 
-  // Se não autenticado, não renderizar nada (useEffect já redirecionou)
+  // BLOQUEAR renderização de login/cadastro se já autenticado
+  if (isAuthenticated && isAuthRoute) {
+    // Não renderizar nada, useEffect já está redirecionando
+    return null;
+  }
+
+  // Se for rota pública (preview, pdf-preview) ou rota de auth não bloqueada, renderizar sem sidebar
+  if (isPublicRoute) {
+    return <>{children}</>;
+  }
+
+  // Se não autenticado e não é rota pública, não renderizar nada (useEffect já redirecionou)
   if (!isAuthenticated) {
     return null;
   }
