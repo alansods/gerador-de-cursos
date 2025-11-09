@@ -14,12 +14,6 @@ import {
   Sun,
 } from "lucide-react";
 import { Button } from "./ui/button";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "./ui/tooltip";
 import { useTheme } from "@/hooks/useTheme";
 import { useAuth } from "@/context/AuthContext";
 import { useRouter, usePathname } from "next/navigation";
@@ -52,14 +46,13 @@ export function Sidebar() {
   };
 
   return (
-    <TooltipProvider delayDuration={0}>
-      <aside
-        className={`border-r border-border bg-white dark:bg-card flex flex-col h-screen transition-all duration-300 ease-in-out ${
-          isExpanded ? "w-64" : "w-20"
-        }`}
-        onMouseEnter={() => !isPinned && setIsHovered(true)}
-        onMouseLeave={() => !isPinned && setIsHovered(false)}
-      >
+    <aside
+      className={`border-r border-border bg-white dark:bg-card flex flex-col h-screen transition-all duration-300 ease-in-out ${
+        isExpanded ? "w-64" : "w-20"
+      }`}
+      onMouseEnter={() => !isPinned && setIsHovered(true)}
+      onMouseLeave={() => !isPinned && setIsHovered(false)}
+    >
         {/* Logo & Brand */}
         <div className="p-6 border-b border-border">
           <div className="flex items-center gap-3">
@@ -98,28 +91,21 @@ export function Sidebar() {
                   pathname?.startsWith("/configuracoes"));
 
               return (
-                <Tooltip key={item.label}>
-                  <TooltipTrigger asChild>
-                    <Link href={item.href}>
-                      <Button
-                        variant={isActive ? "secondary" : "ghost"}
-                        className={`w-full gap-3 py-3 my-0.5 ${
-                          isExpanded ? "justify-start" : "justify-center"
-                        }`}
-                      >
-                        <Icon className="w-5 h-5 shrink-0" />
-                        {isExpanded && (
-                          <span className="whitespace-nowrap">
-                            {item.label}
-                          </span>
-                        )}
-                      </Button>
-                    </Link>
-                  </TooltipTrigger>
-                  {!isExpanded && (
-                    <TooltipContent side="right">{item.label}</TooltipContent>
-                  )}
-                </Tooltip>
+                <Link key={item.label} href={item.href}>
+                  <Button
+                    variant={isActive ? "secondary" : "ghost"}
+                    className={`w-full gap-3 py-3 my-0.5 ${
+                      isExpanded ? "justify-start" : "justify-center"
+                    }`}
+                  >
+                    <Icon className="w-5 h-5 shrink-0" />
+                    {isExpanded && (
+                      <span className="whitespace-nowrap">
+                        {item.label}
+                      </span>
+                    )}
+                  </Button>
+                </Link>
               );
             })}
           </div>
@@ -127,63 +113,45 @@ export function Sidebar() {
 
         {/* Toggle Pin & Dark Mode Buttons */}
         <div className="px-4 pb-4 border-t border-border pt-4 space-y-2">
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={toggleDarkMode}
-                className={`gap-2 ${
-                  isExpanded ? "w-full justify-start" : "w-full justify-center"
-                }`}
-              >
-                {isDarkMode ? (
-                  <Sun className="w-4 h-4" />
-                ) : (
-                  <Moon className="w-4 h-4" />
-                )}
-                {isExpanded && (
-                  <span className="whitespace-nowrap">
-                    {isDarkMode ? "Modo Claro" : "Modo Escuro"}
-                  </span>
-                )}
-              </Button>
-            </TooltipTrigger>
-            {!isExpanded && (
-              <TooltipContent side="right">
-                {isDarkMode ? "Ativar Modo Claro" : "Ativar Modo Escuro"}
-              </TooltipContent>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={toggleDarkMode}
+            className={`gap-2 ${
+              isExpanded ? "w-full justify-start" : "w-full justify-center"
+            }`}
+          >
+            {isDarkMode ? (
+              <Sun className="w-4 h-4" />
+            ) : (
+              <Moon className="w-4 h-4" />
             )}
-          </Tooltip>
+            {isExpanded && (
+              <span className="whitespace-nowrap">
+                {isDarkMode ? "Modo Claro" : "Modo Escuro"}
+              </span>
+            )}
+          </Button>
 
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setIsPinned(!isPinned)}
-                className={`gap-2 ${
-                  isExpanded ? "w-full justify-start" : "w-full justify-center"
-                }`}
-              >
-                {isPinned ? (
-                  <Pin className="w-4 h-4" />
-                ) : (
-                  <PinOff className="w-4 h-4" />
-                )}
-                {isExpanded && (
-                  <span className="whitespace-nowrap">
-                    {isPinned ? "Fixado" : "Não fixado"}
-                  </span>
-                )}
-              </Button>
-            </TooltipTrigger>
-            {!isExpanded && (
-              <TooltipContent side="right">
-                {isPinned ? "Desafixar menu" : "Fixar menu"}
-              </TooltipContent>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setIsPinned(!isPinned)}
+            className={`gap-2 ${
+              isExpanded ? "w-full justify-start" : "w-full justify-center"
+            }`}
+          >
+            {isPinned ? (
+              <Pin className="w-4 h-4" />
+            ) : (
+              <PinOff className="w-4 h-4" />
             )}
-          </Tooltip>
+            {isExpanded && (
+              <span className="whitespace-nowrap">
+                {isPinned ? "Fixado" : "Não fixado"}
+              </span>
+            )}
+          </Button>
         </div>
 
         {/* User Profile */}
@@ -212,24 +180,18 @@ export function Sidebar() {
               </div>
             )}
           </div>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="ghost"
-                className={`w-full gap-3 ${
-                  isExpanded ? "justify-start" : "justify-center"
-                }`}
-                size="sm"
-                onClick={handleLogout}
-              >
-                <LogOut className="w-4 h-4 shrink-0" />
-                {isExpanded && <span className="whitespace-nowrap">Sair</span>}
-              </Button>
-            </TooltipTrigger>
-            {!isExpanded && <TooltipContent side="right">Sair</TooltipContent>}
-          </Tooltip>
+          <Button
+            variant="ghost"
+            className={`w-full gap-3 ${
+              isExpanded ? "justify-start" : "justify-center"
+            }`}
+            size="sm"
+            onClick={handleLogout}
+          >
+            <LogOut className="w-4 h-4 shrink-0" />
+            {isExpanded && <span className="whitespace-nowrap">Sair</span>}
+          </Button>
         </div>
       </aside>
-    </TooltipProvider>
   );
 }
