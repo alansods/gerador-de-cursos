@@ -47,8 +47,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     // OTIMIZAÇÃO: Não chamar /me em páginas públicas
-    const publicRoutes = ['/login', '/cadastro'];
-    const isPublicRoute = publicRoutes.some(route => pathname?.startsWith(route));
+    const publicRoutes = ['/login', '/cadastro', '/'];
+    const isPublicRoute = publicRoutes.includes(pathname || '');
 
     if (isPublicRoute) {
       // Em páginas públicas, apenas marca como não-carregando
