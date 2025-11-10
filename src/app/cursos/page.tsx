@@ -35,11 +35,12 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Plus, Loader2, AlertCircle, Search, X, Bug } from "lucide-react";
+import { Plus, Loader2, AlertCircle, X, Bug } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useDebounce } from "@/hooks/useDebounce";
 import { clearBrowserCache, runDiagnostics } from "@/lib/browser-cache";
+import { SearchInput } from "@/components/SearchInput";
 
 const ITEMS_PER_PAGE = 6;
 
@@ -513,16 +514,11 @@ export default function CursosPage() {
             <div className="mb-6 space-y-4">
               <div className="flex flex-col sm:flex-row gap-4">
                 {/* Barra de Busca */}
-                <div className="relative flex-1">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground z-10" />
-                  <Input
-                    type="text"
-                    placeholder="Buscar cursos..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10 bg-card dark:bg-card border border-border"
-                  />
-                </div>
+                <SearchInput
+                  value={searchTerm}
+                  onChange={setSearchTerm}
+                  placeholder="Buscar cursos..."
+                />
 
                 {/* Filtro por Categoria */}
                 <Select

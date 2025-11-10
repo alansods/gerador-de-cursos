@@ -2,8 +2,29 @@
 
 import { useState, useEffect } from "react";
 import { PageTransition } from "@/components/PageTransition";
-import { Users, Search, Plus, Pencil, Trash2, X } from "lucide-react";
+import { Users, Plus, Pencil, Trash2 } from "lucide-react";
 import { toast } from "sonner";
+import { SearchInput } from "@/components/SearchInput";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
 
 interface User {
   id: string;
@@ -217,29 +238,21 @@ export default function UsuariosPage() {
 
           {/* Actions Bar */}
           <div className="flex flex-col sm:flex-row gap-4 mb-6">
-            {/* Search */}
-            <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-              <input
-                type="text"
-                placeholder="Buscar por nome, usuário ou cargo..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-input bg-background rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
-              />
-            </div>
+            <SearchInput
+              value={searchTerm}
+              onChange={setSearchTerm}
+              placeholder="Buscar por nome, usuário ou cargo..."
+            />
 
-            {/* Create Button */}
-            <button
+            <Button
               onClick={() => {
                 setFormData({ nome: "", cargo: "", usuario: "", senha: "" });
                 setShowCreateModal(true);
               }}
-              className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors"
             >
-              <Plus className="h-5 w-5" />
+              <Plus className="h-5 w-5 mr-2" />
               Novo Usuário
-            </button>
+            </Button>
           </div>
 
           {/* Users Table */}
@@ -258,69 +271,49 @@ export default function UsuariosPage() {
               </div>
             ) : (
               <>
-                <div className="overflow-x-auto">
-                  <table className="w-full">
-                    <thead className="bg-muted">
-                      <tr>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                          Nome
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                          Usuário
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                          Cargo
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                          Data de Criação
-                        </th>
-                        <th className="px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                          Ações
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody className="bg-card divide-y divide-border">
-                      {users.map((user) => (
-                        <tr key={user.id} className="hover:bg-muted/50 transition-colors">
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="text-sm font-medium text-foreground">
-                              {user.nome}
-                            </div>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="text-sm text-muted-foreground">
-                              {user.usuario}
-                            </div>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <span className="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-primary/10 text-primary">
-                              {user.cargo}
-                            </span>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
-                            {new Date(user.createdAt).toLocaleDateString("pt-BR")}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                            <button
-                              onClick={() => openEditModal(user)}
-                              className="text-primary hover:text-primary/80 mr-4 transition-colors"
-                              title="Editar"
-                            >
-                              <Pencil className="h-4 w-4" />
-                            </button>
-                            <button
-                              onClick={() => openDeleteModal(user)}
-                              className="text-destructive hover:text-destructive/80 transition-colors"
-                              title="Deletar"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Nome</TableHead>
+                      <TableHead>Usuário</TableHead>
+                      <TableHead>Cargo</TableHead>
+                      <TableHead>Data de Criação</TableHead>
+                      <TableHead className="text-right">Ações</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {users.map((user) => (
+                      <TableRow key={user.id}>
+                        <TableCell className="font-medium">{user.nome}</TableCell>
+                        <TableCell>{user.usuario}</TableCell>
+                        <TableCell>
+                          <Badge variant="secondary">{user.cargo}</Badge>
+                        </TableCell>
+                        <TableCell>
+                          {new Date(user.createdAt).toLocaleDateString("pt-BR")}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => openEditModal(user)}
+                            className="mr-2"
+                          >
+                            <Pencil className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => openDeleteModal(user)}
+                            className="text-destructive hover:text-destructive"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
 
                 {/* Pagination */}
                 {pagination.totalPages > 1 && (
@@ -329,23 +322,25 @@ export default function UsuariosPage() {
                       Mostrando {users.length} de {pagination.total} usuários
                     </div>
                     <div className="flex gap-2">
-                      <button
+                      <Button
+                        variant="outline"
+                        size="sm"
                         onClick={() => fetchUsers(pagination.page - 1, searchTerm)}
                         disabled={pagination.page === 1}
-                        className="px-3 py-1 border border-input rounded-md hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                       >
                         Anterior
-                      </button>
-                      <div className="px-3 py-1 bg-primary text-primary-foreground rounded-md">
+                      </Button>
+                      <div className="px-3 py-1 bg-primary text-primary-foreground rounded-md flex items-center">
                         {pagination.page}
                       </div>
-                      <button
+                      <Button
+                        variant="outline"
+                        size="sm"
                         onClick={() => fetchUsers(pagination.page + 1, searchTerm)}
                         disabled={pagination.page === pagination.totalPages}
-                        className="px-3 py-1 border border-input rounded-md hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                       >
                         Próxima
-                      </button>
+                      </Button>
                     </div>
                   </div>
                 )}
@@ -355,224 +350,168 @@ export default function UsuariosPage() {
         </div>
 
         {/* Create Modal */}
-        {showCreateModal && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-            <div className="bg-card rounded-lg shadow-xl max-w-md w-full border border-border">
-              <div className="flex items-center justify-between p-6 border-b border-border">
-                <h2 className="text-xl font-semibold text-foreground">Criar Novo Usuário</h2>
-                <button
-                  onClick={() => setShowCreateModal(false)}
-                  className="text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  <X className="h-5 w-5" />
-                </button>
+        <Dialog open={showCreateModal} onOpenChange={setShowCreateModal}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Criar Novo Usuário</DialogTitle>
+              <DialogDescription>
+                Preencha os campos abaixo para criar um novo usuário no sistema.
+              </DialogDescription>
+            </DialogHeader>
+
+            <form onSubmit={handleCreate}>
+              <div className="space-y-4 py-4">
+                <div className="space-y-2">
+                  <Label htmlFor="nome">Nome Completo</Label>
+                  <Input
+                    id="nome"
+                    value={formData.nome}
+                    onChange={(e) => setFormData({ ...formData, nome: e.target.value })}
+                    placeholder="Digite o nome completo"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="cargo">Cargo</Label>
+                  <Input
+                    id="cargo"
+                    value={formData.cargo}
+                    onChange={(e) => setFormData({ ...formData, cargo: e.target.value })}
+                    placeholder="Ex: Administrador, Professor, etc"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="usuario">Nome de Usuário</Label>
+                  <Input
+                    id="usuario"
+                    value={formData.usuario}
+                    onChange={(e) => setFormData({ ...formData, usuario: e.target.value })}
+                    placeholder="Digite o nome de usuário"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="senha">Senha</Label>
+                  <Input
+                    id="senha"
+                    type="password"
+                    value={formData.senha}
+                    onChange={(e) => setFormData({ ...formData, senha: e.target.value })}
+                    placeholder="Mínimo 6 caracteres"
+                  />
+                </div>
               </div>
 
-              <form onSubmit={handleCreate} className="p-6">
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-foreground mb-1">
-                      Nome Completo
-                    </label>
-                    <input
-                      type="text"
-                      value={formData.nome}
-                      onChange={(e) => setFormData({ ...formData, nome: e.target.value })}
-                      className="w-full px-3 py-2 border border-input bg-background rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
-                      placeholder="Digite o nome completo"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-foreground mb-1">
-                      Cargo
-                    </label>
-                    <input
-                      type="text"
-                      value={formData.cargo}
-                      onChange={(e) => setFormData({ ...formData, cargo: e.target.value })}
-                      className="w-full px-3 py-2 border border-input bg-background rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
-                      placeholder="Ex: Administrador, Professor, etc"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-foreground mb-1">
-                      Nome de Usuário
-                    </label>
-                    <input
-                      type="text"
-                      value={formData.usuario}
-                      onChange={(e) => setFormData({ ...formData, usuario: e.target.value })}
-                      className="w-full px-3 py-2 border border-input bg-background rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
-                      placeholder="Digite o nome de usuário"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-foreground mb-1">
-                      Senha
-                    </label>
-                    <input
-                      type="password"
-                      value={formData.senha}
-                      onChange={(e) => setFormData({ ...formData, senha: e.target.value })}
-                      className="w-full px-3 py-2 border border-input bg-background rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
-                      placeholder="Mínimo 6 caracteres"
-                    />
-                  </div>
-                </div>
-
-                <div className="flex gap-3 mt-6">
-                  <button
-                    type="button"
-                    onClick={() => setShowCreateModal(false)}
-                    className="flex-1 px-4 py-2 border border-input rounded-md hover:bg-muted transition-colors"
-                  >
-                    Cancelar
-                  </button>
-                  <button
-                    type="submit"
-                    className="flex-1 px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors"
-                  >
-                    Criar Usuário
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        )}
+              <DialogFooter>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setShowCreateModal(false)}
+                >
+                  Cancelar
+                </Button>
+                <Button type="submit">Criar Usuário</Button>
+              </DialogFooter>
+            </form>
+          </DialogContent>
+        </Dialog>
 
         {/* Edit Modal */}
-        {showEditModal && selectedUser && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-            <div className="bg-card rounded-lg shadow-xl max-w-md w-full border border-border">
-              <div className="flex items-center justify-between p-6 border-b border-border">
-                <h2 className="text-xl font-semibold text-foreground">Editar Usuário</h2>
-                <button
+        <Dialog open={showEditModal} onOpenChange={setShowEditModal}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Editar Usuário</DialogTitle>
+              <DialogDescription>
+                Atualize as informações do usuário. Deixe a senha em branco para mantê-la.
+              </DialogDescription>
+            </DialogHeader>
+
+            <form onSubmit={handleUpdate}>
+              <div className="space-y-4 py-4">
+                <div className="space-y-2">
+                  <Label htmlFor="edit-nome">Nome Completo</Label>
+                  <Input
+                    id="edit-nome"
+                    value={formData.nome}
+                    onChange={(e) => setFormData({ ...formData, nome: e.target.value })}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="edit-cargo">Cargo</Label>
+                  <Input
+                    id="edit-cargo"
+                    value={formData.cargo}
+                    onChange={(e) => setFormData({ ...formData, cargo: e.target.value })}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="edit-usuario">Nome de Usuário</Label>
+                  <Input
+                    id="edit-usuario"
+                    value={formData.usuario}
+                    onChange={(e) => setFormData({ ...formData, usuario: e.target.value })}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="edit-senha">Nova Senha (opcional)</Label>
+                  <Input
+                    id="edit-senha"
+                    type="password"
+                    value={formData.senha}
+                    onChange={(e) => setFormData({ ...formData, senha: e.target.value })}
+                    placeholder="Deixe em branco para manter a senha atual"
+                  />
+                </div>
+              </div>
+
+              <DialogFooter>
+                <Button
+                  type="button"
+                  variant="outline"
                   onClick={() => {
                     setShowEditModal(false);
                     setSelectedUser(null);
                   }}
-                  className="text-muted-foreground hover:text-foreground transition-colors"
                 >
-                  <X className="h-5 w-5" />
-                </button>
-              </div>
-
-              <form onSubmit={handleUpdate} className="p-6">
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-foreground mb-1">
-                      Nome Completo
-                    </label>
-                    <input
-                      type="text"
-                      value={formData.nome}
-                      onChange={(e) => setFormData({ ...formData, nome: e.target.value })}
-                      className="w-full px-3 py-2 border border-input bg-background rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-foreground mb-1">
-                      Cargo
-                    </label>
-                    <input
-                      type="text"
-                      value={formData.cargo}
-                      onChange={(e) => setFormData({ ...formData, cargo: e.target.value })}
-                      className="w-full px-3 py-2 border border-input bg-background rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-foreground mb-1">
-                      Nome de Usuário
-                    </label>
-                    <input
-                      type="text"
-                      value={formData.usuario}
-                      onChange={(e) => setFormData({ ...formData, usuario: e.target.value })}
-                      className="w-full px-3 py-2 border border-input bg-background rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-foreground mb-1">
-                      Nova Senha (opcional)
-                    </label>
-                    <input
-                      type="password"
-                      value={formData.senha}
-                      onChange={(e) => setFormData({ ...formData, senha: e.target.value })}
-                      className="w-full px-3 py-2 border border-input bg-background rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
-                      placeholder="Deixe em branco para manter a senha atual"
-                    />
-                  </div>
-                </div>
-
-                <div className="flex gap-3 mt-6">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setShowEditModal(false);
-                      setSelectedUser(null);
-                    }}
-                    className="flex-1 px-4 py-2 border border-input rounded-md hover:bg-muted transition-colors"
-                  >
-                    Cancelar
-                  </button>
-                  <button
-                    type="submit"
-                    className="flex-1 px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors"
-                  >
-                    Atualizar
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        )}
+                  Cancelar
+                </Button>
+                <Button type="submit">Atualizar</Button>
+              </DialogFooter>
+            </form>
+          </DialogContent>
+        </Dialog>
 
         {/* Delete Confirmation Modal */}
-        {showDeleteModal && selectedUser && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-            <div className="bg-card rounded-lg shadow-xl max-w-md w-full border border-border">
-              <div className="p-6">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="p-2 bg-destructive/10 rounded-full">
-                    <Trash2 className="h-6 w-6 text-destructive" />
-                  </div>
-                  <h2 className="text-xl font-semibold text-foreground">Confirmar Exclusão</h2>
-                </div>
+        <Dialog open={showDeleteModal} onOpenChange={setShowDeleteModal}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Confirmar Exclusão</DialogTitle>
+              <DialogDescription>
+                Tem certeza que deseja deletar o usuário{" "}
+                <strong>{selectedUser?.nome}</strong>? Esta ação não pode ser desfeita.
+              </DialogDescription>
+            </DialogHeader>
 
-                <p className="text-muted-foreground mb-6">
-                  Tem certeza que deseja deletar o usuário <strong>{selectedUser.nome}</strong>?
-                  Esta ação não pode ser desfeita.
-                </p>
-
-                <div className="flex gap-3">
-                  <button
-                    onClick={() => {
-                      setShowDeleteModal(false);
-                      setSelectedUser(null);
-                    }}
-                    className="flex-1 px-4 py-2 border border-input rounded-md hover:bg-muted transition-colors"
-                  >
-                    Cancelar
-                  </button>
-                  <button
-                    onClick={handleDelete}
-                    className="flex-1 px-4 py-2 bg-destructive text-destructive-foreground rounded-md hover:bg-destructive/90 transition-colors"
-                  >
-                    Deletar
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setShowDeleteModal(false);
+                  setSelectedUser(null);
+                }}
+              >
+                Cancelar
+              </Button>
+              <Button variant="destructive" onClick={handleDelete}>
+                Deletar
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </PageTransition>
   );
