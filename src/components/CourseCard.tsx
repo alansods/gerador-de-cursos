@@ -2,12 +2,6 @@ import { Clock, BookOpen, Calendar, Eye, Pencil, Trash2, Download } from 'lucide
 import { Card } from './ui/card';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from './ui/tooltip';
 
 interface CourseCardProps {
   title: string;
@@ -62,45 +56,22 @@ export function CourseCard({
         </div>
 
         {/* Course Details */}
-        <TooltipProvider>
-          <div className="grid grid-cols-3 gap-2 sm:gap-4 py-4 border-t border-b border-border">
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-1 sm:gap-2 cursor-help">
-                  <Clock className="w-4 h-4 text-muted-foreground shrink-0" />
-                  <p style={{ fontSize: '0.75rem' }} className="text-muted-foreground sm:text-sm">{duration}</p>
-                </div>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>Duração</p>
-              </TooltipContent>
-            </Tooltip>
-
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-1 sm:gap-2 cursor-help">
-                  <BookOpen className="w-4 h-4 text-muted-foreground shrink-0" />
-                  <p style={{ fontSize: '0.75rem' }} className="text-muted-foreground sm:text-sm">{units} un.</p>
-                </div>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>Unidades</p>
-              </TooltipContent>
-            </Tooltip>
-
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-1 sm:gap-2 cursor-help">
-                  <Calendar className="w-4 h-4 text-muted-foreground shrink-0" />
-                  <p style={{ fontSize: '0.75rem' }} className="text-muted-foreground sm:text-sm">{format}</p>
-                </div>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>Formato</p>
-              </TooltipContent>
-            </Tooltip>
+        <div className="grid grid-cols-3 gap-2 sm:gap-4 py-4 border-t border-b border-border">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-1 sm:gap-2">
+            <Clock className="w-4 h-4 text-muted-foreground shrink-0" />
+            <p style={{ fontSize: '0.75rem' }} className="text-muted-foreground sm:text-sm">{duration}</p>
           </div>
-        </TooltipProvider>
+
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-1 sm:gap-2">
+            <BookOpen className="w-4 h-4 text-muted-foreground shrink-0" />
+            <p style={{ fontSize: '0.75rem' }} className="text-muted-foreground sm:text-sm">{units} unidades</p>
+          </div>
+
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-1 sm:gap-2">
+            <Calendar className="w-4 h-4 text-muted-foreground shrink-0" />
+            <p style={{ fontSize: '0.75rem' }} className="text-muted-foreground sm:text-sm">{format}</p>
+          </div>
+        </div>
 
         {/* Actions */}
         <div className="flex flex-col gap-2 mt-auto pt-4">
