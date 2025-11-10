@@ -216,10 +216,12 @@ export default function CadastroPage() {
                   }`}
                   disabled={loading}
                 />
-                <button
+                <Button
                   type="button"
+                  variant="ghost"
+                  size="icon"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-[#64748B] hover:text-[#1A202C] transition-colors"
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 h-auto w-auto p-0 text-[#64748B] hover:text-[#1A202C] hover:bg-transparent"
                   tabIndex={-1}
                 >
                   {showPassword ? (
@@ -227,7 +229,7 @@ export default function CadastroPage() {
                   ) : (
                     <Eye className="w-5 h-5" />
                   )}
-                </button>
+                </Button>
               </div>
               {errors.senha && (
                 <p className="text-sm text-red-500 mt-1">{errors.senha}</p>
@@ -262,10 +264,12 @@ export default function CadastroPage() {
                   }`}
                   disabled={loading}
                 />
-                <button
+                <Button
                   type="button"
+                  variant="ghost"
+                  size="icon"
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-[#64748B] hover:text-[#1A202C] transition-colors"
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 h-auto w-auto p-0 text-[#64748B] hover:text-[#1A202C] hover:bg-transparent"
                   tabIndex={-1}
                 >
                   {showConfirmPassword ? (
@@ -273,7 +277,7 @@ export default function CadastroPage() {
                   ) : (
                     <Eye className="w-5 h-5" />
                   )}
-                </button>
+                </Button>
               </div>
               {errors.confirmarSenha && (
                 <p className="text-sm text-red-500 mt-1">
