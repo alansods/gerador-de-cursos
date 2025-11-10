@@ -2,6 +2,7 @@
 
 import { usePathname, useRouter } from 'next/navigation';
 import { Sidebar } from '@/components/Sidebar';
+import { MobileNavbar } from '@/components/layout/MobileNavbar';
 import { useAuth } from '@/context/AuthContext';
 import { useEffect } from 'react';
 
@@ -75,10 +76,13 @@ export function AuthGuard({ children }: AuthGuardProps) {
 
   // Autenticado - mostrar sidebar e conteúdo
   return (
-    <div className="flex h-screen bg-background">
+    <div className="flex h-screen bg-background overflow-hidden">
+      <MobileNavbar />
       <Sidebar />
-      <main className="flex-1 overflow-auto">
-        {children}
+      <main className="flex-1 overflow-auto w-full lg:w-auto">
+        <div className="pt-16 lg:pt-0">
+          {children}
+        </div>
       </main>
     </div>
   );

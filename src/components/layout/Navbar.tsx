@@ -39,59 +39,84 @@ export const Navbar: React.FC<NavbarProps> = ({
 
   return (
     <div className="bg-card border-b border-border fixed top-0 left-0 right-0 z-30">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-4">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-3 sm:py-4">
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center space-x-2 sm:space-x-4 min-w-0 flex-1">
             {onBack && (
               <Button
                 variant="outline"
                 size="sm"
                 onClick={onBack}
-                className="flex items-center"
+                className="flex items-center shrink-0"
               >
-                <ArrowLeft className="h-4 w-4 mr-2" />
-                Voltar
+                <ArrowLeft className="h-4 w-4 sm:mr-2" />
+                <span className="hidden sm:inline">Voltar</span>
               </Button>
             )}
             {title ? (
-              <h1 className="text-lg font-semibold text-foreground">{title}</h1>
+              <h1 className="text-base sm:text-lg font-semibold text-foreground truncate">{title}</h1>
             ) : (
-              <Link href="/cursos" className="text-lg font-semibold text-foreground hover:text-primary transition-colors">
+              <Link href="/cursos" className="text-base sm:text-lg font-semibold text-foreground hover:text-primary transition-colors truncate">
                 Gerador de Cursos
               </Link>
             )}
           </div>
 
-          <div className="flex items-center space-x-3">
+          <div className="flex items-center space-x-1 sm:space-x-3 shrink-0">
             {showPreview && onPreview && (
-              <Button variant="outline" onClick={onPreview}>
+              <Button variant="outline" onClick={onPreview} size="sm" className="hidden sm:flex">
                 <Eye className="h-4 w-4 mr-2" />
                 Preview
+              </Button>
+            )}
+            {showPreview && onPreview && (
+              <Button variant="outline" onClick={onPreview} size="icon" className="sm:hidden">
+                <Eye className="h-4 w-4" />
               </Button>
             )}
             {showSave && onSave && (
               <Button
                 onClick={onSave}
-                className="bg-primary hover:bg-primary/90"
+                size="sm"
+                className="bg-primary hover:bg-primary/90 hidden sm:flex"
               >
                 <Save className="h-4 w-4 mr-2" />
                 Salvar
               </Button>
             )}
+            {showSave && onSave && (
+              <Button
+                onClick={onSave}
+                size="icon"
+                className="bg-primary hover:bg-primary/90 sm:hidden"
+              >
+                <Save className="h-4 w-4" />
+              </Button>
+            )}
             {showSCORM && onSCORM && (
               <Button
                 onClick={onSCORM}
-                className="bg-highlight hover:bg-highlight/90 text-highlight-foreground"
+                size="sm"
+                className="bg-highlight hover:bg-highlight/90 text-highlight-foreground hidden sm:flex"
               >
                 <Download className="h-4 w-4 mr-2" />
                 SCORM
+              </Button>
+            )}
+            {showSCORM && onSCORM && (
+              <Button
+                onClick={onSCORM}
+                size="icon"
+                className="bg-highlight hover:bg-highlight/90 text-highlight-foreground sm:hidden"
+              >
+                <Download className="h-4 w-4" />
               </Button>
             )}
             <Button
               variant="ghost"
               size="icon"
               onClick={toggleDarkMode}
-              className="mr-2"
+              className="shrink-0"
               aria-label="Toggle dark mode"
             >
               {isDarkMode ? (
@@ -101,12 +126,12 @@ export const Navbar: React.FC<NavbarProps> = ({
               )}
             </Button>
             {showUserInfo && user && (
-              <div className="flex items-center space-x-3 ml-4 pl-4 border-l border-border">
+              <div className="flex items-center space-x-2 sm:space-x-3 sm:ml-4 sm:pl-4 sm:border-l border-border">
                 <div className="flex items-center space-x-2 text-sm">
-                  <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center">
+                  <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center shrink-0">
                     <User className="w-4 h-4 text-primary-foreground" />
                   </div>
-                  <div className="hidden md:block">
+                  <div className="hidden lg:block">
                     <p className="font-medium text-foreground">{user.nome}</p>
                     <p className="text-xs text-muted-foreground">{user.cargo}</p>
                   </div>
@@ -115,10 +140,19 @@ export const Navbar: React.FC<NavbarProps> = ({
                   variant="outline"
                   size="sm"
                   onClick={handleLogout}
-                  className="flex items-center"
+                  className="hidden sm:flex items-center"
                 >
                   <LogOut className="h-4 w-4 mr-2" />
                   Sair
+                </Button>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={handleLogout}
+                  className="sm:hidden"
+                  aria-label="Sair"
+                >
+                  <LogOut className="h-4 w-4" />
                 </Button>
               </div>
             )}

@@ -25,7 +25,17 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Plus, Loader2, AlertCircle, X, BookOpen, ChevronsLeft, ChevronLeft, ChevronRight, ChevronsRight } from "lucide-react";
+import {
+  Plus,
+  Loader2,
+  AlertCircle,
+  X,
+  BookOpen,
+  ChevronsLeft,
+  ChevronLeft,
+  ChevronRight,
+  ChevronsRight,
+} from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useDebounce } from "@/hooks/useDebounce";
@@ -80,8 +90,19 @@ export default function CursosPage() {
   const isLoadingRef = useRef(false);
   const abortControllerRef = useRef<AbortController | null>(null);
   const lastRequestIdRef = useRef(0);
-  const requestCacheRef = useRef<Map<string, { data: { cursos: CursoGerado[]; pagination: { total: number; totalPages: number } }; timestamp: number }>>(new Map());
-  const prevFiltersRef = useRef<string>('');
+  const requestCacheRef = useRef<
+    Map<
+      string,
+      {
+        data: {
+          cursos: CursoGerado[];
+          pagination: { total: number; totalPages: number };
+        };
+        timestamp: number;
+      }
+    >
+  >(new Map());
+  const prevFiltersRef = useRef<string>("");
 
   // Cache duration: 5 seconds
   const CACHE_DURATION = 5000;
@@ -90,16 +111,19 @@ export default function CursosPage() {
   useEffect(() => {
     const currentFilters = `${debouncedSearchTerm}-${selectedCategory}-${selectedFormat}-${itemsPerPage}`;
 
-    console.log('[CursosPage] 🔄 useEffect RESET disparado', {
+    console.log("[CursosPage] 🔄 useEffect RESET disparado", {
       prevFilters: prevFiltersRef.current,
       currentFilters,
-      currentPage
+      currentPage,
     });
 
     // Se é a primeira vez ou filtros não mudaram, não faz nada
-    if (prevFiltersRef.current === '' || prevFiltersRef.current === currentFilters) {
+    if (
+      prevFiltersRef.current === "" ||
+      prevFiltersRef.current === currentFilters
+    ) {
       prevFiltersRef.current = currentFilters;
-      console.log('[CursosPage] ℹ️ Filtros não mudaram ou primeira carga');
+      console.log("[CursosPage] ℹ️ Filtros não mudaram ou primeira carga");
       return;
     }
 
@@ -107,39 +131,47 @@ export default function CursosPage() {
 
     // Só reseta se a página não for 1 (evita requisição duplicada)
     if (currentPage !== 1) {
-      console.log('[CursosPage] 🔁 Resetando página para 1');
+      console.log("[CursosPage] 🔁 Resetando página para 1");
       setCurrentPage(1);
     } else {
-      console.log('[CursosPage] ℹ️ Página já é 1, não precisa resetar');
+      console.log("[CursosPage] ℹ️ Página já é 1, não precisa resetar");
     }
-  }, [debouncedSearchTerm, selectedCategory, selectedFormat, itemsPerPage, currentPage]);
+  }, [
+    debouncedSearchTerm,
+    selectedCategory,
+    selectedFormat,
+    itemsPerPage,
+    currentPage,
+  ]);
 
   // Carregar cursos paginados do servidor
   useEffect(() => {
-    console.log('[CursosPage] 📡 useEffect FETCH disparado', {
+    console.log("[CursosPage] 📡 useEffect FETCH disparado", {
       currentPage,
       itemsPerPage,
       debouncedSearchTerm,
       selectedCategory,
       selectedFormat,
-      isLoadingRef: isLoadingRef.current
+      isLoadingRef: isLoadingRef.current,
     });
 
     // Prevenir múltiplas requisições simultâneas
     if (isLoadingRef.current) {
-      console.log('[CursosPage] 🚫 Requisição bloqueada - já existe uma requisição em andamento');
+      console.log(
+        "[CursosPage] 🚫 Requisição bloqueada - já existe uma requisição em andamento"
+      );
       return;
     }
 
     // Cancelar requisição anterior se existir
     if (abortControllerRef.current) {
-      console.log('[CursosPage] ⏹️ Cancelando requisição anterior');
+      console.log("[CursosPage] ⏹️ Cancelando requisição anterior");
       abortControllerRef.current.abort();
     }
 
     let cancelled = false;
     const requestId = ++lastRequestIdRef.current;
-    console.log('[CursosPage] 🆕 Nova requisição #' + requestId);
+    console.log("[CursosPage] 🆕 Nova requisição #" + requestId);
 
     const carregarCursosPaginados = async () => {
       // Construir chave de cache
@@ -148,7 +180,7 @@ export default function CursosPage() {
 
       // Verificar se há cache válido
       if (cachedData && Date.now() - cachedData.timestamp < CACHE_DURATION) {
-        console.log('[CursosPage] ⚡ Usando cache para requisição:', cacheKey);
+        console.log("[CursosPage] ⚡ Usando cache para requisição:", cacheKey);
         setCursosPaginados(cachedData.data.cursos || []);
         setTotalCourses(cachedData.data.pagination?.total || 0);
         setTotalPages(cachedData.data.pagination?.totalPages || 1);
@@ -182,16 +214,19 @@ export default function CursosPage() {
       // Construir URL da API
       const apiUrl = `/api/cursos?${params.toString()}`;
 
-      console.log(`[CursosPage] 🚀 Iniciando requisição #${requestId}:`, apiUrl);
+      console.log(
+        `[CursosPage] 🚀 Iniciando requisição #${requestId}:`,
+        apiUrl
+      );
 
       try {
         const response = await fetch(apiUrl, {
           signal: controller.signal,
-          credentials: 'include',
+          credentials: "include",
           headers: {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json',
-            'Cache-Control': 'no-cache',
+            "Content-Type": "application/json",
+            Accept: "application/json",
+            "Cache-Control": "no-cache",
           },
         });
 
@@ -203,29 +238,40 @@ export default function CursosPage() {
 
         // Verificar se esta é a requisição mais recente
         if (requestId !== lastRequestIdRef.current) {
-          console.log(`[CursosPage] 🚫 Requisição #${requestId} descartada (não é a mais recente)`);
+          console.log(
+            `[CursosPage] 🚫 Requisição #${requestId} descartada (não é a mais recente)`
+          );
           return;
         }
 
         // Verificar se a resposta foi bem-sucedida
         if (!response.ok) {
-          const errorText = await response.text().catch(() => 'Erro desconhecido');
-          console.error(`[CursosPage] ❌ Requisição #${requestId} falhou:`, response.status, errorText);
+          const errorText = await response
+            .text()
+            .catch(() => "Erro desconhecido");
+          console.error(
+            `[CursosPage] ❌ Requisição #${requestId} falhou:`,
+            response.status,
+            errorText
+          );
           throw new Error(`Erro ao carregar cursos: ${response.status}`);
         }
 
         const data = await response.json();
-        console.log(`[CursosPage] ✅ Requisição #${requestId} concluída com sucesso`, {
-          cursos: data.cursos?.length || 0,
-          total: data.pagination?.total || 0
-        });
+        console.log(
+          `[CursosPage] ✅ Requisição #${requestId} concluída com sucesso`,
+          {
+            cursos: data.cursos?.length || 0,
+            total: data.pagination?.total || 0,
+          }
+        );
 
         // Verificar se a requisição não foi cancelada
         if (!cancelled && !controller.signal.aborted && data.success) {
           // Salvar no cache
           requestCacheRef.current.set(cacheKey, {
             data,
-            timestamp: Date.now()
+            timestamp: Date.now(),
           });
 
           // Limpar cache antigo (mais de 1 minuto)
@@ -241,13 +287,16 @@ export default function CursosPage() {
         }
       } catch (error) {
         // Ignorar erros de abort
-        if (error instanceof Error && error.name === 'AbortError') {
+        if (error instanceof Error && error.name === "AbortError") {
           console.log(`[CursosPage] ⏹️ Requisição #${requestId} abortada`);
           return;
         }
 
         // Log de erro para debug
-        console.error(`[CursosPage] ❌ Erro na requisição #${requestId}:`, error);
+        console.error(
+          `[CursosPage] ❌ Erro na requisição #${requestId}:`,
+          error
+        );
 
         // Não atualizar estado se a requisição foi cancelada
         if (!cancelled && !controller.signal.aborted) {
@@ -273,13 +322,21 @@ export default function CursosPage() {
     return () => {
       cancelled = true;
       if (abortControllerRef.current) {
-        console.log(`[CursosPage] 🧹 Cleanup: cancelando requisição #${requestId}`);
+        console.log(
+          `[CursosPage] 🧹 Cleanup: cancelando requisição #${requestId}`
+        );
         abortControllerRef.current.abort();
         abortControllerRef.current = null;
       }
       isLoadingRef.current = false;
     };
-  }, [currentPage, debouncedSearchTerm, selectedCategory, selectedFormat, itemsPerPage]);
+  }, [
+    currentPage,
+    debouncedSearchTerm,
+    selectedCategory,
+    selectedFormat,
+    itemsPerPage,
+  ]);
 
   // Cursos exibidos (vêm do servidor já paginados)
   const paginatedCourses = cursosPaginados;
@@ -346,7 +403,7 @@ export default function CursosPage() {
           {/* Header */}
           <PageHeader
             icon={BookOpen}
-            title="Gerador de Cursos"
+            title="Gerenciar Cursos"
             description="Crie e gerencie seus cursos online"
             actionLabel="Novo Curso"
             onAction={handleCriarCurso}
@@ -420,25 +477,30 @@ export default function CursosPage() {
           {/* Busca e Filtros */}
           {!showError && (
             <div className="mb-6 space-y-4">
-              <div className="flex flex-col sm:flex-row gap-4 items-end">
-                {/* Barra de Busca */}
-                <div className="flex flex-col gap-1 flex-1">
-                  <span className="text-xs text-muted-foreground pl-1">Buscar</span>
-                  <SearchInput
-                    value={searchTerm}
-                    onChange={setSearchTerm}
-                    placeholder="Título, descrição ou categoria..."
-                  />
-                </div>
+              {/* Barra de Busca - Full width on mobile */}
+              <div className="flex flex-col gap-1">
+                <span className="text-xs text-muted-foreground pl-1">
+                  Buscar
+                </span>
+                <SearchInput
+                  value={searchTerm}
+                  onChange={setSearchTerm}
+                  placeholder="Título, descrição ou categoria..."
+                />
+              </div>
 
+              {/* Filtros em linha */}
+              <div className="flex flex-col sm:flex-row gap-4">
                 {/* Filtro por Categoria */}
-                <div className="flex flex-col gap-1 w-full sm:w-auto">
-                  <span className="text-xs text-muted-foreground pl-1">Categoria</span>
+                <div className="flex flex-col gap-1 flex-1">
+                  <span className="text-xs text-muted-foreground pl-1">
+                    Categoria
+                  </span>
                   <Select
                     value={selectedCategory}
                     onValueChange={setSelectedCategory}
                   >
-                    <SelectTrigger className="w-full sm:w-[180px] bg-card dark:bg-card border border-border">
+                    <SelectTrigger className="w-full bg-card dark:bg-card border border-border">
                       <SelectValue placeholder="Categoria" />
                     </SelectTrigger>
                     <SelectContent>
@@ -452,13 +514,15 @@ export default function CursosPage() {
                 </div>
 
                 {/* Filtro por Modalidade */}
-                <div className="flex flex-col gap-1 w-full sm:w-auto">
-                  <span className="text-xs text-muted-foreground pl-1">Modalidade</span>
+                <div className="flex flex-col gap-1 flex-1">
+                  <span className="text-xs text-muted-foreground pl-1">
+                    Modalidade
+                  </span>
                   <Select
                     value={selectedFormat}
                     onValueChange={setSelectedFormat}
                   >
-                    <SelectTrigger className="w-full sm:w-[180px] bg-card dark:bg-card border border-border">
+                    <SelectTrigger className="w-full bg-card dark:bg-card border border-border">
                       <SelectValue placeholder="Modalidade" />
                     </SelectTrigger>
                     <SelectContent>
@@ -476,7 +540,7 @@ export default function CursosPage() {
                   <Button
                     variant="ghost"
                     onClick={clearFilters}
-                    className="w-full sm:w-auto"
+                    className="w-full sm:w-auto sm:self-end"
                   >
                     <X className="h-4 w-4 mr-2" />
                     Limpar Filtros
@@ -574,7 +638,9 @@ export default function CursosPage() {
 
                   <div className="flex items-center gap-4">
                     <div className="text-sm text-muted-foreground">
-                      {((currentPage - 1) * itemsPerPage) + 1}-{Math.min(currentPage * itemsPerPage, totalCourses)} de {totalCourses}
+                      {(currentPage - 1) * itemsPerPage + 1}-
+                      {Math.min(currentPage * itemsPerPage, totalCourses)} de{" "}
+                      {totalCourses}
                     </div>
 
                     <div className="flex items-center gap-1">
@@ -695,7 +761,7 @@ export default function CursosPage() {
                 await generateSCORM(selectedCursoForExport, filename);
                 setExportModalOpen(false);
               } catch (error) {
-                console.error('Erro ao gerar SCORM:', error);
+                console.error("Erro ao gerar SCORM:", error);
               }
             }
           }}

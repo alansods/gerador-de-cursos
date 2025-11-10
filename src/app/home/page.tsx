@@ -90,22 +90,22 @@ export default function HomePage() {
             </div>
 
             {/* Title */}
-            <h1 className="text-4xl font-normal text-foreground mb-4">
+            <h1 className="text-2xl sm:text-3xl md:text-4xl font-normal text-foreground mb-4">
               Gerador de Cursos SCORM SENAI
             </h1>
 
             {/* Description */}
-            <p className="text-lg text-muted-foreground mb-8 max-w-3xl">
+            <p className="text-base sm:text-lg text-muted-foreground mb-6 sm:mb-8 max-w-3xl">
               Crie, gerencie e publique cursos SCORM compatíveis com as
               principais plataformas LMS. Produza conteúdo educacional
               padronizado, interoperável e de alta qualidade.
             </p>
 
             {/* Action Buttons */}
-            <div className="flex gap-4">
+            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
               <Button
                 onClick={() => router.push("/cursos/novo")}
-                className="bg-[#0047BB] hover:bg-[#0047BB]/90 text-white h-10 px-6"
+                className="bg-[#0047BB] hover:bg-[#0047BB]/90 text-white h-10 px-6 w-full sm:w-auto"
               >
                 <Plus className="w-4 h-4 mr-2" />
                 Criar Novo Curso
@@ -113,7 +113,7 @@ export default function HomePage() {
               <Button
                 variant="outline"
                 onClick={() => router.push("/cursos")}
-                className="h-10 px-6 border-border"
+                className="h-10 px-6 border-border w-full sm:w-auto"
               >
                 Ver Todos os Cursos
                 <ArrowRight className="w-4 h-4 ml-2" />
@@ -172,21 +172,21 @@ export default function HomePage() {
 
           {/* CTA Card */}
           <Card className="mb-12 border border-[#0047BB]/20 bg-gradient-to-br from-[#0047BB]/5 to-[#F15A29]/5">
-            <CardContent className="p-8">
-              <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+            <CardContent className="p-6 sm:p-8">
+              <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 sm:gap-6">
                 <div className="flex-1">
-                  <h2 className="text-xl font-medium text-foreground mb-2">
+                  <h2 className="text-lg sm:text-xl font-medium text-foreground mb-2">
                     Pronto para começar?
                   </h2>
-                  <p className="text-base text-muted-foreground">
+                  <p className="text-sm sm:text-base text-muted-foreground">
                     Comece criando seu primeiro curso SCORM ou explore os
                     pacotes existentes para ver tudo que a plataforma oferece.
                   </p>
                 </div>
-                <div className="flex gap-4">
+                <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 w-full md:w-auto">
                   <Button
                     onClick={() => router.push("/cursos/novo")}
-                    className="bg-[#F15A29] hover:bg-[#F15A29]/90 text-white h-10 px-6"
+                    className="bg-[#F15A29] hover:bg-[#F15A29]/90 text-white h-10 px-6 w-full sm:w-auto"
                   >
                     <Plus className="w-4 h-4 mr-2" />
                     Criar Curso
@@ -194,7 +194,7 @@ export default function HomePage() {
                   <Button
                     variant="outline"
                     onClick={() => router.push("/cursos")}
-                    className="h-10 px-6 border-border"
+                    className="h-10 px-6 border-border w-full sm:w-auto"
                   >
                     Explorar Cursos
                   </Button>
@@ -205,8 +205,8 @@ export default function HomePage() {
 
           {/* Recent Activity Section */}
           <div>
-            <div className="mb-6">
-              <h3 className="text-lg font-medium text-foreground mb-2">
+            <div className="mb-4 sm:mb-6">
+              <h3 className="text-base sm:text-lg font-medium text-foreground mb-2">
                 Atividade Recente
               </h3>
               <p className="text-sm text-muted-foreground">
@@ -223,14 +223,14 @@ export default function HomePage() {
                     key={index}
                     className="border border-border hover:shadow-md transition-shadow"
                   >
-                    <CardContent className="p-4">
-                      <div className="flex gap-4">
+                    <CardContent className="p-3 sm:p-4">
+                      <div className="flex gap-3 sm:gap-4">
                         {/* Icon */}
                         <div
-                          className={`w-10 h-10 rounded-full ${activity.iconBg} flex items-center justify-center shrink-0`}
+                          className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full ${activity.iconBg} flex items-center justify-center shrink-0`}
                         >
                           <Icon
-                            className="w-5 h-5"
+                            className="w-4 h-4 sm:w-5 sm:h-5"
                             style={{ color: activity.iconColor }}
                           />
                         </div>
@@ -239,16 +239,16 @@ export default function HomePage() {
                         <div className="flex-1 min-w-0">
                           <div className="flex flex-col gap-1">
                             <div className="flex flex-wrap items-baseline gap-1">
-                              <span className="text-base font-normal text-foreground">
+                              <span className="text-sm sm:text-base font-normal text-foreground">
                                 {activity.title}
                               </span>
                               {activity.subtitle && (
-                                <span className="text-base font-normal text-foreground">
+                                <span className="text-sm sm:text-base font-normal text-foreground">
                                   {activity.subtitle}
                                 </span>
                               )}
                             </div>
-                            <p className="text-sm text-muted-foreground">
+                            <p className="text-xs sm:text-sm text-muted-foreground">
                               {activity.time}
                             </p>
                           </div>

@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect, useCallback } from "react";
 import { PageTransition } from "@/components/PageTransition";
-import { Users, Plus, Pencil, Trash2 } from "lucide-react";
+import { Users, Plus, Pencil, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
 import { SearchInput } from "@/components/SearchInput";
 import { PageHeader } from "@/components/PageHeader";
@@ -64,35 +64,50 @@ export default function UsuariosPage() {
     senha: "",
   });
   // Fetch users
-  const fetchUsers = useCallback(async (page = 1, search = "", start = "", end = "") => {
-    try {
-      setLoading(true);
-      const params = new URLSearchParams({
-        page: page.toString(),
-        limit: pagination.limit.toString(),
-        search,
-      });
-      if (start) params.append("startDate", start);
-      if (end) params.append("endDate", end);
-      const response = await fetch(`/api/users?${params}`);
-      const data = await response.json();
-      if (data.success) {
-        setUsers(data.users);
-        setPagination(data.pagination);
-      } else {
-        toast.error(data.error || "Erro ao carregar usuários");
+  const fetchUsers = useCallback(
+    async (page = 1, search = "", start = "", end = "") => {
+      try {
+        setLoading(true);
+        const params = new URLSearchParams({
+          page: page.toString(),
+          limit: pagination.limit.toString(),
+          search,
+        });
+        if (start) params.append("startDate", start);
+        if (end) params.append("endDate", end);
+        const response = await fetch(`/api/users?${params}`);
+        const data = await response.json();
+        if (data.success) {
+          setUsers(data.users);
+          setPagination(data.pagination);
+        } else {
+          toast.error(data.error || "Erro ao carregar usuários");
+        }
+      } catch (error) {
+        console.error("Erro ao buscar usuários:", error);
+        toast.error("Erro ao conectar com o servidor");
+      } finally {
+        setLoading(false);
       }
-    } catch (error) {
-      console.error("Erro ao buscar usuários:", error);
-      toast.error("Erro ao conectar com o servidor");
-    } finally {
-      setLoading(false);
-    }
-  }, [pagination.limit]);
+    },
+    [pagination.limit]
+  );
 
   useEffect(() => {
     fetchUsers(1, searchTerm, startDate, endDate);
   }, [searchTerm, startDate, endDate, fetchUsers]);
+
+  // Check if there are active filters
+  const hasActiveFilters =
+    searchTerm !== "" || startDate !== "" || endDate !== "";
+
+  // Clear all filters
+  const clearFilters = () => {
+    setSearchTerm("");
+    setStartDate("");
+    setEndDate("");
+  };
+
   // Create user
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -204,7 +219,7 @@ export default function UsuariosPage() {
   };
   return (
     <PageTransition>
-      <div className="min-h-screen bg-background p-6">
+      <div className="min-h-screen bg-background p-4 sm:p-6">
         <div className="max-w-7xl mx-auto">
           {/* Header */}
           <PageHeader
@@ -219,39 +234,58 @@ export default function UsuariosPage() {
           />
           {/* Filters */}
           <div className="mb-6 space-y-4">
-            <div className="flex flex-col sm:flex-row gap-4 items-end">
+            {/* Search Bar - Full width on mobile */}
+            <div className="flex flex-col gap-1">
+              <span className="text-xs text-muted-foreground pl-1">Buscar</span>
+              <SearchInput
+                value={searchTerm}
+                onChange={setSearchTerm}
+                placeholder="Nome, usuário ou cargo..."
+              />
+            </div>
+
+            {/* Date Filters - Side by side */}
+            <div className="flex flex-col sm:flex-row gap-4">
               <div className="flex flex-col gap-1 flex-1">
-                <span className="text-xs text-muted-foreground pl-1">Buscar</span>
-                <SearchInput
-                  value={searchTerm}
-                  onChange={setSearchTerm}
-                  placeholder="Nome, usuário ou cargo..."
-                />
-              </div>
-              <div className="flex flex-col gap-1 w-full sm:w-auto">
-                <span className="text-xs text-muted-foreground pl-1">Data Inicial</span>
+                <span className="text-xs text-muted-foreground pl-1">
+                  Data Inicial
+                </span>
                 <Input
                   id="startDate"
                   type="date"
                   value={startDate}
                   onChange={(e) => setStartDate(e.target.value)}
-                  className="w-full sm:w-auto"
+                  className="w-full"
                 />
               </div>
-              <div className="flex flex-col gap-1 w-full sm:w-auto">
-                <span className="text-xs text-muted-foreground pl-1">Data Final</span>
+              <div className="flex flex-col gap-1 flex-1">
+                <span className="text-xs text-muted-foreground pl-1">
+                  Data Final
+                </span>
                 <Input
                   id="endDate"
                   type="date"
                   value={endDate}
                   onChange={(e) => setEndDate(e.target.value)}
-                  className="w-full sm:w-auto"
+                  className="w-full"
                 />
               </div>
+
+              {/* Clear Filters Button */}
+              {hasActiveFilters && (
+                <Button
+                  variant="ghost"
+                  onClick={clearFilters}
+                  className="w-full sm:w-auto sm:self-end"
+                >
+                  <X className="h-4 w-4 mr-2" />
+                  Limpar Filtros
+                </Button>
+              )}
             </div>
           </div>
           {/* Users Table */}
-          <div className="bg-card rounded-lg shadow-sm border border-border overflow-hidden">
+          <div className="bg-card rounded-lg overflow-hidden">
             {loading ? (
               <div className="p-8 text-center">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
@@ -268,54 +302,104 @@ export default function UsuariosPage() {
               </div>
             ) : (
               <>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Nome</TableHead>
-                      <TableHead>Usuário</TableHead>
-                      <TableHead>Cargo</TableHead>
-                      <TableHead>Data de Criação</TableHead>
-                      <TableHead className="text-right">Ações</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {users.map((user) => (
-                      <TableRow key={user.id}>
-                        <TableCell className="font-medium">
-                          {user.nome}
-                        </TableCell>
-                        <TableCell>{user.usuario}</TableCell>
-                        <TableCell>
-                          <Badge variant="secondary">{user.cargo}</Badge>
-                        </TableCell>
-                        <TableCell>
+                {/* Desktop Table */}
+                <div className="hidden md:block overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Nome</TableHead>
+                        <TableHead>Usuário</TableHead>
+                        <TableHead>Cargo</TableHead>
+                        <TableHead>Data de Criação</TableHead>
+                        <TableHead className="text-right">Ações</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {users.map((user) => (
+                        <TableRow key={user.id}>
+                          <TableCell className="font-medium">
+                            {user.nome}
+                          </TableCell>
+                          <TableCell>{user.usuario}</TableCell>
+                          <TableCell>
+                            <Badge variant="secondary">{user.cargo}</Badge>
+                          </TableCell>
+                          <TableCell>
+                            {new Date(user.createdAt).toLocaleDateString(
+                              "pt-BR"
+                            )}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => openEditModal(user)}
+                              className="mr-2"
+                            >
+                              <Pencil className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => openDeleteModal(user)}
+                              className="text-destructive hover:text-destructive"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+
+                {/* Mobile Cards */}
+                <div className="md:hidden divide-y divide-border">
+                  {users.map((user) => (
+                    <div key={user.id} className="p-4 space-y-3">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex-1 min-w-0">
+                          <h3 className="font-medium text-foreground truncate">
+                            {user.nome}
+                          </h3>
+                          <p className="text-sm text-muted-foreground truncate">
+                            @{user.usuario}
+                          </p>
+                        </div>
+                        <Badge variant="secondary" className="shrink-0">
+                          {user.cargo}
+                        </Badge>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <p className="text-sm text-muted-foreground">
                           {new Date(user.createdAt).toLocaleDateString("pt-BR")}
-                        </TableCell>
-                        <TableCell className="text-right">
+                        </p>
+                        <div className="flex gap-2">
                           <Button
-                            variant="ghost"
-                            size="icon"
+                            variant="outline"
+                            size="sm"
                             onClick={() => openEditModal(user)}
-                            className="mr-2"
                           >
-                            <Pencil className="h-4 w-4" />
+                            <Pencil className="h-4 w-4 mr-1" />
+                            Editar
                           </Button>
                           <Button
-                            variant="ghost"
-                            size="icon"
+                            variant="outline"
+                            size="sm"
                             onClick={() => openDeleteModal(user)}
                             className="text-destructive hover:text-destructive"
                           >
-                            <Trash2 className="h-4 w-4" />
+                            <Trash2 className="h-4 w-4 mr-1" />
+                            Deletar
                           </Button>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
                 {/* Pagination */}
                 {pagination.totalPages > 1 && (
-                  <div className="px-6 py-4 flex items-center justify-between border-t border-border">
+                  <div className="px-4 sm:px-6 py-4 flex flex-col sm:flex-row items-center justify-between gap-3 border-t border-border">
                     <div className="text-sm text-muted-foreground">
                       Mostrando {users.length} de {pagination.total} usuários
                     </div>
@@ -335,7 +419,7 @@ export default function UsuariosPage() {
                       >
                         Anterior
                       </Button>
-                      <div className="px-3 py-1 bg-primary text-primary-foreground rounded-md flex items-center">
+                      <div className="px-3 py-1 bg-primary text-primary-foreground rounded-md flex items-center text-sm">
                         {pagination.page}
                       </div>
                       <Button
@@ -420,7 +504,7 @@ export default function UsuariosPage() {
                   />
                 </div>
               </div>
-              <DialogFooter>
+              <DialogFooter className="mt-4">
                 <Button
                   type="button"
                   variant="outline"
@@ -440,7 +524,10 @@ export default function UsuariosPage() {
         <Dialog open={showEditModal} onOpenChange={setShowEditModal}>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Editar Usuário</DialogTitle>
+              <DialogTitle className="flex items-center gap-2">
+                <Pencil className="h-5 w-5" />
+                Editar Usuário
+              </DialogTitle>
               <DialogDescription>
                 Atualize as informações do usuário. Deixe a senha em branco para
                 mantê-la.

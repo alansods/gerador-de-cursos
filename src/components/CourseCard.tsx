@@ -41,7 +41,7 @@ export function CourseCard({
 
   return (
     <Card className="overflow-hidden hover:shadow-lg transition-shadow flex flex-col h-full">
-      <div className="p-6 flex flex-col flex-1">
+      <div className="p-4 sm:p-6 flex flex-col flex-1">
         {/* Header */}
         <div className="flex items-start justify-between mb-4">
           <div className="flex-1">
@@ -63,12 +63,12 @@ export function CourseCard({
 
         {/* Course Details */}
         <TooltipProvider>
-          <div className="grid grid-cols-3 gap-4 py-4 border-t border-b border-border">
+          <div className="grid grid-cols-3 gap-2 sm:gap-4 py-4 border-t border-b border-border">
             <Tooltip>
               <TooltipTrigger asChild>
-                <div className="flex items-center gap-2 cursor-help">
-                  <Clock className="w-4 h-4 text-muted-foreground" />
-                  <p style={{ fontSize: '0.875rem' }} className="text-muted-foreground">{duration}</p>
+                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-1 sm:gap-2 cursor-help">
+                  <Clock className="w-4 h-4 text-muted-foreground shrink-0" />
+                  <p style={{ fontSize: '0.75rem' }} className="text-muted-foreground sm:text-sm">{duration}</p>
                 </div>
               </TooltipTrigger>
               <TooltipContent>
@@ -78,9 +78,9 @@ export function CourseCard({
 
             <Tooltip>
               <TooltipTrigger asChild>
-                <div className="flex items-center gap-2 cursor-help">
-                  <BookOpen className="w-4 h-4 text-muted-foreground" />
-                  <p style={{ fontSize: '0.875rem' }} className="text-muted-foreground">{units} unidades</p>
+                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-1 sm:gap-2 cursor-help">
+                  <BookOpen className="w-4 h-4 text-muted-foreground shrink-0" />
+                  <p style={{ fontSize: '0.75rem' }} className="text-muted-foreground sm:text-sm">{units} un.</p>
                 </div>
               </TooltipTrigger>
               <TooltipContent>
@@ -90,9 +90,9 @@ export function CourseCard({
 
             <Tooltip>
               <TooltipTrigger asChild>
-                <div className="flex items-center gap-2 cursor-help">
-                  <Calendar className="w-4 h-4 text-muted-foreground" />
-                  <p style={{ fontSize: '0.875rem' }} className="text-muted-foreground">{format}</p>
+                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-1 sm:gap-2 cursor-help">
+                  <Calendar className="w-4 h-4 text-muted-foreground shrink-0" />
+                  <p style={{ fontSize: '0.75rem' }} className="text-muted-foreground sm:text-sm">{format}</p>
                 </div>
               </TooltipTrigger>
               <TooltipContent>
@@ -104,32 +104,31 @@ export function CourseCard({
 
         {/* Actions */}
         <div className="flex flex-col gap-2 mt-auto pt-4">
-          <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" className="flex-1 gap-2 h-8" onClick={onPreview}>
-              <Eye className="w-4 h-4 shrink-0" />
+          <div className="flex items-center gap-1.5 sm:gap-2">
+            <Button variant="outline" size="sm" className="flex-1 gap-1 sm:gap-2 h-8 text-xs sm:text-sm px-2 sm:px-3" onClick={onPreview}>
+              <Eye className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
               <span>Preview</span>
             </Button>
-            <Button variant="outline" size="sm" className="flex-1 gap-2 h-8" onClick={onEdit}>
-              <Pencil className="w-4 h-4 shrink-0" />
+            <Button variant="outline" size="sm" className="flex-1 gap-1 sm:gap-2 h-8 text-xs sm:text-sm px-2 sm:px-3" onClick={onEdit}>
+              <Pencil className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
               <span>Editar</span>
             </Button>
-            <Button 
-              variant="outline" 
-              size="sm" 
-              className="gap-2 h-8 border-0"
+            <Button
+              variant="outline"
+              size="icon"
+              className="h-8 w-8 border-0"
               onClick={onDelete}
             >
-              <Trash2 className="w-4 h-4 text-destructive shrink-0" />
-              <span className="text-destructive">Excluir</span>
+              <Trash2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-destructive" />
             </Button>
           </div>
-          <Button 
-            size="sm" 
-            className="w-full gap-2 bg-[#F15A29] hover:bg-[#F15A29]/90 text-white h-8"
+          <Button
+            size="sm"
+            className="w-full gap-2 bg-[#F15A29] hover:bg-[#F15A29]/90 text-white h-8 text-xs sm:text-sm"
             onClick={onExport}
             style={{ backgroundColor: '#F15A29' }}
           >
-            <Download className="w-4 h-4 shrink-0" />
+            <Download className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
             <span>Exportar</span>
           </Button>
         </div>

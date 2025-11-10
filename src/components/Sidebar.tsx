@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Home,
   BookOpen,
@@ -12,6 +12,8 @@ import {
   PinOff,
   Moon,
   Sun,
+  Menu,
+  X,
 } from "lucide-react";
 import { Button } from "./ui/button";
 import { useTheme } from "@/hooks/useTheme";
@@ -34,6 +36,7 @@ const navItems = [
 export function Sidebar() {
   const [isPinned, setIsPinned] = useState(true);
   const [isHovered, setIsHovered] = useState(false);
+  const [isMobileOpen, setIsMobileOpen] = useState(false);
   const { isDarkMode, toggleDarkMode } = useTheme();
   const { user, logout } = useAuth();
   const pathname = usePathname();
@@ -44,17 +47,71 @@ export function Sidebar() {
     await logout();
   };
 
+  // Close mobile menu when route changes
+  useEffect(() => {
+    setIsMobileOpen(false);
+  }, [pathname]);
+
+  // Prevent body scroll when mobile menu is open
+  useEffect(() => {
+    if (isMobileOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [isMobileOpen]);
+
   return (
-    <aside
-      className={`border-r border-border bg-white dark:bg-card flex flex-col h-screen transition-all duration-300 ease-in-out ${
-        isExpanded ? "w-64" : "w-20"
-      }`}
-      onMouseEnter={() => !isPinned && setIsHovered(true)}
-      onMouseLeave={() => !isPinned && setIsHovered(false)}
-    >
-        {/* Logo & Brand */}
-        <div className="p-6 border-b border-border">
-          <div className="flex items-center gap-3">
+    <>
+      {/* Mobile Menu Button - Only show when closed */}
+      {!isMobileOpen && (
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => setIsMobileOpen(true)}
+          className="lg:hidden fixed top-3.5 left-3 z-50"
+          aria-label="Abrir menu"
+        >
+          <Menu className="h-5 w-5" />
+        </Button>
+      )}
+
+      {/* Mobile Overlay */}
+      {isMobileOpen && (
+        <div
+          className="lg:hidden fixed inset-0 bg-black/50 z-40"
+          onClick={() => setIsMobileOpen(false)}
+        />
+      )}
+
+      {/* Sidebar */}
+      <aside
+        className={`border-r border-border bg-white dark:bg-card flex flex-col h-screen transition-all duration-300 ease-in-out
+          ${isExpanded ? "w-64" : "w-20"}
+          lg:relative lg:translate-x-0
+          fixed z-50
+          ${isMobileOpen ? "translate-x-0" : "-translate-x-full"}
+        `}
+        onMouseEnter={() => !isPinned && setIsHovered(true)}
+        onMouseLeave={() => !isPinned && setIsHovered(false)}
+      >
+        {/* Logo & Brand with Close Button */}
+        <div className="p-6 border-b border-border relative">
+          {/* Close button for mobile - inside sidebar */}
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setIsMobileOpen(false)}
+            className="lg:hidden absolute top-4 right-4 z-10"
+            aria-label="Fechar menu"
+          >
+            <X className="h-5 w-5" />
+          </Button>
+
+          <div className="flex items-center gap-3 pr-10 lg:pr-0">
             <div className="w-10 h-10 rounded-lg bg-primary flex items-center justify-center shrink-0">
               <GraduationCap className="w-6 h-6 text-primary-foreground" />
             </div>
@@ -136,7 +193,7 @@ export function Sidebar() {
             variant="ghost"
             size="sm"
             onClick={() => setIsPinned(!isPinned)}
-            className={`gap-2 ${
+            className={`gap-2 hidden lg:flex ${
               isExpanded ? "w-full justify-start" : "w-full justify-center"
             }`}
           >
@@ -192,5 +249,6 @@ export function Sidebar() {
           </Button>
         </div>
       </aside>
+    </>
   );
 }
