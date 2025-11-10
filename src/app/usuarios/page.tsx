@@ -368,6 +368,7 @@ export default function UsuariosPage() {
                     value={formData.nome}
                     onChange={(e) => setFormData({ ...formData, nome: e.target.value })}
                     placeholder="Digite o nome completo"
+                    className="bg-card dark:bg-card"
                   />
                 </div>
 
@@ -378,6 +379,7 @@ export default function UsuariosPage() {
                     value={formData.cargo}
                     onChange={(e) => setFormData({ ...formData, cargo: e.target.value })}
                     placeholder="Ex: Administrador, Professor, etc"
+                    className="bg-card dark:bg-card"
                   />
                 </div>
 
@@ -388,6 +390,7 @@ export default function UsuariosPage() {
                     value={formData.usuario}
                     onChange={(e) => setFormData({ ...formData, usuario: e.target.value })}
                     placeholder="Digite o nome de usuário"
+                    className="bg-card dark:bg-card"
                   />
                 </div>
 
@@ -399,6 +402,7 @@ export default function UsuariosPage() {
                     value={formData.senha}
                     onChange={(e) => setFormData({ ...formData, senha: e.target.value })}
                     placeholder="Mínimo 6 caracteres"
+                    className="bg-card dark:bg-card"
                   />
                 </div>
               </div>
@@ -435,6 +439,7 @@ export default function UsuariosPage() {
                     id="edit-nome"
                     value={formData.nome}
                     onChange={(e) => setFormData({ ...formData, nome: e.target.value })}
+                    className="bg-card dark:bg-card"
                   />
                 </div>
 
@@ -444,6 +449,7 @@ export default function UsuariosPage() {
                     id="edit-cargo"
                     value={formData.cargo}
                     onChange={(e) => setFormData({ ...formData, cargo: e.target.value })}
+                    className="bg-card dark:bg-card"
                   />
                 </div>
 
@@ -453,6 +459,7 @@ export default function UsuariosPage() {
                     id="edit-usuario"
                     value={formData.usuario}
                     onChange={(e) => setFormData({ ...formData, usuario: e.target.value })}
+                    className="bg-card dark:bg-card"
                   />
                 </div>
 
@@ -464,6 +471,7 @@ export default function UsuariosPage() {
                     value={formData.senha}
                     onChange={(e) => setFormData({ ...formData, senha: e.target.value })}
                     placeholder="Deixe em branco para manter a senha atual"
+                    className="bg-card dark:bg-card"
                   />
                 </div>
               </div>

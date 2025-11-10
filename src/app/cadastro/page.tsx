@@ -7,13 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import {
-  GraduationCap,
-  User,
-  Lock,
-  Eye,
-  EyeOff,
-} from "lucide-react";
+import { GraduationCap, User, Lock, Eye, EyeOff } from "lucide-react";
 
 export default function CadastroPage() {
   const [nome, setNome] = useState("");
@@ -128,7 +122,10 @@ export default function CadastroPage() {
           <form onSubmit={handleSubmit} className="space-y-5">
             {/* Campo Nome */}
             <div className="space-y-2">
-              <Label htmlFor="nome" className="text-sm font-medium text-[#1A202C]">
+              <Label
+                htmlFor="nome"
+                className="text-sm font-medium text-[#1A202C]"
+              >
                 Nome completo
               </Label>
               <div className="relative">
@@ -159,7 +156,10 @@ export default function CadastroPage() {
 
             {/* Campo Usuário */}
             <div className="space-y-2">
-              <Label htmlFor="usuario" className="text-sm font-medium text-[#1A202C]">
+              <Label
+                htmlFor="usuario"
+                className="text-sm font-medium text-[#1A202C]"
+              >
                 Usuário
               </Label>
               <div className="relative">
@@ -190,7 +190,10 @@ export default function CadastroPage() {
 
             {/* Campo Senha */}
             <div className="space-y-2">
-              <Label htmlFor="senha" className="text-sm font-medium text-[#1A202C]">
+              <Label
+                htmlFor="senha"
+                className="text-sm font-medium text-[#1A202C]"
+              >
                 Senha
               </Label>
               <div className="relative">
@@ -314,16 +317,6 @@ export default function CadastroPage() {
                 Faça login
               </Link>
             </p>
-          </div>
-
-          {/* Divisor */}
-          <div className="relative my-6">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-[#E2E8F0]"></div>
-            </div>
-            <div className="relative flex justify-center">
-              <span className="bg-white px-2 text-sm text-[#64748B]">ou</span>
-            </div>
           </div>
         </div>
 
