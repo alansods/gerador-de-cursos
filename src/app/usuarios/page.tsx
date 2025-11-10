@@ -4,6 +4,7 @@ import { PageTransition } from "@/components/PageTransition";
 import { Users, Plus, Pencil, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { SearchInput } from "@/components/SearchInput";
+import { PageHeader } from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -42,6 +43,8 @@ export default function UsuariosPage() {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
   const [pagination, setPagination] = useState<PaginationInfo>({
     page: 1,
     limit: 10,
@@ -61,7 +64,7 @@ export default function UsuariosPage() {
     senha: "",
   });
   // Fetch users
-  const fetchUsers = async (page = 1, search = "") => {
+  const fetchUsers = async (page = 1, search = "", start = "", end = "") => {
     try {
       setLoading(true);
       const params = new URLSearchParams({
@@ -69,6 +72,8 @@ export default function UsuariosPage() {
         limit: pagination.limit.toString(),
         search,
       });
+      if (start) params.append("startDate", start);
+      if (end) params.append("endDate", end);
       const response = await fetch(`/api/users?${params}`);
       const data = await response.json();
       if (data.success) {
@@ -85,8 +90,8 @@ export default function UsuariosPage() {
     }
   };
   useEffect(() => {
-    fetchUsers(1, searchTerm);
-  }, [searchTerm]);
+    fetchUsers(1, searchTerm, startDate, endDate);
+  }, [searchTerm, startDate, endDate]);
   // Create user
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -114,7 +119,7 @@ export default function UsuariosPage() {
         toast.success("Usuário criado com sucesso!");
         setShowCreateModal(false);
         setFormData({ nome: "", cargo: "", usuario: "", senha: "" });
-        fetchUsers(pagination.page, searchTerm);
+        fetchUsers(pagination.page, searchTerm, startDate, endDate);
       } else {
         toast.error(data.error || "Erro ao criar usuário");
       }
@@ -150,7 +155,7 @@ export default function UsuariosPage() {
         setShowEditModal(false);
         setSelectedUser(null);
         setFormData({ nome: "", cargo: "", usuario: "", senha: "" });
-        fetchUsers(pagination.page, searchTerm);
+        fetchUsers(pagination.page, searchTerm, startDate, endDate);
       } else {
         toast.error(data.error || "Erro ao atualizar usuário");
       }
@@ -171,7 +176,7 @@ export default function UsuariosPage() {
         toast.success("Usuário deletado com sucesso!");
         setShowDeleteModal(false);
         setSelectedUser(null);
-        fetchUsers(pagination.page, searchTerm);
+        fetchUsers(pagination.page, searchTerm, startDate, endDate);
       } else {
         toast.error(data.error || "Erro ao deletar usuário");
       }

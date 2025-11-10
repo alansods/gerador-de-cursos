@@ -15,17 +15,34 @@ export async function GET(request: NextRequest) {
     const page = parseInt(searchParams.get('page') || '1', 10);
     const limit = parseInt(searchParams.get('limit') || '10', 10);
     const search = searchParams.get('search') || '';
+    const startDate = searchParams.get('startDate');
+    const endDate = searchParams.get('endDate');
 
     // Construir filtro de busca
-    const where = search
-      ? {
-          OR: [
-            { nome: { contains: search, mode: 'insensitive' as const } },
-            { usuario: { contains: search, mode: 'insensitive' as const } },
-            { cargo: { contains: search, mode: 'insensitive' as const } },
-          ],
-        }
-      : {};
+    const where: any = {};
+
+    // Filtro de texto
+    if (search) {
+      where.OR = [
+        { nome: { contains: search, mode: 'insensitive' as const } },
+        { usuario: { contains: search, mode: 'insensitive' as const } },
+        { cargo: { contains: search, mode: 'insensitive' as const } },
+      ];
+    }
+
+    // Filtro de data
+    if (startDate || endDate) {
+      where.createdAt = {};
+      if (startDate) {
+        where.createdAt.gte = new Date(startDate);
+      }
+      if (endDate) {
+        // Adiciona 23:59:59 ao endDate para incluir o dia inteiro
+        const end = new Date(endDate);
+        end.setHours(23, 59, 59, 999);
+        where.createdAt.lte = end;
+      }
+    }
 
     // Contar total de usuários
     const total = await prisma.user.count({ where });
