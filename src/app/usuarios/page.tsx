@@ -1,5 +1,4 @@
 "use client";
-
 import { useState, useEffect } from "react";
 import { PageTransition } from "@/components/PageTransition";
 import { Users, Plus, Pencil, Trash2 } from "lucide-react";
@@ -25,7 +24,6 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-
 interface User {
   id: string;
   nome: string;
@@ -34,14 +32,12 @@ interface User {
   createdAt: string;
   updatedAt: string;
 }
-
 interface PaginationInfo {
   page: number;
   limit: number;
   total: number;
   totalPages: number;
 }
-
 export default function UsuariosPage() {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
@@ -52,13 +48,11 @@ export default function UsuariosPage() {
     total: 0,
     totalPages: 0,
   });
-
   // Modal states
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
-
   // Form states
   const [formData, setFormData] = useState({
     nome: "",
@@ -66,7 +60,6 @@ export default function UsuariosPage() {
     usuario: "",
     senha: "",
   });
-
   // Fetch users
   const fetchUsers = async (page = 1, search = "") => {
     try {
@@ -76,10 +69,8 @@ export default function UsuariosPage() {
         limit: pagination.limit.toString(),
         search,
       });
-
       const response = await fetch(`/api/users?${params}`);
       const data = await response.json();
-
       if (data.success) {
         setUsers(data.users);
         setPagination(data.pagination);
@@ -93,34 +84,32 @@ export default function UsuariosPage() {
       setLoading(false);
     }
   };
-
   useEffect(() => {
     fetchUsers(1, searchTerm);
   }, [searchTerm]);
-
   // Create user
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    if (!formData.nome || !formData.cargo || !formData.usuario || !formData.senha) {
+    if (
+      !formData.nome ||
+      !formData.cargo ||
+      !formData.usuario ||
+      !formData.senha
+    ) {
       toast.error("Todos os campos são obrigatórios");
       return;
     }
-
     if (formData.senha.length < 6) {
       toast.error("Senha deve ter no mínimo 6 caracteres");
       return;
     }
-
     try {
       const response = await fetch("/api/users", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),
       });
-
       const data = await response.json();
-
       if (data.success) {
         toast.success("Usuário criado com sucesso!");
         setShowCreateModal(false);
@@ -134,23 +123,18 @@ export default function UsuariosPage() {
       toast.error("Erro ao conectar com o servidor");
     }
   };
-
   // Update user
   const handleUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
-
     if (!selectedUser) return;
-
     if (!formData.nome || !formData.cargo || !formData.usuario) {
       toast.error("Nome, cargo e usuário são obrigatórios");
       return;
     }
-
     if (formData.senha && formData.senha.length < 6) {
       toast.error("Senha deve ter no mínimo 6 caracteres");
       return;
     }
-
     try {
       const response = await fetch("/api/users", {
         method: "PUT",
@@ -160,9 +144,7 @@ export default function UsuariosPage() {
           ...formData,
         }),
       });
-
       const data = await response.json();
-
       if (data.success) {
         toast.success("Usuário atualizado com sucesso!");
         setShowEditModal(false);
@@ -177,18 +159,14 @@ export default function UsuariosPage() {
       toast.error("Erro ao conectar com o servidor");
     }
   };
-
   // Delete user
   const handleDelete = async () => {
     if (!selectedUser) return;
-
     try {
       const response = await fetch(`/api/users?id=${selectedUser.id}`, {
         method: "DELETE",
       });
-
       const data = await response.json();
-
       if (data.success) {
         toast.success("Usuário deletado com sucesso!");
         setShowDeleteModal(false);
@@ -202,7 +180,6 @@ export default function UsuariosPage() {
       toast.error("Erro ao conectar com o servidor");
     }
   };
-
   // Open edit modal
   const openEditModal = (user: User) => {
     setSelectedUser(user);
@@ -214,13 +191,11 @@ export default function UsuariosPage() {
     });
     setShowEditModal(true);
   };
-
   // Open delete modal
   const openDeleteModal = (user: User) => {
     setSelectedUser(user);
     setShowDeleteModal(true);
   };
-
   return (
     <PageTransition>
       <div className="min-h-screen bg-background p-6">
@@ -229,13 +204,14 @@ export default function UsuariosPage() {
           <div className="mb-8">
             <div className="flex items-center gap-3 mb-2">
               <Users className="h-8 w-8 text-primary" />
-              <h1 className="text-3xl font-bold text-foreground">Gerenciar Usuários</h1>
+              <h1 className="text-3xl font-bold text-foreground">
+                Gerenciar Usuários
+              </h1>
             </div>
             <p className="text-muted-foreground">
               Crie, edite e gerencie usuários do sistema
             </p>
           </div>
-
           {/* Actions Bar */}
           <div className="flex flex-col sm:flex-row gap-4 mb-6">
             <SearchInput
@@ -243,7 +219,6 @@ export default function UsuariosPage() {
               onChange={setSearchTerm}
               placeholder="Buscar por nome, usuário ou cargo..."
             />
-
             <Button
               onClick={() => {
                 setFormData({ nome: "", cargo: "", usuario: "", senha: "" });
@@ -254,7 +229,6 @@ export default function UsuariosPage() {
               Novo Usuário
             </Button>
           </div>
-
           {/* Users Table */}
           <div className="bg-card rounded-lg shadow-sm border border-border overflow-hidden">
             {loading ? (
@@ -266,7 +240,9 @@ export default function UsuariosPage() {
               <div className="p-8 text-center">
                 <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
                 <p className="text-muted-foreground">
-                  {searchTerm ? "Nenhum usuário encontrado" : "Nenhum usuário cadastrado"}
+                  {searchTerm
+                    ? "Nenhum usuário encontrado"
+                    : "Nenhum usuário cadastrado"}
                 </p>
               </div>
             ) : (
@@ -284,7 +260,9 @@ export default function UsuariosPage() {
                   <TableBody>
                     {users.map((user) => (
                       <TableRow key={user.id}>
-                        <TableCell className="font-medium">{user.nome}</TableCell>
+                        <TableCell className="font-medium">
+                          {user.nome}
+                        </TableCell>
                         <TableCell>{user.usuario}</TableCell>
                         <TableCell>
                           <Badge variant="secondary">{user.cargo}</Badge>
@@ -314,7 +292,6 @@ export default function UsuariosPage() {
                     ))}
                   </TableBody>
                 </Table>
-
                 {/* Pagination */}
                 {pagination.totalPages > 1 && (
                   <div className="px-6 py-4 flex items-center justify-between border-t border-border">
@@ -325,7 +302,9 @@ export default function UsuariosPage() {
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => fetchUsers(pagination.page - 1, searchTerm)}
+                        onClick={() =>
+                          fetchUsers(pagination.page - 1, searchTerm)
+                        }
                         disabled={pagination.page === 1}
                       >
                         Anterior
@@ -336,7 +315,9 @@ export default function UsuariosPage() {
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => fetchUsers(pagination.page + 1, searchTerm)}
+                        onClick={() =>
+                          fetchUsers(pagination.page + 1, searchTerm)
+                        }
                         disabled={pagination.page === pagination.totalPages}
                       >
                         Próxima
@@ -348,7 +329,6 @@ export default function UsuariosPage() {
             )}
           </div>
         </div>
-
         {/* Create Modal */}
         <Dialog open={showCreateModal} onOpenChange={setShowCreateModal}>
           <DialogContent>
@@ -358,7 +338,6 @@ export default function UsuariosPage() {
                 Preencha os campos abaixo para criar um novo usuário no sistema.
               </DialogDescription>
             </DialogHeader>
-
             <form onSubmit={handleCreate}>
               <div className="space-y-4 py-4">
                 <div className="space-y-2">
@@ -366,47 +345,47 @@ export default function UsuariosPage() {
                   <Input
                     id="nome"
                     value={formData.nome}
-                    onChange={(e) => setFormData({ ...formData, nome: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, nome: e.target.value })
+                    }
                     placeholder="Digite o nome completo"
-                    className="bg-card dark:bg-card"
                   />
                 </div>
-
                 <div className="space-y-2">
                   <Label htmlFor="cargo">Cargo</Label>
                   <Input
                     id="cargo"
                     value={formData.cargo}
-                    onChange={(e) => setFormData({ ...formData, cargo: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, cargo: e.target.value })
+                    }
                     placeholder="Ex: Administrador, Professor, etc"
-                    className="bg-card dark:bg-card"
                   />
                 </div>
-
                 <div className="space-y-2">
                   <Label htmlFor="usuario">Nome de Usuário</Label>
                   <Input
                     id="usuario"
                     value={formData.usuario}
-                    onChange={(e) => setFormData({ ...formData, usuario: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, usuario: e.target.value })
+                    }
                     placeholder="Digite o nome de usuário"
-                    className="bg-card dark:bg-card"
                   />
                 </div>
-
                 <div className="space-y-2">
                   <Label htmlFor="senha">Senha</Label>
                   <Input
                     id="senha"
                     type="password"
                     value={formData.senha}
-                    onChange={(e) => setFormData({ ...formData, senha: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, senha: e.target.value })
+                    }
                     placeholder="Mínimo 6 caracteres"
-                    className="bg-card dark:bg-card"
                   />
                 </div>
               </div>
-
               <DialogFooter>
                 <Button
                   type="button"
@@ -420,17 +399,16 @@ export default function UsuariosPage() {
             </form>
           </DialogContent>
         </Dialog>
-
         {/* Edit Modal */}
         <Dialog open={showEditModal} onOpenChange={setShowEditModal}>
           <DialogContent>
             <DialogHeader>
               <DialogTitle>Editar Usuário</DialogTitle>
               <DialogDescription>
-                Atualize as informações do usuário. Deixe a senha em branco para mantê-la.
+                Atualize as informações do usuário. Deixe a senha em branco para
+                mantê-la.
               </DialogDescription>
             </DialogHeader>
-
             <form onSubmit={handleUpdate}>
               <div className="space-y-4 py-4">
                 <div className="space-y-2">
@@ -438,44 +416,44 @@ export default function UsuariosPage() {
                   <Input
                     id="edit-nome"
                     value={formData.nome}
-                    onChange={(e) => setFormData({ ...formData, nome: e.target.value })}
-                    className="bg-card dark:bg-card"
+                    onChange={(e) =>
+                      setFormData({ ...formData, nome: e.target.value })
+                    }
                   />
                 </div>
-
                 <div className="space-y-2">
                   <Label htmlFor="edit-cargo">Cargo</Label>
                   <Input
                     id="edit-cargo"
                     value={formData.cargo}
-                    onChange={(e) => setFormData({ ...formData, cargo: e.target.value })}
-                    className="bg-card dark:bg-card"
+                    onChange={(e) =>
+                      setFormData({ ...formData, cargo: e.target.value })
+                    }
                   />
                 </div>
-
                 <div className="space-y-2">
                   <Label htmlFor="edit-usuario">Nome de Usuário</Label>
                   <Input
                     id="edit-usuario"
                     value={formData.usuario}
-                    onChange={(e) => setFormData({ ...formData, usuario: e.target.value })}
-                    className="bg-card dark:bg-card"
+                    onChange={(e) =>
+                      setFormData({ ...formData, usuario: e.target.value })
+                    }
                   />
                 </div>
-
                 <div className="space-y-2">
                   <Label htmlFor="edit-senha">Nova Senha (opcional)</Label>
                   <Input
                     id="edit-senha"
                     type="password"
                     value={formData.senha}
-                    onChange={(e) => setFormData({ ...formData, senha: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, senha: e.target.value })
+                    }
                     placeholder="Deixe em branco para manter a senha atual"
-                    className="bg-card dark:bg-card"
                   />
                 </div>
               </div>
-
               <DialogFooter>
                 <Button
                   type="button"
@@ -492,7 +470,6 @@ export default function UsuariosPage() {
             </form>
           </DialogContent>
         </Dialog>
-
         {/* Delete Confirmation Modal */}
         <Dialog open={showDeleteModal} onOpenChange={setShowDeleteModal}>
           <DialogContent>
@@ -500,10 +477,10 @@ export default function UsuariosPage() {
               <DialogTitle>Confirmar Exclusão</DialogTitle>
               <DialogDescription>
                 Tem certeza que deseja deletar o usuário{" "}
-                <strong>{selectedUser?.nome}</strong>? Esta ação não pode ser desfeita.
+                <strong>{selectedUser?.nome}</strong>? Esta ação não pode ser
+                desfeita.
               </DialogDescription>
             </DialogHeader>
-
             <DialogFooter>
               <Button
                 variant="outline"

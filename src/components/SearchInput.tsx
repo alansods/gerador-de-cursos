@@ -22,7 +22,7 @@ export function SearchInput({
         placeholder={placeholder}
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="pl-10 bg-card dark:bg-card border border-border"
+        className="pl-10"
       />
     </div>
   );
