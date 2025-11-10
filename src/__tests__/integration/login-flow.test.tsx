@@ -12,7 +12,6 @@ import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import LoginPage from '@/app/login/page'
 import { AuthProvider } from '@/context/AuthContext'
-import { useRouter } from 'next/navigation'
 
 // Mock do fetch global para rastrear chamadas
 const mockFetch = jest.fn()

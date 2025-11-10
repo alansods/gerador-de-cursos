@@ -47,7 +47,13 @@ export async function getServerUser(): Promise<JWTPayload | null> {
         return null;
       }
 
-      return payload as JWTPayload;
+      // Type-safe conversion from jose JWTPayload to our JWTPayload
+      return {
+        id: payload.id as string,
+        usuario: payload.usuario as string,
+        nome: payload.nome as string,
+        cargo: payload.cargo as string,
+      };
     } catch (error) {
       // Se houver erro de conexão ou token inválido, retornar null
       return null;

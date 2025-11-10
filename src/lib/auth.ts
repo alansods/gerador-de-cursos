@@ -30,8 +30,14 @@ export async function verifyAuth(req: NextRequest): Promise<JWTPayload> {
 
   try {
     const { payload } = await jwtVerify(token, JWT_SECRET);
-    return payload as JWTPayload;
-  } catch (error) {
+    // Type-safe conversion from jose JWTPayload to our JWTPayload
+    return {
+      id: payload.id as string,
+      usuario: payload.usuario as string,
+      nome: payload.nome as string,
+      cargo: payload.cargo as string,
+    };
+  } catch {
     throw new Error('Token inválido ou expirado');
   }
 }

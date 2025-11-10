@@ -388,7 +388,7 @@ describe('API - Cursos', () => {
       }
 
       mockPrisma.user.findUnique.mockResolvedValue(mockUser)
-      mockPrisma.curso.delete.mockResolvedValue({} as any)
+      mockPrisma.curso.delete.mockResolvedValue({ id: '1' } as { id: string })
 
       const request = new NextRequest('http://localhost:3000/api/cursos?id=1', {
         method: 'DELETE',

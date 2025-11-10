@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { PageTransition } from "@/components/PageTransition";
 import { Users, Plus, Pencil, Trash2 } from "lucide-react";
 import { toast } from "sonner";
@@ -64,7 +64,7 @@ export default function UsuariosPage() {
     senha: "",
   });
   // Fetch users
-  const fetchUsers = async (page = 1, search = "", start = "", end = "") => {
+  const fetchUsers = useCallback(async (page = 1, search = "", start = "", end = "") => {
     try {
       setLoading(true);
       const params = new URLSearchParams({
@@ -88,10 +88,11 @@ export default function UsuariosPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [pagination.limit]);
+
   useEffect(() => {
     fetchUsers(1, searchTerm, startDate, endDate);
-  }, [searchTerm, startDate, endDate]);
+  }, [searchTerm, startDate, endDate, fetchUsers]);
   // Create user
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -206,33 +207,48 @@ export default function UsuariosPage() {
       <div className="min-h-screen bg-background p-6">
         <div className="max-w-7xl mx-auto">
           {/* Header */}
-          <div className="mb-8">
-            <div className="flex items-center gap-3 mb-2">
-              <Users className="h-8 w-8 text-primary" />
-              <h1 className="text-3xl font-bold text-foreground">
-                Gerenciar Usuários
-              </h1>
+          <PageHeader
+            icon={Users}
+            title="Gerenciar Usuários"
+            description="Crie, edite e gerencie usuários do sistema"
+            actionLabel="Novo Usuário"
+            onAction={() => {
+              setFormData({ nome: "", cargo: "", usuario: "", senha: "" });
+              setShowCreateModal(true);
+            }}
+          />
+          {/* Filters */}
+          <div className="mb-6 space-y-4">
+            <div className="flex flex-col sm:flex-row gap-4 items-end">
+              <div className="flex flex-col gap-1 flex-1">
+                <span className="text-xs text-muted-foreground pl-1">Buscar</span>
+                <SearchInput
+                  value={searchTerm}
+                  onChange={setSearchTerm}
+                  placeholder="Nome, usuário ou cargo..."
+                />
+              </div>
+              <div className="flex flex-col gap-1 w-full sm:w-auto">
+                <span className="text-xs text-muted-foreground pl-1">Data Inicial</span>
+                <Input
+                  id="startDate"
+                  type="date"
+                  value={startDate}
+                  onChange={(e) => setStartDate(e.target.value)}
+                  className="w-full sm:w-auto"
+                />
+              </div>
+              <div className="flex flex-col gap-1 w-full sm:w-auto">
+                <span className="text-xs text-muted-foreground pl-1">Data Final</span>
+                <Input
+                  id="endDate"
+                  type="date"
+                  value={endDate}
+                  onChange={(e) => setEndDate(e.target.value)}
+                  className="w-full sm:w-auto"
+                />
+              </div>
             </div>
-            <p className="text-muted-foreground">
-              Crie, edite e gerencie usuários do sistema
-            </p>
-          </div>
-          {/* Actions Bar */}
-          <div className="flex flex-col sm:flex-row gap-4 mb-6">
-            <SearchInput
-              value={searchTerm}
-              onChange={setSearchTerm}
-              placeholder="Buscar por nome, usuário ou cargo..."
-            />
-            <Button
-              onClick={() => {
-                setFormData({ nome: "", cargo: "", usuario: "", senha: "" });
-                setShowCreateModal(true);
-              }}
-            >
-              <Plus className="h-5 w-5 mr-2" />
-              Novo Usuário
-            </Button>
           </div>
           {/* Users Table */}
           <div className="bg-card rounded-lg shadow-sm border border-border overflow-hidden">
@@ -308,7 +324,12 @@ export default function UsuariosPage() {
                         variant="outline"
                         size="sm"
                         onClick={() =>
-                          fetchUsers(pagination.page - 1, searchTerm)
+                          fetchUsers(
+                            pagination.page - 1,
+                            searchTerm,
+                            startDate,
+                            endDate
+                          )
                         }
                         disabled={pagination.page === 1}
                       >
@@ -321,7 +342,12 @@ export default function UsuariosPage() {
                         variant="outline"
                         size="sm"
                         onClick={() =>
-                          fetchUsers(pagination.page + 1, searchTerm)
+                          fetchUsers(
+                            pagination.page + 1,
+                            searchTerm,
+                            startDate,
+                            endDate
+                          )
                         }
                         disabled={pagination.page === pagination.totalPages}
                       >
@@ -338,7 +364,10 @@ export default function UsuariosPage() {
         <Dialog open={showCreateModal} onOpenChange={setShowCreateModal}>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Criar Novo Usuário</DialogTitle>
+              <DialogTitle className="flex items-center gap-2">
+                <Plus className="h-5 w-5" />
+                Criar Novo Usuário
+              </DialogTitle>
               <DialogDescription>
                 Preencha os campos abaixo para criar um novo usuário no sistema.
               </DialogDescription>
@@ -399,7 +428,10 @@ export default function UsuariosPage() {
                 >
                   Cancelar
                 </Button>
-                <Button type="submit">Criar Usuário</Button>
+                <Button type="submit">
+                  <Plus className="h-4 w-4 mr-2" />
+                  Criar Usuário
+                </Button>
               </DialogFooter>
             </form>
           </DialogContent>

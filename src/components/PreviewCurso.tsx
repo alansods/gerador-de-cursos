@@ -6,7 +6,6 @@ import { WelcomeMessage } from "@/components/WelcomeMessage";
 import {
   BookOpen,
   Clock,
-  User,
   GraduationCap,
   ArrowLeft,
   Download,

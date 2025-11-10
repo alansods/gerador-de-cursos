@@ -170,7 +170,6 @@ test.describe('E2E - Cursos Page', () => {
     await page.goto('/cursos')
 
     // Limpar contador após carregamento inicial
-    const initialCount = apiRequests.length
     apiRequests.length = 0
 
     // Act - Selecionar categoria
@@ -247,7 +246,6 @@ test.describe('E2E - Cursos Page', () => {
 
     await expect(page.getByText('Curso Página 1')).toBeVisible()
 
-    const initialCount = apiRequests.length
     apiRequests.length = 0
 
     // Act - Ir para página 2

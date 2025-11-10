@@ -19,7 +19,10 @@ export async function GET(request: NextRequest) {
     const endDate = searchParams.get('endDate');
 
     // Construir filtro de busca
-    const where: any = {};
+    const where: {
+      OR?: Array<{ nome?: { contains: string; mode: 'insensitive' }; usuario?: { contains: string; mode: 'insensitive' }; cargo?: { contains: string; mode: 'insensitive' } }>;
+      createdAt?: { gte?: Date; lte?: Date };
+    } = {};
 
     // Filtro de texto
     if (search) {
@@ -220,7 +223,7 @@ export async function PUT(request: NextRequest) {
     }
 
     // Preparar dados para atualização
-    const updateData: any = {};
+    const updateData: { nome?: string; cargo?: string; usuario?: string; senha?: string } = {};
     if (nome) updateData.nome = nome;
     if (cargo) updateData.cargo = cargo;
     if (usuario) updateData.usuario = usuario;

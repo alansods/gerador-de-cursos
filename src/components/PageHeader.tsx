@@ -1,4 +1,4 @@
-import { LucideIcon } from "lucide-react";
+import { LucideIcon, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface PageHeaderProps {
@@ -27,6 +27,7 @@ export function PageHeader({
       </div>
       {actionLabel && onAction && (
         <Button onClick={onAction}>
+          <Plus className="h-5 w-5 mr-2" />
           {actionLabel}
         </Button>
       )}

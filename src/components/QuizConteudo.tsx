@@ -15,7 +15,7 @@ import {
   Trophy,
   TrendingUp,
 } from "lucide-react";
-import { QuizData, QuizQuestion } from "@/types/gerador-curso";
+import { QuizData } from "@/types/gerador-curso";
 
 interface QuizConteudoProps {
   quizData: QuizData;
@@ -28,6 +28,14 @@ export function QuizConteudo({ quizData, isEdicao = false }: QuizConteudoProps) 
   const [showFeedbacks, setShowFeedbacks] = useState<Record<string, boolean>>({});
   const [showDicas, setShowDicas] = useState<Record<string, boolean>>({});
   const [showResults, setShowResults] = useState(false);
+
+  // Verificar quando mostrar resultados
+  useEffect(() => {
+    if (!isEdicao && !showResults) {
+      checkAndShowResults();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [showFeedbacks, currentQuestionIndex, isEdicao, showResults]);
 
   if (!quizData.questions || quizData.questions.length === 0) {
     return (
@@ -45,7 +53,6 @@ export function QuizConteudo({ quizData, isEdicao = false }: QuizConteudoProps) 
   const questionId = currentQuestion.id;
   const selectedOption = selectedOptions[questionId] || null;
   const showFeedback = showFeedbacks[questionId] || false;
-  const showDica = showDicas[questionId] || false;
 
   const handleOptionSelect = (optionId: string) => {
     if (showFeedback || isEdicao) return;
@@ -115,7 +122,7 @@ export function QuizConteudo({ quizData, isEdicao = false }: QuizConteudoProps) 
     let message = "";
     let icon = <Trophy className="h-12 w-12" />;
     let bgColor = "from-green-500 to-emerald-600";
-    let textColor = "text-green-50";
+    const textColor = "text-green-50";
 
     if (percentage === 100) {
       message = "🎉 Parabéns! Você acertou todas as questões! Você demonstrou excelente compreensão do conteúdo!";
@@ -146,12 +153,6 @@ export function QuizConteudo({ quizData, isEdicao = false }: QuizConteudoProps) 
     };
   };
 
-  // Verificar quando mostrar resultados
-  useEffect(() => {
-    if (!isEdicao && !showResults) {
-      checkAndShowResults();
-    }
-  }, [showFeedbacks, currentQuestionIndex]);
 
   const toggleDica = (questionId: string) => {
     setShowDicas({
@@ -160,11 +161,6 @@ export function QuizConteudo({ quizData, isEdicao = false }: QuizConteudoProps) 
     });
   };
 
-  const selectedOptionData = selectedOption
-    ? currentQuestion.opcoes.find((opt) => opt.id === selectedOption)
-    : null;
-
-  const isCorrect = selectedOptionData?.isCorrect || false;
   const totalQuestions = quizData.questions.length;
 
   // Mostrar tela de resultados

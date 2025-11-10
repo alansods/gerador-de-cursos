@@ -16,7 +16,7 @@ import {
 import { Button } from "./ui/button";
 import { useTheme } from "@/hooks/useTheme";
 import { useAuth } from "@/context/AuthContext";
-import { useRouter, usePathname } from "next/navigation";
+import { usePathname } from "next/navigation";
 import Link from "next/link";
 
 const navItems = [
@@ -36,7 +36,6 @@ export function Sidebar() {
   const [isHovered, setIsHovered] = useState(false);
   const { isDarkMode, toggleDarkMode } = useTheme();
   const { user, logout } = useAuth();
-  const router = useRouter();
   const pathname = usePathname();
 
   const isExpanded = isPinned || isHovered;

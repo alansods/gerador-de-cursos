@@ -48,7 +48,6 @@ export function InfoBox({
   tipo,
   titulo,
   children,
-  className = "",
 }: InfoBoxProps) {
   const Icon = iconMap[tipo];
   const colors = colorMap[tipo];

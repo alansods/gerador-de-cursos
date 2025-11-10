@@ -59,7 +59,10 @@ export function QuizReutilizavel({
 
   // Embaralhar as opções quando o componente monta
   useEffect(() => {
-    setShuffledOptions(shuffleArray(config.options));
+    // Use setTimeout to avoid synchronous setState in effect
+    setTimeout(() => {
+      setShuffledOptions(shuffleArray(config.options));
+    }, 0);
   }, [config.options]);
 
   const handleOptionSelect = (optionId: string) => {

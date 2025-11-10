@@ -7,7 +7,6 @@ import { useSCORM } from "@/hooks/useSCORM";
 import { ExportModal } from "@/components/ExportModal";
 import { PageTransition } from "@/components/PageTransition";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { CourseCard } from "@/components/CourseCard";
 import {
   Select,
@@ -16,15 +15,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Pagination,
-  PaginationContent,
-  PaginationEllipsis,
-  PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
-} from "@/components/ui/pagination";
 import { toast } from "sonner";
 import type { CursoGerado } from "@/types/gerador-curso";
 import {
@@ -35,12 +25,12 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Plus, Loader2, AlertCircle, X, Bug } from "lucide-react";
+import { Plus, Loader2, AlertCircle, X, BookOpen, ChevronsLeft, ChevronLeft, ChevronRight, ChevronsRight } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useDebounce } from "@/hooks/useDebounce";
-import { clearBrowserCache, runDiagnostics } from "@/lib/browser-cache";
 import { SearchInput } from "@/components/SearchInput";
+import { PageHeader } from "@/components/PageHeader";
 
 const ITEMS_PER_PAGE = 6;
 
@@ -71,9 +61,6 @@ export default function CursosPage() {
   const [selectedCursoForExport, setSelectedCursoForExport] =
     useState<CursoGerado | null>(null);
 
-  // Debug
-  const [showDebug, setShowDebug] = useState(false);
-
   // Estados de busca e filtros
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] =
@@ -81,6 +68,7 @@ export default function CursosPage() {
   const [selectedFormat, setSelectedFormat] =
     useState<string>("Todas Modalidades");
   const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(ITEMS_PER_PAGE);
   const [totalCourses, setTotalCourses] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
   const [loadingCourses, setLoadingCourses] = useState(false);
@@ -92,18 +80,51 @@ export default function CursosPage() {
   const isLoadingRef = useRef(false);
   const abortControllerRef = useRef<AbortController | null>(null);
   const lastRequestIdRef = useRef(0);
-  const requestCacheRef = useRef<Map<string, { data: any; timestamp: number }>>(new Map());
+  const requestCacheRef = useRef<Map<string, { data: { cursos: CursoGerado[]; pagination: { total: number; totalPages: number } }; timestamp: number }>>(new Map());
+  const prevFiltersRef = useRef<string>('');
 
   // Cache duration: 5 seconds
   const CACHE_DURATION = 5000;
 
   // Resetar página quando filtros mudarem
   useEffect(() => {
-    setCurrentPage(1);
-  }, [debouncedSearchTerm, selectedCategory, selectedFormat]);
+    const currentFilters = `${debouncedSearchTerm}-${selectedCategory}-${selectedFormat}-${itemsPerPage}`;
+
+    console.log('[CursosPage] 🔄 useEffect RESET disparado', {
+      prevFilters: prevFiltersRef.current,
+      currentFilters,
+      currentPage
+    });
+
+    // Se é a primeira vez ou filtros não mudaram, não faz nada
+    if (prevFiltersRef.current === '' || prevFiltersRef.current === currentFilters) {
+      prevFiltersRef.current = currentFilters;
+      console.log('[CursosPage] ℹ️ Filtros não mudaram ou primeira carga');
+      return;
+    }
+
+    prevFiltersRef.current = currentFilters;
+
+    // Só reseta se a página não for 1 (evita requisição duplicada)
+    if (currentPage !== 1) {
+      console.log('[CursosPage] 🔁 Resetando página para 1');
+      setCurrentPage(1);
+    } else {
+      console.log('[CursosPage] ℹ️ Página já é 1, não precisa resetar');
+    }
+  }, [debouncedSearchTerm, selectedCategory, selectedFormat, itemsPerPage, currentPage]);
 
   // Carregar cursos paginados do servidor
   useEffect(() => {
+    console.log('[CursosPage] 📡 useEffect FETCH disparado', {
+      currentPage,
+      itemsPerPage,
+      debouncedSearchTerm,
+      selectedCategory,
+      selectedFormat,
+      isLoadingRef: isLoadingRef.current
+    });
+
     // Prevenir múltiplas requisições simultâneas
     if (isLoadingRef.current) {
       console.log('[CursosPage] 🚫 Requisição bloqueada - já existe uma requisição em andamento');
@@ -118,10 +139,11 @@ export default function CursosPage() {
 
     let cancelled = false;
     const requestId = ++lastRequestIdRef.current;
+    console.log('[CursosPage] 🆕 Nova requisição #' + requestId);
 
     const carregarCursosPaginados = async () => {
       // Construir chave de cache
-      const cacheKey = `${currentPage}-${debouncedSearchTerm}-${selectedCategory}-${selectedFormat}`;
+      const cacheKey = `${currentPage}-${itemsPerPage}-${debouncedSearchTerm}-${selectedCategory}-${selectedFormat}`;
       const cachedData = requestCacheRef.current.get(cacheKey);
 
       // Verificar se há cache válido
@@ -142,7 +164,7 @@ export default function CursosPage() {
 
       const params = new URLSearchParams({
         page: currentPage.toString(),
-        limit: ITEMS_PER_PAGE.toString(),
+        limit: itemsPerPage.toString(),
       });
 
       if (debouncedSearchTerm) {
@@ -257,7 +279,7 @@ export default function CursosPage() {
       }
       isLoadingRef.current = false;
     };
-  }, [currentPage, debouncedSearchTerm, selectedCategory, selectedFormat]);
+  }, [currentPage, debouncedSearchTerm, selectedCategory, selectedFormat, itemsPerPage]);
 
   // Cursos exibidos (vêm do servidor já paginados)
   const paginatedCourses = cursosPaginados;
@@ -276,42 +298,6 @@ export default function CursosPage() {
     setCurrentPage(1);
   };
 
-  // Gerar números de página para exibir
-  const getPageNumbers = () => {
-    const pages: (number | "ellipsis")[] = [];
-    const maxVisible = 5;
-
-    if (totalPages <= maxVisible) {
-      for (let i = 1; i <= totalPages; i++) {
-        pages.push(i);
-      }
-    } else {
-      if (currentPage <= 3) {
-        for (let i = 1; i <= 4; i++) {
-          pages.push(i);
-        }
-        pages.push("ellipsis");
-        pages.push(totalPages);
-      } else if (currentPage >= totalPages - 2) {
-        pages.push(1);
-        pages.push("ellipsis");
-        for (let i = totalPages - 3; i <= totalPages; i++) {
-          pages.push(i);
-        }
-      } else {
-        pages.push(1);
-        pages.push("ellipsis");
-        for (let i = currentPage - 1; i <= currentPage + 1; i++) {
-          pages.push(i);
-        }
-        pages.push("ellipsis");
-        pages.push(totalPages);
-      }
-    }
-
-    return pages;
-  };
-
   const handleCriarCurso = () => router.push("/cursos/novo");
   const handleEditarCurso = (id: string) => {
     selecionarCurso(id);
@@ -324,19 +310,6 @@ export default function CursosPage() {
     }
   };
 
-  // Debug functions
-  const handleRunDiagnostics = async () => {
-    const result = await runDiagnostics();
-    toast.info(`Cache: ${result.stats.cookies} cookies, ${result.stats.localStorage} localStorage items. ${result.corruption.hasIssues ? `⚠️ ${result.corruption.issues.length} problemas detectados` : '✅ Sem problemas'}`);
-  };
-
-  const handleClearCache = async () => {
-    await clearBrowserCache();
-    toast.success('Cache limpo com sucesso! Recarregue a página.');
-    setTimeout(() => {
-      window.location.reload();
-    }, 1500);
-  };
   const handleOpenExportModal = (curso: CursoGerado) => {
     setSelectedCursoForExport(curso);
     setExportModalOpen(true);
@@ -370,80 +343,15 @@ export default function CursosPage() {
       <div className="min-h-screen bg-background">
         {/* Conteúdo Principal */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          {/* Header - Integrado na página */}
-          <div className="flex justify-between items-center mb-8">
-            <div>
-              <h1 className="text-3xl font-bold text-foreground">
-                Gerador de Cursos
-              </h1>
-              <p className="text-muted-foreground mt-2">
-                Crie e gerencie seus cursos online
-              </p>
-            </div>
-            <div className="flex gap-2 items-center">
-              {/* Debug button - only in development */}
-              {process.env.NODE_ENV === 'development' && (
-                <Button
-                  variant="outline"
-                  size="icon"
-                  onClick={() => setShowDebug(!showDebug)}
-                  title="Debug Tools"
-                  className="border-dashed"
-                >
-                  <Bug className="h-4 w-4" />
-                </Button>
-              )}
-              <Button
-                onClick={handleCriarCurso}
-                className="bg-primary hover:bg-primary/90 text-primary-foreground"
-              >
-                <Plus className="h-5 w-5 mr-2" />
-                Novo Curso
-              </Button>
-            </div>
-          </div>
+          {/* Header */}
+          <PageHeader
+            icon={BookOpen}
+            title="Gerador de Cursos"
+            description="Crie e gerencie seus cursos online"
+            actionLabel="Novo Curso"
+            onAction={handleCriarCurso}
+          />
 
-          {/* Debug Panel */}
-          {showDebug && process.env.NODE_ENV === 'development' && (
-            <div className="mb-6 bg-yellow-50 dark:bg-yellow-900/20 border-2 border-yellow-400 dark:border-yellow-600 rounded-lg p-4">
-              <div className="flex items-start justify-between mb-3">
-                <div className="flex items-center gap-2">
-                  <Bug className="h-5 w-5 text-yellow-600 dark:text-yellow-400" />
-                  <h3 className="font-semibold text-yellow-900 dark:text-yellow-100">
-                    Debug Tools
-                  </h3>
-                </div>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setShowDebug(false)}
-                >
-                  <X className="h-4 w-4" />
-                </Button>
-              </div>
-              <p className="text-sm text-yellow-800 dark:text-yellow-200 mb-3">
-                Ferramentas de diagnóstico para resolver problemas de requisições duplicadas e cache.
-              </p>
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleRunDiagnostics}
-                  className="border-yellow-600 text-yellow-900 dark:text-yellow-100 hover:bg-yellow-100 dark:hover:bg-yellow-900/40"
-                >
-                  Executar Diagnóstico
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleClearCache}
-                  className="border-red-600 text-red-900 dark:text-red-100 hover:bg-red-100 dark:hover:bg-red-900/40"
-                >
-                  Limpar Cache do Navegador
-                </Button>
-              </div>
-            </div>
-          )}
           {showError && (
             <div className="mb-6 bg-secondary border border-border rounded-lg p-6">
               <div className="flex items-start">
@@ -512,47 +420,56 @@ export default function CursosPage() {
           {/* Busca e Filtros */}
           {!showError && (
             <div className="mb-6 space-y-4">
-              <div className="flex flex-col sm:flex-row gap-4">
+              <div className="flex flex-col sm:flex-row gap-4 items-end">
                 {/* Barra de Busca */}
-                <SearchInput
-                  value={searchTerm}
-                  onChange={setSearchTerm}
-                  placeholder="Buscar cursos..."
-                />
+                <div className="flex flex-col gap-1 flex-1">
+                  <span className="text-xs text-muted-foreground pl-1">Buscar</span>
+                  <SearchInput
+                    value={searchTerm}
+                    onChange={setSearchTerm}
+                    placeholder="Título, descrição ou categoria..."
+                  />
+                </div>
 
                 {/* Filtro por Categoria */}
-                <Select
-                  value={selectedCategory}
-                  onValueChange={setSelectedCategory}
-                >
-                  <SelectTrigger className="w-[180px] bg-card dark:bg-card border border-border">
-                    <SelectValue placeholder="Categoria" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {CATEGORIES.map((category) => (
-                      <SelectItem key={category} value={category}>
-                        {category}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <div className="flex flex-col gap-1 w-full sm:w-auto">
+                  <span className="text-xs text-muted-foreground pl-1">Categoria</span>
+                  <Select
+                    value={selectedCategory}
+                    onValueChange={setSelectedCategory}
+                  >
+                    <SelectTrigger className="w-full sm:w-[180px] bg-card dark:bg-card border border-border">
+                      <SelectValue placeholder="Categoria" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {CATEGORIES.map((category) => (
+                        <SelectItem key={category} value={category}>
+                          {category}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
 
                 {/* Filtro por Modalidade */}
-                <Select
-                  value={selectedFormat}
-                  onValueChange={setSelectedFormat}
-                >
-                  <SelectTrigger className="w-[180px] bg-card dark:bg-card border border-border">
-                    <SelectValue placeholder="Modalidade" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {MODALIDADES.map((modalidade) => (
-                      <SelectItem key={modalidade} value={modalidade}>
-                        {modalidade}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <div className="flex flex-col gap-1 w-full sm:w-auto">
+                  <span className="text-xs text-muted-foreground pl-1">Modalidade</span>
+                  <Select
+                    value={selectedFormat}
+                    onValueChange={setSelectedFormat}
+                  >
+                    <SelectTrigger className="w-full sm:w-[180px] bg-card dark:bg-card border border-border">
+                      <SelectValue placeholder="Modalidade" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {MODALIDADES.map((modalidade) => (
+                        <SelectItem key={modalidade} value={modalidade}>
+                          {modalidade}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
 
                 {/* Botão Limpar Filtros */}
                 {hasActiveFilters && (
@@ -633,73 +550,91 @@ export default function CursosPage() {
               </div>
 
               {/* Paginação */}
-              {totalPages > 1 && (
-                <div className="flex justify-center mt-8">
-                  <Pagination>
-                    <PaginationContent>
-                      <PaginationItem>
-                        <PaginationPrevious
-                          href="#"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            if (currentPage > 1) {
-                              setCurrentPage(currentPage - 1);
-                              window.scrollTo({ top: 0, behavior: "smooth" });
-                            }
-                          }}
-                          className={
-                            currentPage === 1
-                              ? "pointer-events-none opacity-50"
-                              : ""
-                          }
-                        />
-                      </PaginationItem>
+              {totalCourses > 0 && (
+                <div className="mt-8 flex flex-col sm:flex-row items-center justify-between gap-4 px-2">
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <span>Itens por página:</span>
+                    <Select
+                      value={itemsPerPage.toString()}
+                      onValueChange={(value) => {
+                        setItemsPerPage(parseInt(value));
+                      }}
+                    >
+                      <SelectTrigger className="w-[70px] h-8 bg-card dark:bg-card border border-border">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="6">6</SelectItem>
+                        <SelectItem value="12">12</SelectItem>
+                        <SelectItem value="24">24</SelectItem>
+                        <SelectItem value="48">48</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
 
-                      {getPageNumbers().map((page, index) => {
-                        if (page === "ellipsis") {
-                          return (
-                            <PaginationItem key={`ellipsis-${index}`}>
-                              <PaginationEllipsis />
-                            </PaginationItem>
-                          );
-                        }
+                  <div className="flex items-center gap-4">
+                    <div className="text-sm text-muted-foreground">
+                      {((currentPage - 1) * itemsPerPage) + 1}-{Math.min(currentPage * itemsPerPage, totalCourses)} de {totalCourses}
+                    </div>
 
-                        return (
-                          <PaginationItem key={page}>
-                            <PaginationLink
-                              href="#"
-                              onClick={(e) => {
-                                e.preventDefault();
-                                setCurrentPage(page);
-                                window.scrollTo({ top: 0, behavior: "smooth" });
-                              }}
-                              isActive={currentPage === page}
-                            >
-                              {page}
-                            </PaginationLink>
-                          </PaginationItem>
-                        );
-                      })}
+                    <div className="flex items-center gap-1">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => {
+                          setCurrentPage(1);
+                          window.scrollTo({ top: 0, behavior: "smooth" });
+                        }}
+                        disabled={currentPage === 1}
+                        className="h-8 w-8"
+                        title="Primeira página"
+                      >
+                        <ChevronsLeft className="h-4 w-4" />
+                      </Button>
 
-                      <PaginationItem>
-                        <PaginationNext
-                          href="#"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            if (currentPage < totalPages) {
-                              setCurrentPage(currentPage + 1);
-                              window.scrollTo({ top: 0, behavior: "smooth" });
-                            }
-                          }}
-                          className={
-                            currentPage === totalPages
-                              ? "pointer-events-none opacity-50"
-                              : ""
-                          }
-                        />
-                      </PaginationItem>
-                    </PaginationContent>
-                  </Pagination>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => {
+                          setCurrentPage(currentPage - 1);
+                          window.scrollTo({ top: 0, behavior: "smooth" });
+                        }}
+                        disabled={currentPage === 1}
+                        className="h-8 w-8"
+                        title="Página anterior"
+                      >
+                        <ChevronLeft className="h-4 w-4" />
+                      </Button>
+
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => {
+                          setCurrentPage(currentPage + 1);
+                          window.scrollTo({ top: 0, behavior: "smooth" });
+                        }}
+                        disabled={currentPage === totalPages}
+                        className="h-8 w-8"
+                        title="Próxima página"
+                      >
+                        <ChevronRight className="h-4 w-4" />
+                      </Button>
+
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => {
+                          setCurrentPage(totalPages);
+                          window.scrollTo({ top: 0, behavior: "smooth" });
+                        }}
+                        disabled={currentPage === totalPages}
+                        className="h-8 w-8"
+                        title="Última página"
+                      >
+                        <ChevronsRight className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
                 </div>
               )}
             </>

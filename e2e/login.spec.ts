@@ -5,7 +5,7 @@
  * Verifica requisições de rede para detectar duplicações
  */
 
-import { test, expect, Page } from '@playwright/test'
+import { test, expect } from '@playwright/test'
 
 test.describe('E2E - Login Flow', () => {
   test.beforeEach(async ({ page }) => {

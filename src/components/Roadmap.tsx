@@ -1,5 +1,6 @@
 import React from "react";
 import { useFeatures } from "../hooks/useFeatures";
+import { type FeatureKey } from "../config/features";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { Badge } from "./ui/badge";
 import { CheckCircle, Clock, Star } from "lucide-react";
@@ -31,14 +32,14 @@ export const Roadmap: React.FC = () => {
   };
 
   const getFeatureIcon = (feature: string) => {
-    if (enabledFeatures.includes(feature as any)) {
+    if (enabledFeatures.includes(feature as FeatureKey)) {
       return <CheckCircle className="h-4 w-4 text-green-500" />;
     }
     return <Clock className="h-4 w-4 text-yellow-500" />;
   };
 
   const getFeatureBadge = (feature: string) => {
-    if (enabledFeatures.includes(feature as any)) {
+    if (enabledFeatures.includes(feature as FeatureKey)) {
       return (
         <Badge variant="default" className="bg-green-500">
           Ativo

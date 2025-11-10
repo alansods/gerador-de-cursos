@@ -41,8 +41,11 @@ export function ExportModal({
   // Resetar estado quando o modal fechar
   useEffect(() => {
     if (!isOpen) {
-      setSelectedType(null);
-      setFilename('');
+      // Use setTimeout to avoid synchronous setState in effect
+      setTimeout(() => {
+        setSelectedType(null);
+        setFilename('');
+      }, 0);
     }
   }, [isOpen]);
 
@@ -60,7 +63,11 @@ export function ExportModal({
       
       const extension = selectedType === 'pdf' ? '.pdf' : '.zip';
       const prefix = selectedType === 'scorm' ? 'scorm-' : '';
-      setFilename(prefix + sanitizedName + extension);
+      const newFilename = prefix + sanitizedName + extension;
+      // Use setTimeout to avoid synchronous setState in effect
+      setTimeout(() => {
+        setFilename(newFilename);
+      }, 0);
     }
   }, [selectedType, courseName]);
 

@@ -4,7 +4,6 @@ import React from "react";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Eye, Download, Save, LogOut, User, Moon, Sun } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useTheme } from "@/hooks/useTheme";
 
@@ -32,7 +31,6 @@ export const Navbar: React.FC<NavbarProps> = ({
   showUserInfo = true,
 }) => {
   const { user, logout } = useAuth();
-  const router = useRouter();
   const { isDarkMode, toggleDarkMode } = useTheme();
 
   const handleLogout = async () => {

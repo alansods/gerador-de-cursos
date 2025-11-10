@@ -169,7 +169,7 @@ describe('API - Authentication', () => {
       mockPrisma.user.findUnique.mockResolvedValue(mockUser)
 
       // Criar um token válido
-      const { SignJWT } = require('jose')
+      const { SignJWT } = await import('jose')
       const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET)
       const token = await new SignJWT({ id: '1' })
         .setProtectedHeader({ alg: 'HS256' })

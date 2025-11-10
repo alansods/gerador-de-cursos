@@ -1,8 +1,7 @@
 import { NextResponse } from 'next/server';
-import type { NextRequest } from 'next/server';
 
 // Middleware desabilitado - todas as rotas são permitidas
-export function middleware(request: NextRequest) {
+export function middleware() {
   // Permitir todas as requisições sem verificação
   return NextResponse.next();
 }
