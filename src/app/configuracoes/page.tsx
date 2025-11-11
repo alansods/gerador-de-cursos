@@ -1,5 +1,8 @@
 "use client";
 
+// Esta página não deve ser exportada estaticamente
+export const dynamic = 'error';
+
 import { PageTransition } from "@/components/PageTransition";
 import { Construction, Settings } from "lucide-react";
 

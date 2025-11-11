@@ -1,6 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma, ensureConnection } from '@/lib/prisma';
 
+// Esta rota não pode ser exportada estaticamente
+export const dynamic = 'error';
+
+// Para build estático: retornar array vazio para ignorar esta rota
+export async function generateStaticParams() {
+  return [];
+}
+
 // GET - Buscar curso por ID
 export async function GET(
   request: NextRequest,

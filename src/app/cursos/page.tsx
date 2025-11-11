@@ -1,5 +1,8 @@
 "use client";
 
+// Esta página não deve ser exportada estaticamente (usa context e API)
+export const dynamic = "error";
+
 import { useGeradorCurso } from "@/context/GeradorCursoContext";
 import { usePreview } from "@/hooks/usePreview";
 import { usePDF } from "@/hooks/usePDF";

@@ -1,5 +1,8 @@
 'use client';
 
+// Esta página não deve ser exportada estaticamente (página de teste)
+export const dynamic = 'error';
+
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';

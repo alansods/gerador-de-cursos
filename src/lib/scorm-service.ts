@@ -576,7 +576,7 @@ function generateIndexHtml(curso: CursoGerado): string {
 // =======================================================================
 // 2. GERADOR DO MANIFESTO (imsmanifest.xml)
 // =======================================================================
-function generateManifest(curso: CursoGerado): string {
+export function generateManifest(curso: CursoGerado): string {
   const sanitizedTitle = curso.titulo.replace(/[^a-zA-Z0-9_-]/g, '_');
   
   return `<?xml version="1.0" encoding="UTF-8"?>
@@ -616,7 +616,7 @@ function generateManifest(curso: CursoGerado): string {
 // =======================================================================
 // 3. GERADOR DO WRAPPER SCORM (scorm_api_wrapper.js) - Sem alterações
 // =======================================================================
-function generateScormWrapper(): string {
+export function generateScormWrapper(): string {
   // Este é o wrapper robusto que suporta 1.2 e 2004
   return `console.log('📦 [SCORM-PLAYER] Carregando SCORM API Wrapper...');
 var SCORM = (function(){
@@ -685,7 +685,7 @@ console.log('📦 [SCORM-PLAYER] SCORM Wrapper carregado com sucesso.');
 // =======================================================================
 // 4. GERADOR DOS SCHEMAS XSD (Arquivos de Definição) - Sem alterações
 // =======================================================================
-function getXSDs(): { [key: string]: string } {
+export function getXSDs(): { [key: string]: string } {
   return {
     'imscp_rootv1p1p2.xsd': `<?xml version="1.0" encoding="UTF-8"?><xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" targetNamespace="http://www.imsproject.org/xsd/imscp_rootv1p1p2" version="IMS CP 1.1.2"><xsd:annotation><xsd:documentation>Schema simplificado para validação.</xsd:documentation></xsd:annotation></xsd:schema>`,
     'adlcp_rootv1p2.xsd': `<?xml version="1.0" encoding="UTF-8"?><xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" targetNamespace="http://www.adlnet.org/xsd/adlcp_rootv1p2"><xsd:annotation><xsd:documentation>Schema simplificado para validação ADL.</xsd:documentation></xsd:annotation></xsd:schema>`,

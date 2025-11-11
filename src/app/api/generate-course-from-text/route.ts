@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
+// Esta rota não pode ser exportada estaticamente
+export const dynamic = 'error';
+
 // Configuração para Vercel
 export const maxDuration = 60; // 60s para plano Pro (10s para Hobby)
 

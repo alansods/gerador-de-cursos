@@ -1,6 +1,9 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 
+// Esta rota não pode ser exportada estaticamente
+export const dynamic = 'error';
+
 export async function GET() {
   try {
     const comments = await prisma.comment.findMany({

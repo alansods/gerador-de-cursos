@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import puppeteer from 'puppeteer';
 
+// Esta rota não pode ser exportada estaticamente
+export const dynamic = 'error';
+
 export async function POST(request: NextRequest) {
   let browser;
   

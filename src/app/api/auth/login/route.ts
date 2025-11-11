@@ -6,6 +6,9 @@ import { JWT_SECRET, createErrorResponse } from '@/lib/auth';
 import { EXPIRATION_TIMES, ERROR_MESSAGES } from '@/lib/constants';
 import { validateLoginData } from '@/lib/validations';
 
+// Esta rota não pode ser exportada estaticamente
+export const dynamic = 'error';
+
 // Tratamento de CORS para requisições OPTIONS
 export async function OPTIONS() {
   return new NextResponse(null, {

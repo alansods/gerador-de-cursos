@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import { prisma, ensureConnection } from '@/lib/prisma';
 
+// Esta rota não pode ser exportada estaticamente
+export const dynamic = 'error';
+
 export async function POST(req: NextRequest) {
   try {
     await ensureConnection();

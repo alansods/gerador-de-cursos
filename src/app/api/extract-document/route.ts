@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import mammoth from 'mammoth';
 
+// Esta rota não pode ser exportada estaticamente
+export const dynamic = 'error';
+
 // Configuração para Vercel
 export const maxDuration = 60; // 60s para plano Pro (10s para Hobby)
 export const runtime = 'nodejs';

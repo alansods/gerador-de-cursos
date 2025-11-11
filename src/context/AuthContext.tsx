@@ -1,7 +1,7 @@
 'use client';
 
 import { createContext, useContext, useState, ReactNode, useEffect, useRef } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { toast } from 'sonner';
 
 interface User {
@@ -31,6 +31,7 @@ export function AuthProvider({ children, initialUser }: AuthProviderProps) {
   const [user, setUser] = useState<User | null>(initialUser || null);
   const [loading, setLoading] = useState(true); // Começa como true para verificar sessão
   const router = useRouter();
+  const pathname = usePathname();
   const checkSessionRef = useRef(false); // Prevenir verificações duplicadas
 
   const login = async (usuario: string, senha: string): Promise<boolean> => {
@@ -101,6 +102,13 @@ export function AuthProvider({ children, initialUser }: AuthProviderProps) {
 
   // Verificar sessão ao carregar
   useEffect(() => {
+    // Não verificar sessão em rotas SCORM (pacotes estáticos)
+    if (pathname?.includes('/scorm-preview')) {
+      console.log('[AuthContext] ⏭️ Pulando verificação de sessão (rota SCORM)');
+      setLoading(false);
+      return;
+    }
+
     // Prevenir verificações duplicadas (React Strict Mode)
     if (checkSessionRef.current) {
       console.log('[AuthContext] 🚫 Verificação de sessão já em andamento');
@@ -148,7 +156,7 @@ export function AuthProvider({ children, initialUser }: AuthProviderProps) {
     checkSession();
 
     // Cleanup não necessário pois é apenas uma verificação única
-  }, []); // Array vazio = executa apenas uma vez ao montar
+  }, [pathname]); // Reexecutar quando o pathname mudar
 
   const isAuthenticated = !!user;
 

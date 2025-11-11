@@ -1,4 +1,8 @@
 "use client";
+
+// Esta página não deve ser exportada estaticamente (usa API)
+export const dynamic = "error";
+
 import { useState, useEffect, useCallback } from "react";
 import { PageTransition } from "@/components/PageTransition";
 import { Users, Plus, Pencil, Trash2, X } from "lucide-react";

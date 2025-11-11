@@ -1,5 +1,8 @@
 "use client";
 
+// Esta página não deve ser exportada estaticamente (usa context e API)
+export const dynamic = 'error';
+
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";

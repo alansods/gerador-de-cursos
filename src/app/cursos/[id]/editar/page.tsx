@@ -1,5 +1,9 @@
 "use client";
 
+// Esta página não deve ser exportada estaticamente (usa context e hooks client-side)
+// O Next.js deve ignorar esta página durante build estático
+export const dynamic = 'error';
+
 import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { useGeradorCurso } from "@/context/GeradorCursoContext";

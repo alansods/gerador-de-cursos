@@ -1,5 +1,8 @@
 'use client'
 
+// Esta página não deve ser exportada estaticamente (usa context e API)
+export const dynamic = 'error';
+
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useGeradorCurso } from '@/context/GeradorCursoContext'

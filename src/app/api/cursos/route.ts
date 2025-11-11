@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma, ensureConnection } from '@/lib/prisma';
 import { Prisma } from '@prisma/client';
 
+// Esta rota não pode ser exportada estaticamente
+export const dynamic = 'error';
+
 // Tratamento de CORS para requisições OPTIONS
 export async function OPTIONS() {
   return new NextResponse(null, {

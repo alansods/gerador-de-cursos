@@ -9,7 +9,7 @@ export const useSCORM = () => {
   const [error, setError] = useState<string | null>(null);
 
   /**
-   * Gera um pacote SCORM para o curso fornecido.
+   * Gera um pacote SCORM para o curso fornecido usando build real do Next.js.
    * @param curso O objeto COMPLETO do curso.
    * @param filename O nome desejado para o arquivo .zip (sem a extensão).
    */
@@ -18,17 +18,16 @@ export const useSCORM = () => {
     setError(null);
     
     const toastId = toast.loading('Gerando pacote SCORM...', {
-      description: `Iniciando a exportação de "${curso.titulo}".`,
+      description: `Iniciando a exportação de "${curso.titulo}". Isso pode levar alguns minutos.`,
     });
 
     try {
-      // 1. Chamar nossa nova API Route
+      // 1. Chamar nossa API Route que faz build real
       const response = await fetch('/api/generate-scorm', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        // --- CORREÇÃO AQUI ---
         // Envia o objeto 'curso' completo
         body: JSON.stringify({ curso: curso }), 
       });

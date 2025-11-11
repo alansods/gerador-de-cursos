@@ -19,6 +19,7 @@ export function AuthGuard({ children }: AuthGuardProps) {
   const publicRoutes = [
     '/preview',
     '/pdf-preview',
+    '/scorm-preview', // Para SCORM packages (standalone)
     '/login',
     '/cadastro',
   ];
@@ -29,6 +30,13 @@ export function AuthGuard({ children }: AuthGuardProps) {
   // Verificar se é uma rota pública
   const isPublicRoute = publicRoutes.some(route => pathname?.includes(route));
   const isAuthRoute = authRoutes.some(route => pathname?.includes(route));
+
+  // Durante build SCORM, tratar como rota pública para evitar loading
+  const isScormBuild = typeof process !== 'undefined' && process.env.SCORM_BUILD_CURSO_FILE;
+  if (isScormBuild) {
+    // Durante build SCORM, não mostrar loading, apenas retornar children
+    return <>{children}</>;
+  }
 
   // Redirecionar para login se não autenticado e não for rota pública
   useEffect(() => {

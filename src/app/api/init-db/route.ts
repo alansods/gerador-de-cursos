@@ -1,6 +1,9 @@
 import { sql } from '@vercel/postgres';
 import { NextResponse } from 'next/server';
 
+// Esta rota não pode ser exportada estaticamente
+export const dynamic = 'error';
+
 export async function GET() {
   try {
     // Criar tabela de cursos

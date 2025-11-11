@@ -1,5 +1,8 @@
 "use client";
 
+// Esta página não deve ser exportada estaticamente (usa API de autenticação)
+export const dynamic = 'error';
+
 import { useState, FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";

@@ -1,5 +1,8 @@
 import { NextResponse } from 'next/server';
 
+// Esta rota não pode ser exportada estaticamente
+export const dynamic = 'error';
+
 export async function POST() {
   console.log('[API /auth/logout] 🚪 Processando logout...');
 

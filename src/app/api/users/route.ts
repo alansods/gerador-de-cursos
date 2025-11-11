@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma, ensureConnection } from '@/lib/prisma';
 import bcrypt from 'bcryptjs';
 
+// Esta rota não pode ser exportada estaticamente
+export const dynamic = 'error';
+
 // GET - Listar todos os usuários
 export async function GET(request: NextRequest) {
   const requestId = Date.now().toString(36);
