@@ -103,7 +103,11 @@ export function AuthProvider({ children, initialUser }: AuthProviderProps) {
   // Verificar sessão ao carregar
   useEffect(() => {
     // Não verificar sessão em rotas SCORM (pacotes estáticos)
-    if (pathname?.includes('/scorm-preview')) {
+    // Detectar ambiente SCORM: pathname inclui scorm-preview OU window.SCORM existe
+    const isScormEnvironment = pathname?.includes('/scorm-preview') ||
+                                (typeof window !== 'undefined' && 'SCORM' in window);
+
+    if (isScormEnvironment) {
       console.log('[AuthContext] ⏭️ Pulando verificação de sessão (rota SCORM)');
       setLoading(false);
       return;

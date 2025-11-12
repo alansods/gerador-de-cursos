@@ -27,8 +27,11 @@ export function AuthGuard({ children }: AuthGuardProps) {
   // Rotas de autenticação (login/cadastro)
   const authRoutes = ['/login', '/cadastro'];
 
+  // Detectar ambiente SCORM: pathname inclui scorm-preview OU window.SCORM existe
+  const isScormEnvironment = typeof window !== 'undefined' && 'SCORM' in window;
+
   // Verificar se é uma rota pública
-  const isPublicRoute = publicRoutes.some(route => pathname?.includes(route));
+  const isPublicRoute = publicRoutes.some(route => pathname?.includes(route)) || isScormEnvironment;
   const isAuthRoute = authRoutes.some(route => pathname?.includes(route));
 
   // Durante build SCORM, tratar como rota pública para evitar loading
