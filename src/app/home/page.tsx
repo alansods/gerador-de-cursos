@@ -16,11 +16,44 @@ import {
   CheckCircle2,
   Users,
   FileCheck,
+  UserPlus,
+  Edit,
+  Trash2,
 } from "lucide-react";
 import { PageTransition } from "@/components/PageTransition";
+import { useEffect, useState } from "react";
+
+interface Activity {
+  id: string;
+  tipo: string;
+  titulo: string;
+  descricao: string | null;
+  createdAt: string;
+}
 
 export default function HomePage() {
   const router = useRouter();
+  const [activities, setActivities] = useState<Activity[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchActivities();
+  }, []);
+
+  const fetchActivities = async () => {
+    try {
+      const response = await fetch('/api/activities');
+      const data = await response.json();
+
+      if (data.success) {
+        setActivities(data.activities);
+      }
+    } catch (error) {
+      console.error('Erro ao buscar atividades:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const features = [
     {
@@ -49,32 +82,88 @@ export default function HomePage() {
     },
   ];
 
-  const recentActivities = [
-    {
-      icon: CheckCircle2,
-      title: "Novo curso publicado:",
-      subtitle: "Fundamentos de Desenvolvimento Web",
-      time: "Há 2 horas",
-      iconBg: "bg-[#0047BB]/10",
-      iconColor: "#0047BB",
-    },
-    {
-      icon: Users,
-      title: "128 novos alunos",
-      subtitle: "matriculados hoje",
-      time: "Há 5 horas",
-      iconBg: "bg-[#F15A29]/10",
-      iconColor: "#F15A29",
-    },
-    {
-      icon: FileCheck,
-      title: "45 certificados",
-      subtitle: "emitidos esta semana",
-      time: "Ontem",
-      iconBg: "bg-[#0047BB]/10",
-      iconColor: "#0047BB",
-    },
-  ];
+  // Mapear tipo de atividade para ícone e cor
+  const getActivityIconAndColor = (tipo: string) => {
+    switch (tipo) {
+      case 'curso_criado':
+        return {
+          icon: CheckCircle2,
+          iconBg: 'bg-green-500/10',
+          iconColor: '#22c55e',
+        };
+      case 'curso_editado':
+        return {
+          icon: Edit,
+          iconBg: 'bg-blue-500/10',
+          iconColor: '#3b82f6',
+        };
+      case 'curso_deletado':
+        return {
+          icon: Trash2,
+          iconBg: 'bg-red-500/10',
+          iconColor: '#ef4444',
+        };
+      case 'usuario_criado':
+        return {
+          icon: UserPlus,
+          iconBg: 'bg-emerald-500/10',
+          iconColor: '#10b981',
+        };
+      case 'usuario_editado':
+        return {
+          icon: Edit,
+          iconBg: 'bg-indigo-500/10',
+          iconColor: '#6366f1',
+        };
+      case 'usuario_deletado':
+        return {
+          icon: Trash2,
+          iconBg: 'bg-orange-500/10',
+          iconColor: '#f97316',
+        };
+      default:
+        return {
+          icon: FileCheck,
+          iconBg: 'bg-[#0047BB]/10',
+          iconColor: '#0047BB',
+        };
+    }
+  };
+
+  // Formatar tempo relativo
+  const getRelativeTime = (dateString: string) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+
+    if (diffInSeconds < 60) return 'Agora mesmo';
+    if (diffInSeconds < 3600) {
+      const minutes = Math.floor(diffInSeconds / 60);
+      return `Há ${minutes} minuto${minutes > 1 ? 's' : ''}`;
+    }
+    if (diffInSeconds < 86400) {
+      const hours = Math.floor(diffInSeconds / 3600);
+      return `Há ${hours} hora${hours > 1 ? 's' : ''}`;
+    }
+    if (diffInSeconds < 604800) {
+      const days = Math.floor(diffInSeconds / 86400);
+      return `Há ${days} dia${days > 1 ? 's' : ''}`;
+    }
+    return date.toLocaleDateString('pt-BR');
+  };
+
+  // Mapear atividades para formato de exibição
+  const recentActivities = activities.map((activity) => {
+    const { icon, iconBg, iconColor } = getActivityIconAndColor(activity.tipo);
+    return {
+      icon,
+      title: activity.titulo,
+      subtitle: activity.descricao || '',
+      time: getRelativeTime(activity.createdAt),
+      iconBg,
+      iconColor,
+    };
+  });
 
   return (
     <PageTransition>
@@ -219,48 +308,72 @@ export default function HomePage() {
 
             {/* Activity Cards */}
             <div className="space-y-4">
-              {recentActivities.map((activity, index) => {
-                const Icon = activity.icon;
-                return (
-                  <Card
-                    key={index}
-                    className="border border-border hover:shadow-md transition-shadow"
-                  >
-                    <CardContent className="p-3 sm:p-4">
-                      <div className="flex gap-3 sm:gap-4">
-                        {/* Icon */}
-                        <div
-                          className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full ${activity.iconBg} flex items-center justify-center shrink-0`}
-                        >
-                          <Icon
-                            className="w-4 h-4 sm:w-5 sm:h-5"
-                            style={{ color: activity.iconColor }}
-                          />
-                        </div>
+              {loading ? (
+                // Loading state
+                <div className="flex items-center justify-center py-8">
+                  <p className="text-sm text-muted-foreground">
+                    Carregando atividades...
+                  </p>
+                </div>
+              ) : recentActivities.length === 0 ? (
+                // Empty state
+                <Card className="border border-border">
+                  <CardContent className="p-6 sm:p-8 text-center">
+                    <FileCheck className="w-12 h-12 mx-auto mb-4 text-muted-foreground/50" />
+                    <h3 className="text-base font-medium text-foreground mb-2">
+                      Nenhuma atividade ainda
+                    </h3>
+                    <p className="text-sm text-muted-foreground">
+                      Comece criando cursos ou usuários para ver as atividades
+                      recentes aqui.
+                    </p>
+                  </CardContent>
+                </Card>
+              ) : (
+                // Activities list
+                recentActivities.map((activity, index) => {
+                  const Icon = activity.icon;
+                  return (
+                    <Card
+                      key={index}
+                      className="border border-border hover:shadow-md transition-shadow"
+                    >
+                      <CardContent className="p-3 sm:p-4">
+                        <div className="flex gap-3 sm:gap-4">
+                          {/* Icon */}
+                          <div
+                            className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full ${activity.iconBg} flex items-center justify-center shrink-0`}
+                          >
+                            <Icon
+                              className="w-4 h-4 sm:w-5 sm:h-5"
+                              style={{ color: activity.iconColor }}
+                            />
+                          </div>
 
-                        {/* Content */}
-                        <div className="flex-1 min-w-0">
-                          <div className="flex flex-col gap-1">
-                            <div className="flex flex-wrap items-baseline gap-1">
-                              <span className="text-sm sm:text-base font-normal text-foreground">
-                                {activity.title}
-                              </span>
-                              {activity.subtitle && (
+                          {/* Content */}
+                          <div className="flex-1 min-w-0">
+                            <div className="flex flex-col gap-1">
+                              <div className="flex flex-wrap items-baseline gap-1">
                                 <span className="text-sm sm:text-base font-normal text-foreground">
-                                  {activity.subtitle}
+                                  {activity.title}
                                 </span>
-                              )}
+                                {activity.subtitle && (
+                                  <span className="text-sm sm:text-base font-normal text-foreground">
+                                    {activity.subtitle}
+                                  </span>
+                                )}
+                              </div>
+                              <p className="text-xs sm:text-sm text-muted-foreground">
+                                {activity.time}
+                              </p>
                             </div>
-                            <p className="text-xs sm:text-sm text-muted-foreground">
-                              {activity.time}
-                            </p>
                           </div>
                         </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                );
-              })}
+                      </CardContent>
+                    </Card>
+                  );
+                })
+              )}
             </div>
           </div>
         </div>

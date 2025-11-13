@@ -1,7 +1,7 @@
 "use client";
 
 // Esta página não deve ser exportada estaticamente
-export const dynamic = 'error';
+export const dynamic = "error";
 
 import { PageTransition } from "@/components/PageTransition";
 import { Construction, Settings } from "lucide-react";
@@ -25,7 +25,8 @@ export default function ConfiguracoesPage() {
               Página em Construção
             </p>
             <p className="text-muted-foreground">
-              Esta funcionalidade está sendo desenvolvida e estará disponível em breve.
+              Esta funcionalidade está sendo desenvolvida e estará disponível em
+              breve.
             </p>
           </div>
         </div>
@@ -33,4 +34,3 @@ export default function ConfiguracoesPage() {
     </PageTransition>
   );
 }
-

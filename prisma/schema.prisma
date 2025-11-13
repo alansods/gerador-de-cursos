@@ -49,3 +49,18 @@ model Curso {
   @@index([categoria])
   @@map("cursos")
 }
+
+// Modelo de Atividades (log de ações dos usuários)
+model Activity {
+  id          String   @id @default(cuid())
+  tipo        String   // 'curso_criado', 'curso_editado', 'curso_deletado', 'usuario_criado', 'usuario_editado', 'usuario_deletado'
+  titulo      String   // título descritivo da atividade
+  descricao   String?  // descrição adicional (ex: nome do curso ou usuário)
+  entityId    String?  @map("entity_id") // ID da entidade afetada (curso ou usuário)
+  entityType  String?  @map("entity_type") // 'curso' ou 'usuario'
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  @@index([tipo])
+  @@index([createdAt])
+  @@map("activities")
+}

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma, ensureConnection } from '@/lib/prisma';
 import { Prisma } from '@prisma/client';
+import { logActivity } from '@/lib/activity-logger';
 
 // Esta rota não pode ser exportada estaticamente
 export const dynamic = 'error';
@@ -184,9 +185,18 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    return NextResponse.json({ 
-      success: true, 
-      curso 
+    // Registrar atividade
+    await logActivity({
+      tipo: 'curso_criado',
+      titulo: 'Novo curso criado',
+      descricao: curso.titulo,
+      entityId: curso.id,
+      entityType: 'curso',
+    });
+
+    return NextResponse.json({
+      success: true,
+      curso
     }, { status: 201 });
   } catch (error) {
     console.error('[API /cursos] Erro ao criar curso:', error);
@@ -250,9 +260,18 @@ export async function PUT(request: NextRequest) {
       data: updateData,
     });
 
-    return NextResponse.json({ 
-      success: true, 
-      curso 
+    // Registrar atividade
+    await logActivity({
+      tipo: 'curso_editado',
+      titulo: 'Curso editado',
+      descricao: curso.titulo,
+      entityId: curso.id,
+      entityType: 'curso',
+    });
+
+    return NextResponse.json({
+      success: true,
+      curso
     });
   } catch (error) {
     console.error('[API /cursos] Erro ao atualizar curso:', error);
@@ -288,13 +307,30 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
+    // Buscar curso antes de deletar para registrar o título
+    const curso = await prisma.curso.findUnique({
+      where: { id },
+      select: { titulo: true },
+    });
+
     await prisma.curso.delete({
       where: { id },
     });
 
-    return NextResponse.json({ 
-      success: true, 
-      message: 'Course deleted successfully' 
+    // Registrar atividade
+    if (curso) {
+      await logActivity({
+        tipo: 'curso_deletado',
+        titulo: 'Curso deletado',
+        descricao: curso.titulo,
+        entityId: id,
+        entityType: 'curso',
+      });
+    }
+
+    return NextResponse.json({
+      success: true,
+      message: 'Course deleted successfully'
     });
   } catch (error) {
     console.error('[API /cursos] Erro ao deletar curso:', error);

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma, ensureConnection } from '@/lib/prisma';
 import bcrypt from 'bcryptjs';
+import { logActivity } from '@/lib/activity-logger';
 
 // Esta rota não pode ser exportada estaticamente
 export const dynamic = 'error';
@@ -167,6 +168,15 @@ export async function POST(request: NextRequest) {
 
     console.log(`[API /users] ✅ Requisição #${requestId} - Usuário criado: ${user.usuario}`);
 
+    // Registrar atividade
+    await logActivity({
+      tipo: 'usuario_criado',
+      titulo: 'Novo usuário criado',
+      descricao: user.nome,
+      entityId: user.id,
+      entityType: 'usuario',
+    });
+
     return NextResponse.json({ success: true, user }, { status: 201 });
   } catch (error) {
     console.error(`[API /users] ❌ Erro na requisição #${requestId}:`, error);
@@ -258,6 +268,15 @@ export async function PUT(request: NextRequest) {
 
     console.log(`[API /users] ✅ Requisição #${requestId} - Usuário atualizado: ${user.usuario}`);
 
+    // Registrar atividade
+    await logActivity({
+      tipo: 'usuario_editado',
+      titulo: 'Usuário editado',
+      descricao: user.nome,
+      entityId: user.id,
+      entityType: 'usuario',
+    });
+
     return NextResponse.json({ success: true, user });
   } catch (error) {
     console.error(`[API /users] ❌ Erro na requisição #${requestId}:`, error);
@@ -308,6 +327,15 @@ export async function DELETE(request: NextRequest) {
     });
 
     console.log(`[API /users] ✅ Requisição #${requestId} - Usuário deletado: ${user.usuario}`);
+
+    // Registrar atividade
+    await logActivity({
+      tipo: 'usuario_deletado',
+      titulo: 'Usuário deletado',
+      descricao: user.nome,
+      entityId: id,
+      entityType: 'usuario',
+    });
 
     return NextResponse.json({
       success: true,
