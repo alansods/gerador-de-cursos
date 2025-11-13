@@ -4,7 +4,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { Sidebar } from '@/components/Sidebar';
 import { MobileNavbar } from '@/components/layout/MobileNavbar';
 import { useAuth } from '@/context/AuthContext';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
 interface AuthGuardProps {
   children: React.ReactNode;
@@ -14,6 +14,20 @@ export function AuthGuard({ children }: AuthGuardProps) {
   const pathname = usePathname();
   const router = useRouter();
   const { isAuthenticated, loading } = useAuth();
+  const [loadingTimeout, setLoadingTimeout] = useState(false);
+
+  // Detectar se o loading está demorando muito (possível problema após build SCORM)
+  useEffect(() => {
+    if (loading) {
+      const timeoutId = setTimeout(() => {
+        setLoadingTimeout(true);
+      }, 5000); // 5 segundos
+
+      return () => clearTimeout(timeoutId);
+    } else {
+      setLoadingTimeout(false);
+    }
+  }, [loading]);
 
   // Rotas públicas que não exigem autenticação e não mostram sidebar
   const publicRoutes = [
@@ -61,9 +75,26 @@ export function AuthGuard({ children }: AuthGuardProps) {
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center">
+        <div className="text-center max-w-md px-4">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Verificando autenticação...</p>
+          <p className="text-muted-foreground mb-4">Verificando autenticação...</p>
+
+          {loadingTimeout && (
+            <div className="mt-6 p-4 bg-muted rounded-lg">
+              <p className="text-sm text-foreground mb-3">
+                A verificação está demorando mais que o esperado.
+              </p>
+              <button
+                onClick={() => window.location.reload()}
+                className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors text-sm font-medium"
+              >
+                Recarregar Página
+              </button>
+              <p className="text-xs text-muted-foreground mt-3">
+                Isso pode ocorrer após exportar um curso SCORM.
+              </p>
+            </div>
+          )}
         </div>
       </div>
     );

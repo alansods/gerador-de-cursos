@@ -308,21 +308,26 @@ async function restoreNextDir(backupDir) {
   if (!backupDir || !(await pathExists(backupDir))) {
     return;
   }
-  
+
   const nextDir = path.join(process.cwd(), '.next');
   console.log('   🔄 Restaurando .next/ do backup...');
-  
+
   // Remover .next/ atual (criado pelo build SCORM)
   if (await pathExists(nextDir)) {
     await fs.rm(nextDir, { recursive: true, force: true });
   }
-  
+
   // Restaurar backup
   await fs.cp(backupDir, nextDir, { recursive: true });
-  
+
   // Remover backup
   await fs.rm(backupDir, { recursive: true, force: true });
-  console.log('   ✅ .next/ restaurado (servidor pode continuar funcionando)');
+  console.log('   ✅ .next/ restaurado');
+
+  // Aguardar alguns segundos para o Next.js processar as mudanças
+  console.log('   ⏳ Aguardando Next.js reprocessar arquivos (3s)...');
+  await new Promise(resolve => setTimeout(resolve, 3000));
+  console.log('   ✅ Servidor deve estar pronto novamente');
 }
 
 /**
