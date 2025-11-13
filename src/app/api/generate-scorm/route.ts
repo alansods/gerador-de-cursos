@@ -15,7 +15,8 @@ import JSZip from 'jszip';
 // Esta rota não pode ser exportada estaticamente
 export const dynamic = 'error';
 
-export const maxDuration = 600; // 10 minutos para build
+// Vercel hobby plan permite máximo de 300 segundos (5 minutos)
+export const maxDuration = 300;
 
 export async function POST(req: Request) {
   let cursoId: string | undefined;

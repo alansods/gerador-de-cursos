@@ -11,7 +11,8 @@ import { existsSync } from 'fs';
 // Esta rota não pode ser exportada estaticamente
 export const dynamic = 'error';
 
-export const maxDuration = 600; // 10 minutos para build
+// Vercel hobby plan permite máximo de 300 segundos (5 minutos)
+export const maxDuration = 300;
 
 /**
  * API Route V2 para geração de SCORM usando processo isolado
