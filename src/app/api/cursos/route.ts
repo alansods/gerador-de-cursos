@@ -188,7 +188,7 @@ export async function POST(request: NextRequest) {
     // Registrar atividade
     await logActivity({
       tipo: 'curso_criado',
-      titulo: 'Novo curso criado',
+      titulo: 'Novo curso criado:',
       descricao: curso.titulo,
       entityId: curso.id,
       entityType: 'curso',
@@ -263,7 +263,7 @@ export async function PUT(request: NextRequest) {
     // Registrar atividade
     await logActivity({
       tipo: 'curso_editado',
-      titulo: 'Curso editado',
+      titulo: 'Curso editado:',
       descricao: curso.titulo,
       entityId: curso.id,
       entityType: 'curso',
@@ -321,7 +321,7 @@ export async function DELETE(request: NextRequest) {
     if (curso) {
       await logActivity({
         tipo: 'curso_deletado',
-        titulo: 'Curso deletado',
+        titulo: 'Curso deletado:',
         descricao: curso.titulo,
         entityId: id,
         entityType: 'curso',
