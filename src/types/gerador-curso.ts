@@ -93,7 +93,7 @@ export interface GeradorCursoContextType {
   criarCurso: (curso: Omit<CursoGerado, 'id' | 'dataCriacao' | 'dataModificacao'>) => void
   editarCurso: (id: string, curso: Partial<CursoGerado>) => void
   deletarCurso: (id: string) => void
-  selecionarCurso: (id: string) => void
+  selecionarCurso: (id: string, forceRefresh?: boolean) => void
   adicionarUnidade: (unidade: Omit<Unidade, 'id' | 'ordem'>) => void
   editarUnidade: (id: string, unidade: Partial<Unidade>) => void
   deletarUnidade: (id: string) => void

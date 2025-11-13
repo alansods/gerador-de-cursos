@@ -162,6 +162,7 @@ export default function EditarCursoPage() {
   const [confirmarDeletarUnidade, setConfirmarDeletarUnidade] = useState(false);
   const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [imagePreviewUrl, setImagePreviewUrl] = useState<string | null>(null);
+  const [isFetchingCurso, setIsFetchingCurso] = useState(false);
   const [unidadeParaDeletar, setUnidadeParaDeletar] = useState<string | null>(
     null
   );
@@ -179,15 +180,27 @@ export default function EditarCursoPage() {
 
   const cursoId = params.id as string;
 
-  // Aguardar os cursos carregarem antes de selecionar
+  // Selecionar o curso ao carregar a página (busca do servidor se necessário)
   useEffect(() => {
-    if (cursoId && !state.loading && state.cursos.length > 0) {
+    if (cursoId && !state.loading) {
       // Verificar se o curso não está selecionado ainda
       if (!state.cursoAtual || state.cursoAtual.id !== cursoId) {
-        selecionarCurso(cursoId);
+        setIsFetchingCurso(true);
+        selecionarCurso(cursoId); // Busca do servidor se não estiver no cache
+      } else {
+        // Curso já está selecionado
+        setIsFetchingCurso(false);
       }
     }
-  }, [cursoId, selecionarCurso, state.loading, state.cursos, state.cursoAtual]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cursoId, state.loading, state.cursoAtual?.id]); // Remove selecionarCurso para evitar loop infinito
+
+  // Atualizar isFetchingCurso quando o curso for carregado
+  useEffect(() => {
+    if (state.cursoAtual?.id === cursoId) {
+      setIsFetchingCurso(false);
+    }
+  }, [state.cursoAtual, cursoId]);
 
   // Atualizar preview da imagem ao editar conteúdo
   useEffect(() => {
@@ -940,53 +953,12 @@ export default function EditarCursoPage() {
   };
 
   // Verificar se está carregando ou se o curso não foi encontrado
-  if (state.loading || (!state.cursoAtual && state.cursos.length === 0)) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-500">Carregando...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // Se os cursos foram carregados mas o curso atual não foi encontrado
-  if (!state.loading && !state.cursoAtual && state.cursos.length > 0) {
-    const cursoEncontrado = state.cursos.find((c) => c.id === cursoId);
-    if (!cursoEncontrado) {
-      return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-50">
-          <div className="text-center">
-            <h1 className="text-2xl font-bold text-gray-900 mb-4">
-              Curso não encontrado
-            </h1>
-            <Button onClick={handleVoltar} variant="outline">
-              Voltar para lista de cursos
-            </Button>
-          </div>
-        </div>
-      );
-    }
-
-    // Se encontrou mas ainda não selecionou, mostrar loading enquanto seleciona
+  if (state.loading || isFetchingCurso || !state.cursoAtual) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
           <p className="text-gray-500">Carregando curso...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // Fallback para garantir que sempre mostra algo
-  if (!state.cursoAtual) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-500">Carregando...</p>
         </div>
       </div>
     );

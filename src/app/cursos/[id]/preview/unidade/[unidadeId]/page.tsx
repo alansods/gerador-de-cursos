@@ -48,11 +48,13 @@ export default function PreviewUnidadePage() {
   const unidadeId = params.unidadeId as string;
   
   // Selecionar o curso ao carregar a página
+  // SEMPRE força refresh para garantir dados atualizados
   useEffect(() => {
     if (cursoId) {
-      selecionarCurso(cursoId);
+      selecionarCurso(cursoId, true); // forceRefresh = true
     }
-  }, [cursoId, selecionarCurso]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cursoId]); // Remove selecionarCurso das deps para evitar loop infinito
 
   // Usar cursoAtual do state (que é selecionado) ou buscar na lista
   const curso = state.cursoAtual || state.cursos.find((c) => c.id === cursoId);

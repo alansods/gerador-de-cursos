@@ -197,16 +197,26 @@ export function GeradorCursoProvider({ children }: { children: React.ReactNode }
     }
   }, [])
 
-  const selecionarCurso = useCallback(async (id: string) => {
-    // Buscar o curso do servidor se não estiver no state
-    if (!state.cursos.find(c => c.id === id)) {
+  const selecionarCurso = useCallback(async (id: string, forceRefresh = false) => {
+    // Buscar o curso do servidor se:
+    // 1. forceRefresh = true (sempre busca dados frescos, usado no preview)
+    // 2. curso não estiver no state
+    const cursoExiste = state.cursos.find(c => c.id === id)
+
+    if (forceRefresh || !cursoExiste) {
       try {
-        const response = await fetch(`/api/cursos/${id}`)
+        const response = await fetch(`/api/cursos/${id}`, {
+          headers: {
+            'Cache-Control': 'no-cache',
+            'Pragma': 'no-cache'
+          }
+        })
         const data = await response.json()
 
         if (data.success && data.curso) {
-          // Adiciona o curso ao state temporariamente para edição
-          dispatch({ type: "CARREGAR_CURSOS", payload: [data.curso] })
+          // Fazer merge ao invés de substituir: remove curso antigo e adiciona o novo
+          const cursosAtualizados = state.cursos.filter(c => c.id !== id)
+          dispatch({ type: "CARREGAR_CURSOS", payload: [...cursosAtualizados, data.curso] })
         }
       } catch (error) {
         console.error('Erro ao carregar curso:', error)
