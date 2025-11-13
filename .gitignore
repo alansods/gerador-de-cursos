@@ -22,10 +22,12 @@
 /.scorm-project-temp/
 /.hidden-*-temp/
 /.api-*-hidden-temp/
+.api-*-hidden-temp/
 /.next-backup-scorm/
 /scorm-test-extract/
 /public/scorm-images/
 *.zip
+/generate-scorm-isolated.js
 
 # Arquivos de backup (gerados por editores)
 * 2.*
