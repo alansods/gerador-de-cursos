@@ -22,7 +22,9 @@
 /.scorm-project-temp/
 /.hidden-*-temp/
 /.api-*-hidden-temp/
+/.api-hidden-temp/
 .api-*-hidden-temp/
+.api-hidden-temp/
 /.next-backup-scorm/
 /scorm-test-extract/
 /public/scorm-images/
