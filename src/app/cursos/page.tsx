@@ -70,6 +70,7 @@ export default function CursosPage() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(
     null
   );
+  const [isDeletingCurso, setIsDeletingCurso] = useState(false);
   const [exportModalOpen, setExportModalOpen] = useState(false);
   const [selectedCursoForExport, setSelectedCursoForExport] =
     useState<CursoGerado | null>(null);
@@ -733,6 +734,7 @@ export default function CursosPage() {
                 variant="outline"
                 onClick={() => setShowDeleteConfirm(null)}
                 className="w-full sm:w-auto"
+                disabled={isDeletingCurso}
               >
                 Cancelar
               </Button>
@@ -740,19 +742,32 @@ export default function CursosPage() {
                 onClick={async () => {
                   try {
                     if (showDeleteConfirm) {
+                      setIsDeletingCurso(true);
                       await deletarCurso(showDeleteConfirm);
-                      toast.success("Curso excluído");
+
+                      // Remover curso da lista local imediatamente
+                      setCursosPaginados(prev =>
+                        prev.filter(c => c.id !== showDeleteConfirm)
+                      );
+                      setTotalCourses(prev => Math.max(0, prev - 1));
+
+                      toast.success("Curso excluído com sucesso");
+                      setShowDeleteConfirm(null);
                     }
                   } catch (error) {
                     console.error("Erro ao deletar curso:", error);
-                    toast.error("Erro ao excluir");
+                    toast.error("Erro ao excluir curso");
                   } finally {
-                    setShowDeleteConfirm(null);
+                    setIsDeletingCurso(false);
                   }
                 }}
-                className="w-full sm:w-auto bg-destructive hover:bg-destructive/90 text-destructive-foreground"
+                className="w-full sm:w-auto bg-destructive hover:bg-destructive/90 text-destructive-foreground gap-2"
+                disabled={isDeletingCurso}
               >
-                Excluir
+                {isDeletingCurso && (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                )}
+                {isDeletingCurso ? "Excluindo..." : "Excluir"}
               </Button>
             </DialogFooter>
           </DialogContent>
