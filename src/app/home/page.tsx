@@ -1,7 +1,7 @@
 "use client";
 
 // Esta página não deve ser exportada estaticamente (usa context e API)
-export const dynamic = 'error';
+export const dynamic = "error";
 
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -38,18 +38,45 @@ export default function HomePage() {
 
   useEffect(() => {
     fetchActivities();
+
+    // Recarregar atividades quando a página se tornar visível
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        fetchActivities();
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    // Também recarregar a cada 30 segundos enquanto a página está ativa
+    const interval = setInterval(() => {
+      if (!document.hidden) {
+        fetchActivities();
+      }
+    }, 30000);
+
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      clearInterval(interval);
+    };
   }, []);
 
   const fetchActivities = async () => {
     try {
-      const response = await fetch('/api/activities');
+      const response = await fetch("/api/activities", {
+        cache: "no-store",
+        headers: {
+          "Cache-Control": "no-cache",
+          Pragma: "no-cache",
+        },
+      });
       const data = await response.json();
 
       if (data.success) {
         setActivities(data.activities);
       }
     } catch (error) {
-      console.error('Erro ao buscar atividades:', error);
+      console.error("Erro ao buscar atividades:", error);
     } finally {
       setLoading(false);
     }
@@ -85,47 +112,47 @@ export default function HomePage() {
   // Mapear tipo de atividade para ícone e cor
   const getActivityIconAndColor = (tipo: string) => {
     switch (tipo) {
-      case 'curso_criado':
+      case "curso_criado":
         return {
           icon: CheckCircle2,
-          iconBg: 'bg-green-500/10',
-          iconColor: '#22c55e',
+          iconBg: "bg-green-500/10",
+          iconColor: "#22c55e",
         };
-      case 'curso_editado':
+      case "curso_editado":
         return {
           icon: Edit,
-          iconBg: 'bg-blue-500/10',
-          iconColor: '#3b82f6',
+          iconBg: "bg-blue-500/10",
+          iconColor: "#3b82f6",
         };
-      case 'curso_deletado':
+      case "curso_deletado":
         return {
           icon: Trash2,
-          iconBg: 'bg-red-500/10',
-          iconColor: '#ef4444',
+          iconBg: "bg-red-500/10",
+          iconColor: "#ef4444",
         };
-      case 'usuario_criado':
+      case "usuario_criado":
         return {
           icon: UserPlus,
-          iconBg: 'bg-emerald-500/10',
-          iconColor: '#10b981',
+          iconBg: "bg-emerald-500/10",
+          iconColor: "#10b981",
         };
-      case 'usuario_editado':
+      case "usuario_editado":
         return {
           icon: Edit,
-          iconBg: 'bg-indigo-500/10',
-          iconColor: '#6366f1',
+          iconBg: "bg-indigo-500/10",
+          iconColor: "#6366f1",
         };
-      case 'usuario_deletado':
+      case "usuario_deletado":
         return {
           icon: Trash2,
-          iconBg: 'bg-orange-500/10',
-          iconColor: '#f97316',
+          iconBg: "bg-orange-500/10",
+          iconColor: "#f97316",
         };
       default:
         return {
           icon: FileCheck,
-          iconBg: 'bg-[#0047BB]/10',
-          iconColor: '#0047BB',
+          iconBg: "bg-[#0047BB]/10",
+          iconColor: "#0047BB",
         };
     }
   };
@@ -136,20 +163,20 @@ export default function HomePage() {
     const now = new Date();
     const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
 
-    if (diffInSeconds < 60) return 'Agora mesmo';
+    if (diffInSeconds < 60) return "Agora mesmo";
     if (diffInSeconds < 3600) {
       const minutes = Math.floor(diffInSeconds / 60);
-      return `Há ${minutes} minuto${minutes > 1 ? 's' : ''}`;
+      return `Há ${minutes} minuto${minutes > 1 ? "s" : ""}`;
     }
     if (diffInSeconds < 86400) {
       const hours = Math.floor(diffInSeconds / 3600);
-      return `Há ${hours} hora${hours > 1 ? 's' : ''}`;
+      return `Há ${hours} hora${hours > 1 ? "s" : ""}`;
     }
     if (diffInSeconds < 604800) {
       const days = Math.floor(diffInSeconds / 86400);
-      return `Há ${days} dia${days > 1 ? 's' : ''}`;
+      return `Há ${days} dia${days > 1 ? "s" : ""}`;
     }
-    return date.toLocaleDateString('pt-BR');
+    return date.toLocaleDateString("pt-BR");
   };
 
   // Mapear atividades para formato de exibição
@@ -158,7 +185,7 @@ export default function HomePage() {
     return {
       icon,
       title: activity.titulo,
-      subtitle: activity.descricao || '',
+      subtitle: activity.descricao || "",
       time: getRelativeTime(activity.createdAt),
       iconBg,
       iconColor,
