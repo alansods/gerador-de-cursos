@@ -9,7 +9,7 @@ import { useGeradorCurso } from '@/context/GeradorCursoContext'
 import { PageTransition } from '@/components/PageTransition'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Progress } from '@/components/ui/progress'
 import { ArrowLeft, Save, Upload, FileText, Sparkles, CheckCircle2, AlertCircle, Info, Download } from 'lucide-react'
@@ -237,24 +237,28 @@ export default function NovoCursoPage() {
 
   return (
     <PageTransition>
-      <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-white border-b">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <Button variant="outline" onClick={() => router.back()} className="gap-2">
-            <ArrowLeft className="h-4 w-4" />
-            Voltar
-          </Button>
-        </div>
-      </div>
+      <div className="min-h-screen bg-background">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          {/* Header */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 sm:mb-8">
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 sm:gap-3 mb-2">
+                <button
+                  onClick={() => router.back()}
+                  className="h-6 w-6 sm:h-8 sm:w-8 text-primary shrink-0 hover:opacity-70 transition-opacity cursor-pointer"
+                  aria-label="Voltar"
+                >
+                  <ArrowLeft className="h-full w-full" />
+                </button>
+                <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-foreground truncate">Novo Curso</h1>
+              </div>
+              <p className="text-sm sm:text-base text-muted-foreground">Crie um novo curso manualmente ou gere automaticamente usando IA</p>
+            </div>
+          </div>
 
-      {/* Form */}
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <Card>
-          <CardHeader>
-            <CardTitle>Novo Curso</CardTitle>
-          </CardHeader>
-          <CardContent>
+          {/* Form */}
+          <Card>
+            <CardContent className="pt-6">
             <Tabs defaultValue="manual" className="w-full">
               <TabsList className="grid w-full grid-cols-2 mb-6">
                 <TabsTrigger value="manual" className="gap-2">
@@ -272,33 +276,33 @@ export default function NovoCursoPage() {
                 <form onSubmit={handleSubmit} className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
-                  <label htmlFor="titulo" className="text-sm font-medium text-gray-700">Título do Curso *</label>
+                  <label htmlFor="titulo" className="text-sm font-medium text-gray-700 dark:text-gray-300">Título do Curso *</label>
                   <Input id="titulo" value={formData.titulo} onChange={(e) => setField('titulo', e.target.value)} placeholder="Ex: Introdução ao React" className={errors.titulo ? 'border-red-500' : ''} />
-                  {errors.titulo && <p className="text-sm text-red-600">{errors.titulo}</p>}
+                  {errors.titulo && <p className="text-sm text-red-600 dark:text-red-400">{errors.titulo}</p>}
                 </div>
                 <div className="space-y-2">
-                  <label htmlFor="categoria" className="text-sm font-medium text-gray-700">Categoria *</label>
+                  <label htmlFor="categoria" className="text-sm font-medium text-gray-700 dark:text-gray-300">Categoria *</label>
                   <Input id="categoria" value={formData.categoria} onChange={(e) => setField('categoria', e.target.value)} placeholder="Ex: Programação, Design, Marketing" className={errors.categoria ? 'border-red-500' : ''} />
-                  {errors.categoria && <p className="text-sm text-red-600">{errors.categoria}</p>}
+                  {errors.categoria && <p className="text-sm text-red-600 dark:text-red-400">{errors.categoria}</p>}
                 </div>
               </div>
 
               <div className="space-y-2">
-                <label htmlFor="descricao" className="text-sm font-medium text-gray-700">Descrição *</label>
-                <textarea id="descricao" value={formData.descricao} onChange={(e) => setField('descricao', e.target.value)} placeholder="Descreva o que os alunos aprenderão neste curso..." rows={5} className={`w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${errors.descricao ? 'border-red-500' : ''}`} />
-                {errors.descricao && <p className="text-sm text-red-600">{errors.descricao}</p>}
+                <label htmlFor="descricao" className="text-sm font-medium text-gray-700 dark:text-gray-300">Descrição *</label>
+                <textarea id="descricao" value={formData.descricao} onChange={(e) => setField('descricao', e.target.value)} placeholder="Descreva o que os alunos aprenderão neste curso..." rows={5} className={`w-full px-3 py-2 border border-border rounded-md bg-card text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ${errors.descricao ? 'border-red-500' : ''}`} />
+                {errors.descricao && <p className="text-sm text-red-600 dark:text-red-400">{errors.descricao}</p>}
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div className="space-y-2">
-                  <label htmlFor="cargaHoraria" className="text-sm font-medium text-gray-700">Carga Horária *</label>
+                  <label htmlFor="cargaHoraria" className="text-sm font-medium text-gray-700 dark:text-gray-300">Carga Horária *</label>
                   <Input id="cargaHoraria" value={formData.cargaHoraria} onChange={(e) => setField('cargaHoraria', e.target.value)} placeholder="Ex: 40 horas" className={errors.cargaHoraria ? 'border-red-500' : ''} />
-                  {errors.cargaHoraria && <p className="text-sm text-red-600">{errors.cargaHoraria}</p>}
+                  {errors.cargaHoraria && <p className="text-sm text-red-600 dark:text-red-400">{errors.cargaHoraria}</p>}
                 </div>
                 <div className="space-y-2">
-                  <label htmlFor="modalidade" className="text-sm font-medium text-gray-700">Modalidade *</label>
+                  <label htmlFor="modalidade" className="text-sm font-medium text-gray-700 dark:text-gray-300">Modalidade *</label>
                   <Input id="modalidade" value={formData.modalidade} onChange={(e) => setField('modalidade', e.target.value)} placeholder="Ex: Online, Presencial, Híbrido" className={errors.modalidade ? 'border-red-500' : ''} />
-                  {errors.modalidade && <p className="text-sm text-red-600">{errors.modalidade}</p>}
+                  {errors.modalidade && <p className="text-sm text-red-600 dark:text-red-400">{errors.modalidade}</p>}
                 </div>
               </div>
 
@@ -316,17 +320,17 @@ export default function NovoCursoPage() {
           <TabsContent value="ai">
             <div className="space-y-6">
               {/* Informações */}
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
                 <div className="flex items-start gap-3">
-                  <Info className="h-5 w-5 text-blue-600 shrink-0 mt-0.5" />
+                  <Info className="h-5 w-5 text-blue-600 dark:text-blue-400 shrink-0 mt-0.5" />
                   <div className="flex-1 space-y-3">
                     <div className="space-y-2">
-                      <h3 className="font-semibold text-blue-900">Como funciona a geração por IA?</h3>
-                      <p className="text-sm text-blue-800">
+                      <h3 className="font-semibold text-blue-900 dark:text-blue-200">Como funciona a geração por IA?</h3>
+                      <p className="text-sm text-blue-800 dark:text-blue-300">
                         Envie um documento Word (.docx ou .doc) estruturado com o conteúdo do curso.
                         A IA irá processar o documento e criar automaticamente o curso com unidades e conteúdo organizados.
                       </p>
-                      <p className="text-sm text-blue-800 font-medium">
+                      <p className="text-sm text-blue-800 dark:text-blue-300 font-medium">
                         💡 Use Google Docs ou Microsoft Word para criar seu documento!
                       </p>
                     </div>
@@ -345,14 +349,14 @@ export default function NovoCursoPage() {
               </div>
 
               {/* Upload Area */}
-              <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 hover:border-blue-400 transition-colors">
+              <div className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-8 hover:border-blue-400 dark:hover:border-blue-500 transition-colors">
                 <div className="flex flex-col items-center justify-center gap-4">
-                  <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center">
-                    <Upload className="h-8 w-8 text-blue-600" />
+                  <div className="w-16 h-16 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center">
+                    <Upload className="h-8 w-8 text-blue-600 dark:text-blue-400" />
                   </div>
                   <div className="text-center">
-                    <h3 className="font-semibold text-gray-900 mb-1">Envie seu documento Word</h3>
-                    <p className="text-sm text-gray-600 mb-4">
+                    <h3 className="font-semibold text-gray-900 dark:text-gray-100 mb-1">Envie seu documento Word</h3>
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
                       Apenas .docx ou .doc • Máximo 10MB
                     </p>
                     <label htmlFor="file-upload" className="cursor-pointer">
@@ -376,12 +380,12 @@ export default function NovoCursoPage() {
 
                 {/* Arquivo selecionado */}
                 {selectedFile && (
-                  <div className="mt-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
+                  <div className="mt-6 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
                     <div className="flex items-center gap-3">
-                      <FileText className="h-8 w-8 text-blue-600 shrink-0" />
+                      <FileText className="h-8 w-8 text-blue-600 dark:text-blue-400 shrink-0" />
                       <div className="flex-1 min-w-0">
-                        <p className="font-medium text-gray-900 truncate">{selectedFile.name}</p>
-                        <p className="text-sm text-gray-600">
+                        <p className="font-medium text-gray-900 dark:text-gray-100 truncate">{selectedFile.name}</p>
+                        <p className="text-sm text-gray-600 dark:text-gray-400">
                           {(selectedFile.size / 1024 / 1024).toFixed(2)} MB
                         </p>
                       </div>
@@ -408,27 +412,27 @@ export default function NovoCursoPage() {
                 <div
                   className={`flex items-start gap-3 p-4 rounded-lg border ${
                     validationMessage.type === 'error'
-                      ? 'bg-red-50 border-red-200'
+                      ? 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800'
                       : validationMessage.type === 'warning'
-                      ? 'bg-yellow-50 border-yellow-200'
+                      ? 'bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800'
                       : validationMessage.type === 'success'
-                      ? 'bg-green-50 border-green-200'
-                      : 'bg-blue-50 border-blue-200'
+                      ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800'
+                      : 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800'
                   }`}
                 >
-                  {validationMessage.type === 'error' && <AlertCircle className="h-5 w-5 text-red-600 shrink-0 mt-0.5" />}
-                  {validationMessage.type === 'warning' && <AlertCircle className="h-5 w-5 text-yellow-600 shrink-0 mt-0.5" />}
-                  {validationMessage.type === 'success' && <CheckCircle2 className="h-5 w-5 text-green-600 shrink-0 mt-0.5" />}
-                  {validationMessage.type === 'info' && <Info className="h-5 w-5 text-blue-600 shrink-0 mt-0.5" />}
+                  {validationMessage.type === 'error' && <AlertCircle className="h-5 w-5 text-red-600 dark:text-red-400 shrink-0 mt-0.5" />}
+                  {validationMessage.type === 'warning' && <AlertCircle className="h-5 w-5 text-yellow-600 dark:text-yellow-400 shrink-0 mt-0.5" />}
+                  {validationMessage.type === 'success' && <CheckCircle2 className="h-5 w-5 text-green-600 dark:text-green-400 shrink-0 mt-0.5" />}
+                  {validationMessage.type === 'info' && <Info className="h-5 w-5 text-blue-600 dark:text-blue-400 shrink-0 mt-0.5" />}
                   <p
                     className={`text-sm ${
                       validationMessage.type === 'error'
-                        ? 'text-red-800'
+                        ? 'text-red-800 dark:text-red-300'
                         : validationMessage.type === 'warning'
-                        ? 'text-yellow-800'
+                        ? 'text-yellow-800 dark:text-yellow-300'
                         : validationMessage.type === 'success'
-                        ? 'text-green-800'
-                        : 'text-blue-800'
+                        ? 'text-green-800 dark:text-green-300'
+                        : 'text-blue-800 dark:text-blue-300'
                     }`}
                   >
                     {validationMessage.message}
@@ -441,18 +445,18 @@ export default function NovoCursoPage() {
                 <div className="space-y-4">
                   <div className="space-y-2">
                     <div className="flex items-center justify-between text-sm">
-                      <span className="font-medium text-gray-700">
+                      <span className="font-medium text-gray-700 dark:text-gray-300">
                         {processingStep === 'extracting' && 'Extraindo texto do documento...'}
                         {processingStep === 'generating' && 'Gerando curso com IA...'}
                         {processingStep === 'done' && 'Curso criado com sucesso!'}
                       </span>
-                      <span className="text-gray-600">{progress}%</span>
+                      <span className="text-gray-600 dark:text-gray-400">{progress}%</span>
                     </div>
                     <Progress value={progress} className="h-2" />
                   </div>
-                  
+
                   {processingStep === 'done' && (
-                    <div className="flex items-center gap-2 text-green-600 justify-center">
+                    <div className="flex items-center gap-2 text-green-600 dark:text-green-400 justify-center">
                       <CheckCircle2 className="h-5 w-5" />
                       <span className="font-medium">Redirecionando...</span>
                     </div>
@@ -483,9 +487,9 @@ export default function NovoCursoPage() {
             </div>
           </TabsContent>
         </Tabs>
-          </CardContent>
-        </Card>
-      </div>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </PageTransition>
   )

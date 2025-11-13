@@ -994,9 +994,9 @@ export default function EditarCursoPage() {
 
   return (
     <PageTransition>
-      <div className="min-h-screen bg-linear-to-br from-blue-50 via-white to-purple-50">
+      <div className="min-h-screen bg-linear-to-br from-blue-50 via-white to-purple-50 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950">
         {/* Header */}
-        <div className="bg-white/80 backdrop-blur-sm border-b border-[#e5e7eb] sticky top-0 z-50">
+        <div className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm border-b border-[#e5e7eb] dark:border-gray-800 sticky top-0 z-50">
           <div className="max-w-6xl mx-auto px-6 py-4">
             <div className="flex items-center justify-between">
               <Button variant="outline" size="sm" onClick={handleVoltar}>
@@ -1031,7 +1031,7 @@ export default function EditarCursoPage() {
         {/* Conteúdo Principal */}
         <div className="max-w-6xl mx-auto px-6 py-8">
           {/* Card de Informações do Curso */}
-          <Card className="mb-8 border-0 shadow-xl overflow-hidden bg-gradient-to-br from-blue-600 via-blue-700 to-purple-600 text-white">
+          <Card className="mb-8 border-0 shadow-xl overflow-hidden bg-gradient-to-br from-blue-600 via-blue-700 to-purple-600 dark:from-blue-800 dark:via-purple-800 dark:to-purple-900 text-white">
             <CardHeader className="pb-6 pt-8 px-8">
               <div className="flex items-start justify-between gap-4">
                 <div className="flex-1">
@@ -1119,18 +1119,18 @@ export default function EditarCursoPage() {
             {(state.cursoAtual.unidades || []).map((unidade, unidadeIndex) => (
               <Card
                 key={unidade.id}
-                className="group bg-white/80 backdrop-blur-sm"
+                className="group bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm"
               >
-                <CardHeader className="bg-linear-to-r from-gray-50 to-blue-50 border-b border-[#e5e7eb]">
+                <CardHeader className="bg-linear-to-r from-gray-50 to-blue-50 dark:from-gray-800 dark:to-gray-800 border-b border-[#e5e7eb] dark:border-gray-700">
                   <div className="flex items-center justify-between">
                     <div className="flex-1">
                       <div className="flex items-center space-x-3">
-                        <Layers className="h-6 w-6 text-blue-600" />
-                        <h3 className="text-2xl font-bold text-gray-900">
+                        <Layers className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+                        <h3 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
                           {unidade.titulo}
                         </h3>
                       </div>
-                      <p className="mt-2 ml-9 text-gray-600 text-sm">
+                      <p className="mt-2 ml-9 text-gray-600 dark:text-gray-400 text-sm">
                         {unidade.descricao}
                       </p>
                     </div>
@@ -1166,16 +1166,16 @@ export default function EditarCursoPage() {
                         
                         {/* Title and Description */}
                         <div className="space-y-2">
-                          <h3 className="text-xl font-bold text-gray-900">
+                          <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100">
                             Comece a criar seu conteúdo!
                           </h3>
-                          <p className="text-gray-600 max-w-md mx-auto">
+                          <p className="text-gray-600 dark:text-gray-400 max-w-md mx-auto">
                             Esta unidade ainda está vazia. Use os botões abaixo para adicionar títulos, parágrafos, imagens e muito mais.
                           </p>
                         </div>
-                        
+
                         {/* Hint */}
-                        <div className="flex items-center justify-center gap-2 text-sm text-blue-600 font-medium pt-2">
+                        <div className="flex items-center justify-center gap-2 text-sm text-blue-600 dark:text-blue-400 font-medium pt-2">
                           <Type className="h-4 w-4" />
                           <span>Escolha um tipo de conteúdo para começar</span>
                         </div>
@@ -1192,40 +1192,40 @@ export default function EditarCursoPage() {
                               : "md:col-span-12"
                           }`}
                         >
-                          <div className="flex items-start space-x-3 p-4 bg-gray-50 rounded-lg">
+                          <div className="flex items-start space-x-3 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
                             <div className="shrink-0 mt-1">
                               {item.tipo === "titulo" ? (
-                                <Heading2 className="h-4 w-4 text-purple-600" />
+                                <Heading2 className="h-4 w-4 text-purple-600 dark:text-purple-400" />
                               ) : item.tipo === "subtitulo" ? (
-                                <Heading3 className="h-4 w-4 text-blue-600" />
+                                <Heading3 className="h-4 w-4 text-blue-600 dark:text-blue-400" />
                               ) : item.tipo === "imagem" ? (
-                                <Image className="h-4 w-4 text-green-600" />
+                                <Image className="h-4 w-4 text-green-600 dark:text-green-400" />
                               ) : item.tipo === "accordion" ? (
-                                <ChevronDown className="h-4 w-4 text-orange-600" />
+                                <ChevronDown className="h-4 w-4 text-orange-600 dark:text-orange-400" />
                               ) : item.tipo === "flipcard" ? (
-                                <RotateCcw className="h-4 w-4 text-pink-600" />
+                                <RotateCcw className="h-4 w-4 text-pink-600 dark:text-pink-400" />
                               ) : item.tipo === "lista" ? (
-                                <List className="h-4 w-4 text-purple-600" />
+                                <List className="h-4 w-4 text-purple-600 dark:text-purple-400" />
                               ) : item.tipo === "quiz" ? (
-                                <HelpCircle className="h-4 w-4 text-indigo-600" />
+                                <HelpCircle className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />
                               ) : item.tipo === "info-box" ? (
-                                <AlertTriangle className="h-4 w-4 text-yellow-600" />
+                                <AlertTriangle className="h-4 w-4 text-yellow-600 dark:text-yellow-400" />
                               ) : (
-                                <Type className="h-4 w-4 text-gray-600" />
+                                <Type className="h-4 w-4 text-gray-600 dark:text-gray-400" />
                               )}
                             </div>
                             <div className="flex-1">
                               {item.tipo === "titulo" ? (
-                                <h3 className="font-bold text-lg text-gray-900">
+                                <h3 className="font-bold text-lg text-gray-900 dark:text-gray-100">
                                   {item.conteudo}
                                 </h3>
                               ) : item.tipo === "subtitulo" ? (
-                                <h4 className="font-semibold text-gray-900">
+                                <h4 className="font-semibold text-gray-900 dark:text-gray-100">
                                   {item.conteudo}
                                 </h4>
                               ) : item.tipo === "flipcard" ? (
                                 <div className="space-y-2">
-                                  <p className="text-sm font-semibold text-gray-700">
+                                  <p className="text-sm font-semibold text-gray-700 dark:text-gray-300">
                                     FlipCard (
                                     {item.tipoFrente === "imagem"
                                       ? "Imagem"
@@ -1235,14 +1235,14 @@ export default function EditarCursoPage() {
                                     )
                                   </p>
                                   {item.tituloFrente && (
-                                    <p className="text-xs text-gray-500">
+                                    <p className="text-xs text-gray-500 dark:text-gray-400">
                                       Frente: {item.tituloFrente}
                                     </p>
                                   )}
                                 </div>
                               ) : item.tipo === "accordion" ? (
                                 <div className="space-y-2">
-                                  <p className="text-sm font-semibold text-gray-700">
+                                  <p className="text-sm font-semibold text-gray-700 dark:text-gray-300">
                                     Accordion ({item.items?.length || 0}{" "}
                                     {item.items?.length === 1
                                       ? "item"
@@ -1250,7 +1250,7 @@ export default function EditarCursoPage() {
                                     )
                                   </p>
                                   {item.items && item.items.length > 0 && (
-                                    <div className="text-xs text-gray-500 space-y-1">
+                                    <div className="text-xs text-gray-500 dark:text-gray-400 space-y-1">
                                       {item.items
                                         .slice(0, 2)
                                         .map((accordionItem, idx) => (
@@ -1259,7 +1259,7 @@ export default function EditarCursoPage() {
                                           </div>
                                         ))}
                                       {item.items.length > 2 && (
-                                        <div className="text-gray-400">
+                                        <div className="text-gray-400 dark:text-gray-500">
                                           +{item.items.length - 2} mais
                                         </div>
                                       )}
@@ -1269,14 +1269,14 @@ export default function EditarCursoPage() {
                               ) : item.tipo === "imagem" ? (
                                 <div className="space-y-2">
                                   {item.fonte && (
-                                    <p className="text-xs text-gray-500">
+                                    <p className="text-xs text-gray-500 dark:text-gray-400">
                                       Fonte: {item.fonte}
                                     </p>
                                   )}
                                   <img
                                     src={item.conteudo}
                                     alt={item.legenda || "Imagem"}
-                                    className={`h-auto object-contain border border-[#e5e7eb] rounded-md ${
+                                    className={`h-auto object-contain border border-[#e5e7eb] dark:border-gray-700 rounded-md ${
                                       item.tamanho === "pequena"
                                         ? "max-w-xs"
                                         : item.tamanho === "media"
@@ -1288,14 +1288,14 @@ export default function EditarCursoPage() {
                                     }}
                                   />
                                   {item.legenda && (
-                                    <p className="text-sm text-gray-600 italic">
+                                    <p className="text-sm text-gray-600 dark:text-gray-400 italic">
                                       {item.legenda}
                                     </p>
                                   )}
                                 </div>
                               ) : item.tipo === "lista" ? (
                                 <div className="space-y-2">
-                                  <p className="text-sm font-semibold text-gray-700">
+                                  <p className="text-sm font-semibold text-gray-700 dark:text-gray-300">
                                     Lista{" "}
                                     {item.tipoLista === "ordenada"
                                       ? "Ordenada"
@@ -1310,7 +1310,7 @@ export default function EditarCursoPage() {
                                   </p>
                                   {item.itensLista &&
                                     item.itensLista.length > 0 && (
-                                      <div className="text-xs text-gray-500 space-y-1 max-h-32 overflow-y-auto">
+                                      <div className="text-xs text-gray-500 dark:text-gray-400 space-y-1 max-h-32 overflow-y-auto">
                                         {item.itensLista
                                           .slice(0, 3)
                                           .map((listaItem, idx) => (
@@ -1339,7 +1339,7 @@ export default function EditarCursoPage() {
                                             </div>
                                           ))}
                                         {item.itensLista.length > 3 && (
-                                          <div className="text-gray-400">
+                                          <div className="text-gray-400 dark:text-gray-500">
                                             +{item.itensLista.length - 3} mais
                                           </div>
                                         )}
@@ -1348,26 +1348,26 @@ export default function EditarCursoPage() {
                                 </div>
                               ) : item.tipo === "quiz" ? (
                                 <div className="space-y-2">
-                                  <p className="text-sm font-semibold text-gray-700">
+                                  <p className="text-sm font-semibold text-gray-700 dark:text-gray-300">
                                     Quiz: {item.quizData?.questions?.length || 0} pergunta{item.quizData?.questions?.length !== 1 ? 's' : ''}
                                   </p>
                                   {item.quizData?.questions && item.quizData.questions.length > 0 && (
-                                    <div className="text-xs text-gray-500 space-y-2">
+                                    <div className="text-xs text-gray-500 dark:text-gray-400 space-y-2">
                                       {item.quizData.questions.slice(0, 2).map((question, qIdx) => (
                                         <div key={question.id} className="space-y-1">
-                                          <p className="font-medium text-gray-700">
+                                          <p className="font-medium text-gray-700 dark:text-gray-300">
                                             Pergunta {qIdx + 1}: {question.pergunta.slice(0, 50)}
                                             {question.pergunta.length > 50 ? '...' : ''}
                                           </p>
                                           {question.dica && (
-                                            <p className="text-yellow-600 italic">
+                                            <p className="text-yellow-600 dark:text-yellow-400 italic">
                                               💡 Dica disponível
                                             </p>
                                           )}
                                         </div>
                                       ))}
                                       {item.quizData.questions.length > 2 && (
-                                        <div className="text-gray-400">
+                                        <div className="text-gray-400 dark:text-gray-500">
                                           +{item.quizData.questions.length - 2} mais pergunta{item.quizData.questions.length - 2 !== 1 ? 's' : ''}
                                         </div>
                                       )}
@@ -1375,30 +1375,30 @@ export default function EditarCursoPage() {
                                   )}
                                   {/* Preview do Quiz */}
                                   {item.quizData && (
-                                    <div className="mt-4 pt-4 border-t border-gray-200">
+                                    <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
                                       <QuizConteudo quizData={item.quizData} isEdicao={true} />
                                     </div>
                                   )}
                                 </div>
                               ) : item.tipo === "info-box" ? (
                                 <div className="space-y-2">
-                                  <p className="text-sm font-semibold text-gray-700">
+                                  <p className="text-sm font-semibold text-gray-700 dark:text-gray-300">
                                     Info Box: {item.tipoInfoBox === "atencao" ? "Atenção" : item.tipoInfoBox === "saiba_mais" ? "Saiba mais" : item.tipoInfoBox === "curiosidade" ? "Curiosidade" : "Informação"}
                                   </p>
                                   {item.tituloInfoBox && (
-                                    <p className="text-xs text-gray-500">
+                                    <p className="text-xs text-gray-500 dark:text-gray-400">
                                       Título: {item.tituloInfoBox}
                                     </p>
                                   )}
                                   {item.conteudo && (
-                                    <div className="text-xs text-gray-500 line-clamp-2">
+                                    <div className="text-xs text-gray-500 dark:text-gray-400 line-clamp-2">
                                       {item.conteudo.replace(/<[^>]*>/g, '').slice(0, 100)}
                                       {item.conteudo.replace(/<[^>]*>/g, '').length > 100 ? '...' : ''}
                                     </div>
                                   )}
                                   {/* Preview do Info Box */}
                                   {item.tipoInfoBox && (
-                                    <div className="mt-4 pt-4 border-t border-gray-200">
+                                    <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
                                       <InfoBox
                                         tipo={item.tipoInfoBox}
                                         titulo={item.tituloInfoBox}
@@ -1414,7 +1414,7 @@ export default function EditarCursoPage() {
                                 </div>
                               ) : (
                                 <div
-                                  className={`conteudo-paragrafo ${
+                                  className={`conteudo-paragrafo text-gray-700 dark:text-gray-300 ${
                                     item.alinhamento === "centro"
                                       ? "text-center"
                                       : item.alinhamento === "direita"
@@ -1425,9 +1425,6 @@ export default function EditarCursoPage() {
                                   }`}
                                   dangerouslySetInnerHTML={{
                                     __html: item.conteudo,
-                                  }}
-                                  style={{
-                                    color: "inherit",
                                   }}
                                 />
                               )}
@@ -1455,8 +1452,8 @@ export default function EditarCursoPage() {
                   )}
 
                   {/* Área de Criação de Conteúdo */}
-                  <div className={`mt-6 ${unidade.conteudo.length === 0 ? '' : 'pt-6 border-t border-[#e5e7eb]'}`}>
-                    <div className="bg-gradient-to-br from-blue-50 via-white to-purple-50 rounded-xl border-2 border-blue-200 shadow-lg p-6">
+                  <div className={`mt-6 ${unidade.conteudo.length === 0 ? '' : 'pt-6 border-t border-[#e5e7eb] dark:border-gray-700'}`}>
+                    <div className="bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-800 dark:via-gray-800 dark:to-gray-800 rounded-xl border-2 border-blue-200 dark:border-blue-800 shadow-lg p-6">
                       {/* Header */}
                       <div className="mb-6">
                         <div className="flex items-center gap-3 mb-2">
@@ -1464,10 +1461,10 @@ export default function EditarCursoPage() {
                             <Plus className="h-5 w-5 text-white" />
                           </div>
                           <div>
-                            <h3 className="text-lg font-bold text-gray-900">
+                            <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100">
                               Adicionar Novo Conteúdo
                             </h3>
-                            <p className="text-sm text-gray-600 mt-1">
+                            <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
                               Escolha o tipo de conteúdo que deseja adicionar a esta unidade
                             </p>
                           </div>
@@ -1482,124 +1479,124 @@ export default function EditarCursoPage() {
                           onClick={() =>
                             handleSelecionarTipoConteudo("titulo", unidade.id)
                           }
-                          className="h-auto py-4 px-3 flex flex-col items-center gap-2 bg-white hover:bg-blue-50 hover:border-blue-400 hover:shadow-md transition-all border-2 border-blue-200 group"
+                          className="h-auto py-4 px-3 flex flex-col items-center gap-2 bg-white dark:bg-gray-900 hover:bg-blue-50 dark:hover:bg-blue-900/30 hover:border-blue-400 dark:hover:border-blue-500 hover:shadow-md transition-all border-2 border-blue-200 dark:border-blue-800 group"
                         >
-                          <div className="p-2 bg-blue-100 rounded-lg group-hover:bg-blue-200 transition-colors">
-                            <Heading2 className="h-5 w-5 text-blue-600" />
+                          <div className="p-2 bg-blue-100 dark:bg-blue-900/50 rounded-lg group-hover:bg-blue-200 dark:group-hover:bg-blue-800 transition-colors">
+                            <Heading2 className="h-5 w-5 text-blue-600 dark:text-blue-400" />
                           </div>
-                          <span className="text-xs font-semibold text-gray-700">Título</span>
+                          <span className="text-xs font-semibold text-gray-700 dark:text-gray-300">Título</span>
                         </Button>
-                        
+
                         <Button
                           variant="outline"
                           size="sm"
                           onClick={() =>
                             handleSelecionarTipoConteudo("subtitulo", unidade.id)
                           }
-                          className="h-auto py-4 px-3 flex flex-col items-center gap-2 bg-white hover:bg-blue-50 hover:border-blue-400 hover:shadow-md transition-all border-2 border-blue-200 group"
+                          className="h-auto py-4 px-3 flex flex-col items-center gap-2 bg-white dark:bg-gray-900 hover:bg-blue-50 dark:hover:bg-blue-900/30 hover:border-blue-400 dark:hover:border-blue-500 hover:shadow-md transition-all border-2 border-blue-200 dark:border-blue-800 group"
                         >
-                          <div className="p-2 bg-blue-100 rounded-lg group-hover:bg-blue-200 transition-colors">
-                            <Heading3 className="h-5 w-5 text-blue-600" />
+                          <div className="p-2 bg-blue-100 dark:bg-blue-900/50 rounded-lg group-hover:bg-blue-200 dark:group-hover:bg-blue-800 transition-colors">
+                            <Heading3 className="h-5 w-5 text-blue-600 dark:text-blue-400" />
                           </div>
-                          <span className="text-xs font-semibold text-gray-700">Subtítulo</span>
+                          <span className="text-xs font-semibold text-gray-700 dark:text-gray-300">Subtítulo</span>
                         </Button>
-                        
+
                         <Button
                           variant="outline"
                           size="sm"
                           onClick={() =>
                             handleSelecionarTipoConteudo("paragrafo", unidade.id)
                           }
-                          className="h-auto py-4 px-3 flex flex-col items-center gap-2 bg-white hover:bg-blue-50 hover:border-blue-400 hover:shadow-md transition-all border-2 border-blue-200 group"
+                          className="h-auto py-4 px-3 flex flex-col items-center gap-2 bg-white dark:bg-gray-900 hover:bg-blue-50 dark:hover:bg-blue-900/30 hover:border-blue-400 dark:hover:border-blue-500 hover:shadow-md transition-all border-2 border-blue-200 dark:border-blue-800 group"
                         >
-                          <div className="p-2 bg-blue-100 rounded-lg group-hover:bg-blue-200 transition-colors">
-                            <Type className="h-5 w-5 text-blue-600" />
+                          <div className="p-2 bg-blue-100 dark:bg-blue-900/50 rounded-lg group-hover:bg-blue-200 dark:group-hover:bg-blue-800 transition-colors">
+                            <Type className="h-5 w-5 text-blue-600 dark:text-blue-400" />
                           </div>
-                          <span className="text-xs font-semibold text-gray-700">Parágrafo</span>
+                          <span className="text-xs font-semibold text-gray-700 dark:text-gray-300">Parágrafo</span>
                         </Button>
-                        
+
                         <Button
                           variant="outline"
                           size="sm"
                           onClick={() =>
                             handleSelecionarTipoConteudo("imagem", unidade.id)
                           }
-                          className="h-auto py-4 px-3 flex flex-col items-center gap-2 bg-white hover:bg-green-50 hover:border-green-400 hover:shadow-md transition-all border-2 border-green-200 group"
+                          className="h-auto py-4 px-3 flex flex-col items-center gap-2 bg-white dark:bg-gray-900 hover:bg-green-50 dark:hover:bg-green-900/30 hover:border-green-400 dark:hover:border-green-500 hover:shadow-md transition-all border-2 border-green-200 dark:border-green-800 group"
                         >
-                          <div className="p-2 bg-green-100 rounded-lg group-hover:bg-green-200 transition-colors">
-                            <Image className="h-5 w-5 text-green-600" />
+                          <div className="p-2 bg-green-100 dark:bg-green-900/50 rounded-lg group-hover:bg-green-200 dark:group-hover:bg-green-800 transition-colors">
+                            <Image className="h-5 w-5 text-green-600 dark:text-green-400" />
                           </div>
-                          <span className="text-xs font-semibold text-gray-700">Imagem</span>
+                          <span className="text-xs font-semibold text-gray-700 dark:text-gray-300">Imagem</span>
                         </Button>
-                        
+
                         <Button
                           variant="outline"
                           size="sm"
                           onClick={() =>
                             handleSelecionarTipoConteudo("accordion", unidade.id)
                           }
-                          className="h-auto py-4 px-3 flex flex-col items-center gap-2 bg-white hover:bg-orange-50 hover:border-orange-400 hover:shadow-md transition-all border-2 border-orange-200 group"
+                          className="h-auto py-4 px-3 flex flex-col items-center gap-2 bg-white dark:bg-gray-900 hover:bg-orange-50 dark:hover:bg-orange-900/30 hover:border-orange-400 dark:hover:border-orange-500 hover:shadow-md transition-all border-2 border-orange-200 dark:border-orange-800 group"
                         >
-                          <div className="p-2 bg-orange-100 rounded-lg group-hover:bg-orange-200 transition-colors">
-                            <ChevronDown className="h-5 w-5 text-orange-600" />
+                          <div className="p-2 bg-orange-100 dark:bg-orange-900/50 rounded-lg group-hover:bg-orange-200 dark:group-hover:bg-orange-800 transition-colors">
+                            <ChevronDown className="h-5 w-5 text-orange-600 dark:text-orange-400" />
                           </div>
-                          <span className="text-xs font-semibold text-gray-700">Accordion</span>
+                          <span className="text-xs font-semibold text-gray-700 dark:text-gray-300">Accordion</span>
                         </Button>
-                        
+
                         <Button
                           variant="outline"
                           size="sm"
                           onClick={() =>
                             handleSelecionarTipoConteudo("flipcard", unidade.id)
                           }
-                          className="h-auto py-4 px-3 flex flex-col items-center gap-2 bg-white hover:bg-pink-50 hover:border-pink-400 hover:shadow-md transition-all border-2 border-pink-200 group"
+                          className="h-auto py-4 px-3 flex flex-col items-center gap-2 bg-white dark:bg-gray-900 hover:bg-pink-50 dark:hover:bg-pink-900/30 hover:border-pink-400 dark:hover:border-pink-500 hover:shadow-md transition-all border-2 border-pink-200 dark:border-pink-800 group"
                         >
-                          <div className="p-2 bg-pink-100 rounded-lg group-hover:bg-pink-200 transition-colors">
-                            <RotateCcw className="h-5 w-5 text-pink-600" />
+                          <div className="p-2 bg-pink-100 dark:bg-pink-900/50 rounded-lg group-hover:bg-pink-200 dark:group-hover:bg-pink-800 transition-colors">
+                            <RotateCcw className="h-5 w-5 text-pink-600 dark:text-pink-400" />
                           </div>
-                          <span className="text-xs font-semibold text-gray-700">FlipCard</span>
+                          <span className="text-xs font-semibold text-gray-700 dark:text-gray-300">FlipCard</span>
                         </Button>
-                        
+
                         <Button
                           variant="outline"
                           size="sm"
                           onClick={() =>
                             handleSelecionarTipoConteudo("lista", unidade.id)
                           }
-                          className="h-auto py-4 px-3 flex flex-col items-center gap-2 bg-white hover:bg-purple-50 hover:border-purple-400 hover:shadow-md transition-all border-2 border-purple-200 group"
+                          className="h-auto py-4 px-3 flex flex-col items-center gap-2 bg-white dark:bg-gray-900 hover:bg-purple-50 dark:hover:bg-purple-900/30 hover:border-purple-400 dark:hover:border-purple-500 hover:shadow-md transition-all border-2 border-purple-200 dark:border-purple-800 group"
                         >
-                          <div className="p-2 bg-purple-100 rounded-lg group-hover:bg-purple-200 transition-colors">
-                            <List className="h-5 w-5 text-purple-600" />
+                          <div className="p-2 bg-purple-100 dark:bg-purple-900/50 rounded-lg group-hover:bg-purple-200 dark:group-hover:bg-purple-800 transition-colors">
+                            <List className="h-5 w-5 text-purple-600 dark:text-purple-400" />
                           </div>
-                          <span className="text-xs font-semibold text-gray-700">Lista</span>
+                          <span className="text-xs font-semibold text-gray-700 dark:text-gray-300">Lista</span>
                         </Button>
-                        
+
                         <Button
                           variant="outline"
                           size="sm"
                           onClick={() =>
                             handleSelecionarTipoConteudo("quiz", unidade.id)
                           }
-                          className="h-auto py-4 px-3 flex flex-col items-center gap-2 bg-white hover:bg-indigo-50 hover:border-indigo-400 hover:shadow-md transition-all border-2 border-indigo-200 group"
+                          className="h-auto py-4 px-3 flex flex-col items-center gap-2 bg-white dark:bg-gray-900 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 hover:border-indigo-400 dark:hover:border-indigo-500 hover:shadow-md transition-all border-2 border-indigo-200 dark:border-indigo-800 group"
                         >
-                          <div className="p-2 bg-indigo-100 rounded-lg group-hover:bg-indigo-200 transition-colors">
-                            <HelpCircle className="h-5 w-5 text-indigo-600" />
+                          <div className="p-2 bg-indigo-100 dark:bg-indigo-900/50 rounded-lg group-hover:bg-indigo-200 dark:group-hover:bg-indigo-800 transition-colors">
+                            <HelpCircle className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
                           </div>
-                          <span className="text-xs font-semibold text-gray-700">Quiz</span>
+                          <span className="text-xs font-semibold text-gray-700 dark:text-gray-300">Quiz</span>
                         </Button>
-                        
+
                         <Button
                           variant="outline"
                           size="sm"
                           onClick={() =>
                             handleSelecionarTipoConteudo("info-box", unidade.id)
                           }
-                          className="h-auto py-4 px-3 flex flex-col items-center gap-2 bg-white hover:bg-yellow-50 hover:border-yellow-400 hover:shadow-md transition-all border-2 border-yellow-200 group"
+                          className="h-auto py-4 px-3 flex flex-col items-center gap-2 bg-white dark:bg-gray-900 hover:bg-yellow-50 dark:hover:bg-yellow-900/30 hover:border-yellow-400 dark:hover:border-yellow-500 hover:shadow-md transition-all border-2 border-yellow-200 dark:border-yellow-800 group"
                         >
-                          <div className="p-2 bg-yellow-100 rounded-lg group-hover:bg-yellow-200 transition-colors">
-                            <AlertTriangle className="h-5 w-5 text-yellow-600" />
+                          <div className="p-2 bg-yellow-100 dark:bg-yellow-900/50 rounded-lg group-hover:bg-yellow-200 dark:group-hover:bg-yellow-800 transition-colors">
+                            <AlertTriangle className="h-5 w-5 text-yellow-600 dark:text-yellow-400" />
                           </div>
-                          <span className="text-xs font-semibold text-gray-700">Info Box</span>
+                          <span className="text-xs font-semibold text-gray-700 dark:text-gray-300">Info Box</span>
                         </Button>
                       </div>
                     </div>
@@ -1805,30 +1802,30 @@ export default function EditarCursoPage() {
                 <div className="space-y-4">
                   {/* Upload ou URL */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       Imagem <span className="text-red-500">*</span>
                     </label>
                     <div className="space-y-3">
                       {/* Upload de Arquivo */}
                       <div>
-                        <label className="flex items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-blue-400 transition-colors bg-gray-50">
+                        <label className="flex items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg cursor-pointer hover:border-blue-400 dark:hover:border-blue-500 transition-colors bg-gray-50 dark:bg-gray-800">
                           {isUploadingImage ? (
                             <div className="flex flex-col items-center gap-2">
-                              <Loader2 className="h-6 w-6 animate-spin text-blue-600" />
-                              <span className="text-sm text-gray-600">
+                              <Loader2 className="h-6 w-6 animate-spin text-blue-600 dark:text-blue-400" />
+                              <span className="text-sm text-gray-600 dark:text-gray-400">
                                 Enviando...
                               </span>
                             </div>
                           ) : (
                             <div className="flex flex-col items-center gap-2">
-                              <Upload className="h-6 w-6 text-gray-400" />
-                              <span className="text-sm text-gray-600">
+                              <Upload className="h-6 w-6 text-gray-400 dark:text-gray-500" />
+                              <span className="text-sm text-gray-600 dark:text-gray-400">
                                 Clique para fazer upload
                               </span>
-                              <span className="text-xs text-gray-500">
+                              <span className="text-xs text-gray-500 dark:text-gray-400">
                                 ou arraste a imagem aqui
                               </span>
-                              <span className="text-xs text-gray-400">
+                              <span className="text-xs text-gray-400 dark:text-gray-500">
                                 JPG, PNG, GIF, WEBP, SVG (máx. 10MB)
                               </span>
                             </div>
@@ -1851,10 +1848,10 @@ export default function EditarCursoPage() {
                       {/* Divisor */}
                       <div className="relative">
                         <div className="absolute inset-0 flex items-center">
-                          <div className="w-full border-t border-gray-300"></div>
+                          <div className="w-full border-t border-gray-300 dark:border-gray-600"></div>
                         </div>
                         <div className="relative flex justify-center text-sm">
-                          <span className="bg-white px-2 text-gray-500">
+                          <span className="bg-white dark:bg-gray-900 px-2 text-gray-500 dark:text-gray-400">
                             ou
                           </span>
                         </div>
@@ -1886,7 +1883,7 @@ export default function EditarCursoPage() {
                           <img
                             src={imagePreviewUrl || conteudoTemp.conteudo}
                             alt="Preview"
-                            className="w-full h-auto rounded-lg border border-gray-300 max-h-40 object-contain bg-gray-50"
+                            className="w-full h-auto rounded-lg border border-gray-300 dark:border-gray-600 max-h-40 object-contain bg-gray-50 dark:bg-gray-800"
                             onError={() => setImagePreviewUrl(null)}
                           />
                         </div>
@@ -1895,7 +1892,7 @@ export default function EditarCursoPage() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       Tamanho da Imagem <span className="text-red-500">*</span>
                     </label>
                     <select
@@ -1909,7 +1906,7 @@ export default function EditarCursoPage() {
                             | "grande",
                         })
                       }
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
                     >
                       <option value="">Selecione o tamanho</option>
                       <option value="pequena">Pequena (25%)</option>
@@ -1919,7 +1916,7 @@ export default function EditarCursoPage() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       Legenda <span className="text-red-500">*</span>
                     </label>
                     <Input
@@ -1935,7 +1932,7 @@ export default function EditarCursoPage() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       Fonte <span className="text-red-500">*</span>
                     </label>
                     <Input
@@ -2357,7 +2354,7 @@ export default function EditarCursoPage() {
                           <div className="space-y-6">
                             {/* Texto da Pergunta */}
                             <div>
-                              <label className="block text-sm font-medium text-gray-700 mb-2">
+                              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                                 Pergunta <span className="text-red-500">*</span>
                               </label>
                               <textarea
@@ -2366,15 +2363,15 @@ export default function EditarCursoPage() {
                                   handleAtualizarPerguntaQuiz(question.id, "pergunta", e.target.value)
                                 }
                                 placeholder="Digite a pergunta do quiz..."
-                                className="w-full p-3 border border-gray-300 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-400"
                                 rows={3}
                               />
                             </div>
 
                             {/* Dica (opcional) */}
                             <div>
-                              <label className="block text-sm font-medium text-gray-700 mb-2">
-                                Dica <span className="text-gray-400 text-xs">(opcional)</span>
+                              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                Dica <span className="text-gray-400 dark:text-gray-500 text-xs">(opcional)</span>
                               </label>
                               <textarea
                                 value={question.dica || ""}
@@ -2382,7 +2379,7 @@ export default function EditarCursoPage() {
                                   handleAtualizarPerguntaQuiz(question.id, "dica", e.target.value)
                                 }
                                 placeholder="Digite uma dica para o aluno..."
-                                className="w-full p-3 border border-gray-300 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-400"
                                 rows={2}
                               />
                             </div>
@@ -2401,8 +2398,8 @@ export default function EditarCursoPage() {
                                     key={opcao.id}
                                     className={`p-4 border-2 ${
                                       opcao.isCorrect
-                                        ? "border-green-500 bg-green-50"
-                                        : "border-gray-200"
+                                        ? "border-green-500 bg-green-50 dark:bg-green-900/30 dark:border-green-600"
+                                        : "border-gray-200 dark:border-gray-700"
                                     }`}
                                   >
                                     <div className="flex items-start gap-4">
@@ -2423,7 +2420,7 @@ export default function EditarCursoPage() {
                                       <div className="flex-1 space-y-3">
                                         {/* Texto da Opção */}
                                         <div>
-                                          <label className="block text-xs font-medium text-gray-600 mb-1">
+                                          <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
                                             Texto da Opção <span className="text-red-500">*</span>
                                           </label>
                                           <Input
@@ -2443,7 +2440,7 @@ export default function EditarCursoPage() {
 
                                         {/* Feedback da Opção */}
                                         <div>
-                                          <label className="block text-xs font-medium text-gray-600 mb-1">
+                                          <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
                                             Feedback <span className="text-red-500">*</span>
                                           </label>
                                           <textarea
@@ -2457,7 +2454,7 @@ export default function EditarCursoPage() {
                                               )
                                             }
                                             placeholder="Digite o feedback que aparecerá quando o aluno escolher esta opção..."
-                                            className="w-full p-2 border border-gray-300 rounded-md resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                                            className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-400"
                                             rows={2}
                                           />
                                         </div>
@@ -2474,7 +2471,7 @@ export default function EditarCursoPage() {
                                           />
                                           <label
                                             htmlFor={`correct-${question.id}-${opcao.id}`}
-                                            className="text-sm font-medium text-gray-700 cursor-pointer"
+                                            className="text-sm font-medium text-gray-700 dark:text-gray-300 cursor-pointer"
                                           >
                                             Marcar como resposta correta
                                           </label>
@@ -3095,8 +3092,8 @@ export default function EditarCursoPage() {
                                     key={opcao.id}
                                     className={`p-4 border-2 ${
                                       opcao.isCorrect
-                                        ? "border-green-500 bg-green-50"
-                                        : "border-gray-200"
+                                        ? "border-green-500 bg-green-50 dark:bg-green-900/30 dark:border-green-600"
+                                        : "border-gray-200 dark:border-gray-700"
                                     }`}
                                   >
                                     <div className="flex items-start gap-4">
@@ -3117,7 +3114,7 @@ export default function EditarCursoPage() {
                                       <div className="flex-1 space-y-3">
                                         {/* Texto da Opção */}
                                         <div>
-                                          <label className="block text-xs font-medium text-gray-600 mb-1">
+                                          <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
                                             Texto da Opção <span className="text-red-500">*</span>
                                           </label>
                                           <Input
@@ -3247,30 +3244,30 @@ export default function EditarCursoPage() {
                 <div className="space-y-4">
                   {/* Upload ou URL */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       Imagem <span className="text-red-500">*</span>
                     </label>
                     <div className="space-y-3">
                       {/* Upload de Arquivo */}
                       <div>
-                        <label className="flex items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-blue-400 transition-colors bg-gray-50">
+                        <label className="flex items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg cursor-pointer hover:border-blue-400 dark:hover:border-blue-500 transition-colors bg-gray-50 dark:bg-gray-800">
                           {isUploadingImage ? (
                             <div className="flex flex-col items-center gap-2">
-                              <Loader2 className="h-6 w-6 animate-spin text-blue-600" />
-                              <span className="text-sm text-gray-600">
+                              <Loader2 className="h-6 w-6 animate-spin text-blue-600 dark:text-blue-400" />
+                              <span className="text-sm text-gray-600 dark:text-gray-400">
                                 Enviando...
                               </span>
                             </div>
                           ) : (
                             <div className="flex flex-col items-center gap-2">
-                              <Upload className="h-6 w-6 text-gray-400" />
-                              <span className="text-sm text-gray-600">
+                              <Upload className="h-6 w-6 text-gray-400 dark:text-gray-500" />
+                              <span className="text-sm text-gray-600 dark:text-gray-400">
                                 Clique para fazer upload
                               </span>
-                              <span className="text-xs text-gray-500">
+                              <span className="text-xs text-gray-500 dark:text-gray-400">
                                 ou arraste a imagem aqui
                               </span>
-                              <span className="text-xs text-gray-400">
+                              <span className="text-xs text-gray-400 dark:text-gray-500">
                                 JPG, PNG, GIF, WEBP, SVG (máx. 10MB)
                               </span>
                             </div>
@@ -3293,10 +3290,10 @@ export default function EditarCursoPage() {
                       {/* Divisor */}
                       <div className="relative">
                         <div className="absolute inset-0 flex items-center">
-                          <div className="w-full border-t border-gray-300"></div>
+                          <div className="w-full border-t border-gray-300 dark:border-gray-600"></div>
                         </div>
                         <div className="relative flex justify-center text-sm">
-                          <span className="bg-white px-2 text-gray-500">
+                          <span className="bg-white dark:bg-gray-900 px-2 text-gray-500 dark:text-gray-400">
                             ou
                           </span>
                         </div>
@@ -3361,7 +3358,7 @@ export default function EditarCursoPage() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       Legenda <span className="text-red-500">*</span>
                     </label>
                     <Input
@@ -3377,7 +3374,7 @@ export default function EditarCursoPage() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       Fonte <span className="text-red-500">*</span>
                     </label>
                     <Input
@@ -4029,13 +4026,22 @@ export default function EditarCursoPage() {
           }}
           onExportSCORM={async (filename) => {
             try {
+              console.log('🔄 [Export] Iniciando exportação SCORM...');
+              console.log('📦 [Export] Curso atual:', state.cursoAtual);
+              console.log('📝 [Export] Filename:', filename);
+              
               if (state.cursoAtual) {
+                console.log('✅ [Export] Curso encontrado, chamando generateSCORM...');
                 await generateSCORM(state.cursoAtual, filename);
+                console.log('✅ [Export] generateSCORM concluído');
                 setExportModalOpen(false);
+              } else {
+                console.error('❌ [Export] state.cursoAtual é null/undefined');
+                toast.error('Erro: Curso não encontrado');
               }
             } catch (error) {
               // Erro já foi tratado no hook, modal permanece aberto
-              console.error('Erro ao gerar SCORM:', error);
+              console.error('❌ [Export] Erro ao gerar SCORM:', error);
             }
           }}
           courseName={state.cursoAtual?.titulo || "Curso"}
