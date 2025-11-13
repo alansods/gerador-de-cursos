@@ -480,6 +480,7 @@ function generateManifestSimple(curso) {
   <metadata>
     <schema>ADL SCORM</schema>
     <schemaversion>1.2</schemaversion>
+    <adlcp:location>index.html</adlcp:location>
     <lom>
       <general>
         <title><langstring>${curso.titulo}</langstring></title>
@@ -488,7 +489,7 @@ function generateManifestSimple(curso) {
     </lom>
   </metadata>
   <organizations default="org_default">
-    <organization identifier="org_default">
+    <organization identifier="org_default" structure="hierarchical">
       <title>${curso.titulo}</title>
       <!-- Página inicial do curso (primeiro item, mesmo nível que as unidades) -->
       <item identifier="item_index" identifierref="resource_index" isvisible="true">
@@ -508,14 +509,20 @@ function generateManifestSimple(curso) {
               adlcp:scormtype="sco" href="index.html">
       <file href="index.html"/>
       <file href="scorm_api_wrapper.js"/>
+      <dependency identifierref="common_files"/>
     </resource>
     ${(curso.unidades || []).map(unidade => `
     <resource identifier="resource_${unidade.id}" type="webcontent"
               adlcp:scormtype="sco" href="scorm-preview/unidade/${unidade.id}.html">
       <file href="scorm-preview/unidade/${unidade.id}.html"/>
       <file href="scorm_api_wrapper.js"/>
+      <dependency identifierref="common_files"/>
     </resource>
     `).join('')}
+    <!-- Recursos comuns -->
+    <resource identifier="common_files" type="webcontent" adlcp:scormtype="asset">
+      <file href="scorm_api_wrapper.js"/>
+    </resource>
   </resources>
 </manifest>`;
 }

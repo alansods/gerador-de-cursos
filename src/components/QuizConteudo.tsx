@@ -40,8 +40,8 @@ export function QuizConteudo({ quizData, isEdicao = false }: QuizConteudoProps) 
   if (!quizData.questions || quizData.questions.length === 0) {
     return (
       <div className="w-full max-w-4xl mx-auto">
-        <Card className="border-2 border-gray-200">
-          <CardContent className="p-6 text-center text-gray-500">
+        <Card className="border-2 border-gray-200 dark:border-gray-700 dark:bg-gray-800">
+          <CardContent className="p-6 text-center text-gray-500 dark:text-gray-400">
             Quiz sem perguntas
           </CardContent>
         </Card>
@@ -169,7 +169,7 @@ export function QuizConteudo({ quizData, isEdicao = false }: QuizConteudoProps) 
 
     return (
       <div className="w-full max-w-4xl mx-auto">
-        <Card className="border-2 border-blue-200 shadow-lg overflow-hidden">
+        <Card className="border-2 border-blue-200 dark:border-blue-800 dark:bg-gray-800 shadow-lg overflow-hidden">
           <CardHeader className={`bg-gradient-to-r ${results.bgColor} ${results.textColor} pb-6`}>
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
@@ -188,7 +188,7 @@ export function QuizConteudo({ quizData, isEdicao = false }: QuizConteudoProps) 
             {/* Nota */}
             <div className="text-center space-y-4">
               <div className="inline-flex flex-col items-center gap-3">
-                <div className="text-6xl font-bold text-gray-900">
+                <div className="text-6xl font-bold text-gray-900 dark:text-gray-100">
                   {results.correctAnswers}/{results.totalQuestions}
                 </div>
                 <Badge
@@ -220,7 +220,7 @@ export function QuizConteudo({ quizData, isEdicao = false }: QuizConteudoProps) 
               <Button
                 onClick={handleResetAll}
                 size="lg"
-                className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-6 text-lg"
+                className="bg-blue-600 hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-800 text-white px-8 py-6 text-lg"
               >
                 <RotateCcw className="h-5 w-5 mr-2" />
                 Tentar Novamente
@@ -252,16 +252,16 @@ export function QuizConteudo({ quizData, isEdicao = false }: QuizConteudoProps) 
         return (
           <Card
             key={question.id}
-            className="border-2 border-blue-200 shadow-lg bg-gradient-to-br from-blue-50 via-white to-purple-50"
+            className="border-2 border-blue-200 dark:border-blue-800 shadow-lg bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900"
           >
-            <CardHeader className="bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-t-lg pb-4">
+            <CardHeader className="bg-gradient-to-r from-blue-600 to-purple-600 dark:from-blue-700 dark:to-purple-700 text-white rounded-t-lg pb-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <HelpCircle className="h-6 w-6" />
                   <div>
                     <h3 className="text-xl font-bold">Quiz Interativo</h3>
                     {totalQuestions > 1 && (
-                      <p className="text-sm text-blue-100 mt-1">
+                      <p className="text-sm text-blue-100 dark:text-blue-200 mt-1">
                         Pergunta {questionIndex + 1} de {totalQuestions}
                       </p>
                     )}
@@ -284,8 +284,8 @@ export function QuizConteudo({ quizData, isEdicao = false }: QuizConteudoProps) 
 
             <CardContent className="p-6 space-y-8">
               {/* Pergunta */}
-              <div className="bg-white rounded-lg p-6 border-l-4 border-blue-500 shadow-sm">
-                <p className="text-lg font-semibold text-gray-900 leading-relaxed">
+              <div className="bg-white dark:bg-gray-800 rounded-lg p-6 border-l-4 border-blue-500 dark:border-blue-600 shadow-sm">
+                <p className="text-lg font-semibold text-gray-900 dark:text-gray-100 leading-relaxed">
                   {question.pergunta}
                 </p>
               </div>
@@ -298,8 +298,8 @@ export function QuizConteudo({ quizData, isEdicao = false }: QuizConteudoProps) 
                     onClick={() => toggleDica(qId)}
                     className={`${
                       qShowDica
-                        ? "bg-yellow-100 border-yellow-400 text-yellow-800"
-                        : "bg-white border-blue-300 text-blue-600 hover:bg-blue-50"
+                        ? "bg-yellow-100 dark:bg-yellow-900/30 border-yellow-400 dark:border-yellow-600 text-yellow-800 dark:text-yellow-300"
+                        : "bg-white dark:bg-gray-800 border-blue-300 dark:border-blue-700 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/30"
                     } transition-all`}
                     disabled={qShowFeedback}
                   >
@@ -311,12 +311,12 @@ export function QuizConteudo({ quizData, isEdicao = false }: QuizConteudoProps) 
 
               {/* Dica */}
               {qShowDica && question.dica && !isEdicao && (
-                <div className="bg-gradient-to-r from-yellow-50 to-amber-50 border-2 border-yellow-300 rounded-lg p-5 shadow-md animate-in slide-in-from-top-2">
+                <div className="bg-gradient-to-r from-yellow-50 to-amber-50 dark:from-yellow-900/20 dark:to-amber-900/20 border-2 border-yellow-300 dark:border-yellow-700 rounded-lg p-5 shadow-md animate-in slide-in-from-top-2">
                   <div className="flex items-start gap-3">
-                    <Lightbulb className="h-5 w-5 text-yellow-600 shrink-0 mt-0.5" />
+                    <Lightbulb className="h-5 w-5 text-yellow-600 dark:text-yellow-400 shrink-0 mt-0.5" />
                     <div>
-                      <p className="font-semibold text-yellow-800 mb-2">Dica:</p>
-                      <p className="text-yellow-900 leading-relaxed">{question.dica}</p>
+                      <p className="font-semibold text-yellow-800 dark:text-yellow-300 mb-2">Dica:</p>
+                      <p className="text-yellow-900 dark:text-yellow-200 leading-relaxed">{question.dica}</p>
                     </div>
                   </div>
                 </div>
@@ -332,7 +332,7 @@ export function QuizConteudo({ quizData, isEdicao = false }: QuizConteudoProps) 
                   return (
                     <Card
                       key={opcao.id}
-                      className={`cursor-pointer transition-all duration-300 ${
+                      className={`cursor-pointer transition-all duration-300 dark:bg-gray-800 ${
                         isEdicao
                           ? "cursor-default"
                           : qShowFeedback && !isSelected
@@ -340,12 +340,12 @@ export function QuizConteudo({ quizData, isEdicao = false }: QuizConteudoProps) 
                           : ""
                       } ${
                         showAsCorrect
-                          ? "ring-4 ring-green-500 bg-green-50 border-green-500 shadow-lg scale-105"
+                          ? "ring-4 ring-green-500 bg-green-50 dark:bg-green-900/30 border-green-500 shadow-lg scale-105"
                           : showAsIncorrect
-                          ? "ring-4 ring-red-500 bg-red-50 border-red-500 shadow-lg"
+                          ? "ring-4 ring-red-500 bg-red-50 dark:bg-red-900/30 border-red-500 shadow-lg"
                           : isSelected && !qShowFeedback
-                          ? "ring-2 ring-blue-500 bg-blue-50 border-blue-300"
-                          : "hover:shadow-md hover:scale-105 border-gray-200"
+                          ? "ring-2 ring-blue-500 bg-blue-50 dark:bg-blue-900/30 border-blue-300 dark:border-blue-700"
+                          : "hover:shadow-md hover:scale-105 border-gray-200 dark:border-gray-700"
                       }`}
                       onClick={() => handleOptionSelect(opcao.id)}
                     >
@@ -368,7 +368,7 @@ export function QuizConteudo({ quizData, isEdicao = false }: QuizConteudoProps) 
 
                           {/* Texto da Opção */}
                           <div className="flex-1">
-                            <p className="text-gray-900 font-medium leading-relaxed mb-4">
+                            <p className="text-gray-900 dark:text-gray-100 font-medium leading-relaxed mb-4">
                               {opcao.texto}
                             </p>
 
@@ -377,22 +377,22 @@ export function QuizConteudo({ quizData, isEdicao = false }: QuizConteudoProps) 
                               <div
                                 className={`mt-5 p-4 rounded-lg border-2 ${
                                   qIsCorrect
-                                    ? "bg-green-50 border-green-200"
-                                    : "bg-red-50 border-red-200"
+                                    ? "bg-green-50 dark:bg-green-900/30 border-green-200 dark:border-green-700"
+                                    : "bg-red-50 dark:bg-red-900/30 border-red-200 dark:border-red-700"
                                 }`}
                               >
                                 <div className="flex items-start gap-3">
                                   {qIsCorrect ? (
-                                    <CheckCircle2 className="h-5 w-5 text-green-600 shrink-0 mt-0.5" />
+                                    <CheckCircle2 className="h-5 w-5 text-green-600 dark:text-green-400 shrink-0 mt-0.5" />
                                   ) : (
-                                    <XCircle className="h-5 w-5 text-red-600 shrink-0 mt-0.5" />
+                                    <XCircle className="h-5 w-5 text-red-600 dark:text-red-400 shrink-0 mt-0.5" />
                                   )}
                                   <div className="flex-1">
                                     <p
                                       className={`font-semibold mb-2 ${
                                         qIsCorrect
-                                          ? "text-green-800"
-                                          : "text-red-800"
+                                          ? "text-green-800 dark:text-green-300"
+                                          : "text-red-800 dark:text-red-300"
                                       }`}
                                     >
                                       {qIsCorrect ? "Correto!" : "Incorreto"}
@@ -400,8 +400,8 @@ export function QuizConteudo({ quizData, isEdicao = false }: QuizConteudoProps) 
                                     <p
                                       className={`text-sm leading-relaxed ${
                                         qIsCorrect
-                                          ? "text-green-700"
-                                          : "text-red-700"
+                                          ? "text-green-700 dark:text-green-300"
+                                          : "text-red-700 dark:text-red-300"
                                       }`}
                                     >
                                       {opcao.feedback}
@@ -413,10 +413,10 @@ export function QuizConteudo({ quizData, isEdicao = false }: QuizConteudoProps) 
 
                             {/* Feedback Visual para Resposta Correta */}
                             {showAsCorrect && !isSelected && (
-                              <div className="mt-5 p-4 rounded-lg bg-green-50 border-2 border-green-200">
+                              <div className="mt-5 p-4 rounded-lg bg-green-50 dark:bg-green-900/30 border-2 border-green-200 dark:border-green-700">
                                 <div className="flex items-center gap-2">
-                                  <CheckCircle2 className="h-5 w-5 text-green-600" />
-                                  <p className="text-sm font-semibold text-green-800">
+                                  <CheckCircle2 className="h-5 w-5 text-green-600 dark:text-green-400" />
+                                  <p className="text-sm font-semibold text-green-800 dark:text-green-300">
                                     Esta é a resposta correta!
                                   </p>
                                 </div>
@@ -432,14 +432,14 @@ export function QuizConteudo({ quizData, isEdicao = false }: QuizConteudoProps) 
 
               {/* Botões de Navegação */}
               {!isEdicao && (
-                <div className="flex items-center justify-between pt-4 border-t border-gray-200">
+                <div className="flex items-center justify-between pt-4 border-t border-gray-200 dark:border-gray-700">
                   {/* Botão Anterior */}
                   <div>
                     {currentQuestionIndex > 0 && (
                       <Button
                         variant="outline"
                         onClick={handlePreviousQuestion}
-                        className="bg-white hover:bg-blue-50 border-blue-300 text-blue-600"
+                        className="bg-white dark:bg-gray-800 hover:bg-blue-50 dark:hover:bg-blue-900/30 border-blue-300 dark:border-blue-700 text-blue-600 dark:text-blue-400"
                       >
                         <ChevronLeft className="h-4 w-4 mr-2" />
                         Anterior
@@ -453,7 +453,7 @@ export function QuizConteudo({ quizData, isEdicao = false }: QuizConteudoProps) 
                       <Button
                         variant="outline"
                         onClick={handleNextQuestion}
-                        className="bg-white hover:bg-blue-50 border-blue-300 text-blue-600"
+                        className="bg-white dark:bg-gray-800 hover:bg-blue-50 dark:hover:bg-blue-900/30 border-blue-300 dark:border-blue-700 text-blue-600 dark:text-blue-400"
                         disabled={!qShowFeedback}
                       >
                         Próxima
@@ -467,7 +467,7 @@ export function QuizConteudo({ quizData, isEdicao = false }: QuizConteudoProps) 
                             checkAndShowResults();
                           }
                         }}
-                        className="bg-blue-600 hover:bg-blue-700 text-white border-blue-600"
+                        className="bg-blue-600 hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-800 text-white border-blue-600 dark:border-blue-700"
                         disabled={!qShowFeedback}
                       >
                         Ver Resultados

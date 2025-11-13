@@ -1,18 +1,18 @@
-'use client';
+"use client";
 
-import React from 'react';
-import Link from 'next/link';
-import { Button } from '@/components/ui/button';
-import { Menu, Home, User } from 'lucide-react';
+import React from "react";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { Menu, Home, User } from "lucide-react";
 import {
   Sheet,
   SheetContent,
   SheetTrigger,
   SheetHeader,
   SheetTitle,
-} from '@/components/ui/sheet';
-import type { CursoGerado } from '@/types/gerador-curso';
-import { useLMS } from '@/hooks/useLMS';
+} from "@/components/ui/sheet";
+import type { CursoGerado } from "@/types/gerador-curso";
+import { useLMS } from "@/hooks/useLMS";
 
 interface SCORMNavbarProps {
   curso: CursoGerado;
@@ -20,11 +20,15 @@ interface SCORMNavbarProps {
   showMenu?: boolean;
 }
 
-export function SCORMNavbar({ curso, currentUnidadeId, showMenu = true }: SCORMNavbarProps) {
+export function SCORMNavbar({
+  curso,
+  currentUnidadeId,
+  showMenu = true,
+}: SCORMNavbarProps) {
   const { learnerName, isConnected } = useLMS();
 
   return (
-    <nav className="fixed top-0 left-0 right-0 bg-white border-b-[1px] border-[#e5e7eb] z-50 h-16 flex items-center px-4">
+    <nav className="fixed top-0 left-0 right-0 bg-white border-b border-[#e5e7eb] z-50 h-16 flex items-center px-4">
       {showMenu && (
         <Sheet>
           <SheetTrigger asChild>
@@ -33,7 +37,10 @@ export function SCORMNavbar({ curso, currentUnidadeId, showMenu = true }: SCORMN
               <span className="sr-only">Abrir menu</span>
             </Button>
           </SheetTrigger>
-          <SheetContent side="left" className="w-[320px] sm:w-[400px] p-0 bg-linear-to-b from-gray-50 to-white">
+          <SheetContent
+            side="left"
+            className="w-[320px] sm:w-[400px] p-0 bg-linear-to-b from-gray-50 to-white"
+          >
             <SheetHeader className="px-6 pt-6 pb-4 border-b border-gray-100 bg-white">
               <SheetTitle className="text-left text-xl font-bold text-gray-900">
                 Unidades do curso
@@ -57,9 +64,13 @@ export function SCORMNavbar({ curso, currentUnidadeId, showMenu = true }: SCORMN
 
               {/* Units Section */}
               {(curso.unidades || []).map((u, index) => {
-                const isActive = currentUnidadeId ? u.id === currentUnidadeId : false;
+                const isActive = currentUnidadeId
+                  ? u.id === currentUnidadeId
+                  : false;
                 const href = currentUnidadeId
-                  ? (u.id === currentUnidadeId ? '#' : `${u.id}.html`)
+                  ? u.id === currentUnidadeId
+                    ? "#"
+                    : `${u.id}.html`
                   : `unidade/${u.id}.html`;
 
                 return (
@@ -68,13 +79,13 @@ export function SCORMNavbar({ curso, currentUnidadeId, showMenu = true }: SCORMN
                     href={href}
                     className={`group flex items-center gap-3 p-4 rounded-xl border transition-all duration-200 ${
                       isActive
-                        ? 'border-orange-500 bg-orange-50/50'
-                        : 'border-gray-200 hover:border-orange-300 hover:bg-orange-50/50'
+                        ? "border-orange-500 bg-orange-50/50"
+                        : "border-gray-200 hover:border-orange-300 hover:bg-orange-50/50"
                     }`}
                   >
                     {/* Badge with number */}
                     <div className="shrink-0 w-10 h-10 rounded-lg bg-linear-to-br from-orange-400 to-orange-600 flex items-center justify-center text-white font-bold text-sm">
-                      {String(index + 1).padStart(2, '0')}
+                      {String(index + 1).padStart(2, "0")}
                     </div>
                     {/* Content */}
                     <div className="flex-1 min-w-0">
@@ -97,13 +108,13 @@ export function SCORMNavbar({ curso, currentUnidadeId, showMenu = true }: SCORMN
         </h2>
       </div>
 
-      {/* Student Name Display */}
-      {isConnected && learnerName && (
-        <div className="flex items-center gap-2 px-3 py-1.5 bg-gray-100 rounded-full">
-          <User className="h-4 w-4 text-gray-600" />
-          <span className="text-sm font-medium text-gray-700">{learnerName}</span>
-        </div>
-      )}
+      {/* Student Name Display - Sempre mostrar, mesmo se não estiver conectado */}
+      <div className="flex items-center gap-2 px-3 py-1.5 bg-gray-100 rounded-full">
+        <User className="h-4 w-4 text-gray-600" />
+        <span className="text-sm font-medium text-gray-700">
+          {isConnected && learnerName ? learnerName : "Convidado"}
+        </span>
+      </div>
     </nav>
   );
 }

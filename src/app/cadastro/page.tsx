@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { GraduationCap, User, Lock, Eye, EyeOff } from "lucide-react";
 
 export default function CadastroPage() {
@@ -105,34 +106,35 @@ export default function CadastroPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#F5F7FA] p-4 py-8">
+    <div className="min-h-screen flex items-center justify-center bg-[#F5F7FA] dark:bg-gray-900 p-4 py-8">
+      <ThemeToggle />
       <div className="w-full max-w-md">
         {/* Logo/Header */}
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center w-16 h-16 bg-[#0047BB] rounded-2xl mb-6">
             <GraduationCap className="w-10 h-10 text-white" />
           </div>
-          <h1 className="text-2xl font-normal text-[#1A202C] mb-2">
+          <h1 className="text-2xl font-normal text-[#1A202C] dark:text-gray-100 mb-2">
             Criar sua conta
           </h1>
-          <p className="text-base text-[#64748B]">
+          <p className="text-base text-[#64748B] dark:text-gray-400">
             Comece a criar cursos SCORM com qualidade SENAI
           </p>
         </div>
 
         {/* Card de Cadastro */}
-        <div className="bg-white rounded-xl border border-[#E2E8F0] p-8 mb-8">
+        <div className="bg-white dark:bg-gray-800 rounded-xl border border-[#E2E8F0] dark:border-gray-700 p-8 mb-8">
           <form onSubmit={handleSubmit} className="space-y-5">
             {/* Campo Nome */}
             <div className="space-y-2">
               <Label
                 htmlFor="nome"
-                className="text-sm font-medium text-[#1A202C]"
+                className="text-sm font-medium text-[#1A202C] dark:text-gray-200"
               >
                 Nome completo
               </Label>
               <div className="relative">
-                <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#64748B] w-5 h-5" />
+                <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#64748B] dark:text-gray-400 w-5 h-5" />
                 <Input
                   id="nome"
                   type="text"
@@ -144,7 +146,7 @@ export default function CadastroPage() {
                     }
                   }}
                   placeholder="João Silva"
-                  className={`pl-10 h-9 border-[#E2E8F0] ${
+                  className={`pl-10 h-9 border-[#E2E8F0] dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 dark:placeholder:text-gray-400 ${
                     errors.nome
                       ? "border-red-500 focus-visible:ring-red-500"
                       : ""
@@ -161,12 +163,12 @@ export default function CadastroPage() {
             <div className="space-y-2">
               <Label
                 htmlFor="usuario"
-                className="text-sm font-medium text-[#1A202C]"
+                className="text-sm font-medium text-[#1A202C] dark:text-gray-200"
               >
                 Usuário
               </Label>
               <div className="relative">
-                <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#64748B] w-5 h-5" />
+                <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#64748B] dark:text-gray-400 w-5 h-5" />
                 <Input
                   id="usuario"
                   type="text"
@@ -178,7 +180,7 @@ export default function CadastroPage() {
                     }
                   }}
                   placeholder="Digite seu usuário"
-                  className={`pl-10 h-9 border-[#E2E8F0] ${
+                  className={`pl-10 h-9 border-[#E2E8F0] dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 dark:placeholder:text-gray-400 ${
                     errors.usuario
                       ? "border-red-500 focus-visible:ring-red-500"
                       : ""
@@ -195,12 +197,12 @@ export default function CadastroPage() {
             <div className="space-y-2">
               <Label
                 htmlFor="senha"
-                className="text-sm font-medium text-[#1A202C]"
+                className="text-sm font-medium text-[#1A202C] dark:text-gray-200"
               >
                 Senha
               </Label>
               <div className="relative">
-                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#64748B] w-5 h-5" />
+                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#64748B] dark:text-gray-400 w-5 h-5" />
                 <Input
                   id="senha"
                   type={showPassword ? "text" : "password"}
@@ -215,7 +217,7 @@ export default function CadastroPage() {
                     }
                   }}
                   placeholder="••••••••"
-                  className={`pl-10 pr-10 h-9 border-[#E2E8F0] ${
+                  className={`pl-10 pr-10 h-9 border-[#E2E8F0] dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 dark:placeholder:text-gray-400 ${
                     errors.senha
                       ? "border-red-500 focus-visible:ring-red-500"
                       : ""
@@ -227,7 +229,7 @@ export default function CadastroPage() {
                   variant="ghost"
                   size="icon"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 h-auto w-auto p-0 text-[#64748B] hover:text-[#1A202C] hover:bg-transparent"
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 h-auto w-auto p-0 text-[#64748B] dark:text-gray-400 hover:text-[#1A202C] dark:hover:text-gray-100 hover:bg-transparent"
                   tabIndex={-1}
                 >
                   {showPassword ? (
@@ -246,12 +248,12 @@ export default function CadastroPage() {
             <div className="space-y-2">
               <Label
                 htmlFor="confirmarSenha"
-                className="text-sm font-medium text-[#1A202C]"
+                className="text-sm font-medium text-[#1A202C] dark:text-gray-200"
               >
                 Confirmar senha
               </Label>
               <div className="relative">
-                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#64748B] w-5 h-5" />
+                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#64748B] dark:text-gray-400 w-5 h-5" />
                 <Input
                   id="confirmarSenha"
                   type={showConfirmPassword ? "text" : "password"}
@@ -263,7 +265,7 @@ export default function CadastroPage() {
                     }
                   }}
                   placeholder="••••••••"
-                  className={`pl-10 pr-10 h-9 border-[#E2E8F0] ${
+                  className={`pl-10 pr-10 h-9 border-[#E2E8F0] dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 dark:placeholder:text-gray-400 ${
                     errors.confirmarSenha
                       ? "border-red-500 focus-visible:ring-red-500"
                       : ""
@@ -275,7 +277,7 @@ export default function CadastroPage() {
                   variant="ghost"
                   size="icon"
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 h-auto w-auto p-0 text-[#64748B] hover:text-[#1A202C] hover:bg-transparent"
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 h-auto w-auto p-0 text-[#64748B] dark:text-gray-400 hover:text-[#1A202C] dark:hover:text-gray-100 hover:bg-transparent"
                   tabIndex={-1}
                 >
                   {showConfirmPassword ? (
@@ -311,11 +313,11 @@ export default function CadastroPage() {
 
           {/* Link para Login */}
           <div className="mt-6 text-center">
-            <p className="text-sm text-[#64748B]">
+            <p className="text-sm text-[#64748B] dark:text-gray-400">
               Já tem uma conta?{" "}
               <Link
                 href="/login"
-                className="text-sm font-medium text-[#0047BB] hover:underline"
+                className="text-sm font-medium text-[#0047BB] dark:text-blue-400 hover:underline"
               >
                 Faça login
               </Link>
@@ -324,7 +326,7 @@ export default function CadastroPage() {
         </div>
 
         {/* Footer */}
-        <p className="text-center text-sm text-[#64748B]">
+        <p className="text-center text-sm text-[#64748B] dark:text-gray-400">
           © 2025 SENAI. Todos os direitos reservados.
         </p>
       </div>

@@ -25,18 +25,18 @@ export function UnidadeConteudo({
     <Card
       key={unidade.id}
       id={unidade.id}
-      className="overflow-hidden scroll-mt-20"
+      className="overflow-hidden scroll-mt-20 dark:bg-gray-800 dark:border-gray-700"
     >
-      <CardHeader className="bg-linear-to-r from-gray-50 to-gray-100 border-b px-6 py-5">
+      <CardHeader className="bg-linear-to-r from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 border-b dark:border-gray-700 px-6 py-5">
         <div className="flex items-start gap-4">
-          <div className="flex items-center justify-center w-12 h-12 bg-blue-600 text-white rounded-full font-bold shrink-0 text-lg">
+          <div className="flex items-center justify-center w-12 h-12 bg-blue-600 dark:bg-blue-700 text-white rounded-full font-bold shrink-0 text-lg">
             {unidadeIndex + 1}
           </div>
           <div className="flex-1">
-            <h2 className="text-2xl font-bold text-gray-900 mb-3">
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-3">
               {unidade.titulo}
             </h2>
-            <p className="text-gray-600 text-base leading-relaxed">
+            <p className="text-gray-600 dark:text-gray-400 text-base leading-relaxed">
               {unidade.descricao}
             </p>
           </div>
@@ -45,7 +45,7 @@ export function UnidadeConteudo({
 
       <CardContent className="px-6 py-8">
         {unidade.conteudo.length === 0 ? (
-          <div className="text-center py-12 text-gray-500">
+          <div className="text-center py-12 text-gray-500 dark:text-gray-400">
             <p>Nenhum conteúdo adicionado.</p>
           </div>
         ) : (
@@ -58,21 +58,21 @@ export function UnidadeConteudo({
                 }`}
               >
                 {item.tipo === "titulo" ? (
-                  <h3 className="text-2xl font-bold text-gray-900 mb-3 mt-4 first:mt-0">
+                  <h3 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-3 mt-4 first:mt-0">
                     {item.conteudo}
                   </h3>
                 ) : item.tipo === "subtitulo" ? (
-                  <h4 className="text-xl font-semibold text-gray-800 mb-2 mt-3">
+                  <h4 className="text-xl font-semibold text-gray-800 dark:text-gray-200 mb-2 mt-3">
                     {item.conteudo}
                   </h4>
                 ) : item.tipo === "imagem" ? (
                   <div className="space-y-3">
                     {item.fonte && (
-                      <p className="text-xs text-gray-500 mb-2">
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">
                         Fonte: {item.fonte}
                       </p>
                     )}
-                    <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
+                    <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
                       <img
                         src={item.conteudo}
                         alt={item.legenda || "Imagem"}
@@ -89,7 +89,7 @@ export function UnidadeConteudo({
                       />
                     </div>
                     {item.legenda && (
-                      <p className="text-sm text-gray-600 italic mt-2">
+                      <p className="text-sm text-gray-600 dark:text-gray-400 italic mt-2">
                         {item.legenda}
                       </p>
                     )}
@@ -108,7 +108,7 @@ export function UnidadeConteudo({
                             </AccordionTrigger>
                             <AccordionContent>
                               <div
-                                className="text-gray-700 leading-relaxed"
+                                className="text-gray-700 dark:text-gray-300 leading-relaxed"
                                 dangerouslySetInnerHTML={{
                                   __html: accordionItem.conteudo,
                                 }}
@@ -118,7 +118,7 @@ export function UnidadeConteudo({
                         ))}
                       </Accordion>
                     ) : (
-                      <div className="text-gray-500 text-sm italic">
+                      <div className="text-gray-500 dark:text-gray-400 text-sm italic">
                         Accordion vazio
                       </div>
                     )}
@@ -134,7 +134,7 @@ export function UnidadeConteudo({
                         alturaCard={item.alturaCard}
                       />
                     ) : (
-                      <div className="text-gray-500 text-sm italic p-4 border border-gray-300 rounded-lg">
+                      <div className="text-gray-500 dark:text-gray-400 text-sm italic p-4 border border-gray-300 dark:border-gray-700 rounded-lg">
                         FlipCard vazio ou incompleto
                       </div>
                     )}
@@ -143,18 +143,18 @@ export function UnidadeConteudo({
                   <div className="mb-4">
                     {item.itensLista && item.itensLista.length > 0 ? (
                       item.tipoLista === "ordenada" ? (
-                        <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-6 border border-blue-200 shadow-sm">
+                        <div className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-xl p-6 border border-blue-200 dark:border-blue-800 shadow-sm">
                           <ol className="space-y-3">
                             {item.itensLista.map((listaItem, idx) => (
                               <li
                                 key={listaItem.id || idx}
-                                className="flex items-start gap-3 p-3 bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow border-l-4 border-blue-500"
+                                className="flex items-start gap-3 p-3 bg-white dark:bg-gray-800 rounded-lg shadow-sm hover:shadow-md transition-shadow border-l-4 border-blue-500"
                               >
                                 <span className="flex items-center justify-center w-8 h-8 bg-blue-500 text-white rounded-full font-semibold text-sm shrink-0">
                                   {idx + 1}
                                 </span>
                                 <span
-                                  className="flex-1 text-gray-700 leading-relaxed pt-1"
+                                  className="flex-1 text-gray-700 dark:text-gray-300 leading-relaxed pt-1"
                                   dangerouslySetInnerHTML={{
                                     __html: listaItem.texto,
                                   }}
@@ -164,12 +164,12 @@ export function UnidadeConteudo({
                           </ol>
                         </div>
                       ) : item.tipoLista === "check" ? (
-                        <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl p-6 border border-green-200 shadow-sm">
+                        <div className="bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-xl p-6 border border-green-200 dark:border-green-800 shadow-sm">
                           <ul className="space-y-3">
                             {item.itensLista.map((listaItem, idx) => (
                               <li
                                 key={listaItem.id || idx}
-                                className="flex items-start gap-3 p-3 bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow border-l-4 border-green-500"
+                                className="flex items-start gap-3 p-3 bg-white dark:bg-gray-800 rounded-lg shadow-sm hover:shadow-md transition-shadow border-l-4 border-green-500"
                               >
                                 <span className="flex items-center justify-center w-6 h-6 mt-0.5 bg-green-500 rounded shrink-0">
                                   <svg
@@ -187,7 +187,7 @@ export function UnidadeConteudo({
                                   </svg>
                                 </span>
                                 <span
-                                  className="flex-1 text-gray-700 leading-relaxed"
+                                  className="flex-1 text-gray-700 dark:text-gray-300 leading-relaxed"
                                   dangerouslySetInnerHTML={{
                                     __html: listaItem.texto,
                                   }}
@@ -197,18 +197,18 @@ export function UnidadeConteudo({
                           </ul>
                         </div>
                       ) : (
-                        <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-xl p-6 border border-purple-200 shadow-sm">
+                        <div className="bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 rounded-xl p-6 border border-purple-200 dark:border-purple-800 shadow-sm">
                           <ul className="space-y-3">
                             {item.itensLista.map((listaItem, idx) => (
                               <li
                                 key={listaItem.id || idx}
-                                className="flex items-start gap-3 p-3 bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow border-l-4 border-purple-500"
+                                className="flex items-start gap-3 p-3 bg-white dark:bg-gray-800 rounded-lg shadow-sm hover:shadow-md transition-shadow border-l-4 border-purple-500"
                               >
                                 <span className="flex items-center justify-center w-6 h-6 mt-0.5 bg-purple-500 rounded-full shrink-0">
                                   <span className="w-2 h-2 bg-white rounded-full"></span>
                                 </span>
                                 <span
-                                  className="flex-1 text-gray-700 leading-relaxed"
+                                  className="flex-1 text-gray-700 dark:text-gray-300 leading-relaxed"
                                   dangerouslySetInnerHTML={{
                                     __html: listaItem.texto,
                                   }}
@@ -219,7 +219,7 @@ export function UnidadeConteudo({
                         </div>
                       )
                     ) : (
-                      <div className="text-gray-500 text-sm italic p-4 border border-gray-300 rounded-lg">
+                      <div className="text-gray-500 dark:text-gray-400 text-sm italic p-4 border border-gray-300 dark:border-gray-700 rounded-lg">
                         Lista vazia
                       </div>
                     )}
@@ -229,7 +229,7 @@ export function UnidadeConteudo({
                     {item.quizData ? (
                       <QuizConteudo quizData={item.quizData} isEdicao={false} />
                     ) : (
-                      <div className="text-gray-500 text-sm italic p-4 border border-gray-300 rounded-lg">
+                      <div className="text-gray-500 dark:text-gray-400 text-sm italic p-4 border border-gray-300 dark:border-gray-700 rounded-lg">
                         Quiz incompleto ou sem dados
                       </div>
                     )}
@@ -249,14 +249,14 @@ export function UnidadeConteudo({
                         />
                       </InfoBox>
                     ) : (
-                      <div className="text-gray-500 text-sm italic p-4 border border-gray-300 rounded-lg">
+                      <div className="text-gray-500 dark:text-gray-400 text-sm italic p-4 border border-gray-300 dark:border-gray-700 rounded-lg">
                         Info Box incompleto ou sem dados
                       </div>
                     )}
                   </div>
                 ) : (
                   <div
-                    className={`text-gray-700 leading-relaxed text-base mb-3 ${
+                    className={`text-gray-700 dark:text-gray-300 leading-relaxed text-base mb-3 ${
                       item.alinhamento === "centro"
                         ? "text-center"
                         : item.alinhamento === "direita"

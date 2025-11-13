@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/context/AuthContext";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { GraduationCap, User, Lock, Eye, EyeOff } from "lucide-react";
 
 export default function LoginPage() {
@@ -55,34 +56,35 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#F5F7FA] p-4">
+    <div className="min-h-screen flex items-center justify-center bg-[#F5F7FA] dark:bg-gray-900 p-4">
+      <ThemeToggle />
       <div className="w-full max-w-md">
         {/* Logo/Header */}
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center w-16 h-16 bg-[#0047BB] rounded-2xl mb-6">
             <GraduationCap className="w-10 h-10 text-white" />
           </div>
-          <h1 className="text-2xl font-normal text-[#1A202C] mb-2">
+          <h1 className="text-2xl font-normal text-[#1A202C] dark:text-gray-100 mb-2">
             Bem-vindo de volta
           </h1>
-          <p className="text-base text-[#64748B]">
+          <p className="text-base text-[#64748B] dark:text-gray-400">
             Acesse o Gerador de Cursos SCORM SENAI
           </p>
         </div>
 
         {/* Card de Login */}
-        <div className="bg-white rounded-xl border border-[#E2E8F0] p-8 mb-8">
+        <div className="bg-white dark:bg-gray-800 rounded-xl border border-[#E2E8F0] dark:border-gray-700 p-8 mb-8">
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Campo Usuário */}
             <div className="space-y-2">
               <Label
                 htmlFor="usuario"
-                className="text-sm font-medium text-[#1A202C]"
+                className="text-sm font-medium text-[#1A202C] dark:text-gray-200"
               >
                 Usuário
               </Label>
               <div className="relative">
-                <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#64748B] w-5 h-5" />
+                <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#64748B] dark:text-gray-400 w-5 h-5" />
                 <Input
                   id="usuario"
                   type="text"
@@ -94,7 +96,7 @@ export default function LoginPage() {
                     }
                   }}
                   placeholder="Digite seu usuário"
-                  className={`pl-10 h-9 border-[#E2E8F0] ${
+                  className={`pl-10 h-9 border-[#E2E8F0] dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 dark:placeholder:text-gray-400 ${
                     errors.usuario
                       ? "border-red-500 focus-visible:ring-red-500"
                       : ""
@@ -111,12 +113,12 @@ export default function LoginPage() {
             <div className="space-y-2">
               <Label
                 htmlFor="senha"
-                className="text-sm font-medium text-[#1A202C]"
+                className="text-sm font-medium text-[#1A202C] dark:text-gray-200"
               >
                 Senha
               </Label>
               <div className="relative">
-                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#64748B] w-5 h-5" />
+                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#64748B] dark:text-gray-400 w-5 h-5" />
                 <Input
                   id="senha"
                   type={showPassword ? "text" : "password"}
@@ -128,7 +130,7 @@ export default function LoginPage() {
                     }
                   }}
                   placeholder="••••••••"
-                  className={`pl-10 pr-10 h-9 border-[#E2E8F0] ${
+                  className={`pl-10 pr-10 h-9 border-[#E2E8F0] dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 dark:placeholder:text-gray-400 ${
                     errors.senha
                       ? "border-red-500 focus-visible:ring-red-500"
                       : ""
@@ -140,7 +142,7 @@ export default function LoginPage() {
                   variant="ghost"
                   size="icon"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 h-auto w-auto p-0 text-[#64748B] hover:text-[#1A202C] hover:bg-transparent"
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 h-auto w-auto p-0 text-[#64748B] dark:text-gray-400 hover:text-[#1A202C] dark:hover:text-gray-100 hover:bg-transparent"
                   tabIndex={-1}
                 >
                   {showPassword ? (
@@ -174,11 +176,11 @@ export default function LoginPage() {
 
           {/* Link para Cadastro */}
           <div className="mt-6 text-center">
-            <p className="text-sm text-[#64748B]">
+            <p className="text-sm text-[#64748B] dark:text-gray-400">
               Não tem uma conta?{" "}
               <Link
                 href="/cadastro"
-                className="text-sm font-medium text-[#0047BB] hover:underline"
+                className="text-sm font-medium text-[#0047BB] dark:text-blue-400 hover:underline"
               >
                 Cadastre-se
               </Link>
@@ -187,7 +189,7 @@ export default function LoginPage() {
         </div>
 
         {/* Footer */}
-        <p className="text-center text-sm text-[#64748B]">
+        <p className="text-center text-sm text-[#64748B] dark:text-gray-400">
           © 2025 SENAI. Todos os direitos reservados.
         </p>
       </div>

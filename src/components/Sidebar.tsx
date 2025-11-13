@@ -127,7 +127,7 @@ export function Sidebar() {
                 className="text-muted-foreground whitespace-nowrap"
                 style={{ fontSize: "0.875rem" }}
               >
-                Admin
+                {user?.cargo || "SENAI"}
               </p>
             </div>
           </div>
@@ -225,13 +225,13 @@ export function Sidebar() {
             {isExpanded && (
               <div className="flex-1 min-w-0 overflow-hidden">
                 <p className="truncate text-foreground">
-                  {user?.nome || "Natália Silva"}
+                  {user?.nome || "Usuário"}
                 </p>
                 <p
                   className="text-muted-foreground truncate"
                   style={{ fontSize: "0.875rem" }}
                 >
-                  {user?.usuario || "admin@edu.com"}
+                  {user?.usuario || ""}
                 </p>
               </div>
             )}

@@ -1,4 +1,4 @@
-import { ReactNode } from 'react';
+import { ReactNode } from "react";
 
 export default function SCORMPreviewLayout({
   children,
@@ -76,8 +76,23 @@ export default function SCORMPreviewLayout({
             // Inicializar SCORM quando a página carregar
             if (typeof window !== 'undefined') {
               window.SCORM = SCORM;
+              console.log('[SCORM-PLAYER] window.SCORM definido');
               if (SCORM.init()) {
                 console.log('✅ SCORM inicializado com sucesso');
+                // Tentar buscar nome do aluno imediatamente
+                try {
+                  var studentName = SCORM.getStudentName();
+                  console.log('[SCORM-PLAYER] Nome do aluno (via SCORM.getStudentName):', studentName);
+                  // Tentar buscar diretamente também
+                  if (SCORM.API) {
+                    var name12 = SCORM.API.LMSGetValue ? SCORM.API.LMSGetValue('cmi.core.student_name') : '';
+                    var name2004 = SCORM.API.GetValue ? SCORM.API.GetValue('cmi.learner_name') : '';
+                    console.log('[SCORM-PLAYER] cmi.core.student_name:', name12);
+                    console.log('[SCORM-PLAYER] cmi.learner_name:', name2004);
+                  }
+                } catch (e) {
+                  console.warn('[SCORM-PLAYER] Erro ao buscar nome do aluno:', e);
+                }
               } else {
                 console.warn('⚠️ SCORM não inicializado (modo offline)');
               }
@@ -89,4 +104,3 @@ export default function SCORMPreviewLayout({
     </>
   );
 }
-

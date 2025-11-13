@@ -49,7 +49,6 @@ export function AuthProvider({ children, initialUser }: AuthProviderProps) {
 
       if (response.ok) {
         setUser(data.user);
-        toast.success('Login realizado com sucesso!');
         return true;
       } else {
         toast.error(data.error || 'Erro ao fazer login');
@@ -86,7 +85,6 @@ export function AuthProvider({ children, initialUser }: AuthProviderProps) {
 
       console.log('[AuthContext] ✅ Logout concluído, redirecionando para login');
 
-      toast.success('Logout realizado com sucesso!');
       router.push('/login');
     } catch (error) {
       console.error('[AuthContext] ❌ Erro no logout:', error);
@@ -95,8 +93,6 @@ export function AuthProvider({ children, initialUser }: AuthProviderProps) {
       setUser(null);
       checkSessionRef.current = false;
       router.push('/login');
-
-      toast.error('Erro ao fazer logout, mas você foi desconectado');
     }
   };
 

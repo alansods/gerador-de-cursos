@@ -72,7 +72,14 @@ export function ExportModal({
   }, [selectedType, courseName]);
 
   const handleExport = async () => {
-    if (!filename.trim()) return;
+    console.log('🔄 [ExportModal] handleExport chamado');
+    console.log('📝 [ExportModal] Filename:', filename);
+    console.log('📋 [ExportModal] Selected type:', selectedType);
+    
+    if (!filename.trim()) {
+      console.warn('⚠️ [ExportModal] Filename vazio, abortando');
+      return;
+    }
 
     let finalFilename = filename;
 
@@ -81,13 +88,20 @@ export function ExportModal({
       finalFilename = 'scorm-' + finalFilename;
     }
 
+    console.log('📝 [ExportModal] Final filename:', finalFilename);
+
     try {
       if (selectedType === 'pdf') {
+        console.log('📄 [ExportModal] Exportando PDF...');
         await onExportPDF(finalFilename);
       } else if (selectedType === 'scorm' && onExportSCORM) {
+        console.log('📦 [ExportModal] Exportando SCORM...');
+        console.log('📦 [ExportModal] onExportSCORM existe:', !!onExportSCORM);
         await onExportSCORM(finalFilename);
+        console.log('✅ [ExportModal] onExportSCORM concluído');
       } else if (selectedType === 'scorm') {
         // SCORM desabilitado temporariamente
+        console.error('❌ [ExportModal] SCORM desabilitado - onExportSCORM não fornecido');
         toast.error('Exportação SCORM temporariamente indisponível');
         return;
       }
@@ -135,23 +149,23 @@ export function ExportModal({
             <button
               onClick={() => setSelectedType('pdf')}
               disabled={isGeneratingPDF}
-              className="w-full flex items-center gap-4 p-4 rounded-lg border-2 border-gray-200 hover:border-green-500 hover:bg-green-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed group"
+              className="w-full flex items-center gap-4 p-4 rounded-lg border-2 border-gray-200 dark:border-gray-700 hover:border-green-500 dark:hover:border-green-500 hover:bg-green-50 dark:hover:bg-green-900/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed group"
             >
-              <div className="flex items-center justify-center w-12 h-12 bg-green-100 group-hover:bg-green-500 rounded-lg transition-colors">
+              <div className="flex items-center justify-center w-12 h-12 bg-green-100 dark:bg-green-900/30 group-hover:bg-green-500 dark:group-hover:bg-green-500 rounded-lg transition-colors">
                 {isGeneratingPDF ? (
-                  <Loader2 className="w-6 h-6 text-green-600 group-hover:text-white animate-spin" />
+                  <Loader2 className="w-6 h-6 text-green-600 dark:text-green-400 group-hover:text-white animate-spin" />
                 ) : (
-                  <FileText className="w-6 h-6 text-green-600 group-hover:text-white" />
+                  <FileText className="w-6 h-6 text-green-600 dark:text-green-400 group-hover:text-white" />
                 )}
               </div>
               <div className="flex-1 text-left">
-                <h3 className="font-semibold text-gray-900">Exportar como PDF</h3>
-                <p className="text-sm text-gray-600">
+                <h3 className="font-semibold text-gray-900 dark:text-gray-100">Exportar como PDF</h3>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
                   {isGeneratingPDF ? 'Gerando PDF...' : 'Documento para impressão e visualização'}
                 </p>
               </div>
               <svg
-                className="w-5 h-5 text-gray-400 group-hover:text-green-600"
+                className="w-5 h-5 text-gray-400 dark:text-gray-500 group-hover:text-green-600 dark:group-hover:text-green-400"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -169,23 +183,23 @@ export function ExportModal({
             <button
               onClick={() => setSelectedType('scorm')}
               disabled={isGeneratingPDF || isGeneratingSCORM}
-              className="w-full flex items-center gap-4 p-4 rounded-lg border-2 border-gray-200 hover:border-purple-500 hover:bg-purple-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed group"
+              className="w-full flex items-center gap-4 p-4 rounded-lg border-2 border-gray-200 dark:border-gray-700 hover:border-purple-500 dark:hover:border-purple-500 hover:bg-purple-50 dark:hover:bg-purple-900/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed group"
             >
-              <div className="flex items-center justify-center w-12 h-12 bg-purple-100 group-hover:bg-purple-500 rounded-lg transition-colors">
+              <div className="flex items-center justify-center w-12 h-12 bg-purple-100 dark:bg-purple-900/30 group-hover:bg-purple-500 dark:group-hover:bg-purple-500 rounded-lg transition-colors">
                 {isGeneratingSCORM ? (
-                  <Loader2 className="w-6 h-6 text-purple-600 group-hover:text-white animate-spin" />
+                  <Loader2 className="w-6 h-6 text-purple-600 dark:text-purple-400 group-hover:text-white animate-spin" />
                 ) : (
-                  <Download className="w-6 h-6 text-purple-600 group-hover:text-white" />
+                  <Download className="w-6 h-6 text-purple-600 dark:text-purple-400 group-hover:text-white" />
                 )}
               </div>
               <div className="flex-1 text-left">
-                <h3 className="font-semibold text-gray-900">Exportar como SCORM</h3>
-                <p className="text-sm text-gray-600">
+                <h3 className="font-semibold text-gray-900 dark:text-gray-100">Exportar como SCORM</h3>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
                   {isGeneratingSCORM ? 'Gerando SCORM...' : 'Pacote para LMS (Moodle, Canvas, etc.)'}
                 </p>
               </div>
               <svg
-                className="w-5 h-5 text-gray-400 group-hover:text-purple-600"
+                className="w-5 h-5 text-gray-400 dark:text-gray-500 group-hover:text-purple-600 dark:group-hover:text-purple-400"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -204,25 +218,25 @@ export function ExportModal({
         {/* Tela de escolha do nome do arquivo */}
         {selectedType && (
           <div className="space-y-4 py-4">
-            <div className="flex items-center gap-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+            <div className="flex items-center gap-2 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
               {selectedType === 'pdf' ? (
-                <FileText className="w-5 h-5 text-blue-600 shrink-0" />
+                <FileText className="w-5 h-5 text-blue-600 dark:text-blue-400 shrink-0" />
               ) : (
-                <Download className="w-5 h-5 text-purple-600 shrink-0" />
+                <Download className="w-5 h-5 text-purple-600 dark:text-purple-400 shrink-0" />
               )}
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-gray-900">
+                <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
                   {selectedType === 'pdf' ? 'PDF' : 'SCORM'}
                 </p>
-                <p className="text-xs text-gray-600 truncate">
+                <p className="text-xs text-gray-600 dark:text-gray-400 truncate">
                   {courseName}
                 </p>
               </div>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Nome do arquivo <span className="text-red-500">*</span>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Nome do arquivo <span className="text-red-500 dark:text-red-400">*</span>
               </label>
               <Input
                 value={filename}
@@ -231,8 +245,8 @@ export function ExportModal({
                 className="w-full"
                 autoFocus
               />
-              <p className="mt-1 text-xs text-gray-500">
-                {selectedType === 'scorm' 
+              <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                {selectedType === 'scorm'
                   ? 'Arquivos SCORM sempre iniciam com "scorm-"'
                   : 'O arquivo será baixado com este nome'
                 }

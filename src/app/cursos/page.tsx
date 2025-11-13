@@ -364,9 +364,13 @@ export default function CursosPage() {
     router.push(`/cursos/${id}/editar`);
   };
   const handlePreviewCurso = (id: string) => {
-    const curso = state.cursos.find((c) => c.id === id);
+    // Buscar o curso nos cursos paginados atuais
+    const curso = cursosPaginados.find((c) => c.id === id);
     if (curso) {
       openPreview(curso);
+    } else {
+      // Fallback: abrir preview diretamente
+      window.open(`/cursos/${id}/preview`, '_blank');
     }
   };
 

@@ -40,10 +40,9 @@ export function CourseCard({
         <div className="flex items-start justify-between mb-4">
           <div className="flex-1">
             <div className="flex items-center gap-2 mb-2">
-              <Badge 
-                variant="secondary" 
-                className="bg-[#E3F2FD] text-[#0047BB] hover:bg-[#E3F2FD] border-0"
-                style={{ backgroundColor: '#E3F2FD', color: '#0047BB' }}
+              <Badge
+                variant="secondary"
+                className="bg-[#E3F2FD] text-[#0047BB] hover:bg-[#E3F2FD] dark:bg-blue-900/30 dark:text-blue-300 dark:hover:bg-blue-900/40 border-0"
               >
                 {category}
               </Badge>

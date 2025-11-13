@@ -14,6 +14,10 @@ export const useSCORM = () => {
    * @param filename O nome desejado para o arquivo .zip (sem a extensão).
    */
   const generateSCORM = async (curso: CursoGerado, filename: string) => {
+    console.log('🚀 [useSCORM] generateSCORM chamado');
+    console.log('📦 [useSCORM] Curso:', curso);
+    console.log('📝 [useSCORM] Filename:', filename);
+    
     setIsGenerating(true);
     setError(null);
     
@@ -22,8 +26,9 @@ export const useSCORM = () => {
     });
 
     try {
-      // 1. Chamar nossa API Route que faz build real
-      const response = await fetch('/api/generate-scorm', {
+      console.log('🌐 [useSCORM] Fazendo requisição para /api/generate-scorm-v2...');
+      // 1. Chamar nossa API Route V2 que faz build isolado
+      const response = await fetch('/api/generate-scorm-v2', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -31,6 +36,9 @@ export const useSCORM = () => {
         // Envia o objeto 'curso' completo
         body: JSON.stringify({ curso: curso }), 
       });
+
+      console.log('📡 [useSCORM] Response status:', response.status);
+      console.log('📡 [useSCORM] Response ok:', response.ok);
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({ error: 'Erro desconhecido' }));
@@ -40,21 +48,28 @@ export const useSCORM = () => {
       // 2. Obter o blob (arquivo zip)
       const blob = await response.blob();
 
-      // 3. Criar o link de download
+      // 3. Criar o link de download (download automático sem diálogo)
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `${filename}.zip`; 
+      a.download = `${filename}.zip`;
+      a.style.display = 'none'; // Ocultar o elemento
       document.body.appendChild(a);
+      
+      // Forçar download automático
       a.click();
       
-      // 4. Limpeza
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
+      // Aguardar um pouco antes de limpar (garantir que o download iniciou)
+      setTimeout(() => {
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      }, 100);
 
-      toast.success('Pacote SCORM gerado!', {
+      // 5. Toast de sucesso após download iniciado
+      toast.success('Download concluído!', {
         id: toastId,
-        description: `${filename}.zip foi baixado com sucesso.`,
+        description: `O arquivo ${filename}.zip foi baixado com sucesso.`,
+        duration: 5000,
       });
 
     } catch (err) {

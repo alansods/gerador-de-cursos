@@ -4,6 +4,7 @@ import "./globals.css";
 import { GeradorCursoProvider } from "@/context/GeradorCursoContext";
 import { ProgressoProvider } from "@/context/ProgressoContext";
 import { AuthProviderWrapper } from "@/components/AuthProviderWrapper";
+import { ThemeProvider } from "@/components/ThemeProvider";
 import { Toaster } from "sonner";
 
 const geistSans = Geist({
@@ -29,14 +30,16 @@ export default function RootLayout({
   return (
     <html lang="pt-BR">
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-        <AuthProviderWrapper>
-          <GeradorCursoProvider>
-            <ProgressoProvider>
-              {children}
-            </ProgressoProvider>
-          </GeradorCursoProvider>
-        </AuthProviderWrapper>
-        <Toaster position="top-right" richColors closeButton />
+        <ThemeProvider>
+          <AuthProviderWrapper>
+            <GeradorCursoProvider>
+              <ProgressoProvider>
+                {children}
+              </ProgressoProvider>
+            </GeradorCursoProvider>
+          </AuthProviderWrapper>
+          <Toaster position="top-right" richColors closeButton />
+        </ThemeProvider>
       </body>
     </html>
   );
