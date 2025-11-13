@@ -27,6 +27,14 @@
 /public/scorm-images/
 *.zip
 
+# Arquivos de backup (gerados por editores)
+* 2.*
+* [0-9]*/
+*_backup.*
+*-backup.*
+*.backup
+*.js.map
+
 # production
 /build
 
