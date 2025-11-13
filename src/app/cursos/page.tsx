@@ -612,6 +612,7 @@ export default function CursosPage() {
                     duration={curso.cargaHoraria}
                     units={curso.unidades?.length || 0}
                     format={curso.modalidade}
+                    createdAt={curso.dataCriacao}
                     onPreview={() => handlePreviewCurso(curso.id)}
                     onEdit={() => handleEditarCurso(curso.id)}
                     onDelete={() => setShowDeleteConfirm(curso.id)}

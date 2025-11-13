@@ -1,4 +1,4 @@
-import { Clock, BookOpen, Calendar, Eye, Pencil, Trash2, Download } from 'lucide-react';
+import { Clock, BookOpen, Calendar, Eye, Pencil, Trash2, Download, Sparkles } from 'lucide-react';
 import { Card } from './ui/card';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
@@ -10,6 +10,7 @@ interface CourseCardProps {
   duration: string;
   units: number;
   format: string;
+  createdAt?: Date | string;
   onPreview?: () => void;
   onEdit?: () => void;
   onDelete?: () => void;
@@ -23,6 +24,7 @@ export function CourseCard({
   duration,
   units,
   format,
+  createdAt,
   onPreview,
   onEdit,
   onDelete,
@@ -33,19 +35,39 @@ export function CourseCard({
     return text.substring(0, maxLength).trim() + '...';
   };
 
+  // Verificar se o curso foi criado há menos de 24h
+  const isNewCourse = () => {
+    if (!createdAt) return false;
+
+    const createdDate = new Date(createdAt);
+    const now = new Date();
+    const diffInHours = (now.getTime() - createdDate.getTime()) / (1000 * 60 * 60);
+
+    return diffInHours < 24;
+  };
+
   return (
     <Card className="overflow-hidden hover:shadow-lg transition-shadow flex flex-col h-full">
       <div className="p-4 sm:p-6 flex flex-col flex-1">
         {/* Header */}
         <div className="flex items-start justify-between mb-4">
           <div className="flex-1">
-            <div className="flex items-center gap-2 mb-2">
+            <div className="flex items-center gap-2 mb-2 flex-wrap">
               <Badge
                 variant="secondary"
                 className="bg-[#E3F2FD] text-[#0047BB] hover:bg-[#E3F2FD] dark:bg-blue-900/30 dark:text-blue-300 dark:hover:bg-blue-900/40 border-0"
               >
                 {category}
               </Badge>
+              {isNewCourse() && (
+                <Badge
+                  variant="secondary"
+                  className="bg-gradient-to-r from-emerald-500 to-green-500 text-white hover:from-emerald-600 hover:to-green-600 border-0 gap-1 animate-pulse"
+                >
+                  <Sparkles className="w-3 h-3" />
+                  NOVO
+                </Badge>
+              )}
             </div>
             <h3 className="mb-2 text-card-foreground">{title}</h3>
             <p className="text-muted-foreground" style={{ fontSize: '0.875rem', lineHeight: '1.5' }}>
