@@ -12,13 +12,14 @@ datasource db {
 
 // Modelo de Usuário
 model User {
-  id        String   @id @default(cuid())
-  nome      String
-  cargo     String
-  usuario   String   @unique
-  senha     String
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  id         String     @id @default(cuid())
+  nome       String
+  cargo      String
+  usuario    String     @unique
+  senha      String
+  createdAt  DateTime   @default(now()) @map("created_at")
+  updatedAt  DateTime   @updatedAt @map("updated_at")
+  activities Activity[]
 
   @@index([usuario])
   @@map("users")
@@ -58,9 +59,12 @@ model Activity {
   descricao   String?  // descrição adicional (ex: nome do curso ou usuário)
   entityId    String?  @map("entity_id") // ID da entidade afetada (curso ou usuário)
   entityType  String?  @map("entity_type") // 'curso' ou 'usuario'
+  userId      String?  @map("user_id") // ID do usuário que realizou a ação
+  user        User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
   createdAt   DateTime @default(now()) @map("created_at")
 
   @@index([tipo])
   @@index([createdAt])
+  @@index([userId])
   @@map("activities")
 }

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma, ensureConnection } from '@/lib/prisma';
 import { Prisma } from '@prisma/client';
 import { logActivity } from '@/lib/activity-logger';
+import { getUserIdFromRequest } from '@/lib/auth-utils';
 
 // Esta rota não pode ser exportada estaticamente
 export const dynamic = 'error';
@@ -186,12 +187,14 @@ export async function POST(request: NextRequest) {
     });
 
     // Registrar atividade
+    const userId = getUserIdFromRequest(request);
     await logActivity({
       tipo: 'curso_criado',
       titulo: 'Novo curso criado:',
       descricao: curso.titulo,
       entityId: curso.id,
       entityType: 'curso',
+      userId: userId || undefined,
     });
 
     return NextResponse.json({
@@ -261,12 +264,14 @@ export async function PUT(request: NextRequest) {
     });
 
     // Registrar atividade
+    const userId = getUserIdFromRequest(request);
     await logActivity({
       tipo: 'curso_editado',
       titulo: 'Curso editado:',
       descricao: curso.titulo,
       entityId: curso.id,
       entityType: 'curso',
+      userId: userId || undefined,
     });
 
     return NextResponse.json({
@@ -319,12 +324,14 @@ export async function DELETE(request: NextRequest) {
 
     // Registrar atividade
     if (curso) {
+      const userId = getUserIdFromRequest(request);
       await logActivity({
         tipo: 'curso_deletado',
         titulo: 'Curso deletado:',
         descricao: curso.titulo,
         entityId: id,
         entityType: 'curso',
+        userId: userId || undefined,
       });
     }
 

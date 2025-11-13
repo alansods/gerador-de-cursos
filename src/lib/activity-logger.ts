@@ -14,6 +14,7 @@ export interface LogActivityParams {
   descricao?: string;
   entityId?: string;
   entityType?: 'curso' | 'usuario';
+  userId?: string;
 }
 
 /**
@@ -28,6 +29,7 @@ export async function logActivity(params: LogActivityParams) {
         descricao: params.descricao,
         entityId: params.entityId,
         entityType: params.entityType,
+        userId: params.userId,
       },
     });
   } catch (error) {

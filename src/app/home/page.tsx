@@ -29,6 +29,12 @@ interface Activity {
   titulo: string;
   descricao: string | null;
   createdAt: string;
+  user?: {
+    id: string;
+    nome: string;
+    usuario: string;
+    cargo: string;
+  } | null;
 }
 
 export default function HomePage() {
@@ -187,6 +193,7 @@ export default function HomePage() {
       title: activity.titulo,
       subtitle: activity.descricao || "",
       time: getRelativeTime(activity.createdAt),
+      userName: activity.user?.nome || "Sistema",
       iconBg,
       iconColor,
     };
@@ -390,9 +397,17 @@ export default function HomePage() {
                                   </span>
                                 )}
                               </div>
-                              <p className="text-xs sm:text-sm text-muted-foreground">
-                                {activity.time}
-                              </p>
+                              <div className="flex items-center gap-1 flex-wrap">
+                                <p className="text-xs sm:text-sm text-muted-foreground">
+                                  {activity.time}
+                                </p>
+                                <span className="text-xs sm:text-sm text-muted-foreground">
+                                  •
+                                </span>
+                                <p className="text-xs sm:text-sm text-muted-foreground">
+                                  por {activity.userName}
+                                </p>
+                              </div>
                             </div>
                           </div>
                         </div>
