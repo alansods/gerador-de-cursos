@@ -8,12 +8,12 @@ export async function GET() {
   try {
     await ensureConnection();
 
-    // Buscar as últimas 10 atividades com dados do usuário
+    // Buscar as últimas 4 atividades com dados do usuário
     const activities = await prisma.activity.findMany({
       orderBy: {
         createdAt: 'desc',
       },
-      take: 10,
+      take: 4,
       include: {
         user: {
           select: {
