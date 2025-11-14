@@ -320,6 +320,14 @@ async function restoreNextDir(backupDir) {
   // Restaurar backup
   await fs.cp(backupDir, nextDir, { recursive: true });
 
+  // Limpar cache do webpack para evitar erros
+  const cacheDir = path.join(nextDir, 'cache', 'webpack');
+  if (await pathExists(cacheDir)) {
+    console.log('   🧹 Limpando cache do webpack...');
+    await fs.rm(cacheDir, { recursive: true, force: true });
+    console.log('   ✅ Cache do webpack limpo');
+  }
+
   // Remover backup
   await fs.rm(backupDir, { recursive: true, force: true });
   console.log('   ✅ .next/ restaurado');
