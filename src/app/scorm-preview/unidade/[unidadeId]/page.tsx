@@ -16,6 +16,38 @@ declare global {
   }
 }
 
+// IMPORTANTE: Mesmo sendo Client Component, precisamos de generateStaticParams
+// para export estático funcionar com rotas dinâmicas
+export const dynamicParams = false;
+
+export async function generateStaticParams() {
+  // Durante o build, ler o curso do arquivo temporário e gerar rotas para todas as unidades
+  if (process.env.SCORM_BUILD_CURSO_FILE) {
+    try {
+      const fs = await import('fs/promises');
+      const cursoFile = process.env.SCORM_BUILD_CURSO_FILE;
+      const cursoData = await fs.readFile(cursoFile, 'utf-8');
+      const curso = JSON.parse(cursoData) as CursoGerado;
+
+      console.log(
+        `[scorm-preview/unidade] Gerando rotas estáticas para ${curso.unidades?.length || 0} unidades`
+      );
+
+      // Retornar todas as unidades do curso
+      return (
+        curso.unidades?.map((unidade) => ({
+          unidadeId: unidade.id,
+        })) || []
+      );
+    } catch (error) {
+      console.error('[scorm-preview/unidade] Erro ao gerar rotas estáticas:', error);
+    }
+  }
+
+  // Se não estiver em modo de build, retornar array vazio
+  return [];
+}
+
 export default function SCORMPreviewUnidadePage() {
   const params = useParams();
   const unidadeId = params.unidadeId as string;
