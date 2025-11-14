@@ -467,7 +467,7 @@ async function createSCORMZip(outputPath, curso, cursoId) {
   zip.file('scorm_api_wrapper.js', wrapperContent);
 
   // Copiar arquivos do build
-  await copyBuildFilesToZip(zip, outDir, publicImagesDir);
+  await copyBuildFilesToZip(zip, outDir, publicImagesDir, curso);
 
   // Gerar ZIP
   const zipBuffer = await zip.generateAsync({
@@ -600,7 +600,7 @@ window.addEventListener('beforeunload', finishSCORM);
 /**
  * Copia arquivos do build para o ZIP
  */
-async function copyBuildFilesToZip(zip, outDir, publicImagesDir) {
+async function copyBuildFilesToZip(zip, outDir, publicImagesDir, curso) {
   // Função auxiliar para verificar se um arquivo é relacionado a PDF
   function isPDFRelated(fileName) {
     const lower = fileName.toLowerCase();
