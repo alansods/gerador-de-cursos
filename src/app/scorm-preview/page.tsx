@@ -1,4 +1,6 @@
-import React from 'react';
+'use client';
+
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -7,38 +9,48 @@ import { Clock, GraduationCap, Layers, ArrowRight } from 'lucide-react';
 import type { CursoGerado } from '@/types/gerador-curso';
 import { SCORMNavbar } from '@/components/SCORMNavbar';
 
-// Esta página é usada para renderizar o preview standalone para SCORM
-// Durante o build estático (export), ela lê o curso do arquivo temporário
-export const dynamic = 'force-static';
+// Dados do curso serão injetados no HTML durante o build
+declare global {
+  interface Window {
+    __SCORM_CURSO_DATA__?: CursoGerado;
+  }
+}
 
-export default async function SCORMPreviewPage() {
-  // Durante o build estático para SCORM, ler do arquivo temporário
-  // Este arquivo é criado antes do build e contém os dados do curso
-  let curso: CursoGerado | null = null;
+export default function SCORMPreviewPage() {
+  const [curso, setCurso] = useState<CursoGerado | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  // Durante o build SCORM, ler do arquivo temporário
-  if (process.env.SCORM_BUILD_CURSO_FILE) {
-    try {
-      const fs = await import('fs/promises');
-      const cursoFile = process.env.SCORM_BUILD_CURSO_FILE;
-      const cursoData = await fs.readFile(cursoFile, 'utf-8');
-      curso = JSON.parse(cursoData);
-      if (curso) {
-        console.log('[scorm-preview] Curso carregado do arquivo temporário:', curso.id);
-      }
-    } catch (error) {
-      console.error('[scorm-preview] Erro ao ler curso do arquivo temporário:', error);
+  useEffect(() => {
+    // Carregar dados do curso injetados no HTML
+    if (typeof window !== 'undefined' && window.__SCORM_CURSO_DATA__) {
+      console.log('[scorm-preview] Carregando curso dos dados injetados');
+      setCurso(window.__SCORM_CURSO_DATA__);
+      setLoading(false);
+    } else {
+      console.error('[scorm-preview] Dados do curso não encontrados');
+      setLoading(false);
     }
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600 dark:text-gray-400">Carregando curso...</p>
+        </div>
+      </div>
+    );
   }
 
   if (!curso) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-4">
             Curso não encontrado
           </h1>
-          <p className="text-gray-600">
+          <p className="text-gray-600 dark:text-gray-400">
             O curso não foi fornecido ou houve um erro ao carregá-lo.
           </p>
         </div>
@@ -47,7 +59,7 @@ export default async function SCORMPreviewPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       {/* Navbar Fixed Top with Menu and Student Name */}
       <SCORMNavbar curso={curso} showMenu={true} />
 
@@ -89,14 +101,14 @@ export default async function SCORMPreviewPage() {
 
         {/* Units Section */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-          <h2 className="text-3xl font-bold text-gray-900 mb-8 text-center">
+          <h2 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-8 text-center">
             Unidades do Curso
           </h2>
 
           <div className="space-y-6">
             {curso.unidades && curso.unidades.length === 0 ? (
               <Card>
-                <CardContent className="py-12 text-center text-gray-500">
+                <CardContent className="py-12 text-center text-gray-500 dark:text-gray-400">
                   <p>Nenhuma unidade criada ainda.</p>
                 </CardContent>
               </Card>
@@ -107,7 +119,7 @@ export default async function SCORMPreviewPage() {
                   href={`unidade/${unidade.id}.html`}
                   className="block"
                 >
-                  <Card className="overflow-hidden bg-white hover:border-orange-600 transition-all duration-200 cursor-pointer">
+                  <Card className="overflow-hidden bg-white dark:bg-gray-800 hover:border-orange-600 transition-all duration-200 cursor-pointer">
                     <CardContent className="p-6">
                       <div className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-5">
                         {/* Icon Circle */}
@@ -128,12 +140,12 @@ export default async function SCORMPreviewPage() {
                           </div>
 
                           {/* Unit Title */}
-                          <h3 className="text-xl md:text-2xl font-bold text-gray-900 leading-tight">
+                          <h3 className="text-xl md:text-2xl font-bold text-gray-900 dark:text-gray-100 leading-tight">
                             {unidade.titulo}
                           </h3>
 
                           {/* Unit Description */}
-                          <p className="text-gray-600 text-base leading-relaxed my-2">
+                          <p className="text-gray-600 dark:text-gray-400 text-base leading-relaxed my-2">
                             {unidade.descricao}
                           </p>
                         </div>
@@ -143,7 +155,7 @@ export default async function SCORMPreviewPage() {
                           <Button
                             variant="ghost"
                             size="icon"
-                            className="text-orange-600 hover:text-orange-700 hover:bg-orange-50 h-10 w-10 pointer-events-none"
+                            className="text-orange-600 hover:text-orange-700 hover:bg-orange-50 dark:hover:bg-gray-700 h-10 w-10 pointer-events-none"
                           >
                             <ArrowRight className="w-6 h-6" />
                           </Button>
@@ -160,4 +172,3 @@ export default async function SCORMPreviewPage() {
     </div>
   );
 }
-

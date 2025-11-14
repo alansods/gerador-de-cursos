@@ -1,4 +1,5 @@
 import { ReactNode } from "react";
+import { ThemeProvider } from "@/components/ThemeProvider";
 
 export default function SCORMPreviewLayout({
   children,
@@ -6,7 +7,7 @@ export default function SCORMPreviewLayout({
   children: ReactNode;
 }) {
   return (
-    <>
+    <ThemeProvider>
       {/* SCORM API Wrapper - será incluído no build */}
       <script
         dangerouslySetInnerHTML={{
@@ -101,6 +102,6 @@ export default function SCORMPreviewLayout({
         }}
       />
       {children}
-    </>
+    </ThemeProvider>
   );
 }

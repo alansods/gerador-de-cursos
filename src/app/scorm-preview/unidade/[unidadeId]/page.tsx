@@ -1,77 +1,59 @@
-import React from 'react';
+'use client';
+
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { useParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { UnidadeConteudo } from '@/components/UnidadeConteudo';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import type { CursoGerado } from '@/types/gerador-curso';
 import { SCORMNavbar } from '@/components/SCORMNavbar';
 
-// Durante o build estático, esta página será gerada para todas as unidades
-export const dynamic = 'force-static';
-export const dynamicParams = false;
-
-interface PageProps {
-  params: Promise<{ unidadeId: string }>;
-}
-
-export async function generateStaticParams() {
-  // Durante o build, ler o curso do arquivo temporário e gerar rotas para todas as unidades
-  if (process.env.SCORM_BUILD_CURSO_FILE) {
-    try {
-      const fs = await import('fs/promises');
-      const cursoFile = process.env.SCORM_BUILD_CURSO_FILE;
-      const cursoData = await fs.readFile(cursoFile, 'utf-8');
-      const curso = JSON.parse(cursoData) as CursoGerado;
-
-      console.log(
-        `[scorm-preview/unidade] Gerando rotas estáticas para ${curso.unidades?.length || 0} unidades`
-      );
-
-      // Retornar todas as unidades do curso
-      return (
-        curso.unidades?.map((unidade) => ({
-          unidadeId: unidade.id,
-        })) || []
-      );
-    } catch (error) {
-      console.error('[scorm-preview/unidade] Erro ao gerar rotas estáticas:', error);
-    }
+// Dados do curso serão injetados no HTML durante o build
+declare global {
+  interface Window {
+    __SCORM_CURSO_DATA__?: CursoGerado;
   }
-
-  // Se não estiver em modo de build, retornar array vazio
-  return [];
 }
 
-export default async function SCORMPreviewUnidadePage({ params }: PageProps) {
-  // No Next.js 16, params é uma Promise
-  const { unidadeId } = await params;
+export default function SCORMPreviewUnidadePage() {
+  const params = useParams();
+  const unidadeId = params.unidadeId as string;
 
-  // Durante o build SCORM, ler do arquivo temporário
-  // Este arquivo contém os dados completos do curso
-  let curso: CursoGerado | null = null;
+  const [curso, setCurso] = useState<CursoGerado | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  if (process.env.SCORM_BUILD_CURSO_FILE) {
-    try {
-      const fs = await import('fs/promises');
-      const cursoFile = process.env.SCORM_BUILD_CURSO_FILE;
-      const cursoData = await fs.readFile(cursoFile, 'utf-8');
-      curso = JSON.parse(cursoData);
-      if (curso) {
-        console.log(`[scorm-preview/unidade] Curso carregado: ${curso.id}, buscando unidade: ${unidadeId}`);
-      }
-    } catch (error) {
-      console.error('[scorm-preview/unidade] Erro ao ler curso do arquivo temporário:', error);
+  useEffect(() => {
+    // Carregar dados do curso injetados no HTML
+    if (typeof window !== 'undefined' && window.__SCORM_CURSO_DATA__) {
+      console.log(`[scorm-preview/unidade] Carregando curso dos dados injetados, buscando unidade: ${unidadeId}`);
+      setCurso(window.__SCORM_CURSO_DATA__);
+      setLoading(false);
+    } else {
+      console.error('[scorm-preview/unidade] Dados do curso não encontrados');
+      setLoading(false);
     }
+  }, [unidadeId]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600 dark:text-gray-400">Carregando unidade...</p>
+        </div>
+      </div>
+    );
   }
 
   if (!curso) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-4">
             Curso não encontrado
           </h1>
-          <p className="text-gray-600">
+          <p className="text-gray-600 dark:text-gray-400">
             O curso não foi fornecido ou houve um erro ao carregá-lo.
           </p>
         </div>
@@ -83,16 +65,18 @@ export default async function SCORMPreviewUnidadePage({ params }: PageProps) {
 
   if (!unidade) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-4">
             Unidade não encontrada
           </h1>
-          <p className="text-gray-600">
+          <p className="text-gray-600 dark:text-gray-400">
             A unidade solicitada não existe neste curso.
           </p>
-          <Link href={`../index.html?curso=${encodeURIComponent(JSON.stringify(curso))}`}>
-            <Button className="mt-4">Voltar para o início</Button>
+          <Link href="../index.html">
+            <Button className="mt-4 bg-blue-600 hover:bg-blue-700">
+              Voltar para o início
+            </Button>
           </Link>
         </div>
       </div>
@@ -103,10 +87,8 @@ export default async function SCORMPreviewUnidadePage({ params }: PageProps) {
   const unidadeAnterior = unidadeIndex > 0 ? curso.unidades[unidadeIndex - 1] : null;
   const proximaUnidade = unidadeIndex < curso.unidades.length - 1 ? curso.unidades[unidadeIndex + 1] : null;
 
-  const cursoQueryParam = encodeURIComponent(JSON.stringify(curso));
-
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       {/* Navbar Fixed Top with Menu and Student Name */}
       <SCORMNavbar curso={curso} currentUnidadeId={unidadeId} showMenu={true} />
 
@@ -120,7 +102,7 @@ export default async function SCORMPreviewUnidadePage({ params }: PageProps) {
           />
 
           {/* Navigation Buttons */}
-          <div className="flex items-center justify-between gap-4 mt-8 pt-8 border-t-[1px] border-[#e5e7eb]">
+          <div className="flex items-center justify-between gap-4 mt-8 pt-8 border-t-[1px] border-[#e5e7eb] dark:border-gray-700">
             {/* Previous Button */}
             <Link
               href={unidadeAnterior ? `${unidadeAnterior.id}.html` : '#'}
@@ -137,7 +119,7 @@ export default async function SCORMPreviewUnidadePage({ params }: PageProps) {
 
             {/* Unit Counter */}
             <div className="flex-1 text-center">
-              <span className="text-sm text-gray-600">
+              <span className="text-sm text-gray-600 dark:text-gray-400">
                 {unidadeIndex + 1} de {curso.unidades.length}
               </span>
             </div>
@@ -161,4 +143,3 @@ export default async function SCORMPreviewUnidadePage({ params }: PageProps) {
     </div>
   );
 }
-

@@ -150,5 +150,63 @@ GET /_next/static/chunks/main-app.js?v=1763076788764 404 in 37ms
 
 ---
 
-**Última atualização**: 13/01/2025
+## Problema: React Error #418 e 404s no LMS
+
+### Sintomas
+- React Error #418 no console do LMS
+- Múltiplos 404s para arquivos CSS, JS, e fontes
+- Tentativas de fetch de arquivos `.html.txt?_rsc=`
+- Dark mode não funciona no SCORM exportado
+- Nome do aluno do LMS não aparece na navbar
+
+### Causa Raiz
+As páginas SCORM eram **Server Components** (async functions) que tentavam usar `fs/promises` dinamicamente. Quando exportadas como estáticas, o Next.js tentava fazer RSC (React Server Components) fetches que não existem no pacote SCORM.
+
+Além disso:
+- `ThemeProvider` não estava incluído no layout SCORM
+- Dados do curso não eram injetados no HTML estático
+
+### Solução Implementada
+1. **Convertidas páginas para Client Components**:
+   - `scorm-preview/page.tsx` → `'use client'`
+   - `scorm-preview/unidade/[unidadeId]/page.tsx` → `'use client'`
+
+2. **Adicionado ThemeProvider ao layout SCORM**:
+   ```tsx
+   // scorm-preview/layout.tsx
+   import { ThemeProvider } from "@/components/ThemeProvider";
+
+   export default function SCORMPreviewLayout({ children }) {
+     return <ThemeProvider>{children}</ThemeProvider>;
+   }
+   ```
+
+3. **Injeção de dados via `window.__SCORM_CURSO_DATA__`**:
+   ```javascript
+   // generate-scorm-isolated.mjs
+   function injectCursoData(html, cursoData) {
+     const cursoDataScript = `
+     <script>
+       window.__SCORM_CURSO_DATA__ = ${JSON.stringify(cursoData)};
+     </script>`;
+     return html.replace('</head>', `${cursoDataScript}\n</head>`);
+   }
+   ```
+
+4. **Componentes React carregam dados do window**:
+   ```tsx
+   useEffect(() => {
+     if (typeof window !== 'undefined' && window.__SCORM_CURSO_DATA__) {
+       setCurso(window.__SCORM_CURSO_DATA__);
+     }
+   }, []);
+   ```
+
+### Commits Relacionados
+- Conversão para Client Components e ThemeProvider
+- Injeção de dados do curso no HTML
+
+---
+
+**Última atualização**: 14/01/2025
 **Versão do Next.js**: 15.1.6

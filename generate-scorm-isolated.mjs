@@ -644,6 +644,19 @@ async function copyBuildFilesToZip(zip, outDir, publicImagesDir) {
   // Copiar APENAS arquivos do scorm-preview (nada de PDF)
   console.log('   📦 Copiando arquivos do preview SCORM...');
   
+  // Função para injetar dados do curso no HTML
+  function injectCursoData(html, cursoData) {
+    const cursoDataScript = `
+  <script>
+    // Dados do curso injetados durante o build SCORM
+    window.__SCORM_CURSO_DATA__ = ${JSON.stringify(cursoData)};
+    console.log('[SCORM] Dados do curso carregados:', window.__SCORM_CURSO_DATA__);
+  </script>`;
+
+    // Injetar antes do </head> para garantir que esteja disponível quando o componente montar
+    return html.replace('</head>', `${cursoDataScript}\n</head>`);
+  }
+
   // Copiar scorm-preview.html como index
   const scormPreviewHtml = path.join(outDir, 'scorm-preview.html');
   if (await pathExists(scormPreviewHtml)) {
@@ -652,8 +665,10 @@ async function copyBuildFilesToZip(zip, outDir, publicImagesDir) {
     content = content.replace(/pdf-preview/gi, '');
     content = content.replace(/generatePDF/gi, '');
     content = convertPaths(content, '../');
+    // Injetar dados do curso
+    content = injectCursoData(content, curso);
     zip.file('scorm-preview/index.html', content);
-    console.log('   ✅ scorm-preview.html copiado');
+    console.log('   ✅ scorm-preview.html copiado com dados do curso injetados');
   }
 
   // Copiar arquivos HTML das unidades (apenas scorm-preview)
@@ -674,11 +689,13 @@ async function copyBuildFilesToZip(zip, outDir, publicImagesDir) {
   <script src="../../scorm_api_wrapper.js"></script>
 </head>`);
         }
+        // Injetar dados do curso
+        content = injectCursoData(content, curso);
         zip.file(`scorm-preview/unidade/${file}`, content);
         unitFilesCount++;
       }
     }
-    console.log(`   ✅ ${unitFilesCount} arquivo(s) HTML de unidades copiado(s)`);
+    console.log(`   ✅ ${unitFilesCount} arquivo(s) HTML de unidades copiado(s) com dados do curso injetados`);
   }
 
   // Copiar _next/static (apenas arquivos necessários para scorm-preview)
