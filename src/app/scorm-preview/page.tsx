@@ -1,6 +1,4 @@
-'use client';
-
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import Link from 'next/link';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -8,40 +6,27 @@ import { Badge } from '@/components/ui/badge';
 import { Clock, GraduationCap, Layers, ArrowRight } from 'lucide-react';
 import type { CursoGerado } from '@/types/gerador-curso';
 import { SCORMNavbar } from '@/components/SCORMNavbar';
+import fs from 'fs/promises';
 
-// Dados do curso serão injetados no HTML durante o build
-declare global {
-  interface Window {
-    __SCORM_CURSO_DATA__?: CursoGerado;
+// Forçar geração estática completa (sem RSC fetches)
+export const dynamic = 'force-static';
+
+// Função para carregar dados do curso durante o build
+async function getCursoData(): Promise<CursoGerado | null> {
+  if (process.env.SCORM_BUILD_CURSO_FILE) {
+    try {
+      const cursoFile = process.env.SCORM_BUILD_CURSO_FILE;
+      const cursoData = await fs.readFile(cursoFile, 'utf-8');
+      return JSON.parse(cursoData) as CursoGerado;
+    } catch (error) {
+      console.error('[scorm-preview] Erro ao carregar curso:', error);
+    }
   }
+  return null;
 }
 
-export default function SCORMPreviewPage() {
-  const [curso, setCurso] = useState<CursoGerado | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    // Carregar dados do curso injetados no HTML
-    if (typeof window !== 'undefined' && window.__SCORM_CURSO_DATA__) {
-      console.log('[scorm-preview] Carregando curso dos dados injetados');
-      setCurso(window.__SCORM_CURSO_DATA__);
-      setLoading(false);
-    } else {
-      console.error('[scorm-preview] Dados do curso não encontrados');
-      setLoading(false);
-    }
-  }, []);
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600 dark:text-gray-400">Carregando curso...</p>
-        </div>
-      </div>
-    );
-  }
+export default async function SCORMPreviewPage() {
+  const curso = await getCursoData();
 
   if (!curso) {
     return (

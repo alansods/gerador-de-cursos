@@ -1,30 +1,20 @@
-'use client';
-
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import Link from 'next/link';
-import { useParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { UnidadeConteudo } from '@/components/UnidadeConteudo';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import type { CursoGerado } from '@/types/gerador-curso';
 import { SCORMNavbar } from '@/components/SCORMNavbar';
+import fs from 'fs/promises';
 
-// Dados do curso serão injetados no HTML durante o build
-declare global {
-  interface Window {
-    __SCORM_CURSO_DATA__?: CursoGerado;
-  }
-}
-
-// IMPORTANTE: Mesmo sendo Client Component, precisamos de generateStaticParams
-// para export estático funcionar com rotas dinâmicas
+// Forçar geração estática completa (sem RSC fetches)
+export const dynamic = 'force-static';
 export const dynamicParams = false;
 
 export async function generateStaticParams() {
   // Durante o build, ler o curso do arquivo temporário e gerar rotas para todas as unidades
   if (process.env.SCORM_BUILD_CURSO_FILE) {
     try {
-      const fs = await import('fs/promises');
       const cursoFile = process.env.SCORM_BUILD_CURSO_FILE;
       const cursoData = await fs.readFile(cursoFile, 'utf-8');
       const curso = JSON.parse(cursoData) as CursoGerado;
@@ -48,35 +38,27 @@ export async function generateStaticParams() {
   return [];
 }
 
-export default function SCORMPreviewUnidadePage() {
-  const params = useParams();
-  const unidadeId = params.unidadeId as string;
-
-  const [curso, setCurso] = useState<CursoGerado | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    // Carregar dados do curso injetados no HTML
-    if (typeof window !== 'undefined' && window.__SCORM_CURSO_DATA__) {
-      console.log(`[scorm-preview/unidade] Carregando curso dos dados injetados, buscando unidade: ${unidadeId}`);
-      setCurso(window.__SCORM_CURSO_DATA__);
-      setLoading(false);
-    } else {
-      console.error('[scorm-preview/unidade] Dados do curso não encontrados');
-      setLoading(false);
+// Função para carregar dados do curso durante o build
+async function getCursoData(): Promise<CursoGerado | null> {
+  if (process.env.SCORM_BUILD_CURSO_FILE) {
+    try {
+      const cursoFile = process.env.SCORM_BUILD_CURSO_FILE;
+      const cursoData = await fs.readFile(cursoFile, 'utf-8');
+      return JSON.parse(cursoData) as CursoGerado;
+    } catch (error) {
+      console.error('[scorm-preview/unidade] Erro ao carregar curso:', error);
     }
-  }, [unidadeId]);
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600 dark:text-gray-400">Carregando unidade...</p>
-        </div>
-      </div>
-    );
   }
+  return null;
+}
+
+export default async function SCORMPreviewUnidadePage({
+  params,
+}: {
+  params: Promise<{ unidadeId: string }>;
+}) {
+  const { unidadeId } = await params;
+  const curso = await getCursoData();
 
   if (!curso) {
     return (

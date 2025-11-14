@@ -166,12 +166,43 @@ Além disso:
 - `ThemeProvider` não estava incluído no layout SCORM
 - Dados do curso não eram injetados no HTML estático
 
-### Solução Implementada
-1. **Convertidas páginas para Client Components**:
-   - `scorm-preview/page.tsx` → `'use client'`
-   - `scorm-preview/unidade/[unidadeId]/page.tsx` → `'use client'`
+### Solução Implementada (FINAL - CORRIGIDA)
 
-2. **Adicionado ThemeProvider ao layout SCORM**:
+⚠️ **IMPORTANTE**: Next.js 15 **NÃO PERMITE** usar `'use client'` e `generateStaticParams()` juntos!
+
+A solução correta é usar **Server Components** com geração **completamente estática**:
+
+1. **Páginas SCORM são Server Components** (sem `'use client'`):
+   - `scorm-preview/page.tsx` → Server Component
+   - `scorm-preview/unidade/[unidadeId]/page.tsx` → Server Component
+
+2. **Forçar geração estática completa**:
+   ```tsx
+   // Previne RSC fetches forçando geração estática
+   export const dynamic = 'force-static';
+   export const dynamicParams = false;
+   ```
+
+3. **Dados carregados durante BUILD** (não runtime):
+   ```tsx
+   import fs from 'fs/promises'; // Import estático, não dinâmico
+
+   async function getCursoData(): Promise<CursoGerado | null> {
+     if (process.env.SCORM_BUILD_CURSO_FILE) {
+       const cursoFile = process.env.SCORM_BUILD_CURSO_FILE;
+       const cursoData = await fs.readFile(cursoFile, 'utf-8');
+       return JSON.parse(cursoData);
+     }
+     return null;
+   }
+
+   export default async function Page() {
+     const curso = await getCursoData();
+     // Renderiza HTML com dados embutidos
+   }
+   ```
+
+4. **ThemeProvider no layout** (Client Component):
    ```tsx
    // scorm-preview/layout.tsx
    import { ThemeProvider } from "@/components/ThemeProvider";
@@ -181,30 +212,23 @@ Além disso:
    }
    ```
 
-3. **Injeção de dados via `window.__SCORM_CURSO_DATA__`**:
-   ```javascript
-   // generate-scorm-isolated.mjs
-   function injectCursoData(html, cursoData) {
-     const cursoDataScript = `
-     <script>
-       window.__SCORM_CURSO_DATA__ = ${JSON.stringify(cursoData)};
-     </script>`;
-     return html.replace('</head>', `${cursoDataScript}\n</head>`);
-   }
-   ```
+5. **Componentes interativos são Client Components**:
+   - `SCORMNavbar` → `'use client'` (usa hooks: useLMS)
+   - `ThemeProvider` → `'use client'`
+   - Server Component (página) renderiza Client Components filhos
 
-4. **Componentes React carregam dados do window**:
-   ```tsx
-   useEffect(() => {
-     if (typeof window !== 'undefined' && window.__SCORM_CURSO_DATA__) {
-       setCurso(window.__SCORM_CURSO_DATA__);
-     }
-   }, []);
-   ```
+### Por que isso funciona?
+- `dynamic = 'force-static'` força Next.js a gerar HTML completamente estático
+- Dados são lidos do arquivo JSON durante BUILD e embutidos no HTML
+- Não há tentativas de RSC fetches porque tudo é estático
+- Client Components filhos (ThemeProvider, SCORMNavbar) funcionam normalmente
+- Dark mode funciona via ThemeProvider
+- Nome do aluno funciona via SCORM API no useLMS hook
 
 ### Commits Relacionados
-- Conversão para Client Components e ThemeProvider
-- Injeção de dados do curso no HTML
+- `03096d2c` - Primeira tentativa (Client Components com window.__SCORM_CURSO_DATA__)
+- `34edbf3a` - Segunda tentativa (adicionar generateStaticParams a Client Component - ERRO!)
+- Commit atual - Solução final (Server Components com dynamic = 'force-static')
 
 ---
 
