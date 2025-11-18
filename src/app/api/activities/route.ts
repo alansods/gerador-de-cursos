@@ -1,19 +1,20 @@
-import { NextResponse } from 'next/server';
-import { prisma, ensureConnection } from '@/lib/prisma';
+import { NextRequest } from 'next/server';
+import { prisma } from '@/lib/prisma';
+import { createErrorResponse, createSuccessResponse } from '@/lib/auth';
 
-export const dynamic = 'force-dynamic';
-
-// GET - Buscar atividades recentes
-export async function GET() {
+/**
+ * GET /api/activities
+ * Lista atividades (log de ações dos usuários)
+ */
+export async function GET(req: NextRequest) {
   try {
-    await ensureConnection();
+    const { searchParams } = new URL(req.url);
+    const limit = parseInt(searchParams.get('limit') || '20', 10);
 
-    // Buscar as últimas 4 atividades com dados do usuário
+    // Buscar atividades mais recentes
     const activities = await prisma.activity.findMany({
-      orderBy: {
-        createdAt: 'desc',
-      },
-      take: 4,
+      take: limit,
+      orderBy: { createdAt: 'desc' },
       include: {
         user: {
           select: {
@@ -26,27 +27,32 @@ export async function GET() {
       },
     });
 
-    return NextResponse.json(
-      {
-        success: true,
-        activities,
-      },
-      {
-        headers: {
-          'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
-          'Pragma': 'no-cache',
-          'Expires': '0',
-        },
-      }
-    );
+    // Formatar atividades
+    const activitiesFormatted = activities.map((activity) => ({
+      id: activity.id,
+      tipo: activity.tipo,
+      titulo: activity.titulo,
+      descricao: activity.descricao,
+      entityId: activity.entityId,
+      entityType: activity.entityType,
+      userId: activity.userId,
+      user: activity.user
+        ? {
+            id: activity.user.id,
+            nome: activity.user.nome,
+            usuario: activity.user.usuario,
+            cargo: activity.user.cargo,
+          }
+        : null,
+      createdAt: activity.createdAt,
+    }));
+
+    return createSuccessResponse({
+      activities: activitiesFormatted,
+    });
   } catch (error) {
-    console.error('Error fetching activities:', error);
-    return NextResponse.json(
-      {
-        success: false,
-        error: error instanceof Error ? error.message : 'Unknown error',
-      },
-      { status: 500 }
-    );
+    console.error('Erro ao listar atividades:', error);
+    return createErrorResponse('Erro ao listar atividades', 500, error);
   }
 }
+

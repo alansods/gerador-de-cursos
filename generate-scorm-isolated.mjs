@@ -60,8 +60,20 @@ async function main() {
   const devServerRunning = await checkDevServerRunning();
   if (devServerRunning) {
     console.log('\nℹ️  Servidor de desenvolvimento detectado na porta 3000.');
-    console.log('   O build SCORM fará backup de .next/ e restaurará após o build.');
-    console.log('   O servidor deve continuar funcionando normalmente.\n');
+    console.log('   O build SCORM será executado em diretório isolado (.scorm-build-work/).');
+    console.log('   O projeto original NÃO será modificado.\n');
+  }
+
+  // LIMPEZA INICIAL: Remover pastas temporárias de builds anteriores
+  console.log('🧹 [SCORM Isolated] Limpando pastas temporárias de builds anteriores...');
+  await cleanupTempFolders();
+  
+  // Limpar diretório de trabalho isolado de builds anteriores
+  const workDir = path.join(process.cwd(), '.scorm-build-work');
+  if (await pathExists(workDir)) {
+    console.log('   🗑️  Removendo diretório de trabalho isolado anterior...');
+    await fs.rm(workDir, { recursive: true, force: true });
+    console.log('   ✅ Diretório de trabalho limpo');
   }
 
   try {
@@ -84,39 +96,68 @@ async function main() {
     await fs.writeFile(tempCursoFile, JSON.stringify(cursoData, null, 2));
     console.log(`✅ Curso salvo em: ${tempCursoFile}`);
 
-    // 3. Executar build isolado (em subprocesso)
+    // 3. Preparar diretório de trabalho isolado
+    console.log('\n📁 [SCORM Isolated] Preparando diretório de trabalho isolado...');
+    const workDir = await prepareIsolatedWorkDir();
+    console.log(`✅ Diretório de trabalho criado: ${workDir}`);
+    
+    // 4. Executar build isolado (em subprocesso no diretório isolado)
     console.log('\n🔨 [SCORM Isolated] Executando build isolado...');
-    await executeIsolatedBuild(tempCursoFile);
+    await executeIsolatedBuild(tempCursoFile, workDir);
     console.log('✅ Build concluído');
 
-    // 4. Verificar se out/ foi criado
-    console.log('\n🔍 [SCORM Isolated] Verificando build output...');
-    const outDir = path.join(process.cwd(), 'out');
-    const buildExists = await pathExists(outDir);
-    if (!buildExists) {
-      throw new Error('Build não foi criado. Diretório out/ não encontrado.');
+    // 5. Copiar output do build isolado para o projeto
+    console.log('\n📦 [SCORM Isolated] Copiando output do build isolado...');
+    const workOutDir = path.join(workDir, 'out');
+    const projectOutDir = path.join(process.cwd(), 'out');
+    
+    if (!(await pathExists(workOutDir))) {
+      throw new Error('Build não foi criado. Diretório out/ não encontrado no diretório de trabalho.');
     }
-    console.log('✅ Build verificado');
+    
+    // Remover out/ do projeto se existir
+    if (await pathExists(projectOutDir)) {
+      await fs.rm(projectOutDir, { recursive: true, force: true });
+    }
+    
+    // Copiar output do diretório isolado para o projeto
+    await fs.cp(workOutDir, projectOutDir, { recursive: true });
+    console.log('✅ Output copiado para out/ do projeto');
+    
+    // 6. Limpar diretório de trabalho isolado
+    console.log('\n🧹 [SCORM Isolated] Limpando diretório de trabalho isolado...');
+    await fs.rm(workDir, { recursive: true, force: true });
+    console.log('✅ Diretório de trabalho removido');
 
-    // 5. Criar ZIP SCORM
+    // 7. Criar ZIP SCORM
     console.log('\n📦 [SCORM Isolated] Criando pacote ZIP SCORM...');
     await createSCORMZip(outputZipPath, cursoData, cursoId);
     console.log('✅ ZIP SCORM criado');
 
-    // 6. Limpar arquivo temporário do curso
-    console.log('\n🧹 [SCORM Isolated] Limpando arquivo temporário...');
+    // 8. Limpar arquivos temporários
+    console.log('\n🧹 [SCORM Isolated] Limpando arquivos temporários...');
+    
+    // Remover arquivo temporário do curso
     await fs.unlink(tempCursoFile).catch(() => {});
+    
+    // Limpar diretório out/ (build estático do Next.js)
+    // Usar projectOutDir que foi definido anteriormente
+    if (await pathExists(projectOutDir)) {
+      console.log('   🗑️  Removendo diretório out/...');
+      await fs.rm(projectOutDir, { recursive: true, force: true }).catch(() => {});
+      console.log('   ✅ Diretório out/ removido');
+    }
+    
     console.log('✅ Limpeza concluída');
 
     console.log('\n═══════════════════════════════════════════════════════════');
     console.log(`✅ [SCORM Isolated] SCORM gerado com sucesso: ${outputZipPath}`);
     console.log('═══════════════════════════════════════════════════════════');
     console.log('');
-    console.log('✅ O diretório .next/ foi restaurado do backup.');
-    console.log('✅ O servidor de desenvolvimento deve continuar funcionando normalmente.');
-    console.log('');
-    console.log('ℹ️  NOTA: O diretório out/ foi criado e contém os arquivos estáticos.');
-    console.log('   Você pode removê-lo se quiser: rm -rf out');
+    console.log('✅ O projeto original NUNCA foi modificado.');
+    console.log('✅ O build foi executado em diretório isolado (.scorm-build-work/).');
+    console.log('✅ O servidor de desenvolvimento não foi afetado.');
+    console.log('✅ Diretório de trabalho isolado foi limpo automaticamente.');
     console.log('═══════════════════════════════════════════════════════════');
 
   } catch (error) {
@@ -151,216 +192,232 @@ async function pathExists(filePath) {
   }
 }
 
+// ✅ Funções de backup/restore e ocultar/restaurar pastas removidas - não são mais necessárias!
+// O projeto original NUNCA é modificado quando usamos diretório isolado (.scorm-build-work/)
+// As pastas problemáticas são simplesmente NÃO COPIADAS para o diretório isolado
+
 /**
- * Oculta pastas de API antes do build
+ * Limpa pastas temporárias de builds anteriores
  */
-async function hideApiRoutes() {
-  const appDir = path.join(process.cwd(), 'src', 'app');
-  const hiddenDirs = [];
-
+async function cleanupTempFolders() {
   try {
-    const entries = await fs.readdir(appDir, { withFileTypes: true });
-    const apiDirs = entries
-      .filter(entry => entry.isDirectory() && entry.name.startsWith('api'))
-      .map(entry => entry.name);
-
-    if (apiDirs.length === 0) {
-      console.log('   ℹ️ Nenhuma pasta de API encontrada');
-      return hiddenDirs;
-    }
-
-    console.log(`   📦 Ocultando ${apiDirs.length} pasta(s) de API...`);
-
-    for (const apiDirName of apiDirs) {
-      const apiDir = path.join(appDir, apiDirName);
-      const hiddenApiDir = path.join(process.cwd(), `.${apiDirName}-hidden-temp`);
-
-      if (await pathExists(hiddenApiDir)) {
-        await fs.rm(hiddenApiDir, { recursive: true, force: true });
+    const entries = await fs.readdir(process.cwd(), { withFileTypes: true });
+    let cleanedCount = 0;
+    
+    for (const entry of entries) {
+      if (entry.isDirectory() && entry.name.startsWith('.') && 
+          (entry.name.includes('-hidden-temp') || entry.name.includes('-backup'))) {
+        const tempPath = path.join(process.cwd(), entry.name);
+        await fs.rm(tempPath, { recursive: true, force: true });
+        cleanedCount++;
       }
-
-      await fs.rename(apiDir, hiddenApiDir);
-      console.log(`   ✅ Pasta /${apiDirName} ocultada`);
-      hiddenDirs.push(hiddenApiDir);
+    }
+    
+    // Limpar .scorm-build-work se existir (diretório de trabalho isolado anterior)
+    const workDir = path.join(process.cwd(), '.scorm-build-work');
+    if (await pathExists(workDir)) {
+      await fs.rm(workDir, { recursive: true, force: true });
+      cleanedCount++;
+    }
+    
+    // Limpar .next-scorm se existir (build anterior no projeto - não deveria mais existir)
+    const scormNextDir = path.join(process.cwd(), '.next-scorm');
+    if (await pathExists(scormNextDir)) {
+      await fs.rm(scormNextDir, { recursive: true, force: true });
+      cleanedCount++;
+    }
+    
+    if (cleanedCount > 0) {
+      console.log(`   ✅ ${cleanedCount} pasta(s) temporária(s) removida(s)`);
+    } else {
+      console.log('   ✅ Nenhuma pasta temporária encontrada');
     }
   } catch (error) {
-    console.error(`   ❌ Erro ao ocultar pastas de API:`, error);
-  }
-
-  return hiddenDirs;
-}
-
-/**
- * Restaura pastas de API após o build
- */
-async function restoreApiRoutes(hiddenApiDirs) {
-  if (!hiddenApiDirs || hiddenApiDirs.length === 0) return;
-
-  const appDir = path.join(process.cwd(), 'src', 'app');
-
-  for (const hiddenApiDir of hiddenApiDirs) {
-    try {
-      if (await pathExists(hiddenApiDir)) {
-        const dirBaseName = path.basename(hiddenApiDir);
-        const apiDirName = dirBaseName.replace(/^\./, '').replace(/-hidden-temp$/, '');
-        const apiDir = path.join(appDir, apiDirName);
-
-        if (await pathExists(apiDir)) {
-          await fs.rm(apiDir, { recursive: true, force: true });
-        }
-
-        await fs.rename(hiddenApiDir, apiDir);
-        console.log(`   ✅ Pasta /${apiDirName} restaurada`);
-      }
-    } catch (error) {
-      console.error(`   ❌ Erro ao restaurar pasta:`, error);
-    }
+    // Ignorar erros silenciosamente (pode não ter permissão ou não existir)
+    console.log('   ℹ️  Limpeza concluída');
   }
 }
 
 /**
- * Oculta pastas problemáticas antes do build
+ * Prepara diretório de trabalho isolado copiando apenas arquivos necessários
+ * NÃO modifica o projeto original
  */
-async function hideProblematicPages() {
-  const hiddenDirs = [];
-  const problematicPaths = [
-    path.join(process.cwd(), 'src', 'app', 'cursos', '[id]'),
-    path.join(process.cwd(), 'src', 'app', 'pdf-preview'),
+async function prepareIsolatedWorkDir() {
+  const workDir = path.join(process.cwd(), '.scorm-build-work');
+  const projectRoot = process.cwd();
+  
+  console.log('   📁 Criando diretório de trabalho isolado...');
+  await fs.mkdir(workDir, { recursive: true });
+  
+  // Lista de arquivos/diretórios a copiar
+  const filesToCopy = [
+    'src',
+    'public',
+    'next.config.ts',
+    'package.json',
+    'tsconfig.json',
+    'tailwind.config.ts',
+    'postcss.config.mjs',
+    'components.json',
+    'middleware.ts',
+    'node_modules', // Usar symlink ou copiar (symlink é mais rápido)
   ];
-
-  for (const problematicPath of problematicPaths) {
-    try {
-      if (await pathExists(problematicPath)) {
-        const hiddenPath = path.join(process.cwd(), `.hidden-${path.basename(problematicPath)}-temp`);
+  
+  // Pastas problemáticas que NÃO devem ser copiadas
+  const excludeFromSrcApp = [
+    'api',
+    'pdf-preview',
+    'test-prisma',
+    'cursos/[id]', // Rota dinâmica
+    'cadastro',
+    'configuracoes',
+    'home',
+    'login',
+    'usuarios',
+  ];
+  
+  console.log('   📦 Copiando arquivos necessários (excluindo pastas problemáticas)...');
+  
+  // Copiar arquivos de configuração
+  for (const file of ['next.config.ts', 'package.json', 'tsconfig.json', 'middleware.ts', 'components.json']) {
+    const srcPath = path.join(projectRoot, file);
+    const destPath = path.join(workDir, file);
+    if (await pathExists(srcPath)) {
+      await fs.cp(srcPath, destPath);
+    }
+  }
+  
+  // Copiar postcss.config.mjs se existir
+  const postcssPath = path.join(projectRoot, 'postcss.config.mjs');
+  if (await pathExists(postcssPath)) {
+    await fs.cp(postcssPath, path.join(workDir, 'postcss.config.mjs'));
+  }
+  
+  // Copiar tailwind.config.ts se existir
+  const tailwindPath = path.join(projectRoot, 'tailwind.config.ts');
+  if (await pathExists(tailwindPath)) {
+    await fs.cp(tailwindPath, path.join(workDir, 'tailwind.config.ts'));
+  }
+  
+  // Copiar public/ completo
+  const publicSrc = path.join(projectRoot, 'public');
+  const publicDest = path.join(workDir, 'public');
+  if (await pathExists(publicSrc)) {
+    await fs.cp(publicSrc, publicDest, { recursive: true });
+    console.log('   ✅ public/ copiado');
+  }
+  
+  // Copiar src/ mas excluindo pastas problemáticas
+  const srcSrc = path.join(projectRoot, 'src');
+  const srcDest = path.join(workDir, 'src');
+  await fs.mkdir(srcDest, { recursive: true });
+  
+  // Copiar estrutura de src/ excluindo app/ problemático
+  const srcEntries = await fs.readdir(srcSrc, { withFileTypes: true });
+  for (const entry of srcEntries) {
+    const srcPath = path.join(srcSrc, entry.name);
+    const destPath = path.join(srcDest, entry.name);
+    
+    if (entry.isDirectory() && entry.name === 'app') {
+      // Copiar app/ mas excluindo pastas problemáticas
+      await fs.mkdir(destPath, { recursive: true });
+      const appEntries = await fs.readdir(srcPath, { withFileTypes: true });
+      
+      for (const appEntry of appEntries) {
+        const appEntryPath = path.join(srcPath, appEntry.name);
+        const appDestPath = path.join(destPath, appEntry.name);
         
-        if (await pathExists(hiddenPath)) {
-          await fs.rm(hiddenPath, { recursive: true, force: true });
+        // Verificar se deve ser excluído
+        const shouldExclude = excludeFromSrcApp.some(exclude => {
+          if (exclude.includes('/')) {
+            // Para rotas aninhadas como 'cursos/[id]'
+            const [parent, child] = exclude.split('/');
+            return appEntry.name === parent;
+          }
+          return appEntry.name === exclude || appEntry.name.startsWith(exclude + ' ');
+        });
+        
+        if (!shouldExclude) {
+          if (appEntry.isDirectory()) {
+            // Para cursos/[id], copiar cursos mas excluir [id]
+            if (appEntry.name === 'cursos') {
+              await fs.mkdir(appDestPath, { recursive: true });
+              const cursosEntries = await fs.readdir(appEntryPath, { withFileTypes: true });
+              for (const cursoEntry of cursosEntries) {
+                if (cursoEntry.name !== '[id]') {
+                  await fs.cp(
+                    path.join(appEntryPath, cursoEntry.name),
+                    path.join(appDestPath, cursoEntry.name),
+                    { recursive: true }
+                  );
+                }
+              }
+            } else {
+              await fs.cp(appEntryPath, appDestPath, { recursive: true });
+            }
+          } else {
+            await fs.cp(appEntryPath, appDestPath);
+          }
         }
-
-        await fs.rename(problematicPath, hiddenPath);
-        console.log(`   ✅ Pasta ${path.basename(problematicPath)} ocultada`);
-        hiddenDirs.push(hiddenPath);
       }
-    } catch (error) {
-      console.error(`   ❌ Erro ao ocultar pasta:`, error);
+      console.log('   ✅ src/app/ copiado (pastas problemáticas excluídas)');
+    } else if (entry.isDirectory()) {
+      // Copiar outros diretórios de src/ (components, lib, hooks, etc)
+      await fs.cp(srcPath, destPath, { recursive: true });
+      console.log(`   ✅ src/${entry.name}/ copiado`);
+    } else {
+      await fs.cp(srcPath, destPath);
     }
   }
-
-  return hiddenDirs;
-}
-
-/**
- * Restaura pastas problemáticas após o build
- */
-async function restoreProblematicPages(hiddenDirs) {
-  for (const hiddenDir of hiddenDirs) {
+  
+  // Criar symlink para node_modules (mais eficiente que copiar)
+  const nodeModulesSrc = path.join(projectRoot, 'node_modules');
+  const nodeModulesDest = path.join(workDir, 'node_modules');
+  if (await pathExists(nodeModulesSrc)) {
     try {
-      if (await pathExists(hiddenDir)) {
-        const dirName = path.basename(hiddenDir).replace('.hidden-', '').replace('-temp', '');
-        let originalPath;
-
-        if (dirName === '[id]') {
-          originalPath = path.join(process.cwd(), 'src', 'app', 'cursos', dirName);
-        } else if (dirName === 'pdf-preview') {
-          originalPath = path.join(process.cwd(), 'src', 'app', dirName);
-        } else {
-          originalPath = path.join(process.cwd(), 'src', 'app', dirName);
-        }
-
-        if (await pathExists(originalPath)) {
-          await fs.rm(originalPath, { recursive: true, force: true });
-        }
-
-        await fs.rename(hiddenDir, originalPath);
-        console.log(`   ✅ Pasta ${dirName} restaurada`);
-      }
+      // Tentar criar symlink (pode falhar em alguns sistemas)
+      await fs.symlink(nodeModulesSrc, nodeModulesDest, 'dir');
+      console.log('   ✅ node_modules/ linkado (symlink)');
     } catch (error) {
-      console.error(`   ❌ Erro ao restaurar pasta:`, error);
+      // Se symlink falhar, copiar (mais lento mas funciona sempre)
+      console.log('   ⚠️  Symlink falhou, copiando node_modules/ (pode demorar)...');
+      await fs.cp(nodeModulesSrc, nodeModulesDest, { recursive: true });
+      console.log('   ✅ node_modules/ copiado');
     }
   }
-}
-
-/**
- * Faz backup do diretório .next/ antes do build
- */
-async function backupNextDir() {
-  const nextDir = path.join(process.cwd(), '.next');
-  const backupDir = path.join(process.cwd(), '.next-backup-scorm');
   
-  if (await pathExists(nextDir)) {
-    console.log('   💾 Fazendo backup de .next/ antes do build...');
-    // Remover backup anterior se existir
-    if (await pathExists(backupDir)) {
-      await fs.rm(backupDir, { recursive: true, force: true });
-    }
-    // Copiar .next/ para backup
-    await fs.cp(nextDir, backupDir, { recursive: true });
-    console.log('   ✅ Backup de .next/ criado');
-    return backupDir;
-  }
-  return null;
+  console.log('   ✅ Diretório de trabalho preparado');
+  return workDir;
 }
 
 /**
- * Restaura o backup do .next/ após o build
+ * Executa o build isolado em um subprocesso no diretório de trabalho isolado
  */
-async function restoreNextDir(backupDir) {
-  if (!backupDir || !(await pathExists(backupDir))) {
-    return;
-  }
-
-  const nextDir = path.join(process.cwd(), '.next');
-  console.log('   🔄 Restaurando .next/ do backup...');
-
-  // Remover .next/ atual (criado pelo build SCORM)
-  if (await pathExists(nextDir)) {
-    await fs.rm(nextDir, { recursive: true, force: true });
-  }
-
-  // Restaurar backup
-  await fs.cp(backupDir, nextDir, { recursive: true });
-
-  // Limpar cache do webpack para evitar erros
-  const cacheDir = path.join(nextDir, 'cache', 'webpack');
-  if (await pathExists(cacheDir)) {
-    console.log('   🧹 Limpando cache do webpack...');
-    await fs.rm(cacheDir, { recursive: true, force: true });
-    console.log('   ✅ Cache do webpack limpo');
-  }
-
-  // Remover backup
-  await fs.rm(backupDir, { recursive: true, force: true });
-  console.log('   ✅ .next/ restaurado');
-
-  // Aguardar alguns segundos para o Next.js processar as mudanças
-  console.log('   ⏳ Aguardando Next.js reprocessar arquivos (3s)...');
-  await new Promise(resolve => setTimeout(resolve, 3000));
-  console.log('   ✅ Servidor deve estar pronto novamente');
-}
-
-/**
- * Executa o build isolado em um subprocesso
- */
-async function executeIsolatedBuild(cursoFile) {
-  // Fazer backup do .next/ antes do build para não corromper o servidor
-  const backupDir = await backupNextDir();
+async function executeIsolatedBuild(cursoFile, workDir) {
+  // O arquivo do curso está no projeto (.scorm-build/curso-xxx.json)
+  // Precisamos copiá-lo para o workDir para que o build possa encontrá-lo
+  const workCursoFile = path.join(workDir, path.basename(cursoFile));
+  await fs.cp(cursoFile, workCursoFile);
+  console.log(`   📄 Arquivo do curso copiado para: ${workCursoFile}`);
   
-  // Ocultar pastas problemáticas antes do build
-  console.log('   📦 Ocultando pastas problemáticas...');
-  const hiddenApiDirs = await hideApiRoutes();
-  const hiddenPagesDirs = await hideProblematicPages();
+  // Limpar .next-scorm no diretório de trabalho se existir
+  const scormNextDir = path.join(workDir, '.next-scorm');
+  if (await pathExists(scormNextDir)) {
+    await fs.rm(scormNextDir, { recursive: true, force: true });
+  }
 
   return new Promise((resolve, reject) => {
+    // Usar o caminho do arquivo no diretório de trabalho isolado (já copiado acima)
     const env = {
       ...process.env,
       NODE_ENV: 'production',
       NEXT_OUTPUT_EXPORT: 'true',
-      SCORM_BUILD_CURSO_FILE: cursoFile,
+      SCORM_BUILD_CURSO_FILE: workCursoFile, // ✅ Caminho no diretório isolado
     };
 
     console.log('   🔧 Variáveis de ambiente configuradas');
-    console.log(`   📁 Diretório de trabalho: ${process.cwd()}`);
-    console.log('   💾 Backup de .next/ foi criado - será restaurado após o build');
+    console.log(`   📁 Diretório de trabalho isolado: ${workDir}`);
+    console.log('   ✅ Projeto original não será modificado');
 
     // Executar build em subprocesso isolado
     console.log('   🔨 Executando next build...');
@@ -369,7 +426,7 @@ async function executeIsolatedBuild(cursoFile) {
     console.log('   🔧 NEXT_OUTPUT_EXPORT:', env.NEXT_OUTPUT_EXPORT);
     
     const buildProcess = spawn('pnpm', ['next', 'build', '--no-lint'], {
-      cwd: process.cwd(),
+      cwd: workDir, // ✅ Executar no diretório isolado, NÃO no projeto
       env,
       stdio: ['ignore', 'pipe', 'pipe'],
       shell: false, // Não usar shell para evitar problemas com espaços
@@ -391,35 +448,49 @@ async function executeIsolatedBuild(cursoFile) {
     });
 
     buildProcess.on('close', async (code) => {
-      // Restaurar .next/ do backup ANTES de restaurar pastas
-      await restoreNextDir(backupDir);
-      
-      // Restaurar pastas após build (mesmo em caso de erro)
-      console.log('   📦 Restaurando pastas...');
-      await restoreApiRoutes(hiddenApiDirs).catch(err => {
-        console.error(`   ⚠️ Erro ao restaurar API routes:`, err);
-      });
-      await restoreProblematicPages(hiddenPagesDirs).catch(err => {
-        console.error(`   ⚠️ Erro ao restaurar páginas:`, err);
-      });
+      try {
+        // Quando usamos distDir customizado (.next-scorm), o Next.js gera o output dentro dele
+        // Precisamos copiar os arquivos para out/ no diretório de trabalho
+        if (code === 0) {
+          const scormNextDir = path.join(workDir, '.next-scorm');
+          const workOutDir = path.join(workDir, 'out');
+          
+          // Verificar se o output está em .next-scorm/ (quando distDir é customizado)
+          if (await pathExists(scormNextDir)) {
+            const hasHtmlFiles = await fs.readdir(scormNextDir).then(files => 
+              files.some(f => f.endsWith('.html'))
+            ).catch(() => false);
+            
+            if (hasHtmlFiles) {
+              console.log('   📦 Copiando output de .next-scorm/ para out/ no diretório isolado...');
+              // Remover out/ se existir
+              if (await pathExists(workOutDir)) {
+                await fs.rm(workOutDir, { recursive: true, force: true });
+              }
+              // Copiar conteúdo de .next-scorm/ para out/
+              await fs.cp(scormNextDir, workOutDir, { recursive: true });
+              console.log('   ✅ Output copiado para out/ no diretório isolado');
+            }
+          }
+        }
+        
+        // ✅ NÃO precisamos restaurar nada - o projeto original nunca foi modificado!
 
-      if (code === 0) {
-        resolve();
-      } else {
-        const errorMsg = `Build falhou com código ${code}\n\nSTDOUT:\n${buildStdout}\n\nSTDERR:\n${buildStderr}`;
-        console.error(`   ❌ [Build] ${errorMsg}`);
-        reject(new Error(errorMsg));
+        if (code === 0) {
+          resolve();
+        } else {
+          const errorMsg = `Build falhou com código ${code}\n\nSTDOUT:\n${buildStdout}\n\nSTDERR:\n${buildStderr}`;
+          console.error(`   ❌ [Build] ${errorMsg}`);
+          reject(new Error(errorMsg));
+        }
+      } finally {
+        // ✅ NÃO precisamos limpar pastas temporárias - projeto original nunca foi modificado!
+        // Apenas garantir que o diretório de trabalho será limpo depois
       }
     });
 
     buildProcess.on('error', async (error) => {
-      // Restaurar .next/ do backup em caso de erro
-      await restoreNextDir(backupDir);
-      
-      // Restaurar pastas em caso de erro
-      console.log('   📦 Restaurando pastas após erro...');
-      await restoreApiRoutes(hiddenApiDirs).catch(() => {});
-      await restoreProblematicPages(hiddenPagesDirs).catch(() => {});
+      // ✅ NÃO precisamos restaurar nada - o projeto original nunca foi modificado!
       reject(error);
     });
   });
@@ -635,10 +706,51 @@ async function copyBuildFilesToZip(zip, outDir, publicImagesDir, curso) {
 
   // Converter caminhos absolutos para relativos
   function convertPaths(html, prefix) {
-    return html
-      .replace(/href="\/_next\//g, `href="${prefix}_next/`)
-      .replace(/src="\/_next\//g, `src="${prefix}_next/`)
-      .replace(/href="\/favicon\.ico/g, `href="${prefix}favicon.ico`);
+    // Normalizar prefix (garantir que termine com / se não for vazio e não terminar com /)
+    let normalizedPrefix = prefix || '';
+    if (normalizedPrefix && !normalizedPrefix.endsWith('/') && normalizedPrefix !== './') {
+      normalizedPrefix = normalizedPrefix + '/';
+    }
+    
+    // Converter href com aspas duplas
+    html = html.replace(/href="\/_next\//g, `href="${normalizedPrefix}_next/`);
+    html = html.replace(/href="\/favicon\.ico/g, `href="${normalizedPrefix}favicon.ico`);
+    
+    // Converter href com aspas simples
+    html = html.replace(/href='\/_next\//g, `href='${normalizedPrefix}_next/`);
+    html = html.replace(/href='\/favicon\.ico/g, `href='${normalizedPrefix}favicon.ico`);
+    
+    // Converter src com aspas duplas
+    html = html.replace(/src="\/_next\//g, `src="${normalizedPrefix}_next/`);
+    
+    // Converter src com aspas simples
+    html = html.replace(/src='\/_next\//g, `src='${normalizedPrefix}_next/`);
+    
+    // Converter URLs em CSS (url() com aspas duplas)
+    html = html.replace(/url\("\/_next\//g, `url("${normalizedPrefix}_next/`);
+    html = html.replace(/url\('\/_next\//g, `url('${normalizedPrefix}_next/`);
+    html = html.replace(/url\(\/_next\//g, `url(${normalizedPrefix}_next/`);
+    
+    // Converter qualquer atributo que contenha /_next/ (data-*, etc.)
+    html = html.replace(/(\w+)="\/_next\//g, `$1="${normalizedPrefix}_next/`);
+    html = html.replace(/(\w+)='\/_next\//g, `$1='${normalizedPrefix}_next/`);
+    
+    // Converter caminhos absolutos genéricos (que começam com / mas não são URLs externas)
+    // Preservar URLs externas (http://, https://, //)
+    html = html.replace(/(href|src|content|data-src|data-href)="\/(?!\/|http|https|mailto|tel|#)/g, `$1="${normalizedPrefix}`);
+    html = html.replace(/(href|src|content|data-src|data-href)='\/(?!\/|http|https|mailto|tel|#)/g, `$1='${normalizedPrefix}`);
+    
+    // Converter também em atributos sem aspas (menos comum, mas pode acontecer)
+    html = html.replace(/(href|src)=([^"'\s>]+)\/_next\//g, `$1=$2${normalizedPrefix}_next/`);
+    
+    // Converter em JavaScript inline (pode conter caminhos absolutos)
+    html = html.replace(/(['"`])\/_next\//g, `$1${normalizedPrefix}_next/`);
+    
+    // Converter também em JSON dentro de scripts (Next.js injeta dados assim)
+    html = html.replace(/("\/_next\/)/g, `"${normalizedPrefix}_next/`);
+    html = html.replace(/('\/_next\/)/g, `'${normalizedPrefix}_next/`);
+    
+    return html;
   }
 
   // Copiar APENAS arquivos do scorm-preview (nada de PDF)
@@ -676,25 +788,92 @@ async function copyBuildFilesToZip(zip, outDir, publicImagesDir, curso) {
   if (await pathExists(unidadeDir)) {
     const files = await fs.readdir(unidadeDir);
     let unitFilesCount = 0;
-    for (const file of files) {
-      if (file.endsWith('.html') && !file.includes('pdf')) {
-        let content = await fs.readFile(path.join(unidadeDir, file), 'utf-8');
-        // Remover qualquer referência a PDF do HTML
-        content = content.replace(/pdf-preview/gi, '');
-        content = content.replace(/generatePDF/gi, '');
-        content = convertPaths(content, '../../');
-        // Garantir que o script SCORM wrapper está incluído
-        if (!content.includes('scorm_api_wrapper.js')) {
-          content = content.replace('</head>', `
-  <script src="../../scorm_api_wrapper.js"></script>
-</head>`);
+    
+    // Criar mapa: ID da unidade -> arquivo HTML correspondente
+    const unitIdToFile = new Map();
+    
+    // Primeiro, processar cada unidade do curso e encontrar seu arquivo
+    for (const unidade of curso.unidades || []) {
+      const expectedFileName = `${unidade.id}.html`;
+      let matchedFile = null;
+      
+      // Tentar encontrar pelo nome exato primeiro
+      if (files.includes(expectedFileName)) {
+        matchedFile = expectedFileName;
+        console.log(`   ✅ Arquivo encontrado por nome exato: ${expectedFileName}`);
+      } else {
+        // Tentar encontrar por padrões no nome
+        for (const file of files) {
+          if (file.endsWith('.html') && !file.includes('pdf')) {
+            // Verificar se o arquivo contém o ID da unidade
+            if (file === `unidade-${unidade.id}.html` || 
+                file.includes(unidade.id) && file.endsWith('.html')) {
+              matchedFile = file;
+              console.log(`   ✅ Arquivo encontrado por padrão: ${file} → ${unidade.id}`);
+              break;
+            }
+          }
         }
-        // Injetar dados do curso
-        content = injectCursoData(content, curso);
-        zip.file(`scorm-preview/unidade/${file}`, content);
-        unitFilesCount++;
+        
+        // Se ainda não encontrou, ler o conteúdo para verificar
+        if (!matchedFile) {
+          for (const file of files) {
+            if (file.endsWith('.html') && !file.includes('pdf')) {
+              try {
+                const content = await fs.readFile(path.join(unidadeDir, file), 'utf-8');
+                // Procurar por padrões que indiquem este é o arquivo da unidade
+                if (content.includes(`unidadeId: "${unidade.id}"`) ||
+                    content.includes(`currentUnidadeId="${unidade.id}"`) ||
+                    content.includes(`"${unidade.id}"`) && (content.includes('unidadeId') || content.includes('currentUnidadeId'))) {
+                  matchedFile = file;
+                  console.log(`   ✅ Arquivo encontrado por conteúdo: ${file} → ${unidade.id}`);
+                  break;
+                }
+              } catch (error) {
+                // Ignorar erros de leitura
+              }
+            }
+          }
+        }
+      }
+      
+      if (matchedFile) {
+        unitIdToFile.set(unidade.id, matchedFile);
+      } else {
+        console.log(`   ⚠️  Arquivo não encontrado para unidade: ${unidade.id}`);
       }
     }
+    
+    // Agora copiar e renomear os arquivos usando os IDs corretos
+    for (const [unitId, originalFile] of unitIdToFile.entries()) {
+      let content = await fs.readFile(path.join(unidadeDir, originalFile), 'utf-8');
+      
+      // Remover qualquer referência a PDF do HTML
+      content = content.replace(/pdf-preview/gi, '');
+      content = content.replace(/generatePDF/gi, '');
+      content = convertPaths(content, '../../');
+      
+      // Garantir que o script SCORM wrapper está incluído
+      if (!content.includes('scorm_api_wrapper.js')) {
+        content = content.replace('</head>', `
+  <script src="../../scorm_api_wrapper.js"></script>
+</head>`);
+      }
+      
+      // Injetar dados do curso
+      content = injectCursoData(content, curso);
+      
+      // Usar o ID da unidade como nome do arquivo (garantir formato correto)
+      const finalFileName = `${unitId}.html`;
+      
+      if (originalFile !== finalFileName) {
+        console.log(`   🔄 Renomeando: ${originalFile} → ${finalFileName}`);
+      }
+      
+      zip.file(`scorm-preview/unidade/${finalFileName}`, content);
+      unitFilesCount++;
+    }
+    
     console.log(`   ✅ ${unitFilesCount} arquivo(s) HTML de unidades copiado(s) com dados do curso injetados`);
   }
 

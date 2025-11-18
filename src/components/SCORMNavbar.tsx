@@ -75,6 +75,9 @@ export function SCORMNavbar({
                 const isActive = currentUnidadeId
                   ? u.id === currentUnidadeId
                   : false;
+                // Corrigir caminhos dos links:
+                // - Se estamos na página inicial (index.html): unidade/${u.id}.html
+                // - Se estamos em uma unidade (unidade/xxx.html): ${u.id}.html (mesmo diretório)
                 const href = currentUnidadeId
                   ? u.id === currentUnidadeId
                     ? "#"

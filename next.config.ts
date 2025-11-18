@@ -15,8 +15,7 @@ const nextConfig: NextConfig = {
   // Configuração para exportação estática (usado para gerar SCORM)
   // Quando output: 'export' está ativo, o Next.js gera HTML estático
   // Isso é necessário apenas durante o build do SCORM, não em produção normal
-  // ⚠️ ATENÇÃO: O build SCORM sobrescreve .next/, o que pode corromper o servidor de desenvolvimento
-  // Recomenda-se reiniciar o servidor após exportar SCORM: rm -rf .next out && pnpm dev
+  // ✅ O build SCORM usa .next-scorm/ isolado para não interferir no servidor de desenvolvimento
   ...(process.env.NEXT_OUTPUT_EXPORT === 'true' ? {
     output: 'export' as const,
     // Nota: Não podemos usar assetPrefix: '.' porque next/font não suporta
@@ -24,7 +23,7 @@ const nextConfig: NextConfig = {
     // caminhos absolutos em relativos (feito em scorm-build-service.ts)
     // Excluir rotas de API do build estático
     // O Next.js não deve tentar processar rotas de API durante export estático
-    distDir: '.next', // ⚠️ Mesmo diretório usado pelo dev server - pode causar conflitos
+    distDir: '.next-scorm', // ✅ Diretório isolado para build SCORM (não interfere no dev server)
   } : {}),
   
   // Desabilitar otimização de imagens para exportação estática

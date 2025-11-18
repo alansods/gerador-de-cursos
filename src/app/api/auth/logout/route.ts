@@ -1,28 +1,28 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 
-// Esta rota não pode ser exportada estaticamente
-export const dynamic = 'error';
+export async function POST(request: NextRequest) {
+  try {
+    const response = NextResponse.json({
+      success: true,
+      message: 'Logout realizado com sucesso',
+    });
 
-export async function POST() {
-  console.log('[API /auth/logout] 🚪 Processando logout...');
+    // Remover cookie
+    response.cookies.set('auth-token', '', {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 0,
+      path: '/',
+    });
 
-  const response = NextResponse.json({
-    success: true,
-    message: 'Logout realizado com sucesso'
-  });
-
-  // Deletar cookie de autenticação
-  // Precisamos usar 'set' com maxAge 0 para garantir que funcione em todos os navegadores
-  response.cookies.set('auth-token', '', {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'lax',
-    maxAge: 0, // Expira imediatamente
-    path: '/', // Mesmo path usado ao criar o cookie
-  });
-
-  console.log('[API /auth/logout] ✅ Cookie removido com sucesso');
-
-  return response;
+    return response;
+  } catch (error) {
+    console.error('Erro no logout:', error);
+    return NextResponse.json(
+      { success: false, error: 'Erro interno do servidor' },
+      { status: 500 }
+    );
+  }
 }
 

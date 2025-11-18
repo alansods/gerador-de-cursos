@@ -15,10 +15,12 @@
 
 # next.js
 /.next/
+/.next-scorm/
 /out/
 
 # SCORM build temporários
 /.scorm-build/
+/.scorm-build-work/
 /.scorm-project-temp/
 /.hidden-*-temp/
 /.api-*-hidden-temp/

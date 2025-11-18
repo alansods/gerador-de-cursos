@@ -1,104 +1,64 @@
 import { NextRequest, NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
-import { prisma, ensureConnection } from '@/lib/prisma';
+import { prisma } from '@/lib/prisma';
 
-// Esta rota não pode ser exportada estaticamente
-export const dynamic = 'error';
-
-export async function POST(req: NextRequest) {
+export async function POST(request: NextRequest) {
   try {
-    await ensureConnection();
-    const { nome, cargo, usuario, senha } = await req.json();
+    const body = await request.json();
+    const { nome, usuario, senha } = body;
 
-    // Validações
-    if (!nome || !cargo || !usuario || !senha) {
+    // Validação
+    if (!nome || !usuario || !senha) {
       return NextResponse.json(
-        { error: 'Todos os campos são obrigatórios' },
-        { status: 400 }
-      );
-    }
-
-    if (typeof nome !== 'string' || typeof cargo !== 'string' || 
-        typeof usuario !== 'string' || typeof senha !== 'string') {
-      return NextResponse.json(
-        { error: 'Dados inválidos' },
-        { status: 400 }
-      );
-    }
-
-    // Validações específicas
-    if (nome.trim().length < 2) {
-      return NextResponse.json(
-        { error: 'Nome deve ter no mínimo 2 caracteres' },
-        { status: 400 }
-      );
-    }
-
-    if (cargo.trim().length < 2) {
-      return NextResponse.json(
-        { error: 'Cargo deve ter no mínimo 2 caracteres' },
-        { status: 400 }
-      );
-    }
-
-    if (usuario.trim().length < 3) {
-      return NextResponse.json(
-        { error: 'Usuário deve ter no mínimo 3 caracteres' },
-        { status: 400 }
-      );
-    }
-
-    if (senha.length < 6) {
-      return NextResponse.json(
-        { error: 'Senha deve ter no mínimo 6 caracteres' },
+        { success: false, error: 'Nome, usuário e senha são obrigatórios' },
         { status: 400 }
       );
     }
 
     // Verificar se usuário já existe
-    const usuarioExiste = await prisma.user.findUnique({
-      where: { usuario: usuario.trim() },
+    const existingUser = await prisma.user.findUnique({
+      where: { usuario },
     });
 
-    if (usuarioExiste) {
+    if (existingUser) {
       return NextResponse.json(
-        { error: 'Usuário já cadastrado' },
+        { success: false, error: 'Usuário já cadastrado' },
         { status: 409 }
       );
     }
 
     // Hash da senha
-    const senhaHash = await bcrypt.hash(senha, 10);
+    const hashedPassword = await bcrypt.hash(senha, 10);
 
     // Criar usuário
-    const novoUsuario = await prisma.user.create({
+    const user = await prisma.user.create({
       data: {
         nome: nome.trim(),
-        cargo: cargo.trim(),
         usuario: usuario.trim(),
-        senha: senhaHash,
+        senha: hashedPassword,
+        cargo: 'Usuário', // Cargo padrão
       },
       select: {
         id: true,
+        usuario: true,
         nome: true,
         cargo: true,
-        usuario: true,
-        createdAt: true,
       },
     });
 
-    return NextResponse.json(
-      {
-        success: true,
-        message: 'Usuário cadastrado com sucesso',
-        user: novoUsuario,
+    return NextResponse.json({
+      success: true,
+      user: {
+        id: user.id,
+        usuario: user.usuario,
+        nome: user.nome,
+        cargo: user.cargo,
       },
-      { status: 201 }
-    );
+    });
   } catch (error) {
     console.error('Erro no cadastro:', error);
     return NextResponse.json(
-      { error: 'Erro interno do servidor' },
+      { success: false, error: 'Erro interno do servidor' },
       { status: 500 }
     );
   }

@@ -1,25 +1,24 @@
-import React from 'react';
-import Link from 'next/link';
-import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Clock, GraduationCap, Layers, ArrowRight } from 'lucide-react';
-import type { CursoGerado } from '@/types/gerador-curso';
-import { SCORMNavbar } from '@/components/SCORMNavbar';
-import fs from 'fs/promises';
+import React from "react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Clock, GraduationCap, Layers, ArrowRight } from "lucide-react";
+import type { CursoGerado } from "@/types/gerador-curso";
+import { SCORMNavbar } from "@/components/SCORMNavbar";
+import fs from "fs/promises";
 
 // Forçar geração estática completa (sem RSC fetches)
-export const dynamic = 'force-static';
+export const dynamic = "force-static";
 
 // Função para carregar dados do curso durante o build
 async function getCursoData(): Promise<CursoGerado | null> {
   if (process.env.SCORM_BUILD_CURSO_FILE) {
     try {
       const cursoFile = process.env.SCORM_BUILD_CURSO_FILE;
-      const cursoData = await fs.readFile(cursoFile, 'utf-8');
+      const cursoData = await fs.readFile(cursoFile, "utf-8");
       return JSON.parse(cursoData) as CursoGerado;
     } catch (error) {
-      console.error('[scorm-preview] Erro ao carregar curso:', error);
+      console.error("[scorm-preview] Erro ao carregar curso:", error);
     }
   }
   return null;
@@ -99,7 +98,7 @@ export default async function SCORMPreviewPage() {
               </Card>
             ) : (
               curso.unidades.map((unidade, unidadeIndex) => (
-                <Link
+                <a
                   key={unidade.id}
                   href={`unidade/${unidade.id}.html`}
                   className="block"
@@ -119,8 +118,8 @@ export default async function SCORMPreviewPage() {
                           {/* Unit Label */}
                           <div>
                             <span className="text-xs font-bold text-orange-600 uppercase tracking-wide">
-                              UNIDADE{' '}
-                              {String(unidadeIndex + 1).padStart(2, '0')}
+                              UNIDADE{" "}
+                              {String(unidadeIndex + 1).padStart(2, "0")}
                             </span>
                           </div>
 
@@ -148,7 +147,7 @@ export default async function SCORMPreviewPage() {
                       </div>
                     </CardContent>
                   </Card>
-                </Link>
+                </a>
               ))
             )}
           </div>

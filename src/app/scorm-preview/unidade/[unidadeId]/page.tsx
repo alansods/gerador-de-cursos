@@ -1,5 +1,4 @@
 import React from 'react';
-import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { UnidadeConteudo } from '@/components/UnidadeConteudo';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
@@ -87,11 +86,11 @@ export default async function SCORMPreviewUnidadePage({
           <p className="text-gray-600 dark:text-gray-400">
             A unidade solicitada não existe neste curso.
           </p>
-          <Link href="../index.html">
+          <a href="../index.html">
             <Button className="mt-4 bg-blue-600 hover:bg-blue-700">
               Voltar para o início
             </Button>
-          </Link>
+          </a>
         </div>
       </div>
     );
@@ -118,7 +117,7 @@ export default async function SCORMPreviewUnidadePage({
           {/* Navigation Buttons */}
           <div className="flex items-center justify-between gap-4 mt-8 pt-8 border-t-[1px] border-[#e5e7eb] dark:border-gray-700">
             {/* Previous Button */}
-            <Link
+            <a
               href={unidadeAnterior ? `${unidadeAnterior.id}.html` : '#'}
               className={unidadeAnterior ? '' : 'pointer-events-none'}
             >
@@ -129,7 +128,7 @@ export default async function SCORMPreviewUnidadePage({
                 <ChevronLeft className="h-4 w-4" />
                 Unidade Anterior
               </Button>
-            </Link>
+            </a>
 
             {/* Unit Counter */}
             <div className="flex-1 text-center">
@@ -139,7 +138,7 @@ export default async function SCORMPreviewUnidadePage({
             </div>
 
             {/* Next Button */}
-            <Link
+            <a
               href={proximaUnidade ? `${proximaUnidade.id}.html` : '#'}
               className={proximaUnidade ? '' : 'pointer-events-none'}
             >
@@ -150,7 +149,7 @@ export default async function SCORMPreviewUnidadePage({
                 Próxima Unidade
                 <ChevronRight className="h-4 w-4" />
               </Button>
-            </Link>
+            </a>
           </div>
         </div>
       </main>

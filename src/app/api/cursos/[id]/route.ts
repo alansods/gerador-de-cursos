@@ -1,21 +1,17 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { prisma, ensureConnection } from '@/lib/prisma';
+import { NextRequest } from 'next/server';
+import { prisma } from '@/lib/prisma';
+import { createErrorResponse, createSuccessResponse } from '@/lib/auth';
+import { CursoGerado } from '@/types/gerador-curso';
 
-// Esta rota não pode ser exportada estaticamente
-export const dynamic = 'error';
-
-// Para build estático: retornar array vazio para ignorar esta rota
-export async function generateStaticParams() {
-  return [];
-}
-
-// GET - Buscar curso por ID
+/**
+ * GET /api/cursos/[id]
+ * Busca um curso por ID
+ */
 export async function GET(
-  request: NextRequest,
+  req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    await ensureConnection();
     const { id } = await params;
 
     const curso = await prisma.curso.findUnique({
@@ -23,34 +19,26 @@ export async function GET(
     });
 
     if (!curso) {
-      return NextResponse.json(
-        { success: false, error: 'Course not found' },
-        { status: 404 }
-      );
+      return createErrorResponse('Curso não encontrado', 404);
     }
 
-    return NextResponse.json(
-      {
-        success: true,
-        curso
-      },
-      {
-        headers: {
-          'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
-          'Pragma': 'no-cache',
-          'Expires': '0',
-        }
-      }
-    );
+    // Converter para formato CursoGerado
+    const cursoFormatado: CursoGerado = {
+      id: curso.id,
+      titulo: curso.titulo,
+      descricao: curso.descricao,
+      cargaHoraria: curso.cargaHoraria,
+      modalidade: curso.modalidade,
+      categoria: curso.categoria,
+      unidades: (curso.unidades as any) || [],
+      dataCriacao: curso.dataCriacao,
+      dataModificacao: curso.dataModificacao,
+    };
+
+    return createSuccessResponse({ curso: cursoFormatado });
   } catch (error) {
-    console.error('Error fetching course:', error);
-    return NextResponse.json(
-      { 
-        success: false, 
-        error: error instanceof Error ? error.message : 'Unknown error' 
-      },
-      { status: 500 }
-    );
+    console.error('Erro ao buscar curso:', error);
+    return createErrorResponse('Erro ao buscar curso', 500, error);
   }
 }
 

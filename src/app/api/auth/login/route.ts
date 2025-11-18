@@ -1,37 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import { SignJWT } from 'jose';
-import { prisma, ensureConnection } from '@/lib/prisma';
-import { JWT_SECRET, createErrorResponse } from '@/lib/auth';
-import { EXPIRATION_TIMES, ERROR_MESSAGES } from '@/lib/constants';
-import { validateLoginData } from '@/lib/validations';
+import { prisma } from '@/lib/prisma';
+import { JWT_SECRET } from '@/lib/auth';
 
-// Esta rota não pode ser exportada estaticamente
-export const dynamic = 'error';
-
-// Tratamento de CORS para requisições OPTIONS
-export async function OPTIONS() {
-  return new NextResponse(null, {
-    status: 200,
-    headers: {
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'POST, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type, Cookie',
-      'Access-Control-Allow-Credentials': 'true',
-    },
-  });
-}
-
-export async function POST(req: NextRequest) {
+export async function POST(request: NextRequest) {
   try {
-    await ensureConnection();
-    const { usuario, senha } = await req.json();
+    const body = await request.json();
+    const { usuario, senha } = body;
 
-    // Validações usando helper centralizado
-    const validation = validateLoginData(usuario, senha);
-    if (!validation.valid) {
+    // Validação
+    if (!usuario || !senha) {
       return NextResponse.json(
-        { error: Object.values(validation.errors)[0] },
+        { success: false, error: 'Usuário e senha são obrigatórios' },
         { status: 400 }
       );
     }
@@ -42,14 +23,20 @@ export async function POST(req: NextRequest) {
     });
 
     if (!user) {
-      return createErrorResponse(ERROR_MESSAGES.AUTH.INVALID_CREDENTIALS, 401);
+      return NextResponse.json(
+        { success: false, error: 'Credenciais inválidas' },
+        { status: 401 }
+      );
     }
 
     // Verificar senha
-    const senhaValida = await bcrypt.compare(senha, user.senha);
+    const isPasswordValid = await bcrypt.compare(senha, user.senha);
 
-    if (!senhaValida) {
-      return createErrorResponse(ERROR_MESSAGES.AUTH.INVALID_CREDENTIALS, 401);
+    if (!isPasswordValid) {
+      return NextResponse.json(
+        { success: false, error: 'Credenciais inválidas' },
+        { status: 401 }
+      );
     }
 
     // Criar token JWT
@@ -60,26 +47,26 @@ export async function POST(req: NextRequest) {
       cargo: user.cargo,
     })
       .setProtectedHeader({ alg: 'HS256' })
-      .setIssuedAt()
-      .setExpirationTime(EXPIRATION_TIMES.JWT_TOKEN)
+      .setExpirationTime('24h')
       .sign(JWT_SECRET);
 
-    // Criar resposta com cookie
+    // Criar resposta
     const response = NextResponse.json({
       success: true,
       user: {
         id: user.id,
+        usuario: user.usuario,
         nome: user.nome,
         cargo: user.cargo,
-        usuario: user.usuario,
       },
     });
 
+    // Definir cookie
     response.cookies.set('auth-token', token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
-      maxAge: EXPIRATION_TIMES.COOKIE_MAX_AGE,
+      maxAge: 60 * 60 * 24, // 24 horas
       path: '/',
     });
 
@@ -87,7 +74,7 @@ export async function POST(req: NextRequest) {
   } catch (error) {
     console.error('Erro no login:', error);
     return NextResponse.json(
-      { error: 'Erro interno do servidor' },
+      { success: false, error: 'Erro interno do servidor' },
       { status: 500 }
     );
   }
