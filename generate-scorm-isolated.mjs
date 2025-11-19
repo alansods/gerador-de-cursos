@@ -441,6 +441,8 @@ async function prepareIsolatedWorkDir() {
     'home',
     'login',
     'usuarios',
+    'scorm-build', // Página de progresso (dinâmica)
+    'scorm-jobs', // Página de histórico
   ];
   
   console.log('   📦 Copiando arquivos necessários (excluindo pastas problemáticas)...');
