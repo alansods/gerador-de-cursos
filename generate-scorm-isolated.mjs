@@ -639,8 +639,8 @@ export default nextConfig;
     throw new Error(`Diretório src/ não encontrado em: ${srcSrc}`);
   }
   
-  // Criar symlink para node_modules (mais eficiente que copiar)
-  // Na Vercel, node_modules já está disponível, então podemos usar symlink ou pular
+  // Criar symlink para node_modules (CRÍTICO: necessário para o build funcionar)
+  // O symlink permite que o workDir acesse node_modules sem copiar (economiza tempo/espaço)
   const nodeModulesSrc = path.join(projectRoot, 'node_modules');
   const nodeModulesDest = path.join(workDir, 'node_modules');
   
@@ -648,15 +648,22 @@ export default nextConfig;
   
   if (await pathExists(nodeModulesSrc)) {
     try {
-      // Tentar symlink primeiro (mais rápido)
+      // ✅ CORREÇÃO: Tentar criar symlink SEMPRE (incluindo na Vercel)
+      // O symlink é necessário para que o build encontre as dependências no workDir
       await fs.symlink(nodeModulesSrc, nodeModulesDest, 'dir');
       console.log('   ✅ node_modules/ linkado (symlink)');
+      console.log(`   📍 Symlink: ${nodeModulesDest} -> ${nodeModulesSrc}`);
     } catch (symlinkError) {
-      // Na Vercel, symlink pode falhar, mas node_modules já está disponível
+      console.warn(`   ⚠️  Symlink falhou: ${symlinkError.message}`);
+      
       if (isVercel) {
-        console.log('   ⚠️  Symlink falhou na Vercel, mas node_modules já está disponível no ambiente');
-        // Não copiar na Vercel - usar node_modules do ambiente
+        // Na Vercel, se o symlink falhar, o build provavelmente vai falhar
+        // Mas vamos tentar continuar e usar o binário do projeto original como fallback
+        console.warn('   ⚠️  Na Vercel, sem symlink o build pode falhar ao encontrar dependências');
+        console.warn('   ⚠️  Tentando continuar - o build usará fallback para binário original');
+        // Não copiar na Vercel (muito lento e pode dar timeout)
       } else {
+        // Localmente, se symlink falhar, copiar como fallback
         console.log('   ⚠️  Symlink falhou, copiando node_modules/ (pode demorar)...');
         try {
           await fs.cp(nodeModulesSrc, nodeModulesDest, { recursive: true });
@@ -668,9 +675,12 @@ export default nextConfig;
       }
     }
   } else {
-    console.warn(`   ⚠️  node_modules não encontrado em: ${nodeModulesSrc}`);
+    console.error(`   ❌ node_modules não encontrado em: ${nodeModulesSrc}`);
     if (isVercel) {
-      console.log('   ℹ️  Na Vercel, node_modules está disponível no ambiente, não precisa copiar');
+      // Na Vercel, node_modules DEVE existir em /var/task/node_modules
+      // Se não existir, algo está muito errado
+      console.error('   ❌ ERRO CRÍTICO: node_modules não encontrado na Vercel!');
+      throw new Error(`node_modules não encontrado em: ${nodeModulesSrc}. Isso é necessário para o build funcionar.`);
     } else {
       throw new Error(`node_modules não encontrado em: ${nodeModulesSrc}`);
     }
@@ -704,10 +714,25 @@ async function executeIsolatedBuild(cursoFile, workDir) {
   
   if (isVercel) {
     // Na Vercel, usar process.execPath (caminho absoluto do Node.js atual) 
-    // com o binário direto do Next.js em node_modules/.bin/next
-    // Isso garante compatibilidade e não depende de pnpm/npm/npx
-    const nextBinPath = path.join(workDir, 'node_modules', '.bin', 'next');
-    const nextBinExists = await pathExists(nextBinPath).catch(() => false);
+    // com o binário direto do Next.js
+    // ✅ CORREÇÃO: Tentar primeiro no workDir (via symlink), depois no projeto original
+    let nextBinPath = path.join(workDir, 'node_modules', '.bin', 'next');
+    let nextBinExists = await pathExists(nextBinPath).catch(() => false);
+    
+    if (!nextBinExists) {
+      // Se não encontrou no workDir (symlink pode ter falhado), tentar no projeto original
+      console.log('   ⚠️  Binário não encontrado no workDir via symlink. Tentando projeto original...');
+      const originalNextBinPath = path.join(process.cwd(), 'node_modules', '.bin', 'next');
+      const originalExists = await pathExists(originalNextBinPath).catch(() => false);
+      
+      if (originalExists) {
+        nextBinPath = originalNextBinPath;
+        nextBinExists = true;
+        console.log(`   ✅ Usando binário do projeto original: ${nextBinPath}`);
+        console.log('   ⚠️  ATENÇÃO: Build será executado no workDir, mas usando binário original');
+        console.log('   ⚠️  Isso pode funcionar se as dependências estiverem acessíveis via NODE_PATH');
+      }
+    }
     
     if (nextBinExists) {
       // Usar process.execPath (Node.js atual) com binário direto do Next.js
