@@ -447,13 +447,12 @@ async function prepareIsolatedWorkDir() {
   
   // Copiar arquivos de configuração
   // Na Vercel, alguns arquivos podem não estar disponíveis no bundle
-  const requiredFiles = ['package.json', 'tsconfig.json'];
-  const optionalFiles = ['next.config.ts', 'middleware.ts', 'components.json'];
+  // Todos os arquivos são opcionais - criaremos versões básicas se não existirem
+  const configFiles = ['package.json', 'tsconfig.json', 'next.config.ts', 'middleware.ts', 'components.json'];
   
-  for (const file of [...requiredFiles, ...optionalFiles]) {
+  for (const file of configFiles) {
     const srcPath = path.join(projectRoot, file);
     const destPath = path.join(workDir, file);
-    const isRequired = requiredFiles.includes(file);
     
     console.log(`   📄 Copiando ${file}...`);
     if (await pathExists(srcPath)) {
@@ -462,39 +461,50 @@ async function prepareIsolatedWorkDir() {
         console.log(`   ✅ ${file} copiado`);
       } catch (cpError) {
         console.error(`   ❌ Erro ao copiar ${file}:`, cpError);
-        if (isRequired) {
-          throw new Error(`Falha ao copiar ${file} de ${srcPath} para ${destPath}: ${cpError.message}`);
-        } else {
-          console.warn(`   ⚠️  ${file} é opcional, continuando sem ele...`);
-        }
+        console.warn(`   ⚠️  ${file} não pôde ser copiado, criando versão básica...`);
+        await createBasicConfigFile(file, destPath);
       }
     } else {
       console.warn(`   ⚠️  Arquivo não encontrado: ${srcPath}`);
-      if (isRequired) {
-        // Na Vercel, se arquivos obrigatórios não existirem, tentar criar versões mínimas
-        if (file === 'package.json') {
-          console.log(`   ⚠️  package.json não encontrado, criando versão mínima...`);
-          const minimalPackageJson = {
-            name: 'scorm-build',
-            version: '1.0.0',
-            dependencies: {},
-          };
-          await fs.writeFile(destPath, JSON.stringify(minimalPackageJson, null, 2));
-          console.log(`   ✅ package.json mínimo criado`);
-        } else {
-          throw new Error(`Arquivo obrigatório não encontrado: ${srcPath}`);
-        }
-      } else {
-        console.log(`   ℹ️  ${file} é opcional, continuando sem ele...`);
-      }
+      console.log(`   ℹ️  Criando versão básica de ${file}...`);
+      await createBasicConfigFile(file, destPath);
     }
   }
   
-  // Se next.config.ts não foi encontrado, criar um básico
-  const nextConfigPath = path.join(workDir, 'next.config.ts');
-  if (!(await pathExists(nextConfigPath))) {
-    console.log(`   📄 Criando next.config.ts básico...`);
-    const basicNextConfig = `import type { NextConfig } from "next";
+  // Função auxiliar para criar arquivos de configuração básicos
+  async function createBasicConfigFile(fileName, destPath) {
+    try {
+      if (fileName === 'package.json') {
+        const minimalPackageJson = {
+          name: 'scorm-build',
+          version: '1.0.0',
+          dependencies: {},
+        };
+        await fs.writeFile(destPath, JSON.stringify(minimalPackageJson, null, 2));
+        console.log(`   ✅ package.json básico criado`);
+      } else if (fileName === 'tsconfig.json') {
+        const basicTsConfig = {
+          compilerOptions: {
+            target: 'ES2020',
+            lib: ['ES2020', 'DOM', 'DOM.Iterable'],
+            jsx: 'preserve',
+            module: 'ESNext',
+            moduleResolution: 'bundler',
+            resolveJsonModule: true,
+            allowJs: true,
+            strict: true,
+            noEmit: true,
+            esModuleInterop: true,
+            skipLibCheck: true,
+            forceConsistentCasingInFileNames: true,
+          },
+          include: ['src'],
+          exclude: ['node_modules'],
+        };
+        await fs.writeFile(destPath, JSON.stringify(basicTsConfig, null, 2));
+        console.log(`   ✅ tsconfig.json básico criado`);
+      } else if (fileName === 'next.config.ts') {
+        const basicNextConfig = `import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   output: 'export',
@@ -505,8 +515,19 @@ const nextConfig: NextConfig = {
 
 export default nextConfig;
 `;
-    await fs.writeFile(nextConfigPath, basicNextConfig);
-    console.log(`   ✅ next.config.ts básico criado`);
+        await fs.writeFile(destPath, basicNextConfig);
+        console.log(`   ✅ next.config.ts básico criado`);
+      } else {
+        // Para outros arquivos opcionais, apenas logar
+        console.log(`   ℹ️  ${fileName} é opcional, continuando sem ele...`);
+      }
+    } catch (writeError) {
+      console.error(`   ❌ Erro ao criar ${fileName}:`, writeError);
+      // Não falhar se não conseguir criar arquivo opcional
+      if (fileName === 'package.json' || fileName === 'tsconfig.json') {
+        throw new Error(`Falha ao criar ${fileName}: ${writeError.message}`);
+      }
+    }
   }
   
   // Copiar postcss.config.mjs se existir
