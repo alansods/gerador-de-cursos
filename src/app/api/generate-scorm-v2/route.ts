@@ -27,9 +27,23 @@ export async function POST(req: NextRequest) {
     const cursoData = curso as CursoGerado;
     const cursoId = cursoData.id;
 
-    // 1. Criar diretório temporário se não existir
-    const scormBuildDir = path.join(process.cwd(), '.scorm-build');
-    await fs.mkdir(scormBuildDir, { recursive: true });
+    // 1. Criar diretório temporário - usar /tmp na Vercel, .scorm-build localmente
+    const isVercel = process.env.VERCEL === '1' || process.env.VERCEL_ENV;
+    const scormBuildDir = isVercel 
+      ? path.join('/tmp', '.scorm-build')
+      : path.join(process.cwd(), '.scorm-build');
+    
+    console.log(`📁 [API generate-scorm-v2] Ambiente: ${isVercel ? 'Vercel' : 'Local'}`);
+    console.log(`📁 [API generate-scorm-v2] Diretório de build: ${scormBuildDir}`);
+    console.log(`📁 [API generate-scorm-v2] CWD: ${process.cwd()}`);
+    
+    try {
+      await fs.mkdir(scormBuildDir, { recursive: true });
+      console.log(`✅ [API generate-scorm-v2] Diretório criado: ${scormBuildDir}`);
+    } catch (mkdirError) {
+      console.error(`❌ [API generate-scorm-v2] Erro ao criar diretório:`, mkdirError);
+      throw new Error(`Falha ao criar diretório temporário: ${scormBuildDir}. Erro: ${mkdirError instanceof Error ? mkdirError.message : 'Desconhecido'}`);
+    }
 
     // 2. Salvar curso em arquivo JSON temporário
     const cursoFile = path.join(scormBuildDir, `curso-${cursoId}.json`);
@@ -45,11 +59,30 @@ export async function POST(req: NextRequest) {
 
     const scriptPath = path.join(process.cwd(), 'generate-scorm-isolated.mjs');
     
+    console.log(`📜 [API generate-scorm-v2] Verificando script: ${scriptPath}`);
+    
     // Verificar se o script existe
     try {
       await fs.access(scriptPath);
-    } catch {
-      return createErrorResponse('Script de geração SCORM não encontrado', 500);
+      const stats = await fs.stat(scriptPath);
+      console.log(`✅ [API generate-scorm-v2] Script encontrado (${(stats.size / 1024).toFixed(2)} KB)`);
+    } catch (accessError) {
+      console.error(`❌ [API generate-scorm-v2] Script não encontrado: ${scriptPath}`);
+      console.error(`   📍 CWD: ${process.cwd()}`);
+      console.error(`   📍 Erro:`, accessError);
+      
+      // Listar arquivos na raiz para debug
+      try {
+        const rootFiles = await fs.readdir(process.cwd());
+        console.log(`   📋 Arquivos na raiz: ${rootFiles.slice(0, 10).join(', ')}...`);
+      } catch {
+        // Ignorar se não conseguir listar
+      }
+      
+      return createErrorResponse(
+        `Script de geração SCORM não encontrado em: ${scriptPath}`,
+        500
+      );
     }
 
     // Executar o script
@@ -88,7 +121,27 @@ export async function POST(req: NextRequest) {
     });
   } catch (error) {
     console.error('❌ [API generate-scorm-v2] Erro:', error);
-    return createErrorResponse('Erro interno ao gerar SCORM', 500, error);
+    
+    // Log detalhado para identificar arquivo faltante
+    if (error instanceof Error) {
+      console.error('   📍 Mensagem:', error.message);
+      console.error('   📍 Stack:', error.stack);
+      
+      // Se for ENOENT, mostrar caminho exato
+      if (error.message.includes('ENOENT')) {
+        const match = error.message.match(/ENOENT:.*?['"]([^'"]+)['"]/);
+        if (match) {
+          console.error(`   📍 Arquivo não encontrado: ${match[1]}`);
+          console.error(`   📍 CWD: ${process.cwd()}`);
+        }
+      }
+    }
+    
+    return createErrorResponse(
+      `Erro interno ao gerar SCORM: ${error instanceof Error ? error.message : 'Erro desconhecido'}`,
+      500,
+      error
+    );
   }
 }
 

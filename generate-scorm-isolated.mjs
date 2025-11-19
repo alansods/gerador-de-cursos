@@ -127,11 +127,19 @@ async function main() {
   await cleanupTempFolders();
   
   // Limpar diretório de trabalho isolado de builds anteriores
-  const workDir = path.join(process.cwd(), '.scorm-build-work');
+  const isVercel = process.env.VERCEL === '1' || process.env.VERCEL_ENV;
+  const workDir = isVercel
+    ? path.join('/tmp', '.scorm-build-work')
+    : path.join(process.cwd(), '.scorm-build-work');
+    
   if (await pathExists(workDir)) {
-    console.log('   🗑️  Removendo diretório de trabalho isolado anterior...');
-    await fs.rm(workDir, { recursive: true, force: true });
-    console.log('   ✅ Diretório de trabalho limpo');
+    console.log(`   🗑️  Removendo diretório de trabalho isolado anterior: ${workDir}...`);
+    try {
+      await fs.rm(workDir, { recursive: true, force: true });
+      console.log('   ✅ Diretório de trabalho limpo');
+    } catch (rmError) {
+      console.warn(`   ⚠️  Erro ao remover diretório (pode não existir):`, rmError.message);
+    }
   }
 
   try {
@@ -148,11 +156,21 @@ async function main() {
     console.log(`✅ Curso: ${cursoData.titulo} (${cursoData.unidades?.length || 0} unidades)`);
 
     // 2. Salvar curso no local esperado pelo build
-    const tempDir = path.join(process.cwd(), '.scorm-build');
+    const isVercel = process.env.VERCEL === '1' || process.env.VERCEL_ENV;
+    const tempDir = isVercel
+      ? path.join('/tmp', '.scorm-build')
+      : path.join(process.cwd(), '.scorm-build');
     const tempCursoFile = path.join(tempDir, `curso-${cursoId}.json`);
-    await fs.mkdir(tempDir, { recursive: true });
-    await fs.writeFile(tempCursoFile, JSON.stringify(cursoData, null, 2));
-    console.log(`✅ Curso salvo em: ${tempCursoFile}`);
+    
+    console.log(`📁 [SCORM Isolated] Temp dir: ${tempDir}`);
+    try {
+      await fs.mkdir(tempDir, { recursive: true });
+      await fs.writeFile(tempCursoFile, JSON.stringify(cursoData, null, 2));
+      console.log(`✅ Curso salvo em: ${tempCursoFile}`);
+    } catch (writeError) {
+      console.error(`❌ Erro ao salvar curso:`, writeError);
+      throw new Error(`Falha ao salvar curso em ${tempCursoFile}: ${writeError.message}`);
+    }
 
     // 3. Preparar diretório de trabalho isolado
     console.log('\n📁 [SCORM Isolated] Preparando diretório de trabalho isolado...');
@@ -305,11 +323,24 @@ async function cleanupTempFolders() {
  * NÃO modifica o projeto original
  */
 async function prepareIsolatedWorkDir() {
-  const workDir = path.join(process.cwd(), '.scorm-build-work');
+  // Usar /tmp na Vercel, .scorm-build-work localmente
+  const isVercel = process.env.VERCEL === '1' || process.env.VERCEL_ENV;
+  const workDir = isVercel
+    ? path.join('/tmp', '.scorm-build-work')
+    : path.join(process.cwd(), '.scorm-build-work');
   const projectRoot = process.cwd();
   
-  console.log('   📁 Criando diretório de trabalho isolado...');
-  await fs.mkdir(workDir, { recursive: true });
+  console.log(`   📁 Ambiente: ${isVercel ? 'Vercel' : 'Local'}`);
+  console.log(`   📁 Criando diretório de trabalho isolado: ${workDir}`);
+  console.log(`   📁 Project root: ${projectRoot}`);
+  
+  try {
+    await fs.mkdir(workDir, { recursive: true });
+    console.log(`   ✅ Diretório criado: ${workDir}`);
+  } catch (mkdirError) {
+    console.error(`   ❌ Erro ao criar diretório:`, mkdirError);
+    throw new Error(`Falha ao criar diretório de trabalho: ${workDir}. Erro: ${mkdirError.message}`);
+  }
   
   // Lista de arquivos/diretórios a copiar
   const filesToCopy = [
@@ -344,8 +375,23 @@ async function prepareIsolatedWorkDir() {
   for (const file of ['next.config.ts', 'package.json', 'tsconfig.json', 'middleware.ts', 'components.json']) {
     const srcPath = path.join(projectRoot, file);
     const destPath = path.join(workDir, file);
+    console.log(`   📄 Copiando ${file}...`);
     if (await pathExists(srcPath)) {
-      await fs.cp(srcPath, destPath);
+      try {
+        await fs.cp(srcPath, destPath);
+        console.log(`   ✅ ${file} copiado`);
+      } catch (cpError) {
+        console.error(`   ❌ Erro ao copiar ${file}:`, cpError);
+        throw new Error(`Falha ao copiar ${file} de ${srcPath} para ${destPath}: ${cpError.message}`);
+      }
+    } else {
+      console.warn(`   ⚠️  Arquivo não encontrado: ${srcPath}`);
+      if (file === 'middleware.ts' || file === 'components.json') {
+        // Esses arquivos são opcionais
+        console.log(`   ℹ️  ${file} é opcional, continuando...`);
+      } else {
+        throw new Error(`Arquivo obrigatório não encontrado: ${srcPath}`);
+      }
     }
   }
   
@@ -364,90 +410,134 @@ async function prepareIsolatedWorkDir() {
   // Copiar public/ completo
   const publicSrc = path.join(projectRoot, 'public');
   const publicDest = path.join(workDir, 'public');
+  console.log(`   📁 Copiando public/ de ${publicSrc}...`);
   if (await pathExists(publicSrc)) {
-    await fs.cp(publicSrc, publicDest, { recursive: true });
-    console.log('   ✅ public/ copiado');
+    try {
+      await fs.cp(publicSrc, publicDest, { recursive: true });
+      console.log('   ✅ public/ copiado');
+    } catch (cpError) {
+      console.error(`   ❌ Erro ao copiar public/:`, cpError);
+      throw new Error(`Falha ao copiar public/ de ${publicSrc} para ${publicDest}: ${cpError.message}`);
+    }
+  } else {
+    console.error(`   ❌ public/ não encontrado em: ${publicSrc}`);
+    throw new Error(`Diretório public/ não encontrado em: ${publicSrc}`);
   }
   
   // Copiar src/ mas excluindo pastas problemáticas
   const srcSrc = path.join(projectRoot, 'src');
   const srcDest = path.join(workDir, 'src');
-  await fs.mkdir(srcDest, { recursive: true });
+  console.log(`   📁 Copiando src/ de ${srcSrc}...`);
   
-  // Copiar estrutura de src/ excluindo app/ problemático
-  const srcEntries = await fs.readdir(srcSrc, { withFileTypes: true });
-  for (const entry of srcEntries) {
-    const srcPath = path.join(srcSrc, entry.name);
-    const destPath = path.join(srcDest, entry.name);
-    
-    if (entry.isDirectory() && entry.name === 'app') {
-      // Copiar app/ mas excluindo pastas problemáticas
-      await fs.mkdir(destPath, { recursive: true });
-      const appEntries = await fs.readdir(srcPath, { withFileTypes: true });
+  if (await pathExists(srcSrc)) {
+    try {
+      await fs.mkdir(srcDest, { recursive: true });
       
-      for (const appEntry of appEntries) {
-        const appEntryPath = path.join(srcPath, appEntry.name);
-        const appDestPath = path.join(destPath, appEntry.name);
+      // Copiar estrutura de src/ excluindo app/ problemático
+      const srcEntries = await fs.readdir(srcSrc, { withFileTypes: true });
+      for (const entry of srcEntries) {
+        const srcPath = path.join(srcSrc, entry.name);
+        const destPath = path.join(srcDest, entry.name);
         
-        // Verificar se deve ser excluído
-        const shouldExclude = excludeFromSrcApp.some(exclude => {
-          if (exclude.includes('/')) {
-            // Para rotas aninhadas como 'cursos/[id]'
-            const [parent, child] = exclude.split('/');
-            return appEntry.name === parent;
-          }
-          // Excluir nome exato OU nome com sufixo numérico (ex: 'api 2', 'pdf-preview 3')
-          // Regex: nome exato OU nome seguido de espaço e dígitos
-          const pattern = new RegExp(`^${exclude.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(\\s+\\d+)?$`);
-          return pattern.test(appEntry.name);
-        });
-        
-        if (!shouldExclude) {
-          if (appEntry.isDirectory()) {
-            // Para cursos/[id], copiar cursos mas excluir [id]
-            if (appEntry.name === 'cursos') {
-              await fs.mkdir(appDestPath, { recursive: true });
-              const cursosEntries = await fs.readdir(appEntryPath, { withFileTypes: true });
-              for (const cursoEntry of cursosEntries) {
-                if (cursoEntry.name !== '[id]') {
-                  await fs.cp(
-                    path.join(appEntryPath, cursoEntry.name),
-                    path.join(appDestPath, cursoEntry.name),
-                    { recursive: true }
-                  );
-                }
+        if (entry.isDirectory() && entry.name === 'app') {
+          // Copiar app/ mas excluindo pastas problemáticas
+          await fs.mkdir(destPath, { recursive: true });
+          const appEntries = await fs.readdir(srcPath, { withFileTypes: true });
+          
+          for (const appEntry of appEntries) {
+            const appEntryPath = path.join(srcPath, appEntry.name);
+            const appDestPath = path.join(destPath, appEntry.name);
+            
+            // Verificar se deve ser excluído
+            const shouldExclude = excludeFromSrcApp.some(exclude => {
+              if (exclude.includes('/')) {
+                // Para rotas aninhadas como 'cursos/[id]'
+                const [parent, child] = exclude.split('/');
+                return appEntry.name === parent;
               }
-            } else {
-              await fs.cp(appEntryPath, appDestPath, { recursive: true });
+              // Excluir nome exato OU nome com sufixo numérico (ex: 'api 2', 'pdf-preview 3')
+              // Regex: nome exato OU nome seguido de espaço e dígitos
+              const pattern = new RegExp(`^${exclude.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(\\s+\\d+)?$`);
+              return pattern.test(appEntry.name);
+            });
+            
+            if (!shouldExclude) {
+              if (appEntry.isDirectory()) {
+                // Para cursos/[id], copiar cursos mas excluir [id]
+                if (appEntry.name === 'cursos') {
+                  await fs.mkdir(appDestPath, { recursive: true });
+                  const cursosEntries = await fs.readdir(appEntryPath, { withFileTypes: true });
+                  for (const cursoEntry of cursosEntries) {
+                    if (cursoEntry.name !== '[id]') {
+                      await fs.cp(
+                        path.join(appEntryPath, cursoEntry.name),
+                        path.join(appDestPath, cursoEntry.name),
+                        { recursive: true }
+                      );
+                    }
+                  }
+                } else {
+                  await fs.cp(appEntryPath, appDestPath, { recursive: true });
+                }
+              } else {
+                await fs.cp(appEntryPath, appDestPath);
+              }
             }
-          } else {
-            await fs.cp(appEntryPath, appDestPath);
           }
+          console.log('   ✅ src/app/ copiado (pastas problemáticas excluídas)');
+        } else if (entry.isDirectory()) {
+          // Copiar outros diretórios de src/ (components, lib, hooks, etc)
+          await fs.cp(srcPath, destPath, { recursive: true });
+          console.log(`   ✅ src/${entry.name}/ copiado`);
+        } else {
+          // Copiar arquivos individuais
+          await fs.cp(srcPath, destPath);
         }
       }
-      console.log('   ✅ src/app/ copiado (pastas problemáticas excluídas)');
-    } else if (entry.isDirectory()) {
-      // Copiar outros diretórios de src/ (components, lib, hooks, etc)
-      await fs.cp(srcPath, destPath, { recursive: true });
-      console.log(`   ✅ src/${entry.name}/ copiado`);
-    } else {
-      await fs.cp(srcPath, destPath);
+      console.log('   ✅ src/ copiado');
+    } catch (srcError) {
+      console.error(`   ❌ Erro ao copiar src/:`, srcError);
+      throw new Error(`Falha ao copiar src/ de ${srcSrc} para ${srcDest}: ${srcError.message}`);
     }
+  } else {
+    console.error(`   ❌ src/ não encontrado em: ${srcSrc}`);
+    throw new Error(`Diretório src/ não encontrado em: ${srcSrc}`);
   }
   
   // Criar symlink para node_modules (mais eficiente que copiar)
+  // Na Vercel, node_modules já está disponível, então podemos usar symlink ou pular
   const nodeModulesSrc = path.join(projectRoot, 'node_modules');
   const nodeModulesDest = path.join(workDir, 'node_modules');
+  
+  console.log(`   📦 Verificando node_modules: ${nodeModulesSrc}`);
+  
   if (await pathExists(nodeModulesSrc)) {
     try {
-      // Tentar criar symlink (pode falhar em alguns sistemas)
+      // Tentar symlink primeiro (mais rápido)
       await fs.symlink(nodeModulesSrc, nodeModulesDest, 'dir');
       console.log('   ✅ node_modules/ linkado (symlink)');
-    } catch (error) {
-      // Se symlink falhar, copiar (mais lento mas funciona sempre)
-      console.log('   ⚠️  Symlink falhou, copiando node_modules/ (pode demorar)...');
-      await fs.cp(nodeModulesSrc, nodeModulesDest, { recursive: true });
-      console.log('   ✅ node_modules/ copiado');
+    } catch (symlinkError) {
+      // Na Vercel, symlink pode falhar, mas node_modules já está disponível
+      if (isVercel) {
+        console.log('   ⚠️  Symlink falhou na Vercel, mas node_modules já está disponível no ambiente');
+        // Não copiar na Vercel - usar node_modules do ambiente
+      } else {
+        console.log('   ⚠️  Symlink falhou, copiando node_modules/ (pode demorar)...');
+        try {
+          await fs.cp(nodeModulesSrc, nodeModulesDest, { recursive: true });
+          console.log('   ✅ node_modules/ copiado');
+        } catch (cpError) {
+          console.error(`   ❌ Erro ao copiar node_modules:`, cpError);
+          throw new Error(`Falha ao copiar node_modules: ${cpError.message}`);
+        }
+      }
+    }
+  } else {
+    console.warn(`   ⚠️  node_modules não encontrado em: ${nodeModulesSrc}`);
+    if (isVercel) {
+      console.log('   ℹ️  Na Vercel, node_modules está disponível no ambiente, não precisa copiar');
+    } else {
+      throw new Error(`node_modules não encontrado em: ${nodeModulesSrc}`);
     }
   }
   
