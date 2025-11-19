@@ -14,6 +14,7 @@ import {
   Sun,
   Menu,
   X,
+  Package,
 } from "lucide-react";
 import { Button } from "./ui/button";
 import { useTheme } from "@/hooks/useTheme";
@@ -24,6 +25,7 @@ import Link from "next/link";
 const navItems = [
   { icon: Home, label: "Início", href: "/home", active: false },
   { icon: BookOpen, label: "Cursos", href: "/cursos", active: true },
+  { icon: Package, label: "Builds SCORM", href: "/scorm-jobs", active: false },
   { icon: Users, label: "Usuários", href: "/usuarios", active: false },
   {
     icon: Settings,
@@ -141,6 +143,8 @@ export function Sidebar() {
               const isActive =
                 pathname === item.href ||
                 (item.href === "/cursos" && pathname?.startsWith("/cursos")) ||
+                (item.href === "/scorm-jobs" && pathname?.startsWith("/scorm-jobs")) ||
+                (item.href === "/scorm-build" && pathname?.startsWith("/scorm-build")) ||
                 (item.href === "/usuarios" &&
                   pathname?.startsWith("/usuarios")) ||
                 (item.href === "/configuracoes" &&
