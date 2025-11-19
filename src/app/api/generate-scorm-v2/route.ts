@@ -41,12 +41,21 @@ export async function POST(req: NextRequest) {
     // Converter Buffer para Uint8Array (compatível com NextResponse)
     const zipArray = new Uint8Array(zipBuffer);
 
+    // Criar filename seguro (apenas ASCII) para o header
+    // Remove acentos e caracteres especiais
+    const safeFilename = cursoData.titulo
+      .normalize('NFD') // Decompõe caracteres acentuados
+      .replace(/[\u0300-\u036f]/g, '') // Remove acentos
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-') // Substitui caracteres não alfanuméricos por '-'
+      .replace(/^-+|-+$/g, ''); // Remove '-' no início/fim
+
     // Retornar ZIP diretamente
     return new NextResponse(zipArray, {
       status: 200,
       headers: {
         'Content-Type': 'application/zip',
-        'Content-Disposition': `attachment; filename="scorm-${cursoData.titulo.toLowerCase().replace(/\s+/g, '-')}.zip"`,
+        'Content-Disposition': `attachment; filename="scorm-${safeFilename}.zip"`,
         'Content-Length': zipBuffer.length.toString(),
       },
     });
