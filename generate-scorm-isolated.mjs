@@ -639,30 +639,30 @@ export default nextConfig;
     throw new Error(`Diretório src/ não encontrado em: ${srcSrc}`);
   }
   
-  // Criar symlink para node_modules (CRÍTICO: necessário para o build funcionar)
-  // O symlink permite que o workDir acesse node_modules sem copiar (economiza tempo/espaço)
+  // ✅ CORREÇÃO: Na Vercel, NÃO criar symlink para node_modules
+  // Symlinks causam erro "invalid deployment package" na Vercel
+  // Em vez disso, vamos usar NODE_PATH para apontar para o node_modules original
+  // e executar o build no workDir mas com acesso ao node_modules via NODE_PATH
   const nodeModulesSrc = path.join(projectRoot, 'node_modules');
   const nodeModulesDest = path.join(workDir, 'node_modules');
   
   console.log(`   📦 Verificando node_modules: ${nodeModulesSrc}`);
   
   if (await pathExists(nodeModulesSrc)) {
-    try {
-      // ✅ CORREÇÃO: Tentar criar symlink SEMPRE (incluindo na Vercel)
-      // O symlink é necessário para que o build encontre as dependências no workDir
-      await fs.symlink(nodeModulesSrc, nodeModulesDest, 'dir');
-      console.log('   ✅ node_modules/ linkado (symlink)');
-      console.log(`   📍 Symlink: ${nodeModulesDest} -> ${nodeModulesSrc}`);
-    } catch (symlinkError) {
-      console.warn(`   ⚠️  Symlink falhou: ${symlinkError.message}`);
-      
-      if (isVercel) {
-        // Na Vercel, se o symlink falhar, o build provavelmente vai falhar
-        // Mas vamos tentar continuar e usar o binário do projeto original como fallback
-        console.warn('   ⚠️  Na Vercel, sem symlink o build pode falhar ao encontrar dependências');
-        console.warn('   ⚠️  Tentando continuar - o build usará fallback para binário original');
-        // Não copiar na Vercel (muito lento e pode dar timeout)
-      } else {
+    if (isVercel) {
+      // ✅ Na Vercel: NÃO criar symlink (causa erro de deployment)
+      // Vamos usar NODE_PATH no ambiente do build para encontrar dependências
+      console.log('   ℹ️  Na Vercel: Não criando symlink (evita erro de deployment)');
+      console.log('   ℹ️  Dependências serão encontradas via NODE_PATH no ambiente do build');
+      console.log(`   📍 node_modules original: ${nodeModulesSrc}`);
+    } else {
+      // Localmente: tentar criar symlink (mais rápido)
+      try {
+        await fs.symlink(nodeModulesSrc, nodeModulesDest, 'dir');
+        console.log('   ✅ node_modules/ linkado (symlink)');
+        console.log(`   📍 Symlink: ${nodeModulesDest} -> ${nodeModulesSrc}`);
+      } catch (symlinkError) {
+        console.warn(`   ⚠️  Symlink falhou: ${symlinkError.message}`);
         // Localmente, se symlink falhar, copiar como fallback
         console.log('   ⚠️  Symlink falhou, copiando node_modules/ (pode demorar)...');
         try {
@@ -762,6 +762,18 @@ async function executeIsolatedBuild(cursoFile, workDir) {
       SCORM_BUILD_CURSO_FILE: workCursoFile, // ✅ Caminho no diretório isolado
       NEXT_PUBLIC_IS_SCORM_BUILD: 'true', // ✅ Flag para indicar build SCORM
     };
+    
+    // ✅ Na Vercel: Configurar NODE_PATH para encontrar node_modules original
+    // Isso permite que o build encontre dependências sem criar symlink
+    if (isVercel) {
+      const originalNodeModules = path.join(process.cwd(), 'node_modules');
+      const existingNodePath = process.env.NODE_PATH || '';
+      // Adicionar node_modules original ao NODE_PATH
+      env.NODE_PATH = existingNodePath 
+        ? `${existingNodePath}:${originalNodeModules}`
+        : originalNodeModules;
+      console.log(`   🔧 NODE_PATH configurado: ${env.NODE_PATH}`);
+    }
 
     console.log('   🔧 Variáveis de ambiente configuradas');
     console.log(`   📁 Diretório de trabalho isolado: ${workDir}`);

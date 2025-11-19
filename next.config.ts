@@ -26,15 +26,15 @@ const nextConfig: NextConfig = {
       './src/**/*',                       // Código fonte necessário para o build SCORM
       // ✅ CRÍTICO: Forçar inclusão do binário e dependências do Next.js
       // Sem isso, a Vercel remove o Next.js via tree shaking (API routes não precisam fazer build)
-      './node_modules/next/**/*',         // Binário completo do Next.js (inclui dist/bin/next)
-      './node_modules/@next/**/*',       // Pacotes internos do Next.js
-      './node_modules/react/**/*',       // React (necessário para o build)
-      './node_modules/react-dom/**/*',   // React DOM (necessário para o build)
+      // IMPORTANTE: Não incluir node_modules completo para evitar problemas com symlinks
+      // Em vez disso, incluir apenas os arquivos essenciais do Next.js
+      './node_modules/next/dist/bin/next', // Binário do Next.js (arquivo específico, não pasta inteira)
+      './node_modules/next/dist/**/*',     // Distribuição do Next.js (sem symlinks)
+      './node_modules/@next/**/*',         // Pacotes internos do Next.js
+      './node_modules/react/index.js',     // React (arquivo principal)
+      './node_modules/react-dom/index.js', // React DOM (arquivo principal)
     ],
   },
-  
-  // Necessário para garantir que imports dinâmicos e pacotes externos funcionem
-  serverComponentsExternalPackages: ['next', 'esbuild', 'webpack'],
   
   // Configuração para exportação estática (usado para gerar SCORM)
   // Quando output: 'export' está ativo, o Next.js gera HTML estático
