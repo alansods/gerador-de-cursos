@@ -706,49 +706,52 @@ async function executeIsolatedBuild(cursoFile, workDir) {
     await fs.rm(scormNextDir, { recursive: true, force: true });
   }
 
-  // Na Vercel, pnpm não está disponível, usar binário direto do Next.js
   // Determinar comando de build antes de criar a Promise
   const isVercel = process.env.VERCEL === '1' || process.env.VERCEL_ENV;
   let buildCommand;
   let buildArgs;
   
   if (isVercel) {
-    // Na Vercel, usar process.execPath (caminho absoluto do Node.js atual) 
-    // com o binário direto do Next.js
-    // ✅ CORREÇÃO: Tentar primeiro no workDir (via symlink), depois no projeto original
-    let nextBinPath = path.join(workDir, 'node_modules', '.bin', 'next');
-    let nextBinExists = await pathExists(nextBinPath).catch(() => false);
+    console.log('   🔧 Configurando ambiente Vercel...');
     
-    if (!nextBinExists) {
-      // Se não encontrou no workDir (symlink pode ter falhado), tentar no projeto original
-      console.log('   ⚠️  Binário não encontrado no workDir via symlink. Tentando projeto original...');
-      const originalNextBinPath = path.join(process.cwd(), 'node_modules', '.bin', 'next');
-      const originalExists = await pathExists(originalNextBinPath).catch(() => false);
+    // ✅ CORREÇÃO: Apontar diretamente para o executável JavaScript real do Next.js
+    // O caminho correto é node_modules/next/dist/bin/next (não o atalho .bin/next)
+    // Isso funciona em qualquer lugar onde o pacote next esteja instalado
+    const nextJsEntry = path.join(process.cwd(), 'node_modules', 'next', 'dist', 'bin', 'next');
+    
+    // Verificar se o arquivo existe
+    try {
+      await fs.access(nextJsEntry);
+      console.log(`   ✅ Executável Next.js encontrado: ${nextJsEntry}`);
       
-      if (originalExists) {
-        nextBinPath = originalNextBinPath;
-        nextBinExists = true;
-        console.log(`   ✅ Usando binário do projeto original: ${nextBinPath}`);
-        console.log('   ⚠️  ATENÇÃO: Build será executado no workDir, mas usando binário original');
-        console.log('   ⚠️  Isso pode funcionar se as dependências estiverem acessíveis via NODE_PATH');
+      // Usar process.execPath (Node.js atual) para rodar o script do Next.js
+      buildCommand = process.execPath; // Caminho absoluto do Node.js atual
+      buildArgs = [nextJsEntry, 'build', '--no-lint'];
+      
+      console.log(`   🔧 Usando executável JavaScript direto do Next.js`);
+      console.log(`   📍 Node.js: ${buildCommand}`);
+      console.log(`   📍 Next.js: ${nextJsEntry}`);
+    } catch (err) {
+      console.error(`   ❌ Executável Next.js não encontrado em: ${nextJsEntry}`);
+      console.error('   Tentando fallback para node_modules/.bin/next...');
+      
+      // Fallback: tentar o atalho .bin/next
+      const binNext = path.join(process.cwd(), 'node_modules', '.bin', 'next');
+      const binExists = await pathExists(binNext).catch(() => false);
+      
+      if (binExists) {
+        buildCommand = process.execPath;
+        buildArgs = [binNext, 'build', '--no-lint'];
+        console.log(`   ⚠️  Usando fallback: ${binNext}`);
+      } else {
+        // Último recurso: npx
+        buildCommand = 'npx';
+        buildArgs = ['--yes', 'next', 'build', '--no-lint'];
+        console.log('   ⚠️  Usando npx como último recurso');
       }
     }
-    
-    if (nextBinExists) {
-      // Usar process.execPath (Node.js atual) com binário direto do Next.js
-      buildCommand = process.execPath; // Caminho absoluto do Node.js atual
-      buildArgs = [nextBinPath, 'build', '--no-lint'];
-      console.log(`   🔧 Usando binário direto do Next.js via Node.js atual`);
-      console.log(`   📍 Node.js: ${buildCommand}`);
-      console.log(`   📍 Next.js: ${nextBinPath}`);
-    } else {
-      // Fallback: tentar npx (geralmente disponível, mas menos confiável)
-      buildCommand = 'npx';
-      buildArgs = ['--yes', 'next', 'build', '--no-lint'];
-      console.log('   ⚠️  Binário do Next.js não encontrado, usando npx (fallback)');
-    }
   } else {
-    // Localmente, usar pnpm
+    // Ambiente Local: usar pnpm
     buildCommand = 'pnpm';
     buildArgs = ['next', 'build', '--no-lint'];
     console.log('   🔧 Usando pnpm (ambiente local)');
