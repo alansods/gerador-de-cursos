@@ -137,9 +137,9 @@ export const useSCORM = () => {
     setError(null);
     setProgress(null);
     
-    const toastId = toast.loading('Iniciando geração SCORM...', {
+    const toastId = String(toast.loading('Iniciando geração SCORM...', {
       description: `Preparando build para "${curso.titulo}". Isso pode levar alguns minutos.`,
-    });
+    }));
 
     try {
       console.log('🌐 [useSCORM] Fazendo requisição para /api/generate-scorm-v2...');
