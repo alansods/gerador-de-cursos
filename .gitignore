@@ -32,6 +32,7 @@
 /public/scorm-images/
 *.zip
 /generate-scorm-isolated.js
+/build-scorm-exemplo-react/
 
 # Arquivos de backup (gerados por editores)
 * 2.*

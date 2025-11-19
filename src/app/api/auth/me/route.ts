@@ -27,6 +27,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
+      authenticated: true,
       user: {
         id: user.id,
         usuario: user.usuario,

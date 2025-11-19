@@ -21,6 +21,64 @@ import { dirname } from 'path';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
+// ✅ Rastreamento global de arquivos/pastas temporárias para limpeza
+let tempPaths = {
+  workDir: null,
+  tempCursoFile: null,
+  projectOutDir: null,
+};
+
+/**
+ * Limpa todos os arquivos/pastas temporárias rastreadas
+ */
+async function cleanupAllTemp() {
+  console.log('\n🧹 [CLEANUP] Limpando arquivos temporários...');
+  
+  const cleanupTasks = [];
+  
+  if (tempPaths.workDir && await pathExists(tempPaths.workDir)) {
+    console.log(`   🗑️  Removendo ${tempPaths.workDir}...`);
+    cleanupTasks.push(
+      fs.rm(tempPaths.workDir, { recursive: true, force: true })
+        .then(() => console.log(`   ✅ ${tempPaths.workDir} removido`))
+        .catch(err => console.warn(`   ⚠️  Erro ao remover ${tempPaths.workDir}:`, err.message))
+    );
+  }
+  
+  if (tempPaths.tempCursoFile && await pathExists(tempPaths.tempCursoFile)) {
+    console.log(`   🗑️  Removendo ${tempPaths.tempCursoFile}...`);
+    cleanupTasks.push(
+      fs.unlink(tempPaths.tempCursoFile)
+        .then(() => console.log(`   ✅ ${tempPaths.tempCursoFile} removido`))
+        .catch(err => console.warn(`   ⚠️  Erro ao remover ${tempPaths.tempCursoFile}:`, err.message))
+    );
+  }
+  
+  if (tempPaths.projectOutDir && await pathExists(tempPaths.projectOutDir)) {
+    console.log(`   🗑️  Removendo ${tempPaths.projectOutDir}...`);
+    cleanupTasks.push(
+      fs.rm(tempPaths.projectOutDir, { recursive: true, force: true })
+        .then(() => console.log(`   ✅ ${tempPaths.projectOutDir} removido`))
+        .catch(err => console.warn(`   ⚠️  Erro ao remover ${tempPaths.projectOutDir}:`, err.message))
+    );
+  }
+  
+  await Promise.all(cleanupTasks);
+  console.log('✅ [CLEANUP] Limpeza concluída');
+}
+
+/**
+ * Verifica se um caminho existe
+ */
+async function pathExists(filePath) {
+  try {
+    await fs.access(filePath);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 /**
  * Verifica se o servidor de desenvolvimento está rodando
  */
@@ -169,28 +227,32 @@ async function main() {
   }
 }
 
-// Wrapper para capturar erros não tratados
-process.on('unhandledRejection', (reason, promise) => {
+// ✅ Handlers para limpeza em caso de interrupção ou erro
+process.on('SIGINT', async () => {
+  console.log('\n\n⚠️  [SCORM Isolated] Build interrompido pelo usuário (Ctrl+C)');
+  await cleanupAllTemp();
+  process.exit(130); // Exit code padrão para SIGINT
+});
+
+process.on('SIGTERM', async () => {
+  console.log('\n\n⚠️  [SCORM Isolated] Build terminado externamente');
+  await cleanupAllTemp();
+  process.exit(143); // Exit code padrão para SIGTERM
+});
+
+process.on('unhandledRejection', async (reason, promise) => {
   console.error('❌ [SCORM Isolated] Unhandled Rejection at:', promise, 'reason:', reason);
+  await cleanupAllTemp();
   process.exit(1);
 });
 
-process.on('uncaughtException', (error) => {
+process.on('uncaughtException', async (error) => {
   console.error('❌ [SCORM Isolated] Uncaught Exception:', error);
+  await cleanupAllTemp();
   process.exit(1);
 });
 
-/**
- * Verifica se um caminho existe
- */
-async function pathExists(filePath) {
-  try {
-    await fs.access(filePath);
-    return true;
-  } catch {
-    return false;
-  }
-}
+
 
 // ✅ Funções de backup/restore e ocultar/restaurar pastas removidas - não são mais necessárias!
 // O projeto original NUNCA é modificado quando usamos diretório isolado (.scorm-build-work/)
@@ -334,7 +396,10 @@ async function prepareIsolatedWorkDir() {
             const [parent, child] = exclude.split('/');
             return appEntry.name === parent;
           }
-          return appEntry.name === exclude || appEntry.name.startsWith(exclude + ' ');
+          // Excluir nome exato OU nome com sufixo numérico (ex: 'api 2', 'pdf-preview 3')
+          // Regex: nome exato OU nome seguido de espaço e dígitos
+          const pattern = new RegExp(`^${exclude.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(\\s+\\d+)?$`);
+          return pattern.test(appEntry.name);
         });
         
         if (!shouldExclude) {
@@ -413,6 +478,7 @@ async function executeIsolatedBuild(cursoFile, workDir) {
       NODE_ENV: 'production',
       NEXT_OUTPUT_EXPORT: 'true',
       SCORM_BUILD_CURSO_FILE: workCursoFile, // ✅ Caminho no diretório isolado
+      NEXT_PUBLIC_IS_SCORM_BUILD: 'true', // ✅ Flag para indicar build SCORM
     };
 
     console.log('   🔧 Variáveis de ambiente configuradas');
@@ -553,62 +619,60 @@ async function createSCORMZip(outputPath, curso, cursoId) {
 }
 
 /**
+ * Escapa caracteres especiais para XML
+ */
+function escapeXml(unsafe) {
+  if (!unsafe) return "";
+  return unsafe.replace(/[<>&'"]/g, function (c) {
+    switch (c) {
+      case '<': return '&lt;';
+      case '>': return '&gt;';
+      case '&': return '&amp;';
+      case '\'': return '&apos;';
+      case '"': return '&quot;';
+    }
+  });
+}
+
+/**
  * Gera manifesto SCORM simples
  */
 function generateManifestSimple(curso) {
-  return `<?xml version="1.0" encoding="UTF-8"?>
-<manifest identifier="curso_${curso.id}" version="1.0"
-          xmlns="http://www.imsproject.org/xsd/imscp_rootv1p1p2"
-          xmlns:adlcp="http://www.adlnet.org/xsd/adlcp_rootv1p2"
-          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  // === MANIFESTO SIMPLIFICADO PARA SPA ===
+  // Apenas um item apontando para index.html
+  // A navegação interna é gerenciada pelo React
+  
+  const manifest = `<?xml version="1.0" standalone="no" ?>
+<manifest identifier="com.scorm.manifest" version="1.2"
+  xmlns="http://www.imsproject.org/xsd/imscp_rootv1p1p2"
+  xmlns:adlcp="http://www.adlnet.org/xsd/adlcp_rootv1p2"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.imsproject.org/xsd/imscp_rootv1p1p2 imscp_rootv1p1p2.xsd
+                      http://www.imsproject.org/xsd/adlcp_rootv1p2 adlcp_rootv1p2.xsd">
+
   <metadata>
     <schema>ADL SCORM</schema>
     <schemaversion>1.2</schemaversion>
-    <adlcp:location>index.html</adlcp:location>
-    <lom>
-      <general>
-        <title><langstring>${curso.titulo}</langstring></title>
-        <description><langstring>${curso.descricao || ''}</langstring></description>
-      </general>
-    </lom>
   </metadata>
-  <organizations default="org_default">
-    <organization identifier="org_default" structure="hierarchical">
-      <title>${curso.titulo}</title>
-      <!-- Página inicial do curso (primeiro item, mesmo nível que as unidades) -->
-      <item identifier="item_index" identifierref="resource_index" isvisible="true">
-        <title>Página Inicial</title>
+
+  <organizations default="default_org">
+    <organization identifier="default_org">
+      <title>${escapeXml(curso.titulo)}</title>
+      <item identifier="item_index" identifierref="resource_index">
+        <title>${escapeXml(curso.titulo)}</title>
       </item>
-      <!-- Unidades do curso (mesmo nível que a página inicial) -->
-      ${(curso.unidades || []).map((unidade, index) => `
-      <item identifier="${unidade.id}" identifierref="resource_${unidade.id}" isvisible="true">
-        <title>Unidade ${index + 1}: ${unidade.titulo}</title>
-      </item>
-      `).join('')}
     </organization>
   </organizations>
+
   <resources>
-    <!-- Recurso principal: página inicial (deve ser SCO para ser o ponto de entrada) -->
-    <resource identifier="resource_index" type="webcontent"
-              adlcp:scormtype="sco" href="index.html">
+    <resource identifier="resource_index" type="webcontent" href="index.html" adlcp:scormtype="sco">
       <file href="index.html"/>
-      <file href="scorm_api_wrapper.js"/>
-      <dependency identifierref="common_files"/>
-    </resource>
-    ${(curso.unidades || []).map(unidade => `
-    <resource identifier="resource_${unidade.id}" type="webcontent"
-              adlcp:scormtype="sco" href="scorm-preview/unidade/${unidade.id}.html">
-      <file href="scorm-preview/unidade/${unidade.id}.html"/>
-      <file href="scorm_api_wrapper.js"/>
-      <dependency identifierref="common_files"/>
-    </resource>
-    `).join('')}
-    <!-- Recursos comuns -->
-    <resource identifier="common_files" type="webcontent" adlcp:scormtype="asset">
       <file href="scorm_api_wrapper.js"/>
     </resource>
   </resources>
 </manifest>`;
+
+  return manifest;
 }
 
 /**
@@ -616,11 +680,21 @@ function generateManifestSimple(curso) {
  */
 function generateScormWrapperSimple() {
   return `
-// SCORM 1.2 API Wrapper
+/**
+ * SCORM 1.2 API Wrapper
+ * Exposes window.SCORM object for the SPA to interact with.
+ */
 var API = null;
 
 function findAPI(win) {
-  while (win.API == null && win.parent != null && win.parent != win) {
+  var attempt = 0;
+  var maxAttempts = 500;
+  while ((win.API == null) && (win.parent != null) && (win.parent != win)) {
+    attempt++;
+    if (attempt > maxAttempts) {
+      console.error("SCORM: Could not find APIAdapter - too deep.");
+      return null;
+    }
     win = win.parent;
   }
   return win.API;
@@ -633,38 +707,70 @@ function getAPI() {
   return API;
 }
 
-function initSCORM() {
-  console.log('[SCORM-WRAPPER] initSCORM chamado');
-  var api = getAPI();
-  if (api != null) {
-    console.log('[SCORM-WRAPPER] API encontrada, inicializando...');
-    try {
-      var initResult = api.LMSInitialize("");
-      console.log('[SCORM-WRAPPER] LMSInitialize resultado:', initResult);
-      if (initResult === 'true' || initResult === true) {
-        api.LMSSetValue("cmi.core.lesson_status", "incomplete");
-        console.log('[SCORM-WRAPPER] ✅ SCORM inicializado com sucesso');
-      } else {
-        console.warn('[SCORM-WRAPPER] ⚠️ LMSInitialize retornou:', initResult);
+// SCORM Object exposed to the application
+window.SCORM = {
+  init: function() {
+    var api = getAPI();
+    if (api) {
+      var result = api.LMSInitialize("");
+      if (result.toString() === "true") {
+        this.setValue("cmi.core.lesson_status", "incomplete");
+        this.save();
+        return true;
       }
-    } catch (error) {
-      console.error('[SCORM-WRAPPER] ❌ Erro ao inicializar SCORM:', error);
     }
+    return false;
+  },
+  
+  getValue: function(key) {
+    var api = getAPI();
+    if (api) return api.LMSGetValue(key);
+    return "";
+  },
+  
+  setValue: function(key, value) {
+    var api = getAPI();
+    if (api) {
+      var result = api.LMSSetValue(key, value);
+      return result.toString() === "true";
+    }
+    return false;
+  },
+  
+  save: function() {
+    var api = getAPI();
+    if (api) return api.LMSCommit("");
+    return false;
+  },
+  
+  quit: function() {
+    var api = getAPI();
+    if (api) return api.LMSFinish("");
+    return false;
+  },
+  
+  complete: function() {
+    this.setValue("cmi.core.lesson_status", "completed");
+    this.save();
+    this.quit();
+  }
+};
+
+// Auto-initialize on load
+window.addEventListener('load', function() {
+  console.log("[SCORM-WRAPPER] Initializing...");
+  if (window.SCORM.init()) {
+    console.log("[SCORM-WRAPPER] Initialized successfully.");
   } else {
-    console.warn('[SCORM-WRAPPER] ⚠️ API não encontrada');
+    console.warn("[SCORM-WRAPPER] Failed to initialize or API not found.");
   }
-}
+});
 
-function finishSCORM() {
-  var api = getAPI();
-  if (api != null) {
-    api.LMSSetValue("cmi.core.lesson_status", "completed");
-    api.LMSFinish("");
-  }
-}
-
-window.addEventListener('load', initSCORM);
-window.addEventListener('beforeunload', finishSCORM);
+// Auto-finish on unload
+window.addEventListener('beforeunload', function() {
+  console.log("[SCORM-WRAPPER] Finishing...");
+  window.SCORM.quit();
+});
 `;
 }
 
@@ -783,99 +889,10 @@ async function copyBuildFilesToZip(zip, outDir, publicImagesDir, curso) {
     console.log('   ✅ scorm-preview.html copiado com dados do curso injetados');
   }
 
-  // Copiar arquivos HTML das unidades (apenas scorm-preview)
-  const unidadeDir = path.join(outDir, 'scorm-preview', 'unidade');
-  if (await pathExists(unidadeDir)) {
-    const files = await fs.readdir(unidadeDir);
-    let unitFilesCount = 0;
-    
-    // Criar mapa: ID da unidade -> arquivo HTML correspondente
-    const unitIdToFile = new Map();
-    
-    // Primeiro, processar cada unidade do curso e encontrar seu arquivo
-    for (const unidade of curso.unidades || []) {
-      const expectedFileName = `${unidade.id}.html`;
-      let matchedFile = null;
-      
-      // Tentar encontrar pelo nome exato primeiro
-      if (files.includes(expectedFileName)) {
-        matchedFile = expectedFileName;
-        console.log(`   ✅ Arquivo encontrado por nome exato: ${expectedFileName}`);
-      } else {
-        // Tentar encontrar por padrões no nome
-        for (const file of files) {
-          if (file.endsWith('.html') && !file.includes('pdf')) {
-            // Verificar se o arquivo contém o ID da unidade
-            if (file === `unidade-${unidade.id}.html` || 
-                file.includes(unidade.id) && file.endsWith('.html')) {
-              matchedFile = file;
-              console.log(`   ✅ Arquivo encontrado por padrão: ${file} → ${unidade.id}`);
-              break;
-            }
-          }
-        }
-        
-        // Se ainda não encontrou, ler o conteúdo para verificar
-        if (!matchedFile) {
-          for (const file of files) {
-            if (file.endsWith('.html') && !file.includes('pdf')) {
-              try {
-                const content = await fs.readFile(path.join(unidadeDir, file), 'utf-8');
-                // Procurar por padrões que indiquem este é o arquivo da unidade
-                if (content.includes(`unidadeId: "${unidade.id}"`) ||
-                    content.includes(`currentUnidadeId="${unidade.id}"`) ||
-                    content.includes(`"${unidade.id}"`) && (content.includes('unidadeId') || content.includes('currentUnidadeId'))) {
-                  matchedFile = file;
-                  console.log(`   ✅ Arquivo encontrado por conteúdo: ${file} → ${unidade.id}`);
-                  break;
-                }
-              } catch (error) {
-                // Ignorar erros de leitura
-              }
-            }
-          }
-        }
-      }
-      
-      if (matchedFile) {
-        unitIdToFile.set(unidade.id, matchedFile);
-      } else {
-        console.log(`   ⚠️  Arquivo não encontrado para unidade: ${unidade.id}`);
-      }
-    }
-    
-    // Agora copiar e renomear os arquivos usando os IDs corretos
-    for (const [unitId, originalFile] of unitIdToFile.entries()) {
-      let content = await fs.readFile(path.join(unidadeDir, originalFile), 'utf-8');
-      
-      // Remover qualquer referência a PDF do HTML
-      content = content.replace(/pdf-preview/gi, '');
-      content = content.replace(/generatePDF/gi, '');
-      content = convertPaths(content, '../../');
-      
-      // Garantir que o script SCORM wrapper está incluído
-      if (!content.includes('scorm_api_wrapper.js')) {
-        content = content.replace('</head>', `
-  <script src="../../scorm_api_wrapper.js"></script>
-</head>`);
-      }
-      
-      // Injetar dados do curso
-      content = injectCursoData(content, curso);
-      
-      // Usar o ID da unidade como nome do arquivo (garantir formato correto)
-      const finalFileName = `${unitId}.html`;
-      
-      if (originalFile !== finalFileName) {
-        console.log(`   🔄 Renomeando: ${originalFile} → ${finalFileName}`);
-      }
-      
-      zip.file(`scorm-preview/unidade/${finalFileName}`, content);
-      unitFilesCount++;
-    }
-    
-    console.log(`   ✅ ${unitFilesCount} arquivo(s) HTML de unidades copiado(s) com dados do curso injetados`);
-  }
+  // === SPA MODE: Single index.html contains everything ===
+  // O arquivo index.html principal será criado abaixo a partir de scorm-preview.html
+  // === SPA MODE: Single index.html contains everything ===
+  // O arquivo index.html principal será criado abaixo a partir de scorm-preview.html
 
   // Copiar _next/static (apenas arquivos necessários para scorm-preview)
   // Filtrar para evitar incluir código de PDF ou outras páginas não relacionadas
@@ -905,7 +922,38 @@ async function copyBuildFilesToZip(zip, outDir, publicImagesDir, curso) {
             fileName.includes('generatepdf');
           
           if (!shouldExclude) {
-            const content = await fs.readFile(fullPath);
+            let content = await fs.readFile(fullPath);
+            
+            // PATCH: Corrigir Webpack Runtime para usar caminhos relativos
+            // O Next.js define __webpack_require__.p = "/_next/" por padrão
+            // Precisamos mudar para "./_next/" ou detectar dinamicamente
+            if (fileName.startsWith('webpack-') && fileName.endsWith('.js')) {
+              console.log(`   🔧 Patching Webpack Runtime: ${fileName}`);
+              let jsContent = content.toString('utf-8');
+              
+              // Substituir atribuição do publicPath
+              // Procura por: n.p="/_next/" ou similar
+              // Substitui por: n.p="./_next/"
+              // Regex flexível para pegar variações minificadas
+              const publicPathRegex = /(\w+\.p=)"\/_next\/"/g;
+              
+              if (publicPathRegex.test(jsContent)) {
+                jsContent = jsContent.replace(publicPathRegex, '$1"./_next/"');
+                console.log('      ✅ Public path corrigido para "./_next/"');
+                content = Buffer.from(jsContent);
+              } else {
+                console.warn('      ⚠️  Não foi possível encontrar a definição do publicPath no Webpack Runtime');
+                // Tentar fallback mais agressivo se o regex acima falhar
+                // Procura por qualquer string "/_next/" atribuída a .p
+                const aggressiveRegex = /\.p="\/_next\/"/g;
+                if (aggressiveRegex.test(jsContent)) {
+                   jsContent = jsContent.replace(aggressiveRegex, '.p="./_next/"');
+                   console.log('      ✅ Public path corrigido (fallback) para "./_next/"');
+                   content = Buffer.from(jsContent);
+                }
+              }
+            }
+
             zip.file(zipEntryPath, content);
           } else {
             console.log(`   ⏭️  Pulando arquivo relacionado a PDF: ${entry.name}`);
@@ -957,6 +1005,10 @@ async function copyBuildFilesToZip(zip, outDir, publicImagesDir, curso) {
     indexContent = indexContent.replace(/generatePDF/gi, '');
     // Converter caminhos absolutos para relativos (raiz)
     indexContent = convertPaths(indexContent, '');
+    
+    // ✅ INJETAR DADOS DO CURSO (CRUCIAL PARA SPA)
+    indexContent = injectCursoData(indexContent, curso);
+    
     // Garantir que o script SCORM wrapper está incluído
     if (!indexContent.includes('scorm_api_wrapper.js')) {
       indexContent = indexContent.replace('</head>', `
