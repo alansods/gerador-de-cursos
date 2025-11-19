@@ -68,3 +68,21 @@ model Activity {
   @@index([userId])
   @@map("activities")
 }
+
+// Modelo de Jobs de Geração SCORM
+model SCORMJob {
+  id           String   @id @default(cuid())
+  cursoId      String   @map("curso_id")
+  cursoTitulo  String   @map("curso_titulo")
+  status       String   // 'pending', 'building', 'completed', 'failed'
+  progress     String?  // mensagem de progresso atual
+  error        String?  // mensagem de erro se falhar
+  zipData      Bytes?   @map("zip_data") // dados do ZIP (Buffer) quando completado
+  createdAt    DateTime @default(now()) @map("created_at")
+  completedAt  DateTime? @map("completed_at")
+
+  @@index([status])
+  @@index([createdAt])
+  @@index([cursoId])
+  @@map("scorm_jobs")
+}

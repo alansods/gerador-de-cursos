@@ -1,34 +1,35 @@
 // Caminho do Ficheiro: src/hooks/useSCORM.ts
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { CursoGerado } from '@/types/gerador-curso';
 
 export const useSCORM = () => {
+  const router = useRouter();
   const [isGeneratingSCORM, setIsGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   /**
-   * Gera e baixa um pacote SCORM diretamente (sem jobs/polling)
+   * Inicia geração de SCORM e redireciona para página de progresso
    * @param curso O objeto COMPLETO do curso.
-   * @param filename O nome desejado para o arquivo .zip (sem a extensão).
+   * @param filename O nome desejado para o arquivo .zip (sem a extensão - NÃO USADO mais).
    */
   const generateSCORM = async (curso: CursoGerado, filename: string) => {
     console.log('🚀 [useSCORM] generateSCORM chamado');
     console.log('📦 [useSCORM] Curso:', curso);
-    console.log('📝 [useSCORM] Filename:', filename);
 
     setIsGenerating(true);
     setError(null);
 
-    const toastId = String(toast.loading('Gerando pacote SCORM...', {
-      description: `Gerando "${curso.titulo}". Isso deve levar apenas alguns segundos.`,
+    const toastId = String(toast.loading('Iniciando build SCORM...', {
+      description: `Preparando build completo para "${curso.titulo}". Você será redirecionado para a página de progresso.`,
     }));
 
     try {
       console.log('🌐 [useSCORM] Fazendo requisição para /api/generate-scorm-v2...');
 
-      // Gerar e baixar SCORM diretamente
+      // Iniciar job de build
       const response = await fetch('/api/generate-scorm-v2', {
         method: 'POST',
         headers: {
@@ -41,48 +42,34 @@ export const useSCORM = () => {
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({ error: 'Erro desconhecido' }));
-        throw new Error(errorData.details || errorData.error || 'Falha ao gerar SCORM');
+        throw new Error(errorData.details || errorData.error || 'Falha ao iniciar build');
       }
 
-      // Obter o blob (arquivo zip) diretamente
-      const blob = await response.blob();
-      console.log(`✅ [useSCORM] ZIP recebido (${(blob.size / 1024).toFixed(2)} KB)`);
+      const { jobId } = await response.json();
+      console.log(`✅ [useSCORM] Job criado: ${jobId}`);
 
-      // Criar o link de download
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `${filename}.zip`;
-      a.style.display = 'none';
-      document.body.appendChild(a);
-
-      // Forçar download automático
-      a.click();
-
-      // Limpar após download
-      setTimeout(() => {
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-      }, 100);
-
-      // Toast de sucesso
-      toast.success('Download concluído!', {
-        id: toastId,
-        description: `O arquivo ${filename}.zip foi baixado com sucesso.`,
-        duration: 5000,
+      // Fechar toast e redirecionar para página de progresso
+      toast.dismiss(toastId);
+      toast.success('Build iniciado!', {
+        description: 'Redirecionando para página de progresso...',
+        duration: 2000,
       });
+
+      // Redirecionar para página de progresso
+      router.push(`/scorm-build/${jobId}`);
 
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Erro desconhecido';
       console.error("Erro no useSCORM:", err);
       setError(errorMessage);
-      toast.error('Erro na Geração', {
+      toast.error('Erro ao Iniciar Build', {
         id: toastId,
         description: errorMessage,
       });
-    } finally {
       setIsGenerating(false);
     }
+    // Nota: não setamos setIsGenerating(false) em caso de sucesso
+    // porque o usuário será redirecionado
   };
 
   return {

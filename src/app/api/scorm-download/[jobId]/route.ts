@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getJob, deleteJob } from '@/lib/scorm-job-store';
+import { prisma } from '@/lib/prisma';
 import { requireAuth, createErrorResponse } from '@/lib/auth';
 
 /**
  * GET /api/scorm-download/[jobId]
- * Retorna o arquivo ZIP SCORM quando o job estiver completo
+ * Retorna o arquivo ZIP SCORM quando o job estiver completo (busca do DB)
  */
 export async function GET(
   req: NextRequest,
@@ -23,7 +23,10 @@ export async function GET(
       return createErrorResponse('Job ID é obrigatório', 400);
     }
 
-    const job = getJob(jobId);
+    // Buscar job no banco de dados (incluindo zipData)
+    const job = await prisma.sCORMJob.findUnique({
+      where: { id: jobId },
+    });
 
     if (!job) {
       return NextResponse.json(
@@ -46,18 +49,27 @@ export async function GET(
       );
     }
 
-    if (job.status === 'completed' && job.zipBuffer) {
+    if (job.status === 'completed' && job.zipData) {
+      // Criar filename seguro (apenas ASCII)
+      const safeFilename = job.cursoTitulo
+        .normalize('NFD') // Decompõe caracteres acentuados
+        .replace(/[\u0300-\u036f]/g, '') // Remove acentos
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-') // Substitui caracteres não alfanuméricos por '-'
+        .replace(/^-+|-+$/g, ''); // Remove '-' no início/fim
+
       // Retornar ZIP
-      const response = new NextResponse(new Uint8Array(job.zipBuffer), {
+      const response = new NextResponse(job.zipData, {
         status: 200,
         headers: {
           'Content-Type': 'application/zip',
-          'Content-Disposition': `attachment; filename="scorm-${job.cursoTitulo.replace(/[^a-zA-Z0-9_-]/g, '_')}.zip"`,
+          'Content-Disposition': `attachment; filename="scorm-${safeFilename}.zip"`,
+          'Content-Length': job.zipData.length.toString(),
         },
       });
 
-      // Limpar job após download (opcional - pode manter por um tempo para redownload)
-      // deleteJob(jobId);
+      // Opcional: Limpar job após download (ou manter por 1 hora para redownload)
+      // await prisma.sCORMJob.delete({ where: { id: jobId } });
 
       return response;
     }

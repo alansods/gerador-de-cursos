@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getJob } from '@/lib/scorm-job-store';
+import { prisma } from '@/lib/prisma';
 import { requireAuth, createErrorResponse } from '@/lib/auth';
 
 /**
  * GET /api/scorm-status/[jobId]
- * Verifica o status de um job de geração SCORM
+ * Verifica o status de um job de geração SCORM (consulta no DB)
  */
 export async function GET(
   req: NextRequest,
@@ -23,7 +23,21 @@ export async function GET(
       return createErrorResponse('Job ID é obrigatório', 400);
     }
 
-    const job = getJob(jobId);
+    // Consultar job no banco de dados
+    const job = await prisma.sCORMJob.findUnique({
+      where: { id: jobId },
+      select: {
+        id: true,
+        cursoId: true,
+        cursoTitulo: true,
+        status: true,
+        progress: true,
+        error: true,
+        createdAt: true,
+        completedAt: true,
+        // Não retornar zipData para economizar largura de banda
+      },
+    });
 
     if (!job) {
       return NextResponse.json(
@@ -32,7 +46,7 @@ export async function GET(
       );
     }
 
-    // Retornar status do job (sem o zipBuffer para economizar memória)
+    // Retornar status do job
     return NextResponse.json({
       id: job.id,
       cursoId: job.cursoId,
