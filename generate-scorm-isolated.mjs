@@ -714,41 +714,36 @@ async function executeIsolatedBuild(cursoFile, workDir) {
   if (isVercel) {
     console.log('   🔧 Configurando ambiente Vercel...');
     
-    // ✅ CORREÇÃO: Apontar diretamente para o executável JavaScript real do Next.js
-    // O caminho correto é node_modules/next/dist/bin/next (não o atalho .bin/next)
-    // Isso funciona em qualquer lugar onde o pacote next esteja instalado
-    const nextJsEntry = path.join(process.cwd(), 'node_modules', 'next', 'dist', 'bin', 'next');
-    
-    // Verificar se o arquivo existe
     try {
-      await fs.access(nextJsEntry);
-      console.log(`   ✅ Executável Next.js encontrado: ${nextJsEntry}`);
+      // ✅ MÁGICA DO NODE: Encontrar onde o pacote 'next' está realmente instalado
+      // Usa require.resolve() para descobrir o caminho exato, mesmo após tree shaking
+      const require = createRequire(import.meta.url);
       
-      // Usar process.execPath (Node.js atual) para rodar o script do Next.js
-      buildCommand = process.execPath; // Caminho absoluto do Node.js atual
-      buildArgs = [nextJsEntry, 'build', '--no-lint'];
+      // Tenta resolver o caminho do binário do next
+      // Geralmente resolve para: .../node_modules/next/dist/bin/next
+      const nextExecutablePath = require.resolve('next/dist/bin/next');
       
-      console.log(`   🔧 Usando executável JavaScript direto do Next.js`);
+      console.log(`   ✅ Executável Next.js resolvido: ${nextExecutablePath}`);
+      
+      // Usar process.execPath (o próprio executável 'node' atual)
+      buildCommand = process.execPath;
+      buildArgs = [nextExecutablePath, 'build', '--no-lint'];
+      
+      console.log(`   🔧 Usando executável JavaScript direto do Next.js (via require.resolve)`);
       console.log(`   📍 Node.js: ${buildCommand}`);
-      console.log(`   📍 Next.js: ${nextJsEntry}`);
-    } catch (err) {
-      console.error(`   ❌ Executável Next.js não encontrado em: ${nextJsEntry}`);
-      console.error('   Tentando fallback para node_modules/.bin/next...');
+      console.log(`   📍 Next.js: ${nextExecutablePath}`);
+    } catch (resolveError) {
+      console.error('   ❌ Falha fatal: Não foi possível resolver next/dist/bin/next');
+      console.error('   Erro:', resolveError.message);
+      console.error('   Isso geralmente significa que o Next.js foi removido pelo tree shaking da Vercel');
+      console.error('   Verifique se next.config.ts inclui "./node_modules/next/**/*" em outputFileTracingIncludes');
       
-      // Fallback: tentar o atalho .bin/next
-      const binNext = path.join(process.cwd(), 'node_modules', '.bin', 'next');
-      const binExists = await pathExists(binNext).catch(() => false);
+      // Última tentativa desesperada: caminho hardcoded
+      const hardcodedPath = path.join(process.cwd(), 'node_modules', 'next', 'dist', 'bin', 'next');
+      console.log(`   ⚠️  Tentando caminho manual: ${hardcodedPath}`);
       
-      if (binExists) {
-        buildCommand = process.execPath;
-        buildArgs = [binNext, 'build', '--no-lint'];
-        console.log(`   ⚠️  Usando fallback: ${binNext}`);
-      } else {
-        // Último recurso: npx
-        buildCommand = 'npx';
-        buildArgs = ['--yes', 'next', 'build', '--no-lint'];
-        console.log('   ⚠️  Usando npx como último recurso');
-      }
+      buildCommand = process.execPath;
+      buildArgs = [hardcodedPath, 'build', '--no-lint'];
     }
   } else {
     // Ambiente Local: usar pnpm
