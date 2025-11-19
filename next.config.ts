@@ -11,6 +11,22 @@ const nextConfig: NextConfig = {
     // Mas ainda roda o linting localmente com npm run lint
     ignoreDuringBuilds: true,
   },
+
+  // Forçar inclusão de arquivos necessários para a função serverless /api/generate-scorm-v2
+  // Na Vercel, arquivos não usados são removidos do bundle para otimizar tamanho
+  // Isso garante que public/, generate-scorm-isolated.mjs e arquivos de config sejam incluídos
+  experimental: {
+    outputFileTracingIncludes: {
+      '/api/generate-scorm-v2': [
+        './public/**/*',                    // Toda a pasta public (templates, assets, etc)
+        './generate-scorm-isolated.mjs',    // Script isolado de geração SCORM
+        './package.json',                   // Para ler dependências e versões
+        './tsconfig.json',                  // Configuração TypeScript (se necessário)
+        './next.config.ts',                 // Configuração Next.js (se necessário)
+        './src/**/*',                       // Código fonte necessário para o build SCORM
+      ],
+    },
+  },
   
   // Configuração para exportação estática (usado para gerar SCORM)
   // Quando output: 'export' está ativo, o Next.js gera HTML estático
