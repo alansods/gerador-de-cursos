@@ -4,7 +4,6 @@ import path from 'path';
 import { spawn } from 'child_process';
 import { CursoGerado } from '@/types/gerador-curso';
 import { requireAuth, createErrorResponse } from '@/lib/auth';
-import { generateSCORMPackage } from '@/lib/scorm-service';
 
 /**
  * POST /api/generate-scorm-v2
@@ -28,70 +27,65 @@ export async function POST(req: NextRequest) {
     const cursoData = curso as CursoGerado;
     const cursoId = cursoData.id;
 
-    console.log(`🚀 [API generate-scorm-v2] Gerando SCORM para: ${cursoData.titulo}`);
+    // 1. Criar diretório temporário se não existir
+    const scormBuildDir = path.join(process.cwd(), '.scorm-build');
+    await fs.mkdir(scormBuildDir, { recursive: true });
 
-    // ESTRATÉGIA HÍBRIDA: Tentar método simples primeiro (Vercel-safe), depois fallback para build
-    // Método 1: Geração direta sem build (rápido, compatível com Vercel)
+    // 2. Salvar curso em arquivo JSON temporário
+    const cursoFile = path.join(scormBuildDir, `curso-${cursoId}.json`);
+    await fs.writeFile(cursoFile, JSON.stringify(cursoData, null, 2), 'utf-8');
+
+    // 3. Definir caminho do ZIP de saída
+    const outputZip = path.join(scormBuildDir, `scorm-${cursoId}.zip`);
+
+    // 4. Executar script isolado
+    console.log(`🚀 [API generate-scorm-v2] Executando build SCORM para curso: ${cursoData.titulo}`);
+    console.log(`   📁 Curso JSON: ${cursoFile}`);
+    console.log(`   📦 Output ZIP: ${outputZip}`);
+
+    const scriptPath = path.join(process.cwd(), 'generate-scorm-isolated.mjs');
+    
+    // Verificar se o script existe
     try {
-      console.log('📦 [API generate-scorm-v2] Tentando método direto (sem build)...');
-      const zipBuffer = await generateSCORMPackage(cursoData);
-      console.log(`✅ [API generate-scorm-v2] SCORM gerado com sucesso (método direto): ${(zipBuffer.length / 1024 / 1024).toFixed(2)}MB`);
-      
-      return new NextResponse(zipBuffer, {
-        status: 200,
-        headers: {
-          'Content-Type': 'application/zip',
-          'Content-Disposition': `attachment; filename="scorm-${cursoData.titulo.replace(/[^a-zA-Z0-9_-]/g, '_')}.zip"`,
-        },
-      });
-    } catch (directError) {
-      console.warn('⚠️ [API generate-scorm-v2] Método direto falhou, tentando build completo...', directError);
-      
-      // Método 2: Fallback para build completo (apenas se método direto falhar)
-      // Isso só funciona localmente, na Vercel vai dar timeout, mas pelo menos tentamos
-      try {
-        const scormBuildDir = path.join(process.cwd(), '.scorm-build');
-        await fs.mkdir(scormBuildDir, { recursive: true });
-
-        const cursoFile = path.join(scormBuildDir, `curso-${cursoId}.json`);
-        await fs.writeFile(cursoFile, JSON.stringify(cursoData, null, 2), 'utf-8');
-
-        const outputZip = path.join(scormBuildDir, `scorm-${cursoId}.zip`);
-
-        const scriptPath = path.join(process.cwd(), 'generate-scorm-isolated.mjs');
-        
-        try {
-          await fs.access(scriptPath);
-        } catch {
-          throw new Error('Script de geração SCORM não encontrado');
-        }
-
-        const buildResult = await executeBuildScript(scriptPath, cursoFile, outputZip);
-
-        if (!buildResult.success) {
-          throw new Error(`Build falhou: ${buildResult.error}`);
-        }
-
-        await fs.access(outputZip);
-        const zipBuffer = await fs.readFile(outputZip);
-
-        cleanupTempFiles(cursoId, cursoFile, outputZip).catch((err) => {
-          console.error('⚠️ [API generate-scorm-v2] Erro ao limpar arquivos temporários:', err);
-        });
-
-        return new NextResponse(zipBuffer, {
-          status: 200,
-          headers: {
-            'Content-Type': 'application/zip',
-            'Content-Disposition': `attachment; filename="scorm-${cursoData.titulo.replace(/[^a-zA-Z0-9_-]/g, '_')}.zip"`,
-          },
-        });
-      } catch (buildError) {
-        console.error('❌ [API generate-scorm-v2] Ambos os métodos falharam:', buildError);
-        // Se ambos falharem, retornar erro do método direto (mais provável de funcionar)
-        throw directError;
-      }
+      await fs.access(scriptPath);
+    } catch {
+      return createErrorResponse('Script de geração SCORM não encontrado', 500);
     }
+
+    // Executar o script
+    const buildResult = await executeBuildScript(scriptPath, cursoFile, outputZip);
+
+    if (!buildResult.success) {
+      console.error('❌ [API generate-scorm-v2] Erro no build:', buildResult.error);
+      return createErrorResponse(
+        `Falha ao gerar pacote SCORM: ${buildResult.error}`,
+        500
+      );
+    }
+
+    // 5. Verificar se o ZIP foi criado
+    try {
+      await fs.access(outputZip);
+    } catch {
+      return createErrorResponse('ZIP não foi gerado', 500);
+    }
+
+    // 6. Ler o ZIP e retornar
+    const zipBuffer = await fs.readFile(outputZip);
+
+    // 7. Limpar arquivos temporários (opcional, pode ser feito em background)
+    cleanupTempFiles(cursoId, cursoFile, outputZip).catch((err) => {
+      console.error('⚠️ [API generate-scorm-v2] Erro ao limpar arquivos temporários:', err);
+    });
+
+    // 8. Retornar ZIP
+    return new NextResponse(new Uint8Array(zipBuffer), {
+      status: 200,
+      headers: {
+        'Content-Type': 'application/zip',
+        'Content-Disposition': `attachment; filename="scorm-${cursoData.titulo.replace(/[^a-zA-Z0-9_-]/g, '_')}.zip"`,
+      },
+    });
   } catch (error) {
     console.error('❌ [API generate-scorm-v2] Erro:', error);
     return createErrorResponse('Erro interno ao gerar SCORM', 500, error);
