@@ -15,17 +15,16 @@ const nextConfig: NextConfig = {
   // Forçar inclusão de arquivos necessários para a função serverless /api/generate-scorm-v2
   // Na Vercel, arquivos não usados são removidos do bundle para otimizar tamanho
   // Isso garante que public/, generate-scorm-isolated.mjs e arquivos de config sejam incluídos
-  experimental: {
-    outputFileTracingIncludes: {
-      '/api/generate-scorm-v2': [
-        './public/**/*',                    // Toda a pasta public (templates, assets, etc)
-        './generate-scorm-isolated.mjs',    // Script isolado de geração SCORM
-        './package.json',                   // Para ler dependências e versões
-        './tsconfig.json',                  // Configuração TypeScript (se necessário)
-        './next.config.ts',                 // Configuração Next.js (se necessário)
-        './src/**/*',                       // Código fonte necessário para o build SCORM
-      ],
-    },
+  // Nota: outputFileTracingIncludes foi movido de experimental para o nível raiz no Next.js 15
+  outputFileTracingIncludes: {
+    '/api/generate-scorm-v2': [
+      './public/**/*',                    // Toda a pasta public (templates, assets, etc)
+      './generate-scorm-isolated.mjs',    // Script isolado de geração SCORM
+      './package.json',                   // Para ler dependências e versões
+      './tsconfig.json',                  // Configuração TypeScript (se necessário)
+      './next.config.ts',                 // Configuração Next.js (se necessário)
+      './src/**/*',                       // Código fonte necessário para o build SCORM
+    ],
   },
   
   // Configuração para exportação estática (usado para gerar SCORM)
