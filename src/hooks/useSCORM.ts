@@ -22,16 +22,17 @@ export const useSCORM = () => {
 
   /**
    * Faz polling do status do job até completar ou falhar
+   * Geração direta é rápida (< 1 segundo), mas mantemos margem de segurança
    */
   const pollJobStatus = async (jobId: string, filename: string, toastId: string): Promise<void> => {
-    const maxAttempts = 300; // 5 minutos máximo (300 * 1s)
+    const maxAttempts = 60; // 1 minuto máximo (60 * 1s) - suficiente para geração direta
     let attempts = 0;
 
     const poll = async (): Promise<void> => {
       attempts++;
 
       if (attempts > maxAttempts) {
-        throw new Error('Timeout: Build demorou mais de 5 minutos');
+        throw new Error('Timeout: Geração demorou mais de 1 minuto');
       }
 
       try {
@@ -138,7 +139,7 @@ export const useSCORM = () => {
     setProgress(null);
     
     const toastId = String(toast.loading('Iniciando geração SCORM...', {
-      description: `Preparando build para "${curso.titulo}". Isso pode levar alguns minutos.`,
+      description: `Gerando pacote para "${curso.titulo}". Aguarde alguns segundos.`,
     }));
 
     try {
@@ -163,9 +164,9 @@ export const useSCORM = () => {
       const { jobId } = await response.json();
       console.log('✅ [useSCORM] Job criado:', jobId);
 
-      toast.loading('Build em andamento...', {
+      toast.loading('Geração em andamento...', {
         id: toastId,
-        description: 'Aguardando conclusão do build. Isso pode levar alguns minutos.',
+        description: 'Aguardando conclusão. Isso deve levar apenas alguns segundos.',
       });
 
       // 2. Fazer polling do status até completar
