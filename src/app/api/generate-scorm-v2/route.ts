@@ -1,13 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { promises as fs } from 'fs';
 import path from 'path';
-import { spawn } from 'child_process';
 import { CursoGerado } from '@/types/gerador-curso';
 import { requireAuth, createErrorResponse } from '@/lib/auth';
+import { generateSCORMPackage } from '@/lib/scorm-service';
 
 /**
  * POST /api/generate-scorm-v2
- * Gera um pacote SCORM usando build isolado do Next.js
+ * Gera um pacote SCORM diretamente sem build (solução Vercel-compatible)
+ * 
+ * Esta implementação usa templates HTML gerados em memória, evitando:
+ * - Build do Next.js em runtime (timeout)
+ * - Symlinks (erro de deployment)
+ * - Dependências complexas
+ * 
+ * Tempo estimado: < 1 segundo (vs 2-5 minutos com build)
  */
 export async function POST(req: NextRequest) {
   const authResult = await requireAuth(req);
@@ -27,91 +34,17 @@ export async function POST(req: NextRequest) {
     const cursoData = curso as CursoGerado;
     const cursoId = cursoData.id;
 
-    // 1. Criar diretório temporário - usar /tmp na Vercel, .scorm-build localmente
-    const isVercel = process.env.VERCEL === '1' || process.env.VERCEL_ENV;
-    const scormBuildDir = isVercel 
-      ? path.join('/tmp', '.scorm-build')
-      : path.join(process.cwd(), '.scorm-build');
+    console.log(`📦 [API generate-scorm-v2] Iniciando geração SCORM para: ${cursoData.titulo}`);
+    console.log(`   📍 Curso ID: ${cursoId}`);
+    console.log(`   📍 Unidades: ${cursoData.unidades?.length || 0}`);
     
-    console.log(`📁 [API generate-scorm-v2] Ambiente: ${isVercel ? 'Vercel' : 'Local'}`);
-    console.log(`📁 [API generate-scorm-v2] Diretório de build: ${scormBuildDir}`);
-    console.log(`📁 [API generate-scorm-v2] CWD: ${process.cwd()}`);
+    // ✅ SOLUÇÃO DIRETA: Usar generateSCORMPackage() que gera tudo em memória
+    // Não precisa de build, symlinks, ou arquivos temporários complexos
+    const zipBuffer = await generateSCORMPackage(cursoData);
     
-    try {
-      await fs.mkdir(scormBuildDir, { recursive: true });
-      console.log(`✅ [API generate-scorm-v2] Diretório criado: ${scormBuildDir}`);
-    } catch (mkdirError) {
-      console.error(`❌ [API generate-scorm-v2] Erro ao criar diretório:`, mkdirError);
-      throw new Error(`Falha ao criar diretório temporário: ${scormBuildDir}. Erro: ${mkdirError instanceof Error ? mkdirError.message : 'Desconhecido'}`);
-    }
+    console.log(`✅ [API generate-scorm-v2] SCORM gerado com sucesso (${(zipBuffer.length / 1024).toFixed(2)} KB)`);
 
-    // 2. Salvar curso em arquivo JSON temporário
-    const cursoFile = path.join(scormBuildDir, `curso-${cursoId}.json`);
-    await fs.writeFile(cursoFile, JSON.stringify(cursoData, null, 2), 'utf-8');
-
-    // 3. Definir caminho do ZIP de saída
-    const outputZip = path.join(scormBuildDir, `scorm-${cursoId}.zip`);
-
-    // 4. Executar script isolado
-    console.log(`🚀 [API generate-scorm-v2] Executando build SCORM para curso: ${cursoData.titulo}`);
-    console.log(`   📁 Curso JSON: ${cursoFile}`);
-    console.log(`   📦 Output ZIP: ${outputZip}`);
-
-    const scriptPath = path.join(process.cwd(), 'generate-scorm-isolated.mjs');
-    
-    console.log(`📜 [API generate-scorm-v2] Verificando script: ${scriptPath}`);
-    
-    // Verificar se o script existe
-    try {
-      await fs.access(scriptPath);
-      const stats = await fs.stat(scriptPath);
-      console.log(`✅ [API generate-scorm-v2] Script encontrado (${(stats.size / 1024).toFixed(2)} KB)`);
-    } catch (accessError) {
-      console.error(`❌ [API generate-scorm-v2] Script não encontrado: ${scriptPath}`);
-      console.error(`   📍 CWD: ${process.cwd()}`);
-      console.error(`   📍 Erro:`, accessError);
-      
-      // Listar arquivos na raiz para debug
-      try {
-        const rootFiles = await fs.readdir(process.cwd());
-        console.log(`   📋 Arquivos na raiz: ${rootFiles.slice(0, 10).join(', ')}...`);
-      } catch {
-        // Ignorar se não conseguir listar
-      }
-      
-      return createErrorResponse(
-        `Script de geração SCORM não encontrado em: ${scriptPath}`,
-        500
-      );
-    }
-
-    // Executar o script
-    const buildResult = await executeBuildScript(scriptPath, cursoFile, outputZip);
-
-    if (!buildResult.success) {
-      console.error('❌ [API generate-scorm-v2] Erro no build:', buildResult.error);
-      return createErrorResponse(
-        `Falha ao gerar pacote SCORM: ${buildResult.error}`,
-        500
-      );
-    }
-
-    // 5. Verificar se o ZIP foi criado
-    try {
-      await fs.access(outputZip);
-    } catch {
-      return createErrorResponse('ZIP não foi gerado', 500);
-    }
-
-    // 6. Ler o ZIP e retornar
-    const zipBuffer = await fs.readFile(outputZip);
-
-    // 7. Limpar arquivos temporários (opcional, pode ser feito em background)
-    cleanupTempFiles(cursoId, cursoFile, outputZip).catch((err) => {
-      console.error('⚠️ [API generate-scorm-v2] Erro ao limpar arquivos temporários:', err);
-    });
-
-    // 8. Retornar ZIP
+    // Retornar ZIP diretamente
     return new NextResponse(new Uint8Array(zipBuffer), {
       status: 200,
       headers: {
@@ -122,19 +55,10 @@ export async function POST(req: NextRequest) {
   } catch (error) {
     console.error('❌ [API generate-scorm-v2] Erro:', error);
     
-    // Log detalhado para identificar arquivo faltante
+    // Log detalhado
     if (error instanceof Error) {
       console.error('   📍 Mensagem:', error.message);
       console.error('   📍 Stack:', error.stack);
-      
-      // Se for ENOENT, mostrar caminho exato
-      if (error.message.includes('ENOENT')) {
-        const match = error.message.match(/ENOENT:.*?['"]([^'"]+)['"]/);
-        if (match) {
-          console.error(`   📍 Arquivo não encontrado: ${match[1]}`);
-          console.error(`   📍 CWD: ${process.cwd()}`);
-        }
-      }
     }
     
     return createErrorResponse(
@@ -145,113 +69,11 @@ export async function POST(req: NextRequest) {
   }
 }
 
-/**
- * Executa o script de build isolado
- */
-function executeBuildScript(
-  scriptPath: string,
-  cursoFile: string,
-  outputZip: string
-): Promise<{ success: boolean; error?: string }> {
-  return new Promise((resolve) => {
-    // Na Vercel, garantir que NODE_PATH aponte para node_modules correto
-    const nodePath = path.join(process.cwd(), 'node_modules');
-    const env = {
-      ...process.env,
-      FORCE_COLOR: '0',
-      NODE_PATH: nodePath, // Garantir que Node.js encontre os módulos
-      NODE_ENV: process.env.NODE_ENV || 'production',
-    };
-    
-    console.log(`🔧 [API generate-scorm-v2] Executando script com NODE_PATH: ${nodePath}`);
-    console.log(`🔧 [API generate-scorm-v2] CWD: ${process.cwd()}`);
-    console.log(`🔧 [API generate-scorm-v2] Script: ${scriptPath}`);
-    
-    const buildProcess = spawn('node', [scriptPath, cursoFile, outputZip], {
-      cwd: process.cwd(), // Executar na raiz do projeto para ter acesso ao node_modules
-      env: env,
-      stdio: ['ignore', 'pipe', 'pipe'],
-    });
-
-    let stdout = '';
-    let stderr = '';
-
-    buildProcess.stdout?.on('data', (data) => {
-      stdout += data.toString();
-      // Log em tempo real (opcional)
-      console.log(`[Build] ${data.toString().trim()}`);
-    });
-
-    buildProcess.stderr?.on('data', (data) => {
-      stderr += data.toString();
-      // Log de erros em tempo real
-      console.error(`[Build Error] ${data.toString().trim()}`);
-    });
-
-    buildProcess.on('close', (code) => {
-      if (code === 0) {
-        resolve({ success: true });
-      } else {
-        resolve({
-          success: false,
-          error: `Script falhou com código ${code}. ${stderr || stdout}`,
-        });
-      }
-    });
-
-    buildProcess.on('error', (error) => {
-      resolve({
-        success: false,
-        error: `Erro ao executar script: ${error.message}`,
-      });
-    });
-
-    // Timeout de 10 minutos
-    setTimeout(() => {
-      if (!buildProcess.killed) {
-        buildProcess.kill('SIGTERM');
-        resolve({
-          success: false,
-          error: 'Timeout: Build demorou mais de 10 minutos',
-        });
-      }
-    }, 600000); // 10 minutos
-  });
-}
-
-/**
- * Limpa arquivos temporários após a geração
- */
-async function cleanupTempFiles(
-  cursoId: string,
-  cursoFile: string,
-  outputZip: string
-): Promise<void> {
-  try {
-    // Remover arquivo JSON do curso
-    try {
-      await fs.unlink(cursoFile);
-      console.log('   ✅ [API generate-scorm-v2] Arquivo JSON temporário removido');
-    } catch {
-      // Ignorar se não existir
-    }
-
-    // Remover ZIP (opcional - pode manter para cache)
-    // await fs.unlink(outputZip).catch(() => {});
-
-    // Remover diretório out/ se existir
-    const outDir = path.join(process.cwd(), 'out');
-    try {
-      await fs.rm(outDir, { recursive: true, force: true });
-      console.log('   ✅ [API generate-scorm-v2] Diretório out/ removido');
-    } catch {
-      // Ignorar erros
-    }
-
-    console.log('✅ [API generate-scorm-v2] Limpeza concluída');
-  } catch (error) {
-    console.error('⚠️ [API generate-scorm-v2] Erro na limpeza:', error);
-    // Não falhar se a limpeza der erro
-  }
-}
+// ✅ Funções removidas: não são mais necessárias
+// A geração SCORM agora é feita diretamente em memória via generateSCORMPackage()
+// Isso elimina a necessidade de:
+// - Scripts de build isolados
+// - Arquivos temporários
+// - Processos spawn
+// - Limpeza de arquivos
 
