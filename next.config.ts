@@ -12,29 +12,9 @@ const nextConfig: NextConfig = {
     ignoreDuringBuilds: true,
   },
 
-  // Forçar inclusão de arquivos necessários para a função serverless /api/generate-scorm-v2
-  // Na Vercel, arquivos não usados são removidos do bundle para otimizar tamanho
-  // Isso garante que public/, generate-scorm-isolated.mjs e arquivos de config sejam incluídos
-  // Nota: outputFileTracingIncludes foi movido de experimental para o nível raiz no Next.js 15
-  outputFileTracingIncludes: {
-    '/api/generate-scorm-v2': [
-      './public/**/*',                    // Toda a pasta public (templates, assets, etc)
-      './generate-scorm-isolated.mjs',    // Script isolado de geração SCORM
-      './package.json',                   // Para ler dependências e versões
-      './tsconfig.json',                  // Configuração TypeScript (se necessário)
-      './next.config.ts',                 // Configuração Next.js (se necessário)
-      './src/**/*',                       // Código fonte necessário para o build SCORM
-      // ✅ CRÍTICO: Forçar inclusão do binário e dependências do Next.js
-      // Sem isso, a Vercel remove o Next.js via tree shaking (API routes não precisam fazer build)
-      // IMPORTANTE: Não incluir node_modules completo para evitar problemas com symlinks
-      // Em vez disso, incluir apenas os arquivos essenciais do Next.js
-      './node_modules/next/dist/bin/next', // Binário do Next.js (arquivo específico, não pasta inteira)
-      './node_modules/next/dist/**/*',     // Distribuição do Next.js (sem symlinks)
-      './node_modules/@next/**/*',         // Pacotes internos do Next.js
-      './node_modules/react/index.js',     // React (arquivo principal)
-      './node_modules/react-dom/index.js', // React DOM (arquivo principal)
-    ],
-  },
+  // ✅ REMOVIDO: outputFileTracingIncludes causava erro de deployment
+  // A geração SCORM agora usa generateSCORMPackage() que gera HTML em memória
+  // Não precisa mais de binários do Next.js ou arquivos de build
   
   // Configuração para exportação estática (usado para gerar SCORM)
   // Quando output: 'export' está ativo, o Next.js gera HTML estático
