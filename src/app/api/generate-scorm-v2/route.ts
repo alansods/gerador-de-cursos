@@ -154,9 +154,22 @@ function executeBuildScript(
   outputZip: string
 ): Promise<{ success: boolean; error?: string }> {
   return new Promise((resolve) => {
+    // Na Vercel, garantir que NODE_PATH aponte para node_modules correto
+    const nodePath = path.join(process.cwd(), 'node_modules');
+    const env = {
+      ...process.env,
+      FORCE_COLOR: '0',
+      NODE_PATH: nodePath, // Garantir que Node.js encontre os módulos
+      NODE_ENV: process.env.NODE_ENV || 'production',
+    };
+    
+    console.log(`🔧 [API generate-scorm-v2] Executando script com NODE_PATH: ${nodePath}`);
+    console.log(`🔧 [API generate-scorm-v2] CWD: ${process.cwd()}`);
+    console.log(`🔧 [API generate-scorm-v2] Script: ${scriptPath}`);
+    
     const buildProcess = spawn('node', [scriptPath, cursoFile, outputZip], {
-      cwd: process.cwd(),
-      env: { ...process.env, FORCE_COLOR: '0' },
+      cwd: process.cwd(), // Executar na raiz do projeto para ter acesso ao node_modules
+      env: env,
       stdio: ['ignore', 'pipe', 'pipe'],
     });
 

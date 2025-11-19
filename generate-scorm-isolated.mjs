@@ -14,12 +14,79 @@
 import { spawn } from 'child_process';
 import { promises as fs } from 'fs';
 import path from 'path';
-import JSZip from 'jszip';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
+import { createRequire } from 'module';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
+
+// Função para carregar JSZip de forma robusta
+async function loadJSZip() {
+  try {
+    // Tentar importação direta primeiro
+    const jszipModule = await import('jszip');
+    return jszipModule.default || jszipModule;
+  } catch (importError) {
+    // Se falhar, tentar usar require (compatibilidade)
+    try {
+      const require = createRequire(import.meta.url);
+      return require('jszip');
+    } catch (requireError) {
+      // Se ambos falharem, tentar resolver manualmente
+      const projectRoot = process.cwd();
+      const jszipPath = path.join(projectRoot, 'node_modules', 'jszip');
+      try {
+        // Tentar diferentes caminhos possíveis
+        const possiblePaths = [
+          path.join(jszipPath, 'index.js'),
+          path.join(jszipPath, 'lib', 'index.js'),
+          path.join(jszipPath, 'dist', 'jszip.min.js'),
+        ];
+        
+        for (const jszipFile of possiblePaths) {
+          try {
+            const jszipModule = await import(jszipFile);
+            return jszipModule.default || jszipModule;
+          } catch {
+            // Tentar próximo caminho
+            continue;
+          }
+        }
+        
+        throw new Error('Nenhum caminho válido encontrado');
+      } catch (manualError) {
+        console.error('❌ [SCORM Isolated] Erro ao carregar JSZip:');
+        console.error('   Import direto:', importError.message);
+        console.error('   Require:', requireError.message);
+        console.error('   Manual:', manualError.message);
+        console.error('   Project root:', projectRoot);
+        console.error('   JSZip path:', jszipPath);
+        console.error('   NODE_PATH:', process.env.NODE_PATH);
+        console.error('   CWD:', process.cwd());
+        
+        // Listar node_modules para debug
+        try {
+          const nodeModulesDir = path.join(projectRoot, 'node_modules');
+          const exists = await fs.access(nodeModulesDir).then(() => true).catch(() => false);
+          if (exists) {
+            const files = await fs.readdir(nodeModulesDir);
+            console.error('   Node modules encontrados:', files.slice(0, 10).join(', '), '...');
+          } else {
+            console.error('   Node modules não encontrado em:', nodeModulesDir);
+          }
+        } catch {
+          // Ignorar
+        }
+        
+        throw new Error(`Não foi possível carregar JSZip. Verifique se está instalado: npm install jszip`);
+      }
+    }
+  }
+}
+
+// Variável global para armazenar JSZip após carregamento
+let JSZip;
 
 // ✅ Rastreamento global de arquivos/pastas temporárias para limpeza
 let tempPaths = {
@@ -205,12 +272,19 @@ async function main() {
     await fs.rm(workDir, { recursive: true, force: true });
     console.log('✅ Diretório de trabalho removido');
 
-    // 7. Criar ZIP SCORM
+    // 7. Carregar JSZip antes de criar o ZIP
+    console.log('\n📦 [SCORM Isolated] Carregando JSZip...');
+    if (!JSZip) {
+      JSZip = await loadJSZip();
+      console.log('✅ JSZip carregado com sucesso');
+    }
+    
+    // 8. Criar ZIP SCORM
     console.log('\n📦 [SCORM Isolated] Criando pacote ZIP SCORM...');
     await createSCORMZip(outputZipPath, cursoData, cursoId);
     console.log('✅ ZIP SCORM criado');
 
-    // 8. Limpar arquivos temporários
+    // 9. Limpar arquivos temporários
     console.log('\n🧹 [SCORM Isolated] Limpando arquivos temporários...');
     
     // Remover arquivo temporário do curso
@@ -656,6 +730,12 @@ async function executeIsolatedBuild(cursoFile, workDir) {
  * Cria o pacote ZIP SCORM
  */
 async function createSCORMZip(outputPath, curso, cursoId) {
+  // Garantir que JSZip está carregado
+  if (!JSZip) {
+    console.log('   📦 Carregando JSZip...');
+    JSZip = await loadJSZip();
+  }
+  
   const zip = new JSZip();
   const outDir = path.join(process.cwd(), 'out');
   const publicImagesDir = path.join(process.cwd(), 'public', 'scorm-images', cursoId);
