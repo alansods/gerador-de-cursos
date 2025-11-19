@@ -735,6 +735,7 @@ async function executeIsolatedBuild(cursoFile, workDir) {
       ...process.env,
       NODE_ENV: 'production',
       NEXT_OUTPUT_EXPORT: 'true',
+      NEXT_TELEMETRY_DISABLED: '1', // Desabilitar telemetria do Next.js
       SCORM_BUILD_CURSO_FILE: workCursoFile, // ✅ Caminho no diretório isolado
       NEXT_PUBLIC_IS_SCORM_BUILD: 'true', // ✅ Flag para indicar build SCORM
     };
