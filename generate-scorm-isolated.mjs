@@ -696,6 +696,36 @@ async function executeIsolatedBuild(cursoFile, workDir) {
     await fs.rm(scormNextDir, { recursive: true, force: true });
   }
 
+  // Na Vercel, pnpm não está disponível, usar npx ou binário direto do Next.js
+  // Determinar comando de build antes de criar a Promise
+  const isVercel = process.env.VERCEL === '1' || process.env.VERCEL_ENV;
+  let buildCommand;
+  let buildArgs;
+  
+  if (isVercel) {
+    // Na Vercel, usar npx ou o binário direto do Next.js
+    // npx geralmente está disponível, mas se não estiver, usar o caminho direto
+    const nextBinPath = path.join(workDir, 'node_modules', '.bin', 'next');
+    const nextBinExists = await pathExists(nextBinPath).catch(() => false);
+    
+    if (nextBinExists) {
+      // Usar binário direto do Next.js
+      buildCommand = 'node';
+      buildArgs = [nextBinPath, 'build', '--no-lint'];
+      console.log(`   🔧 Usando binário direto do Next.js: ${nextBinPath}`);
+    } else {
+      // Tentar npx (geralmente disponível)
+      buildCommand = 'npx';
+      buildArgs = ['--yes', 'next', 'build', '--no-lint'];
+      console.log('   🔧 Usando npx para executar Next.js');
+    }
+  } else {
+    // Localmente, usar pnpm
+    buildCommand = 'pnpm';
+    buildArgs = ['next', 'build', '--no-lint'];
+    console.log('   🔧 Usando pnpm (ambiente local)');
+  }
+
   return new Promise((resolve, reject) => {
     // Usar o caminho do arquivo no diretório de trabalho isolado (já copiado acima)
     const env = {
@@ -715,37 +745,6 @@ async function executeIsolatedBuild(cursoFile, workDir) {
     console.log('   📍 Diretório atual:', process.cwd());
     console.log('   🔧 NODE_ENV:', env.NODE_ENV);
     console.log('   🔧 NEXT_OUTPUT_EXPORT:', env.NEXT_OUTPUT_EXPORT);
-    
-    // Na Vercel, pnpm não está disponível, usar npx ou binário direto do Next.js
-    // Tentar npx primeiro (disponível na maioria dos ambientes Node.js)
-    // Se falhar, usar o binário direto de node_modules
-    const isVercel = process.env.VERCEL === '1' || process.env.VERCEL_ENV;
-    let buildCommand;
-    let buildArgs;
-    
-    if (isVercel) {
-      // Na Vercel, usar npx ou o binário direto do Next.js
-      // npx geralmente está disponível, mas se não estiver, usar o caminho direto
-      const nextBinPath = path.join(workDir, 'node_modules', '.bin', 'next');
-      const nextBinExists = await pathExists(nextBinPath).catch(() => false);
-      
-      if (nextBinExists) {
-        // Usar binário direto do Next.js
-        buildCommand = 'node';
-        buildArgs = [nextBinPath, 'build', '--no-lint'];
-        console.log(`   🔧 Usando binário direto do Next.js: ${nextBinPath}`);
-      } else {
-        // Tentar npx (geralmente disponível)
-        buildCommand = 'npx';
-        buildArgs = ['--yes', 'next', 'build', '--no-lint'];
-        console.log('   🔧 Usando npx para executar Next.js');
-      }
-    } else {
-      // Localmente, tentar pnpm primeiro, depois npm, depois npx
-      buildCommand = 'pnpm';
-      buildArgs = ['next', 'build', '--no-lint'];
-      console.log('   🔧 Usando pnpm (ambiente local)');
-    }
     
     const buildProcess = spawn(buildCommand, buildArgs, {
       cwd: workDir, // ✅ Executar no diretório isolado, NÃO no projeto
