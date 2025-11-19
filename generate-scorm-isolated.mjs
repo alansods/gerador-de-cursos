@@ -696,28 +696,31 @@ async function executeIsolatedBuild(cursoFile, workDir) {
     await fs.rm(scormNextDir, { recursive: true, force: true });
   }
 
-  // Na Vercel, pnpm não está disponível, usar npx ou binário direto do Next.js
+  // Na Vercel, pnpm não está disponível, usar binário direto do Next.js
   // Determinar comando de build antes de criar a Promise
   const isVercel = process.env.VERCEL === '1' || process.env.VERCEL_ENV;
   let buildCommand;
   let buildArgs;
   
   if (isVercel) {
-    // Na Vercel, usar npx ou o binário direto do Next.js
-    // npx geralmente está disponível, mas se não estiver, usar o caminho direto
+    // Na Vercel, usar process.execPath (caminho absoluto do Node.js atual) 
+    // com o binário direto do Next.js em node_modules/.bin/next
+    // Isso garante compatibilidade e não depende de pnpm/npm/npx
     const nextBinPath = path.join(workDir, 'node_modules', '.bin', 'next');
     const nextBinExists = await pathExists(nextBinPath).catch(() => false);
     
     if (nextBinExists) {
-      // Usar binário direto do Next.js
-      buildCommand = 'node';
+      // Usar process.execPath (Node.js atual) com binário direto do Next.js
+      buildCommand = process.execPath; // Caminho absoluto do Node.js atual
       buildArgs = [nextBinPath, 'build', '--no-lint'];
-      console.log(`   🔧 Usando binário direto do Next.js: ${nextBinPath}`);
+      console.log(`   🔧 Usando binário direto do Next.js via Node.js atual`);
+      console.log(`   📍 Node.js: ${buildCommand}`);
+      console.log(`   📍 Next.js: ${nextBinPath}`);
     } else {
-      // Tentar npx (geralmente disponível)
+      // Fallback: tentar npx (geralmente disponível, mas menos confiável)
       buildCommand = 'npx';
       buildArgs = ['--yes', 'next', 'build', '--no-lint'];
-      console.log('   🔧 Usando npx para executar Next.js');
+      console.log('   ⚠️  Binário do Next.js não encontrado, usando npx (fallback)');
     }
   } else {
     // Localmente, usar pnpm
