@@ -177,7 +177,7 @@ async function tryRealBuild(
       console.log(`   📁 Curso: ${cursoFile}`);
       console.log(`   📦 Output: ${outputZip}`);
 
-      onProgress?.('Iniciando processo de build...');
+      onProgress?.('🚀 Iniciando processo de build (10%)');
 
       const buildProcess = spawn('node', [scriptPath, cursoFile, outputZip], {
         cwd: process.cwd(),
@@ -191,20 +191,20 @@ async function tryRealBuild(
       let stdout = '';
       let stderr = '';
 
-      buildProcess.stdout?.on('data', (data) => {
+      buildProcess.stdout?.on('data', async (data) => {
         const output = data.toString();
         stdout += output;
         console.log(`   [Build] ${output.trim()}`);
 
-        // Atualizar progresso baseado na saída
+        // Atualizar progresso baseado na saída (com await para garantir que salve no DB)
         if (output.includes('Creating an optimized production build')) {
-          onProgress?.('Criando build otimizado de produção...');
+          await onProgress?.('📦 Criando build otimizado de produção (20%)');
         } else if (output.includes('Compiled successfully')) {
-          onProgress?.('Compilação concluída com sucesso!');
+          await onProgress?.('✅ Compilação concluída com sucesso! (40%)');
         } else if (output.includes('Generating static pages')) {
-          onProgress?.('Gerando páginas estáticas...');
+          await onProgress?.('📄 Gerando páginas estáticas (70%)');
         } else if (output.includes('Finalizing page optimization')) {
-          onProgress?.('Finalizando otimização...');
+          await onProgress?.('🎨 Finalizando otimização (90%)');
         }
       });
 
@@ -234,8 +234,11 @@ async function tryRealBuild(
           if (code === 0) {
             // Verificar se o ZIP foi criado
             try {
+              await onProgress?.('📦 Empacotando arquivos SCORM (95%)');
               await fs.access(outputZip);
               const zipBuffer = await fs.readFile(outputZip);
+
+              await onProgress?.('✅ Build concluído! Preparando download (100%)');
 
               // Limpar arquivos temporários
               await fs.rm(buildDir, { recursive: true, force: true }).catch(() => {});
