@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, Download, AlertCircle, CheckCircle2, Clock, Eye, Trash2, XCircle } from 'lucide-react';
+import { Loader2, Download, AlertCircle, CheckCircle2, Clock, Eye, Trash2, XCircle, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface SCORMJob {
@@ -86,6 +86,41 @@ export default function SCORMJobsPage() {
     } catch (error) {
       console.error('Erro ao apagar job:', error);
       toast.error('Erro ao apagar item');
+    }
+  };
+
+  const restartJob = async (cursoId: string, cursoTitulo: string) => {
+    if (!confirm(`Deseja reiniciar o build para "${cursoTitulo}"?`)) return;
+
+    try {
+      // Buscar dados completos do curso
+      const cursoResponse = await fetch(`/api/cursos/${cursoId}`);
+      if (!cursoResponse.ok) {
+        throw new Error('Curso não encontrado');
+      }
+
+      const curso = await cursoResponse.json();
+
+      // Iniciar novo build
+      const buildResponse = await fetch('/api/generate-scorm-v2', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ curso }),
+      });
+
+      if (!buildResponse.ok) {
+        const error = await buildResponse.json();
+        throw new Error(error.error || 'Erro ao iniciar build');
+      }
+
+      const { jobId } = await buildResponse.json();
+      toast.success('Build reiniciado!');
+
+      // Redirecionar para página de progresso
+      router.push(`/scorm-build/${jobId}`);
+    } catch (error) {
+      console.error('Erro ao reiniciar build:', error);
+      toast.error(error instanceof Error ? error.message : 'Erro ao reiniciar build');
     }
   };
 
@@ -241,7 +276,30 @@ export default function SCORMJobsPage() {
                     </Button>
                   )}
 
-                  {(job.status === 'completed' || job.status === 'failed') && (
+                  {job.status === 'failed' && (
+                    <>
+                      <Button
+                        onClick={() => restartJob(job.cursoId, job.cursoTitulo)}
+                        variant="outline"
+                        size="sm"
+                        className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                      >
+                        <RefreshCw className="w-4 h-4 mr-2" />
+                        Reiniciar
+                      </Button>
+                      <Button
+                        onClick={() => deleteJob(job.id)}
+                        variant="outline"
+                        size="sm"
+                        className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                      >
+                        <Trash2 className="w-4 h-4 mr-2" />
+                        Apagar
+                      </Button>
+                    </>
+                  )}
+
+                  {job.status === 'completed' && (
                     <Button
                       onClick={() => deleteJob(job.id)}
                       variant="outline"
