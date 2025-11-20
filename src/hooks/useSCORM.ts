@@ -22,10 +22,6 @@ export const useSCORM = () => {
     setIsGenerating(true);
     setError(null);
 
-    const toastId = String(toast.loading('Iniciando build SCORM...', {
-      description: `Preparando build completo para "${curso.titulo}". Você será redirecionado para a página de progresso.`,
-    }));
-
     try {
       console.log('🌐 [useSCORM] Fazendo requisição para /api/generate-scorm-v2...');
 
@@ -48,14 +44,7 @@ export const useSCORM = () => {
       const { jobId } = await response.json();
       console.log(`✅ [useSCORM] Job criado: ${jobId}`);
 
-      // Fechar toast e redirecionar para página de progresso
-      toast.dismiss(toastId);
-      toast.success('Build iniciado!', {
-        description: 'Redirecionando para página de progresso...',
-        duration: 2000,
-      });
-
-      // Redirecionar para página de progresso
+      // Redirecionar para página de progresso (sem toasts - tela mostra tudo)
       router.push(`/scorm-build/${jobId}`);
 
     } catch (err) {
@@ -63,7 +52,6 @@ export const useSCORM = () => {
       console.error("Erro no useSCORM:", err);
       setError(errorMessage);
       toast.error('Erro ao Iniciar Build', {
-        id: toastId,
         description: errorMessage,
       });
       setIsGenerating(false);
