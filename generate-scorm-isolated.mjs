@@ -544,7 +544,7 @@ export default nextConfig;
     await fs.cp(tailwindPath, path.join(workDir, 'tailwind.config.ts'));
   }
   
-  // Copiar public/ completo
+  // Copiar public/ completo (ou criar vazio se não existir - comum na Vercel)
   const publicSrc = path.join(projectRoot, 'public');
   const publicDest = path.join(workDir, 'public');
   console.log(`   📁 Copiando public/ de ${publicSrc}...`);
@@ -557,8 +557,12 @@ export default nextConfig;
       throw new Error(`Falha ao copiar public/ de ${publicSrc} para ${publicDest}: ${cpError.message}`);
     }
   } else {
-    console.error(`   ❌ public/ não encontrado em: ${publicSrc}`);
-    throw new Error(`Diretório public/ não encontrado em: ${publicSrc}`);
+    // Na Vercel, public/ não está disponível para serverless functions
+    // Criar diretório vazio para evitar erros no build
+    console.warn(`   ⚠️ public/ não encontrado em: ${publicSrc}`);
+    console.log(`   📁 Criando public/ vazio (normal na Vercel)...`);
+    await fs.mkdir(publicDest, { recursive: true });
+    console.log('   ✅ public/ vazio criado');
   }
   
   // Copiar src/ mas excluindo pastas problemáticas
