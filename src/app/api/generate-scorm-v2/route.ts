@@ -179,6 +179,11 @@ async function tryRealBuild(
 
       onProgress?.('🚀 Iniciando processo de build (10%)');
 
+      console.log(`   🔍 [DEBUG] Verificando ambiente...`);
+      console.log(`   🔍 [DEBUG] isVercel: ${isVercel}`);
+      console.log(`   🔍 [DEBUG] Node version: ${process.version}`);
+      console.log(`   🔍 [DEBUG] CWD: ${process.cwd()}`);
+
       const buildProcess = spawn('node', [scriptPath, cursoFile, outputZip], {
         cwd: process.cwd(),
         env: {
@@ -188,12 +193,22 @@ async function tryRealBuild(
         stdio: ['ignore', 'pipe', 'pipe'],
       });
 
+      console.log(`   🔍 [DEBUG] Process spawned. PID: ${buildProcess.pid || 'undefined'}`);
+
+      if (!buildProcess.pid) {
+        throw new Error('Falha ao iniciar processo de build (PID undefined)');
+      }
+
       let stdout = '';
       let stderr = '';
+      let hasOutput = false;
+      let lastOutputTime = Date.now();
 
       buildProcess.stdout?.on('data', async (data) => {
         const output = data.toString();
         stdout += output;
+        hasOutput = true;
+        lastOutputTime = Date.now();
         console.log(`   [Build] ${output.trim()}`);
 
         // Atualizar progresso baseado na saída (com await para garantir que salve no DB)
@@ -211,21 +226,39 @@ async function tryRealBuild(
       buildProcess.stderr?.on('data', (data) => {
         const output = data.toString();
         stderr += output;
+        lastOutputTime = Date.now();
         console.error(`   [Build Error] ${output.trim()}`);
       });
 
-      // Timeout handler
+      // Timeout handler (total)
       timeoutId = setTimeout(() => {
         if (!processExited) {
           processExited = true;
           buildProcess.kill('SIGTERM');
-          reject(new Error(`Build timeout após ${timeout}ms`));
+          const errorMsg = hasOutput
+            ? `Build timeout após ${timeout}ms (houve output, mas não terminou)`
+            : `Build timeout após ${timeout}ms (SEM OUTPUT - processo travado ou spawn falhou)`;
+          reject(new Error(errorMsg));
         }
       }, timeout);
+
+      // Timeout de inatividade (se não houver output por 60s, algo está errado)
+      const inactivityCheck = setInterval(() => {
+        const timeSinceLastOutput = Date.now() - lastOutputTime;
+        if (timeSinceLastOutput > 60000 && !hasOutput && !processExited) {
+          console.error(`   ❌ [DEBUG] Processo sem output por ${timeSinceLastOutput}ms - possível travamento`);
+          clearInterval(inactivityCheck);
+          if (timeoutId) clearTimeout(timeoutId);
+          processExited = true;
+          buildProcess.kill('SIGKILL');
+          reject(new Error('Processo travado: sem output por mais de 60 segundos. Isso geralmente indica que o spawn() não funciona neste ambiente serverless.'));
+        }
+      }, 10000); // Verifica a cada 10 segundos
 
       buildProcess.on('close', async (code) => {
         if (processExited) return; // Já foi tratado pelo timeout
 
+        clearInterval(inactivityCheck);
         if (timeoutId) {
           clearTimeout(timeoutId);
         }
