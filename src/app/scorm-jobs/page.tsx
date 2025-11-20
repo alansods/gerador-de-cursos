@@ -5,7 +5,8 @@ import { useRouter } from 'next/navigation';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, Download, AlertCircle, CheckCircle2, Clock, Eye } from 'lucide-react';
+import { Loader2, Download, AlertCircle, CheckCircle2, Clock, Eye, Trash2, XCircle } from 'lucide-react';
+import { toast } from 'sonner';
 
 interface SCORMJob {
   id: string;
@@ -41,6 +42,50 @@ export default function SCORMJobsPage() {
       console.error('Erro ao buscar jobs:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const cancelJob = async (jobId: string) => {
+    if (!confirm('Deseja realmente cancelar este build?')) return;
+
+    try {
+      const response = await fetch(`/api/scorm-jobs/${jobId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'cancel' }),
+      });
+
+      if (response.ok) {
+        toast.success('Build cancelado com sucesso');
+        fetchJobs();
+      } else {
+        const error = await response.json();
+        toast.error(error.error || 'Erro ao cancelar build');
+      }
+    } catch (error) {
+      console.error('Erro ao cancelar job:', error);
+      toast.error('Erro ao cancelar build');
+    }
+  };
+
+  const deleteJob = async (jobId: string) => {
+    if (!confirm('Deseja realmente apagar este item? Esta ação não pode ser desfeita.')) return;
+
+    try {
+      const response = await fetch(`/api/scorm-jobs/${jobId}`, {
+        method: 'DELETE',
+      });
+
+      if (response.ok) {
+        toast.success('Item apagado com sucesso');
+        fetchJobs();
+      } else {
+        const error = await response.json();
+        toast.error(error.error || 'Erro ao apagar item');
+      }
+    } catch (error) {
+      console.error('Erro ao apagar job:', error);
+      toast.error('Erro ao apagar item');
     }
   };
 
@@ -143,13 +188,36 @@ export default function SCORMJobsPage() {
 
                 <div className="flex gap-2">
                   {job.status === 'building' && (
+                    <>
+                      <Button
+                        onClick={() => router.push(`/scorm-build/${job.id}`)}
+                        variant="outline"
+                        size="sm"
+                      >
+                        <Eye className="w-4 h-4 mr-2" />
+                        Ver Progresso
+                      </Button>
+                      <Button
+                        onClick={() => cancelJob(job.id)}
+                        variant="outline"
+                        size="sm"
+                        className="text-orange-600 hover:text-orange-700 hover:bg-orange-50"
+                      >
+                        <XCircle className="w-4 h-4 mr-2" />
+                        Cancelar
+                      </Button>
+                    </>
+                  )}
+
+                  {job.status === 'pending' && (
                     <Button
-                      onClick={() => router.push(`/scorm-build/${job.id}`)}
+                      onClick={() => cancelJob(job.id)}
                       variant="outline"
                       size="sm"
+                      className="text-orange-600 hover:text-orange-700 hover:bg-orange-50"
                     >
-                      <Eye className="w-4 h-4 mr-2" />
-                      Ver Progresso
+                      <XCircle className="w-4 h-4 mr-2" />
+                      Cancelar
                     </Button>
                   )}
 
@@ -170,6 +238,18 @@ export default function SCORMJobsPage() {
                     >
                       <Download className="w-4 h-4 mr-2" />
                       Baixar
+                    </Button>
+                  )}
+
+                  {(job.status === 'completed' || job.status === 'failed') && (
+                    <Button
+                      onClick={() => deleteJob(job.id)}
+                      variant="outline"
+                      size="sm"
+                      className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                    >
+                      <Trash2 className="w-4 h-4 mr-2" />
+                      Apagar
                     </Button>
                   )}
                 </div>

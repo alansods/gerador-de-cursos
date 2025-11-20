@@ -4,7 +4,8 @@ import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Loader2, Download, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { Loader2, Download, AlertCircle, CheckCircle2, XCircle } from 'lucide-react';
+import { toast } from 'sonner';
 
 interface JobStatus {
   id: string;
@@ -84,6 +85,30 @@ export default function SCORMBuildPage() {
       alert('Erro ao baixar o arquivo');
     } finally {
       setDownloading(false);
+    }
+  };
+
+  // Cancelar build
+  const handleCancel = async () => {
+    if (!confirm('Deseja realmente cancelar este build?')) return;
+
+    try {
+      const response = await fetch(`/api/scorm-jobs/${jobId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'cancel' }),
+      });
+
+      if (response.ok) {
+        toast.success('Build cancelado');
+        router.push('/scorm-jobs');
+      } else {
+        const error = await response.json();
+        toast.error(error.error || 'Erro ao cancelar build');
+      }
+    } catch (error) {
+      console.error('Erro ao cancelar:', error);
+      toast.error('Erro ao cancelar build');
     }
   };
 
@@ -188,12 +213,24 @@ export default function SCORMBuildPage() {
               </Button>
             )}
 
+            {(jobStatus.status === 'building' || jobStatus.status === 'pending') && (
+              <Button
+                onClick={handleCancel}
+                variant="outline"
+                size="lg"
+                className="text-orange-600 hover:text-orange-700 hover:bg-orange-50"
+              >
+                <XCircle className="mr-2 h-4 w-4" />
+                Cancelar Build
+              </Button>
+            )}
+
             <Button
-              onClick={() => router.push('/cursos')}
+              onClick={() => router.push('/scorm-jobs')}
               variant="outline"
               size="lg"
             >
-              Voltar para Cursos
+              Ver Histórico
             </Button>
           </div>
 
