@@ -435,6 +435,7 @@ async function prepareIsolatedWorkDir() {
     'api',
     'pdf-preview',
     'test-prisma',
+    'cursos', // ✅ Página de listagem de cursos (faz requisições API durante build)
     'cursos/[id]', // Rota dinâmica
     'cadastro',
     'configuracoes',

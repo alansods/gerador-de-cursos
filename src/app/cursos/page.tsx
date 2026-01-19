@@ -150,6 +150,12 @@ export default function CursosPage() {
 
   // Carregar cursos paginados do servidor
   useEffect(() => {
+    // ✅ Verificar se estamos em build estático (SCORM)
+    if (process.env.NEXT_OUTPUT_EXPORT === 'true' || process.env.NEXT_PUBLIC_IS_SCORM_BUILD === 'true') {
+      console.log("[CursosPage] ⏭️ Build estático detectado, pulando requisição");
+      return;
+    }
+
     console.log("[CursosPage] 📡 useEffect FETCH disparado", {
       currentPage,
       itemsPerPage,
