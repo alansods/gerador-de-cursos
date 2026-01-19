@@ -135,8 +135,8 @@ export default function PreviewCursoPage() {
                 {/* Units Section */}
                 {(curso.unidades || []).map((unidade, index) => (
                   <Link
-                    key={unidade.id}
-                    href={`/cursos/${cursoId}/preview/unidade/${unidade.id}`}
+                    key={unidade.id || `unidade-${index}`}
+                    href={`/cursos/${cursoId}/preview/unidade/${unidade.id || index}`}
                     onClick={() => setMenuOpen(false)}
                     className="group flex items-center gap-3 p-4 rounded-xl border border-gray-200 dark:border-gray-700 hover:border-orange-300 dark:hover:border-orange-600 hover:bg-orange-50/50 dark:hover:bg-orange-900/30 transition-all duration-200"
                   >
@@ -276,8 +276,8 @@ export default function PreviewCursoPage() {
               ) : (
                 curso.unidades.map((unidade, unidadeIndex) => (
                   <Link
-                    key={unidade.id}
-                    href={`/cursos/${cursoId}/preview/unidade/${unidade.id}`}
+                    key={unidade.id || `unidade-${unidadeIndex}`}
+                    href={`/cursos/${cursoId}/preview/unidade/${unidade.id || unidadeIndex}`}
                     className="block"
                   >
                     <Card className="overflow-hidden bg-white dark:bg-gray-800 hover:border-orange-600 dark:hover:border-orange-500 dark:border-gray-700 transition-all duration-200 cursor-pointer">

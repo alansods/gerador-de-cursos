@@ -921,7 +921,7 @@ export default function EditarCursoPage() {
       (u) => u.id === unidadeId
     );
     if (unidade && index > 0) {
-      const novoConteudo = [...unidade.conteudo];
+      const novoConteudo = [...(unidade.conteudo || [])];
       [novoConteudo[index - 1], novoConteudo[index]] = [
         novoConteudo[index],
         novoConteudo[index - 1],
@@ -935,8 +935,8 @@ export default function EditarCursoPage() {
     const unidade = (state.cursoAtual?.unidades || []).find(
       (u) => u.id === unidadeId
     );
-    if (unidade && index < unidade.conteudo.length - 1) {
-      const novoConteudo = [...unidade.conteudo];
+    if (unidade && index < (unidade.conteudo || []).length - 1) {
+      const novoConteudo = [...(unidade.conteudo || [])];
       [novoConteudo[index], novoConteudo[index + 1]] = [
         novoConteudo[index + 1],
         novoConteudo[index],
@@ -1090,7 +1090,7 @@ export default function EditarCursoPage() {
           <div className="space-y-8">
             {(state.cursoAtual.unidades || []).map((unidade, unidadeIndex) => (
               <Card
-                key={unidade.id}
+                key={unidade.id || `unidade-${unidadeIndex}`}
                 className="group bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm"
               >
                 <CardHeader className="bg-linear-to-r from-gray-50 to-blue-50 dark:from-gray-800 dark:to-gray-800 border-b border-[#e5e7eb] dark:border-gray-700">
@@ -1120,7 +1120,7 @@ export default function EditarCursoPage() {
 
                 <CardContent className="pt-6">
                   {/* Lista de Conteúdo */}
-                  {unidade.conteudo.length === 0 ? (
+                  {(unidade.conteudo || []).length === 0 ? (
                     <div className="relative overflow-hidden rounded-xl border-2 border-dashed border-blue-300 bg-gradient-to-br from-blue-50 via-white to-purple-50 py-12 px-6">
                       {/* Decorative elements */}
                       <div className="absolute top-0 left-0 w-full h-full opacity-5">
@@ -1155,7 +1155,7 @@ export default function EditarCursoPage() {
                     </div>
                   ) : (
                     <div className="grid grid-cols-1 md:grid-cols-12 gap-3">
-                        {unidade.conteudo.map((item, itemIndex) => (
+                        {(unidade.conteudo || []).map((item, itemIndex) => (
                         <div
                           key={item.id}
                           className={`group ${
@@ -1424,7 +1424,7 @@ export default function EditarCursoPage() {
                   )}
 
                   {/* Área de Criação de Conteúdo */}
-                  <div className={`mt-6 ${unidade.conteudo.length === 0 ? '' : 'pt-6 border-t border-[#e5e7eb] dark:border-gray-700'}`}>
+                  <div className={`mt-6 ${(unidade.conteudo || []).length === 0 ? '' : 'pt-6 border-t border-[#e5e7eb] dark:border-gray-700'}`}>
                     <div className="bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-800 dark:via-gray-800 dark:to-gray-800 rounded-xl border-2 border-blue-200 dark:border-blue-800 shadow-lg p-6">
                       {/* Header */}
                       <div className="mb-6">

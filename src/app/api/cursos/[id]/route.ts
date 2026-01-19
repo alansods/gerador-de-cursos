@@ -22,6 +22,31 @@ export async function GET(
       return createErrorResponse('Curso não encontrado', 404);
     }
 
+    // Normalizar unidades: garantir IDs e estrutura correta
+    const unidadesOriginais = (curso.unidades as any) || [];
+    const unidadesNormalizadas = unidadesOriginais.map((unidade: any, index: number) => {
+      // Gerar ID se não existir
+      const unidadeId = unidade.id || `unidade-${Date.now()}-${index}`;
+      
+      // Normalizar conteúdo: pode vir como 'aulas' ou 'conteudo'
+      let conteudoOriginal = unidade.conteudo || unidade.aulas || [];
+      
+      // Garantir que cada conteúdo tenha ID
+      const conteudoNormalizado = conteudoOriginal.map((item: any, itemIndex: number) => ({
+        ...item,
+        id: item.id || `conteudo-${Date.now()}-${index}-${itemIndex}`,
+        ordem: item.ordem ?? itemIndex,
+        tipo: item.tipo || 'paragrafo',
+      }));
+
+      return {
+        ...unidade,
+        id: unidadeId,
+        ordem: unidade.ordem ?? index,
+        conteudo: conteudoNormalizado,
+      };
+    });
+
     // Converter para formato CursoGerado
     const cursoFormatado: CursoGerado = {
       id: curso.id,
@@ -30,7 +55,7 @@ export async function GET(
       cargaHoraria: curso.cargaHoraria,
       modalidade: curso.modalidade,
       categoria: curso.categoria,
-      unidades: (curso.unidades as any) || [],
+      unidades: unidadesNormalizadas,
       dataCriacao: curso.dataCriacao,
       dataModificacao: curso.dataModificacao,
     };

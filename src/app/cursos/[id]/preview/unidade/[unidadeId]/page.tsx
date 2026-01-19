@@ -58,7 +58,10 @@ export default function PreviewUnidadePage() {
 
   // Usar cursoAtual do state (que é selecionado) ou buscar na lista
   const curso = state.cursoAtual || state.cursos.find((c) => c.id === cursoId);
-  const unidade = curso?.unidades?.find((u) => u.id === unidadeId);
+  
+  // Buscar unidade por ID ou por índice (fallback para cursos sem IDs nas unidades)
+  const unidade = curso?.unidades?.find((u) => u.id === unidadeId) 
+    || (curso?.unidades && !isNaN(Number(unidadeId)) ? curso.unidades[Number(unidadeId)] : undefined);
 
   useEffect(() => {
     if (!state.loading && (!curso || !unidade)) {
@@ -82,9 +85,15 @@ export default function PreviewUnidadePage() {
     );
   }
 
-  const unidadeIndex = curso.unidades.findIndex((u) => u.id === unidadeId);
+  // Encontrar índice por ID ou pelo próprio índice (se unidadeId for numérico)
+  let unidadeIndex = curso.unidades.findIndex((u) => u.id === unidadeId);
+  if (unidadeIndex === -1 && !isNaN(Number(unidadeId))) {
+    unidadeIndex = Number(unidadeId);
+  }
   const unidadeAnterior = unidadeIndex > 0 ? curso.unidades[unidadeIndex - 1] : null;
   const proximaUnidade = unidadeIndex < curso.unidades.length - 1 ? curso.unidades[unidadeIndex + 1] : null;
+  const anteriorId = unidadeAnterior?.id || (unidadeIndex > 0 ? unidadeIndex - 1 : null);
+  const proximaId = proximaUnidade?.id || (unidadeIndex < curso.unidades.length - 1 ? unidadeIndex + 1 : null);
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
@@ -122,11 +131,11 @@ export default function PreviewUnidadePage() {
 
               {/* Units Section */}
               {(curso.unidades || []).map((u, index) => {
-                const isActive = u.id === unidadeId;
+                const isActive = u.id === unidadeId || String(index) === unidadeId;
                 return (
                   <Link
-                    key={u.id}
-                    href={`/cursos/${cursoId}/preview/unidade/${u.id}`}
+                    key={u.id || `unidade-${index}`}
+                    href={`/cursos/${cursoId}/preview/unidade/${u.id || index}`}
                     onClick={() => setMenuOpen(false)}
                     className={`group flex items-center gap-3 p-4 rounded-xl border transition-all duration-200 ${
                       isActive
@@ -228,14 +237,14 @@ export default function PreviewUnidadePage() {
             {/* Previous Button */}
             <Link
               href={
-                unidadeAnterior
-                  ? `/cursos/${cursoId}/preview/unidade/${unidadeAnterior.id}`
+                anteriorId !== null
+                  ? `/cursos/${cursoId}/preview/unidade/${anteriorId}`
                   : '#'
               }
-              className={unidadeAnterior ? '' : 'pointer-events-none'}
+              className={anteriorId !== null ? '' : 'pointer-events-none'}
             >
               <Button
-                disabled={!unidadeAnterior}
+                disabled={anteriorId === null}
                 className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-800 text-white disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <ChevronLeft className="h-4 w-4" />
@@ -253,14 +262,14 @@ export default function PreviewUnidadePage() {
             {/* Next Button */}
             <Link
               href={
-                proximaUnidade
-                  ? `/cursos/${cursoId}/preview/unidade/${proximaUnidade.id}`
+                proximaId !== null
+                  ? `/cursos/${cursoId}/preview/unidade/${proximaId}`
                   : '#'
               }
-              className={proximaUnidade ? '' : 'pointer-events-none'}
+              className={proximaId !== null ? '' : 'pointer-events-none'}
             >
               <Button
-                disabled={!proximaUnidade}
+                disabled={proximaId === null}
                 className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-800 text-white disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Próxima Unidade

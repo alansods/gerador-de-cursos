@@ -150,8 +150,24 @@ export default function NovoCursoPage() {
       })
 
       if (!extractResponse.ok) {
-        const error = await extractResponse.json()
-        throw new Error(error.message || 'Erro ao extrair texto do documento')
+        // Verificar se a resposta é JSON antes de parsear
+        const contentType = extractResponse.headers.get('content-type')
+        if (contentType && contentType.includes('application/json')) {
+          const error = await extractResponse.json()
+          throw new Error(error.message || error.error || 'Erro ao extrair texto do documento')
+        } else {
+          const text = await extractResponse.text()
+          console.error('Erro não-JSON da API extract-document:', text.substring(0, 200))
+          throw new Error(`Erro ao extrair texto (${extractResponse.status}): ${text.substring(0, 100)}`)
+        }
+      }
+
+      // Verificar content-type antes de parsear JSON
+      const extractContentType = extractResponse.headers.get('content-type')
+      if (!extractContentType || !extractContentType.includes('application/json')) {
+        const text = await extractResponse.text()
+        console.error('Resposta não-JSON da API extract-document:', text.substring(0, 200))
+        throw new Error('Resposta inválida da API de extração')
       }
 
       const { text } = await extractResponse.json()
@@ -178,6 +194,14 @@ export default function NovoCursoPage() {
           console.error('Erro não-JSON da API:', text.substring(0, 200))
           throw new Error(`Erro ao gerar curso (${generateResponse.status}): ${text.substring(0, 100)}`)
         }
+      }
+
+      // Verificar content-type antes de parsear JSON
+      const generateContentType = generateResponse.headers.get('content-type')
+      if (!generateContentType || !generateContentType.includes('application/json')) {
+        const text = await generateResponse.text()
+        console.error('Resposta não-JSON da API generate-course-from-text:', text.substring(0, 200))
+        throw new Error('Resposta inválida da API de geração')
       }
 
       const { course } = await generateResponse.json()
