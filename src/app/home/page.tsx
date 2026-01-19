@@ -69,7 +69,7 @@ export default function HomePage() {
 
   const fetchActivities = async () => {
     try {
-      const response = await fetch("/api/activities", {
+      const response = await fetch("/api/activities?limit=5", {
         cache: "no-store",
         headers: {
           "Cache-Control": "no-cache",

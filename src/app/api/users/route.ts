@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import bcrypt from 'bcryptjs';
 import { Prisma } from '@prisma/client';
+import { logActivity } from '@/lib/activity-logger';
 
 // GET: Listar usuários com paginação e filtros
 export async function GET(request: NextRequest) {
@@ -119,6 +120,15 @@ export async function POST(request: NextRequest) {
       },
     });
 
+    // Registrar atividade
+    await logActivity({
+      tipo: 'usuario_criado',
+      titulo: 'Novo usuário criado',
+      descricao: nome,
+      entityId: user.id,
+      entityType: 'usuario',
+    });
+
     return NextResponse.json({ success: true, user });
   } catch (error) {
     console.error('Erro ao criar usuário:', error);
@@ -163,6 +173,15 @@ export async function PUT(request: NextRequest) {
       },
     });
 
+    // Registrar atividade
+    await logActivity({
+      tipo: 'usuario_editado',
+      titulo: 'Usuário editado',
+      descricao: user.nome,
+      entityId: user.id,
+      entityType: 'usuario',
+    });
+
     return NextResponse.json({ success: true, user });
   } catch (error) {
     console.error('Erro ao atualizar usuário:', error);
@@ -193,8 +212,23 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
+    // Buscar usuário antes de deletar para obter o nome
+    const usuarioExistente = await prisma.user.findUnique({
+      where: { id },
+      select: { nome: true },
+    });
+
     await prisma.user.delete({
       where: { id },
+    });
+
+    // Registrar atividade
+    await logActivity({
+      tipo: 'usuario_deletado',
+      titulo: 'Usuário deletado',
+      descricao: usuarioExistente?.nome || 'Usuário',
+      entityId: id,
+      entityType: 'usuario',
     });
 
     return NextResponse.json({ success: true });

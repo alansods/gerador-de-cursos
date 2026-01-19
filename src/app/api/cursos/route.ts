@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { requireAuth, createErrorResponse, createSuccessResponse } from '@/lib/auth';
 import { CursoGerado } from '@/types/gerador-curso';
+import { logActivity } from '@/lib/activity-logger';
 
 /**
  * GET /api/cursos
@@ -45,18 +46,40 @@ export async function GET(req: NextRequest) {
       orderBy: { dataCriacao: 'desc' },
     });
 
-    // Converter para formato CursoGerado
-    const cursosFormatados: CursoGerado[] = cursos.map((curso) => ({
-      id: curso.id,
-      titulo: curso.titulo,
-      descricao: curso.descricao,
-      cargaHoraria: curso.cargaHoraria,
-      modalidade: curso.modalidade,
-      categoria: curso.categoria,
-      unidades: (curso.unidades as any) || [],
-      dataCriacao: curso.dataCriacao,
-      dataModificacao: curso.dataModificacao,
-    }));
+    // Converter para formato CursoGerado com normalização de unidades
+    const cursosFormatados: CursoGerado[] = cursos.map((curso) => {
+      // Normalizar unidades: garantir IDs e estrutura correta
+      const unidadesOriginais = (curso.unidades as any) || [];
+      const unidadesNormalizadas = unidadesOriginais.map((unidade: any, index: number) => {
+        const unidadeId = unidade.id || `unidade-${curso.id}-${index}`;
+        let conteudoOriginal = unidade.conteudo || unidade.aulas || [];
+        const conteudoNormalizado = conteudoOriginal.map((item: any, itemIndex: number) => ({
+          ...item,
+          id: item.id || `conteudo-${curso.id}-${index}-${itemIndex}`,
+          ordem: item.ordem ?? itemIndex,
+          tipo: item.tipo || 'paragrafo',
+        }));
+
+        return {
+          ...unidade,
+          id: unidadeId,
+          ordem: unidade.ordem ?? index,
+          conteudo: conteudoNormalizado,
+        };
+      });
+
+      return {
+        id: curso.id,
+        titulo: curso.titulo,
+        descricao: curso.descricao,
+        cargaHoraria: curso.cargaHoraria,
+        modalidade: curso.modalidade,
+        categoria: curso.categoria,
+        unidades: unidadesNormalizadas,
+        dataCriacao: curso.dataCriacao,
+        dataModificacao: curso.dataModificacao,
+      };
+    });
 
     return createSuccessResponse({
       cursos: cursosFormatados,
@@ -93,6 +116,33 @@ export async function POST(req: NextRequest) {
       return createErrorResponse('Missing required fields', 400);
     }
 
+    // Normalizar unidades: garantir IDs e estrutura correta
+    const unidadesNormalizadas = (unidades || []).map((unidade: any, index: number) => {
+      // Gerar ID se não existir
+      const unidadeId = unidade.id || `unidade-${Date.now()}-${index}`;
+      
+      // Normalizar conteúdo: pode vir como 'aulas' (da IA) ou 'conteudo'
+      let conteudoOriginal = unidade.conteudo || unidade.aulas || [];
+      
+      // Garantir que cada conteúdo tenha ID
+      const conteudoNormalizado = conteudoOriginal.map((item: any, itemIndex: number) => ({
+        ...item,
+        id: item.id || `conteudo-${Date.now()}-${index}-${itemIndex}`,
+        ordem: item.ordem ?? itemIndex,
+        // Normalizar tipo se vier de 'aulas' da IA
+        tipo: item.tipo || 'paragrafo',
+      }));
+
+      return {
+        ...unidade,
+        id: unidadeId,
+        ordem: unidade.ordem ?? index,
+        conteudo: conteudoNormalizado,
+        // Remover 'aulas' se existir (foi movido para 'conteudo')
+        aulas: undefined,
+      };
+    });
+
     // Criar curso
     const curso = await prisma.curso.create({
       data: {
@@ -101,8 +151,18 @@ export async function POST(req: NextRequest) {
         cargaHoraria,
         modalidade,
         categoria,
-        unidades: unidades || [],
+        unidades: unidadesNormalizadas,
       },
+    });
+
+    // Registrar atividade
+    await logActivity({
+      tipo: 'curso_criado',
+      titulo: 'Novo curso criado',
+      descricao: titulo,
+      entityId: curso.id,
+      entityType: 'curso',
+      userId: authResult.user.id,
     });
 
     // Converter para formato CursoGerado
@@ -153,6 +213,32 @@ export async function PUT(req: NextRequest) {
       return createErrorResponse('Curso não encontrado', 404);
     }
 
+    // Normalizar unidades se fornecidas
+    let unidadesNormalizadas = undefined;
+    if (unidades !== undefined) {
+      unidadesNormalizadas = unidades.map((unidade: any, index: number) => {
+        // Gerar ID se não existir
+        const unidadeId = unidade.id || `unidade-${Date.now()}-${index}`;
+        
+        // Normalizar conteúdo
+        let conteudoOriginal = unidade.conteudo || unidade.aulas || [];
+        const conteudoNormalizado = conteudoOriginal.map((item: any, itemIndex: number) => ({
+          ...item,
+          id: item.id || `conteudo-${Date.now()}-${index}-${itemIndex}`,
+          ordem: item.ordem ?? itemIndex,
+          tipo: item.tipo || 'paragrafo',
+        }));
+
+        return {
+          ...unidade,
+          id: unidadeId,
+          ordem: unidade.ordem ?? index,
+          conteudo: conteudoNormalizado,
+          aulas: undefined,
+        };
+      });
+    }
+
     // Atualizar curso
     const curso = await prisma.curso.update({
       where: { id },
@@ -162,8 +248,18 @@ export async function PUT(req: NextRequest) {
         ...(cargaHoraria && { cargaHoraria }),
         ...(modalidade && { modalidade }),
         ...(categoria && { categoria }),
-        ...(unidades !== undefined && { unidades }),
+        ...(unidadesNormalizadas !== undefined && { unidades: unidadesNormalizadas }),
       },
+    });
+
+    // Registrar atividade
+    await logActivity({
+      tipo: 'curso_editado',
+      titulo: 'Curso editado',
+      descricao: curso.titulo,
+      entityId: curso.id,
+      entityType: 'curso',
+      userId: authResult.user.id,
     });
 
     // Converter para formato CursoGerado
@@ -217,6 +313,16 @@ export async function DELETE(req: NextRequest) {
     // Deletar curso
     await prisma.curso.delete({
       where: { id },
+    });
+
+    // Registrar atividade
+    await logActivity({
+      tipo: 'curso_deletado',
+      titulo: 'Curso deletado',
+      descricao: cursoExistente.titulo,
+      entityId: id,
+      entityType: 'curso',
+      userId: authResult.user.id,
     });
 
     return createSuccessResponse({ message: 'Curso deletado com sucesso' });
