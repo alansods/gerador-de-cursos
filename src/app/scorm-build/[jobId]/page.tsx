@@ -114,7 +114,7 @@ export default function SCORMBuildPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-transparent">
         <Loader2 className="h-8 w-8 animate-spin text-orange-500" />
       </div>
     );
@@ -122,11 +122,11 @@ export default function SCORMBuildPage() {
 
   if (!jobStatus) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-transparent">
         <Card className="p-8 max-w-md">
           <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
           <h2 className="text-xl font-bold text-center mb-2">Job não encontrado</h2>
-          <p className="text-gray-600 text-center mb-4">
+          <p className="text-gray-600 dark:text-gray-400 text-center mb-4">
             O job de build SCORM não foi encontrado.
           </p>
           <Button onClick={() => router.push('/cursos')} className="w-full">
@@ -138,7 +138,7 @@ export default function SCORMBuildPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-gray-50">
+    <div className="min-h-screen flex items-center justify-center p-4 bg-gray-50 dark:bg-transparent">
       <Card className="p-8 max-w-2xl w-full">
         <div className="text-center">
           {/* Status Icon */}
@@ -160,37 +160,37 @@ export default function SCORMBuildPage() {
           </h1>
 
           {/* Curso */}
-          <p className="text-gray-600 mb-6">
+          <p className="text-gray-600 dark:text-gray-400 mb-6">
             {jobStatus.cursoTitulo}
           </p>
 
           {/* Progresso */}
           {jobStatus.progress && (
-            <div className="mb-6 p-4 bg-blue-50 rounded-lg">
-              <p className="text-sm text-blue-700">{jobStatus.progress}</p>
+            <div className="mb-6 p-4 bg-blue-50 dark:bg-blue-950/50 rounded-lg border border-blue-200 dark:border-blue-900">
+              <p className="text-sm text-blue-700 dark:text-blue-300">{jobStatus.progress}</p>
             </div>
           )}
 
           {/* Erro */}
           {jobStatus.error && (
-            <div className="mb-6 p-4 bg-red-50 rounded-lg">
-              <p className="text-sm text-red-700">{jobStatus.error}</p>
+            <div className="mb-6 p-4 bg-red-50 dark:bg-red-950/50 rounded-lg border border-red-200 dark:border-red-900">
+              <p className="text-sm text-red-700 dark:text-red-300">{jobStatus.error}</p>
             </div>
           )}
 
           {/* Status específico */}
           {jobStatus.status === 'pending' && (
-            <p className="text-gray-500 text-sm mb-6">
+            <p className="text-gray-500 dark:text-gray-400 text-sm mb-6">
               Build iniciado. Aguardando processamento...
             </p>
           )}
 
           {jobStatus.status === 'building' && (
             <div className="mb-6">
-              <div className="w-full bg-gray-200 rounded-full h-2">
+              <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
                 <div className="bg-orange-500 h-2 rounded-full animate-pulse" style={{ width: '60%' }}></div>
               </div>
-              <p className="text-gray-500 text-sm mt-2">
+              <p className="text-gray-500 dark:text-gray-400 text-sm mt-2">
                 Build em andamento. Isso pode levar de 2 a 5 minutos.
               </p>
             </div>
@@ -218,7 +218,7 @@ export default function SCORMBuildPage() {
                 onClick={handleCancel}
                 variant="outline"
                 size="lg"
-                className="text-orange-600 hover:text-orange-700 hover:bg-orange-50"
+                className="text-orange-600 hover:text-orange-700 hover:bg-orange-50 dark:hover:bg-orange-950/50"
               >
                 <XCircle className="mr-2 h-4 w-4" />
                 Cancelar Build
@@ -235,7 +235,7 @@ export default function SCORMBuildPage() {
           </div>
 
           {/* Info adicional */}
-          <div className="mt-8 pt-6 border-t text-sm text-gray-500">
+          <div className="mt-8 pt-6 border-t border-gray-200 dark:border-gray-700 text-sm text-gray-500 dark:text-gray-400">
             <p>Iniciado em: {new Date(jobStatus.createdAt).toLocaleString('pt-BR')}</p>
             {jobStatus.completedAt && (
               <p>Concluído em: {new Date(jobStatus.completedAt).toLocaleString('pt-BR')}</p>
