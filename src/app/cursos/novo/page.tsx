@@ -3,7 +3,7 @@
 // Esta página não deve ser exportada estaticamente (usa context e API)
 export const dynamic = 'error';
 
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { useGeradorCurso } from '@/context/GeradorCursoContext'
 import { PageTransition } from '@/components/PageTransition'
@@ -14,6 +14,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Progress } from '@/components/ui/progress'
 import { ArrowLeft, Save, Upload, FileText, Sparkles, CheckCircle2, AlertCircle, Info, Download } from 'lucide-react'
 import { toast } from 'sonner'
+import { TokenMeter, type TokenUsage } from '@/components/TokenMeter'
 
 export default function NovoCursoPage() {
   const router = useRouter()
@@ -31,6 +32,7 @@ export default function NovoCursoPage() {
 
   // Estados para a geração por IA
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
   const [isProcessing, setIsProcessing] = useState(false)
   const [processingStep, setProcessingStep] = useState<'idle' | 'extracting' | 'generating' | 'done'>('idle')
   const [progress, setProgress] = useState(0)
@@ -38,6 +40,14 @@ export default function NovoCursoPage() {
     type: 'error' | 'warning' | 'success' | 'info'
     message: string
   } | null>(null)
+  const [tokenInfo, setTokenInfo] = useState<{
+    extractedChars: number
+    totalDocChars: number
+    estimatedPromptTokens: number
+  } | null>(null)
+  const [actualTokenUsage, setActualTokenUsage] = useState<TokenUsage | null>(null)
+  const [extractedText, setExtractedText] = useState<string | null>(null)
+  const [isExtracting, setIsExtracting] = useState(false)
 
   const setField = (field: keyof typeof formData, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }))
@@ -82,6 +92,43 @@ export default function NovoCursoPage() {
     return true
   }
 
+  const extractAndEstimate = async (file: File) => {
+    setIsExtracting(true)
+    setTokenInfo(null)
+    setExtractedText(null)
+    setActualTokenUsage(null)
+
+    try {
+      const formData = new FormData()
+      formData.append('file', file)
+
+      const res = await fetch('/api/extract-document', { method: 'POST', body: formData })
+
+      if (!res.ok) {
+        const ct = res.headers.get('content-type')
+        const msg = ct?.includes('application/json')
+          ? (await res.json()).message ?? 'Erro ao extrair texto'
+          : `Erro ${res.status} ao extrair texto`
+        throw new Error(msg)
+      }
+
+      const { text } = await res.json()
+      const extractedChars = Math.min(text.length, 10000)
+      const estimatedPromptTokens = Math.ceil((extractedChars + 500) / 3.5)
+
+      setExtractedText(text)
+      setTokenInfo({ extractedChars, totalDocChars: text.length, estimatedPromptTokens })
+    } catch (error) {
+      setValidationMessage({
+        type: 'error',
+        message: error instanceof Error ? error.message : 'Erro ao analisar documento'
+      })
+      setSelectedFile(null)
+    } finally {
+      setIsExtracting(false)
+    }
+  }
+
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
@@ -102,6 +149,7 @@ export default function NovoCursoPage() {
     // Validar tamanho
     if (validateFileSize(file)) {
       setSelectedFile(file)
+      extractAndEstimate(file)
     } else {
       setSelectedFile(null)
     }
@@ -135,48 +183,54 @@ export default function NovoCursoPage() {
     if (!selectedFile) return
 
     setIsProcessing(true)
-    setProcessingStep('extracting')
-    setProgress(10)
+    setActualTokenUsage(null)
+
+    let text = extractedText
+
+    // Se o texto ainda não foi extraído (ex: extração falhou ou não terminou), extrai agora
+    if (!text) {
+      setProcessingStep('extracting')
+      setProgress(10)
+
+      try {
+        const fd = new FormData()
+        fd.append('file', selectedFile)
+        setProgress(20)
+
+        const extractResponse = await fetch('/api/extract-document', { method: 'POST', body: fd })
+
+        if (!extractResponse.ok) {
+          const contentType = extractResponse.headers.get('content-type')
+          if (contentType?.includes('application/json')) {
+            const err = await extractResponse.json()
+            throw new Error(err.message || err.error || 'Erro ao extrair texto do documento')
+          }
+          throw new Error(`Erro ao extrair texto (${extractResponse.status})`)
+        }
+
+        const data = await extractResponse.json()
+        text = data.text
+        setProgress(40)
+
+        const extractedChars = Math.min(text!.length, 10000)
+        const estimatedPromptTokens = Math.ceil((extractedChars + 500) / 3.5)
+        setTokenInfo({ extractedChars, totalDocChars: text!.length, estimatedPromptTokens })
+      } catch (error) {
+        setValidationMessage({ type: 'error', message: error instanceof Error ? error.message : 'Erro ao extrair texto' })
+        setIsProcessing(false)
+        setProcessingStep('idle')
+        setProgress(0)
+        return
+      }
+    } else {
+      setProgress(40)
+    }
+
+    // Gerar curso com IA
+    setProcessingStep('generating')
+    setProgress(50)
 
     try {
-      // Passo 1: Extrair texto do documento
-      const formData = new FormData()
-      formData.append('file', selectedFile)
-
-      setProgress(20)
-      const extractResponse = await fetch('/api/extract-document', {
-        method: 'POST',
-        body: formData,
-      })
-
-      if (!extractResponse.ok) {
-        // Verificar se a resposta é JSON antes de parsear
-        const contentType = extractResponse.headers.get('content-type')
-        if (contentType && contentType.includes('application/json')) {
-          const error = await extractResponse.json()
-          throw new Error(error.message || error.error || 'Erro ao extrair texto do documento')
-        } else {
-          const text = await extractResponse.text()
-          console.error('Erro não-JSON da API extract-document:', text.substring(0, 200))
-          throw new Error(`Erro ao extrair texto (${extractResponse.status}): ${text.substring(0, 100)}`)
-        }
-      }
-
-      // Verificar content-type antes de parsear JSON
-      const extractContentType = extractResponse.headers.get('content-type')
-      if (!extractContentType || !extractContentType.includes('application/json')) {
-        const text = await extractResponse.text()
-        console.error('Resposta não-JSON da API extract-document:', text.substring(0, 200))
-        throw new Error('Resposta inválida da API de extração')
-      }
-
-      const { text } = await extractResponse.json()
-      setProgress(40)
-      
-      // Passo 2: Gerar curso com IA
-      setProcessingStep('generating')
-      setProgress(50)
-
       const generateResponse = await fetch('/api/generate-course-from-text', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -204,7 +258,8 @@ export default function NovoCursoPage() {
         throw new Error('Resposta inválida da API de geração')
       }
 
-      const { course } = await generateResponse.json()
+      const { course, tokenUsage } = await generateResponse.json()
+      if (tokenUsage) setActualTokenUsage(tokenUsage)
       setProgress(80)
 
       // Passo 3: Criar curso no banco (remover instrutor se existir)
@@ -391,6 +446,7 @@ export default function NovoCursoPage() {
                         </span>
                       </Button>
                       <input
+                        ref={fileInputRef}
                         id="file-upload"
                         type="file"
                         accept=".docx,.doc"
@@ -421,6 +477,10 @@ export default function NovoCursoPage() {
                           onClick={() => {
                             setSelectedFile(null)
                             setValidationMessage(null)
+                            setTokenInfo(null)
+                            setActualTokenUsage(null)
+                            setExtractedText(null)
+                            if (fileInputRef.current) fileInputRef.current.value = ''
                           }}
                         >
                           Remover
@@ -464,6 +524,18 @@ export default function NovoCursoPage() {
                 </div>
               )}
 
+              {/* Token Meter — aparece assim que um arquivo é selecionado */}
+              {selectedFile && (
+                <TokenMeter
+                  isLoading={isExtracting}
+                  extractedChars={tokenInfo?.extractedChars}
+                  totalDocChars={tokenInfo?.totalDocChars}
+                  estimatedPromptTokens={tokenInfo?.estimatedPromptTokens}
+                  actualUsage={actualTokenUsage ?? undefined}
+                  isGenerating={processingStep === 'generating'}
+                />
+              )}
+
               {/* Barra de progresso */}
               {isProcessing && (
                 <div className="space-y-4">
@@ -502,10 +574,10 @@ export default function NovoCursoPage() {
                   type="button"
                   onClick={handleGenerateWithAI}
                   className="bg-purple-600 hover:bg-purple-700 gap-2"
-                  disabled={!selectedFile || isProcessing || validationMessage?.type === 'error'}
+                  disabled={!selectedFile || isProcessing || isExtracting || validationMessage?.type === 'error'}
                 >
                   <Sparkles className="h-4 w-4" />
-                  {isProcessing ? 'Processando...' : 'Gerar Curso'}
+                  {isExtracting ? 'Analisando...' : isProcessing ? 'Processando...' : 'Gerar Curso'}
                 </Button>
               </div>
             </div>

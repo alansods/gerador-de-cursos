@@ -3,6 +3,13 @@ import { requireAuth, createErrorResponse, createSuccessResponse } from '@/lib/a
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { CursoGerado } from '@/types/gerador-curso';
 
+interface TokenUsage {
+  promptTokens: number;
+  completionTokens: number;
+  totalTokens: number;
+  model: string;
+}
+
 /**
  * POST /api/generate-course-from-text
  * Gera um curso estruturado a partir de texto usando IA
@@ -35,16 +42,21 @@ export async function POST(req: NextRequest) {
 
     // Usar Google Gemini se disponível, senão OpenAI
     let course: CursoGerado;
-    
+    let tokenUsage: TokenUsage | undefined;
+
     if (geminiApiKey) {
-      course = await generateWithGemini(text, geminiApiKey);
+      const result = await generateWithGemini(text, geminiApiKey);
+      course = result.course;
+      tokenUsage = result.tokenUsage;
     } else if (openaiApiKey) {
-      course = await generateWithOpenAI(text, openaiApiKey);
+      const result = await generateWithOpenAI(text, openaiApiKey);
+      course = result.course;
+      tokenUsage = result.tokenUsage;
     } else {
       throw new Error('Nenhuma API de IA disponível');
     }
 
-    return createSuccessResponse({ course });
+    return createSuccessResponse({ course, tokenUsage });
   } catch (error) {
     console.error('Erro ao gerar curso:', error);
     return createErrorResponse(
@@ -58,7 +70,7 @@ export async function POST(req: NextRequest) {
 /**
  * Gera curso usando Google Gemini
  */
-async function generateWithGemini(text: string, apiKey: string): Promise<CursoGerado> {
+async function generateWithGemini(text: string, apiKey: string): Promise<{ course: CursoGerado; tokenUsage: TokenUsage }> {
   const genAI = new GoogleGenerativeAI(apiKey);
   
   const prompt = `Você é um especialista em criação de cursos online. Analise o seguinte texto e crie uma estrutura de curso completa em formato JSON.
@@ -97,7 +109,7 @@ Retorne APENAS o JSON válido, sem markdown, sem explicações adicionais.`;
 
   // Tentar diferentes modelos em ordem de preferência (nomes atualizados 2025+)
   // Referência: https://ai.google.dev/models/gemini
-  const modelNames = ['gemini-2.0-flash', 'gemini-1.5-flash-latest', 'gemini-2.5-flash'];
+  const modelNames = ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-1.5-flash-latest'];
   let lastError: Error | null = null;
   
   for (const modelName of modelNames) {
@@ -108,12 +120,12 @@ Retorne APENAS o JSON válido, sem markdown, sem explicações adicionais.`;
       const result = await model.generateContent(prompt);
       const response = await result.response;
       const generatedText = response.text();
-      
+
       console.log(`✅ Modelo ${modelName} funcionou!`);
 
       // Extrair JSON da resposta (pode vir com markdown code blocks)
       let jsonText = generatedText.trim();
-      
+
       // Remover markdown code blocks se existirem
       if (jsonText.startsWith('```json')) {
         jsonText = jsonText.replace(/^```json\n?/, '').replace(/\n?```$/, '');
@@ -133,13 +145,28 @@ Retorne APENAS o JSON válido, sem markdown, sem explicações adicionais.`;
         courseData.unidades = [];
       }
 
-      return courseData;
+      const tokenUsage: TokenUsage = {
+        promptTokens: response.usageMetadata?.promptTokenCount ?? 0,
+        completionTokens: response.usageMetadata?.candidatesTokenCount ?? 0,
+        totalTokens: response.usageMetadata?.totalTokenCount ?? 0,
+        model: modelName,
+      };
+
+      return { course: courseData, tokenUsage };
     } catch (error) {
       console.error(`❌ Erro com modelo ${modelName}:`, error);
       lastError = error instanceof Error ? error : new Error(String(error));
       
-      // Se não for erro de modelo não encontrado, propagar o erro
-      if (error instanceof Error && !error.message.includes('not found') && !error.message.includes('404')) {
+      // Continuar para próximo modelo em caso de erro de modelo não encontrado ou quota excedida
+      const isRetryable = error instanceof Error && (
+        error.message.includes('not found') ||
+        error.message.includes('404') ||
+        error.message.includes('429') ||
+        error.message.includes('quota') ||
+        error.message.includes('Too Many Requests') ||
+        error.message.includes('RESOURCE_EXHAUSTED')
+      );
+      if (!isRetryable) {
         throw error;
       }
       
@@ -155,7 +182,7 @@ Retorne APENAS o JSON válido, sem markdown, sem explicações adicionais.`;
 /**
  * Gera curso usando OpenAI
  */
-async function generateWithOpenAI(text: string, apiKey: string): Promise<CursoGerado> {
+async function generateWithOpenAI(text: string, apiKey: string): Promise<{ course: CursoGerado; tokenUsage: TokenUsage }> {
   const { default: OpenAI } = await import('openai');
   const openai = new OpenAI({ apiKey });
 
@@ -238,7 +265,14 @@ Retorne APENAS o JSON válido, sem markdown, sem explicações adicionais.`;
       courseData.unidades = [];
     }
 
-    return courseData;
+    const tokenUsage: TokenUsage = {
+      promptTokens: completion.usage?.prompt_tokens ?? 0,
+      completionTokens: completion.usage?.completion_tokens ?? 0,
+      totalTokens: completion.usage?.total_tokens ?? 0,
+      model: completion.model,
+    };
+
+    return { course: courseData, tokenUsage };
   } catch (error) {
     console.error('Erro ao gerar com OpenAI:', error);
     throw new Error(`Erro ao processar resposta da IA: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
