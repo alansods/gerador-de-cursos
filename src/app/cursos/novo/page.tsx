@@ -179,7 +179,26 @@ export default function NovoCursoPage() {
     }
   }
 
-  const handleGenerateWithAI = async () => {
+  const handleDownloadSampleDoc = async () => {
+    try {
+      const response = await fetch('/api/sample-document')
+      if (!response.ok) throw new Error('Erro ao gerar documento')
+      const blob = await response.blob()
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = 'exemplo-seguranca-trabalho.docx'
+      document.body.appendChild(a)
+      a.click()
+      URL.revokeObjectURL(url)
+      document.body.removeChild(a)
+    } catch {
+      setValidationMessage({ type: 'error', message: 'Erro ao baixar documento de exemplo.' })
+    }
+  }
+
+
+  const handleGenerateWithAI = async (mode: 'auto' | 'markers' = 'auto') => {
     if (!selectedFile) return
 
     setIsProcessing(true)
@@ -234,7 +253,7 @@ export default function NovoCursoPage() {
       const generateResponse = await fetch('/api/generate-course-from-text', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text }),
+        body: JSON.stringify({ text, mode }),
       })
 
       if (!generateResponse.ok) {
@@ -409,20 +428,35 @@ export default function NovoCursoPage() {
                         Envie um documento Word (.docx ou .doc) estruturado com o conteúdo do curso.
                         A IA irá processar o documento e criar automaticamente o curso com unidades e conteúdo organizados.
                       </p>
+                      <p className="text-sm text-blue-800 dark:text-blue-300 font-semibold">
+                        ⚠️ A IA usa ESTRITAMENTE o conteúdo do seu documento. Ela não inventa ou adiciona informações extras.
+                      </p>
                       <p className="text-sm text-blue-800 dark:text-blue-300 font-medium">
                         💡 Use Google Docs ou Microsoft Word para criar seu documento!
                       </p>
                     </div>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={handleDownloadExample}
-                      className="gap-2 bg-white hover:bg-blue-50 border-blue-300 text-blue-700 hover:text-blue-800"
-                    >
-                      <Download className="h-4 w-4" />
-                      Baixar Exemplo
-                    </Button>
+                    <div className="flex gap-2">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={handleDownloadExample}
+                        className="gap-2 bg-white hover:bg-blue-50 border-blue-300 text-blue-700 hover:text-blue-800"
+                      >
+                        <Download className="h-4 w-4" />
+                        Baixar Exemplo
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={handleDownloadSampleDoc}
+                        className="gap-2 bg-white hover:bg-purple-50 border-purple-300 text-purple-700 hover:text-purple-800"
+                      >
+                        <Download className="h-4 w-4" />
+                        Exemplo de Teste (IA Auto)
+                      </Button>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -449,7 +483,7 @@ export default function NovoCursoPage() {
                         ref={fileInputRef}
                         id="file-upload"
                         type="file"
-                        accept=".docx,.doc"
+                        accept=".docx,.doc,.txt"
                         onChange={handleFileSelect}
                         className="hidden"
                         disabled={isProcessing}
@@ -524,17 +558,15 @@ export default function NovoCursoPage() {
                 </div>
               )}
 
-              {/* Token Meter — aparece assim que um arquivo é selecionado */}
-              {selectedFile && (
-                <TokenMeter
-                  isLoading={isExtracting}
-                  extractedChars={tokenInfo?.extractedChars}
-                  totalDocChars={tokenInfo?.totalDocChars}
-                  estimatedPromptTokens={tokenInfo?.estimatedPromptTokens}
-                  actualUsage={actualTokenUsage ?? undefined}
-                  isGenerating={processingStep === 'generating'}
-                />
-              )}
+              {/* Token Meter — sempre visível */}
+              <TokenMeter
+                isLoading={isExtracting}
+                extractedChars={tokenInfo?.extractedChars}
+                totalDocChars={tokenInfo?.totalDocChars}
+                estimatedPromptTokens={tokenInfo?.estimatedPromptTokens}
+                actualUsage={actualTokenUsage ?? undefined}
+                isGenerating={processingStep === 'generating'}
+              />
 
               {/* Barra de progresso */}
               {isProcessing && (
@@ -560,25 +592,46 @@ export default function NovoCursoPage() {
                 </div>
               )}
 
-              {/* Botão de gerar */}
-              <div className="flex justify-end gap-3 pt-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => router.back()}
-                  disabled={isProcessing}
-                >
-                  Cancelar
-                </Button>
-                <Button
-                  type="button"
-                  onClick={handleGenerateWithAI}
-                  className="bg-purple-600 hover:bg-purple-700 gap-2"
-                  disabled={!selectedFile || isProcessing || isExtracting || validationMessage?.type === 'error'}
-                >
-                  <Sparkles className="h-4 w-4" />
-                  {isExtracting ? 'Analisando...' : isProcessing ? 'Processando...' : 'Gerar Curso'}
-                </Button>
+              {/* Botões de gerar */}
+              <div className="flex flex-col gap-3 pt-2">
+                <div className="flex gap-3">
+                  <div className="flex-1 rounded-lg border border-purple-200 dark:border-purple-800 bg-purple-50 dark:bg-purple-950/30 p-3">
+                    <p className="text-xs font-medium text-purple-700 dark:text-purple-400 mb-1">IA Automática</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">A IA lê o conteúdo e decide o melhor recurso para cada parte (accordion, quiz, flipcard, etc.)</p>
+                    <Button
+                      type="button"
+                      onClick={() => handleGenerateWithAI('auto')}
+                      className="w-full bg-purple-600 hover:bg-purple-700 gap-2"
+                      disabled={!selectedFile || isProcessing || isExtracting || validationMessage?.type === 'error'}
+                    >
+                      <Sparkles className="h-4 w-4" />
+                      {isProcessing ? 'Processando...' : 'Gerar Automaticamente'}
+                    </Button>
+                  </div>
+                  <div className="flex-1 rounded-lg border border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-950/30 p-3">
+                    <p className="text-xs font-medium text-blue-700 dark:text-blue-400 mb-1">Com Marcadores</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">Use ACCORDION_INICIO/FIM, QUIZ_INICIO/FIM e FLIPCARD_INICIO/FIM no documento para controle preciso.</p>
+                    <Button
+                      type="button"
+                      onClick={() => handleGenerateWithAI('markers')}
+                      className="w-full bg-blue-600 hover:bg-blue-700 gap-2"
+                      disabled={!selectedFile || isProcessing || isExtracting || validationMessage?.type === 'error'}
+                    >
+                      <Sparkles className="h-4 w-4" />
+                      {isProcessing ? 'Processando...' : 'Gerar com Marcadores'}
+                    </Button>
+                  </div>
+                </div>
+                <div className="flex justify-end">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => router.back()}
+                    disabled={isProcessing}
+                  >
+                    Cancelar
+                  </Button>
+                </div>
               </div>
             </div>
           </TabsContent>

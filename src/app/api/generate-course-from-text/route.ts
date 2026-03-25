@@ -23,7 +23,7 @@ export async function POST(req: NextRequest) {
 
   try {
     const body = await req.json();
-    const { text } = body;
+    const { text, mode = 'auto' } = body as { text: string; mode?: 'auto' | 'markers' };
 
     if (!text || typeof text !== 'string' || text.trim().length === 0) {
       return createErrorResponse('Texto não fornecido ou inválido', 400);
@@ -45,11 +45,11 @@ export async function POST(req: NextRequest) {
     let tokenUsage: TokenUsage | undefined;
 
     if (geminiApiKey) {
-      const result = await generateWithGemini(text, geminiApiKey);
+      const result = await generateWithGemini(text, geminiApiKey, mode);
       course = result.course;
       tokenUsage = result.tokenUsage;
     } else if (openaiApiKey) {
-      const result = await generateWithOpenAI(text, openaiApiKey);
+      const result = await generateWithOpenAI(text, openaiApiKey, mode);
       course = result.course;
       tokenUsage = result.tokenUsage;
     } else {
@@ -68,44 +68,167 @@ export async function POST(req: NextRequest) {
 }
 
 /**
- * Gera curso usando Google Gemini
+ * Monta o prompt compartilhado para Gemini e OpenAI.
+ * Inclui instruções para reconhecer os marcadores de recursos interativos
+ * (ACCORDION_INICIO/FIM, QUIZ_INICIO/FIM, FLIPCARD_INICIO/FIM) e gerar
+ * o JSON correto para cada tipo.
  */
-async function generateWithGemini(text: string, apiKey: string): Promise<{ course: CursoGerado; tokenUsage: TokenUsage }> {
-  const genAI = new GoogleGenerativeAI(apiKey);
-  
-  const prompt = `Você é um especialista em criação de cursos online. Analise o seguinte texto e crie uma estrutura de curso completa em formato JSON.
+function buildPrompt(text: string, mode: 'auto' | 'markers' = 'auto'): string {
+  const truncated = text.substring(0, 12000) + (text.length > 12000 ? '\n\n[... texto truncado ...]' : '');
 
-O JSON deve seguir exatamente este formato:
+  const sharedStructure = `## Estrutura geral do JSON
+
 {
-  "titulo": "Título do Curso",
-  "descricao": "Descrição detalhada do curso",
-  "categoria": "Categoria do curso (ex: Tecnologia, Marketing, Design)",
+  "titulo": "string",
+  "descricao": "string",
+  "categoria": "string",
   "cargaHoraria": "X horas",
   "modalidade": "Online",
-  "unidades": [
-    {
-      "titulo": "Título da Unidade",
-      "descricao": "Descrição da unidade",
-      "conteudo": [
-        {
-          "titulo": "Título do Conteúdo",
-          "conteudo": "Conteúdo detalhado em formato HTML com parágrafos, listas, etc.",
-          "tipo": "paragrafo"
-        }
-      ]
-    }
+  "unidades": [ <array de Unidade> ]
+}
+
+Cada Unidade:
+{
+  "titulo": "string",
+  "descricao": "string",
+  "conteudo": [ <array de ConteudoUnidade> ]
+}
+
+## Recursos disponíveis
+
+### 1. paragrafo
+{ "titulo": "string", "tipo": "paragrafo", "conteudo": "<p>HTML</p>" }
+
+### 2. subtitulo
+{ "titulo": "string", "tipo": "subtitulo", "conteudo": "Texto do subtítulo" }
+
+### 3. lista
+{ "titulo": "string", "tipo": "lista", "conteudo": "<ul><li>item</li></ul> ou <ol><li>passo</li></ol>" }
+
+### 4. accordion
+{
+  "titulo": "string",
+  "tipo": "accordion",
+  "conteudo": "",
+  "items": [
+    { "id": "item-1", "titulo": "Tópico 1", "conteudo": "<p>Detalhes</p>" },
+    { "id": "item-2", "titulo": "Tópico 2", "conteudo": "<p>Detalhes</p>" }
   ]
 }
 
-IMPORTANTE:
-- Cada unidade deve ter um array "conteudo" (NÃO "aulas")
-- Cada item de conteúdo deve ter: titulo, conteudo (HTML), tipo ("paragrafo", "titulo", "lista", etc.)
-- Gere conteúdo rico e detalhado em HTML para cada item
+### 5. quiz — OBRIGATÓRIO: exatamente 5 opções; apenas uma com "isCorrect": true
+{
+  "titulo": "string",
+  "tipo": "quiz",
+  "conteudo": "",
+  "quizData": {
+    "questions": [
+      {
+        "id": "q-1",
+        "pergunta": "Pergunta?",
+        "dica": "Dica opcional",
+        "opcoes": [
+          { "id": "op-1", "texto": "Opção A", "isCorrect": false, "feedback": "Explicação A" },
+          { "id": "op-2", "texto": "Opção B", "isCorrect": true,  "feedback": "Correto! Explicação B" },
+          { "id": "op-3", "texto": "Opção C", "isCorrect": false, "feedback": "Explicação C" },
+          { "id": "op-4", "texto": "Opção D", "isCorrect": false, "feedback": "Explicação D" },
+          { "id": "op-5", "texto": "Opção E", "isCorrect": false, "feedback": "Explicação E" }
+        ]
+      }
+    ]
+  }
+}
 
-Texto para analisar:
-${text.substring(0, 10000)} ${text.length > 10000 ? '\n\n[... texto truncado ...]' : ''}
+### 6. flipcard
+{
+  "titulo": "string",
+  "tipo": "flipcard",
+  "conteudo": "",
+  "tipoFrente": "titulo",
+  "tituloFrente": "Conceito ou pergunta na frente",
+  "conteudoVerso": "<p>Explicação no verso</p>"
+}
 
-Retorne APENAS o JSON válido, sem markdown, sem explicações adicionais.`;
+### 7. info-box
+{
+  "titulo": "string",
+  "tipo": "info-box",
+  "conteudo": "<p>Conteúdo</p>",
+  "tipoInfoBox": "atencao" | "saiba_mais" | "info" | "curiosidade",
+  "tituloInfoBox": "Título da caixa"
+}
+
+## Regras gerais
+
+- NÃO use "aulas" — use sempre "conteudo"
+- IDs únicos simples: "item-1", "q-1", "op-1"
+- HTML apenas com: <p>, <ul>, <ol>, <li>, <strong>, <em>
+- Retorne APENAS o JSON válido, sem markdown, sem explicações
+
+## IMPORTANTE: Uso estrito do conteúdo do documento
+
+⚠️ **REGRA FUNDAMENTAL**: Você DEVE usar ESTRITAMENTE o conteúdo presente no documento fornecido.
+
+- NÃO invente, crie ou adicione informações que não estejam no texto original
+- NÃO adicione exemplos, casos práticos, curiosidades ou contextos extras por conta própria
+- NÃO expanda conceitos além do que está escrito no documento
+- Use apenas as informações, exemplos e dados que foram explicitamente fornecidos no texto
+- Se o documento for curto ou superficial, o curso gerado também deve refletir isso
+- Sua função é ESTRUTURAR e ORGANIZAR o conteúdo existente, não criar conteúdo novo`;
+
+  if (mode === 'markers') {
+    return `Você é um especialista em design instrucional. Analise o texto abaixo e gere uma estrutura de curso em JSON respeitando os marcadores de recursos interativos presentes no texto.
+
+${sharedStructure}
+
+## Como converter os marcadores
+
+- Bloco ACCORDION_INICIO...ACCORDION_FIM → tipo "accordion"
+  - "Título do Item N:" → items[N].titulo
+  - "Conteúdo do Item N:" → items[N].conteudo (em HTML)
+- Bloco QUIZ_INICIO...QUIZ_FIM → tipo "quiz"
+  - "Pergunta:" → quizData.questions[].pergunta
+  - "Opção A/B/C/D/E:" → opcoes[] (identifique a correta pelo contexto)
+  - "Resposta Correta:" → marque o isCorrect correspondente
+- Bloco FLIPCARD_INICIO...FLIPCARD_FIM → tipo "flipcard"
+  - "Frente:" ou "Título:" → tituloFrente
+  - "Verso:" → conteudoVerso (em HTML)
+- Conteúdo fora de marcadores → use paragrafo, subtitulo ou lista conforme adequado
+
+## Texto para analisar
+
+${truncated}`;
+  }
+
+  // mode === 'auto'
+  return `Você é um especialista em design instrucional. Analise o texto abaixo e gere uma estrutura de curso em JSON, escolhendo automaticamente o recurso mais adequado para cada parte do conteúdo.
+
+${sharedStructure}
+
+## Diretrizes de escolha automática
+
+- Texto introdutório ou explicativo → paragrafo
+- Lista de ingredientes, materiais, requisitos, características → lista
+- Passos numerados de um processo → lista com <ol>
+- 3 ou mais tópicos relacionados com subconteúdo → accordion
+- Termo técnico + definição, pergunta retórica + resposta → flipcard
+- "Atenção:", "Importante:", aviso de segurança → info-box (tipoInfoBox: "atencao")
+- "Sabia que", curiosidade, fato interessante → info-box (tipoInfoBox: "curiosidade")
+- Revisão ao final de cada unidade → quiz (1 a 3 perguntas baseadas no conteúdo real)
+- Use ao menos 1 recurso interativo (accordion, quiz ou flipcard) por unidade
+
+## Texto para analisar
+
+${truncated}`;
+}
+
+/**
+ * Gera curso usando Google Gemini
+ */
+async function generateWithGemini(text: string, apiKey: string, mode: 'auto' | 'markers' = 'auto'): Promise<{ course: CursoGerado; tokenUsage: TokenUsage }> {
+  const genAI = new GoogleGenerativeAI(apiKey);
+  
+  const prompt = buildPrompt(text, mode);
 
   // Tentar diferentes modelos em ordem de preferência (nomes atualizados 2025+)
   // Referência: https://ai.google.dev/models/gemini
@@ -118,7 +241,7 @@ Retorne APENAS o JSON válido, sem markdown, sem explicações adicionais.`;
       console.log(`🔄 Tentando modelo: ${modelName}`);
       
       const result = await model.generateContent(prompt);
-      const response = await result.response;
+      const response = result.response;
       const generatedText = response.text();
 
       console.log(`✅ Modelo ${modelName} funcionou!`);
@@ -182,43 +305,11 @@ Retorne APENAS o JSON válido, sem markdown, sem explicações adicionais.`;
 /**
  * Gera curso usando OpenAI
  */
-async function generateWithOpenAI(text: string, apiKey: string): Promise<{ course: CursoGerado; tokenUsage: TokenUsage }> {
+async function generateWithOpenAI(text: string, apiKey: string, mode: 'auto' | 'markers' = 'auto'): Promise<{ course: CursoGerado; tokenUsage: TokenUsage }> {
   const { default: OpenAI } = await import('openai');
   const openai = new OpenAI({ apiKey });
 
-  const prompt = `Você é um especialista em criação de cursos online. Analise o seguinte texto e crie uma estrutura de curso completa em formato JSON.
-
-O JSON deve seguir exatamente este formato:
-{
-  "titulo": "Título do Curso",
-  "descricao": "Descrição detalhada do curso",
-  "categoria": "Categoria do curso (ex: Tecnologia, Marketing, Design)",
-  "cargaHoraria": "X horas",
-  "modalidade": "Online",
-  "unidades": [
-    {
-      "titulo": "Título da Unidade",
-      "descricao": "Descrição da unidade",
-      "conteudo": [
-        {
-          "titulo": "Título do Conteúdo",
-          "conteudo": "Conteúdo detalhado em formato HTML com parágrafos, listas, etc.",
-          "tipo": "paragrafo"
-        }
-      ]
-    }
-  ]
-}
-
-IMPORTANTE:
-- Cada unidade deve ter um array "conteudo" (NÃO "aulas")
-- Cada item de conteúdo deve ter: titulo, conteudo (HTML), tipo ("paragrafo", "titulo", "lista", etc.)
-- Gere conteúdo rico e detalhado em HTML para cada item
-
-Texto para analisar:
-${text.substring(0, 10000)} ${text.length > 10000 ? '\n\n[... texto truncado ...]' : ''}
-
-Retorne APENAS o JSON válido, sem markdown, sem explicações adicionais.`;
+  const prompt = buildPrompt(text, mode);
 
   try {
     const completion = await openai.chat.completions.create({

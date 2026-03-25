@@ -33,10 +33,12 @@ export function TokenMeter({
   actualUsage,
   isGenerating,
 }: TokenMeterProps) {
-  const hasData = extractedChars !== undefined && totalDocChars !== undefined && estimatedPromptTokens !== undefined
+  const hasEstimate = extractedChars !== undefined && totalDocChars !== undefined && estimatedPromptTokens !== undefined
 
-  const isTruncated = hasData && totalDocChars! > 10_000
-  const usagePercent = hasData ? Math.min((estimatedPromptTokens! / MODEL_INPUT_LIMIT) * 100, 100) : 0
+  const isTruncated = hasEstimate && totalDocChars! > 12_000
+  const usedTokens = actualUsage ? actualUsage.totalTokens : (hasEstimate ? estimatedPromptTokens! : 0)
+  const remainingTokens = MODEL_INPUT_LIMIT - usedTokens
+  const usagePercent = Math.min((usedTokens / MODEL_INPUT_LIMIT) * 100, 100)
 
   const barColor =
     usagePercent < 50
@@ -50,7 +52,7 @@ export function TokenMeter({
       {/* Header */}
       <div className="flex items-center gap-2">
         <Zap className="h-4 w-4 text-yellow-500 shrink-0" />
-        <span className="font-medium">Uso de Tokens da IA</span>
+        <span className="font-medium">Capacidade de Tokens da IA</span>
         {(isLoading || (isGenerating && !actualUsage)) && (
           <Loader2 className="h-3 w-3 animate-spin text-muted-foreground ml-auto" />
         )}
@@ -59,52 +61,62 @@ export function TokenMeter({
         )}
       </div>
 
-      {/* Estado: analisando documento */}
-      {isLoading && !hasData && (
-        <div className="space-y-2">
-          <div className="h-3 bg-muted animate-pulse rounded w-3/4" />
-          <div className="h-3 bg-muted animate-pulse rounded w-1/2" />
-          <p className="text-xs text-muted-foreground">Analisando documento...</p>
+      {/* Barra de uso — sempre visível */}
+      <div className="space-y-1.5">
+        <div className="flex justify-between text-xs text-muted-foreground">
+          <span>{hasEstimate || actualUsage ? 'Consumo estimado por geração' : 'Capacidade por geração'}</span>
+          <span>{usagePercent < 0.01 && (hasEstimate || actualUsage) ? '< 0,01' : usagePercent > 0 ? usagePercent.toFixed(2) : '0'}%</span>
         </div>
+        <div className="h-2 bg-muted rounded-full overflow-hidden">
+          <div
+            className={`h-full rounded-full transition-all duration-500 ${usagePercent === 0 ? 'bg-green-500/20' : barColor}`}
+            style={{ width: usagePercent === 0 ? '100%' : `${Math.max(usagePercent, 0.5)}%` }}
+          />
+        </div>
+        <div className="grid grid-cols-3 gap-1 text-xs pt-0.5">
+          <div>
+            <p className="text-muted-foreground">Usado</p>
+            <p className="font-mono font-medium">{hasEstimate || actualUsage ? `~${formatNumber(usedTokens)}` : '—'}</p>
+          </div>
+          <div>
+            <p className="text-muted-foreground">Restante</p>
+            <p className={`font-mono font-medium ${hasEstimate || actualUsage ? 'text-green-600 dark:text-green-400' : ''}`}>
+              {hasEstimate || actualUsage ? formatNumber(remainingTokens) : '—'}
+            </p>
+          </div>
+          <div>
+            <p className="text-muted-foreground">Total</p>
+            <p className="font-mono font-medium">{formatNumber(MODEL_INPUT_LIMIT)}</p>
+          </div>
+        </div>
+        <p className="text-xs text-muted-foreground/70">
+          Limite de contexto por requisição — Gemini Flash
+        </p>
+      </div>
+
+      {/* Analisando documento */}
+      {isLoading && !hasEstimate && (
+        <p className="text-xs text-muted-foreground">Analisando documento...</p>
       )}
 
-      {/* Estimativa de entrada */}
-      {hasData && (
-        <>
-          <div className="grid grid-cols-2 gap-3 text-xs">
-            <div>
-              <p className="text-muted-foreground mb-0.5">Caracteres enviados à IA</p>
-              <p className="font-mono font-medium">{formatNumber(extractedChars!)}</p>
-              {isTruncated && (
-                <div className="flex items-center gap-1 mt-0.5 text-yellow-600 dark:text-yellow-400">
-                  <AlertTriangle className="h-3 w-3 shrink-0" />
-                  <span>documento truncado ({formatNumber(totalDocChars!)} no total)</span>
-                </div>
-              )}
-            </div>
-            <div>
-              <p className="text-muted-foreground mb-0.5">Tokens estimados (entrada)</p>
-              <p className="font-mono font-medium">~{formatNumber(estimatedPromptTokens!)}</p>
-            </div>
+      {/* Detalhes da estimativa */}
+      {hasEstimate && (
+        <div className="grid grid-cols-2 gap-3 text-xs pt-1 border-t border-border">
+          <div>
+            <p className="text-muted-foreground mb-0.5">Caracteres enviados à IA</p>
+            <p className="font-mono font-medium">{formatNumber(extractedChars!)}</p>
+            {isTruncated && (
+              <div className="flex items-center gap-1 mt-0.5 text-yellow-600 dark:text-yellow-400">
+                <AlertTriangle className="h-3 w-3 shrink-0" />
+                <span>truncado ({formatNumber(totalDocChars!)} no total)</span>
+              </div>
+            )}
           </div>
-
-          {/* Barra de uso do limite */}
-          <div className="space-y-1">
-            <div className="flex justify-between text-xs text-muted-foreground">
-              <span>Uso do limite do modelo</span>
-              <span>
-                {usagePercent < 0.01 ? '< 0,01' : usagePercent.toFixed(2)}% de{' '}
-                {formatNumber(MODEL_INPUT_LIMIT / 1000)}k tokens
-              </span>
-            </div>
-            <div className="h-1.5 bg-muted rounded-full overflow-hidden">
-              <div
-                className={`h-full rounded-full transition-all duration-500 ${barColor}`}
-                style={{ width: `${Math.max(usagePercent, 0.5)}%` }}
-              />
-            </div>
+          <div>
+            <p className="text-muted-foreground mb-0.5">Tokens estimados (entrada)</p>
+            <p className="font-mono font-medium">~{formatNumber(estimatedPromptTokens!)}</p>
           </div>
-        </>
+        </div>
       )}
 
       {/* Uso real após geração */}
