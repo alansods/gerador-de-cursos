@@ -9,7 +9,7 @@ declare global {
   interface Window {
     __COURSE_DATA__: CursoGerado | null
     // Exposto para compatibilidade com useLMS, SCORMPlayer e SCORMNavbar
-    SCORM: typeof scormAPI
+    SCORM?: typeof scormAPI
   }
 }
 
