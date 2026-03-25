@@ -1,486 +1,379 @@
 'use client'
 
-import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { useState, useEffect } from 'react'
+import { Button } from '@/components/ui/button'
 import {
   CheckCircle2,
   XCircle,
   Lightbulb,
-  HelpCircle,
   RotateCcw,
   ChevronRight,
   ChevronLeft,
   Trophy,
   TrendingUp,
-} from "lucide-react";
-import { QuizData } from "@/types/gerador-curso";
+  AlertCircle,
+} from 'lucide-react'
+import { QuizData } from '@/types/gerador-curso'
 
 interface QuizConteudoProps {
-  quizData: QuizData;
-  isEdicao?: boolean;
+  quizData: QuizData
+  isEdicao?: boolean
 }
 
 export function QuizConteudo({ quizData, isEdicao = false }: QuizConteudoProps) {
-  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-  const [selectedOptions, setSelectedOptions] = useState<Record<string, string>>({});
-  const [showFeedbacks, setShowFeedbacks] = useState<Record<string, boolean>>({});
-  const [showDicas, setShowDicas] = useState<Record<string, boolean>>({});
-  const [showResults, setShowResults] = useState(false);
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0)
+  const [selectedOptions, setSelectedOptions] = useState<Record<string, string>>({})
+  const [showFeedbacks, setShowFeedbacks] = useState<Record<string, boolean>>({})
+  const [showDicas, setShowDicas] = useState<Record<string, boolean>>({})
+  const [showResults, setShowResults] = useState(false)
 
-  // Verificar quando mostrar resultados
   useEffect(() => {
     if (!isEdicao && !showResults) {
-      checkAndShowResults();
+      checkAndShowResults()
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [showFeedbacks, currentQuestionIndex, isEdicao, showResults]);
+  }, [showFeedbacks, currentQuestionIndex, isEdicao, showResults])
 
   if (!quizData.questions || quizData.questions.length === 0) {
     return (
-      <div className="w-full max-w-4xl mx-auto">
-        <Card className="border-2 border-gray-200 dark:border-gray-700 dark:bg-gray-800">
-          <CardContent className="p-6 text-center text-gray-500 dark:text-gray-400">
-            Quiz sem perguntas
-          </CardContent>
-        </Card>
+      <div className="w-full rounded-lg border border-dashed border-gray-300 dark:border-gray-700 p-8 text-center text-sm text-gray-500 dark:text-gray-400">
+        Nenhuma pergunta adicionada.
       </div>
-    );
+    )
   }
 
-  const currentQuestion = quizData.questions[currentQuestionIndex];
-  const questionId = currentQuestion.id;
-  const selectedOption = selectedOptions[questionId] || null;
-  const showFeedback = showFeedbacks[questionId] || false;
+  const currentQuestion = quizData.questions[currentQuestionIndex]
+  const questionId = currentQuestion.id
+  const selectedOption = selectedOptions[questionId] || null
+  const showFeedback = showFeedbacks[questionId] || false
 
   const handleOptionSelect = (optionId: string) => {
-    if (showFeedback || isEdicao) return;
-    
-    setSelectedOptions({
-      ...selectedOptions,
-      [questionId]: optionId,
-    });
-    setShowFeedbacks({
-      ...showFeedbacks,
-      [questionId]: true,
-    });
-  };
+    if (showFeedback || isEdicao) return
+    setSelectedOptions({ ...selectedOptions, [questionId]: optionId })
+  }
+
+  const handleConfirmar = () => {
+    if (!selectedOption || showFeedback || isEdicao) return
+    setShowFeedbacks({ ...showFeedbacks, [questionId]: true })
+  }
 
   const handleNextQuestion = () => {
     if (currentQuestionIndex < quizData.questions.length - 1) {
-      setCurrentQuestionIndex(currentQuestionIndex + 1);
+      setCurrentQuestionIndex(currentQuestionIndex + 1)
     } else {
-      // Quando chegar na última pergunta e responder, mostrar resultados
-      if (showFeedbacks[questionId]) {
-        checkAndShowResults();
-      }
+      if (showFeedbacks[questionId]) checkAndShowResults()
     }
-  };
-
-  const handlePreviousQuestion = () => {
-    if (currentQuestionIndex > 0) {
-      setCurrentQuestionIndex(currentQuestionIndex - 1);
-    }
-  };
-
-  const handleResetAll = () => {
-    setSelectedOptions({});
-    setShowFeedbacks({});
-    setShowDicas({});
-    setCurrentQuestionIndex(0);
-    setShowResults(false);
-  };
-
-  // Verificar se todas as perguntas foram respondidas para mostrar resultados
-  const checkAndShowResults = () => {
-    const totalQuestions = quizData.questions.length;
-    const answeredQuestions = Object.keys(showFeedbacks).length;
-    
-    if (answeredQuestions === totalQuestions && currentQuestionIndex === totalQuestions - 1) {
-      setShowResults(true);
-    }
-  };
-
-  // Calcular nota e mensagem de feedback
-  const calculateResults = () => {
-    let correctAnswers = 0;
-    
-    quizData.questions.forEach((question) => {
-      const selectedOptionId = selectedOptions[question.id];
-      if (selectedOptionId) {
-        const selectedOption = question.opcoes.find((opt) => opt.id === selectedOptionId);
-        if (selectedOption?.isCorrect) {
-          correctAnswers++;
-        }
-      }
-    });
-
-    const totalQuestions = quizData.questions.length;
-    const percentage = (correctAnswers / totalQuestions) * 100;
-
-    let message = "";
-    let icon = <Trophy className="h-12 w-12" />;
-    let bgColor = "from-green-500 to-emerald-600";
-    const textColor = "text-green-50";
-
-    if (percentage === 100) {
-      message = "🎉 Parabéns! Você acertou todas as questões! Você demonstrou excelente compreensão do conteúdo!";
-      icon = <Trophy className="h-12 w-12" />;
-      bgColor = "from-yellow-500 to-amber-600";
-    } else if (percentage >= 80) {
-      message = "👏 Parabéns! Você teve um ótimo desempenho! Continue assim para alcançar a perfeição!";
-      icon = <TrendingUp className="h-12 w-12" />;
-      bgColor = "from-green-500 to-emerald-600";
-    } else if (percentage >= 60) {
-      message = "👍 Bom trabalho! Você está no caminho certo. Revise os conteúdos que errou e tente novamente para melhorar!";
-      icon = <TrendingUp className="h-12 w-12" />;
-      bgColor = "from-blue-500 to-blue-600";
-    } else {
-      message = "💪 Não desista! Todo aprendizado requer prática. Revise o conteúdo e tente novamente - você consegue melhorar!";
-      icon = <HelpCircle className="h-12 w-12" />;
-      bgColor = "from-orange-500 to-red-500";
-    }
-
-    return {
-      correctAnswers,
-      totalQuestions,
-      percentage: Math.round(percentage),
-      message,
-      icon,
-      bgColor,
-      textColor,
-    };
-  };
-
-
-  const toggleDica = (questionId: string) => {
-    setShowDicas({
-      ...showDicas,
-      [questionId]: !showDicas[questionId],
-    });
-  };
-
-  const totalQuestions = quizData.questions.length;
-
-  // Mostrar tela de resultados
-  if (showResults && !isEdicao) {
-    const results = calculateResults();
-
-    return (
-      <div className="w-full max-w-4xl mx-auto">
-        <Card className="border-2 border-blue-200 dark:border-blue-800 dark:bg-gray-800 shadow-lg overflow-hidden">
-          <CardHeader className={`bg-gradient-to-r ${results.bgColor} ${results.textColor} pb-6`}>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                {results.icon}
-                <div>
-                  <h3 className="text-2xl font-bold">Resultado do Quiz</h3>
-                  <p className="text-sm opacity-90 mt-1">
-                    Você completou todas as perguntas!
-                  </p>
-                </div>
-              </div>
-            </div>
-          </CardHeader>
-
-          <CardContent className="p-8 space-y-6">
-            {/* Nota */}
-            <div className="text-center space-y-4">
-              <div className="inline-flex flex-col items-center gap-3">
-                <div className="text-6xl font-bold text-gray-900 dark:text-gray-100">
-                  {results.correctAnswers}/{results.totalQuestions}
-                </div>
-                <Badge
-                  className={`text-lg px-4 py-2 ${
-                    results.percentage >= 80
-                      ? "bg-green-500 text-white"
-                      : results.percentage >= 60
-                      ? "bg-blue-500 text-white"
-                      : "bg-orange-500 text-white"
-                  } border-0`}
-                >
-                  {results.percentage}% de acerto
-                </Badge>
-              </div>
-            </div>
-
-            {/* Mensagem de Feedback */}
-            <div className={`bg-gradient-to-r ${results.bgColor} rounded-lg p-6 ${results.textColor} shadow-md`}>
-              <div className="flex items-start gap-4">
-                <div className="shrink-0 mt-1">{results.icon}</div>
-                <p className="text-lg font-semibold leading-relaxed">
-                  {results.message}
-                </p>
-              </div>
-            </div>
-
-            {/* Botão Reiniciar */}
-            <div className="flex justify-center pt-4">
-              <Button
-                onClick={handleResetAll}
-                size="lg"
-                className="bg-blue-600 hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-800 text-white px-8 py-6 text-lg"
-              >
-                <RotateCcw className="h-5 w-5 mr-2" />
-                Tentar Novamente
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    );
   }
 
+  const handlePreviousQuestion = () => {
+    if (currentQuestionIndex > 0) setCurrentQuestionIndex(currentQuestionIndex - 1)
+  }
+
+  const handleResetAll = () => {
+    setSelectedOptions({})
+    setShowFeedbacks({})
+    setShowDicas({})
+    setCurrentQuestionIndex(0)
+    setShowResults(false)
+  }
+
+  const checkAndShowResults = () => {
+    const total = quizData.questions.length
+    const answered = Object.keys(showFeedbacks).length
+    if (answered === total && currentQuestionIndex === total - 1) {
+      setShowResults(true)
+    }
+  }
+
+  const calculateResults = () => {
+    let correctAnswers = 0
+    quizData.questions.forEach((question) => {
+      const opt = question.opcoes.find((o) => o.id === selectedOptions[question.id])
+      if (opt?.isCorrect) correctAnswers++
+    })
+    const total = quizData.questions.length
+    const pct = Math.round((correctAnswers / total) * 100)
+    return { correctAnswers, total, pct }
+  }
+
+  const toggleDica = (qId: string) => {
+    setShowDicas({ ...showDicas, [qId]: !showDicas[qId] })
+  }
+
+  const totalQuestions = quizData.questions.length
+
+  // ── Tela de resultados ────────────────────────────────────────────────────
+  if (showResults && !isEdicao) {
+    const { correctAnswers, total, pct } = calculateResults()
+    const perfect = pct === 100
+    const good = pct >= 80
+    const ok = pct >= 60
+
+    const scoreColor =
+      perfect || good
+        ? 'text-emerald-600 dark:text-emerald-400'
+        : ok
+          ? 'text-blue-600 dark:text-blue-400'
+          : 'text-orange-500 dark:text-orange-400'
+
+    const ResultIcon = perfect || good ? Trophy : ok ? TrendingUp : AlertCircle
+    const resultMsg = perfect
+      ? 'Excelente! Você acertou tudo.'
+      : good
+        ? 'Ótimo desempenho! Continue assim.'
+        : ok
+          ? 'Bom trabalho! Revise os erros e tente melhorar.'
+          : 'Revise o conteúdo e tente novamente.'
+
+    return (
+      <div className="w-full rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 overflow-hidden">
+        <div className="p-8 flex flex-col items-center gap-6 text-center">
+          <div
+            className={`w-14 h-14 rounded-full flex items-center justify-center ${
+              perfect || good
+                ? 'bg-emerald-100 dark:bg-emerald-900/30'
+                : ok
+                  ? 'bg-blue-100 dark:bg-blue-900/30'
+                  : 'bg-orange-100 dark:bg-orange-900/30'
+            }`}
+          >
+            <ResultIcon className={`h-7 w-7 ${scoreColor}`} />
+          </div>
+
+          <div>
+            <p className={`text-5xl font-bold tabular-nums ${scoreColor}`}>
+              {correctAnswers}
+              <span className="text-2xl font-normal text-gray-400 dark:text-gray-500">
+                /{total}
+              </span>
+            </p>
+            <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">{pct}% de acerto</p>
+          </div>
+
+          <p className="text-gray-700 dark:text-gray-300 text-sm max-w-xs leading-relaxed">
+            {resultMsg}
+          </p>
+
+          <Button variant="outline" onClick={handleResetAll} className="gap-2">
+            <RotateCcw className="h-4 w-4" />
+            Tentar Novamente
+          </Button>
+        </div>
+      </div>
+    )
+  }
+
+  // ── Questão ───────────────────────────────────────────────────────────────
   return (
-    <div className="w-full max-w-4xl mx-auto space-y-6">
+    <div className="w-full space-y-4">
       {quizData.questions.map((question, questionIndex) => {
-        const qId = question.id;
-        const qSelectedOption = selectedOptions[qId] || null;
-        const qShowFeedback = showFeedbacks[qId] || false;
-        const qShowDica = showDicas[qId] || false;
+        const qId = question.id
+        const qSelectedOption = selectedOptions[qId] || null
+        const qShowFeedback = showFeedbacks[qId] || false
+        const qShowDica = showDicas[qId] || false
         const qSelectedOptionData = qSelectedOption
           ? question.opcoes.find((opt) => opt.id === qSelectedOption)
-          : null;
-        const qIsCorrect = qSelectedOptionData?.isCorrect || false;
+          : null
+        const qIsCorrect = qSelectedOptionData?.isCorrect || false
 
-        // Mostrar apenas a pergunta atual se não estiver em modo edição
-        if (!isEdicao && questionIndex !== currentQuestionIndex) {
-          return null;
-        }
+        if (!isEdicao && questionIndex !== currentQuestionIndex) return null
 
         return (
-          <Card
+          <div
             key={question.id}
-            className="border-2 border-blue-200 dark:border-blue-800 shadow-lg bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900"
+            className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 overflow-hidden"
           >
-            <CardHeader className="bg-gradient-to-r from-blue-600 to-purple-600 dark:from-blue-700 dark:to-purple-700 text-white rounded-t-lg pb-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <HelpCircle className="h-6 w-6" />
-                  <div>
-                    <h3 className="text-xl font-bold">Quiz Interativo</h3>
-                    {totalQuestions > 1 && (
-                      <p className="text-sm text-blue-100 dark:text-blue-200 mt-1">
-                        Pergunta {questionIndex + 1} de {totalQuestions}
-                      </p>
-                    )}
-                  </div>
-                </div>
-                {!isEdicao && qShowFeedback && (
-                  <Badge
-                    variant="secondary"
-                    className={`${
-                      qIsCorrect
-                        ? "bg-green-500 text-white"
-                        : "bg-red-500 text-white"
-                    } border-0`}
-                  >
-                    {qIsCorrect ? "Correto!" : "Incorreto"}
-                  </Badge>
-                )}
+            {/* Header */}
+            <div className="px-5 py-3 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between gap-4">
+              <div className="flex items-center gap-3 min-w-0">
+                <span className="text-xs font-semibold text-blue-600 dark:text-blue-400 whitespace-nowrap">
+                  {questionIndex + 1} / {totalQuestions}
+                </span>
+                <span className="text-xs text-gray-400 dark:text-gray-500 hidden sm:inline">
+                  {questionIndex + 1 === totalQuestions
+                    ? 'Última pergunta'
+                    : `Faltam ${totalQuestions - questionIndex - 1} pergunta${totalQuestions - questionIndex - 1 > 1 ? 's' : ''}`}
+                </span>
               </div>
-            </CardHeader>
 
-            <CardContent className="p-6 space-y-8">
+              {/* Barra de progresso */}
+              <div className="flex-1 h-1.5 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-blue-500 rounded-full transition-all duration-300"
+                  style={{ width: `${((questionIndex + 1) / totalQuestions) * 100}%` }}
+                />
+              </div>
+            </div>
+
+            <div className="p-5 space-y-5">
               {/* Pergunta */}
-              <div className="bg-white dark:bg-gray-800 rounded-lg p-6 border-l-4 border-blue-500 dark:border-blue-600 shadow-sm">
-                <p className="text-lg font-semibold text-gray-900 dark:text-gray-100 leading-relaxed">
-                  {question.pergunta}
-                </p>
-              </div>
+              <p className="text-base font-medium text-gray-900 dark:text-gray-100 leading-relaxed">
+                <span className="text-blue-500 dark:text-blue-400 mr-1">{questionIndex + 1}.</span>
+                {question.pergunta}
+              </p>
 
-              {/* Botão de Dica */}
-              {question.dica && !isEdicao && (
-                <div className="flex justify-center pt-2">
-                  <Button
-                    variant="outline"
-                    onClick={() => toggleDica(qId)}
-                    className={`${
-                      qShowDica
-                        ? "bg-yellow-100 dark:bg-yellow-900/30 border-yellow-400 dark:border-yellow-600 text-yellow-800 dark:text-yellow-300"
-                        : "bg-white dark:bg-gray-800 border-blue-300 dark:border-blue-700 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/30"
-                    } transition-all`}
-                    disabled={qShowFeedback}
-                  >
-                    <Lightbulb className="h-4 w-4 mr-2" />
-                    {qShowDica ? "Ocultar Dica" : "Mostrar Dica"}
-                  </Button>
-                </div>
-              )}
-
-              {/* Dica */}
-              {qShowDica && question.dica && !isEdicao && (
-                <div className="bg-gradient-to-r from-yellow-50 to-amber-50 dark:from-yellow-900/20 dark:to-amber-900/20 border-2 border-yellow-300 dark:border-yellow-700 rounded-lg p-5 shadow-md animate-in slide-in-from-top-2">
-                  <div className="flex items-start gap-3">
-                    <Lightbulb className="h-5 w-5 text-yellow-600 dark:text-yellow-400 shrink-0 mt-0.5" />
-                    <div>
-                      <p className="font-semibold text-yellow-800 dark:text-yellow-300 mb-2">Dica:</p>
-                      <p className="text-yellow-900 dark:text-yellow-200 leading-relaxed">{question.dica}</p>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Opções de Resposta */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Opções */}
+              <div className="space-y-2">
                 {question.opcoes.map((opcao, index) => {
-                  const isSelected = qSelectedOption === opcao.id;
-                  const showAsCorrect = qShowFeedback && opcao.isCorrect;
-                  const showAsIncorrect = qShowFeedback && isSelected && !opcao.isCorrect;
+                  const isSelected = qSelectedOption === opcao.id
+                  const showAsCorrect = qShowFeedback && opcao.isCorrect
+                  const showAsIncorrect = qShowFeedback && isSelected && !opcao.isCorrect
+                  const dimmed = qShowFeedback && !isSelected && !opcao.isCorrect
 
                   return (
-                    <Card
-                      key={opcao.id}
-                      className={`cursor-pointer transition-all duration-300 dark:bg-gray-800 ${
-                        isEdicao
-                          ? "cursor-default"
-                          : qShowFeedback && !isSelected
-                          ? "opacity-50 cursor-default"
-                          : ""
-                      } ${
-                        showAsCorrect
-                          ? "ring-4 ring-green-500 bg-green-50 dark:bg-green-900/30 border-green-500 shadow-lg scale-105"
-                          : showAsIncorrect
-                          ? "ring-4 ring-red-500 bg-red-50 dark:bg-red-900/30 border-red-500 shadow-lg"
-                          : isSelected && !qShowFeedback
-                          ? "ring-2 ring-blue-500 bg-blue-50 dark:bg-blue-900/30 border-blue-300 dark:border-blue-700"
-                          : "hover:shadow-md hover:scale-105 border-gray-200 dark:border-gray-700"
-                      }`}
-                      onClick={() => handleOptionSelect(opcao.id)}
-                    >
-                      <CardContent className="p-5">
-                        <div className="flex items-start gap-4">
-                          {/* Label da Opção */}
-                          <div className="shrink-0">
-                            <div
-                              className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-lg ${
-                                showAsCorrect
-                                  ? "bg-green-500 text-white"
-                                  : showAsIncorrect
-                                  ? "bg-red-500 text-white"
-                                  : "bg-blue-500 text-white"
-                              }`}
-                            >
-                              {String.fromCharCode(65 + index)}
-                            </div>
-                          </div>
+                    <div key={opcao.id}>
+                      <button
+                        onClick={() => handleOptionSelect(opcao.id)}
+                        disabled={qShowFeedback || isEdicao}
+                        className={`w-full text-left rounded-lg border px-4 py-3 flex items-start gap-3 transition-all duration-200 ${
+                          showAsCorrect
+                            ? 'border-emerald-400 dark:border-emerald-600 bg-emerald-50 dark:bg-emerald-900/20'
+                            : showAsIncorrect
+                              ? 'border-red-400 dark:border-red-600 bg-red-50 dark:bg-red-900/20'
+                              : isSelected
+                                ? 'border-blue-400 dark:border-blue-600 bg-blue-50 dark:bg-blue-900/20'
+                                : dimmed
+                                  ? 'border-gray-100 dark:border-gray-800 opacity-40'
+                                  : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-800/50 cursor-pointer'
+                        }`}
+                      >
+                        {/* Label */}
+                        <span
+                          className={`shrink-0 w-6 h-6 rounded-full text-xs font-bold flex items-center justify-center mt-0.5 ${
+                            showAsCorrect
+                              ? 'bg-emerald-500 text-white'
+                              : showAsIncorrect
+                                ? 'bg-red-500 text-white'
+                                : isSelected
+                                  ? 'bg-blue-500 text-white'
+                                  : 'bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400'
+                          }`}
+                        >
+                          {String.fromCharCode(65 + index)}
+                        </span>
 
-                          {/* Texto da Opção */}
-                          <div className="flex-1">
-                            <p className="text-gray-900 dark:text-gray-100 font-medium leading-relaxed mb-4">
-                              {opcao.texto}
-                            </p>
-
-                            {/* Feedback da Opção Selecionada */}
-                            {isSelected && qShowFeedback && (
-                              <div
-                                className={`mt-5 p-4 rounded-lg border-2 ${
-                                  qIsCorrect
-                                    ? "bg-green-50 dark:bg-green-900/30 border-green-200 dark:border-green-700"
-                                    : "bg-red-50 dark:bg-red-900/30 border-red-200 dark:border-red-700"
-                                }`}
-                              >
-                                <div className="flex items-start gap-3">
-                                  {qIsCorrect ? (
-                                    <CheckCircle2 className="h-5 w-5 text-green-600 dark:text-green-400 shrink-0 mt-0.5" />
-                                  ) : (
-                                    <XCircle className="h-5 w-5 text-red-600 dark:text-red-400 shrink-0 mt-0.5" />
-                                  )}
-                                  <div className="flex-1">
-                                    <p
-                                      className={`font-semibold mb-2 ${
-                                        qIsCorrect
-                                          ? "text-green-800 dark:text-green-300"
-                                          : "text-red-800 dark:text-red-300"
-                                      }`}
-                                    >
-                                      {qIsCorrect ? "Correto!" : "Incorreto"}
-                                    </p>
-                                    <p
-                                      className={`text-sm leading-relaxed ${
-                                        qIsCorrect
-                                          ? "text-green-700 dark:text-green-300"
-                                          : "text-red-700 dark:text-red-300"
-                                      }`}
-                                    >
-                                      {opcao.feedback}
-                                    </p>
-                                  </div>
-                                </div>
-                              </div>
-                            )}
-
-                            {/* Feedback Visual para Resposta Correta */}
-                            {showAsCorrect && !isSelected && (
-                              <div className="mt-5 p-4 rounded-lg bg-green-50 dark:bg-green-900/30 border-2 border-green-200 dark:border-green-700">
-                                <div className="flex items-center gap-2">
-                                  <CheckCircle2 className="h-5 w-5 text-green-600 dark:text-green-400" />
-                                  <p className="text-sm font-semibold text-green-800 dark:text-green-300">
-                                    Esta é a resposta correta!
-                                  </p>
-                                </div>
-                              </div>
-                            )}
-                          </div>
+                        {/* Texto */}
+                        <div className="flex-1 min-w-0">
+                          <p
+                            className={`text-sm leading-relaxed ${
+                              showAsCorrect
+                                ? 'text-emerald-900 dark:text-emerald-200 font-medium'
+                                : showAsIncorrect
+                                  ? 'text-red-900 dark:text-red-200'
+                                  : 'text-gray-800 dark:text-gray-200'
+                            }`}
+                          >
+                            {opcao.texto}
+                          </p>
                         </div>
-                      </CardContent>
-                    </Card>
-                  );
+
+                        {/* Ícone de status */}
+                        {showAsCorrect && (
+                          <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0 mt-0.5" />
+                        )}
+                        {showAsIncorrect && (
+                          <XCircle className="h-4 w-4 text-red-500 shrink-0 mt-0.5" />
+                        )}
+                      </button>
+
+                      {/* Feedback da opção selecionada */}
+                      {isSelected && qShowFeedback && opcao.feedback && (
+                        <div
+                          className={`mt-1.5 ml-9 px-3 py-2 rounded-md text-xs leading-relaxed border ${
+                            qIsCorrect
+                              ? 'bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-300'
+                              : 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800 text-red-800 dark:text-red-300'
+                          }`}
+                        >
+                          {opcao.feedback}
+                        </div>
+                      )}
+                    </div>
+                  )
                 })}
               </div>
 
-              {/* Botões de Navegação */}
-              {!isEdicao && (
-                <div className="flex items-center justify-between pt-4 border-t border-gray-200 dark:border-gray-700">
-                  {/* Botão Anterior */}
-                  <div>
-                    {currentQuestionIndex > 0 && (
-                      <Button
-                        variant="outline"
-                        onClick={handlePreviousQuestion}
-                        className="bg-white dark:bg-gray-800 hover:bg-blue-50 dark:hover:bg-blue-900/30 border-blue-300 dark:border-blue-700 text-blue-600 dark:text-blue-400"
-                      >
-                        <ChevronLeft className="h-4 w-4 mr-2" />
-                        Anterior
-                      </Button>
-                    )}
-                  </div>
+              {/* Dica expandida — acima dos botões */}
+              {question.dica && !isEdicao && qShowDica && (
+                <div className="flex items-start gap-2 px-3 py-2.5 rounded-lg bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800">
+                  <Lightbulb className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+                  <p className="text-xs text-amber-800 dark:text-amber-300 leading-relaxed">
+                    {question.dica}
+                  </p>
+                </div>
+              )}
 
-                  {/* Botão Próxima / Finalizar */}
-                  <div>
-                    {currentQuestionIndex < totalQuestions - 1 ? (
-                      <Button
-                        variant="outline"
-                        onClick={handleNextQuestion}
-                        className="bg-white dark:bg-gray-800 hover:bg-blue-50 dark:hover:bg-blue-900/30 border-blue-300 dark:border-blue-700 text-blue-600 dark:text-blue-400"
-                        disabled={!qShowFeedback}
+              {/* Navegação */}
+              {!isEdicao && (
+                <div className="flex items-center justify-between pt-2 border-t border-gray-100 dark:border-gray-800">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handlePreviousQuestion}
+                    disabled={currentQuestionIndex === 0}
+                    className="gap-1.5 text-gray-500 dark:text-gray-400"
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                    Anterior
+                  </Button>
+
+                  <div className="flex items-center gap-2">
+                    {/* Botão de dica */}
+                    {question.dica && !qShowFeedback && (
+                      <button
+                        onClick={() => toggleDica(qId)}
+                        className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium border transition-colors ${
+                          qShowDica
+                            ? 'bg-amber-100 dark:bg-amber-900/40 border-amber-300 dark:border-amber-700 text-amber-800 dark:text-amber-300'
+                            : 'bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800 text-amber-700 dark:text-amber-400 hover:bg-amber-100 dark:hover:bg-amber-900/40'
+                        }`}
                       >
-                        Próxima
-                        <ChevronRight className="h-4 w-4 ml-2" />
-                      </Button>
-                    ) : (
+                        <Lightbulb className="h-3.5 w-3.5" />
+                        Dica
+                      </button>
+                    )}
+
+                    {/* Confirmar: aparece quando selecionou mas ainda não confirmou */}
+                    {!qShowFeedback && (
                       <Button
-                        variant="outline"
-                        onClick={() => {
-                          if (qShowFeedback) {
-                            checkAndShowResults();
-                          }
-                        }}
-                        className="bg-blue-600 hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-800 text-white border-blue-600 dark:border-blue-700"
-                        disabled={!qShowFeedback}
+                        size="sm"
+                        onClick={handleConfirmar}
+                        disabled={!qSelectedOption}
+                        className="gap-1.5 bg-blue-600 hover:bg-blue-700 disabled:opacity-40 text-white"
                       >
-                        Ver Resultados
-                        <ChevronRight className="h-4 w-4 ml-2" />
+                        Confirmar
                       </Button>
                     )}
+
+                    {/* Após confirmar: Próxima ou Ver Resultado */}
+                    {qShowFeedback &&
+                      (currentQuestionIndex < totalQuestions - 1 ? (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={handleNextQuestion}
+                          className="gap-1.5"
+                        >
+                          Próxima
+                          <ChevronRight className="h-4 w-4" />
+                        </Button>
+                      ) : (
+                        <Button
+                          size="sm"
+                          onClick={checkAndShowResults}
+                          className="gap-1.5 bg-blue-600 hover:bg-blue-700 text-white"
+                        >
+                          Ver Resultado
+                          <ChevronRight className="h-4 w-4" />
+                        </Button>
+                      ))}
                   </div>
                 </div>
               )}
-            </CardContent>
-          </Card>
-        );
+            </div>
+          </div>
+        )
       })}
     </div>
-  );
+  )
 }
