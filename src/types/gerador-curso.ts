@@ -62,6 +62,7 @@ export interface ConteudoUnidade {
 
 export interface Unidade {
   id: string
+  slug?: string
   titulo: string
   descricao: string
   conteudo: ConteudoUnidade[]
@@ -70,6 +71,7 @@ export interface Unidade {
 
 export interface CursoGerado {
   id: string
+  slug?: string
   titulo: string
   descricao: string
   cargaHoraria: string

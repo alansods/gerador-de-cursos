@@ -2,10 +2,11 @@ import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { createErrorResponse, createSuccessResponse } from '@/lib/auth';
 import { CursoGerado } from '@/types/gerador-curso';
+import { slugifyUnidades } from '@/lib/slug';
 
 /**
  * GET /api/cursos/[id]
- * Busca um curso por ID
+ * Busca um curso por ID ou slug
  */
 export async function GET(
   req: NextRequest,
@@ -14,24 +15,20 @@ export async function GET(
   try {
     const { id } = await params;
 
-    const curso = await prisma.curso.findUnique({
-      where: { id },
+    // Tenta encontrar por ID primeiro; se não achar, tenta por slug
+    const curso = await prisma.curso.findFirst({
+      where: { OR: [{ id }, { slug: id }] },
     });
 
     if (!curso) {
       return createErrorResponse('Curso não encontrado', 404);
     }
 
-    // Normalizar unidades: garantir IDs e estrutura correta
+    // Normalizar unidades: garantir IDs, slugs e estrutura correta
     const unidadesOriginais = (curso.unidades as any) || [];
-    const unidadesNormalizadas = unidadesOriginais.map((unidade: any, index: number) => {
-      // Gerar ID se não existir
+    const unidadesMapped = unidadesOriginais.map((unidade: any, index: number) => {
       const unidadeId = unidade.id || `unidade-${Date.now()}-${index}`;
-      
-      // Normalizar conteúdo: pode vir como 'aulas' ou 'conteudo'
       let conteudoOriginal = unidade.conteudo || unidade.aulas || [];
-      
-      // Garantir que cada conteúdo tenha ID
       const conteudoNormalizado = conteudoOriginal.map((item: any, itemIndex: number) => ({
         ...item,
         id: item.id || `conteudo-${Date.now()}-${index}-${itemIndex}`,
@@ -46,10 +43,12 @@ export async function GET(
         conteudo: conteudoNormalizado,
       };
     });
+    const unidadesNormalizadas = slugifyUnidades(unidadesMapped);
 
     // Converter para formato CursoGerado
     const cursoFormatado: CursoGerado = {
       id: curso.id,
+      slug: curso.slug ?? undefined,
       titulo: curso.titulo,
       descricao: curso.descricao,
       cargaHoraria: curso.cargaHoraria,

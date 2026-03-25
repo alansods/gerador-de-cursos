@@ -200,8 +200,8 @@ export function GeradorCursoProvider({ children }: { children: React.ReactNode }
   const selecionarCurso = useCallback(async (id: string, forceRefresh = false) => {
     // Buscar o curso do servidor se:
     // 1. forceRefresh = true (sempre busca dados frescos, usado no preview)
-    // 2. curso não estiver no state
-    const cursoExiste = state.cursos.find(c => c.id === id)
+    // 2. curso não estiver no state (busca por id ou slug)
+    const cursoExiste = state.cursos.find(c => c.id === id || c.slug === id)
 
     if (forceRefresh || !cursoExiste) {
       try {
@@ -215,15 +215,20 @@ export function GeradorCursoProvider({ children }: { children: React.ReactNode }
 
         if (data.success && data.curso) {
           // Fazer merge ao invés de substituir: remove curso antigo e adiciona o novo
-          const cursosAtualizados = state.cursos.filter(c => c.id !== id)
+          const cursosAtualizados = state.cursos.filter(c => c.id !== data.curso.id)
           dispatch({ type: "CARREGAR_CURSOS", payload: [...cursosAtualizados, data.curso] })
+          // Dispatch com o ID real (não o slug) para o reducer encontrar o curso
+          dispatch({ type: "SELECIONAR_CURSO", payload: data.curso.id })
+          return
         }
       } catch (error) {
         console.error('Erro ao carregar curso:', error)
       }
     }
 
-    dispatch({ type: "SELECIONAR_CURSO", payload: id })
+    // Cache hit: usar id real do curso encontrado (pode ter sido buscado por slug)
+    const realId = cursoExiste?.id || id
+    dispatch({ type: "SELECIONAR_CURSO", payload: realId })
   }, [state.cursos])
 
   const salvarCurso = useCallback(() => {

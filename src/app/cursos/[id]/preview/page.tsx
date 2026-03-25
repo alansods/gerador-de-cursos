@@ -136,7 +136,7 @@ export default function PreviewCursoPage() {
                 {(curso.unidades || []).map((unidade, index) => (
                   <Link
                     key={unidade.id || `unidade-${index}`}
-                    href={`/cursos/${cursoId}/preview/unidade/${unidade.id || index}`}
+                    href={`/cursos/${cursoId}/preview/unidade/${unidade.slug || unidade.id || index}`}
                     onClick={() => setMenuOpen(false)}
                     className="group flex items-center gap-3 p-4 rounded-xl border border-gray-200 dark:border-gray-700 hover:border-orange-300 dark:hover:border-orange-600 hover:bg-orange-50/50 dark:hover:bg-orange-900/30 transition-all duration-200"
                   >

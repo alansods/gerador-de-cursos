@@ -184,7 +184,7 @@ export default function EditarCursoPage() {
   useEffect(() => {
     if (cursoId && !state.loading) {
       // Verificar se o curso não está selecionado ainda
-      if (!state.cursoAtual || state.cursoAtual.id !== cursoId) {
+      if (!state.cursoAtual || (state.cursoAtual.id !== cursoId && state.cursoAtual.slug !== cursoId)) {
         setIsFetchingCurso(true);
         selecionarCurso(cursoId); // Busca do servidor se não estiver no cache
       } else {
@@ -197,7 +197,7 @@ export default function EditarCursoPage() {
 
   // Atualizar isFetchingCurso quando o curso for carregado
   useEffect(() => {
-    if (state.cursoAtual?.id === cursoId) {
+    if (state.cursoAtual?.id === cursoId || state.cursoAtual?.slug === cursoId) {
       setIsFetchingCurso(false);
     }
   }, [state.cursoAtual, cursoId]);

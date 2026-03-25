@@ -59,8 +59,8 @@ export default function PreviewUnidadePage() {
   // Usar cursoAtual do state (que é selecionado) ou buscar na lista
   const curso = state.cursoAtual || state.cursos.find((c) => c.id === cursoId);
   
-  // Buscar unidade por ID ou por índice (fallback para cursos sem IDs nas unidades)
-  const unidade = curso?.unidades?.find((u) => u.id === unidadeId) 
+  // Buscar unidade por slug, ID ou índice numérico
+  const unidade = curso?.unidades?.find((u) => u.slug === unidadeId || u.id === unidadeId)
     || (curso?.unidades && !isNaN(Number(unidadeId)) ? curso.unidades[Number(unidadeId)] : undefined);
 
   useEffect(() => {
@@ -85,15 +85,15 @@ export default function PreviewUnidadePage() {
     );
   }
 
-  // Encontrar índice por ID ou pelo próprio índice (se unidadeId for numérico)
-  let unidadeIndex = curso.unidades.findIndex((u) => u.id === unidadeId);
+  // Encontrar índice por slug, ID ou índice numérico
+  let unidadeIndex = curso.unidades.findIndex((u) => u.slug === unidadeId || u.id === unidadeId);
   if (unidadeIndex === -1 && !isNaN(Number(unidadeId))) {
     unidadeIndex = Number(unidadeId);
   }
   const unidadeAnterior = unidadeIndex > 0 ? curso.unidades[unidadeIndex - 1] : null;
   const proximaUnidade = unidadeIndex < curso.unidades.length - 1 ? curso.unidades[unidadeIndex + 1] : null;
-  const anteriorId = unidadeAnterior?.id || (unidadeIndex > 0 ? unidadeIndex - 1 : null);
-  const proximaId = proximaUnidade?.id || (unidadeIndex < curso.unidades.length - 1 ? unidadeIndex + 1 : null);
+  const anteriorId = unidadeAnterior?.slug || unidadeAnterior?.id || (unidadeIndex > 0 ? unidadeIndex - 1 : null);
+  const proximaId = proximaUnidade?.slug || proximaUnidade?.id || (unidadeIndex < curso.unidades.length - 1 ? unidadeIndex + 1 : null);
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
@@ -131,11 +131,11 @@ export default function PreviewUnidadePage() {
 
               {/* Units Section */}
               {(curso.unidades || []).map((u, index) => {
-                const isActive = u.id === unidadeId || String(index) === unidadeId;
+                const isActive = u.slug === unidadeId || u.id === unidadeId || String(index) === unidadeId;
                 return (
                   <Link
                     key={u.id || `unidade-${index}`}
-                    href={`/cursos/${cursoId}/preview/unidade/${u.id || index}`}
+                    href={`/cursos/${cursoId}/preview/unidade/${u.slug || u.id || index}`}
                     onClick={() => setMenuOpen(false)}
                     className={`group flex items-center gap-3 p-4 rounded-xl border transition-all duration-200 ${
                       isActive

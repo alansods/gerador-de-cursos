@@ -621,7 +621,7 @@ export default function CursosPage() {
                     format={curso.modalidade}
                     createdAt={curso.dataCriacao}
                     onPreview={() => handlePreviewCurso(curso.id)}
-                    onEdit={() => handleEditarCurso(curso.id)}
+                    onEdit={() => handleEditarCurso(curso.slug || curso.id)}
                     onDelete={() => setShowDeleteConfirm(curso.id)}
                     onExport={() => handleOpenExportModal(curso)}
                   />

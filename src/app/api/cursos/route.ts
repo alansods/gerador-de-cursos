@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma';
 import { requireAuth, createErrorResponse, createSuccessResponse } from '@/lib/auth';
 import { CursoGerado } from '@/types/gerador-curso';
 import { logActivity } from '@/lib/activity-logger';
+import { generateUniqueSlug, slugifyUnidades } from '@/lib/slug';
 
 /**
  * GET /api/cursos
@@ -48,9 +49,9 @@ export async function GET(req: NextRequest) {
 
     // Converter para formato CursoGerado com normalização de unidades
     const cursosFormatados: CursoGerado[] = cursos.map((curso) => {
-      // Normalizar unidades: garantir IDs e estrutura correta
+      // Normalizar unidades: garantir IDs, slugs e estrutura correta
       const unidadesOriginais = (curso.unidades as any) || [];
-      const unidadesNormalizadas = unidadesOriginais.map((unidade: any, index: number) => {
+      const unidadesMapped = unidadesOriginais.map((unidade: any, index: number) => {
         const unidadeId = unidade.id || `unidade-${curso.id}-${index}`;
         let conteudoOriginal = unidade.conteudo || unidade.aulas || [];
         const conteudoNormalizado = conteudoOriginal.map((item: any, itemIndex: number) => ({
@@ -67,9 +68,11 @@ export async function GET(req: NextRequest) {
           conteudo: conteudoNormalizado,
         };
       });
+      const unidadesNormalizadas = slugifyUnidades(unidadesMapped);
 
       return {
         id: curso.id,
+        slug: curso.slug ?? undefined,
         titulo: curso.titulo,
         descricao: curso.descricao,
         cargaHoraria: curso.cargaHoraria,
@@ -116,20 +119,14 @@ export async function POST(req: NextRequest) {
       return createErrorResponse('Missing required fields', 400);
     }
 
-    // Normalizar unidades: garantir IDs e estrutura correta
-    const unidadesNormalizadas = (unidades || []).map((unidade: any, index: number) => {
-      // Gerar ID se não existir
+    // Normalizar unidades: garantir IDs, slugs e estrutura correta
+    const unidadesMapped = (unidades || []).map((unidade: any, index: number) => {
       const unidadeId = unidade.id || `unidade-${Date.now()}-${index}`;
-      
-      // Normalizar conteúdo: pode vir como 'aulas' (da IA) ou 'conteudo'
       let conteudoOriginal = unidade.conteudo || unidade.aulas || [];
-      
-      // Garantir que cada conteúdo tenha ID
       const conteudoNormalizado = conteudoOriginal.map((item: any, itemIndex: number) => ({
         ...item,
         id: item.id || `conteudo-${Date.now()}-${index}-${itemIndex}`,
         ordem: item.ordem ?? itemIndex,
-        // Normalizar tipo se vier de 'aulas' da IA
         tipo: item.tipo || 'paragrafo',
       }));
 
@@ -138,15 +135,19 @@ export async function POST(req: NextRequest) {
         id: unidadeId,
         ordem: unidade.ordem ?? index,
         conteudo: conteudoNormalizado,
-        // Remover 'aulas' se existir (foi movido para 'conteudo')
         aulas: undefined,
       };
     });
+    const unidadesNormalizadas = slugifyUnidades(unidadesMapped);
+
+    // Gerar slug único a partir do título
+    const slug = await generateUniqueSlug(titulo);
 
     // Criar curso
     const curso = await prisma.curso.create({
       data: {
         titulo,
+        slug,
         descricao,
         cargaHoraria,
         modalidade,
@@ -168,6 +169,7 @@ export async function POST(req: NextRequest) {
     // Converter para formato CursoGerado
     const cursoFormatado: CursoGerado = {
       id: curso.id,
+      slug: curso.slug ?? undefined,
       titulo: curso.titulo,
       descricao: curso.descricao,
       cargaHoraria: curso.cargaHoraria,
@@ -216,11 +218,8 @@ export async function PUT(req: NextRequest) {
     // Normalizar unidades se fornecidas
     let unidadesNormalizadas = undefined;
     if (unidades !== undefined) {
-      unidadesNormalizadas = unidades.map((unidade: any, index: number) => {
-        // Gerar ID se não existir
+      const unidadesMapped = unidades.map((unidade: any, index: number) => {
         const unidadeId = unidade.id || `unidade-${Date.now()}-${index}`;
-        
-        // Normalizar conteúdo
         let conteudoOriginal = unidade.conteudo || unidade.aulas || [];
         const conteudoNormalizado = conteudoOriginal.map((item: any, itemIndex: number) => ({
           ...item,
@@ -237,6 +236,15 @@ export async function PUT(req: NextRequest) {
           aulas: undefined,
         };
       });
+      unidadesNormalizadas = slugifyUnidades(unidadesMapped);
+    }
+
+    // Regenerar slug se o título mudou
+    let newSlug: string | undefined = undefined;
+    if (titulo && titulo !== cursoExistente.titulo) {
+      newSlug = await generateUniqueSlug(titulo, id);
+    } else if (!cursoExistente.slug && (titulo || cursoExistente.titulo)) {
+      newSlug = await generateUniqueSlug(titulo || cursoExistente.titulo, id);
     }
 
     // Atualizar curso
@@ -244,6 +252,7 @@ export async function PUT(req: NextRequest) {
       where: { id },
       data: {
         ...(titulo && { titulo }),
+        ...(newSlug && { slug: newSlug }),
         ...(descricao && { descricao }),
         ...(cargaHoraria && { cargaHoraria }),
         ...(modalidade && { modalidade }),
@@ -265,6 +274,7 @@ export async function PUT(req: NextRequest) {
     // Converter para formato CursoGerado
     const cursoFormatado: CursoGerado = {
       id: curso.id,
+      slug: curso.slug ?? undefined,
       titulo: curso.titulo,
       descricao: curso.descricao,
       cargaHoraria: curso.cargaHoraria,

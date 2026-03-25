@@ -38,6 +38,7 @@ model Comment {
 model Curso {
   id               String   @id @default(cuid())
   titulo           String
+  slug             String?  @unique
   descricao        String
   cargaHoraria     String   @map("carga_horaria")
   modalidade       String
