@@ -1,8 +1,23 @@
 // Caminho do Ficheiro: src/lib/scorm-service.ts
 
 import JSZip from 'jszip';
+import fs from 'fs/promises';
+import path from 'path';
 // Importe os seus tipos TypeScript. Ajuste o caminho se estiver incorreto.
-import { CursoGerado, Unidade, ConteudoUnidade } from '@/types/gerador-curso'; 
+import { CursoGerado, Unidade, ConteudoUnidade } from '@/types/gerador-curso';
+
+/**
+ * Escapa caracteres especiais HTML/XML para uso seguro em texto
+ */
+function escapeHtml(str: string | undefined | null): string {
+  if (!str) return '';
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
 
 // =======================================================================
 // 1. GERADOR DE HTML (PLAYER) - "player.html"
@@ -117,7 +132,7 @@ function generateIndexHtml(curso: CursoGerado): string {
         </div>
         <div class="flex-1 min-w-0">
           <p class="font-semibold text-gray-900 group-hover:text-orange-600 transition-colors line-clamp-2 text-sm leading-snug">
-            ${unidade.titulo}
+            ${escapeHtml(unidade.titulo)}
           </p>
         </div>
       </a>
@@ -181,8 +196,8 @@ function generateIndexHtml(curso: CursoGerado): string {
                   UNIDADE ${String(index + 1).padStart(2, "0")}
                 </span>
               </div>
-              <h3 class="text-xl md:text-2xl font-bold text-gray-900 leading-tight">${unidade.titulo}</h3>
-              <p class="text-gray-600 text-base leading-relaxed my-2">${unidade.descricao || ''}</p>
+              <h3 class="text-xl md:text-2xl font-bold text-gray-900 leading-tight">${escapeHtml(unidade.titulo)}</h3>
+              <p class="text-gray-600 text-base leading-relaxed my-2">${escapeHtml(unidade.descricao)}</p>
             </div>
             <div class="shrink-0">
               <div class="text-orange-600 h-10 w-10 flex items-center justify-center">
@@ -201,7 +216,7 @@ function generateIndexHtml(curso: CursoGerado): string {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>${curso.titulo}</title>
+  <title>${escapeHtml(curso.titulo)}</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
@@ -241,7 +256,7 @@ function generateIndexHtml(curso: CursoGerado): string {
         <span class="sr-only">Abrir menu</span>
       </button>
       <div class="ml-4 flex-1">
-        <h2 class="text-lg font-semibold text-gray-900 line-clamp-1">${curso.titulo}</h2>
+        <h2 class="text-lg font-semibold text-gray-900 line-clamp-1">${escapeHtml(curso.titulo)}</h2>
       </div>
       <div class="flex items-center gap-3">
         <div class="flex items-center gap-2 text-gray-700">
@@ -315,7 +330,7 @@ function generateIndexHtml(curso: CursoGerado): string {
             <button id="sheet-trigger-menu" type="button" class="p-2 rounded-md text-gray-700 hover:bg-gray-100">
               <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
             </button>
-            <span class="font-bold text-lg text-gray-900">${curso.titulo}</span>
+            <span class="font-bold text-lg text-gray-900">${escapeHtml(curso.titulo)}</span>
           </div>
           <div class="flex items-center gap-3">
             <div class="flex items-center gap-2 text-gray-700">
@@ -337,19 +352,19 @@ function generateIndexHtml(curso: CursoGerado): string {
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div class="mb-4">
             <span class="bg-white/20 text-white text-xs font-bold uppercase tracking-wider px-3 py-1.5 rounded-full">
-              ${curso.categoria}
+              ${escapeHtml(curso.categoria)}
             </span>
           </div>
-          <h1 class="text-3xl md:text-5xl font-bold mb-4">${curso.titulo}</h1>
-          <p class="text-lg md:text-xl text-blue-100 mb-8 max-w-3xl">${curso.descricao}</p>
+          <h1 class="text-3xl md:text-5xl font-bold mb-4">${escapeHtml(curso.titulo)}</h1>
+          <p class="text-lg md:text-xl text-blue-100 mb-8 max-w-3xl">${escapeHtml(curso.descricao)}</p>
           <div class="flex flex-wrap gap-6 text-blue-100">
             <div class="flex items-center gap-2">
               <svg class="w-5 h-5 text-blue-300" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-              <span class="text-sm font-medium">${curso.cargaHoraria}</span>
+              <span class="text-sm font-medium">${escapeHtml(curso.cargaHoraria)}</span>
             </div>
             <div class="flex items-center gap-2">
               <svg class="w-5 h-5 text-blue-300" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-              <span class="text-sm font-medium">${curso.modalidade}</span>
+              <span class="text-sm font-medium">${escapeHtml(curso.modalidade)}</span>
             </div>
           </div>
         </div>
@@ -593,9 +608,9 @@ export function generateManifest(curso: CursoGerado): string {
   </metadata>
   <organizations default="ORG-${sanitizedTitle}">
     <organization identifier="ORG-${sanitizedTitle}">
-      <title>${curso.titulo}</title>
+      <title>${escapeHtml(curso.titulo)}</title>
       <item identifier="ITEM-${sanitizedTitle}" identifierref="RES-${sanitizedTitle}">
-        <title>${curso.titulo}</title>
+        <title>${escapeHtml(curso.titulo)}</title>
       </item>
     </organization>
   </organizations>
@@ -697,19 +712,126 @@ export function getXSDs(): { [key: string]: string } {
 // 5. FUNÇÃO PRINCIPAL DE GERAÇÃO DO ZIP
 // =======================================================================
 
-export async function generateSCORMPackage(curso: CursoGerado): Promise<Buffer> {
+/**
+ * Gera o pacote SCORM a partir do build do Vite player (player/dist/).
+ * Injeta o JSON do curso no index.html pré-buildado via string replace.
+ * Compatível com Vercel: nenhum spawn, nenhum next build — apenas I/O de arquivos.
+ */
+export async function generateSCORMFromPlayerDist(
+  curso: CursoGerado,
+  cursoId?: string
+): Promise<Buffer> {
+  console.log(`📦 [SCORM Service] Iniciando geração via Vite player para: ${curso.titulo}`);
+
+  const distDir = path.join(process.cwd(), 'player', 'dist');
+
+  // Verificar se o player foi buildado
+  try {
+    await fs.access(path.join(distDir, 'index.html'));
+  } catch {
+    throw new Error(
+      'player/dist/index.html não encontrado. Execute "pnpm build:player" antes de exportar.'
+    );
+  }
+
+  const zip = new JSZip();
+
+  // 1. Copiar todos os arquivos de player/dist/ para o ZIP recursivamente
+  async function addDirectoryToZip(dir: string, zipPrefix: string): Promise<void> {
+    const entries = await fs.readdir(dir, { withFileTypes: true });
+    for (const entry of entries) {
+      const fullPath = path.join(dir, entry.name);
+      const zipPath = zipPrefix ? `${zipPrefix}/${entry.name}` : entry.name;
+      if (entry.isDirectory()) {
+        await addDirectoryToZip(fullPath, zipPath);
+      } else {
+        const content = await fs.readFile(fullPath);
+        zip.file(zipPath, content);
+      }
+    }
+  }
+
+  await addDirectoryToZip(distDir, '');
+
+  // 2. Injetar course data no index.html (sobrescreve o arquivo copiado)
+  let indexHtml = await fs.readFile(path.join(distDir, 'index.html'), 'utf-8');
+  const courseJson = JSON.stringify(curso);
+  indexHtml = indexHtml.replace(
+    'null /* COURSE_DATA_PLACEHOLDER */',
+    courseJson
+  );
+  // Remover atributo crossorigin que o Vite adiciona — muitos LMSes bloqueiam
+  // carregamento de assets com esse atributo por política de CORS
+  indexHtml = indexHtml.replace(/ crossorigin/g, '');
+  // Garantir que o charset UTF-8 está declarado (evita mojibake no LMS)
+  if (!indexHtml.includes('charset')) {
+    indexHtml = indexHtml.replace('<head>', '<head>\n  <meta charset="UTF-8" />');
+  }
+  zip.file('index.html', Buffer.from(indexHtml, 'utf-8'));
+
+  // 3. Embutir imagens baixadas localmente (mesma lógica do generateSCORMPackage)
+  if (cursoId) {
+    const imagesDir = path.join(process.cwd(), 'public', 'scorm-images', cursoId);
+    try {
+      const imageFiles = await fs.readdir(imagesDir);
+      for (const file of imageFiles) {
+        const filePath = path.join(imagesDir, file);
+        const fileContent = await fs.readFile(filePath);
+        zip.file(`images/${file}`, fileContent);
+      }
+      console.log(`   🖼️ [SCORM Service] ${imageFiles.length} imagem(ns) embutida(s) no ZIP`);
+    } catch {
+      console.log(`   ℹ️ [SCORM Service] Nenhuma imagem local encontrada para embutir`);
+    }
+  }
+
+  // 4. Gerar imsmanifest.xml
+  zip.file('imsmanifest.xml', generateManifest(curso));
+
+  console.log(`✅ [SCORM Service] Pacote (Vite player) gerado com sucesso para: ${curso.titulo}`);
+
+  return zip.generateAsync({
+    type: 'nodebuffer',
+    compression: 'DEFLATE',
+    compressionOptions: { level: 9 },
+  });
+}
+
+export async function generateSCORMPackage(curso: CursoGerado, cursoId?: string): Promise<Buffer> {
   console.log(`📦 [SCORM Service] Iniciando geração do pacote para: ${curso.titulo}`);
-  
+
   const zip = new JSZip();
 
   // 1. Gerar e adicionar o Manifesto
   const manifestContent = generateManifest(curso);
   zip.file('imsmanifest.xml', manifestContent);
 
-  // 2. Gerar e adicionar o Player ÚNICO (index.html)
-  const indexHtmlContent = generateIndexHtml(curso);
+  // 2. Gerar o HTML do player e embutir imagens locais no ZIP
+  let indexHtmlContent = generateIndexHtml(curso);
+
+  if (cursoId) {
+    const imagesDir = path.join(process.cwd(), 'public', 'scorm-images', cursoId);
+    try {
+      const imageFiles = await fs.readdir(imagesDir);
+      for (const file of imageFiles) {
+        const filePath = path.join(imagesDir, file);
+        const fileContent = await fs.readFile(filePath);
+        zip.file(`images/${file}`, fileContent);
+      }
+      // Substituir caminhos absolutos /scorm-images/{cursoId}/ por relativos images/
+      indexHtmlContent = indexHtmlContent.replace(
+        new RegExp(`/scorm-images/${cursoId}/`, 'g'),
+        'images/'
+      );
+      console.log(`   🖼️ [SCORM Service] ${imageFiles.length} imagem(ns) embutida(s) no ZIP`);
+    } catch {
+      // Diretório de imagens não existe — seguir sem imagens
+      console.log(`   ℹ️ [SCORM Service] Nenhuma imagem local encontrada para embutir`);
+    }
+  }
+
   zip.file('index.html', indexHtmlContent);
-  
+
   // 3. Gerar e adicionar o Wrapper da API
   const wrapperContent = generateScormWrapper();
   zip.file('scorm_api_wrapper.js', wrapperContent);
