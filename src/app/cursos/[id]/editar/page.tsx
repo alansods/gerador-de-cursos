@@ -11,6 +11,7 @@ import { usePreview } from '@/hooks/usePreview'
 import { usePDF } from '@/hooks/usePDF'
 import { useSCORM } from '@/hooks/useSCORM'
 import { ExportModal } from '@/components/ExportModal'
+import { RichTextEditor } from '@/components/RichTextEditor'
 import { PageTransition } from '@/components/PageTransition'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -2608,17 +2609,10 @@ export default function EditarCursoPage() {
                     Conteúdo <span className="text-red-500">*</span>
                   </label>
                   {conteudoTemp.tipo === 'paragrafo' ? (
-                    <textarea
+                    <RichTextEditor
                       value={conteudoTemp.conteudo}
-                      onChange={(e) =>
-                        setConteudoTemp({
-                          ...conteudoTemp,
-                          conteudo: e.target.value,
-                        })
-                      }
+                      onChange={(html) => setConteudoTemp({ ...conteudoTemp, conteudo: html })}
                       placeholder="Digite o parágrafo..."
-                      className="w-full p-3 border border-gray-300 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      rows={8}
                     />
                   ) : (
                     <Input
@@ -3881,17 +3875,13 @@ export default function EditarCursoPage() {
                     Conteúdo <span className="text-red-500">*</span>
                   </label>
                   {editandoConteudo?.tipo === 'paragrafo' ? (
-                    <textarea
+                    <RichTextEditor
                       value={editandoConteudo.conteudo}
-                      onChange={(e) =>
-                        setEditandoConteudo({
-                          ...editandoConteudo,
-                          conteudo: e.target.value,
-                        })
+                      onChange={(html) =>
+                        editandoConteudo &&
+                        setEditandoConteudo({ ...editandoConteudo, conteudo: html })
                       }
                       placeholder="Digite o parágrafo..."
-                      className="w-full p-3 border border-gray-300 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      rows={8}
                     />
                   ) : (
                     <Input
