@@ -8,14 +8,13 @@ import type { CursoGerado } from '@/types/gerador-curso'
 declare global {
   interface Window {
     __COURSE_DATA__: CursoGerado | null
-    // Exposto para compatibilidade com useLMS, SCORMPlayer e SCORMNavbar
-    SCORM?: typeof scormAPI
   }
 }
 
 // Expõe o wrapper como window.SCORM — os hooks existentes (useLMS, SCORMPlayer)
 // já esperam esse objeto nesse endereço
-window.SCORM = scormAPI
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+;(window as any).SCORM = scormAPI
 
 // Inicializa sessão SCORM e define status inicial
 const initialized = scormAPI.init()
