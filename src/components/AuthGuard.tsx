@@ -1,33 +1,33 @@
-'use client';
+'use client'
 
-import { usePathname, useRouter } from 'next/navigation';
-import { Sidebar } from '@/components/Sidebar';
-import { MobileNavbar } from '@/components/layout/MobileNavbar';
-import { useAuth } from '@/context/AuthContext';
-import { useEffect, useState } from 'react';
+import { usePathname, useRouter } from 'next/navigation'
+import { Sidebar } from '@/components/Sidebar'
+import { MobileNavbar } from '@/components/layout/MobileNavbar'
+import { useAuth } from '@/context/AuthContext'
+import { useEffect, useState } from 'react'
 
 interface AuthGuardProps {
-  children: React.ReactNode;
+  children: React.ReactNode
 }
 
 export function AuthGuard({ children }: AuthGuardProps) {
-  const pathname = usePathname();
-  const router = useRouter();
-  const { isAuthenticated, loading } = useAuth();
-  const [loadingTimeout, setLoadingTimeout] = useState(false);
+  const pathname = usePathname()
+  const router = useRouter()
+  const { isAuthenticated, loading } = useAuth()
+  const [loadingTimeout, setLoadingTimeout] = useState(false)
 
   // Detectar se o loading está demorando muito (possível problema após build SCORM)
   useEffect(() => {
     if (loading) {
       const timeoutId = setTimeout(() => {
-        setLoadingTimeout(true);
-      }, 5000); // 5 segundos
+        setLoadingTimeout(true)
+      }, 5000) // 5 segundos
 
-      return () => clearTimeout(timeoutId);
+      return () => clearTimeout(timeoutId)
     } else {
-      setLoadingTimeout(false);
+      setLoadingTimeout(false)
     }
-  }, [loading]);
+  }, [loading])
 
   // Rotas públicas que não exigem autenticação e não mostram sidebar
   const publicRoutes = [
@@ -36,40 +36,47 @@ export function AuthGuard({ children }: AuthGuardProps) {
     '/scorm-preview', // Para SCORM packages (standalone)
     '/login',
     '/cadastro',
-  ];
+  ]
+
+  // Rotas autenticadas que ocultam a sidebar do app (modo imersivo)
+  const noSidebarRoutes = ['/editar']
 
   // Rotas de autenticação (login/cadastro)
-  const authRoutes = ['/login', '/cadastro'];
+  const authRoutes = ['/login', '/cadastro']
 
   // Detectar ambiente SCORM: pathname inclui scorm-preview OU window.SCORM existe
-  const isScormEnvironment = typeof window !== 'undefined' && 'SCORM' in window;
+  const isScormEnvironment = typeof window !== 'undefined' && 'SCORM' in window
 
   // Verificar se é uma rota pública
-  const isPublicRoute = publicRoutes.some(route => pathname?.includes(route)) || isScormEnvironment;
-  const isAuthRoute = authRoutes.some(route => pathname?.includes(route));
+  const isPublicRoute =
+    publicRoutes.some((route) => pathname?.includes(route)) || isScormEnvironment
+  const isAuthRoute = authRoutes.some((route) => pathname?.includes(route))
 
   // Durante build SCORM, tratar como rota pública para evitar loading
-  const isScormBuild = typeof process !== 'undefined' && process.env.SCORM_BUILD_CURSO_FILE;
-  if (isScormBuild) {
-    // Durante build SCORM, não mostrar loading, apenas retornar children
-    return <>{children}</>;
-  }
+  const isScormBuild = typeof process !== 'undefined' && process.env.SCORM_BUILD_CURSO_FILE
 
   // Redirecionar para login se não autenticado e não for rota pública
   useEffect(() => {
+    if (isScormBuild) return
     if (!loading && !isAuthenticated && !isPublicRoute) {
-      console.log('[AuthGuard] 🚫 Acesso negado, redirecionando para login');
-      router.push('/login');
+      console.log('[AuthGuard] 🚫 Acesso negado, redirecionando para login')
+      router.push('/login')
     }
-  }, [loading, isAuthenticated, isPublicRoute, router]);
+  }, [isScormBuild, loading, isAuthenticated, isPublicRoute, router])
 
   // Redirecionar usuários autenticados que tentam acessar login/cadastro
   useEffect(() => {
+    if (isScormBuild) return
     if (!loading && isAuthenticated && isAuthRoute) {
-      console.log('[AuthGuard] ℹ️ Usuário já autenticado, redirecionando para home');
-      router.push('/home');
+      console.log('[AuthGuard] ℹ️ Usuário já autenticado, redirecionando para home')
+      router.push('/home')
     }
-  }, [loading, isAuthenticated, isAuthRoute, router]);
+  }, [isScormBuild, loading, isAuthenticated, isAuthRoute, router])
+
+  if (isScormBuild) {
+    // Durante build SCORM, não mostrar loading, apenas retornar children
+    return <>{children}</>
+  }
 
   // Se ainda está carregando, mostrar loading
   if (loading) {
@@ -97,23 +104,30 @@ export function AuthGuard({ children }: AuthGuardProps) {
           )}
         </div>
       </div>
-    );
+    )
   }
 
   // BLOQUEAR renderização de login/cadastro se já autenticado
   if (isAuthenticated && isAuthRoute) {
     // Não renderizar nada, useEffect já está redirecionando
-    return null;
+    return null
   }
 
   // Se for rota pública (preview, pdf-preview) ou rota de auth não bloqueada, renderizar sem sidebar
   if (isPublicRoute) {
-    return <>{children}</>;
+    return <>{children}</>
   }
 
   // Se não autenticado e não é rota pública, não renderizar nada (useEffect já redirecionou)
   if (!isAuthenticated) {
-    return null;
+    return null
+  }
+
+  const isNoSidebarRoute = noSidebarRoutes.some((route) => pathname?.includes(route))
+
+  // Autenticado em rota imersiva - sem sidebar do app
+  if (isNoSidebarRoute) {
+    return <>{children}</>
   }
 
   // Autenticado - mostrar sidebar e conteúdo
@@ -122,10 +136,8 @@ export function AuthGuard({ children }: AuthGuardProps) {
       <MobileNavbar />
       <Sidebar />
       <main className="flex-1 overflow-auto w-full lg:w-auto">
-        <div className="pt-16 lg:pt-0">
-          {children}
-        </div>
+        <div className="pt-16 lg:pt-0">{children}</div>
       </main>
     </div>
-  );
+  )
 }

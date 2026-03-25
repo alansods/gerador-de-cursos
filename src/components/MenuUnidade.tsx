@@ -1,26 +1,21 @@
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Button } from "@/components/ui/button";
-import { MoreHorizontal, ArrowUp, ArrowDown, Edit, Trash2 } from "lucide-react";
+} from '@/components/ui/dropdown-menu'
+import { Button } from '@/components/ui/button'
+import { MoreHorizontal, ArrowUp, ArrowDown, Edit, Trash2 } from 'lucide-react'
 
 interface MenuUnidadeProps {
-  unidadeId: string;
-  unidadeIndex: number;
-  totalUnidades: number;
-  onMoverAcima: (index: number) => void;
-  onMoverAbaixo: (index: number) => void;
-  onEditar: (unidadeId: string) => void;
-  onDeletar: (unidadeId: string) => void;
+  unidadeId: string
+  unidadeIndex: number
+  totalUnidades: number
+  onMoverAcima: (index: number) => void
+  onMoverAbaixo: (index: number) => void
+  onEditar: (unidadeId: string) => void
+  onDeletar: (unidadeId: string) => void
 }
 
 export function MenuUnidade({
@@ -49,7 +44,7 @@ export function MenuUnidade({
             </TooltipTrigger>
           </DropdownMenuTrigger>
 
-          <TooltipContent className="z-[60]">Ações</TooltipContent>
+          <TooltipContent className="z-[60]">Ações da unidade</TooltipContent>
         </Tooltip>
 
         <DropdownMenuContent align="end" className="z-[60]">
@@ -71,10 +66,7 @@ export function MenuUnidade({
             Mover para baixo
           </DropdownMenuItem>
 
-          <DropdownMenuItem
-            onClick={() => onEditar(unidadeId)}
-            className="cursor-pointer"
-          >
+          <DropdownMenuItem onClick={() => onEditar(unidadeId)} className="cursor-pointer">
             <Edit className="h-4 w-4 mr-2" />
             Editar unidade
           </DropdownMenuItem>
@@ -89,6 +81,5 @@ export function MenuUnidade({
         </DropdownMenuContent>
       </DropdownMenu>
     </TooltipProvider>
-  );
+  )
 }
-
