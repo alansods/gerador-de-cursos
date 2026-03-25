@@ -5,7 +5,7 @@
 export const dynamic = 'error';
 
 import { useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, usePathname } from "next/navigation";
 import { useGeradorCurso } from "@/context/GeradorCursoContext";
 import { PageTransition } from "@/components/PageTransition";
 import { Card, CardContent } from "@/components/ui/card";
@@ -49,7 +49,10 @@ export default function PreviewCursoPage() {
   const { learnerName, isConnected } = useLMS();
   const { isDarkMode, toggleDarkMode } = useTheme();
 
-  const cursoId = params.id as string;
+  const pathname = usePathname();
+  // Extrai o segmento do curso diretamente do pathname (sempre confiável)
+  const cursoUrlSegment = pathname.split('/')[2];
+  const cursoId = params?.id as string | undefined || cursoUrlSegment;
 
   // Selecionar o curso ao carregar a página
   // SEMPRE força refresh para garantir dados atualizados
@@ -61,7 +64,7 @@ export default function PreviewCursoPage() {
   }, [cursoId]); // Remove selecionarCurso das deps para evitar loop infinito
 
   // Usar cursoAtual do state (que é selecionado) ou buscar na lista
-  const curso = state.cursoAtual || state.cursos.find((c) => c.id === cursoId);
+  const curso = state.cursoAtual || state.cursos.find((c) => c.id === cursoId || c.slug === cursoId);
 
   useEffect(() => {
     if (!state.loading && !curso && state.cursos.length > 0) {
@@ -118,7 +121,7 @@ export default function PreviewCursoPage() {
               <nav className="px-4 py-6 space-y-2 overflow-y-auto max-h-[calc(100vh-120px)]">
                 {/* Home Button */}
                 <Link
-                  href={`/cursos/${cursoId}/preview`}
+                  href={`/cursos/${cursoUrlSegment}/preview`}
                   onClick={() => setMenuOpen(false)}
                   className="group flex items-center gap-3 p-4 rounded-xl border border-orange-500 dark:border-orange-600 bg-orange-50/50 dark:bg-orange-900/30 transition-all duration-200"
                 >
@@ -136,7 +139,7 @@ export default function PreviewCursoPage() {
                 {(curso.unidades || []).map((unidade, index) => (
                   <Link
                     key={unidade.id || `unidade-${index}`}
-                    href={`/cursos/${cursoId}/preview/unidade/${unidade.slug || unidade.id || index}`}
+                    href={`/cursos/${cursoUrlSegment}/preview/unidade-${index + 1}`}
                     onClick={() => setMenuOpen(false)}
                     className="group flex items-center gap-3 p-4 rounded-xl border border-gray-200 dark:border-gray-700 hover:border-orange-300 dark:hover:border-orange-600 hover:bg-orange-50/50 dark:hover:bg-orange-900/30 transition-all duration-200"
                   >
@@ -277,7 +280,7 @@ export default function PreviewCursoPage() {
                 curso.unidades.map((unidade, unidadeIndex) => (
                   <Link
                     key={unidade.id || `unidade-${unidadeIndex}`}
-                    href={`/cursos/${cursoId}/preview/unidade/${unidade.id || unidadeIndex}`}
+                    href={`/cursos/${cursoUrlSegment}/preview/unidade-${unidadeIndex + 1}`}
                     className="block"
                   >
                     <Card className="overflow-hidden bg-white dark:bg-gray-800 hover:border-orange-600 dark:hover:border-orange-500 dark:border-gray-700 transition-all duration-200 cursor-pointer">

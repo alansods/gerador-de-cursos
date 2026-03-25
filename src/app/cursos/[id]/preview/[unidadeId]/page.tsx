@@ -5,7 +5,7 @@
 export const dynamic = 'error';
 
 import { useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, usePathname } from "next/navigation";
 import { useGeradorCurso } from "@/context/GeradorCursoContext";
 import {
   Sheet,
@@ -44,9 +44,20 @@ export default function PreviewUnidadePage() {
   const { learnerName, isConnected } = useLMS();
   const { isDarkMode, toggleDarkMode } = useTheme();
 
-  const cursoId = params.id as string;
-  const unidadeId = params.unidadeId as string;
-  
+  const pathname = usePathname();
+  const pathParts = pathname.split('/');
+  // pathname = /cursos/[slug]/preview/unidade-N
+  const cursoUrlSegment = pathParts[2];
+  const unidadeSegment = pathParts[4]; // 'unidade-1', 'unidade-2', etc.
+
+  const cursoId = params?.id as string | undefined || cursoUrlSegment;
+  const unidadeId = params?.unidadeId as string | undefined || unidadeSegment;
+
+  // Índice numérico da unidade a partir do segmento 'unidade-N'
+  const unidadeIndexFromUrl = unidadeSegment
+    ? parseInt(unidadeSegment.replace('unidade-', ''), 10) - 1
+    : -1;
+
   // Selecionar o curso ao carregar a página
   // SEMPRE força refresh para garantir dados atualizados
   useEffect(() => {
@@ -57,21 +68,22 @@ export default function PreviewUnidadePage() {
   }, [cursoId]); // Remove selecionarCurso das deps para evitar loop infinito
 
   // Usar cursoAtual do state (que é selecionado) ou buscar na lista
-  const curso = state.cursoAtual || state.cursos.find((c) => c.id === cursoId);
-  
-  // Buscar unidade por slug, ID ou índice numérico
-  const unidade = curso?.unidades?.find((u) => u.slug === unidadeId || u.id === unidadeId)
-    || (curso?.unidades && !isNaN(Number(unidadeId)) ? curso.unidades[Number(unidadeId)] : undefined);
+  const curso = state.cursoAtual || state.cursos.find((c) => c.id === cursoId || c.slug === cursoId);
+
+  // Buscar unidade: primeiro pelo índice da URL (confiável), depois por slug/id como fallback
+  const unidade = (curso?.unidades && unidadeIndexFromUrl >= 0)
+    ? curso.unidades[unidadeIndexFromUrl]
+    : curso?.unidades?.find((u) => u.slug === unidadeId || u.id === unidadeId);
 
   useEffect(() => {
     if (!state.loading && (!curso || !unidade)) {
       if (!curso) {
         router.push("/cursos");
       } else {
-        router.push(`/cursos/${cursoId}/preview`);
+        router.push(`/cursos/${cursoUrlSegment}/preview`);
       }
     }
-  }, [curso, unidade, router, state.loading, cursoId]);
+  }, [curso, unidade, router, state.loading, cursoUrlSegment]);
 
   if (!curso || !unidade) {
     return (
@@ -85,15 +97,11 @@ export default function PreviewUnidadePage() {
     );
   }
 
-  // Encontrar índice por slug, ID ou índice numérico
-  let unidadeIndex = curso.unidades.findIndex((u) => u.slug === unidadeId || u.id === unidadeId);
-  if (unidadeIndex === -1 && !isNaN(Number(unidadeId))) {
-    unidadeIndex = Number(unidadeId);
-  }
-  const unidadeAnterior = unidadeIndex > 0 ? curso.unidades[unidadeIndex - 1] : null;
-  const proximaUnidade = unidadeIndex < curso.unidades.length - 1 ? curso.unidades[unidadeIndex + 1] : null;
-  const anteriorId = unidadeAnterior?.slug || unidadeAnterior?.id || (unidadeIndex > 0 ? unidadeIndex - 1 : null);
-  const proximaId = proximaUnidade?.slug || proximaUnidade?.id || (unidadeIndex < curso.unidades.length - 1 ? unidadeIndex + 1 : null);
+  // Índice da unidade atual (baseado na URL)
+  const unidadeIndex = unidadeIndexFromUrl >= 0 ? unidadeIndexFromUrl
+    : curso.unidades.findIndex((u) => u.slug === unidadeId || u.id === unidadeId);
+  const anteriorId = unidadeIndex > 0 ? `unidade-${unidadeIndex}` : null;
+  const proximaId = unidadeIndex < curso.unidades.length - 1 ? `unidade-${unidadeIndex + 2}` : null;
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
@@ -115,7 +123,7 @@ export default function PreviewUnidadePage() {
             <nav className="px-4 py-6 space-y-2 overflow-y-auto max-h-[calc(100vh-120px)]">
               {/* Home Button */}
               <Link
-                href={`/cursos/${cursoId}/preview`}
+                href={`/cursos/${cursoUrlSegment}/preview`}
                 onClick={() => setMenuOpen(false)}
                 className="group flex items-center gap-3 p-4 rounded-xl border border-gray-200 dark:border-gray-700 hover:border-orange-300 dark:hover:border-orange-600 hover:bg-orange-50/50 dark:hover:bg-orange-900/30 transition-all duration-200"
               >
@@ -131,11 +139,11 @@ export default function PreviewUnidadePage() {
 
               {/* Units Section */}
               {(curso.unidades || []).map((u, index) => {
-                const isActive = u.slug === unidadeId || u.id === unidadeId || String(index) === unidadeId;
+                const isActive = `unidade-${index + 1}` === unidadeSegment;
                 return (
                   <Link
                     key={u.id || `unidade-${index}`}
-                    href={`/cursos/${cursoId}/preview/unidade/${u.slug || u.id || index}`}
+                    href={`/cursos/${cursoUrlSegment}/preview/unidade-${index + 1}`}
                     onClick={() => setMenuOpen(false)}
                     className={`group flex items-center gap-3 p-4 rounded-xl border transition-all duration-200 ${
                       isActive
@@ -238,7 +246,7 @@ export default function PreviewUnidadePage() {
             <Link
               href={
                 anteriorId !== null
-                  ? `/cursos/${cursoId}/preview/unidade/${anteriorId}`
+                  ? `/cursos/${cursoUrlSegment}/preview/${anteriorId}`
                   : '#'
               }
               className={anteriorId !== null ? '' : 'pointer-events-none'}
@@ -263,7 +271,7 @@ export default function PreviewUnidadePage() {
             <Link
               href={
                 proximaId !== null
-                  ? `/cursos/${cursoId}/preview/unidade/${proximaId}`
+                  ? `/cursos/${cursoUrlSegment}/preview/${proximaId}`
                   : '#'
               }
               className={proximaId !== null ? '' : 'pointer-events-none'}
