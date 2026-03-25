@@ -1,0 +1,10 @@
+.next/
+out/
+dist/
+node_modules/
+pnpm-lock.yaml
+*.min.js
+public/
+player/dist/
+.next-scorm/
+.scorm-build/
