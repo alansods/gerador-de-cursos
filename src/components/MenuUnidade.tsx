@@ -1,85 +1,43 @@
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { Button } from '@/components/ui/button'
-import { MoreHorizontal, ArrowUp, ArrowDown, Edit, Trash2 } from 'lucide-react'
+import { MoreVertical, Edit, Trash2 } from 'lucide-react'
 
 interface MenuUnidadeProps {
   unidadeId: string
-  unidadeIndex: number
-  totalUnidades: number
-  onMoverAcima: (index: number) => void
-  onMoverAbaixo: (index: number) => void
   onEditar: (unidadeId: string) => void
   onDeletar: (unidadeId: string) => void
 }
 
-export function MenuUnidade({
-  unidadeId,
-  unidadeIndex,
-  totalUnidades,
-  onMoverAcima,
-  onMoverAbaixo,
-  onEditar,
-  onDeletar,
-}: MenuUnidadeProps) {
+export function MenuUnidade({ unidadeId, onEditar, onDeletar }: MenuUnidadeProps) {
   return (
-    <TooltipProvider>
-      <DropdownMenu>
-        <Tooltip>
-          <DropdownMenuTrigger asChild>
-            <TooltipTrigger asChild>
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-8 w-8 p-0"
-                aria-label="Ações da unidade"
-              >
-                <MoreHorizontal className="h-4 w-4" />
-              </Button>
-            </TooltipTrigger>
-          </DropdownMenuTrigger>
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <button
+          className="p-1.5 rounded text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+          aria-label="Ações da unidade"
+        >
+          <MoreVertical className="h-4 w-4" />
+        </button>
+      </DropdownMenuTrigger>
 
-          <TooltipContent className="z-[60]">Ações da unidade</TooltipContent>
-        </Tooltip>
+      <DropdownMenuContent align="end" className="w-44 z-[60]">
+        <DropdownMenuItem onClick={() => onEditar(unidadeId)} className="cursor-pointer gap-2">
+          <Edit className="h-3.5 w-3.5" />
+          Editar unidade
+        </DropdownMenuItem>
 
-        <DropdownMenuContent align="end" className="z-[60]">
-          <DropdownMenuItem
-            onClick={() => onMoverAcima(unidadeIndex)}
-            disabled={unidadeIndex === 0}
-            className="cursor-pointer"
-          >
-            <ArrowUp className="h-4 w-4 mr-2" />
-            Mover para cima
-          </DropdownMenuItem>
-
-          <DropdownMenuItem
-            onClick={() => onMoverAbaixo(unidadeIndex)}
-            disabled={unidadeIndex === totalUnidades - 1}
-            className="cursor-pointer"
-          >
-            <ArrowDown className="h-4 w-4 mr-2" />
-            Mover para baixo
-          </DropdownMenuItem>
-
-          <DropdownMenuItem onClick={() => onEditar(unidadeId)} className="cursor-pointer">
-            <Edit className="h-4 w-4 mr-2" />
-            Editar unidade
-          </DropdownMenuItem>
-
-          <DropdownMenuItem
-            onClick={() => onDeletar(unidadeId)}
-            className="cursor-pointer text-red-600 focus:text-red-600"
-          >
-            <Trash2 className="h-4 w-4 mr-2" />
-            Deletar unidade
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
-    </TooltipProvider>
+        <DropdownMenuItem
+          onClick={() => onDeletar(unidadeId)}
+          className="cursor-pointer gap-2 text-red-600 focus:text-red-600"
+        >
+          <Trash2 className="h-3.5 w-3.5" />
+          Deletar unidade
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
   )
 }

@@ -4,10 +4,11 @@
 // O Next.js deve ignorar esta página durante build estático
 export const dynamic = 'error'
 
-import { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import { useGeradorCurso } from '@/context/GeradorCursoContext'
 import { usePreview } from '@/hooks/usePreview'
+import { useTheme } from '@/hooks/useTheme'
 import { usePDF } from '@/hooks/usePDF'
 import { useSCORM } from '@/hooks/useSCORM'
 import { ExportModal } from '@/components/ExportModal'
@@ -49,9 +50,20 @@ import {
   List,
   HelpCircle,
   AlertTriangle,
+  MoreVertical,
+  GripVertical,
+  Moon,
+  Sun,
 } from 'lucide-react'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
-import { MenuUnidade } from '@/components/MenuUnidade'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+
 import { SortableConteudoWrapper } from '@/components/SortableConteudoWrapper'
 import {
   DndContext,
@@ -61,10 +73,73 @@ import {
   useSensors,
   closestCenter,
 } from '@dnd-kit/core'
-import { SortableContext, arrayMove, verticalListSortingStrategy } from '@dnd-kit/sortable'
+import {
+  SortableContext,
+  arrayMove,
+  verticalListSortingStrategy,
+  useSortable,
+} from '@dnd-kit/sortable'
+import { CSS } from '@dnd-kit/utilities'
 import { QuizConteudo } from '@/components/QuizConteudo'
 import { InfoBox } from '@/components/info-box'
 import { QuizData, QuizQuestion } from '@/types/gerador-curso'
+
+function SortableUnidadeItem({
+  unidade,
+  idx,
+  isAtiva,
+  onClick,
+}: {
+  unidade: { id: string; titulo: string; descricao?: string; conteudo?: unknown[] }
+  idx: number
+  isAtiva: boolean
+  onClick: () => void
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: unidade.id,
+  })
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  }
+  return (
+    <div ref={setNodeRef} style={style} className="w-full">
+      <button
+        onClick={onClick}
+        className={`w-full text-left p-3 rounded-lg transition-all ${
+          isAtiva
+            ? 'bg-blue-600 text-white shadow-sm'
+            : 'hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300'
+        }`}
+      >
+        <div className="flex items-start gap-2">
+          <span
+            {...attributes}
+            {...listeners}
+            onClick={(e) => e.stopPropagation()}
+            className="cursor-grab active:cursor-grabbing shrink-0 mt-0.5 text-gray-300 hover:text-gray-500 dark:hover:text-gray-400"
+            aria-label="Arrastar para reordenar"
+          >
+            <GripVertical className="h-3.5 w-3.5" />
+          </span>
+          <span
+            className={`text-xs font-bold shrink-0 ${isAtiva ? 'text-blue-200' : 'text-blue-500 dark:text-blue-400'}`}
+          >
+            {idx + 1}.
+          </span>
+          <span className="text-xs font-semibold">{unidade.titulo}</span>
+        </div>
+        <p
+          className={`text-xs mt-1 ml-6 ${isAtiva ? 'text-blue-200' : 'text-gray-400 dark:text-gray-500'}`}
+        >
+          {(unidade.conteudo || []).length}{' '}
+          {(unidade.conteudo || []).length === 1 ? 'item' : 'itens'}
+        </p>
+      </button>
+    </div>
+  )
+}
 
 export default function EditarCursoPage() {
   const {
@@ -80,6 +155,7 @@ export default function EditarCursoPage() {
     selecionarCurso,
   } = useGeradorCurso()
   const { openPreview } = usePreview()
+  const { isDarkMode, toggleDarkMode } = useTheme()
   const { generatePDF, isGenerating: isGeneratingPDF } = usePDF()
   const { generateSCORM, isGeneratingSCORM } = useSCORM()
   const router = useRouter()
@@ -163,6 +239,12 @@ export default function EditarCursoPage() {
   const [imagePreviewUrl, setImagePreviewUrl] = useState<string | null>(null)
   const [isFetchingCurso, setIsFetchingCurso] = useState(false)
   const [unidadeParaDeletar, setUnidadeParaDeletar] = useState<string | null>(null)
+  const insertAtIndex = useRef<{ unidadeId: string; index: number } | null>(null)
+  const pendingInsert = useRef<{ unidadeId: string; targetIndex: number } | null>(null)
+  const [isSavingConteudo, setIsSavingConteudo] = useState(false)
+  const [isDeletingConteudo, setIsDeletingConteudo] = useState(false)
+  const shouldCloseModal = useRef(false)
+  const shouldCloseDeleteModal = useRef(false)
   const [conteudoParaDeletar, setConteudoParaDeletar] = useState<{
     unidadeId: string
     conteudoId: string
@@ -235,6 +317,58 @@ export default function EditarCursoPage() {
       setCategoriaEditada(state.cursoAtual.categoria)
     }
   }, [editarCursoModal, state.cursoAtual])
+
+  // Reordenar item recém-adicionado para a posição correta após o state atualizar
+  useEffect(() => {
+    if (pendingInsert.current) {
+      const { unidadeId, targetIndex } = pendingInsert.current
+      const unidade = state.cursoAtual?.unidades?.find((u) => u.id === unidadeId)
+      if (unidade) {
+        const c = [...(unidade.conteudo || [])]
+        if (c.length > 0 && targetIndex < c.length) {
+          pendingInsert.current = null
+          const reord = arrayMove(c, c.length - 1, targetIndex)
+          reord.forEach((item, i) => (item.ordem = i))
+          editarUnidade(unidadeId, { conteudo: reord })
+          return
+        }
+      }
+    }
+    if (shouldCloseModal.current) {
+      shouldCloseModal.current = false
+      setIsSavingConteudo(false)
+      toast.success('Conteúdo adicionado')
+      setConteudoTemp({
+        tipo: 'paragrafo',
+        conteudo: '',
+        unidadeId: '',
+        tamanho: 'media',
+        legenda: '',
+        fonte: '',
+        corTexto: '#000000',
+        alinhamento: 'esquerda',
+        colunas: 12,
+        items: [],
+        tipoFrente: 'titulo',
+        imagemFrente: '',
+        tituloFrente: '',
+        conteudoVerso: '',
+        alturaCard: '300px',
+        itensLista: [],
+        tipoLista: 'nao-ordenada',
+        quizData: undefined,
+        tipoInfoBox: 'info',
+        tituloInfoBox: '',
+      })
+    }
+    if (shouldCloseDeleteModal.current) {
+      shouldCloseDeleteModal.current = false
+      setIsDeletingConteudo(false)
+      toast.error('Conteúdo excluído')
+      setConfirmarDeletarConteudo(false)
+      setConteudoParaDeletar(null)
+    }
+  }, [state.cursoAtual?.unidades, editarUnidade])
 
   const handleVoltar = () => router.push('/cursos')
 
@@ -565,29 +699,14 @@ export default function EditarCursoPage() {
       tipoInfoBox: conteudoTemp.tipoInfoBox,
       tituloInfoBox: conteudoTemp.tituloInfoBox,
     })
-    toast.success('Conteúdo adicionado')
-    setConteudoTemp({
-      tipo: 'paragrafo',
-      conteudo: '',
-      unidadeId: '',
-      tamanho: 'media',
-      legenda: '',
-      fonte: '',
-      corTexto: '#000000',
-      alinhamento: 'esquerda',
-      colunas: 12,
-      items: [],
-      tipoFrente: 'titulo',
-      imagemFrente: '',
-      tituloFrente: '',
-      conteudoVerso: '',
-      alturaCard: '300px',
-      itensLista: [],
-      tipoLista: 'nao-ordenada',
-      quizData: undefined,
-      tipoInfoBox: 'info',
-      tituloInfoBox: '',
-    })
+    // Se foi solicitada inserção em posição específica, registrar para reordenar após state atualizar
+    if (insertAtIndex.current && insertAtIndex.current.unidadeId === conteudoTemp.unidadeId) {
+      pendingInsert.current = {
+        unidadeId: conteudoTemp.unidadeId,
+        targetIndex: insertAtIndex.current.index + 1,
+      }
+      insertAtIndex.current = null
+    }
   }
 
   const handleEditarConteudo = (
@@ -826,7 +945,8 @@ export default function EditarCursoPage() {
       | 'lista'
       | 'quiz'
       | 'info-box',
-    unidadeId?: string
+    unidadeId?: string,
+    colunas: 6 | 12 = 12
   ) => {
     if (unidadeId) {
       // Inicializar quizData com uma pergunta vazia se for quiz
@@ -858,7 +978,7 @@ export default function EditarCursoPage() {
         fonte: '',
         corTexto: '#000000',
         alinhamento: 'esquerda',
-        colunas: 12,
+        colunas: colunas,
         items: tipo === 'accordion' ? [] : [],
         tipoFrente: tipo === 'flipcard' ? 'titulo' : 'titulo',
         imagemFrente: tipo === 'flipcard' ? '' : '',
@@ -874,24 +994,7 @@ export default function EditarCursoPage() {
     }
   }
 
-  const handleMoverUnidadeAcima = (index: number) => {
-    if (index > 0) {
-      const unidades = [...(state.cursoAtual?.unidades || [])]
-      ;[unidades[index - 1], unidades[index]] = [unidades[index], unidades[index - 1]]
-      unidades.forEach((u, i) => (u.ordem = i))
-      reordenarUnidades(unidades)
-    }
-  }
-
-  const handleMoverUnidadeAbaixo = (index: number) => {
-    const unidades = state.cursoAtual?.unidades || []
-    if (index < unidades.length - 1) {
-      const newUnidades = [...unidades]
-      ;[newUnidades[index], newUnidades[index + 1]] = [newUnidades[index + 1], newUnidades[index]]
-      newUnidades.forEach((u, i) => (u.ordem = i))
-      reordenarUnidades(newUnidades)
-    }
-  }
+  // handleMoverUnidadeAcima e handleMoverUnidadeAbaixo removidos — reordenação via drag-and-drop na sidebar
 
   const handlePreview = () => {
     if (state.cursoAtual) {
@@ -912,6 +1015,17 @@ export default function EditarCursoPage() {
     const novoConteudo = arrayMove(conteudo, oldIndex, newIndex)
     novoConteudo.forEach((c, i) => (c.ordem = i))
     editarUnidade(unidadeId, { conteudo: novoConteudo })
+  }
+
+  const handleDragEndUnidade = (event: DragEndEvent) => {
+    const { active, over } = event
+    if (!over || active.id === over.id) return
+    const unidades = [...(state.cursoAtual?.unidades || [])]
+    const oldIndex = unidades.findIndex((u) => u.id === active.id)
+    const newIndex = unidades.findIndex((u) => u.id === over.id)
+    const novas = arrayMove(unidades, oldIndex, newIndex)
+    reordenarUnidades(novas)
+    setUnidadeAtivaIndex(newIndex)
   }
 
   // Verificar se está carregando ou se o curso não foi encontrado
@@ -942,6 +1056,21 @@ export default function EditarCursoPage() {
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger asChild>
+                      <Button
+                        variant="outline"
+                        size="default"
+                        onClick={toggleDarkMode}
+                        className="h-10 w-10 p-0"
+                      >
+                        {isDarkMode ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>{isDarkMode ? 'Modo claro' : 'Modo escuro'}</TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
                       <Button variant="outline" onClick={handlePreview}>
                         <Eye className="h-4 w-4 mr-2" />
                         Preview
@@ -966,33 +1095,34 @@ export default function EditarCursoPage() {
         <div className="flex flex-1 overflow-hidden">
           {/* Sidebar Esquerda - Lista de Unidades */}
           <div className="w-64 border-r border-[#e5e7eb] dark:border-gray-800 flex flex-col overflow-hidden bg-white/60 dark:bg-gray-900/60 flex-shrink-0">
-            <div className="p-4 border-b border-[#e5e7eb] dark:border-gray-800 flex items-start justify-between gap-2">
-              <div className="flex-1 min-w-0">
-                <p className="text-xs font-medium text-blue-600 dark:text-blue-400 uppercase tracking-wide mb-1">
+            <div className="p-4 border-b border-[#e5e7eb] dark:border-gray-800">
+              <div className="flex items-center justify-between gap-2 mb-1">
+                <p className="text-xs font-medium text-blue-600 dark:text-blue-400 uppercase tracking-wide">
                   Curso
                 </p>
-                <h2 className="text-sm font-bold text-gray-900 dark:text-gray-100 leading-tight line-clamp-2">
-                  {state.cursoAtual.titulo}
-                </h2>
-                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                  {state.cursoAtual.cargaHoraria} · {state.cursoAtual.modalidade}
-                </p>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setEditarCursoModal(true)}
+                        className="shrink-0 h-6 w-6 p-0"
+                      >
+                        <Edit className="h-3.5 w-3.5" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>Editar curso</TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
               </div>
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setEditarCursoModal(true)}
-                      className="shrink-0 h-7 w-7 p-0"
-                    >
-                      <Edit className="h-3.5 w-3.5" />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>Editar curso</TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
+              <h2 className="text-sm font-bold text-gray-900 dark:text-gray-100 leading-tight">
+                {state.cursoAtual.titulo}
+              </h2>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                {state.cursoAtual.cargaHoraria} · {state.cursoAtual.modalidade}
+                {state.cursoAtual.categoria && <> · {state.cursoAtual.categoria}</>}
+              </p>
             </div>
             <div className="flex-1 overflow-y-auto p-3 space-y-1">
               {(state.cursoAtual.unidades || []).length === 0 ? (
@@ -1000,37 +1130,26 @@ export default function EditarCursoPage() {
                   Nenhuma unidade
                 </p>
               ) : (
-                (state.cursoAtual.unidades || []).map((u, idx) => (
-                  <button
-                    key={u.id || `sb-${idx}`}
-                    onClick={() => setUnidadeAtivaIndex(idx)}
-                    className={`w-full text-left p-3 rounded-lg transition-all ${
-                      idx === unidadeAtivaIndex
-                        ? 'bg-blue-600 text-white shadow-sm'
-                        : 'hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300'
-                    }`}
+                <DndContext
+                  sensors={dndSensors}
+                  collisionDetection={closestCenter}
+                  onDragEnd={handleDragEndUnidade}
+                >
+                  <SortableContext
+                    items={(state.cursoAtual.unidades || []).map((u) => u.id)}
+                    strategy={verticalListSortingStrategy}
                   >
-                    <div className="flex items-center gap-2">
-                      <Layers
-                        className={`h-3.5 w-3.5 shrink-0 ${idx === unidadeAtivaIndex ? 'text-blue-100' : 'text-blue-500 dark:text-blue-400'}`}
+                    {(state.cursoAtual.unidades || []).map((u, idx) => (
+                      <SortableUnidadeItem
+                        key={u.id || `sb-${idx}`}
+                        unidade={u}
+                        idx={idx}
+                        isAtiva={idx === unidadeAtivaIndex}
+                        onClick={() => setUnidadeAtivaIndex(idx)}
                       />
-                      <span className="text-xs font-semibold truncate">{u.titulo}</span>
-                    </div>
-                    {u.descricao && (
-                      <p
-                        className={`text-xs mt-1 ml-5 line-clamp-2 ${idx === unidadeAtivaIndex ? 'text-blue-100' : 'text-gray-500 dark:text-gray-400'}`}
-                      >
-                        {u.descricao}
-                      </p>
-                    )}
-                    <p
-                      className={`text-xs mt-1 ml-5 ${idx === unidadeAtivaIndex ? 'text-blue-200' : 'text-gray-400 dark:text-gray-500'}`}
-                    >
-                      {(u.conteudo || []).length}{' '}
-                      {(u.conteudo || []).length === 1 ? 'item' : 'itens'}
-                    </p>
-                  </button>
-                ))
+                    ))}
+                  </SortableContext>
+                </DndContext>
               )}
             </div>
             <div className="p-3 border-t border-[#e5e7eb] dark:border-gray-800">
@@ -1047,9 +1166,9 @@ export default function EditarCursoPage() {
           </div>
 
           {/* Painel Direito - Conteúdo da Unidade Ativa */}
-          <div className="flex-1 overflow-y-auto">
+          <div className="flex-1 flex flex-col overflow-hidden">
             {/* Conteúdo Principal */}
-            <div className="px-6 py-6">
+            <div className="flex-1 overflow-y-auto px-6 py-6">
               {/* Card de Informações do Curso */}
               <Card className="hidden mb-8 border-0 shadow-xl overflow-hidden bg-gradient-to-br from-blue-600 via-blue-700 to-purple-600 dark:from-blue-800 dark:via-purple-800 dark:to-purple-900 text-white">
                 <CardHeader className="pb-6 pt-8 px-8">
@@ -1154,22 +1273,45 @@ export default function EditarCursoPage() {
                             <div className="flex items-center space-x-3">
                               <Layers className="h-6 w-6 text-blue-600 dark:text-blue-400" />
                               <h3 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-                                {unidade.titulo}
+                                {unidadeIndex + 1}. {unidade.titulo}
                               </h3>
                             </div>
                             <p className="mt-2 ml-9 text-gray-600 dark:text-gray-400 text-sm">
                               {unidade.descricao}
                             </p>
                           </div>
-                          <MenuUnidade
-                            unidadeId={unidade.id}
-                            unidadeIndex={unidadeIndex}
-                            totalUnidades={(state.cursoAtual?.unidades || []).length}
-                            onMoverAcima={handleMoverUnidadeAcima}
-                            onMoverAbaixo={handleMoverUnidadeAbaixo}
-                            onEditar={openEditarUnidadeModal}
-                            onDeletar={handleDeletarUnidade}
-                          />
+                          <div className="flex items-center gap-1 shrink-0">
+                            <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => openEditarUnidadeModal(unidade.id)}
+                                    className="h-8 w-8 p-0"
+                                  >
+                                    <Edit className="h-4 w-4" />
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>Editar unidade</TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
+                            <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => handleDeletarUnidade(unidade.id)}
+                                    className="h-8 w-8 p-0 text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20"
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>Deletar unidade</TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
+                          </div>
                         </div>
                       </CardHeader>
 
@@ -1219,466 +1361,575 @@ export default function EditarCursoPage() {
                               items={(unidade.conteudo || []).map((c) => c.id)}
                               strategy={verticalListSortingStrategy}
                             >
-                              <div className="grid grid-cols-1 md:grid-cols-12 gap-3">
-                                {(unidade.conteudo || []).map((item, itemIndex) => (
-                                  <SortableConteudoWrapper
-                                    key={item.id}
-                                    id={item.id}
-                                    colunas={item.colunas}
-                                  >
-                                    {(dragHandle) => (
-                                      <div className="flex items-start space-x-3 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                                        {dragHandle}
-                                        <div className="shrink-0 mt-1">
-                                          {item.tipo === 'titulo' ? (
-                                            <Heading2 className="h-4 w-4 text-purple-600 dark:text-purple-400" />
-                                          ) : item.tipo === 'subtitulo' ? (
-                                            <Heading3 className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-                                          ) : item.tipo === 'imagem' ? (
-                                            <Image className="h-4 w-4 text-green-600 dark:text-green-400" />
-                                          ) : item.tipo === 'accordion' ? (
-                                            <ChevronDown className="h-4 w-4 text-orange-600 dark:text-orange-400" />
-                                          ) : item.tipo === 'flipcard' ? (
-                                            <RotateCcw className="h-4 w-4 text-pink-600 dark:text-pink-400" />
-                                          ) : item.tipo === 'lista' ? (
-                                            <List className="h-4 w-4 text-purple-600 dark:text-purple-400" />
-                                          ) : item.tipo === 'quiz' ? (
-                                            <HelpCircle className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />
-                                          ) : item.tipo === 'info-box' ? (
-                                            <AlertTriangle className="h-4 w-4 text-yellow-600 dark:text-yellow-400" />
-                                          ) : (
-                                            <Type className="h-4 w-4 text-gray-600 dark:text-gray-400" />
-                                          )}
-                                        </div>
-                                        <div className="flex-1">
-                                          {item.tipo === 'titulo' ? (
-                                            <h3 className="font-bold text-lg text-gray-900 dark:text-gray-100">
-                                              {item.conteudo}
-                                            </h3>
-                                          ) : item.tipo === 'subtitulo' ? (
-                                            <h4 className="font-semibold text-gray-900 dark:text-gray-100">
-                                              {item.conteudo}
-                                            </h4>
-                                          ) : item.tipo === 'flipcard' ? (
-                                            <div className="border border-[#e5e7eb] dark:border-gray-700 rounded-lg p-4 bg-linear-to-br from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 text-center min-h-[72px] flex flex-col items-center justify-center gap-2">
-                                              {item.imagemFrente && (
-                                                <img
-                                                  src={item.imagemFrente}
-                                                  alt=""
-                                                  className="max-h-14 mx-auto object-contain rounded"
-                                                  onError={(e) => {
-                                                    e.currentTarget.style.display = 'none'
-                                                  }}
-                                                />
-                                              )}
-                                              {item.tituloFrente ? (
-                                                <p className="font-semibold text-sm text-gray-800 dark:text-gray-200">
-                                                  {item.tituloFrente}
-                                                </p>
-                                              ) : (
-                                                <p className="text-xs text-gray-400 italic">
-                                                  Sem conteúdo na frente
-                                                </p>
-                                              )}
-                                            </div>
-                                          ) : item.tipo === 'accordion' ? (
-                                            <div className="border border-[#e5e7eb] dark:border-gray-700 rounded-lg overflow-hidden">
-                                              {(item.items || []).length === 0 ? (
-                                                <p className="text-xs text-gray-400 italic p-3">
-                                                  Nenhum item
-                                                </p>
-                                              ) : (
-                                                (item.items || []).map((acc, idx) => (
-                                                  <div
-                                                    key={acc.id || idx}
-                                                    className="flex items-center justify-between px-3 py-2 bg-gray-50 dark:bg-gray-800 border-b border-[#e5e7eb] dark:border-gray-700 last:border-b-0"
+                              <div className="grid grid-cols-12 gap-3">
+                                {(() => {
+                                  type TipoInsert =
+                                    | 'titulo'
+                                    | 'subtitulo'
+                                    | 'paragrafo'
+                                    | 'imagem'
+                                    | 'accordion'
+                                    | 'flipcard'
+                                    | 'lista'
+                                    | 'quiz'
+                                    | 'info-box'
+                                  const tiposInsert: {
+                                    tipo: TipoInsert
+                                    label: string
+                                    icon: React.ReactNode
+                                  }[] = [
+                                    {
+                                      tipo: 'titulo',
+                                      label: 'Título',
+                                      icon: <Heading2 className="h-3.5 w-3.5" />,
+                                    },
+                                    {
+                                      tipo: 'subtitulo',
+                                      label: 'Subtítulo',
+                                      icon: <Heading3 className="h-3.5 w-3.5" />,
+                                    },
+                                    {
+                                      tipo: 'paragrafo',
+                                      label: 'Parágrafo',
+                                      icon: <Type className="h-3.5 w-3.5" />,
+                                    },
+                                    {
+                                      tipo: 'imagem',
+                                      label: 'Imagem',
+                                      icon: <Image className="h-3.5 w-3.5" />,
+                                    },
+                                    {
+                                      tipo: 'accordion',
+                                      label: 'Accordion',
+                                      icon: <ChevronDown className="h-3.5 w-3.5" />,
+                                    },
+                                    {
+                                      tipo: 'flipcard',
+                                      label: 'FlipCard',
+                                      icon: <RotateCcw className="h-3.5 w-3.5" />,
+                                    },
+                                    {
+                                      tipo: 'lista',
+                                      label: 'Lista',
+                                      icon: <List className="h-3.5 w-3.5" />,
+                                    },
+                                    {
+                                      tipo: 'quiz',
+                                      label: 'Quiz',
+                                      icon: <HelpCircle className="h-3.5 w-3.5" />,
+                                    },
+                                    {
+                                      tipo: 'info-box',
+                                      label: 'Info Box',
+                                      icon: <AlertTriangle className="h-3.5 w-3.5" />,
+                                    },
+                                  ]
+
+                                  const conteudos = unidade.conteudo || []
+
+                                  // Agrupar itens em linhas
+                                  type RowInfo = {
+                                    startIndex: number
+                                    endIndex: number
+                                    totalCols: number
+                                  }
+                                  const rows: RowInfo[] = []
+                                  let rStart = 0,
+                                    rSum = 0
+                                  conteudos.forEach((it, i) => {
+                                    const cols = it.colunas || 12
+                                    if (i > 0 && rSum + cols > 12) {
+                                      rows.push({
+                                        startIndex: rStart,
+                                        endIndex: i - 1,
+                                        totalCols: rSum,
+                                      })
+                                      rStart = i
+                                      rSum = cols
+                                    } else {
+                                      rSum += cols
+                                    }
+                                  })
+                                  if (conteudos.length > 0)
+                                    rows.push({
+                                      startIndex: rStart,
+                                      endIndex: conteudos.length - 1,
+                                      totalCols: rSum,
+                                    })
+
+                                  const insertDropdown = (
+                                    afterIndex: number,
+                                    colSpanClass: string,
+                                    key: string
+                                  ) => (
+                                    <div key={key} className={`group/div relative ${colSpanClass}`}>
+                                      <div className="opacity-0 group-hover/div:opacity-100 transition-opacity rounded-lg border-2 border-dashed border-blue-400 dark:border-blue-500 h-8 flex items-center justify-center bg-blue-50 dark:bg-blue-950/30">
+                                        <TooltipProvider>
+                                          <Tooltip>
+                                            <DropdownMenu>
+                                              <TooltipTrigger asChild>
+                                                <DropdownMenuTrigger asChild>
+                                                  <button
+                                                    className="text-blue-500 hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-300 flex items-center justify-center"
+                                                    onClick={(e) => {
+                                                      e.stopPropagation()
+                                                      insertAtIndex.current = {
+                                                        unidadeId: unidade.id,
+                                                        index: afterIndex,
+                                                      }
+                                                    }}
                                                   >
-                                                    <span className="text-sm text-gray-700 dark:text-gray-300 truncate">
-                                                      {acc.titulo}
-                                                    </span>
-                                                    <ChevronDown className="h-3.5 w-3.5 text-gray-400 shrink-0 ml-2" />
-                                                  </div>
-                                                ))
-                                              )}
-                                            </div>
-                                          ) : item.tipo === 'imagem' ? (
-                                            <div className="space-y-2">
-                                              {item.fonte && (
-                                                <p className="text-xs text-gray-500 dark:text-gray-400">
-                                                  Fonte: {item.fonte}
-                                                </p>
-                                              )}
-                                              <img
-                                                src={item.conteudo}
-                                                alt={item.legenda || 'Imagem'}
-                                                className={`h-auto object-contain border border-[#e5e7eb] dark:border-gray-700 rounded-md ${
-                                                  item.tamanho === 'pequena'
-                                                    ? 'max-w-xs'
-                                                    : item.tamanho === 'media'
-                                                      ? 'max-w-md'
-                                                      : 'max-w-full'
-                                                }`}
-                                                onError={(e) => {
-                                                  e.currentTarget.style.display = 'none'
-                                                }}
-                                              />
-                                              {item.legenda && (
-                                                <p className="text-sm text-gray-600 dark:text-gray-400 italic">
-                                                  {item.legenda}
-                                                </p>
-                                              )}
-                                            </div>
-                                          ) : item.tipo === 'lista' ? (
-                                            <div className="space-y-1">
-                                              {(item.itensLista || []).length === 0 ? (
-                                                <p className="text-xs text-gray-400 italic">
-                                                  Nenhum item
-                                                </p>
-                                              ) : (
-                                                (item.itensLista || []).map((listaItem, idx) => (
-                                                  <div
-                                                    key={listaItem.id || idx}
-                                                    className="flex items-start gap-2 text-sm text-gray-700 dark:text-gray-300"
+                                                    <Plus className="h-4 w-4" />
+                                                  </button>
+                                                </DropdownMenuTrigger>
+                                              </TooltipTrigger>
+                                              <TooltipContent side="top" className="text-xs">
+                                                Inserir conteúdo aqui
+                                              </TooltipContent>
+                                              <DropdownMenuContent align="center" className="w-40">
+                                                {tiposInsert.map(({ tipo, label, icon }) => (
+                                                  <DropdownMenuItem
+                                                    key={tipo}
+                                                    className="cursor-pointer gap-2"
+                                                    onClick={() => {
+                                                      insertAtIndex.current = {
+                                                        unidadeId: unidade.id,
+                                                        index: afterIndex,
+                                                      }
+                                                      handleSelecionarTipoConteudo(tipo, unidade.id)
+                                                    }}
                                                   >
-                                                    <span className="shrink-0 mt-0.5">
-                                                      {item.tipoLista === 'ordenada' ? (
-                                                        <span className="flex items-center justify-center w-4 h-4 bg-purple-500 text-white rounded-full text-xs font-semibold">
-                                                          {idx + 1}
-                                                        </span>
-                                                      ) : item.tipoLista === 'check' ? (
-                                                        <span className="flex items-center justify-center w-4 h-4 bg-green-500 text-white rounded">
-                                                          <svg
-                                                            className="w-2.5 h-2.5"
-                                                            fill="none"
-                                                            stroke="currentColor"
-                                                            viewBox="0 0 24 24"
-                                                          >
-                                                            <path
-                                                              strokeLinecap="round"
-                                                              strokeLinejoin="round"
-                                                              strokeWidth={3}
-                                                              d="M5 13l4 4L19 7"
-                                                            />
-                                                          </svg>
-                                                        </span>
-                                                      ) : (
-                                                        <span className="w-1.5 h-1.5 bg-purple-500 rounded-full mt-1.5 block" />
-                                                      )}
-                                                    </span>
-                                                    <span className="line-clamp-1">
-                                                      {listaItem.texto}
-                                                    </span>
-                                                  </div>
-                                                ))
-                                              )}
-                                            </div>
-                                          ) : item.tipo === 'quiz' ? (
-                                            item.quizData ? (
-                                              <QuizConteudo
-                                                quizData={item.quizData}
-                                                isEdicao={true}
-                                              />
-                                            ) : (
-                                              <p className="text-xs text-gray-400 italic">
-                                                Sem perguntas
-                                              </p>
-                                            )
-                                          ) : item.tipo === 'info-box' ? (
-                                            item.tipoInfoBox ? (
-                                              <InfoBox
-                                                tipo={item.tipoInfoBox}
-                                                titulo={item.tituloInfoBox}
-                                              >
-                                                <div
-                                                  dangerouslySetInnerHTML={{
-                                                    __html: item.conteudo || '',
-                                                  }}
-                                                />
-                                              </InfoBox>
-                                            ) : null
-                                          ) : (
-                                            <div
-                                              className={`conteudo-paragrafo text-gray-700 dark:text-gray-300 ${
-                                                item.alinhamento === 'centro'
-                                                  ? 'text-center'
-                                                  : item.alinhamento === 'direita'
-                                                    ? 'text-right'
-                                                    : item.alinhamento === 'justificado'
-                                                      ? 'text-justify'
-                                                      : 'text-left'
-                                              }`}
-                                              dangerouslySetInnerHTML={{
-                                                __html: item.conteudo,
-                                              }}
-                                            />
-                                          )}
-                                        </div>
-                                        {/* Barra de ações inline */}
-                                        <div className="flex items-center gap-0.5 shrink-0 self-center">
-                                          <TooltipProvider>
-                                            <Tooltip>
-                                              <TooltipTrigger asChild>
-                                                <button
-                                                  onClick={() =>
-                                                    editarConteudo(unidade.id, item.id, {
-                                                      colunas: 12,
-                                                    })
-                                                  }
-                                                  className={`p-1.5 rounded transition-colors ${item.colunas !== 6 ? 'bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'}`}
-                                                >
-                                                  <div className="w-4 h-2.5 border-2 border-current rounded-sm" />
-                                                </button>
-                                              </TooltipTrigger>
-                                              <TooltipContent side="top" className="text-xs">
-                                                Largura total
-                                              </TooltipContent>
-                                            </Tooltip>
-                                          </TooltipProvider>
-                                          <TooltipProvider>
-                                            <Tooltip>
-                                              <TooltipTrigger asChild>
-                                                <button
-                                                  onClick={() =>
-                                                    editarConteudo(unidade.id, item.id, {
-                                                      colunas: 6,
-                                                    })
-                                                  }
-                                                  className={`p-1.5 rounded transition-colors ${item.colunas === 6 ? 'bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'}`}
-                                                >
-                                                  <div className="flex gap-0.5">
-                                                    <div className="w-1.5 h-2.5 border-2 border-current rounded-sm" />
-                                                    <div className="w-1.5 h-2.5 border-2 border-current rounded-sm opacity-40" />
-                                                  </div>
-                                                </button>
-                                              </TooltipTrigger>
-                                              <TooltipContent side="top" className="text-xs">
-                                                Meia largura
-                                              </TooltipContent>
-                                            </Tooltip>
-                                          </TooltipProvider>
-                                          <div className="w-px h-4 bg-gray-300 dark:bg-gray-600 mx-1" />
-                                          <TooltipProvider>
-                                            <Tooltip>
-                                              <TooltipTrigger asChild>
-                                                <button
-                                                  onClick={() =>
-                                                    setEditandoConteudo({
-                                                      unidadeId: unidade.id,
-                                                      conteudoId: item.id,
-                                                      tipo: item.tipo,
-                                                      conteudo: item.conteudo || '',
-                                                      tamanho: item.tamanho,
-                                                      legenda: item.legenda,
-                                                      fonte: item.fonte,
-                                                      corTexto: item.corTexto,
-                                                      alinhamento: item.alinhamento,
-                                                      colunas: item.colunas,
-                                                      items: item.items,
-                                                      tipoFrente: item.tipoFrente,
-                                                      imagemFrente: item.imagemFrente,
-                                                      tituloFrente: item.tituloFrente,
-                                                      conteudoVerso: item.conteudoVerso,
-                                                      alturaCard: item.alturaCard,
-                                                      itensLista: item.itensLista || [],
-                                                      tipoLista: item.tipoLista || 'nao-ordenada',
-                                                      quizData: item.quizData,
-                                                      tipoInfoBox: item.tipoInfoBox,
-                                                      tituloInfoBox: item.tituloInfoBox,
-                                                    })
-                                                  }
-                                                  className="p-1.5 rounded text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-colors"
-                                                >
-                                                  <Edit className="h-3.5 w-3.5" />
-                                                </button>
-                                              </TooltipTrigger>
-                                              <TooltipContent side="top" className="text-xs">
-                                                Editar
-                                              </TooltipContent>
-                                            </Tooltip>
-                                          </TooltipProvider>
-                                          <TooltipProvider>
-                                            <Tooltip>
-                                              <TooltipTrigger asChild>
-                                                <button
-                                                  onClick={() =>
-                                                    handleDeletarConteudo(unidade.id, item.id)
-                                                  }
-                                                  className="p-1.5 rounded text-gray-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors"
-                                                >
-                                                  <Trash2 className="h-3.5 w-3.5" />
-                                                </button>
-                                              </TooltipTrigger>
-                                              <TooltipContent side="top" className="text-xs">
-                                                Deletar
-                                              </TooltipContent>
-                                            </Tooltip>
-                                          </TooltipProvider>
-                                        </div>
+                                                    {icon}
+                                                    {label}
+                                                  </DropdownMenuItem>
+                                                ))}
+                                              </DropdownMenuContent>
+                                            </DropdownMenu>
+                                          </Tooltip>
+                                        </TooltipProvider>
                                       </div>
-                                    )}
-                                  </SortableConteudoWrapper>
-                                ))}
+                                    </div>
+                                  )
+
+                                  const emptySlot = (afterIndex: number, emptyCols: number) => {
+                                    const colClass =
+                                      emptyCols === 6 ? 'md:col-span-6' : 'col-span-12'
+                                    return (
+                                      <div
+                                        key={`empty-${afterIndex}`}
+                                        className={`${colClass} group/empty`}
+                                      >
+                                        <DropdownMenu>
+                                          <DropdownMenuTrigger asChild>
+                                            <button
+                                              className="w-full h-full min-h-[60px] rounded-lg border-2 border-dashed border-transparent flex items-center justify-center text-gray-400 dark:text-gray-500 opacity-0 group-hover/empty:opacity-100 group-hover/empty:border-gray-300 dark:group-hover/empty:border-gray-600 hover:!border-blue-400 dark:hover:!border-blue-500 hover:!text-blue-500 dark:hover:!text-blue-400 hover:!bg-blue-50 dark:hover:!bg-blue-950/20 transition-all"
+                                              onClick={() =>
+                                                (insertAtIndex.current = {
+                                                  unidadeId: unidade.id,
+                                                  index: afterIndex,
+                                                })
+                                              }
+                                            >
+                                              <Plus className="h-4 w-4" />
+                                            </button>
+                                          </DropdownMenuTrigger>
+                                          <DropdownMenuContent align="center" className="w-40">
+                                            {tiposInsert.map(({ tipo, label, icon }) => (
+                                              <DropdownMenuItem
+                                                key={tipo}
+                                                className="cursor-pointer gap-2"
+                                                onClick={() => {
+                                                  insertAtIndex.current = {
+                                                    unidadeId: unidade.id,
+                                                    index: afterIndex,
+                                                  }
+                                                  handleSelecionarTipoConteudo(
+                                                    tipo,
+                                                    unidade.id,
+                                                    emptyCols as 6 | 12
+                                                  )
+                                                }}
+                                              >
+                                                {icon}
+                                                {label}
+                                              </DropdownMenuItem>
+                                            ))}
+                                          </DropdownMenuContent>
+                                        </DropdownMenu>
+                                      </div>
+                                    )
+                                  }
+
+                                  return rows.map((row, rowIndex) => (
+                                    <React.Fragment key={`row-${rowIndex}`}>
+                                      {rowIndex > 0 &&
+                                        insertDropdown(
+                                          row.startIndex - 1,
+                                          'col-span-12',
+                                          `divider-${rowIndex}`
+                                        )}
+                                      {conteudos
+                                        .slice(row.startIndex, row.endIndex + 1)
+                                        .map((item) => (
+                                          <SortableConteudoWrapper
+                                            key={item.id}
+                                            id={item.id}
+                                            colunas={item.colunas}
+                                          >
+                                            {(dragHandle) => (
+                                              <div className="flex items-start space-x-3 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                                                {dragHandle}
+                                                <div className="flex-1">
+                                                  {item.tipo === 'titulo' ? (
+                                                    <h3 className="font-bold text-lg text-gray-900 dark:text-gray-100">
+                                                      {item.conteudo}
+                                                    </h3>
+                                                  ) : item.tipo === 'subtitulo' ? (
+                                                    <h4 className="font-semibold text-gray-900 dark:text-gray-100">
+                                                      {item.conteudo}
+                                                    </h4>
+                                                  ) : item.tipo === 'flipcard' ? (
+                                                    <div className="border border-[#e5e7eb] dark:border-gray-700 rounded-lg p-4 bg-linear-to-br from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 text-center min-h-[72px] flex flex-col items-center justify-center gap-2">
+                                                      {item.imagemFrente && (
+                                                        <img
+                                                          src={item.imagemFrente}
+                                                          alt=""
+                                                          className="max-h-14 mx-auto object-contain rounded"
+                                                          onError={(e) => {
+                                                            e.currentTarget.style.display = 'none'
+                                                          }}
+                                                        />
+                                                      )}
+                                                      {item.tituloFrente ? (
+                                                        <p className="font-semibold text-sm text-gray-800 dark:text-gray-200">
+                                                          {item.tituloFrente}
+                                                        </p>
+                                                      ) : (
+                                                        <p className="text-xs text-gray-400 italic">
+                                                          Sem conteúdo na frente
+                                                        </p>
+                                                      )}
+                                                    </div>
+                                                  ) : item.tipo === 'accordion' ? (
+                                                    <div className="border border-[#e5e7eb] dark:border-gray-700 rounded-lg overflow-hidden">
+                                                      {(item.items || []).length === 0 ? (
+                                                        <p className="text-xs text-gray-400 italic p-3">
+                                                          Nenhum item
+                                                        </p>
+                                                      ) : (
+                                                        (item.items || []).map((acc, idx) => (
+                                                          <div
+                                                            key={acc.id || idx}
+                                                            className="flex items-center justify-between px-3 py-2 bg-gray-50 dark:bg-gray-800 border-b border-[#e5e7eb] dark:border-gray-700 last:border-b-0"
+                                                          >
+                                                            <span className="text-sm text-gray-700 dark:text-gray-300 truncate">
+                                                              {acc.titulo}
+                                                            </span>
+                                                            <ChevronDown className="h-3.5 w-3.5 text-gray-400 shrink-0 ml-2" />
+                                                          </div>
+                                                        ))
+                                                      )}
+                                                    </div>
+                                                  ) : item.tipo === 'imagem' ? (
+                                                    <div className="space-y-2">
+                                                      {item.fonte && (
+                                                        <p className="text-xs text-gray-500 dark:text-gray-400">
+                                                          Fonte: {item.fonte}
+                                                        </p>
+                                                      )}
+                                                      <img
+                                                        src={item.conteudo}
+                                                        alt={item.legenda || 'Imagem'}
+                                                        className={`h-auto object-contain border border-[#e5e7eb] dark:border-gray-700 rounded-md ${item.tamanho === 'pequena' ? 'max-w-xs' : item.tamanho === 'media' ? 'max-w-md' : 'max-w-full'}`}
+                                                        onError={(e) => {
+                                                          e.currentTarget.style.display = 'none'
+                                                        }}
+                                                      />
+                                                      {item.legenda && (
+                                                        <p className="text-sm text-gray-600 dark:text-gray-400 italic">
+                                                          {item.legenda}
+                                                        </p>
+                                                      )}
+                                                    </div>
+                                                  ) : item.tipo === 'lista' ? (
+                                                    <div className="space-y-1">
+                                                      {(item.itensLista || []).length === 0 ? (
+                                                        <p className="text-xs text-gray-400 italic">
+                                                          Nenhum item
+                                                        </p>
+                                                      ) : (
+                                                        (item.itensLista || []).map(
+                                                          (listaItem, idx) => (
+                                                            <div
+                                                              key={listaItem.id || idx}
+                                                              className="flex items-start gap-2 text-sm text-gray-700 dark:text-gray-300"
+                                                            >
+                                                              <span className="shrink-0 mt-0.5">
+                                                                {item.tipoLista === 'ordenada' ? (
+                                                                  <span className="flex items-center justify-center w-4 h-4 bg-purple-500 text-white rounded-full text-xs font-semibold">
+                                                                    {idx + 1}
+                                                                  </span>
+                                                                ) : item.tipoLista === 'check' ? (
+                                                                  <span className="flex items-center justify-center w-4 h-4 bg-green-500 text-white rounded">
+                                                                    <svg
+                                                                      className="w-2.5 h-2.5"
+                                                                      fill="none"
+                                                                      stroke="currentColor"
+                                                                      viewBox="0 0 24 24"
+                                                                    >
+                                                                      <path
+                                                                        strokeLinecap="round"
+                                                                        strokeLinejoin="round"
+                                                                        strokeWidth={3}
+                                                                        d="M5 13l4 4L19 7"
+                                                                      />
+                                                                    </svg>
+                                                                  </span>
+                                                                ) : (
+                                                                  <span className="w-1.5 h-1.5 bg-purple-500 rounded-full mt-1.5 block" />
+                                                                )}
+                                                              </span>
+                                                              <span className="line-clamp-1">
+                                                                {listaItem.texto}
+                                                              </span>
+                                                            </div>
+                                                          )
+                                                        )
+                                                      )}
+                                                    </div>
+                                                  ) : item.tipo === 'quiz' ? (
+                                                    item.quizData ? (
+                                                      <QuizConteudo
+                                                        quizData={item.quizData}
+                                                        isEdicao={true}
+                                                      />
+                                                    ) : (
+                                                      <p className="text-xs text-gray-400 italic">
+                                                        Sem perguntas
+                                                      </p>
+                                                    )
+                                                  ) : item.tipo === 'info-box' ? (
+                                                    item.tipoInfoBox ? (
+                                                      <InfoBox
+                                                        tipo={item.tipoInfoBox}
+                                                        titulo={item.tituloInfoBox}
+                                                      >
+                                                        <div
+                                                          dangerouslySetInnerHTML={{
+                                                            __html: item.conteudo || '',
+                                                          }}
+                                                        />
+                                                      </InfoBox>
+                                                    ) : null
+                                                  ) : (
+                                                    <div
+                                                      className={`conteudo-paragrafo text-gray-700 dark:text-gray-300 ${item.alinhamento === 'centro' ? 'text-center' : item.alinhamento === 'direita' ? 'text-right' : item.alinhamento === 'justificado' ? 'text-justify' : 'text-left'}`}
+                                                      dangerouslySetInnerHTML={{
+                                                        __html: item.conteudo,
+                                                      }}
+                                                    />
+                                                  )}
+                                                </div>
+                                                {/* Menu de ações */}
+                                                <DropdownMenu>
+                                                  <DropdownMenuTrigger asChild>
+                                                    <button className="shrink-0 p-1.5 rounded text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors self-center">
+                                                      <MoreVertical className="h-4 w-4" />
+                                                    </button>
+                                                  </DropdownMenuTrigger>
+                                                  <DropdownMenuContent align="end" className="w-44">
+                                                    <DropdownMenuItem
+                                                      onClick={() =>
+                                                        setEditandoConteudo({
+                                                          unidadeId: unidade.id,
+                                                          conteudoId: item.id,
+                                                          tipo: item.tipo,
+                                                          conteudo: item.conteudo || '',
+                                                          tamanho: item.tamanho,
+                                                          legenda: item.legenda,
+                                                          fonte: item.fonte,
+                                                          corTexto: item.corTexto,
+                                                          alinhamento: item.alinhamento,
+                                                          colunas: item.colunas,
+                                                          items: item.items,
+                                                          tipoFrente: item.tipoFrente,
+                                                          imagemFrente: item.imagemFrente,
+                                                          tituloFrente: item.tituloFrente,
+                                                          conteudoVerso: item.conteudoVerso,
+                                                          alturaCard: item.alturaCard,
+                                                          itensLista: item.itensLista || [],
+                                                          tipoLista:
+                                                            item.tipoLista || 'nao-ordenada',
+                                                          quizData: item.quizData,
+                                                          tipoInfoBox: item.tipoInfoBox,
+                                                          tituloInfoBox: item.tituloInfoBox,
+                                                        })
+                                                      }
+                                                      className="cursor-pointer gap-2"
+                                                    >
+                                                      <Edit className="h-3.5 w-3.5" />
+                                                      Editar
+                                                    </DropdownMenuItem>
+                                                    <DropdownMenuSeparator />
+                                                    <DropdownMenuItem
+                                                      onClick={() =>
+                                                        editarConteudo(unidade.id, item.id, {
+                                                          colunas: 12,
+                                                        })
+                                                      }
+                                                      className="cursor-pointer gap-2"
+                                                    >
+                                                      <div className="w-3.5 h-2.5 border-2 border-current rounded-sm shrink-0" />
+                                                      Largura total
+                                                      {item.colunas !== 6 && (
+                                                        <span className="ml-auto text-blue-500 text-xs">
+                                                          ✓
+                                                        </span>
+                                                      )}
+                                                    </DropdownMenuItem>
+                                                    <DropdownMenuItem
+                                                      onClick={() =>
+                                                        editarConteudo(unidade.id, item.id, {
+                                                          colunas: 6,
+                                                        })
+                                                      }
+                                                      className="cursor-pointer gap-2"
+                                                    >
+                                                      <div className="flex gap-0.5 shrink-0">
+                                                        <div className="w-1.5 h-2.5 border-2 border-current rounded-sm" />
+                                                        <div className="w-1.5 h-2.5 border-2 border-current rounded-sm opacity-40" />
+                                                      </div>
+                                                      Meia largura
+                                                      {item.colunas === 6 && (
+                                                        <span className="ml-auto text-blue-500 text-xs">
+                                                          ✓
+                                                        </span>
+                                                      )}
+                                                    </DropdownMenuItem>
+                                                    <DropdownMenuSeparator />
+                                                    <DropdownMenuItem
+                                                      onClick={() =>
+                                                        handleDeletarConteudo(unidade.id, item.id)
+                                                      }
+                                                      className="cursor-pointer gap-2 text-red-600 focus:text-red-600"
+                                                    >
+                                                      <Trash2 className="h-3.5 w-3.5" />
+                                                      Deletar
+                                                    </DropdownMenuItem>
+                                                  </DropdownMenuContent>
+                                                </DropdownMenu>
+                                              </div>
+                                            )}
+                                          </SortableConteudoWrapper>
+                                        ))}
+                                      {row.totalCols < 12 &&
+                                        emptySlot(row.endIndex, 12 - row.totalCols)}
+                                      {rowIndex === rows.length - 1 &&
+                                        insertDropdown(
+                                          conteudos.length - 1,
+                                          'col-span-12',
+                                          'divider-end'
+                                        )}
+                                    </React.Fragment>
+                                  ))
+                                })()}
                               </div>
                             </SortableContext>
                           </DndContext>
                         )}
 
-                        {/* Área de Criação de Conteúdo */}
-                        <div
-                          className={`mt-6 ${(unidade.conteudo || []).length === 0 ? '' : 'pt-6 border-t border-[#e5e7eb] dark:border-gray-700'}`}
-                        >
-                          <div className="bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-800 dark:via-gray-800 dark:to-gray-800 rounded-xl border-2 border-blue-200 dark:border-blue-800 shadow-lg p-6">
-                            {/* Header */}
-                            <div className="mb-6">
-                              <div className="flex items-center gap-3 mb-2">
-                                <div className="p-2 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg shadow-md">
-                                  <Plus className="h-5 w-5 text-white" />
-                                </div>
-                                <div>
-                                  <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100">
-                                    Adicionar Novo Conteúdo
-                                  </h3>
-                                  <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                                    Escolha o tipo de conteúdo que deseja adicionar a esta unidade
-                                  </p>
-                                </div>
+                        {/* Botões inline removidos — adicionados na barra fixa abaixo */}
+                        <div className="hidden">
+                          <div className="grid grid-cols-1 gap-3">
+                            <Button
+                              onClick={() => handleSelecionarTipoConteudo('titulo', unidade.id)}
+                            >
+                              Título
+                            </Button>
+
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleSelecionarTipoConteudo('imagem', unidade.id)}
+                              className="h-auto py-4 px-3 flex flex-col items-center gap-2 bg-white dark:bg-gray-900 hover:bg-green-50 dark:hover:bg-green-900/30 hover:border-green-400 dark:hover:border-green-500 hover:shadow-md transition-all border-2 border-green-200 dark:border-green-800 group"
+                            >
+                              <div className="p-2 bg-green-100 dark:bg-green-900/50 rounded-lg group-hover:bg-green-200 dark:group-hover:bg-green-800 transition-colors">
+                                <Image className="h-5 w-5 text-green-600 dark:text-green-400" />
                               </div>
-                            </div>
+                              <span className="text-xs font-semibold text-gray-700 dark:text-gray-300">
+                                Imagem
+                              </span>
+                            </Button>
 
-                            {/* Botões de Conteúdo */}
-                            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-8 gap-3">
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => handleSelecionarTipoConteudo('titulo', unidade.id)}
-                                className="h-auto py-4 px-3 flex flex-col items-center gap-2 bg-white dark:bg-gray-900 hover:bg-blue-50 dark:hover:bg-blue-900/30 hover:border-blue-400 dark:hover:border-blue-500 hover:shadow-md transition-all border-2 border-blue-200 dark:border-blue-800 group"
-                              >
-                                <div className="p-2 bg-blue-100 dark:bg-blue-900/50 rounded-lg group-hover:bg-blue-200 dark:group-hover:bg-blue-800 transition-colors">
-                                  <Heading2 className="h-5 w-5 text-blue-600 dark:text-blue-400" />
-                                </div>
-                                <span className="text-xs font-semibold text-gray-700 dark:text-gray-300">
-                                  Título
-                                </span>
-                              </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleSelecionarTipoConteudo('accordion', unidade.id)}
+                              className="h-auto py-4 px-3 flex flex-col items-center gap-2 bg-white dark:bg-gray-900 hover:bg-orange-50 dark:hover:bg-orange-900/30 hover:border-orange-400 dark:hover:border-orange-500 hover:shadow-md transition-all border-2 border-orange-200 dark:border-orange-800 group"
+                            >
+                              <div className="p-2 bg-orange-100 dark:bg-orange-900/50 rounded-lg group-hover:bg-orange-200 dark:group-hover:bg-orange-800 transition-colors">
+                                <ChevronDown className="h-5 w-5 text-orange-600 dark:text-orange-400" />
+                              </div>
+                              <span className="text-xs font-semibold text-gray-700 dark:text-gray-300">
+                                Accordion
+                              </span>
+                            </Button>
 
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() =>
-                                  handleSelecionarTipoConteudo('subtitulo', unidade.id)
-                                }
-                                className="h-auto py-4 px-3 flex flex-col items-center gap-2 bg-white dark:bg-gray-900 hover:bg-blue-50 dark:hover:bg-blue-900/30 hover:border-blue-400 dark:hover:border-blue-500 hover:shadow-md transition-all border-2 border-blue-200 dark:border-blue-800 group"
-                              >
-                                <div className="p-2 bg-blue-100 dark:bg-blue-900/50 rounded-lg group-hover:bg-blue-200 dark:group-hover:bg-blue-800 transition-colors">
-                                  <Heading3 className="h-5 w-5 text-blue-600 dark:text-blue-400" />
-                                </div>
-                                <span className="text-xs font-semibold text-gray-700 dark:text-gray-300">
-                                  Subtítulo
-                                </span>
-                              </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleSelecionarTipoConteudo('flipcard', unidade.id)}
+                              className="h-auto py-4 px-3 flex flex-col items-center gap-2 bg-white dark:bg-gray-900 hover:bg-pink-50 dark:hover:bg-pink-900/30 hover:border-pink-400 dark:hover:border-pink-500 hover:shadow-md transition-all border-2 border-pink-200 dark:border-pink-800 group"
+                            >
+                              <div className="p-2 bg-pink-100 dark:bg-pink-900/50 rounded-lg group-hover:bg-pink-200 dark:group-hover:bg-pink-800 transition-colors">
+                                <RotateCcw className="h-5 w-5 text-pink-600 dark:text-pink-400" />
+                              </div>
+                              <span className="text-xs font-semibold text-gray-700 dark:text-gray-300">
+                                FlipCard
+                              </span>
+                            </Button>
 
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() =>
-                                  handleSelecionarTipoConteudo('paragrafo', unidade.id)
-                                }
-                                className="h-auto py-4 px-3 flex flex-col items-center gap-2 bg-white dark:bg-gray-900 hover:bg-blue-50 dark:hover:bg-blue-900/30 hover:border-blue-400 dark:hover:border-blue-500 hover:shadow-md transition-all border-2 border-blue-200 dark:border-blue-800 group"
-                              >
-                                <div className="p-2 bg-blue-100 dark:bg-blue-900/50 rounded-lg group-hover:bg-blue-200 dark:group-hover:bg-blue-800 transition-colors">
-                                  <Type className="h-5 w-5 text-blue-600 dark:text-blue-400" />
-                                </div>
-                                <span className="text-xs font-semibold text-gray-700 dark:text-gray-300">
-                                  Parágrafo
-                                </span>
-                              </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleSelecionarTipoConteudo('lista', unidade.id)}
+                              className="h-auto py-4 px-3 flex flex-col items-center gap-2 bg-white dark:bg-gray-900 hover:bg-purple-50 dark:hover:bg-purple-900/30 hover:border-purple-400 dark:hover:border-purple-500 hover:shadow-md transition-all border-2 border-purple-200 dark:border-purple-800 group"
+                            >
+                              <div className="p-2 bg-purple-100 dark:bg-purple-900/50 rounded-lg group-hover:bg-purple-200 dark:group-hover:bg-purple-800 transition-colors">
+                                <List className="h-5 w-5 text-purple-600 dark:text-purple-400" />
+                              </div>
+                              <span className="text-xs font-semibold text-gray-700 dark:text-gray-300">
+                                Lista
+                              </span>
+                            </Button>
 
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => handleSelecionarTipoConteudo('imagem', unidade.id)}
-                                className="h-auto py-4 px-3 flex flex-col items-center gap-2 bg-white dark:bg-gray-900 hover:bg-green-50 dark:hover:bg-green-900/30 hover:border-green-400 dark:hover:border-green-500 hover:shadow-md transition-all border-2 border-green-200 dark:border-green-800 group"
-                              >
-                                <div className="p-2 bg-green-100 dark:bg-green-900/50 rounded-lg group-hover:bg-green-200 dark:group-hover:bg-green-800 transition-colors">
-                                  <Image className="h-5 w-5 text-green-600 dark:text-green-400" />
-                                </div>
-                                <span className="text-xs font-semibold text-gray-700 dark:text-gray-300">
-                                  Imagem
-                                </span>
-                              </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleSelecionarTipoConteudo('quiz', unidade.id)}
+                              className="h-auto py-4 px-3 flex flex-col items-center gap-2 bg-white dark:bg-gray-900 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 hover:border-indigo-400 dark:hover:border-indigo-500 hover:shadow-md transition-all border-2 border-indigo-200 dark:border-indigo-800 group"
+                            >
+                              <div className="p-2 bg-indigo-100 dark:bg-indigo-900/50 rounded-lg group-hover:bg-indigo-200 dark:group-hover:bg-indigo-800 transition-colors">
+                                <HelpCircle className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
+                              </div>
+                              <span className="text-xs font-semibold text-gray-700 dark:text-gray-300">
+                                Quiz
+                              </span>
+                            </Button>
 
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() =>
-                                  handleSelecionarTipoConteudo('accordion', unidade.id)
-                                }
-                                className="h-auto py-4 px-3 flex flex-col items-center gap-2 bg-white dark:bg-gray-900 hover:bg-orange-50 dark:hover:bg-orange-900/30 hover:border-orange-400 dark:hover:border-orange-500 hover:shadow-md transition-all border-2 border-orange-200 dark:border-orange-800 group"
-                              >
-                                <div className="p-2 bg-orange-100 dark:bg-orange-900/50 rounded-lg group-hover:bg-orange-200 dark:group-hover:bg-orange-800 transition-colors">
-                                  <ChevronDown className="h-5 w-5 text-orange-600 dark:text-orange-400" />
-                                </div>
-                                <span className="text-xs font-semibold text-gray-700 dark:text-gray-300">
-                                  Accordion
-                                </span>
-                              </Button>
-
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => handleSelecionarTipoConteudo('flipcard', unidade.id)}
-                                className="h-auto py-4 px-3 flex flex-col items-center gap-2 bg-white dark:bg-gray-900 hover:bg-pink-50 dark:hover:bg-pink-900/30 hover:border-pink-400 dark:hover:border-pink-500 hover:shadow-md transition-all border-2 border-pink-200 dark:border-pink-800 group"
-                              >
-                                <div className="p-2 bg-pink-100 dark:bg-pink-900/50 rounded-lg group-hover:bg-pink-200 dark:group-hover:bg-pink-800 transition-colors">
-                                  <RotateCcw className="h-5 w-5 text-pink-600 dark:text-pink-400" />
-                                </div>
-                                <span className="text-xs font-semibold text-gray-700 dark:text-gray-300">
-                                  FlipCard
-                                </span>
-                              </Button>
-
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => handleSelecionarTipoConteudo('lista', unidade.id)}
-                                className="h-auto py-4 px-3 flex flex-col items-center gap-2 bg-white dark:bg-gray-900 hover:bg-purple-50 dark:hover:bg-purple-900/30 hover:border-purple-400 dark:hover:border-purple-500 hover:shadow-md transition-all border-2 border-purple-200 dark:border-purple-800 group"
-                              >
-                                <div className="p-2 bg-purple-100 dark:bg-purple-900/50 rounded-lg group-hover:bg-purple-200 dark:group-hover:bg-purple-800 transition-colors">
-                                  <List className="h-5 w-5 text-purple-600 dark:text-purple-400" />
-                                </div>
-                                <span className="text-xs font-semibold text-gray-700 dark:text-gray-300">
-                                  Lista
-                                </span>
-                              </Button>
-
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => handleSelecionarTipoConteudo('quiz', unidade.id)}
-                                className="h-auto py-4 px-3 flex flex-col items-center gap-2 bg-white dark:bg-gray-900 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 hover:border-indigo-400 dark:hover:border-indigo-500 hover:shadow-md transition-all border-2 border-indigo-200 dark:border-indigo-800 group"
-                              >
-                                <div className="p-2 bg-indigo-100 dark:bg-indigo-900/50 rounded-lg group-hover:bg-indigo-200 dark:group-hover:bg-indigo-800 transition-colors">
-                                  <HelpCircle className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
-                                </div>
-                                <span className="text-xs font-semibold text-gray-700 dark:text-gray-300">
-                                  Quiz
-                                </span>
-                              </Button>
-
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => handleSelecionarTipoConteudo('info-box', unidade.id)}
-                                className="h-auto py-4 px-3 flex flex-col items-center gap-2 bg-white dark:bg-gray-900 hover:bg-yellow-50 dark:hover:bg-yellow-900/30 hover:border-yellow-400 dark:hover:border-yellow-500 hover:shadow-md transition-all border-2 border-yellow-200 dark:border-yellow-800 group"
-                              >
-                                <div className="p-2 bg-yellow-100 dark:bg-yellow-900/50 rounded-lg group-hover:bg-yellow-200 dark:group-hover:bg-yellow-800 transition-colors">
-                                  <AlertTriangle className="h-5 w-5 text-yellow-600 dark:text-yellow-400" />
-                                </div>
-                                <span className="text-xs font-semibold text-gray-700 dark:text-gray-300">
-                                  Info Box
-                                </span>
-                              </Button>
-                            </div>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleSelecionarTipoConteudo('info-box', unidade.id)}
+                              className="h-auto py-4 px-3 flex flex-col items-center gap-2 bg-white dark:bg-gray-900 hover:bg-yellow-50 dark:hover:bg-yellow-900/30 hover:border-yellow-400 dark:hover:border-yellow-500 hover:shadow-md transition-all border-2 border-yellow-200 dark:border-yellow-800 group"
+                            >
+                              <div className="p-2 bg-yellow-100 dark:bg-yellow-900/50 rounded-lg group-hover:bg-yellow-200 dark:group-hover:bg-yellow-800 transition-colors">
+                                <AlertTriangle className="h-5 w-5 text-yellow-600 dark:text-yellow-400" />
+                              </div>
+                              <span className="text-xs font-semibold text-gray-700 dark:text-gray-300">
+                                Info Box
+                              </span>
+                            </Button>
                           </div>
                         </div>
                       </CardContent>
@@ -1710,6 +1961,121 @@ export default function EditarCursoPage() {
                 </Card>
               )}
             </div>
+
+            {/* Barra fixa de adição de conteúdo */}
+            {(state.cursoAtual.unidades || []).length > 0 &&
+              (() => {
+                const activeId =
+                  state.cursoAtual?.unidades?.[
+                    Math.min(unidadeAtivaIndex, (state.cursoAtual?.unidades || []).length - 1)
+                  ]?.id
+                if (!activeId) return null
+                type TipoConteudo =
+                  | 'titulo'
+                  | 'subtitulo'
+                  | 'paragrafo'
+                  | 'imagem'
+                  | 'accordion'
+                  | 'flipcard'
+                  | 'lista'
+                  | 'quiz'
+                  | 'info-box'
+                const tipos: {
+                  tipo: TipoConteudo
+                  label: string
+                  icon: React.ReactNode
+                  color: string
+                }[] = [
+                  {
+                    tipo: 'titulo',
+                    label: 'Título',
+                    icon: <Heading2 className="h-4 w-4" />,
+                    color:
+                      'text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/30',
+                  },
+                  {
+                    tipo: 'subtitulo',
+                    label: 'Subtítulo',
+                    icon: <Heading3 className="h-4 w-4" />,
+                    color:
+                      'text-blue-500 dark:text-blue-300 hover:bg-blue-50 dark:hover:bg-blue-900/30',
+                  },
+                  {
+                    tipo: 'paragrafo',
+                    label: 'Parágrafo',
+                    icon: <Type className="h-4 w-4" />,
+                    color:
+                      'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700',
+                  },
+                  {
+                    tipo: 'imagem',
+                    label: 'Imagem',
+                    icon: <Image className="h-4 w-4" />,
+                    color:
+                      'text-green-600 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/30',
+                  },
+                  {
+                    tipo: 'accordion',
+                    label: 'Accordion',
+                    icon: <ChevronDown className="h-4 w-4" />,
+                    color:
+                      'text-orange-600 dark:text-orange-400 hover:bg-orange-50 dark:hover:bg-orange-900/30',
+                  },
+                  {
+                    tipo: 'flipcard',
+                    label: 'FlipCard',
+                    icon: <RotateCcw className="h-4 w-4" />,
+                    color:
+                      'text-pink-600 dark:text-pink-400 hover:bg-pink-50 dark:hover:bg-pink-900/30',
+                  },
+                  {
+                    tipo: 'lista',
+                    label: 'Lista',
+                    icon: <List className="h-4 w-4" />,
+                    color:
+                      'text-purple-600 dark:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/30',
+                  },
+                  {
+                    tipo: 'quiz',
+                    label: 'Quiz',
+                    icon: <HelpCircle className="h-4 w-4" />,
+                    color:
+                      'text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/30',
+                  },
+                  {
+                    tipo: 'info-box',
+                    label: 'Info Box',
+                    icon: <AlertTriangle className="h-4 w-4" />,
+                    color:
+                      'text-yellow-600 dark:text-yellow-400 hover:bg-yellow-50 dark:hover:bg-yellow-900/30',
+                  },
+                ]
+                return (
+                  <div className="border-t border-[#e5e7eb] dark:border-gray-700 bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm px-4 py-2 flex items-center gap-1 flex-wrap">
+                    <span className="text-xs font-medium text-gray-400 dark:text-gray-500 mr-2 shrink-0">
+                      + Adicionar:
+                    </span>
+                    {tipos.map(({ tipo, label, icon, color }) => (
+                      <TooltipProvider key={tipo}>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <button
+                              onClick={() => handleSelecionarTipoConteudo(tipo, activeId)}
+                              className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium transition-colors ${color}`}
+                            >
+                              {icon}
+                              {label}
+                            </button>
+                          </TooltipTrigger>
+                          <TooltipContent side="top" className="text-xs">
+                            Adicionar {label}
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    ))}
+                  </div>
+                )
+              })()}
           </div>
         </div>
 
@@ -2609,11 +2975,43 @@ export default function EditarCursoPage() {
                     Conteúdo <span className="text-red-500">*</span>
                   </label>
                   {conteudoTemp.tipo === 'paragrafo' ? (
-                    <RichTextEditor
-                      value={conteudoTemp.conteudo}
-                      onChange={(html) => setConteudoTemp({ ...conteudoTemp, conteudo: html })}
-                      placeholder="Digite o parágrafo..."
-                    />
+                    <div className="space-y-3">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                          Largura da coluna
+                        </label>
+                        <div className="flex gap-2">
+                          <button
+                            type="button"
+                            onClick={() => setConteudoTemp({ ...conteudoTemp, colunas: 12 })}
+                            className={`flex-1 py-2 px-3 rounded-lg border text-sm font-medium transition-colors ${
+                              (conteudoTemp.colunas ?? 12) === 12
+                                ? 'border-blue-500 bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300'
+                                : 'border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400 hover:border-gray-400'
+                            }`}
+                          >
+                            Largura total
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setConteudoTemp({ ...conteudoTemp, colunas: 6 })}
+                            className={`flex-1 py-2 px-3 rounded-lg border text-sm font-medium transition-colors ${
+                              conteudoTemp.colunas === 6
+                                ? 'border-blue-500 bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300'
+                                : 'border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400 hover:border-gray-400'
+                            }`}
+                          >
+                            Meia largura
+                          </button>
+                        </div>
+                      </div>
+                      <RichTextEditor
+                        value={conteudoTemp.conteudo}
+                        onChange={(html) => setConteudoTemp({ ...conteudoTemp, conteudo: html })}
+                        placeholder="Digite o parágrafo..."
+                        autoFocus
+                      />
+                    </div>
                   ) : (
                     <Input
                       value={conteudoTemp.conteudo}
@@ -2637,11 +3035,13 @@ export default function EditarCursoPage() {
               </Button>
               <Button
                 onClick={() => {
+                  shouldCloseModal.current = true
+                  setIsSavingConteudo(true)
                   handleSalvarConteudo()
-                  closeAdicionarConteudoModal()
                 }}
-                className="bg-blue-600 hover:bg-blue-700"
+                className="bg-blue-600 hover:bg-blue-700 min-w-[100px]"
                 disabled={
+                  isSavingConteudo ||
                   (conteudoTemp.tipo === 'accordion'
                     ? !conteudoTemp.items ||
                       conteudoTemp.items.length === 0 ||
@@ -2685,7 +3085,13 @@ export default function EditarCursoPage() {
                     (!conteudoTemp.tamanho || !conteudoTemp.legenda || !conteudoTemp.fonte))
                 }
               >
-                Adicionar
+                {isSavingConteudo ? (
+                  <span className="flex items-center gap-2">
+                    <Loader2 className="h-4 w-4 animate-spin" /> Salvando...
+                  </span>
+                ) : (
+                  'Adicionar'
+                )}
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -2859,14 +3265,21 @@ export default function EditarCursoPage() {
               <Button
                 onClick={() => {
                   if (conteudoParaDeletar) {
+                    setIsDeletingConteudo(true)
+                    shouldCloseDeleteModal.current = true
                     deletarConteudo(conteudoParaDeletar.unidadeId, conteudoParaDeletar.conteudoId)
-                    toast.success('Conteúdo excluído')
                   }
-                  closeConfirmarDeletarConteudoModal()
                 }}
-                className="bg-red-600 hover:bg-red-700"
+                className="bg-red-600 hover:bg-red-700 min-w-[90px]"
+                disabled={isDeletingConteudo}
               >
-                Excluir
+                {isDeletingConteudo ? (
+                  <span className="flex items-center gap-2">
+                    <Loader2 className="h-4 w-4 animate-spin" /> Excluindo...
+                  </span>
+                ) : (
+                  'Excluir'
+                )}
               </Button>
             </DialogFooter>
           </DialogContent>

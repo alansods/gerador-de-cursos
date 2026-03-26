@@ -25,6 +25,7 @@ interface RichTextEditorProps {
   onChange: (value: string) => void
   placeholder?: string
   minHeight?: number
+  autoFocus?: boolean
 }
 
 const COLORS = [
@@ -43,8 +44,11 @@ export function RichTextEditor({
   onChange,
   placeholder = 'Digite o conteúdo...',
   minHeight = 160,
+  autoFocus = false,
 }: RichTextEditorProps) {
   const editor = useEditor({
+    immediatelyRender: false,
+    autofocus: autoFocus ? 'end' : false,
     extensions: [
       StarterKit,
       Underline,

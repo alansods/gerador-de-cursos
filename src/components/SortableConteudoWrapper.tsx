@@ -26,12 +26,12 @@ export function SortableConteudoWrapper({ id, colunas, children }: SortableConte
       <Tooltip>
         <TooltipTrigger asChild>
           <button
-            className="cursor-grab active:cursor-grabbing p-1 rounded hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-300 hover:text-gray-500 dark:hover:text-gray-300 transition-colors shrink-0 mt-1"
+            className="cursor-grab active:cursor-grabbing p-1.5 rounded hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-300 hover:text-gray-500 dark:hover:text-gray-300 transition-colors shrink-0 self-center"
             aria-label="Arrastar para reordenar"
             {...attributes}
             {...listeners}
           >
-            <GripVertical className="h-4 w-4" />
+            <GripVertical className="h-5 w-5" />
           </button>
         </TooltipTrigger>
         <TooltipContent side="top" className="text-xs">

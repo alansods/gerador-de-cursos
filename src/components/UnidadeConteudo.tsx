@@ -1,26 +1,23 @@
-"use client";
+'use client'
 
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
-} from "@/components/ui/accordion";
-import { FlipCard } from "@/components/flipcard";
-import { QuizConteudo } from "@/components/QuizConteudo";
-import { InfoBox } from "@/components/info-box";
-import { Unidade } from "@/types/gerador-curso";
+} from '@/components/ui/accordion'
+import { FlipCard } from '@/components/flipcard'
+import { QuizConteudo } from '@/components/QuizConteudo'
+import { InfoBox } from '@/components/info-box'
+import { Unidade } from '@/types/gerador-curso'
 
 interface UnidadeConteudoProps {
-  unidade: Unidade;
-  unidadeIndex: number;
+  unidade: Unidade
+  unidadeIndex: number
 }
 
-export function UnidadeConteudo({
-  unidade,
-  unidadeIndex,
-}: UnidadeConteudoProps) {
+export function UnidadeConteudo({ unidade, unidadeIndex }: UnidadeConteudoProps) {
   return (
     <Card
       key={unidade.id}
@@ -53,19 +50,17 @@ export function UnidadeConteudo({
             {unidade.conteudo.map((item) => (
               <div
                 key={item.id}
-                className={`${
-                  item.colunas === 6 ? "md:col-span-6" : "md:col-span-12"
-                }`}
+                className={`${item.colunas === 6 ? 'md:col-span-6' : 'md:col-span-12'}`}
               >
-                {item.tipo === "titulo" ? (
+                {item.tipo === 'titulo' ? (
                   <h3 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-3 mt-4 first:mt-0">
                     {item.conteudo}
                   </h3>
-                ) : item.tipo === "subtitulo" ? (
+                ) : item.tipo === 'subtitulo' ? (
                   <h4 className="text-xl font-semibold text-gray-800 dark:text-gray-200 mb-2 mt-3">
                     {item.conteudo}
                   </h4>
-                ) : item.tipo === "imagem" ? (
+                ) : item.tipo === 'imagem' ? (
                   <div className="space-y-3">
                     {item.fonte && (
                       <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">
@@ -75,16 +70,16 @@ export function UnidadeConteudo({
                     <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
                       <img
                         src={item.conteudo}
-                        alt={item.legenda || "Imagem"}
+                        alt={item.legenda || 'Imagem'}
                         className={`h-auto object-contain rounded-lg ${
-                          item.tamanho === "pequena"
-                            ? "max-w-xs"
-                            : item.tamanho === "media"
-                            ? "max-w-md"
-                            : "max-w-full"
+                          item.tamanho === 'pequena'
+                            ? 'max-w-xs'
+                            : item.tamanho === 'media'
+                              ? 'max-w-md'
+                              : 'max-w-full'
                         }`}
                         onError={(e) => {
-                          e.currentTarget.style.display = "none";
+                          e.currentTarget.style.display = 'none'
                         }}
                       />
                     </div>
@@ -94,15 +89,12 @@ export function UnidadeConteudo({
                       </p>
                     )}
                   </div>
-                ) : item.tipo === "accordion" ? (
+                ) : item.tipo === 'accordion' ? (
                   <div className="mb-4">
                     {item.items && item.items.length > 0 ? (
                       <Accordion type="single" collapsible className="w-full">
                         {item.items.map((accordionItem, idx) => (
-                          <AccordionItem
-                            key={accordionItem.id || idx}
-                            value={`item-${idx}`}
-                          >
+                          <AccordionItem key={accordionItem.id || idx} value={`item-${idx}`}>
                             <AccordionTrigger className="text-left font-semibold">
                               {accordionItem.titulo}
                             </AccordionTrigger>
@@ -123,7 +115,7 @@ export function UnidadeConteudo({
                       </div>
                     )}
                   </div>
-                ) : item.tipo === "flipcard" ? (
+                ) : item.tipo === 'flipcard' ? (
                   <div className="mb-4">
                     {item.tipoFrente && item.conteudoVerso ? (
                       <FlipCard
@@ -139,10 +131,10 @@ export function UnidadeConteudo({
                       </div>
                     )}
                   </div>
-                ) : item.tipo === "lista" ? (
+                ) : item.tipo === 'lista' ? (
                   <div className="mb-4">
                     {item.itensLista && item.itensLista.length > 0 ? (
-                      item.tipoLista === "ordenada" ? (
+                      item.tipoLista === 'ordenada' ? (
                         <div className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-xl p-6 border border-blue-200 dark:border-blue-800 shadow-sm">
                           <ol className="space-y-3">
                             {item.itensLista.map((listaItem, idx) => (
@@ -163,7 +155,7 @@ export function UnidadeConteudo({
                             ))}
                           </ol>
                         </div>
-                      ) : item.tipoLista === "check" ? (
+                      ) : item.tipoLista === 'check' ? (
                         <div className="bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-xl p-6 border border-green-200 dark:border-green-800 shadow-sm">
                           <ul className="space-y-3">
                             {item.itensLista.map((listaItem, idx) => (
@@ -197,26 +189,19 @@ export function UnidadeConteudo({
                           </ul>
                         </div>
                       ) : (
-                        <div className="bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 rounded-xl p-6 border border-purple-200 dark:border-purple-800 shadow-sm">
-                          <ul className="space-y-3">
-                            {item.itensLista.map((listaItem, idx) => (
-                              <li
-                                key={listaItem.id || idx}
-                                className="flex items-start gap-3 p-3 bg-white dark:bg-gray-800 rounded-lg shadow-sm hover:shadow-md transition-shadow border-l-4 border-purple-500"
-                              >
-                                <span className="flex items-center justify-center w-6 h-6 mt-0.5 bg-purple-500 rounded-full shrink-0">
-                                  <span className="w-2 h-2 bg-white rounded-full"></span>
-                                </span>
-                                <span
-                                  className="flex-1 text-gray-700 dark:text-gray-300 leading-relaxed"
-                                  dangerouslySetInnerHTML={{
-                                    __html: listaItem.texto,
-                                  }}
-                                />
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
+                        <ul className="space-y-1.5">
+                          {item.itensLista.map((listaItem, idx) => (
+                            <li key={listaItem.id || idx} className="flex items-center gap-2.5">
+                              <span className="w-1.5 h-1.5 rounded-full bg-blue-500 shrink-0" />
+                              <span
+                                className="text-gray-700 dark:text-gray-300 leading-relaxed"
+                                dangerouslySetInnerHTML={{
+                                  __html: listaItem.texto,
+                                }}
+                              />
+                            </li>
+                          ))}
+                        </ul>
                       )
                     ) : (
                       <div className="text-gray-500 dark:text-gray-400 text-sm italic p-4 border border-gray-300 dark:border-gray-700 rounded-lg">
@@ -224,7 +209,7 @@ export function UnidadeConteudo({
                       </div>
                     )}
                   </div>
-                ) : item.tipo === "quiz" ? (
+                ) : item.tipo === 'quiz' ? (
                   <div className="mb-4">
                     {item.quizData ? (
                       <QuizConteudo quizData={item.quizData} isEdicao={false} />
@@ -234,7 +219,7 @@ export function UnidadeConteudo({
                       </div>
                     )}
                   </div>
-                ) : item.tipo === "info-box" ? (
+                ) : item.tipo === 'info-box' ? (
                   <div className="mb-4 w-full">
                     {item.tipoInfoBox ? (
                       <InfoBox
@@ -244,7 +229,7 @@ export function UnidadeConteudo({
                       >
                         <div
                           dangerouslySetInnerHTML={{
-                            __html: item.conteudo || "",
+                            __html: item.conteudo || '',
                           }}
                         />
                       </InfoBox>
@@ -257,19 +242,19 @@ export function UnidadeConteudo({
                 ) : (
                   <div
                     className={`text-gray-700 dark:text-gray-300 leading-relaxed text-base mb-3 ${
-                      item.alinhamento === "centro"
-                        ? "text-center"
-                        : item.alinhamento === "direita"
-                        ? "text-right"
-                        : item.alinhamento === "justificado"
-                        ? "text-justify"
-                        : "text-left"
+                      item.alinhamento === 'centro'
+                        ? 'text-center'
+                        : item.alinhamento === 'direita'
+                          ? 'text-right'
+                          : item.alinhamento === 'justificado'
+                            ? 'text-justify'
+                            : 'text-left'
                     }`}
                     dangerouslySetInnerHTML={{
                       __html: item.conteudo,
                     }}
                     style={{
-                      color: item.corTexto || "inherit",
+                      color: item.corTexto || 'inherit',
                     }}
                   />
                 )}
@@ -279,5 +264,5 @@ export function UnidadeConteudo({
         )}
       </CardContent>
     </Card>
-  );
+  )
 }
