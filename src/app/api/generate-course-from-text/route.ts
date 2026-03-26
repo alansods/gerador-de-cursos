@@ -1,13 +1,13 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { requireAuth, createErrorResponse, createSuccessResponse } from '@/lib/auth';
-import { GoogleGenerativeAI } from '@google/generative-ai';
-import { CursoGerado } from '@/types/gerador-curso';
+import { NextRequest, NextResponse } from 'next/server'
+import { requireAuth, createErrorResponse, createSuccessResponse } from '@/lib/auth'
+import { GoogleGenerativeAI } from '@google/generative-ai'
+import { CursoGerado } from '@/types/gerador-curso'
 
 interface TokenUsage {
-  promptTokens: number;
-  completionTokens: number;
-  totalTokens: number;
-  model: string;
+  promptTokens: number
+  completionTokens: number
+  totalTokens: number
+  model: string
 }
 
 /**
@@ -15,55 +15,55 @@ interface TokenUsage {
  * Gera um curso estruturado a partir de texto usando IA
  */
 export async function POST(req: NextRequest) {
-  const authResult = await requireAuth(req);
+  const authResult = await requireAuth(req)
 
   if (authResult instanceof NextResponse) {
-    return authResult; // Retorna erro 401 se não autenticado
+    return authResult // Retorna erro 401 se não autenticado
   }
 
   try {
-    const body = await req.json();
-    const { text, mode = 'auto' } = body as { text: string; mode?: 'auto' | 'markers' };
+    const body = await req.json()
+    const { text, mode = 'auto' } = body as { text: string; mode?: 'auto' | 'markers' }
 
     if (!text || typeof text !== 'string' || text.trim().length === 0) {
-      return createErrorResponse('Texto não fornecido ou inválido', 400);
+      return createErrorResponse('Texto não fornecido ou inválido', 400)
     }
 
     // Verificar se há API key configurada
-    const geminiApiKey = process.env.GEMINI_API_KEY;
-    const openaiApiKey = process.env.OPENAI_API_KEY;
+    const geminiApiKey = process.env.GEMINI_API_KEY
+    const openaiApiKey = process.env.OPENAI_API_KEY
 
     if (!geminiApiKey && !openaiApiKey) {
       return createErrorResponse(
         'API de IA não configurada. Configure GEMINI_API_KEY ou OPENAI_API_KEY nas variáveis de ambiente.',
         500
-      );
+      )
     }
 
     // Usar Google Gemini se disponível, senão OpenAI
-    let course: CursoGerado;
-    let tokenUsage: TokenUsage | undefined;
+    let course: CursoGerado
+    let tokenUsage: TokenUsage | undefined
 
     if (geminiApiKey) {
-      const result = await generateWithGemini(text, geminiApiKey, mode);
-      course = result.course;
-      tokenUsage = result.tokenUsage;
+      const result = await generateWithGemini(text, geminiApiKey, mode)
+      course = result.course
+      tokenUsage = result.tokenUsage
     } else if (openaiApiKey) {
-      const result = await generateWithOpenAI(text, openaiApiKey, mode);
-      course = result.course;
-      tokenUsage = result.tokenUsage;
+      const result = await generateWithOpenAI(text, openaiApiKey, mode)
+      course = result.course
+      tokenUsage = result.tokenUsage
     } else {
-      throw new Error('Nenhuma API de IA disponível');
+      throw new Error('Nenhuma API de IA disponível')
     }
 
-    return createSuccessResponse({ course, tokenUsage });
+    return createSuccessResponse({ course, tokenUsage })
   } catch (error) {
-    console.error('Erro ao gerar curso:', error);
+    console.error('Erro ao gerar curso:', error)
     return createErrorResponse(
       error instanceof Error ? error.message : 'Erro ao gerar curso com IA',
       500,
       error
-    );
+    )
   }
 }
 
@@ -74,7 +74,8 @@ export async function POST(req: NextRequest) {
  * o JSON correto para cada tipo.
  */
 function buildPrompt(text: string, mode: 'auto' | 'markers' = 'auto'): string {
-  const truncated = text.substring(0, 12000) + (text.length > 12000 ? '\n\n[... texto truncado ...]' : '');
+  const truncated =
+    text.substring(0, 12000) + (text.length > 12000 ? '\n\n[... texto truncado ...]' : '')
 
   const sharedStructure = `## Estrutura geral do JSON
 
@@ -103,7 +104,19 @@ Cada Unidade:
 { "titulo": "string", "tipo": "subtitulo", "conteudo": "Texto do subtítulo" }
 
 ### 3. lista
-{ "titulo": "string", "tipo": "lista", "conteudo": "<ul><li>item</li></ul> ou <ol><li>passo</li></ol>" }
+{
+  "titulo": "string",
+  "tipo": "lista",
+  "conteudo": "",
+  "tipoLista": "nao-ordenada" | "ordenada" | "check",
+  "itensLista": [
+    { "id": "li-1", "texto": "Primeiro item" },
+    { "id": "li-2", "texto": "Segundo item" }
+  ]
+}
+- Use "ordenada" para passos numerados de um processo
+- Use "check" para requisitos, critérios ou itens verificáveis
+- Use "nao-ordenada" para listas simples de itens
 
 ### 4. accordion
 {
@@ -162,7 +175,8 @@ Cada Unidade:
 
 - NÃO use "aulas" — use sempre "conteudo"
 - IDs únicos simples: "item-1", "q-1", "op-1"
-- HTML apenas com: <p>, <ul>, <ol>, <li>, <strong>, <em>
+- HTML (em campos "conteudo") apenas com: <p>, <strong>, <em>
+- Para listas, use SEMPRE o campo "itensLista" — NUNCA coloque listas em HTML no campo "conteudo"
 - Retorne APENAS o JSON válido, sem markdown, sem explicações
 
 ## IMPORTANTE: Uso estrito do conteúdo do documento
@@ -174,7 +188,7 @@ Cada Unidade:
 - NÃO expanda conceitos além do que está escrito no documento
 - Use apenas as informações, exemplos e dados que foram explicitamente fornecidos no texto
 - Se o documento for curto ou superficial, o curso gerado também deve refletir isso
-- Sua função é ESTRUTURAR e ORGANIZAR o conteúdo existente, não criar conteúdo novo`;
+- Sua função é ESTRUTURAR e ORGANIZAR o conteúdo existente, não criar conteúdo novo`
 
   if (mode === 'markers') {
     return `Você é um especialista em design instrucional. Analise o texto abaixo e gere uma estrutura de curso em JSON respeitando os marcadores de recursos interativos presentes no texto.
@@ -197,7 +211,7 @@ ${sharedStructure}
 
 ## Texto para analisar
 
-${truncated}`;
+${truncated}`
   }
 
   // mode === 'auto'
@@ -208,8 +222,9 @@ ${sharedStructure}
 ## Diretrizes de escolha automática
 
 - Texto introdutório ou explicativo → paragrafo
-- Lista de ingredientes, materiais, requisitos, características → lista
-- Passos numerados de um processo → lista com <ol>
+- Lista de ingredientes, materiais, características → lista (tipoLista: "nao-ordenada")
+- Passos numerados de um processo → lista (tipoLista: "ordenada")
+- Requisitos, critérios verificáveis → lista (tipoLista: "check")
 - 3 ou mais tópicos relacionados com subconteúdo → accordion
 - Termo técnico + definição, pergunta retórica + resposta → flipcard
 - "Atenção:", "Importante:", aviso de segurança → info-box (tipoInfoBox: "atencao")
@@ -219,53 +234,57 @@ ${sharedStructure}
 
 ## Texto para analisar
 
-${truncated}`;
+${truncated}`
 }
 
 /**
  * Gera curso usando Google Gemini
  */
-async function generateWithGemini(text: string, apiKey: string, mode: 'auto' | 'markers' = 'auto'): Promise<{ course: CursoGerado; tokenUsage: TokenUsage }> {
-  const genAI = new GoogleGenerativeAI(apiKey);
-  
-  const prompt = buildPrompt(text, mode);
+async function generateWithGemini(
+  text: string,
+  apiKey: string,
+  mode: 'auto' | 'markers' = 'auto'
+): Promise<{ course: CursoGerado; tokenUsage: TokenUsage }> {
+  const genAI = new GoogleGenerativeAI(apiKey)
+
+  const prompt = buildPrompt(text, mode)
 
   // Tentar diferentes modelos em ordem de preferência (nomes atualizados 2025+)
   // Referência: https://ai.google.dev/models/gemini
-  const modelNames = ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-1.5-flash-latest'];
-  let lastError: Error | null = null;
-  
+  const modelNames = ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-1.5-flash-latest']
+  let lastError: Error | null = null
+
   for (const modelName of modelNames) {
     try {
-      const model = genAI.getGenerativeModel({ model: modelName });
-      console.log(`🔄 Tentando modelo: ${modelName}`);
-      
-      const result = await model.generateContent(prompt);
-      const response = result.response;
-      const generatedText = response.text();
+      const model = genAI.getGenerativeModel({ model: modelName })
+      console.log(`🔄 Tentando modelo: ${modelName}`)
 
-      console.log(`✅ Modelo ${modelName} funcionou!`);
+      const result = await model.generateContent(prompt)
+      const response = result.response
+      const generatedText = response.text()
+
+      console.log(`✅ Modelo ${modelName} funcionou!`)
 
       // Extrair JSON da resposta (pode vir com markdown code blocks)
-      let jsonText = generatedText.trim();
+      let jsonText = generatedText.trim()
 
       // Remover markdown code blocks se existirem
       if (jsonText.startsWith('```json')) {
-        jsonText = jsonText.replace(/^```json\n?/, '').replace(/\n?```$/, '');
+        jsonText = jsonText.replace(/^```json\n?/, '').replace(/\n?```$/, '')
       } else if (jsonText.startsWith('```')) {
-        jsonText = jsonText.replace(/^```\n?/, '').replace(/\n?```$/, '');
+        jsonText = jsonText.replace(/^```\n?/, '').replace(/\n?```$/, '')
       }
 
-      const courseData = JSON.parse(jsonText) as CursoGerado;
+      const courseData = JSON.parse(jsonText) as CursoGerado
 
       // Validar estrutura básica
       if (!courseData.titulo || !courseData.descricao) {
-        throw new Error('Resposta da IA não contém título ou descrição válidos');
+        throw new Error('Resposta da IA não contém título ou descrição válidos')
       }
 
       // Garantir que unidades seja um array
       if (!Array.isArray(courseData.unidades)) {
-        courseData.unidades = [];
+        courseData.unidades = []
       }
 
       const tokenUsage: TokenUsage = {
@@ -273,43 +292,49 @@ async function generateWithGemini(text: string, apiKey: string, mode: 'auto' | '
         completionTokens: response.usageMetadata?.candidatesTokenCount ?? 0,
         totalTokens: response.usageMetadata?.totalTokenCount ?? 0,
         model: modelName,
-      };
-
-      return { course: courseData, tokenUsage };
-    } catch (error) {
-      console.error(`❌ Erro com modelo ${modelName}:`, error);
-      lastError = error instanceof Error ? error : new Error(String(error));
-      
-      // Continuar para próximo modelo em caso de erro de modelo não encontrado ou quota excedida
-      const isRetryable = error instanceof Error && (
-        error.message.includes('not found') ||
-        error.message.includes('404') ||
-        error.message.includes('429') ||
-        error.message.includes('quota') ||
-        error.message.includes('Too Many Requests') ||
-        error.message.includes('RESOURCE_EXHAUSTED')
-      );
-      if (!isRetryable) {
-        throw error;
       }
-      
+
+      return { course: courseData, tokenUsage }
+    } catch (error) {
+      console.error(`❌ Erro com modelo ${modelName}:`, error)
+      lastError = error instanceof Error ? error : new Error(String(error))
+
+      // Continuar para próximo modelo em caso de erro de modelo não encontrado ou quota excedida
+      const isRetryable =
+        error instanceof Error &&
+        (error.message.includes('not found') ||
+          error.message.includes('404') ||
+          error.message.includes('429') ||
+          error.message.includes('quota') ||
+          error.message.includes('Too Many Requests') ||
+          error.message.includes('RESOURCE_EXHAUSTED'))
+      if (!isRetryable) {
+        throw error
+      }
+
       // Continuar para o próximo modelo
-      continue;
+      continue
     }
   }
-  
+
   // Se chegou aqui, nenhum modelo funcionou
-  throw new Error(`Nenhum modelo Gemini disponível. Tentei: ${modelNames.join(', ')}. Último erro: ${lastError?.message || 'Desconhecido'}`);
+  throw new Error(
+    `Nenhum modelo Gemini disponível. Tentei: ${modelNames.join(', ')}. Último erro: ${lastError?.message || 'Desconhecido'}`
+  )
 }
 
 /**
  * Gera curso usando OpenAI
  */
-async function generateWithOpenAI(text: string, apiKey: string, mode: 'auto' | 'markers' = 'auto'): Promise<{ course: CursoGerado; tokenUsage: TokenUsage }> {
-  const { default: OpenAI } = await import('openai');
-  const openai = new OpenAI({ apiKey });
+async function generateWithOpenAI(
+  text: string,
+  apiKey: string,
+  mode: 'auto' | 'markers' = 'auto'
+): Promise<{ course: CursoGerado; tokenUsage: TokenUsage }> {
+  const { default: OpenAI } = await import('openai')
+  const openai = new OpenAI({ apiKey })
 
-  const prompt = buildPrompt(text, mode);
+  const prompt = buildPrompt(text, mode)
 
   try {
     const completion = await openai.chat.completions.create({
@@ -317,7 +342,8 @@ async function generateWithOpenAI(text: string, apiKey: string, mode: 'auto' | '
       messages: [
         {
           role: 'system',
-          content: 'Você é um especialista em criação de cursos online. Retorne sempre JSON válido.',
+          content:
+            'Você é um especialista em criação de cursos online. Retorne sempre JSON válido.',
         },
         {
           role: 'user',
@@ -326,34 +352,34 @@ async function generateWithOpenAI(text: string, apiKey: string, mode: 'auto' | '
       ],
       temperature: 0.7,
       max_tokens: 4000,
-    });
+    })
 
-    const generatedText = completion.choices[0]?.message?.content;
+    const generatedText = completion.choices[0]?.message?.content
 
     if (!generatedText) {
-      throw new Error('Resposta vazia da API OpenAI');
+      throw new Error('Resposta vazia da API OpenAI')
     }
 
     // Extrair JSON da resposta
-    let jsonText = generatedText.trim();
-    
+    let jsonText = generatedText.trim()
+
     // Remover markdown code blocks se existirem
     if (jsonText.startsWith('```json')) {
-      jsonText = jsonText.replace(/^```json\n?/, '').replace(/\n?```$/, '');
+      jsonText = jsonText.replace(/^```json\n?/, '').replace(/\n?```$/, '')
     } else if (jsonText.startsWith('```')) {
-      jsonText = jsonText.replace(/^```\n?/, '').replace(/\n?```$/, '');
+      jsonText = jsonText.replace(/^```\n?/, '').replace(/\n?```$/, '')
     }
 
-    const courseData = JSON.parse(jsonText) as CursoGerado;
+    const courseData = JSON.parse(jsonText) as CursoGerado
 
     // Validar estrutura básica
     if (!courseData.titulo || !courseData.descricao) {
-      throw new Error('Resposta da IA não contém título ou descrição válidos');
+      throw new Error('Resposta da IA não contém título ou descrição válidos')
     }
 
     // Garantir que unidades seja um array
     if (!Array.isArray(courseData.unidades)) {
-      courseData.unidades = [];
+      courseData.unidades = []
     }
 
     const tokenUsage: TokenUsage = {
@@ -361,11 +387,13 @@ async function generateWithOpenAI(text: string, apiKey: string, mode: 'auto' | '
       completionTokens: completion.usage?.completion_tokens ?? 0,
       totalTokens: completion.usage?.total_tokens ?? 0,
       model: completion.model,
-    };
+    }
 
-    return { course: courseData, tokenUsage };
+    return { course: courseData, tokenUsage }
   } catch (error) {
-    console.error('Erro ao gerar com OpenAI:', error);
-    throw new Error(`Erro ao processar resposta da IA: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
+    console.error('Erro ao gerar com OpenAI:', error)
+    throw new Error(
+      `Erro ao processar resposta da IA: ${error instanceof Error ? error.message : 'Erro desconhecido'}`
+    )
   }
 }
