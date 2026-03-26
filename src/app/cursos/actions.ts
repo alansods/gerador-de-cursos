@@ -93,11 +93,9 @@ export async function buscarCursos({
         categoria: curso.categoria,
         modalidade: curso.modalidade,
         cargaHoraria: curso.cargaHoraria,
-        objetivos: [], // Campo não existe no schema
-        publicoAlvo: '', // Campo não existe no schema
         unidades: curso.unidades as unknown as CursoGerado['unidades'],
         dataCriacao: curso.dataCriacao,
-        dataAtualizacao: curso.dataModificacao,
+        dataModificacao: curso.dataModificacao,
       })
     )
 
