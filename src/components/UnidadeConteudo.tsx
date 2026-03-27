@@ -1,6 +1,6 @@
 'use client'
 
-import { Card, CardContent, CardHeader } from '@/components/ui/card'
+import { Card, CardContent } from '@/components/ui/card'
 import {
   Accordion,
   AccordionContent,
@@ -24,22 +24,6 @@ export function UnidadeConteudo({ unidade, unidadeIndex }: UnidadeConteudoProps)
       id={unidade.id}
       className="overflow-hidden scroll-mt-20 dark:bg-gray-800 dark:border-gray-700"
     >
-      <CardHeader className="bg-linear-to-r from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 border-b dark:border-gray-700 px-6 py-5">
-        <div className="flex items-start gap-4">
-          <div className="flex items-center justify-center w-12 h-12 bg-blue-600 dark:bg-blue-700 text-white rounded-full font-bold shrink-0 text-lg">
-            {unidadeIndex + 1}
-          </div>
-          <div className="flex-1">
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-3">
-              {unidade.titulo}
-            </h2>
-            <p className="text-gray-600 dark:text-gray-400 text-base leading-relaxed">
-              {unidade.descricao}
-            </p>
-          </div>
-        </div>
-      </CardHeader>
-
       <CardContent className="px-6 py-8">
         {unidade.conteudo.length === 0 ? (
           <div className="text-center py-12 text-gray-500 dark:text-gray-400">

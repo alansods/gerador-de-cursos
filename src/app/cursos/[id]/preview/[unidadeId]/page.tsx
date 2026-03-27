@@ -2,106 +2,89 @@
 
 // Esta página não deve ser exportada estaticamente (usa context e hooks client-side)
 // O Next.js deve ignorar esta página durante build estático
-export const dynamic = 'error';
+export const dynamic = 'error'
 
-import { useEffect, useState } from "react";
-import { useParams, useRouter, usePathname } from "next/navigation";
-import { useGeradorCurso } from "@/context/GeradorCursoContext";
-import {
-  Sheet,
-  SheetContent,
-  SheetTrigger,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
-import {
-  Menu,
-  Home,
-  User,
-  LogOut,
-  ChevronLeft,
-  ChevronRight,
-  Moon,
-  Sun,
-} from "lucide-react";
-import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import { UnidadeConteudo } from "@/components/UnidadeConteudo";
-import { useLMS } from "@/hooks/useLMS";
-import { useTheme } from "@/hooks/useTheme";
+import { useEffect, useState } from 'react'
+import { useParams, useRouter, usePathname } from 'next/navigation'
+import { useGeradorCurso } from '@/context/GeradorCursoContext'
+import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from '@/components/ui/sheet'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
+import { Menu, Home, User, LogOut, ChevronLeft, ChevronRight, Moon, Sun } from 'lucide-react'
+import Link from 'next/link'
+import { Button } from '@/components/ui/button'
+import { UnidadeConteudo } from '@/components/UnidadeConteudo'
+import { useLMS } from '@/hooks/useLMS'
+import { useTheme } from '@/hooks/useTheme'
 
 export default function PreviewUnidadePage() {
-  const params = useParams();
-  const router = useRouter();
-  const { state, selecionarCurso } = useGeradorCurso();
-  const [menuOpen, setMenuOpen] = useState(false);
-  const { learnerName, isConnected } = useLMS();
-  const { isDarkMode, toggleDarkMode } = useTheme();
+  const params = useParams()
+  const router = useRouter()
+  const { state, selecionarCurso } = useGeradorCurso()
+  const [menuOpen, setMenuOpen] = useState(false)
+  const { learnerName, isConnected } = useLMS()
+  const { isDarkMode, toggleDarkMode } = useTheme()
 
-  const pathname = usePathname();
-  const pathParts = pathname.split('/');
+  const pathname = usePathname()
+  const pathParts = pathname.split('/')
   // pathname = /cursos/[slug]/preview/unidade-N
-  const cursoUrlSegment = pathParts[2];
-  const unidadeSegment = pathParts[4]; // 'unidade-1', 'unidade-2', etc.
+  const cursoUrlSegment = pathParts[2]
+  const unidadeSegment = pathParts[4] // 'unidade-1', 'unidade-2', etc.
 
-  const cursoId = params?.id as string | undefined || cursoUrlSegment;
-  const unidadeId = params?.unidadeId as string | undefined || unidadeSegment;
+  const cursoId = (params?.id as string | undefined) || cursoUrlSegment
+  const unidadeId = (params?.unidadeId as string | undefined) || unidadeSegment
 
   // Índice numérico da unidade a partir do segmento 'unidade-N'
   const unidadeIndexFromUrl = unidadeSegment
     ? parseInt(unidadeSegment.replace('unidade-', ''), 10) - 1
-    : -1;
+    : -1
 
   // Selecionar o curso ao carregar a página
   // SEMPRE força refresh para garantir dados atualizados
   useEffect(() => {
     if (cursoId) {
-      selecionarCurso(cursoId, true); // forceRefresh = true
+      selecionarCurso(cursoId, true) // forceRefresh = true
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [cursoId]); // Remove selecionarCurso das deps para evitar loop infinito
+  }, [cursoId]) // Remove selecionarCurso das deps para evitar loop infinito
 
   // Usar cursoAtual do state (que é selecionado) ou buscar na lista
-  const curso = state.cursoAtual || state.cursos.find((c) => c.id === cursoId || c.slug === cursoId);
+  const curso = state.cursoAtual || state.cursos.find((c) => c.id === cursoId || c.slug === cursoId)
 
   // Buscar unidade: primeiro pelo índice da URL (confiável), depois por slug/id como fallback
-  const unidade = (curso?.unidades && unidadeIndexFromUrl >= 0)
-    ? curso.unidades[unidadeIndexFromUrl]
-    : curso?.unidades?.find((u) => u.slug === unidadeId || u.id === unidadeId);
+  const unidade =
+    curso?.unidades && unidadeIndexFromUrl >= 0
+      ? curso.unidades[unidadeIndexFromUrl]
+      : curso?.unidades?.find((u) => u.slug === unidadeId || u.id === unidadeId)
 
   useEffect(() => {
     if (!state.loading && (!curso || !unidade)) {
       if (!curso) {
-        router.push("/cursos");
+        router.push('/cursos')
       } else {
-        router.push(`/cursos/${cursoUrlSegment}/preview`);
+        router.push(`/cursos/${cursoUrlSegment}/preview`)
       }
     }
-  }, [curso, unidade, router, state.loading, cursoUrlSegment]);
+  }, [curso, unidade, router, state.loading, cursoUrlSegment])
 
   if (!curso || !unidade) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
         <div className="text-center">
           <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-4">
-            {!curso ? "Curso não encontrado" : "Unidade não encontrada"}
+            {!curso ? 'Curso não encontrado' : 'Unidade não encontrada'}
           </h1>
         </div>
       </div>
-    );
+    )
   }
 
   // Índice da unidade atual (baseado na URL)
-  const unidadeIndex = unidadeIndexFromUrl >= 0 ? unidadeIndexFromUrl
-    : curso.unidades.findIndex((u) => u.slug === unidadeId || u.id === unidadeId);
-  const anteriorId = unidadeIndex > 0 ? `unidade-${unidadeIndex}` : null;
-  const proximaId = unidadeIndex < curso.unidades.length - 1 ? `unidade-${unidadeIndex + 2}` : null;
+  const unidadeIndex =
+    unidadeIndexFromUrl >= 0
+      ? unidadeIndexFromUrl
+      : curso.unidades.findIndex((u) => u.slug === unidadeId || u.id === unidadeId)
+  const anteriorId = unidadeIndex > 0 ? `unidade-${unidadeIndex}` : null
+  const proximaId = unidadeIndex < curso.unidades.length - 1 ? `unidade-${unidadeIndex + 2}` : null
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
@@ -114,7 +97,10 @@ export default function PreviewUnidadePage() {
               <span className="sr-only">Abrir menu</span>
             </Button>
           </SheetTrigger>
-          <SheetContent side="left" className="w-[320px] sm:w-[400px] p-0 bg-linear-to-b from-gray-50 to-white dark:from-gray-900 dark:to-gray-800">
+          <SheetContent
+            side="left"
+            className="w-[320px] sm:w-[400px] p-0 bg-linear-to-b from-gray-50 to-white dark:from-gray-900 dark:to-gray-800"
+          >
             <SheetHeader className="px-6 pt-6 pb-4 border-b border-gray-100 dark:border-gray-700 bg-white dark:bg-gray-800">
               <SheetTitle className="text-left text-xl font-bold text-gray-900 dark:text-gray-100">
                 Unidades do curso
@@ -139,7 +125,7 @@ export default function PreviewUnidadePage() {
 
               {/* Units Section */}
               {(curso.unidades || []).map((u, index) => {
-                const isActive = `unidade-${index + 1}` === unidadeSegment;
+                const isActive = `unidade-${index + 1}` === unidadeSegment
                 return (
                   <Link
                     key={u.id || `unidade-${index}`}
@@ -147,13 +133,13 @@ export default function PreviewUnidadePage() {
                     onClick={() => setMenuOpen(false)}
                     className={`group flex items-center gap-3 p-4 rounded-xl border transition-all duration-200 ${
                       isActive
-                        ? "border-orange-500 dark:border-orange-600 bg-orange-50/50 dark:bg-orange-900/30"
-                        : "border-gray-200 dark:border-gray-700 hover:border-orange-300 dark:hover:border-orange-600 hover:bg-orange-50/50 dark:hover:bg-orange-900/30"
+                        ? 'border-orange-500 dark:border-orange-600 bg-orange-50/50 dark:bg-orange-900/30'
+                        : 'border-gray-200 dark:border-gray-700 hover:border-orange-300 dark:hover:border-orange-600 hover:bg-orange-50/50 dark:hover:bg-orange-900/30'
                     }`}
                   >
                     {/* Badge with number */}
                     <div className="shrink-0 w-10 h-10 rounded-lg bg-linear-to-br from-orange-400 to-orange-600 dark:from-orange-500 dark:to-orange-700 flex items-center justify-center text-white font-bold text-sm">
-                      {String(index + 1).padStart(2, "0")}
+                      {String(index + 1).padStart(2, '0')}
                     </div>
                     {/* Content */}
                     <div className="flex-1 min-w-0">
@@ -162,7 +148,7 @@ export default function PreviewUnidadePage() {
                       </p>
                     </div>
                   </Link>
-                );
+                )
               })}
             </nav>
           </SheetContent>
@@ -205,18 +191,24 @@ export default function PreviewUnidadePage() {
                   variant="ghost"
                   size="icon"
                   onClick={() => {
-                    if (isConnected && typeof window !== 'undefined' && 'SCORM' in window && typeof (window as { SCORM?: { terminate: () => void } }).SCORM?.terminate === 'function') {
+                    if (
+                      isConnected &&
+                      typeof window !== 'undefined' &&
+                      'SCORM' in window &&
+                      typeof (window as { SCORM?: { terminate: () => void } }).SCORM?.terminate ===
+                        'function'
+                    ) {
                       try {
-                        (window as { SCORM: { terminate: () => void } }).SCORM.terminate();
+                        ;(window as { SCORM: { terminate: () => void } }).SCORM.terminate()
                       } catch (error) {
-                        console.error('[LMS] Erro ao sair:', error);
+                        console.error('[LMS] Erro ao sair:', error)
                       }
                     }
                     // Fechar a janela ou redirecionar
                     if (window.parent !== window) {
-                      window.close();
+                      window.close()
                     } else {
-                      router.push('/cursos');
+                      router.push('/cursos')
                     }
                   }}
                   className="text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/30"
@@ -233,22 +225,53 @@ export default function PreviewUnidadePage() {
 
       {/* Main Content */}
       <main className="pt-16">
+        {/* Hero Banner - full width, fora do container */}
+        <div
+          style={{
+            background: 'linear-gradient(135deg, #172554 0%, #1e3a8a 50%, #1e40af 100%)',
+            color: 'white',
+            padding: '2.5rem 2rem',
+          }}
+        >
+          <div className="max-w-7xl mx-auto flex items-center justify-between gap-6">
+            <h1 style={{ fontSize: '2rem', fontWeight: 700, lineHeight: 1.2, margin: 0 }}>
+              {unidade.titulo.replace(/^UNIDADE\s+\d+[:\s]*/i, '').trim()}
+            </h1>
+            <div
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                color: 'rgba(255,255,255,0.9)',
+                flexShrink: 0,
+              }}
+            >
+              <span
+                style={{
+                  fontSize: '0.7rem',
+                  fontWeight: 600,
+                  letterSpacing: '0.12em',
+                  textTransform: 'uppercase',
+                  opacity: 0.8,
+                }}
+              >
+                Unidade
+              </span>
+              <span style={{ fontSize: '4rem', fontWeight: 900, lineHeight: 1 }}>
+                {String(unidadeIndex + 1).padStart(2, '0')}
+              </span>
+            </div>
+          </div>
+        </div>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           {/* Unit Content */}
-          <UnidadeConteudo
-            unidade={unidade}
-            unidadeIndex={unidadeIndex}
-          />
+          <UnidadeConteudo unidade={unidade} unidadeIndex={unidadeIndex} />
 
           {/* Navigation Buttons */}
           <div className="flex items-center justify-between gap-4 mt-8 pt-8 border-t-[1px] border-[#e5e7eb] dark:border-gray-700">
             {/* Previous Button */}
             <Link
-              href={
-                anteriorId !== null
-                  ? `/cursos/${cursoUrlSegment}/preview/${anteriorId}`
-                  : '#'
-              }
+              href={anteriorId !== null ? `/cursos/${cursoUrlSegment}/preview/${anteriorId}` : '#'}
               className={anteriorId !== null ? '' : 'pointer-events-none'}
             >
               <Button
@@ -269,11 +292,7 @@ export default function PreviewUnidadePage() {
 
             {/* Next Button */}
             <Link
-              href={
-                proximaId !== null
-                  ? `/cursos/${cursoUrlSegment}/preview/${proximaId}`
-                  : '#'
-              }
+              href={proximaId !== null ? `/cursos/${cursoUrlSegment}/preview/${proximaId}` : '#'}
               className={proximaId !== null ? '' : 'pointer-events-none'}
             >
               <Button
@@ -288,5 +307,5 @@ export default function PreviewUnidadePage() {
         </div>
       </main>
     </div>
-  );
+  )
 }

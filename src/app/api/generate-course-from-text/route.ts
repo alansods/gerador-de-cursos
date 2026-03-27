@@ -75,7 +75,7 @@ export async function POST(req: NextRequest) {
  */
 function buildPrompt(text: string, mode: 'auto' | 'markers' = 'auto'): string {
   const truncated =
-    text.substring(0, 12000) + (text.length > 12000 ? '\n\n[... texto truncado ...]' : '')
+    text.substring(0, 150000) + (text.length > 150000 ? '\n\n[... texto truncado ...]' : '')
 
   const sharedStructure = `## Estrutura geral do JSON
 

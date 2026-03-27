@@ -1,17 +1,17 @@
-import React from 'react';
-import { Button } from '@/components/ui/button';
-import { UnidadeConteudo } from '@/components/UnidadeConteudo';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
-import type { CursoGerado } from '@/types/gerador-curso';
+import React from 'react'
+import { Button } from '@/components/ui/button'
+import { UnidadeConteudo } from '@/components/UnidadeConteudo'
+import { ChevronLeft, ChevronRight } from 'lucide-react'
+import type { CursoGerado } from '@/types/gerador-curso'
 
 interface SCORMUnitProps {
-  curso: CursoGerado;
-  unidadeId: string;
-  onNavigate: (unitId: string | null) => void;
+  curso: CursoGerado
+  unidadeId: string
+  onNavigate: (unitId: string | null) => void
 }
 
 export function SCORMUnit({ curso, unidadeId, onNavigate }: SCORMUnitProps) {
-  const unidade = curso.unidades?.find((u) => u.id === unidadeId);
+  const unidade = curso.unidades?.find((u) => u.id === unidadeId)
 
   if (!unidade) {
     return (
@@ -23,29 +23,64 @@ export function SCORMUnit({ curso, unidadeId, onNavigate }: SCORMUnitProps) {
           <p className="text-gray-600 dark:text-gray-400">
             A unidade solicitada não existe neste curso.
           </p>
-          <Button 
-            className="mt-4 bg-blue-600 hover:bg-blue-700"
-            onClick={() => onNavigate(null)}
-          >
+          <Button className="mt-4 bg-blue-600 hover:bg-blue-700" onClick={() => onNavigate(null)}>
             Voltar para o início
           </Button>
         </div>
       </div>
-    );
+    )
   }
 
-  const unidadeIndex = curso.unidades.findIndex((u) => u.id === unidadeId);
-  const unidadeAnterior = unidadeIndex > 0 ? curso.unidades[unidadeIndex - 1] : null;
-  const proximaUnidade = unidadeIndex < curso.unidades.length - 1 ? curso.unidades[unidadeIndex + 1] : null;
+  const unidadeIndex = curso.unidades.findIndex((u) => u.id === unidadeId)
+  const unidadeAnterior = unidadeIndex > 0 ? curso.unidades[unidadeIndex - 1] : null
+  const proximaUnidade =
+    unidadeIndex < curso.unidades.length - 1 ? curso.unidades[unidadeIndex + 1] : null
+
+  const titulo = unidade.titulo.replace(/^UNIDADE\s+\d+[:\s]*/i, '').trim()
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pt-16">
+      {/* Hero Banner - full width, fora do container */}
+      <div
+        style={{
+          background: 'linear-gradient(135deg, #172554 0%, #1e3a8a 50%, #1e40af 100%)',
+          color: 'white',
+          padding: '2.5rem 2rem',
+        }}
+      >
+        <div className="max-w-7xl mx-auto flex items-center justify-between gap-6">
+          <h1 style={{ fontSize: '2rem', fontWeight: 700, lineHeight: 1.2, margin: 0 }}>
+            {titulo}
+          </h1>
+          <div
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              color: 'rgba(255,255,255,0.9)',
+              flexShrink: 0,
+            }}
+          >
+            <span
+              style={{
+                fontSize: '0.7rem',
+                fontWeight: 600,
+                letterSpacing: '0.12em',
+                textTransform: 'uppercase',
+                opacity: 0.8,
+              }}
+            >
+              Unidade
+            </span>
+            <span style={{ fontSize: '4rem', fontWeight: 900, lineHeight: 1 }}>
+              {String(unidadeIndex + 1).padStart(2, '0')}
+            </span>
+          </div>
+        </div>
+      </div>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Unit Content */}
-        <UnidadeConteudo
-          unidade={unidade}
-          unidadeIndex={unidadeIndex}
-        />
+        <UnidadeConteudo unidade={unidade} unidadeIndex={unidadeIndex} />
 
         {/* Navigation Buttons */}
         <div className="flex items-center justify-between gap-4 mt-8 pt-8 border-t-[1px] border-[#e5e7eb] dark:border-gray-700">
@@ -78,5 +113,5 @@ export function SCORMUnit({ curso, unidadeId, onNavigate }: SCORMUnitProps) {
         </div>
       </div>
     </div>
-  );
+  )
 }
