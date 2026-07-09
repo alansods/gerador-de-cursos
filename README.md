@@ -1,213 +1,213 @@
-# Gerador de Cursos SCORM
+# SCORM Course Generator
 
-Sistema web para criação e exportação de cursos educacionais no padrão **SCORM 1.2**, com geração de conteúdo por **Inteligência Artificial** (Google Gemini / OpenAI).
+Web system for creating and exporting educational courses in the **SCORM 1.2** standard, with content generation powered by **Artificial Intelligence** (Google Gemini / OpenAI).
 
-Desenvolvido para uso institucional na **FIEC / SENAI / UNED**.
+Developed for institutional use at **FIEC / SENAI / UNED**.
 
 ---
 
-## Funcionalidades
+## Features
 
-- Criação de cursos com múltiplas unidades e conteúdo rico (markdown)
-- **Geração automática de cursos via IA** a partir de documentos Word (.docx/.doc)
-  - A IA usa **estritamente o conteúdo do documento enviado**, sem inventar ou adicionar informações extras
-  - Suporta dois modos: **automático** (a IA escolhe os melhores recursos) e **com marcadores** (controle preciso via marcadores no documento)
-  - Estrutura automaticamente o conteúdo em unidades com recursos interativos (accordion, quiz, flipcard, etc.)
-- Preview interativo do curso antes da exportação
-- Exportação de pacotes SCORM 1.2 compatíveis com qualquer LMS
-- Dark mode integrado no player SCORM
-- Autenticação com JWT (login/cadastro)
-- Gestão de usuários e log de atividades
-- Geração de PDF do curso
-- Upload de imagens via Vercel Blob
+- Create courses with multiple units and rich content (markdown)
+- **Automatic course generation via AI** from Word documents (.docx/.doc)
+  - AI uses **strictly the content from the uploaded document**, without inventing or adding extra information
+  - Supports two modes: **automatic** (AI chooses the best resources) and **with markers** (precise control via markers in the document)
+  - Automatically structures content into units with interactive resources (accordion, quiz, flipcard, etc.)
+- Interactive course preview before export
+- Export SCORM 1.2 packages compatible with any LMS
+- Integrated dark mode in the SCORM player
+- JWT authentication (login/registration)
+- User management and activity logs
+- Course PDF generation
+- Image upload via Vercel Blob
 
 ---
 
 ## Stack
 
-| Camada | Tecnologia |
-|--------|-----------|
-| Framework | Next.js 15 (App Router) |
-| UI | React 19 + TypeScript + Tailwind CSS v4 + shadcn/ui |
-| Banco de dados | PostgreSQL via Prisma ORM |
-| Autenticação | JWT (jose + jsonwebtoken) + bcryptjs |
-| IA | Google Gemini (`@google/generative-ai`) + OpenAI |
-| SCORM | Geração de imsmanifest.xml + wrapper JS + ZIP (JSZip) |
-| PDF | jsPDF + html2canvas + Puppeteer |
-| Testes | Jest + Testing Library + Playwright |
-| Deploy | Vercel |
-| Package manager | pnpm |
+| Layer           | Technology                                               |
+| --------------- | -------------------------------------------------------- |
+| Framework       | Next.js 15 (App Router)                                  |
+| UI              | React 19 + TypeScript + Tailwind CSS v4 + shadcn/ui      |
+| Database        | PostgreSQL via Prisma ORM                                |
+| Authentication  | JWT (jose + jsonwebtoken) + bcryptjs                     |
+| AI              | Google Gemini (`@google/generative-ai`) + OpenAI         |
+| SCORM           | Generation of imsmanifest.xml + JS wrapper + ZIP (JSZip) |
+| PDF             | jsPDF + html2canvas + Puppeteer                          |
+| Testing         | Jest + Testing Library + Playwright                      |
+| Deploy          | Vercel                                                   |
+| Package manager | pnpm                                                     |
 
 ---
 
-## Pré-requisitos
+## Prerequisites
 
 - Node.js 20+
 - pnpm
-- PostgreSQL (Supabase ou Vercel Postgres)
+- PostgreSQL (Supabase or Vercel Postgres)
 
 ---
 
-## Configuração
+## Setup
 
-### 1. Instalar dependências
+### 1. Install dependencies
 
 ```bash
 pnpm install
 ```
 
-### 2. Variáveis de ambiente
+### 2. Environment variables
 
-Crie `.env.local` na raiz:
+Create `.env.local` at the root:
 
 ```bash
-DATABASE_URL=postgresql://usuario:senha@host:porta/database
-JWT_SECRET=sua-chave-secreta-aqui
+DATABASE_URL=postgresql://user:password@host:port/database
+JWT_SECRET=your-secret-key-here
 NEXT_PUBLIC_APP_URL=http://localhost:3000
 
-# Para geração de cursos via IA
-GOOGLE_AI_API_KEY=sua-chave-gemini
-OPENAI_API_KEY=sua-chave-openai   # opcional
+# For AI course generation
+GOOGLE_AI_API_KEY=your-gemini-key
+OPENAI_API_KEY=your-openai-key   # optional
 
-# Para upload de imagens
-BLOB_READ_WRITE_TOKEN=seu-token-vercel-blob
+# For image uploads
+BLOB_READ_WRITE_TOKEN=your-vercel-blob-token
 ```
 
-### 3. Banco de dados
+### 3. Database
 
 ```bash
-# Criar tabelas
+# Create tables
 pnpm db:migrate
 
-# (Opcional) Popular com dados iniciais
+# (Optional) Populate with initial data
 pnpm db:seed
 ```
 
-### 4. Rodar em desenvolvimento
+### 4. Run in development
 
 ```bash
 pnpm dev
 ```
 
-Acesse [http://localhost:3000](http://localhost:3000).
+Access [http://localhost:3000](http://localhost:3000).
 
 ---
 
 ## Scripts
 
 ```bash
-pnpm dev              # servidor de desenvolvimento
-pnpm build            # build de produção (inclui prisma generate)
-pnpm start            # servidor de produção
+pnpm dev              # development server
+pnpm build            # production build (includes prisma generate)
+pnpm start            # production server
 pnpm lint             # ESLint
-pnpm test             # testes unitários (Jest)
-pnpm test:coverage    # cobertura de testes
-pnpm test:e2e         # testes E2E (Playwright)
-pnpm db:migrate       # migrations do banco
-pnpm db:studio        # Prisma Studio (UI do banco)
-pnpm db:seed          # seed do banco
+pnpm test             # unit tests (Jest)
+pnpm test:coverage    # test coverage
+pnpm test:e2e         # E2E tests (Playwright)
+pnpm db:migrate       # database migrations
+pnpm db:studio        # Prisma Studio (database UI)
+pnpm db:seed          # database seeding
 ```
 
 ---
 
-## Exportação SCORM
+## SCORM Export
 
-O processo de exportação gera um arquivo `.zip` compatível com SCORM 1.2 contendo:
+The export process generates a `.zip` file compatible with SCORM 1.2 containing:
 
-- `imsmanifest.xml` — manifesto com estrutura do curso
-- `scorm-preview/index.html` — página inicial do curso
-- `scorm-preview/unidade/<id>.html` — uma página por unidade
+- `imsmanifest.xml` — manifest with course structure
+- `scorm-preview/index.html` — course homepage
+- `scorm-preview/unidade/<id>.html` — one page per unit
 - `_next/static/` — assets (CSS, JS, fonts)
-- `scorm_api_wrapper.js` — wrapper da API SCORM (1.2 e 2004)
-- `images/` — imagens do curso
+- `scorm_api_wrapper.js` — SCORM API wrapper (1.2 and 2004)
+- `images/` — course images
 
-O pacote ZIP pode ser importado em qualquer LMS compatível com SCORM 1.2 (Moodle, TalentLMS, etc.).
+The ZIP package can be imported into any LMS compatible with SCORM 1.2 (Moodle, TalentLMS, etc.).
 
-### Geração manual (desenvolvimento)
+### Manual generation (development)
 
 ```bash
-node generate-scorm-isolated.mjs "/caminho/para/curso.json" "/caminho/saida.zip"
+node generate-scorm-isolated.mjs "/path/to/course.json" "/path/output.zip"
 ```
 
 ---
 
-## Estrutura do Projeto
+## Project Structure
 
 ```
 src/
 ├── app/
 │   ├── api/                    # API Routes (serverless)
 │   │   ├── auth/               # Login/logout
-│   │   ├── cursos/             # CRUD de cursos
-│   │   ├── generate-course-from-text/  # Geração por IA
-│   │   ├── generate-scorm-v2/  # Exportação SCORM
-│   │   ├── scorm-jobs/         # Fila de jobs SCORM
-│   │   ├── scorm-status/       # Status de jobs
-│   │   ├── scorm-download/     # Download do ZIP
-│   │   ├── users/              # Gestão de usuários
-│   │   ├── activities/         # Log de atividades
-│   │   ├── extract-document/   # PDF/DOCX → texto
-│   │   └── upload-image/       # Upload de imagens
-│   ├── scorm-preview/          # Player SCORM (Server Components estáticos)
+│   │   ├── cursos/             # Course CRUD
+│   │   ├── generate-course-from-text/  # AI generation
+│   │   ├── generate-scorm-v2/  # SCORM export
+│   │   ├── scorm-jobs/         # SCORM job queue
+│   │   ├── scorm-status/       # Job status
+│   │   ├── scorm-download/     # ZIP download
+│   │   ├── users/              # User management
+│   │   ├── activities/         # Activity logs
+│   │   ├── extract-document/   # PDF/DOCX → text
+│   │   └── upload-image/       # Image uploads
+│   ├── scorm-preview/          # SCORM player (static Server Components)
 │   │   ├── layout.tsx
 │   │   ├── page.tsx
 │   │   └── unidade/[unidadeId]/page.tsx
-│   ├── cursos/                 # Gestão de cursos
+│   ├── cursos/                 # Course management
 │   ├── home/                   # Dashboard
-│   ├── login/                  # Autenticação
-│   ├── cadastro/               # Registro
-│   └── usuarios/               # Gestão de usuários
-├── components/                 # Componentes React
-│   ├── SCORMNavbar.tsx         # Navbar do player SCORM
+│   ├── login/                  # Authentication
+│   ├── cadastro/               # Registration
+│   └── usuarios/               # User management
+├── components/                 # React components
+│   ├── SCORMNavbar.tsx         # SCORM player navbar
 │   ├── ThemeProvider.tsx       # Dark mode
-│   ├── ExportModal.tsx         # Modal de exportação
-│   ├── PreviewCurso.tsx        # Preview interativo
-│   ├── scorm/                  # Componentes SCORM
+│   ├── ExportModal.tsx         # Export modal
+│   ├── PreviewCurso.tsx        # Interactive preview
+│   ├── scorm/                  # SCORM components
 │   └── ui/                     # shadcn/ui
 ├── hooks/                      # Custom hooks
-│   ├── useSCORM.ts             # Exportação SCORM
-│   ├── useLMS.ts               # Integração SCORM API
+│   ├── useSCORM.ts             # SCORM export
+│   ├── useLMS.ts               # SCORM API integration
 │   ├── useTheme.ts             # Dark mode
-│   └── useCurso.ts             # Dados do curso
-├── lib/                        # Utilitários e serviços
-│   ├── scorm-build-service.ts  # Geração SCORM em memória
-│   ├── scorm-service.ts        # Lógica SCORM
-│   ├── auth.ts                 # Autenticação
-│   ├── prisma.ts               # Cliente Prisma
-│   └── pdf-service.ts          # Geração PDF
-├── types/                      # Types TypeScript
+│   └── useCurso.ts             # Course data
+├── lib/                        # Utilities and services
+│   ├── scorm-build-service.ts  # In-memory SCORM generation
+│   ├── scorm-service.ts        # SCORM logic
+│   ├── auth.ts                 # Authentication
+│   ├── prisma.ts               # Prisma client
+│   └── pdf-service.ts          # PDF generation
+├── types/                      # TypeScript types
 └── context/                    # React Context
 
 prisma/
-└── schema.prisma               # Modelos: User, Curso, Activity, SCORMJob
+└── schema.prisma               # Models: User, Curso, Activity, SCORMJob
 
-generate-scorm-isolated.mjs     # Script de build SCORM isolado
+generate-scorm-isolated.mjs     # Isolated SCORM build script
 ```
 
 ---
 
-## Banco de Dados
+## Database
 
-| Modelo | Descrição |
-|--------|-----------|
-| `User` | Usuários do sistema (nome, cargo, login, senha) |
-| `Curso` | Cursos com unidades (estrutura JSON) |
-| `Activity` | Log de ações dos usuários |
-| `SCORMJob` | Fila e status de exportações SCORM assíncronas |
+| Model      | Description                                    |
+| ---------- | ---------------------------------------------- |
+| `User`     | System users (name, position, login, password) |
+| `Curso`    | Courses with units (JSON structure)            |
+| `Activity` | User action logs                               |
+| `SCORMJob` | Queue and status of async SCORM exports        |
 
 ---
 
 ## Deploy (Vercel)
 
-1. Conecte o repositório no [Vercel](https://vercel.com)
-2. Configure as variáveis de ambiente no painel da Vercel
-3. Crie um banco PostgreSQL (Vercel Postgres ou Supabase)
-4. Deploy automático a cada push na branch `main`
+1. Connect the repository on [Vercel](https://vercel.com)
+2. Configure environment variables in the Vercel dashboard
+3. Create a PostgreSQL database (Vercel Postgres or Supabase)
+4. Automatic deployment on every push to `main` branch
 
-> **Atenção**: A exportação SCORM via build completo do Next.js não funciona na Vercel por timeout (máximo 60s no plano Pro, build leva 2-5 minutos). A abordagem atual usa geração em memória via `scorm-build-service.ts`.
+> **Warning**: SCORM export via full Next.js build doesn't work on Vercel due to timeout (60s maximum on Pro plan, build takes 2-5 minutes). The current approach uses in-memory generation via `scorm-build-service.ts`.
 
 ---
 
-## Licença
+## License
 
-Uso interno — FIEC / SENAI / UNED.
+Internal use — FIEC / SENAI / UNED.
