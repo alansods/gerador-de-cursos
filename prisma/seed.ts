@@ -328,6 +328,19 @@ async function main() {
   console.log('🌱 Iniciando seed do banco de dados...\n')
 
   // ========================================
+  // PROTEÇÃO: NÃO RODAR EM PRODUÇÃO
+  // ========================================
+
+  if (process.env.NODE_ENV === 'production' || process.env.VERCEL_ENV === 'production') {
+    console.error('❌ ERRO: Seed não pode ser executado em produção!')
+    console.error('   Este seed deleta TODOS os dados existentes.')
+    console.error('   Para produção, crie usuários manualmente via interface ou migrations.')
+    process.exit(1)
+  }
+
+  console.log('✅ Ambiente: desenvolvimento (seed permitido)\n')
+
+  // ========================================
   // LIMPAR DADOS EXISTENTES
   // ========================================
 
