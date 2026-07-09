@@ -1,23 +1,68 @@
-# Global ignore patterns
-# (Specific patterns are handled by individual .gitignore files in frontend/ and backend/)
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
-# Root node_modules (for Vercel Functions dependencies)
-/node_modules/
+# dependencies
+/node_modules
+/.pnp
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/versions
 
-# IDE files
-.vscode/
-.idea/
+# testing
+/coverage
 
-# OS files
+# next.js
+/.next/
+/.next-scorm/
+/out/
+
+# SCORM build temporários
+/.scorm-build/
+/.scorm-build-work/
+/.scorm-project-temp/
+/.hidden-*-temp/
+/.api-*-hidden-temp/
+/.api-hidden-temp/
+.api-*-hidden-temp/
+.api-hidden-temp/
+/.next-backup-scorm/
+/scorm-test-extract/
+/public/scorm-images/
+*.zip
+/generate-scorm-isolated.js
+/build-scorm-exemplo-react/
+
+# Arquivos de backup (gerados por editores)
+* 2.*
+* [0-9]*/
+*_backup.*
+*-backup.*
+*.backup
+*.js.map
+
+# production
+/build
+
+# misc
 .DS_Store
-Thumbs.db
+*.pem
 
-# Logs
-*.log
+# debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
 
-# Coverage
-coverage/
+# env files (can opt-in for committing if needed)
+.env*
 
-# Temporary files
-*.tmp
-*.temp
+# vercel
+.vercel
+
+# typescript
+*.tsbuildinfo
+next-env.d.ts
+
+/src/generated/prisma

@@ -1,0 +1,89 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Modelo de Usuário
+model User {
+  id         String     @id @default(cuid())
+  nome       String
+  cargo      String
+  usuario    String     @unique
+  senha      String
+  createdAt  DateTime   @default(now()) @map("created_at")
+  updatedAt  DateTime   @updatedAt @map("updated_at")
+  activities Activity[]
+
+  @@index([usuario])
+  @@map("users")
+}
+
+// Modelo de Comentários (exemplo do prompt)
+model Comment {
+  id        Int      @id @default(autoincrement())
+  text      String
+  createdAt DateTime @default(now())
+
+  @@map("comments")
+}
+
+// Modelo de Cursos (adaptado do sistema existente)
+model Curso {
+  id               String   @id @default(cuid())
+  titulo           String
+  slug             String?  @unique
+  descricao        String
+  cargaHoraria     String   @map("carga_horaria")
+  modalidade       String
+  categoria        String
+  unidades         Json     @default("[]")
+  dataCriacao      DateTime @default(now()) @map("data_criacao")
+  dataModificacao  DateTime @updatedAt @map("data_modificacao")
+
+  @@index([titulo])
+  @@index([categoria])
+  @@map("cursos")
+}
+
+// Modelo de Atividades (log de ações dos usuários)
+model Activity {
+  id          String   @id @default(cuid())
+  tipo        String   // 'curso_criado', 'curso_editado', 'curso_deletado', 'usuario_criado', 'usuario_editado', 'usuario_deletado'
+  titulo      String   // título descritivo da atividade
+  descricao   String?  // descrição adicional (ex: nome do curso ou usuário)
+  entityId    String?  @map("entity_id") // ID da entidade afetada (curso ou usuário)
+  entityType  String?  @map("entity_type") // 'curso' ou 'usuario'
+  userId      String?  @map("user_id") // ID do usuário que realizou a ação
+  user        User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  @@index([tipo])
+  @@index([createdAt])
+  @@index([userId])
+  @@map("activities")
+}
+
+// Modelo de Jobs de Geração SCORM
+model SCORMJob {
+  id           String   @id @default(cuid())
+  cursoId      String   @map("curso_id")
+  cursoTitulo  String   @map("curso_titulo")
+  status       String   // 'pending', 'building', 'completed', 'failed'
+  progress     String?  // mensagem de progresso atual
+  error        String?  // mensagem de erro se falhar
+  zipData      Bytes?   @map("zip_data") // dados do ZIP (Buffer) quando completado
+  createdAt    DateTime @default(now()) @map("created_at")
+  completedAt  DateTime? @map("completed_at")
+
+  @@index([status])
+  @@index([createdAt])
+  @@index([cursoId])
+  @@map("scorm_jobs")
+}
