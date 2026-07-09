@@ -1,59 +1,57 @@
-"use client";
+'use client'
 
 // Esta página não deve ser exportada estaticamente (usa API de autenticação)
-export const dynamic = 'error';
+export const dynamic = 'error'
 
-import { useState, FormEvent } from "react";
-import { useRouter } from "next/navigation";
-import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { useAuth } from "@/context/AuthContext";
-import { ThemeToggle } from "@/components/ThemeToggle";
-import { GraduationCap, User, Lock, Eye, EyeOff } from "lucide-react";
+import { useState, FormEvent } from 'react'
+import { useRouter } from 'next/navigation'
+import Link from 'next/link'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { useAuth } from '@/context/AuthContext'
+import { ThemeToggle } from '@/components/ThemeToggle'
+import { GraduationCap, User, Lock, Eye, EyeOff, UserCircle } from 'lucide-react'
 
 export default function LoginPage() {
-  const [usuario, setUsuario] = useState("");
-  const [senha, setSenha] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [errors, setErrors] = useState<{ usuario?: string; senha?: string }>(
-    {}
-  );
-  const { login } = useAuth();
-  const router = useRouter();
+  const [usuario, setUsuario] = useState('')
+  const [senha, setSenha] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
+  const [loading, setLoading] = useState(false)
+  const [errors, setErrors] = useState<{ usuario?: string; senha?: string }>({})
+  const { login, loginAsGuest } = useAuth()
+  const router = useRouter()
 
   const validate = () => {
-    const newErrors: { usuario?: string; senha?: string } = {};
+    const newErrors: { usuario?: string; senha?: string } = {}
 
     if (!usuario.trim()) {
-      newErrors.usuario = "Usuário é obrigatório";
+      newErrors.usuario = 'Usuário é obrigatório'
     }
 
     if (!senha) {
-      newErrors.senha = "Senha é obrigatória";
+      newErrors.senha = 'Senha é obrigatória'
     }
 
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
+    setErrors(newErrors)
+    return Object.keys(newErrors).length === 0
+  }
 
   const handleSubmit = async (e: FormEvent) => {
-    e.preventDefault();
+    e.preventDefault()
 
     if (!validate()) {
-      return;
+      return
     }
 
-    setLoading(true);
-    const success = await login(usuario.trim(), senha);
-    setLoading(false);
+    setLoading(true)
+    const success = await login(usuario.trim(), senha)
+    setLoading(false)
 
     if (success) {
-      router.push("/home");
+      router.push('/home')
     }
-  };
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#F5F7FA] dark:bg-gray-900 p-4">
@@ -90,23 +88,19 @@ export default function LoginPage() {
                   type="text"
                   value={usuario}
                   onChange={(e) => {
-                    setUsuario(e.target.value);
+                    setUsuario(e.target.value)
                     if (errors.usuario) {
-                      setErrors({ ...errors, usuario: undefined });
+                      setErrors({ ...errors, usuario: undefined })
                     }
                   }}
                   placeholder="Digite seu usuário"
                   className={`pl-10 h-9 border-[#E2E8F0] dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 dark:placeholder:text-gray-400 ${
-                    errors.usuario
-                      ? "border-red-500 focus-visible:ring-red-500"
-                      : ""
+                    errors.usuario ? 'border-red-500 focus-visible:ring-red-500' : ''
                   }`}
                   disabled={loading}
                 />
               </div>
-              {errors.usuario && (
-                <p className="text-sm text-red-500 mt-1">{errors.usuario}</p>
-              )}
+              {errors.usuario && <p className="text-sm text-red-500 mt-1">{errors.usuario}</p>}
             </div>
 
             {/* Campo Senha */}
@@ -121,19 +115,17 @@ export default function LoginPage() {
                 <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#64748B] dark:text-gray-400 w-5 h-5" />
                 <Input
                   id="senha"
-                  type={showPassword ? "text" : "password"}
+                  type={showPassword ? 'text' : 'password'}
                   value={senha}
                   onChange={(e) => {
-                    setSenha(e.target.value);
+                    setSenha(e.target.value)
                     if (errors.senha) {
-                      setErrors({ ...errors, senha: undefined });
+                      setErrors({ ...errors, senha: undefined })
                     }
                   }}
                   placeholder="••••••••"
                   className={`pl-10 pr-10 h-9 border-[#E2E8F0] dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 dark:placeholder:text-gray-400 ${
-                    errors.senha
-                      ? "border-red-500 focus-visible:ring-red-500"
-                      : ""
+                    errors.senha ? 'border-red-500 focus-visible:ring-red-500' : ''
                   }`}
                   disabled={loading}
                 />
@@ -145,16 +137,10 @@ export default function LoginPage() {
                   className="absolute right-3 top-1/2 transform -translate-y-1/2 h-auto w-auto p-0 text-[#64748B] dark:text-gray-400 hover:text-[#1A202C] dark:hover:text-gray-100 hover:bg-transparent"
                   tabIndex={-1}
                 >
-                  {showPassword ? (
-                    <EyeOff className="w-5 h-5" />
-                  ) : (
-                    <Eye className="w-5 h-5" />
-                  )}
+                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                 </Button>
               </div>
-              {errors.senha && (
-                <p className="text-sm text-red-500 mt-1">{errors.senha}</p>
-              )}
+              {errors.senha && <p className="text-sm text-red-500 mt-1">{errors.senha}</p>}
             </div>
 
             {/* Botão de Login */}
@@ -169,7 +155,7 @@ export default function LoginPage() {
                   Entrando...
                 </span>
               ) : (
-                "Entrar"
+                'Entrar'
               )}
             </Button>
           </form>
@@ -177,7 +163,7 @@ export default function LoginPage() {
           {/* Link para Cadastro */}
           <div className="mt-6 text-center">
             <p className="text-sm text-[#64748B] dark:text-gray-400">
-              Não tem uma conta?{" "}
+              Não tem uma conta?{' '}
               <Link
                 href="/cadastro"
                 className="text-sm font-medium text-[#0047BB] dark:text-blue-400 hover:underline"
@@ -186,6 +172,32 @@ export default function LoginPage() {
               </Link>
             </p>
           </div>
+
+          {/* Divisória OU */}
+          <div className="relative my-6">
+            <div className="absolute inset-0 flex items-center">
+              <span className="w-full border-t" />
+            </div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-background px-2 text-muted-foreground">OU</span>
+            </div>
+          </div>
+
+          {/* Botão Entrar como Convidado */}
+          <Button
+            type="button"
+            variant="outline"
+            onClick={loginAsGuest}
+            disabled={loading}
+            className="w-full"
+          >
+            <UserCircle className="mr-2 h-4 w-4" />
+            Entrar como Convidado
+          </Button>
+
+          <p className="text-center text-xs text-muted-foreground mt-2">
+            Teste todas as funcionalidades sem compromisso
+          </p>
         </div>
 
         {/* Footer */}
@@ -194,5 +206,5 @@ export default function LoginPage() {
         </p>
       </div>
     </div>
-  );
+  )
 }
