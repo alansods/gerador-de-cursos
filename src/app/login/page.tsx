@@ -66,7 +66,7 @@ export default function LoginPage() {
             Bem-vindo de volta
           </h1>
           <p className="text-base text-[#64748B] dark:text-gray-400">
-            Acesse o Gerador de Cursos SCORM SENAI
+            Acesse o Gerador de Cursos SCORM
           </p>
         </div>
 
@@ -202,7 +202,7 @@ export default function LoginPage() {
 
         {/* Footer */}
         <p className="text-center text-sm text-[#64748B] dark:text-gray-400">
-          © 2025 SENAI. Todos os direitos reservados.
+          © 2025 Gerador de Cursos SCORM. Todos os direitos reservados.
         </p>
       </div>
     </div>

@@ -1,11 +1,11 @@
-"use client";
+'use client'
 
 // Esta página não deve ser exportada estaticamente (usa context e API)
-export const dynamic = "error";
+export const dynamic = 'error'
 
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { useRouter } from "next/navigation";
+import { Card, CardContent } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { useRouter } from 'next/navigation'
 import {
   GraduationCap,
   BookOpen,
@@ -14,190 +14,187 @@ import {
   Plus,
   ArrowRight,
   CheckCircle2,
-  Users,
   FileCheck,
   UserPlus,
   Edit,
   Trash2,
-} from "lucide-react";
-import { PageTransition } from "@/components/PageTransition";
-import { useEffect, useState } from "react";
+} from 'lucide-react'
+import { PageTransition } from '@/components/PageTransition'
+import { useEffect, useState } from 'react'
 
 interface Activity {
-  id: string;
-  tipo: string;
-  titulo: string;
-  descricao: string | null;
-  createdAt: string;
+  id: string
+  tipo: string
+  titulo: string
+  descricao: string | null
+  createdAt: string
   user?: {
-    id: string;
-    nome: string;
-    usuario: string;
-    cargo: string;
-  } | null;
+    id: string
+    nome: string
+    usuario: string
+    cargo: string
+  } | null
 }
 
 export default function HomePage() {
-  const router = useRouter();
-  const [activities, setActivities] = useState<Activity[]>([]);
-  const [loading, setLoading] = useState(true);
+  const router = useRouter()
+  const [activities, setActivities] = useState<Activity[]>([])
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    fetchActivities();
+    fetchActivities()
 
     // Recarregar atividades quando a página se tornar visível
     const handleVisibilityChange = () => {
       if (!document.hidden) {
-        fetchActivities();
+        fetchActivities()
       }
-    };
+    }
 
-    document.addEventListener("visibilitychange", handleVisibilityChange);
+    document.addEventListener('visibilitychange', handleVisibilityChange)
 
     // Também recarregar a cada 30 segundos enquanto a página está ativa
     const interval = setInterval(() => {
       if (!document.hidden) {
-        fetchActivities();
+        fetchActivities()
       }
-    }, 30000);
+    }, 30000)
 
     return () => {
-      document.removeEventListener("visibilitychange", handleVisibilityChange);
-      clearInterval(interval);
-    };
-  }, []);
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
+      clearInterval(interval)
+    }
+  }, [])
 
   const fetchActivities = async () => {
     try {
-      const response = await fetch("/api/activities?limit=5", {
-        cache: "no-store",
+      const response = await fetch('/api/activities?limit=5', {
+        cache: 'no-store',
         headers: {
-          "Cache-Control": "no-cache",
-          Pragma: "no-cache",
+          'Cache-Control': 'no-cache',
+          Pragma: 'no-cache',
         },
-      });
-      const data = await response.json();
+      })
+      const data = await response.json()
 
       if (data.success) {
-        setActivities(data.activities);
+        setActivities(data.activities)
       }
     } catch (error) {
-      console.error("Erro ao buscar atividades:", error);
+      console.error('Erro ao buscar atividades:', error)
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
   const features = [
     {
       icon: BookOpen,
-      title: "Padrão SCORM",
+      title: 'Padrão SCORM',
       description:
-        "Gere cursos compatíveis com SCORM 1.2 e 2004, garantindo interoperabilidade com qualquer LMS.",
-      iconBg: "bg-[#F15A29]/10",
-      iconColor: "#F15A29",
+        'Gere cursos compatíveis com SCORM 1.2 e 2004, garantindo interoperabilidade com qualquer LMS.',
+      iconBg: 'bg-[#F15A29]/10',
+      iconColor: '#F15A29',
     },
     {
       icon: Clock,
-      title: "Criação Rápida",
-      description:
-        "Automatize a geração de pacotes SCORM e reduza o tempo de produção de cursos.",
-      iconBg: "bg-[#F15A29]/10",
-      iconColor: "#F15A29",
+      title: 'Criação Rápida',
+      description: 'Automatize a geração de pacotes SCORM e reduza o tempo de produção de cursos.',
+      iconBg: 'bg-[#F15A29]/10',
+      iconColor: '#F15A29',
     },
     {
       icon: Award,
-      title: "Qualidade SENAI",
-      description:
-        "Mantenha o padrão de excelência SENAI com templates e estruturas validadas.",
-      iconBg: "bg-[#F15A29]/10",
-      iconColor: "#F15A29",
+      title: 'Qualidade Premium',
+      description: 'Mantenha o padrão de excelência com templates e estruturas validadas.',
+      iconBg: 'bg-[#F15A29]/10',
+      iconColor: '#F15A29',
     },
-  ];
+  ]
 
   // Mapear tipo de atividade para ícone e cor
   const getActivityIconAndColor = (tipo: string) => {
     switch (tipo) {
-      case "curso_criado":
+      case 'curso_criado':
         return {
           icon: CheckCircle2,
-          iconBg: "bg-green-500/10",
-          iconColor: "#22c55e",
-        };
-      case "curso_editado":
+          iconBg: 'bg-green-500/10',
+          iconColor: '#22c55e',
+        }
+      case 'curso_editado':
         return {
           icon: Edit,
-          iconBg: "bg-blue-500/10",
-          iconColor: "#3b82f6",
-        };
-      case "curso_deletado":
+          iconBg: 'bg-blue-500/10',
+          iconColor: '#3b82f6',
+        }
+      case 'curso_deletado':
         return {
           icon: Trash2,
-          iconBg: "bg-red-500/10",
-          iconColor: "#ef4444",
-        };
-      case "usuario_criado":
+          iconBg: 'bg-red-500/10',
+          iconColor: '#ef4444',
+        }
+      case 'usuario_criado':
         return {
           icon: UserPlus,
-          iconBg: "bg-emerald-500/10",
-          iconColor: "#10b981",
-        };
-      case "usuario_editado":
+          iconBg: 'bg-emerald-500/10',
+          iconColor: '#10b981',
+        }
+      case 'usuario_editado':
         return {
           icon: Edit,
-          iconBg: "bg-indigo-500/10",
-          iconColor: "#6366f1",
-        };
-      case "usuario_deletado":
+          iconBg: 'bg-indigo-500/10',
+          iconColor: '#6366f1',
+        }
+      case 'usuario_deletado':
         return {
           icon: Trash2,
-          iconBg: "bg-orange-500/10",
-          iconColor: "#f97316",
-        };
+          iconBg: 'bg-orange-500/10',
+          iconColor: '#f97316',
+        }
       default:
         return {
           icon: FileCheck,
-          iconBg: "bg-[#0047BB]/10",
-          iconColor: "#0047BB",
-        };
+          iconBg: 'bg-[#0047BB]/10',
+          iconColor: '#0047BB',
+        }
     }
-  };
+  }
 
   // Formatar tempo relativo
   const getRelativeTime = (dateString: string) => {
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+    const date = new Date(dateString)
+    const now = new Date()
+    const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000)
 
-    if (diffInSeconds < 60) return "Agora mesmo";
+    if (diffInSeconds < 60) return 'Agora mesmo'
     if (diffInSeconds < 3600) {
-      const minutes = Math.floor(diffInSeconds / 60);
-      return `Há ${minutes} minuto${minutes > 1 ? "s" : ""}`;
+      const minutes = Math.floor(diffInSeconds / 60)
+      return `Há ${minutes} minuto${minutes > 1 ? 's' : ''}`
     }
     if (diffInSeconds < 86400) {
-      const hours = Math.floor(diffInSeconds / 3600);
-      return `Há ${hours} hora${hours > 1 ? "s" : ""}`;
+      const hours = Math.floor(diffInSeconds / 3600)
+      return `Há ${hours} hora${hours > 1 ? 's' : ''}`
     }
     if (diffInSeconds < 604800) {
-      const days = Math.floor(diffInSeconds / 86400);
-      return `Há ${days} dia${days > 1 ? "s" : ""}`;
+      const days = Math.floor(diffInSeconds / 86400)
+      return `Há ${days} dia${days > 1 ? 's' : ''}`
     }
-    return date.toLocaleDateString("pt-BR");
-  };
+    return date.toLocaleDateString('pt-BR')
+  }
 
   // Mapear atividades para formato de exibição
   const recentActivities = activities.map((activity) => {
-    const { icon, iconBg, iconColor } = getActivityIconAndColor(activity.tipo);
+    const { icon, iconBg, iconColor } = getActivityIconAndColor(activity.tipo)
     return {
       icon,
       title: activity.titulo,
-      subtitle: activity.descricao || "",
+      subtitle: activity.descricao || '',
       time: getRelativeTime(activity.createdAt),
-      userName: activity.user?.nome || "Sistema",
+      userName: activity.user?.nome || 'Sistema',
       iconBg,
       iconColor,
-    };
-  });
+    }
+  })
 
   return (
     <PageTransition>
@@ -209,28 +206,25 @@ export default function HomePage() {
             <div className="mb-6">
               <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#0047BB]/10">
                 <GraduationCap className="w-4 h-4 text-[#0047BB]" />
-                <span className="text-sm text-[#0047BB]">
-                  Plataforma SENAI 2025
-                </span>
+                <span className="text-sm text-[#0047BB]">Plataforma 2025</span>
               </div>
             </div>
 
             {/* Title */}
             <h1 className="text-2xl sm:text-3xl md:text-4xl font-normal text-foreground mb-4">
-              Gerador de Cursos SCORM SENAI
+              Gerador de Cursos SCORM
             </h1>
 
             {/* Description */}
             <p className="text-base sm:text-lg text-muted-foreground mb-6 sm:mb-8 max-w-3xl">
-              Crie, gerencie e publique cursos SCORM compatíveis com as
-              principais plataformas LMS. Produza conteúdo educacional
-              padronizado, interoperável e de alta qualidade.
+              Crie, gerencie e publique cursos SCORM compatíveis com as principais plataformas LMS.
+              Produza conteúdo educacional padronizado, interoperável e de alta qualidade.
             </p>
 
             {/* Action Buttons */}
             <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
               <Button
-                onClick={() => router.push("/cursos/novo")}
+                onClick={() => router.push('/cursos/novo')}
                 className="bg-[#0047BB] hover:bg-[#0047BB]/90 text-white h-10 px-6 w-full sm:w-auto"
               >
                 <Plus className="w-4 h-4 mr-2" />
@@ -238,7 +232,7 @@ export default function HomePage() {
               </Button>
               <Button
                 variant="outline"
-                onClick={() => router.push("/cursos")}
+                onClick={() => router.push('/cursos')}
                 className="h-10 px-6 border-border w-full sm:w-auto"
               >
                 Ver Todos os Cursos
@@ -261,7 +255,7 @@ export default function HomePage() {
             {/* Features Grid */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {features.map((feature, index) => {
-                const Icon = feature.icon;
+                const Icon = feature.icon
                 return (
                   <Card
                     key={index}
@@ -273,17 +267,12 @@ export default function HomePage() {
                         <div
                           className={`w-12 h-12 rounded-lg ${feature.iconBg} flex items-center justify-center`}
                         >
-                          <Icon
-                            className="w-6 h-6"
-                            style={{ color: feature.iconColor }}
-                          />
+                          <Icon className="w-6 h-6" style={{ color: feature.iconColor }} />
                         </div>
 
                         {/* Content */}
                         <div className="space-y-2">
-                          <h3 className="text-base font-normal text-foreground">
-                            {feature.title}
-                          </h3>
+                          <h3 className="text-base font-normal text-foreground">{feature.title}</h3>
                           <p className="text-sm text-muted-foreground leading-relaxed">
                             {feature.description}
                           </p>
@@ -291,7 +280,7 @@ export default function HomePage() {
                       </div>
                     </CardContent>
                   </Card>
-                );
+                )
               })}
             </div>
           </div>
@@ -305,13 +294,13 @@ export default function HomePage() {
                     Pronto para começar?
                   </h2>
                   <p className="text-sm sm:text-base text-muted-foreground">
-                    Comece criando seu primeiro curso SCORM ou explore os
-                    pacotes existentes para ver tudo que a plataforma oferece.
+                    Comece criando seu primeiro curso SCORM ou explore os pacotes existentes para
+                    ver tudo que a plataforma oferece.
                   </p>
                 </div>
                 <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 w-full md:w-auto">
                   <Button
-                    onClick={() => router.push("/cursos/novo")}
+                    onClick={() => router.push('/cursos/novo')}
                     className="bg-[#F15A29] hover:bg-[#F15A29]/90 text-white h-10 px-6 w-full sm:w-auto"
                   >
                     <Plus className="w-4 h-4 mr-2" />
@@ -319,7 +308,7 @@ export default function HomePage() {
                   </Button>
                   <Button
                     variant="outline"
-                    onClick={() => router.push("/cursos")}
+                    onClick={() => router.push('/cursos')}
                     className="h-10 px-6 border-border w-full sm:w-auto"
                   >
                     Explorar Cursos
@@ -335,9 +324,7 @@ export default function HomePage() {
               <h3 className="text-base sm:text-lg font-medium text-foreground mb-2">
                 Atividade Recente
               </h3>
-              <p className="text-sm text-muted-foreground">
-                Últimas atualizações na plataforma
-              </p>
+              <p className="text-sm text-muted-foreground">Últimas atualizações na plataforma</p>
             </div>
 
             {/* Activity Cards */}
@@ -345,9 +332,7 @@ export default function HomePage() {
               {loading ? (
                 // Loading state
                 <div className="flex items-center justify-center py-8">
-                  <p className="text-sm text-muted-foreground">
-                    Carregando atividades...
-                  </p>
+                  <p className="text-sm text-muted-foreground">Carregando atividades...</p>
                 </div>
               ) : recentActivities.length === 0 ? (
                 // Empty state
@@ -358,15 +343,14 @@ export default function HomePage() {
                       Nenhuma atividade ainda
                     </h3>
                     <p className="text-sm text-muted-foreground">
-                      Comece criando cursos ou usuários para ver as atividades
-                      recentes aqui.
+                      Comece criando cursos ou usuários para ver as atividades recentes aqui.
                     </p>
                   </CardContent>
                 </Card>
               ) : (
                 // Activities list
                 recentActivities.map((activity, index) => {
-                  const Icon = activity.icon;
+                  const Icon = activity.icon
                   return (
                     <Card
                       key={index}
@@ -401,9 +385,7 @@ export default function HomePage() {
                                 <p className="text-xs sm:text-sm text-muted-foreground">
                                   {activity.time}
                                 </p>
-                                <span className="text-xs sm:text-sm text-muted-foreground">
-                                  •
-                                </span>
+                                <span className="text-xs sm:text-sm text-muted-foreground">•</span>
                                 <p className="text-xs sm:text-sm text-muted-foreground">
                                   por {activity.userName}
                                 </p>
@@ -413,7 +395,7 @@ export default function HomePage() {
                         </div>
                       </CardContent>
                     </Card>
-                  );
+                  )
                 })
               )}
             </div>
@@ -421,5 +403,5 @@ export default function HomePage() {
         </div>
       </div>
     </PageTransition>
-  );
+  )
 }

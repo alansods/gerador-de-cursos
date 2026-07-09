@@ -2,8 +2,6 @@
 
 Web system for creating and exporting educational courses in the **SCORM 1.2** standard, with content generation powered by **Artificial Intelligence** (Google Gemini / OpenAI).
 
-Developed for institutional use at **FIEC / SENAI / UNED**.
-
 ---
 
 ## Features
@@ -210,4 +208,4 @@ generate-scorm-isolated.mjs     # Isolated SCORM build script
 
 ## License
 
-Internal use — FIEC / SENAI / UNED.
+MIT License - Open source educational content generator.

@@ -1,9 +1,25 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
-import { requireAuth, createErrorResponse, createSuccessResponse } from '@/lib/auth';
-import { CursoGerado } from '@/types/gerador-curso';
-import { logActivity } from '@/lib/activity-logger';
-import { generateUniqueSlug, slugifyUnidades } from '@/lib/slug';
+import { NextRequest, NextResponse } from 'next/server'
+import { prisma } from '@/lib/prisma'
+import { requireAuth, createErrorResponse, createSuccessResponse } from '@/lib/auth'
+import { CursoGerado } from '@/types/gerador-curso'
+import { logActivity } from '@/lib/activity-logger'
+import { generateUniqueSlug, slugifyUnidades } from '@/lib/slug'
+import { Prisma } from '@prisma/client'
+
+type UnidadeConteudo = {
+  id?: string
+  ordem?: number
+  tipo?: string
+  [key: string]: unknown
+}
+
+type UnidadeInput = {
+  id?: string
+  ordem?: number
+  conteudo?: UnidadeConteudo[]
+  aulas?: UnidadeConteudo[]
+  [key: string]: unknown
+}
 
 /**
  * GET /api/cursos
@@ -11,33 +27,33 @@ import { generateUniqueSlug, slugifyUnidades } from '@/lib/slug';
  */
 export async function GET(req: NextRequest) {
   try {
-    const { searchParams } = new URL(req.url);
-    const page = parseInt(searchParams.get('page') || '1', 10);
-    const limit = parseInt(searchParams.get('limit') || '10', 10);
-    const search = searchParams.get('search') || '';
-    const category = searchParams.get('category') || '';
-    const modality = searchParams.get('modality') || '';
+    const { searchParams } = new URL(req.url)
+    const page = parseInt(searchParams.get('page') || '1', 10)
+    const limit = parseInt(searchParams.get('limit') || '10', 10)
+    const search = searchParams.get('search') || ''
+    const category = searchParams.get('category') || ''
+    const modality = searchParams.get('modality') || ''
 
     // Construir filtros
-    const where: any = {};
+    const where: Prisma.CursoWhereInput = {}
 
     if (search) {
       where.OR = [
         { titulo: { contains: search, mode: 'insensitive' } },
         { descricao: { contains: search, mode: 'insensitive' } },
-      ];
+      ]
     }
 
     if (category) {
-      where.categoria = category;
+      where.categoria = category
     }
 
     if (modality) {
-      where.modalidade = modality;
+      where.modalidade = modality
     }
 
     // Contar total de cursos
-    const total = await prisma.curso.count({ where });
+    const total = await prisma.curso.count({ where })
 
     // Buscar cursos com paginação
     const cursos = await prisma.curso.findMany({
@@ -45,30 +61,32 @@ export async function GET(req: NextRequest) {
       skip: (page - 1) * limit,
       take: limit,
       orderBy: { dataCriacao: 'desc' },
-    });
+    })
 
     // Converter para formato CursoGerado com normalização de unidades
     const cursosFormatados: CursoGerado[] = cursos.map((curso) => {
       // Normalizar unidades: garantir IDs, slugs e estrutura correta
-      const unidadesOriginais = (curso.unidades as any) || [];
-      const unidadesMapped = unidadesOriginais.map((unidade: any, index: number) => {
-        const unidadeId = unidade.id || `unidade-${curso.id}-${index}`;
-        let conteudoOriginal = unidade.conteudo || unidade.aulas || [];
-        const conteudoNormalizado = conteudoOriginal.map((item: any, itemIndex: number) => ({
-          ...item,
-          id: item.id || `conteudo-${curso.id}-${index}-${itemIndex}`,
-          ordem: item.ordem ?? itemIndex,
-          tipo: item.tipo || 'paragrafo',
-        }));
+      const unidadesOriginais = (curso.unidades as UnidadeInput[]) || []
+      const unidadesMapped = unidadesOriginais.map((unidade: UnidadeInput, index: number) => {
+        const unidadeId = unidade.id || `unidade-${curso.id}-${index}`
+        const conteudoOriginal = unidade.conteudo || unidade.aulas || []
+        const conteudoNormalizado = conteudoOriginal.map(
+          (item: UnidadeConteudo, itemIndex: number) => ({
+            ...item,
+            id: item.id || `conteudo-${curso.id}-${index}-${itemIndex}`,
+            ordem: item.ordem ?? itemIndex,
+            tipo: item.tipo || 'paragrafo',
+          })
+        )
 
         return {
           ...unidade,
           id: unidadeId,
           ordem: unidade.ordem ?? index,
           conteudo: conteudoNormalizado,
-        };
-      });
-      const unidadesNormalizadas = slugifyUnidades(unidadesMapped);
+        }
+      })
+      const unidadesNormalizadas = slugifyUnidades(unidadesMapped)
 
       return {
         id: curso.id,
@@ -81,8 +99,8 @@ export async function GET(req: NextRequest) {
         unidades: unidadesNormalizadas,
         dataCriacao: curso.dataCriacao,
         dataModificacao: curso.dataModificacao,
-      };
-    });
+      }
+    })
 
     return createSuccessResponse({
       cursos: cursosFormatados,
@@ -92,10 +110,10 @@ export async function GET(req: NextRequest) {
         total,
         totalPages: Math.ceil(total / limit),
       },
-    });
+    })
   } catch (error) {
-    console.error('Erro ao listar cursos:', error);
-    return createErrorResponse('Erro ao listar cursos', 500, error);
+    console.error('Erro ao listar cursos:', error)
+    return createErrorResponse('Erro ao listar cursos', 500, error)
   }
 }
 
@@ -104,31 +122,33 @@ export async function GET(req: NextRequest) {
  * Cria um novo curso
  */
 export async function POST(req: NextRequest) {
-  const authResult = await requireAuth(req);
+  const authResult = await requireAuth(req)
 
   if (authResult instanceof NextResponse) {
-    return authResult; // Retorna erro 401 se não autenticado
+    return authResult // Retorna erro 401 se não autenticado
   }
 
   try {
-    const body = await req.json();
-    const { titulo, descricao, cargaHoraria, modalidade, categoria, unidades } = body;
+    const body = await req.json()
+    const { titulo, descricao, cargaHoraria, modalidade, categoria, unidades } = body
 
     // Validar campos obrigatórios
     if (!titulo || !descricao || !cargaHoraria || !modalidade || !categoria) {
-      return createErrorResponse('Missing required fields', 400);
+      return createErrorResponse('Missing required fields', 400)
     }
 
     // Normalizar unidades: garantir IDs, slugs e estrutura correta
-    const unidadesMapped = (unidades || []).map((unidade: any, index: number) => {
-      const unidadeId = unidade.id || `unidade-${Date.now()}-${index}`;
-      let conteudoOriginal = unidade.conteudo || unidade.aulas || [];
-      const conteudoNormalizado = conteudoOriginal.map((item: any, itemIndex: number) => ({
-        ...item,
-        id: item.id || `conteudo-${Date.now()}-${index}-${itemIndex}`,
-        ordem: item.ordem ?? itemIndex,
-        tipo: item.tipo || 'paragrafo',
-      }));
+    const unidadesMapped = (unidades || []).map((unidade: UnidadeInput, index: number) => {
+      const unidadeId = unidade.id || `unidade-${Date.now()}-${index}`
+      const conteudoOriginal = unidade.conteudo || unidade.aulas || []
+      const conteudoNormalizado = conteudoOriginal.map(
+        (item: UnidadeConteudo, itemIndex: number) => ({
+          ...item,
+          id: item.id || `conteudo-${Date.now()}-${index}-${itemIndex}`,
+          ordem: item.ordem ?? itemIndex,
+          tipo: item.tipo || 'paragrafo',
+        })
+      )
 
       return {
         ...unidade,
@@ -136,12 +156,12 @@ export async function POST(req: NextRequest) {
         ordem: unidade.ordem ?? index,
         conteudo: conteudoNormalizado,
         aulas: undefined,
-      };
-    });
-    const unidadesNormalizadas = slugifyUnidades(unidadesMapped);
+      }
+    })
+    const unidadesNormalizadas = slugifyUnidades(unidadesMapped)
 
     // Gerar slug único a partir do título
-    const slug = await generateUniqueSlug(titulo);
+    const slug = await generateUniqueSlug(titulo)
 
     // Criar curso
     const curso = await prisma.curso.create({
@@ -154,7 +174,7 @@ export async function POST(req: NextRequest) {
         categoria,
         unidades: unidadesNormalizadas,
       },
-    });
+    })
 
     // Registrar atividade
     await logActivity({
@@ -164,7 +184,7 @@ export async function POST(req: NextRequest) {
       entityId: curso.id,
       entityType: 'curso',
       userId: authResult.user.id,
-    });
+    })
 
     // Converter para formato CursoGerado
     const cursoFormatado: CursoGerado = {
@@ -175,15 +195,15 @@ export async function POST(req: NextRequest) {
       cargaHoraria: curso.cargaHoraria,
       modalidade: curso.modalidade,
       categoria: curso.categoria,
-      unidades: (curso.unidades as any) || [],
+      unidades: (curso.unidades as UnidadeInput[]) || [],
       dataCriacao: curso.dataCriacao,
       dataModificacao: curso.dataModificacao,
-    };
+    }
 
-    return createSuccessResponse({ curso: cursoFormatado }, 201);
+    return createSuccessResponse({ curso: cursoFormatado }, 201)
   } catch (error) {
-    console.error('Erro ao criar curso:', error);
-    return createErrorResponse('Erro ao criar curso', 500, error);
+    console.error('Erro ao criar curso:', error)
+    return createErrorResponse('Erro ao criar curso', 500, error)
   }
 }
 
@@ -192,41 +212,43 @@ export async function POST(req: NextRequest) {
  * Atualiza um curso existente
  */
 export async function PUT(req: NextRequest) {
-  const authResult = await requireAuth(req);
+  const authResult = await requireAuth(req)
 
   if (authResult instanceof NextResponse) {
-    return authResult; // Retorna erro 401 se não autenticado
+    return authResult // Retorna erro 401 se não autenticado
   }
 
   try {
-    const body = await req.json();
-    const { id, titulo, descricao, cargaHoraria, modalidade, categoria, unidades } = body;
+    const body = await req.json()
+    const { id, titulo, descricao, cargaHoraria, modalidade, categoria, unidades } = body
 
     if (!id) {
-      return createErrorResponse('ID do curso é obrigatório', 400);
+      return createErrorResponse('ID do curso é obrigatório', 400)
     }
 
     // Verificar se o curso existe
     const cursoExistente = await prisma.curso.findUnique({
       where: { id },
-    });
+    })
 
     if (!cursoExistente) {
-      return createErrorResponse('Curso não encontrado', 404);
+      return createErrorResponse('Curso não encontrado', 404)
     }
 
     // Normalizar unidades se fornecidas
-    let unidadesNormalizadas = undefined;
+    let unidadesNormalizadas = undefined
     if (unidades !== undefined) {
-      const unidadesMapped = unidades.map((unidade: any, index: number) => {
-        const unidadeId = unidade.id || `unidade-${Date.now()}-${index}`;
-        let conteudoOriginal = unidade.conteudo || unidade.aulas || [];
-        const conteudoNormalizado = conteudoOriginal.map((item: any, itemIndex: number) => ({
-          ...item,
-          id: item.id || `conteudo-${Date.now()}-${index}-${itemIndex}`,
-          ordem: item.ordem ?? itemIndex,
-          tipo: item.tipo || 'paragrafo',
-        }));
+      const unidadesMapped = unidades.map((unidade: UnidadeInput, index: number) => {
+        const unidadeId = unidade.id || `unidade-${Date.now()}-${index}`
+        const conteudoOriginal = unidade.conteudo || unidade.aulas || []
+        const conteudoNormalizado = conteudoOriginal.map(
+          (item: UnidadeConteudo, itemIndex: number) => ({
+            ...item,
+            id: item.id || `conteudo-${Date.now()}-${index}-${itemIndex}`,
+            ordem: item.ordem ?? itemIndex,
+            tipo: item.tipo || 'paragrafo',
+          })
+        )
 
         return {
           ...unidade,
@@ -234,17 +256,17 @@ export async function PUT(req: NextRequest) {
           ordem: unidade.ordem ?? index,
           conteudo: conteudoNormalizado,
           aulas: undefined,
-        };
-      });
-      unidadesNormalizadas = slugifyUnidades(unidadesMapped);
+        }
+      })
+      unidadesNormalizadas = slugifyUnidades(unidadesMapped)
     }
 
     // Regenerar slug se o título mudou
-    let newSlug: string | undefined = undefined;
+    let newSlug: string | undefined = undefined
     if (titulo && titulo !== cursoExistente.titulo) {
-      newSlug = await generateUniqueSlug(titulo, id);
+      newSlug = await generateUniqueSlug(titulo, id)
     } else if (!cursoExistente.slug && (titulo || cursoExistente.titulo)) {
-      newSlug = await generateUniqueSlug(titulo || cursoExistente.titulo, id);
+      newSlug = await generateUniqueSlug(titulo || cursoExistente.titulo, id)
     }
 
     // Atualizar curso
@@ -259,7 +281,7 @@ export async function PUT(req: NextRequest) {
         ...(categoria && { categoria }),
         ...(unidadesNormalizadas !== undefined && { unidades: unidadesNormalizadas }),
       },
-    });
+    })
 
     // Registrar atividade
     await logActivity({
@@ -269,7 +291,7 @@ export async function PUT(req: NextRequest) {
       entityId: curso.id,
       entityType: 'curso',
       userId: authResult.user.id,
-    });
+    })
 
     // Converter para formato CursoGerado
     const cursoFormatado: CursoGerado = {
@@ -280,15 +302,15 @@ export async function PUT(req: NextRequest) {
       cargaHoraria: curso.cargaHoraria,
       modalidade: curso.modalidade,
       categoria: curso.categoria,
-      unidades: (curso.unidades as any) || [],
+      unidades: (curso.unidades as UnidadeInput[]) || [],
       dataCriacao: curso.dataCriacao,
       dataModificacao: curso.dataModificacao,
-    };
+    }
 
-    return createSuccessResponse({ curso: cursoFormatado });
+    return createSuccessResponse({ curso: cursoFormatado })
   } catch (error) {
-    console.error('Erro ao atualizar curso:', error);
-    return createErrorResponse('Erro ao atualizar curso', 500, error);
+    console.error('Erro ao atualizar curso:', error)
+    return createErrorResponse('Erro ao atualizar curso', 500, error)
   }
 }
 
@@ -297,33 +319,37 @@ export async function PUT(req: NextRequest) {
  * Deleta um curso
  */
 export async function DELETE(req: NextRequest) {
-  const authResult = await requireAuth(req);
+  const authResult = await requireAuth(req)
 
   if (authResult instanceof NextResponse) {
-    return authResult; // Retorna erro 401 se não autenticado
+    return authResult // Retorna erro 401 se não autenticado
+  }
+
+  if (authResult.user.cargo === 'Convidado') {
+    return createErrorResponse('Você não tem permissão para deletar cursos', 403)
   }
 
   try {
-    const { searchParams } = new URL(req.url);
-    const id = searchParams.get('id');
+    const { searchParams } = new URL(req.url)
+    const id = searchParams.get('id')
 
     if (!id) {
-      return createErrorResponse('ID do curso é obrigatório', 400);
+      return createErrorResponse('ID do curso é obrigatório', 400)
     }
 
     // Verificar se o curso existe
     const cursoExistente = await prisma.curso.findUnique({
       where: { id },
-    });
+    })
 
     if (!cursoExistente) {
-      return createErrorResponse('Curso não encontrado', 404);
+      return createErrorResponse('Curso não encontrado', 404)
     }
 
     // Deletar curso
     await prisma.curso.delete({
       where: { id },
-    });
+    })
 
     // Registrar atividade
     await logActivity({
@@ -333,12 +359,11 @@ export async function DELETE(req: NextRequest) {
       entityId: id,
       entityType: 'curso',
       userId: authResult.user.id,
-    });
+    })
 
-    return createSuccessResponse({ message: 'Curso deletado com sucesso' });
+    return createSuccessResponse({ message: 'Curso deletado com sucesso' })
   } catch (error) {
-    console.error('Erro ao deletar curso:', error);
-    return createErrorResponse('Erro ao deletar curso', 500, error);
+    console.error('Erro ao deletar curso:', error)
+    return createErrorResponse('Erro ao deletar curso', 500, error)
   }
 }
-

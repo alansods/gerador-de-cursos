@@ -366,13 +366,15 @@ export default function CursosPage() {
                       await refresh()
 
                       toast.success('Curso excluído com sucesso')
-                      setShowDeleteConfirm(null)
                     }
                   } catch (error) {
                     console.error('Erro ao deletar curso:', error)
-                    toast.error('Erro ao excluir curso')
+                    const errorMessage =
+                      error instanceof Error ? error.message : 'Erro ao excluir curso'
+                    toast.error(errorMessage)
                   } finally {
                     setIsDeletingCurso(false)
+                    setShowDeleteConfirm(null)
                   }
                 }}
                 className="w-full sm:w-auto bg-destructive hover:bg-destructive/90 text-destructive-foreground gap-2"
