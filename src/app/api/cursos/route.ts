@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requireAuth, createErrorResponse, createSuccessResponse } from '@/lib/auth'
-import { CursoGerado } from '@/types/gerador-curso'
+import { CursoGerado, Unidade } from '@/types/gerador-curso'
 import { logActivity } from '@/lib/activity-logger'
 import { generateUniqueSlug, slugifyUnidades } from '@/lib/slug'
 import { Prisma } from '@prisma/client'
@@ -16,6 +16,8 @@ type UnidadeConteudo = {
 type UnidadeInput = {
   id?: string
   ordem?: number
+  titulo?: string
+  descricao?: string
   conteudo?: UnidadeConteudo[]
   aulas?: UnidadeConteudo[]
   [key: string]: unknown
@@ -195,7 +197,7 @@ export async function POST(req: NextRequest) {
       cargaHoraria: curso.cargaHoraria,
       modalidade: curso.modalidade,
       categoria: curso.categoria,
-      unidades: (curso.unidades as UnidadeInput[]) || [],
+      unidades: (curso.unidades as unknown as Unidade[]) || [],
       dataCriacao: curso.dataCriacao,
       dataModificacao: curso.dataModificacao,
     }
@@ -302,7 +304,7 @@ export async function PUT(req: NextRequest) {
       cargaHoraria: curso.cargaHoraria,
       modalidade: curso.modalidade,
       categoria: curso.categoria,
-      unidades: (curso.unidades as UnidadeInput[]) || [],
+      unidades: (curso.unidades as unknown as Unidade[]) || [],
       dataCriacao: curso.dataCriacao,
       dataModificacao: curso.dataModificacao,
     }

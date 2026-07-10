@@ -34,8 +34,6 @@ export function AuthGuard({ children }: AuthGuardProps) {
     '/preview',
     '/pdf-preview',
     '/scorm-preview', // Para SCORM packages (standalone)
-    '/login',
-    '/cadastro',
   ]
 
   // Rotas autenticadas que ocultam a sidebar do app (modo imersivo)
@@ -43,6 +41,7 @@ export function AuthGuard({ children }: AuthGuardProps) {
 
   // Rotas de autenticação (login/cadastro)
   const authRoutes = ['/login', '/cadastro']
+  const isAuthRoute = authRoutes.some((route) => pathname?.includes(route))
 
   // Detectar ambiente SCORM: pathname inclui scorm-preview OU window.SCORM existe
   const isScormEnvironment = typeof window !== 'undefined' && 'SCORM' in window
@@ -50,7 +49,6 @@ export function AuthGuard({ children }: AuthGuardProps) {
   // Verificar se é uma rota pública
   const isPublicRoute =
     publicRoutes.some((route) => pathname?.includes(route)) || isScormEnvironment
-  const isAuthRoute = authRoutes.some((route) => pathname?.includes(route))
 
   // Durante build SCORM, tratar como rota pública para evitar loading
   const isScormBuild = typeof process !== 'undefined' && process.env.SCORM_BUILD_CURSO_FILE
@@ -58,11 +56,11 @@ export function AuthGuard({ children }: AuthGuardProps) {
   // Redirecionar para login se não autenticado e não for rota pública
   useEffect(() => {
     if (isScormBuild) return
-    if (!loading && !isAuthenticated && !isPublicRoute) {
+    if (!loading && !isAuthenticated && !isPublicRoute && !isAuthRoute) {
       console.log('[AuthGuard] 🚫 Acesso negado, redirecionando para login')
       router.push('/login')
     }
-  }, [isScormBuild, loading, isAuthenticated, isPublicRoute, router])
+  }, [isScormBuild, loading, isAuthenticated, isPublicRoute, isAuthRoute, router])
 
   // Redirecionar usuários autenticados que tentam acessar login/cadastro
   useEffect(() => {
@@ -113,12 +111,17 @@ export function AuthGuard({ children }: AuthGuardProps) {
     return null
   }
 
-  // Se for rota pública (preview, pdf-preview) ou rota de auth não bloqueada, renderizar sem sidebar
+  // Se for rota de autenticação (login/cadastro) e NÃO autenticado, renderizar sem sidebar
+  if (isAuthRoute) {
+    return <>{children}</>
+  }
+
+  // Se for rota pública (preview, pdf-preview), renderizar sem sidebar
   if (isPublicRoute) {
     return <>{children}</>
   }
 
-  // Se não autenticado e não é rota pública, não renderizar nada (useEffect já redirecionou)
+  // Se não autenticado neste ponto, não renderizar nada (useEffect já redirecionou)
   if (!isAuthenticated) {
     return null
   }

@@ -27,7 +27,7 @@ export function GuestBanner() {
         <Button
           variant="default"
           size="sm"
-          onClick={() => router.push('/cadastro')}
+          onClick={() => router.push('/?tab=cadastro')}
           className="shrink-0"
         >
           Criar Conta

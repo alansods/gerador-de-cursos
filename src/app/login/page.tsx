@@ -1,23 +1,26 @@
 'use client'
 
-// Esta página não deve ser exportada estaticamente (usa API de autenticação)
-export const dynamic = 'error'
-
 import { useState, FormEvent } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Checkbox } from '@/components/ui/checkbox'
 import { useAuth } from '@/context/AuthContext'
 import { ThemeToggle } from '@/components/ThemeToggle'
-import { GraduationCap, User, Lock, Eye, EyeOff, UserCircle } from 'lucide-react'
+import { BrandPanel } from '@/components/auth/BrandPanel'
+import { User, Lock, Eye, EyeOff, UserCircle, ArrowRight } from 'lucide-react'
+
+export const dynamic = 'error'
 
 export default function LoginPage() {
   const [usuario, setUsuario] = useState('')
   const [senha, setSenha] = useState('')
   const [showPassword, setShowPassword] = useState(false)
+  const [rememberMe, setRememberMe] = useState(true)
   const [loading, setLoading] = useState(false)
+  const [loadingGuest, setLoadingGuest] = useState(false)
   const [errors, setErrors] = useState<{ usuario?: string; senha?: string }>({})
   const { login, loginAsGuest } = useAuth()
   const router = useRouter()
@@ -53,158 +56,223 @@ export default function LoginPage() {
     }
   }
 
+  const handleGuestLogin = async () => {
+    setLoadingGuest(true)
+    await loginAsGuest()
+    setLoadingGuest(false)
+  }
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#F5F7FA] dark:bg-gray-900 p-4">
-      <ThemeToggle />
-      <div className="w-full max-w-md">
-        {/* Logo/Header */}
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-[#0047BB] rounded-2xl mb-6">
-            <GraduationCap className="w-10 h-10 text-white" />
-          </div>
-          <h1 className="text-2xl font-normal text-[#1A202C] dark:text-gray-100 mb-2">
-            Bem-vindo de volta
-          </h1>
-          <p className="text-base text-[#64748B] dark:text-gray-400">
-            Acesse o Gerador de Cursos SCORM
-          </p>
-        </div>
-
-        {/* Card de Login */}
-        <div className="bg-white dark:bg-gray-800 rounded-xl border border-[#E2E8F0] dark:border-gray-700 p-8 mb-8">
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Campo Usuário */}
-            <div className="space-y-2">
-              <Label
-                htmlFor="usuario"
-                className="text-sm font-medium text-[#1A202C] dark:text-gray-200"
-              >
-                Usuário
-              </Label>
-              <div className="relative">
-                <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#64748B] dark:text-gray-400 w-5 h-5" />
-                <Input
-                  id="usuario"
-                  type="text"
-                  value={usuario}
-                  onChange={(e) => {
-                    setUsuario(e.target.value)
-                    if (errors.usuario) {
-                      setErrors({ ...errors, usuario: undefined })
-                    }
-                  }}
-                  placeholder="Digite seu usuário"
-                  className={`pl-10 h-9 border-[#E2E8F0] dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 dark:placeholder:text-gray-400 ${
-                    errors.usuario ? 'border-red-500 focus-visible:ring-red-500' : ''
-                  }`}
-                  disabled={loading}
-                />
-              </div>
-              {errors.usuario && <p className="text-sm text-red-500 mt-1">{errors.usuario}</p>}
-            </div>
-
-            {/* Campo Senha */}
-            <div className="space-y-2">
-              <Label
-                htmlFor="senha"
-                className="text-sm font-medium text-[#1A202C] dark:text-gray-200"
-              >
-                Senha
-              </Label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#64748B] dark:text-gray-400 w-5 h-5" />
-                <Input
-                  id="senha"
-                  type={showPassword ? 'text' : 'password'}
-                  value={senha}
-                  onChange={(e) => {
-                    setSenha(e.target.value)
-                    if (errors.senha) {
-                      setErrors({ ...errors, senha: undefined })
-                    }
-                  }}
-                  placeholder="••••••••"
-                  className={`pl-10 pr-10 h-9 border-[#E2E8F0] dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 dark:placeholder:text-gray-400 ${
-                    errors.senha ? 'border-red-500 focus-visible:ring-red-500' : ''
-                  }`}
-                  disabled={loading}
-                />
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 h-auto w-auto p-0 text-[#64748B] dark:text-gray-400 hover:text-[#1A202C] dark:hover:text-gray-100 hover:bg-transparent"
-                  tabIndex={-1}
-                >
-                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                </Button>
-              </div>
-              {errors.senha && <p className="text-sm text-red-500 mt-1">{errors.senha}</p>}
-            </div>
-
-            {/* Botão de Login */}
-            <Button
-              type="submit"
-              className="w-full h-9 bg-[#0047BB] hover:bg-[#0047BB]/90 text-white font-medium rounded-md"
-              disabled={loading}
-            >
-              {loading ? (
-                <span className="flex items-center gap-2">
-                  <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white"></div>
-                  Entrando...
-                </span>
-              ) : (
-                'Entrar'
-              )}
-            </Button>
-          </form>
-
-          {/* Link para Cadastro */}
-          <div className="mt-6 text-center">
-            <p className="text-sm text-[#64748B] dark:text-gray-400">
-              Não tem uma conta?{' '}
-              <Link
-                href="/cadastro"
-                className="text-sm font-medium text-[#0047BB] dark:text-blue-400 hover:underline"
-              >
-                Cadastre-se
-              </Link>
-            </p>
-          </div>
-
-          {/* Divisória OU */}
-          <div className="relative my-6">
-            <div className="absolute inset-0 flex items-center">
-              <span className="w-full border-t" />
-            </div>
-            <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-background px-2 text-muted-foreground">OU</span>
-            </div>
-          </div>
-
-          {/* Botão Entrar como Convidado */}
-          <Button
-            type="button"
-            variant="outline"
-            onClick={loginAsGuest}
-            disabled={loading}
-            className="w-full"
-          >
-            <UserCircle className="mr-2 h-4 w-4" />
-            Entrar como Convidado
-          </Button>
-
-          <p className="text-center text-xs text-muted-foreground mt-2">
-            Teste todas as funcionalidades sem compromisso
-          </p>
-        </div>
-
-        {/* Footer */}
-        <p className="text-center text-sm text-[#64748B] dark:text-gray-400">
-          © 2025 Gerador de Cursos SCORM. Todos os direitos reservados.
-        </p>
+    <>
+      <div className="fixed top-4 right-4 z-50">
+        <ThemeToggle />
       </div>
-    </div>
+
+      <div className="auth-layout">
+        <BrandPanel />
+
+        <main className="form-panel">
+          <div className="form-wrap flex-1 flex items-center justify-center py-12">
+            <div className="form-inner w-full max-w-[420px]">
+              <div className="form-head mb-7">
+                <h2 className="text-[26px] font-medium tracking-tight text-foreground">
+                  Bem-vindo
+                </h2>
+                <p className="text-[15px] text-muted-foreground mt-2">
+                  Entre com sua conta institucional para acessar seus cursos.
+                </p>
+              </div>
+
+              <form onSubmit={handleSubmit} className="space-y-4">
+                {/* Campo Usuário */}
+                <div className="field">
+                  <Label
+                    htmlFor="login-usuario"
+                    className="text-[13px] font-medium text-foreground"
+                  >
+                    Usuário
+                  </Label>
+                  <div className="input-wrap relative mt-1.5">
+                    <User className="absolute left-3.5 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4 pointer-events-none" />
+                    <Input
+                      id="login-usuario"
+                      type="text"
+                      value={usuario}
+                      onChange={(e) => {
+                        setUsuario(e.target.value)
+                        if (errors.usuario) {
+                          setErrors({ ...errors, usuario: undefined })
+                        }
+                      }}
+                      placeholder="Digite seu usuário"
+                      className={`pl-10 h-[42px] border-border rounded-lg bg-white text-sm ${
+                        errors.usuario ? 'border-red-500 focus-visible:ring-red-500' : ''
+                      }`}
+                      disabled={loading || loadingGuest}
+                      autoComplete="username"
+                    />
+                  </div>
+                  {errors.usuario && (
+                    <p className="text-xs text-red-500 mt-1.5">{errors.usuario}</p>
+                  )}
+                </div>
+
+                {/* Campo Senha */}
+                <div className="field">
+                  <Label htmlFor="login-senha" className="text-[13px] font-medium text-foreground">
+                    Senha
+                  </Label>
+                  <div className="input-wrap relative mt-1.5">
+                    <Lock className="absolute left-3.5 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4 pointer-events-none" />
+                    <Input
+                      id="login-senha"
+                      type={showPassword ? 'text' : 'password'}
+                      value={senha}
+                      onChange={(e) => {
+                        setSenha(e.target.value)
+                        if (errors.senha) {
+                          setErrors({ ...errors, senha: undefined })
+                        }
+                      }}
+                      placeholder="••••••••"
+                      className={`pl-10 pr-10 h-[42px] border-border rounded-lg bg-white text-sm ${
+                        errors.senha ? 'border-red-500 focus-visible:ring-red-500' : ''
+                      }`}
+                      disabled={loading || loadingGuest}
+                      autoComplete="current-password"
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-2.5 top-1/2 transform -translate-y-1/2 h-[30px] w-[30px] text-muted-foreground hover:bg-muted rounded-md"
+                      tabIndex={-1}
+                      disabled={loading || loadingGuest}
+                    >
+                      {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </Button>
+                  </div>
+                  {errors.senha && <p className="text-xs text-red-500 mt-1.5">{errors.senha}</p>}
+                </div>
+
+                {/* Lembrar de mim + Esqueceu senha */}
+                <div className="check-row flex items-center justify-between py-1">
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="remember-me"
+                      checked={rememberMe}
+                      onCheckedChange={(checked) => setRememberMe(checked as boolean)}
+                      className="h-[18px] w-[18px]"
+                      disabled={loading || loadingGuest}
+                    />
+                    <label
+                      htmlFor="remember-me"
+                      className="text-[13px] text-foreground cursor-pointer select-none"
+                    >
+                      Lembrar de mim
+                    </label>
+                  </div>
+                  <button
+                    type="button"
+                    className="text-[13px] font-medium text-[#0047BB] hover:underline"
+                    disabled={loading || loadingGuest}
+                  >
+                    Esqueceu a senha?
+                  </button>
+                </div>
+
+                {/* Botão Entrar */}
+                <Button
+                  type="submit"
+                  className="w-full h-[44px] bg-[#0047BB] hover:bg-[#003A99] text-white font-medium rounded-lg mt-5"
+                  disabled={loading || loadingGuest}
+                >
+                  {loading ? (
+                    <span className="flex items-center gap-2">
+                      <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white" />
+                      Entrando...
+                    </span>
+                  ) : (
+                    <>
+                      Entrar
+                      <ArrowRight className="ml-2 w-4 h-4" />
+                    </>
+                  )}
+                </Button>
+              </form>
+
+              {/* Link para Cadastro */}
+              <p className="switch-copy text-center mt-5 text-[13px] text-muted-foreground">
+                Ainda não tem conta?{' '}
+                <Link href="/cadastro" className="text-[#0047BB] font-medium hover:underline">
+                  Criar conta gratuita
+                </Link>
+              </p>
+
+              {/* Divisor OU */}
+              <div className="divider flex items-center gap-3 my-5 text-xs text-muted-foreground">
+                <div className="flex-1 h-px bg-border" />
+                OU
+                <div className="flex-1 h-px bg-border" />
+              </div>
+
+              {/* Botão Entrar como Convidado */}
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleGuestLogin}
+                disabled={loading || loadingGuest}
+                className="w-full h-[44px] rounded-lg font-medium text-sm border-border bg-white hover:bg-muted"
+              >
+                {loadingGuest ? (
+                  <span className="flex items-center gap-2">
+                    <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-current" />
+                    Entrando...
+                  </span>
+                ) : (
+                  <>
+                    <UserCircle className="mr-2 w-4 h-4" />
+                    Entrar como Convidado
+                  </>
+                )}
+              </Button>
+            </div>
+          </div>
+        </main>
+      </div>
+
+      <style jsx global>{`
+        .auth-layout {
+          min-height: 100vh;
+          display: grid;
+          grid-template-columns: 1.1fr 1fr;
+        }
+
+        .form-panel {
+          display: flex;
+          flex-direction: column;
+          padding: 40px 56px;
+          overflow-y: auto;
+          background: var(--bg, #f5f7fa);
+        }
+
+        @media (max-width: 980px) {
+          .auth-layout {
+            grid-template-columns: 1fr;
+          }
+
+          .form-panel {
+            padding: 32px 24px;
+          }
+        }
+
+        @media (max-width: 480px) {
+          .form-panel {
+            padding: 24px 16px;
+          }
+        }
+      `}</style>
+    </>
   )
 }
