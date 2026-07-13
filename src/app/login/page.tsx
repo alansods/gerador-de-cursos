@@ -105,7 +105,7 @@ export default function LoginPage() {
                         }
                       }}
                       placeholder="Digite seu usuário"
-                      className={`pl-10 h-[42px] border-border rounded-lg bg-white text-sm ${
+                      className={`pl-10 h-[42px] border-border rounded-lg bg-white dark:bg-input-background text-sm ${
                         errors.usuario ? 'border-red-500 focus-visible:ring-red-500' : ''
                       }`}
                       disabled={loading || loadingGuest}
@@ -135,7 +135,7 @@ export default function LoginPage() {
                         }
                       }}
                       placeholder="••••••••"
-                      className={`pl-10 pr-10 h-[42px] border-border rounded-lg bg-white text-sm ${
+                      className={`pl-10 pr-10 h-[42px] border-border rounded-lg bg-white dark:bg-input-background text-sm ${
                         errors.senha ? 'border-red-500 focus-visible:ring-red-500' : ''
                       }`}
                       disabled={loading || loadingGuest}
@@ -223,7 +223,7 @@ export default function LoginPage() {
                 variant="outline"
                 onClick={handleGuestLogin}
                 disabled={loading || loadingGuest}
-                className="w-full h-[44px] rounded-lg font-medium text-sm border-border bg-white hover:bg-muted"
+                className="w-full h-[44px] rounded-lg font-medium text-sm border-border bg-white dark:bg-input-background hover:bg-muted"
               >
                 {loadingGuest ? (
                   <span className="flex items-center gap-2">
@@ -255,6 +255,10 @@ export default function LoginPage() {
           padding: 40px 56px;
           overflow-y: auto;
           background: var(--bg, #f5f7fa);
+        }
+
+        :global(.dark) .form-panel {
+          background: var(--neutral-950);
         }
 
         @media (max-width: 980px) {

@@ -206,6 +206,18 @@
   --sidebar-ring: #2563eb;
   --highlight: #ff6b3d;
   --highlight-foreground: #ffffff;
+
+  --neutral-900: #1a202c;
+  --neutral-950: #0f1419;
+  --bg: var(--neutral-950);
+  --bg-elevated: var(--neutral-900);
+  --surface-card: var(--neutral-900);
+  --surface-muted: var(--neutral-800);
+  --fg1: #e3e8ef;
+  --fg2: #94a3b8;
+  --fg3: #64748b;
+  --border-strong: #475569;
+  --input-background: var(--neutral-900);
 }
 
 @layer base {

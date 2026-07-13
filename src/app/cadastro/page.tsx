@@ -148,7 +148,7 @@ export default function CadastroPage() {
                         }
                       }}
                       placeholder="Maria Oliveira"
-                      className={`pl-10 h-[42px] border-border rounded-lg bg-white text-sm ${
+                      className={`pl-10 h-[42px] border-border rounded-lg bg-white dark:bg-input-background text-sm ${
                         errors.nome ? 'border-red-500 focus-visible:ring-red-500' : ''
                       }`}
                       disabled={loading}
@@ -179,7 +179,7 @@ export default function CadastroPage() {
                         }
                       }}
                       placeholder="maria.oliveira@senai.br"
-                      className={`pl-10 h-[42px] border-border rounded-lg bg-white text-sm ${
+                      className={`pl-10 h-[42px] border-border rounded-lg bg-white dark:bg-input-background text-sm ${
                         errors.email ? 'border-red-500 focus-visible:ring-red-500' : ''
                       }`}
                       disabled={loading}
@@ -211,7 +211,7 @@ export default function CadastroPage() {
                         }
                       }}
                       placeholder="Mínimo 8 caracteres"
-                      className={`pl-10 pr-10 h-[42px] border-border rounded-lg bg-white text-sm ${
+                      className={`pl-10 pr-10 h-[42px] border-border rounded-lg bg-white dark:bg-input-background text-sm ${
                         errors.senha ? 'border-red-500 focus-visible:ring-red-500' : ''
                       }`}
                       disabled={loading}
@@ -256,7 +256,7 @@ export default function CadastroPage() {
                         }
                       }}
                       placeholder="Digite a senha novamente"
-                      className={`pl-10 pr-10 h-[42px] border-border rounded-lg bg-white text-sm ${
+                      className={`pl-10 pr-10 h-[42px] border-border rounded-lg bg-white dark:bg-input-background text-sm ${
                         errors.confirmarSenha ? 'border-red-500 focus-visible:ring-red-500' : ''
                       }`}
                       disabled={loading}
@@ -328,6 +328,10 @@ export default function CadastroPage() {
           padding: 40px 56px;
           overflow-y: auto;
           background: var(--bg, #f5f7fa);
+        }
+
+        :global(.dark) .form-panel {
+          background: var(--neutral-950);
         }
 
         @media (max-width: 980px) {

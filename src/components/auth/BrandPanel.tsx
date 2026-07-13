@@ -70,6 +70,10 @@ export function BrandPanel() {
           min-height: 100vh;
         }
 
+        :global(.dark) .brand-panel {
+          background: var(--neutral-900);
+        }
+
         .brand-panel::after {
           content: '';
           position: absolute;
@@ -78,6 +82,10 @@ export function BrandPanel() {
           background-image: radial-gradient(rgba(255, 255, 255, 0.06) 1px, transparent 1px);
           background-size: 22px 22px;
           mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.6), transparent 75%);
+        }
+
+        :global(.dark) .brand-panel::after {
+          background-image: radial-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px);
         }
 
         .brand-panel > * {
