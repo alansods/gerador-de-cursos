@@ -276,14 +276,23 @@ export default function CursosPage() {
           {!showError && (
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-lg font-medium text-foreground">Seus Cursos</h2>
-              <div className="text-sm text-muted-foreground">
-                {totalCourses === 1 ? '1 curso encontrado' : `${totalCourses} cursos encontrados`}
-              </div>
+              {!loadingCourses && (
+                <div className="text-sm text-muted-foreground">
+                  {totalCourses === 1 ? '1 curso encontrado' : `${totalCourses} cursos encontrados`}
+                </div>
+              )}
             </div>
           )}
 
-          {/* Grid de Cursos */}
-          {!state.loading && !loadingCourses && !showError && paginatedCourses.length === 0 ? (
+          {/* Loading inicial da lista de cursos */}
+          {loadingCourses && !showError ? (
+            <div className="flex items-center justify-center py-24">
+              <div className="text-center">
+                <Loader2 className="h-12 w-12 animate-spin text-primary mx-auto mb-4" />
+                <p className="text-muted-foreground">Carregando cursos...</p>
+              </div>
+            </div>
+          ) : !showError && paginatedCourses.length === 0 ? (
             <div className="text-center py-24">
               <div className="mx-auto w-40 h-40 bg-muted rounded-full flex items-center justify-center mb-8">
                 <Plus className="h-12 w-12 text-muted-foreground" />
@@ -306,7 +315,7 @@ export default function CursosPage() {
                 </Button>
               )}
             </div>
-          ) : (
+          ) : !showError ? (
             <>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {paginatedCourses.map((curso) => (
@@ -334,7 +343,7 @@ export default function CursosPage() {
                 hasMore={hasMore}
               />
             </>
-          )}
+          ) : null}
         </div>
 
         {/* Modal de Confirmação de Exclusão */}
