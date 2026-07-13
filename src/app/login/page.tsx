@@ -9,12 +9,15 @@ import { Label } from '@/components/ui/label'
 import { Checkbox } from '@/components/ui/checkbox'
 import { useAuth } from '@/context/AuthContext'
 import { ThemeToggle } from '@/components/ThemeToggle'
+import { LanguageToggle } from '@/components/LanguageToggle'
 import { BrandPanel } from '@/components/auth/BrandPanel'
 import { User, Lock, Eye, EyeOff, UserCircle, ArrowRight } from 'lucide-react'
+import { useTranslations } from 'next-intl'
 
 export const dynamic = 'error'
 
 export default function LoginPage() {
+  const t = useTranslations('auth')
   const [usuario, setUsuario] = useState('')
   const [senha, setSenha] = useState('')
   const [showPassword, setShowPassword] = useState(false)
@@ -29,11 +32,11 @@ export default function LoginPage() {
     const newErrors: { usuario?: string; senha?: string } = {}
 
     if (!usuario.trim()) {
-      newErrors.usuario = 'Usuário é obrigatório'
+      newErrors.usuario = t('validation.usernameRequired')
     }
 
     if (!senha) {
-      newErrors.senha = 'Senha é obrigatória'
+      newErrors.senha = t('validation.passwordRequired')
     }
 
     setErrors(newErrors)
@@ -64,7 +67,8 @@ export default function LoginPage() {
 
   return (
     <>
-      <div className="fixed top-4 right-4 z-50">
+      <div className="fixed top-4 right-4 z-50 flex gap-2">
+        <LanguageToggle />
         <ThemeToggle />
       </div>
 
@@ -76,11 +80,9 @@ export default function LoginPage() {
             <div className="form-inner w-full max-w-[420px]">
               <div className="form-head mb-7">
                 <h2 className="text-[26px] font-medium tracking-tight text-foreground">
-                  Bem-vindo
+                  {t('login.title')}
                 </h2>
-                <p className="text-[15px] text-muted-foreground mt-2">
-                  Entre com sua conta institucional para acessar seus cursos.
-                </p>
+                <p className="text-[15px] text-muted-foreground mt-2">{t('login.subtitle')}</p>
               </div>
 
               <form onSubmit={handleSubmit} className="space-y-4">
@@ -90,7 +92,7 @@ export default function LoginPage() {
                     htmlFor="login-usuario"
                     className="text-[13px] font-medium text-foreground"
                   >
-                    Usuário
+                    {t('login.username')}
                   </Label>
                   <div className="input-wrap relative mt-1.5">
                     <User className="absolute left-3.5 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4 pointer-events-none" />
@@ -104,7 +106,7 @@ export default function LoginPage() {
                           setErrors({ ...errors, usuario: undefined })
                         }
                       }}
-                      placeholder="Digite seu usuário"
+                      placeholder={t('login.usernamePlaceholder')}
                       className={`pl-10 h-[42px] border-border rounded-lg bg-white dark:bg-input-background text-sm ${
                         errors.usuario ? 'border-red-500 focus-visible:ring-red-500' : ''
                       }`}
@@ -120,7 +122,7 @@ export default function LoginPage() {
                 {/* Campo Senha */}
                 <div className="field">
                   <Label htmlFor="login-senha" className="text-[13px] font-medium text-foreground">
-                    Senha
+                    {t('login.password')}
                   </Label>
                   <div className="input-wrap relative mt-1.5">
                     <Lock className="absolute left-3.5 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4 pointer-events-none" />
@@ -134,7 +136,7 @@ export default function LoginPage() {
                           setErrors({ ...errors, senha: undefined })
                         }
                       }}
-                      placeholder="••••••••"
+                      placeholder={t('login.passwordPlaceholder')}
                       className={`pl-10 pr-10 h-[42px] border-border rounded-lg bg-white dark:bg-input-background text-sm ${
                         errors.senha ? 'border-red-500 focus-visible:ring-red-500' : ''
                       }`}
@@ -170,7 +172,7 @@ export default function LoginPage() {
                       htmlFor="remember-me"
                       className="text-[13px] text-foreground cursor-pointer select-none"
                     >
-                      Lembrar de mim
+                      {t('login.rememberMe')}
                     </label>
                   </div>
                   <button
@@ -178,7 +180,7 @@ export default function LoginPage() {
                     className="text-[13px] font-medium text-[#0047BB] hover:underline"
                     disabled={loading || loadingGuest}
                   >
-                    Esqueceu a senha?
+                    {t('login.forgotPassword')}
                   </button>
                 </div>
 
@@ -191,11 +193,11 @@ export default function LoginPage() {
                   {loading ? (
                     <span className="flex items-center gap-2">
                       <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white" />
-                      Entrando...
+                      {t('login.signingIn')}
                     </span>
                   ) : (
                     <>
-                      Entrar
+                      {t('login.signIn')}
                       <ArrowRight className="ml-2 w-4 h-4" />
                     </>
                   )}
@@ -204,16 +206,16 @@ export default function LoginPage() {
 
               {/* Link para Cadastro */}
               <p className="switch-copy text-center mt-5 text-[13px] text-muted-foreground">
-                Ainda não tem conta?{' '}
+                {t('login.noAccount')}{' '}
                 <Link href="/cadastro" className="text-[#0047BB] font-medium hover:underline">
-                  Criar conta gratuita
+                  {t('login.createAccount')}
                 </Link>
               </p>
 
               {/* Divisor OU */}
               <div className="divider flex items-center gap-3 my-5 text-xs text-muted-foreground">
                 <div className="flex-1 h-px bg-border" />
-                OU
+                {t('login.or')}
                 <div className="flex-1 h-px bg-border" />
               </div>
 
@@ -228,12 +230,12 @@ export default function LoginPage() {
                 {loadingGuest ? (
                   <span className="flex items-center gap-2">
                     <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-current" />
-                    Entrando...
+                    {t('login.signingIn')}
                   </span>
                 ) : (
                   <>
                     <UserCircle className="mr-2 w-4 h-4" />
-                    Entrar como Convidado
+                    {t('login.guestLogin')}
                   </>
                 )}
               </Button>

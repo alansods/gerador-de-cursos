@@ -1,0 +1,57 @@
+{
+  "hero": {
+    "badge": "Plataforma 2025",
+    "title": "Gerador de Cursos SCORM",
+    "description": "Crie, gerencie e publique cursos SCORM compatíveis com as principais plataformas LMS. Produza conteúdo educacional padronizado, interoperável e de alta qualidade.",
+    "createCourse": "Criar Novo Curso",
+    "viewCourses": "Ver Todos os Cursos"
+  },
+  "features": {
+    "title": "Por que usar nossa plataforma?",
+    "subtitle": "Ferramentas poderosas para criar conteúdo e-learning padronizado",
+    "scorm": {
+      "title": "Padrão SCORM",
+      "description": "Gere cursos compatíveis com SCORM 1.2 e 2004, garantindo interoperabilidade com qualquer LMS."
+    },
+    "speed": {
+      "title": "Criação Rápida",
+      "description": "Automatize a geração de pacotes SCORM e reduza o tempo de produção de cursos."
+    },
+    "quality": {
+      "title": "Qualidade Premium",
+      "description": "Mantenha o padrão de excelência com templates e estruturas validadas."
+    }
+  },
+  "cta": {
+    "title": "Pronto para começar?",
+    "description": "Comece criando seu primeiro curso SCORM ou explore os pacotes existentes para ver tudo que a plataforma oferece."
+  },
+  "activities": {
+    "title": "Atividades Recentes",
+    "subtitle": "Acompanhe as últimas ações na plataforma",
+    "noActivities": "Nenhuma atividade ainda",
+    "noActivitiesDescription": "Assim que você ou outros usuários criarem ou editarem cursos, as atividades aparecerão aqui.",
+    "viewAll": "Ver Todas as Atividades",
+    "by": "por",
+    "timeAgo": {
+      "justNow": "agora mesmo",
+      "minutesAgo": "há {{count}} minuto",
+      "minutesAgo_plural": "há {{count}} minutos",
+      "hoursAgo": "há {{count}} hora",
+      "hoursAgo_plural": "há {{count}} horas",
+      "daysAgo": "há {{count}} dia",
+      "daysAgo_plural": "há {{count}} dias",
+      "weeksAgo": "há {{count}} semana",
+      "weeksAgo_plural": "há {{count}} semanas"
+    },
+    "types": {
+      "curso_criado": "Curso criado",
+      "curso_editado": "Curso editado",
+      "curso_deletado": "Curso deletado",
+      "usuario_criado": "Usuário criado",
+      "usuario_editado": "Usuário editado",
+      "usuario_deletado": "Usuário deletado",
+      "scorm_gerado": "SCORM gerado"
+    }
+  }
+}

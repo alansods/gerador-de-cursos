@@ -1,0 +1,85 @@
+{
+  "list": {
+    "title": "Manage Courses",
+    "subtitle": "Create and manage your online courses",
+    "createCourse": "Create New Course",
+    "yourCourses": "Your Courses",
+    "searchPlaceholder": "Title, description or category...",
+    "search": "Search",
+    "category": "Category",
+    "modality": "Modality",
+    "clearFilters": "Clear Filters",
+    "coursesFound_one": "{{count}} course found",
+    "coursesFound_other": "{{count}} courses found",
+    "noCourses": "No courses created yet",
+    "noCoursesDescription": "Start by creating your first course",
+    "noResults": "No courses found",
+    "noResultsDescription": "Try adjusting your search filters",
+    "loadingMore": "Loading more...",
+    "loadMore": "Load more"
+  },
+  "categories": {
+    "all": "All Categories",
+    "gastronomy": "Gastronomy",
+    "technology": "Technology",
+    "marketing": "Marketing",
+    "design": "Design",
+    "management": "Management",
+    "art": "Art",
+    "languages": "Languages"
+  },
+  "modalities": {
+    "all": "All Modalities",
+    "inPerson": "In-Person",
+    "online": "Online",
+    "hybrid": "Hybrid"
+  },
+  "card": {
+    "units": "units",
+    "newBadge": "New",
+    "preview": "Preview",
+    "edit": "Edit",
+    "export": "Export",
+    "delete": "Delete",
+    "createdAt": "Created on"
+  },
+  "create": {
+    "title": "Create New Course",
+    "fromText": "From Text",
+    "fromDocument": "From Document",
+    "manual": "Manually",
+    "generateTitle": "Generate Course with AI",
+    "generateDescription": "Paste text or upload a document and let AI create the complete course for you",
+    "pasteText": "Paste text here...",
+    "uploadDocument": "Upload Document",
+    "generate": "Generate Course",
+    "generating": "Generating course...",
+    "cancel": "Cancel"
+  },
+  "edit": {
+    "title": "Edit Course",
+    "courseTitle": "Course Title",
+    "description": "Description",
+    "duration": "Duration",
+    "durationPlaceholder": "e.g., 20h",
+    "modality": "Modality",
+    "category": "Category",
+    "units": "Units",
+    "addUnit": "Add Unit",
+    "unitTitle": "Unit Title",
+    "unitContent": "Unit Content",
+    "save": "Save",
+    "saving": "Saving...",
+    "saveSuccess": "Course saved successfully!",
+    "saveError": "Error saving course"
+  },
+  "delete": {
+    "confirmTitle": "Delete Course",
+    "confirmMessage": "Are you sure you want to delete this course? This action cannot be undone.",
+    "confirm": "Yes, delete",
+    "cancel": "Cancel",
+    "deleting": "Deleting...",
+    "success": "Course deleted successfully!",
+    "error": "Error deleting course"
+  }
+}

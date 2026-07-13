@@ -1,0 +1,64 @@
+{
+  "list": {
+    "title": "Gerenciar Usuários",
+    "subtitle": "Gerencie os usuários da plataforma",
+    "addUser": "Adicionar Usuário",
+    "searchPlaceholder": "Buscar por nome ou e-mail...",
+    "noUsers": "Nenhum usuário encontrado",
+    "usersFound_one": "{{count}} usuário",
+    "usersFound_other": "{{count}} usuários"
+  },
+  "table": {
+    "name": "Nome",
+    "email": "E-mail",
+    "username": "Usuário",
+    "role": "Cargo",
+    "actions": "Ações",
+    "edit": "Editar",
+    "delete": "Excluir"
+  },
+  "form": {
+    "createTitle": "Criar Usuário",
+    "editTitle": "Editar Usuário",
+    "name": "Nome",
+    "namePlaceholder": "Nome do usuário",
+    "email": "E-mail",
+    "emailPlaceholder": "usuario@exemplo.com",
+    "username": "Usuário",
+    "usernamePlaceholder": "nome.usuario",
+    "password": "Senha",
+    "passwordPlaceholder": "Mínimo 8 caracteres",
+    "confirmPassword": "Confirmar Senha",
+    "role": "Cargo",
+    "rolePlaceholder": "Ex: Instrutor, Coordenador",
+    "save": "Salvar",
+    "saving": "Salvando...",
+    "cancel": "Cancelar"
+  },
+  "validation": {
+    "nameRequired": "Nome é obrigatório",
+    "emailRequired": "E-mail é obrigatório",
+    "emailInvalid": "E-mail inválido",
+    "usernameRequired": "Usuário é obrigatório",
+    "passwordRequired": "Senha é obrigatória",
+    "passwordMinLength": "Senha deve ter no mínimo 8 caracteres",
+    "passwordsNotMatch": "As senhas não conferem",
+    "roleRequired": "Cargo é obrigatório"
+  },
+  "delete": {
+    "confirmTitle": "Excluir Usuário",
+    "confirmMessage": "Tem certeza que deseja excluir este usuário? Esta ação não pode ser desfeita.",
+    "confirm": "Sim, excluir",
+    "cancel": "Cancelar",
+    "deleting": "Excluindo...",
+    "success": "Usuário excluído com sucesso!",
+    "error": "Erro ao excluir usuário"
+  },
+  "messages": {
+    "createSuccess": "Usuário criado com sucesso!",
+    "updateSuccess": "Usuário atualizado com sucesso!",
+    "createError": "Erro ao criar usuário",
+    "updateError": "Erro ao atualizar usuário",
+    "loadError": "Erro ao carregar usuários"
+  }
+}

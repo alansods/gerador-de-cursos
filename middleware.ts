@@ -1,21 +1,12 @@
-import { NextResponse } from 'next/server';
+import createMiddleware from 'next-intl/middleware'
+import { locales, defaultLocale } from './src/i18n/config'
 
-// Middleware desabilitado - todas as rotas são permitidas
-export function middleware() {
-  // Permitir todas as requisições sem verificação
-  return NextResponse.next();
-}
+export default createMiddleware({
+  locales,
+  defaultLocale,
+  localePrefix: 'never',
+})
 
-// Configurar quais rotas devem passar pelo middleware
 export const config = {
-  matcher: [
-    /*
-     * Match all request paths except for the ones starting with:
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     * - public folder (static files)
-     */
-    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
-  ],
-};
+  matcher: ['/((?!api|_next|_vercel|.*\\..*).*)'],
+}

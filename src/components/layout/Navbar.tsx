@@ -1,22 +1,23 @@
-'use client';
+'use client'
 
-import React from "react";
-import { Button } from "@/components/ui/button";
-import { ArrowLeft, Eye, Download, Save, LogOut, User, Moon, Sun } from "lucide-react";
-import { useAuth } from "@/context/AuthContext";
-import Link from "next/link";
-import { useTheme } from "@/hooks/useTheme";
+import React from 'react'
+import { Button } from '@/components/ui/button'
+import { ArrowLeft, Eye, Download, Save, LogOut, User, Moon, Sun } from 'lucide-react'
+import { useAuth } from '@/context/AuthContext'
+import Link from 'next/link'
+import { useTheme } from '@/hooks/useTheme'
+import { LanguageToggle } from '@/components/LanguageToggle'
 
 interface NavbarProps {
-  onBack?: () => void;
-  onPreview?: () => void;
-  onSCORM?: () => void;
-  onSave?: () => void;
-  showSCORM?: boolean;
-  showSave?: boolean;
-  showPreview?: boolean;
-  title?: string;
-  showUserInfo?: boolean;
+  onBack?: () => void
+  onPreview?: () => void
+  onSCORM?: () => void
+  onSave?: () => void
+  showSCORM?: boolean
+  showSave?: boolean
+  showPreview?: boolean
+  title?: string
+  showUserInfo?: boolean
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -30,12 +31,12 @@ export const Navbar: React.FC<NavbarProps> = ({
   title,
   showUserInfo = true,
 }) => {
-  const { user, logout } = useAuth();
-  const { isDarkMode, toggleDarkMode } = useTheme();
+  const { user, logout } = useAuth()
+  const { isDarkMode, toggleDarkMode } = useTheme()
 
   const handleLogout = async () => {
-    await logout();
-  };
+    await logout()
+  }
 
   return (
     <div className="bg-card border-b border-border fixed top-0 left-0 right-0 z-30">
@@ -54,9 +55,14 @@ export const Navbar: React.FC<NavbarProps> = ({
               </Button>
             )}
             {title ? (
-              <h1 className="text-base sm:text-lg font-semibold text-foreground truncate">{title}</h1>
+              <h1 className="text-base sm:text-lg font-semibold text-foreground truncate">
+                {title}
+              </h1>
             ) : (
-              <Link href="/cursos" className="text-base sm:text-lg font-semibold text-foreground hover:text-primary transition-colors truncate">
+              <Link
+                href="/cursos"
+                className="text-base sm:text-lg font-semibold text-foreground hover:text-primary transition-colors truncate"
+              >
                 Gerador de Cursos
               </Link>
             )}
@@ -119,12 +125,9 @@ export const Navbar: React.FC<NavbarProps> = ({
               className="shrink-0"
               aria-label="Toggle dark mode"
             >
-              {isDarkMode ? (
-                <Sun className="h-4 w-4" />
-              ) : (
-                <Moon className="h-4 w-4" />
-              )}
+              {isDarkMode ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
             </Button>
+            <LanguageToggle />
             {showUserInfo && user && (
               <div className="flex items-center space-x-2 sm:space-x-3 sm:ml-4 sm:pl-4 sm:border-l border-border">
                 <div className="flex items-center space-x-2 text-sm">
@@ -160,5 +163,5 @@ export const Navbar: React.FC<NavbarProps> = ({
         </div>
       </div>
     </div>
-  );
-};
+  )
+}

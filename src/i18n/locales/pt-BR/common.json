@@ -1,0 +1,30 @@
+{
+  "app": {
+    "title": "Gerador de Cursos SCORM"
+  },
+  "actions": {
+    "save": "Salvar",
+    "cancel": "Cancelar",
+    "edit": "Editar",
+    "delete": "Excluir",
+    "create": "Criar",
+    "back": "Voltar",
+    "close": "Fechar",
+    "confirm": "Confirmar",
+    "search": "Buscar",
+    "filter": "Filtrar",
+    "export": "Exportar",
+    "download": "Baixar",
+    "upload": "Enviar",
+    "preview": "Preview",
+    "logout": "Sair"
+  },
+  "states": {
+    "loading": "Carregando...",
+    "saving": "Salvando...",
+    "noResults": "Nenhum resultado encontrado",
+    "success": "Sucesso!",
+    "error": "Erro",
+    "empty": "Vazio"
+  }
+}

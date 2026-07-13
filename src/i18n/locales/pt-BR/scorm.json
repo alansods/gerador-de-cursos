@@ -1,0 +1,52 @@
+{
+  "export": {
+    "title": "Exportar SCORM",
+    "description": "Gere o pacote SCORM do seu curso",
+    "generatePackage": "Gerar Pacote",
+    "generating": "Gerando pacote...",
+    "download": "Baixar SCORM",
+    "cancel": "Cancelar",
+    "close": "Fechar"
+  },
+  "jobs": {
+    "title": "Builds SCORM",
+    "subtitle": "Acompanhe o progresso das exportações SCORM",
+    "noBuild": "Nenhum build SCORM ainda",
+    "noBuildsDescription": "Quando você exportar cursos em formato SCORM, eles aparecerão aqui.",
+    "course": "Curso",
+    "status": "Status",
+    "createdAt": "Criado em",
+    "actions": "Ações",
+    "download": "Baixar",
+    "retry": "Tentar novamente",
+    "viewDetails": "Ver Detalhes"
+  },
+  "status": {
+    "pending": "Em fila",
+    "building": "Processando",
+    "completed": "Concluído",
+    "failed": "Erro",
+    "cancelled": "Cancelado"
+  },
+  "messages": {
+    "generateSuccess": "Pacote SCORM gerado com sucesso!",
+    "generateError": "Erro ao gerar pacote SCORM",
+    "downloadSuccess": "Download iniciado!",
+    "downloadError": "Erro ao baixar pacote",
+    "buildQueued": "Build adicionado à fila",
+    "buildStarted": "Build iniciado",
+    "buildCompleted": "Build concluído",
+    "buildFailed": "Build falhou"
+  },
+  "preview": {
+    "title": "Preview SCORM",
+    "loading": "Carregando preview...",
+    "home": "Página inicial",
+    "units": "Unidades do curso",
+    "toggleTheme": "Alternar tema",
+    "lightMode": "Modo Claro",
+    "darkMode": "Modo Escuro",
+    "exit": "Sair",
+    "openMenu": "Abrir menu"
+  }
+}

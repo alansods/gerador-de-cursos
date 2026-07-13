@@ -1,0 +1,61 @@
+{
+  "general": {
+    "error": "Erro",
+    "unexpectedError": "Ocorreu um erro inesperado",
+    "tryAgain": "Tente novamente",
+    "goBack": "Voltar",
+    "notFound": "Não encontrado",
+    "unauthorized": "Não autorizado",
+    "forbidden": "Acesso negado",
+    "serverError": "Erro no servidor"
+  },
+  "validation": {
+    "required": "Este campo é obrigatório",
+    "invalidEmail": "E-mail inválido",
+    "invalidFormat": "Formato inválido",
+    "minLength": "Mínimo de {{count}} caracteres",
+    "maxLength": "Máximo de {{count}} caracteres",
+    "passwordTooShort": "Senha muito curta",
+    "passwordsNotMatch": "As senhas não conferem"
+  },
+  "api": {
+    "networkError": "Erro de conexão",
+    "timeout": "Tempo esgotado",
+    "serverUnavailable": "Servidor indisponível",
+    "badRequest": "Requisição inválida",
+    "unauthorized": "Você precisa estar logado",
+    "forbidden": "Você não tem permissão para isso",
+    "notFound": "Recurso não encontrado",
+    "conflict": "Conflito de dados",
+    "internalError": "Erro interno do servidor"
+  },
+  "form": {
+    "invalidData": "Dados inválidos",
+    "saveError": "Erro ao salvar",
+    "loadError": "Erro ao carregar",
+    "deleteError": "Erro ao excluir",
+    "uploadError": "Erro ao enviar arquivo",
+    "downloadError": "Erro ao baixar arquivo"
+  },
+  "course": {
+    "notFound": "Curso não encontrado",
+    "loadError": "Erro ao carregar curso",
+    "saveError": "Erro ao salvar curso",
+    "deleteError": "Erro ao excluir curso",
+    "generateError": "Erro ao gerar curso"
+  },
+  "user": {
+    "notFound": "Usuário não encontrado",
+    "loadError": "Erro ao carregar usuário",
+    "saveError": "Erro ao salvar usuário",
+    "deleteError": "Erro ao excluir usuário",
+    "invalidCredentials": "Credenciais inválidas",
+    "sessionExpired": "Sessão expirada"
+  },
+  "scorm": {
+    "generateError": "Erro ao gerar pacote SCORM",
+    "downloadError": "Erro ao baixar pacote SCORM",
+    "uploadError": "Erro ao enviar arquivo",
+    "buildError": "Erro no build SCORM"
+  }
+}

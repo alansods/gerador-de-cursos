@@ -1,0 +1,30 @@
+{
+  "app": {
+    "title": "SCORM Course Generator"
+  },
+  "actions": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "edit": "Edit",
+    "delete": "Delete",
+    "create": "Create",
+    "back": "Back",
+    "close": "Close",
+    "confirm": "Confirm",
+    "search": "Search",
+    "filter": "Filter",
+    "export": "Export",
+    "download": "Download",
+    "upload": "Upload",
+    "preview": "Preview",
+    "logout": "Logout"
+  },
+  "states": {
+    "loading": "Loading...",
+    "saving": "Saving...",
+    "noResults": "No results found",
+    "success": "Success!",
+    "error": "Error",
+    "empty": "Empty"
+  }
+}

@@ -1,0 +1,85 @@
+{
+  "list": {
+    "title": "Gerenciar Cursos",
+    "subtitle": "Crie e gerencie seus cursos online",
+    "createCourse": "Criar Novo Curso",
+    "yourCourses": "Seus Cursos",
+    "searchPlaceholder": "Título, descrição ou categoria...",
+    "search": "Buscar",
+    "category": "Categoria",
+    "modality": "Modalidade",
+    "clearFilters": "Limpar Filtros",
+    "coursesFound_one": "{{count}} curso encontrado",
+    "coursesFound_other": "{{count}} cursos encontrados",
+    "noCourses": "Nenhum curso criado ainda",
+    "noCoursesDescription": "Comece criando seu primeiro curso",
+    "noResults": "Nenhum curso encontrado",
+    "noResultsDescription": "Tente ajustar os filtros de busca",
+    "loadingMore": "Carregando mais...",
+    "loadMore": "Carregar mais"
+  },
+  "categories": {
+    "all": "Todas Categorias",
+    "gastronomy": "Gastronomia",
+    "technology": "Tecnologia",
+    "marketing": "Marketing",
+    "design": "Design",
+    "management": "Gestão",
+    "art": "Arte",
+    "languages": "Idiomas"
+  },
+  "modalities": {
+    "all": "Todas Modalidades",
+    "inPerson": "Presencial",
+    "online": "Online",
+    "hybrid": "Híbrido"
+  },
+  "card": {
+    "units": "unidades",
+    "newBadge": "Novo",
+    "preview": "Preview",
+    "edit": "Editar",
+    "export": "Exportar",
+    "delete": "Excluir",
+    "createdAt": "Criado em"
+  },
+  "create": {
+    "title": "Criar Novo Curso",
+    "fromText": "A partir de Texto",
+    "fromDocument": "A partir de Documento",
+    "manual": "Manualmente",
+    "generateTitle": "Gerar Curso com IA",
+    "generateDescription": "Cole um texto ou envie um documento e deixe a IA criar o curso completo para você",
+    "pasteText": "Cole o texto aqui...",
+    "uploadDocument": "Enviar Documento",
+    "generate": "Gerar Curso",
+    "generating": "Gerando curso...",
+    "cancel": "Cancelar"
+  },
+  "edit": {
+    "title": "Editar Curso",
+    "courseTitle": "Título do Curso",
+    "description": "Descrição",
+    "duration": "Carga Horária",
+    "durationPlaceholder": "Ex: 20h",
+    "modality": "Modalidade",
+    "category": "Categoria",
+    "units": "Unidades",
+    "addUnit": "Adicionar Unidade",
+    "unitTitle": "Título da Unidade",
+    "unitContent": "Conteúdo da Unidade",
+    "save": "Salvar",
+    "saving": "Salvando...",
+    "saveSuccess": "Curso salvo com sucesso!",
+    "saveError": "Erro ao salvar curso"
+  },
+  "delete": {
+    "confirmTitle": "Excluir Curso",
+    "confirmMessage": "Tem certeza que deseja excluir este curso? Esta ação não pode ser desfeita.",
+    "confirm": "Sim, excluir",
+    "cancel": "Cancelar",
+    "deleting": "Excluindo...",
+    "success": "Curso excluído com sucesso!",
+    "error": "Erro ao excluir curso"
+  }
+}

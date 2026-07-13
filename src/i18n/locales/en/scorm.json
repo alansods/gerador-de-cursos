@@ -1,0 +1,52 @@
+{
+  "export": {
+    "title": "Export SCORM",
+    "description": "Generate your course's SCORM package",
+    "generatePackage": "Generate Package",
+    "generating": "Generating package...",
+    "download": "Download SCORM",
+    "cancel": "Cancel",
+    "close": "Close"
+  },
+  "jobs": {
+    "title": "SCORM Builds",
+    "subtitle": "Track SCORM export progress",
+    "noBuild": "No SCORM builds yet",
+    "noBuildsDescription": "When you export courses in SCORM format, they will appear here.",
+    "course": "Course",
+    "status": "Status",
+    "createdAt": "Created on",
+    "actions": "Actions",
+    "download": "Download",
+    "retry": "Retry",
+    "viewDetails": "View Details"
+  },
+  "status": {
+    "pending": "Queued",
+    "building": "Processing",
+    "completed": "Completed",
+    "failed": "Failed",
+    "cancelled": "Cancelled"
+  },
+  "messages": {
+    "generateSuccess": "SCORM package generated successfully!",
+    "generateError": "Error generating SCORM package",
+    "downloadSuccess": "Download started!",
+    "downloadError": "Error downloading package",
+    "buildQueued": "Build added to queue",
+    "buildStarted": "Build started",
+    "buildCompleted": "Build completed",
+    "buildFailed": "Build failed"
+  },
+  "preview": {
+    "title": "SCORM Preview",
+    "loading": "Loading preview...",
+    "home": "Home",
+    "units": "Course units",
+    "toggleTheme": "Toggle theme",
+    "lightMode": "Light Mode",
+    "darkMode": "Dark Mode",
+    "exit": "Exit",
+    "openMenu": "Open menu"
+  }
+}

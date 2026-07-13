@@ -1,0 +1,64 @@
+{
+  "list": {
+    "title": "Manage Users",
+    "subtitle": "Manage platform users",
+    "addUser": "Add User",
+    "searchPlaceholder": "Search by name or email...",
+    "noUsers": "No users found",
+    "usersFound_one": "{{count}} user",
+    "usersFound_other": "{{count}} users"
+  },
+  "table": {
+    "name": "Name",
+    "email": "Email",
+    "username": "Username",
+    "role": "Role",
+    "actions": "Actions",
+    "edit": "Edit",
+    "delete": "Delete"
+  },
+  "form": {
+    "createTitle": "Create User",
+    "editTitle": "Edit User",
+    "name": "Name",
+    "namePlaceholder": "User's name",
+    "email": "Email",
+    "emailPlaceholder": "user@example.com",
+    "username": "Username",
+    "usernamePlaceholder": "username.example",
+    "password": "Password",
+    "passwordPlaceholder": "Minimum 8 characters",
+    "confirmPassword": "Confirm Password",
+    "role": "Role",
+    "rolePlaceholder": "e.g., Instructor, Coordinator",
+    "save": "Save",
+    "saving": "Saving...",
+    "cancel": "Cancel"
+  },
+  "validation": {
+    "nameRequired": "Name is required",
+    "emailRequired": "Email is required",
+    "emailInvalid": "Invalid email",
+    "usernameRequired": "Username is required",
+    "passwordRequired": "Password is required",
+    "passwordMinLength": "Password must be at least 8 characters",
+    "passwordsNotMatch": "Passwords do not match",
+    "roleRequired": "Role is required"
+  },
+  "delete": {
+    "confirmTitle": "Delete User",
+    "confirmMessage": "Are you sure you want to delete this user? This action cannot be undone.",
+    "confirm": "Yes, delete",
+    "cancel": "Cancel",
+    "deleting": "Deleting...",
+    "success": "User deleted successfully!",
+    "error": "Error deleting user"
+  },
+  "messages": {
+    "createSuccess": "User created successfully!",
+    "updateSuccess": "User updated successfully!",
+    "createError": "Error creating user",
+    "updateError": "Error updating user",
+    "loadError": "Error loading users"
+  }
+}

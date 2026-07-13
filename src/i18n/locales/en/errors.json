@@ -1,0 +1,61 @@
+{
+  "general": {
+    "error": "Error",
+    "unexpectedError": "An unexpected error occurred",
+    "tryAgain": "Try again",
+    "goBack": "Go back",
+    "notFound": "Not found",
+    "unauthorized": "Unauthorized",
+    "forbidden": "Access denied",
+    "serverError": "Server error"
+  },
+  "validation": {
+    "required": "This field is required",
+    "invalidEmail": "Invalid email",
+    "invalidFormat": "Invalid format",
+    "minLength": "Minimum {{count}} characters",
+    "maxLength": "Maximum {{count}} characters",
+    "passwordTooShort": "Password too short",
+    "passwordsNotMatch": "Passwords do not match"
+  },
+  "api": {
+    "networkError": "Connection error",
+    "timeout": "Timeout",
+    "serverUnavailable": "Server unavailable",
+    "badRequest": "Invalid request",
+    "unauthorized": "You need to be logged in",
+    "forbidden": "You don't have permission for this",
+    "notFound": "Resource not found",
+    "conflict": "Data conflict",
+    "internalError": "Internal server error"
+  },
+  "form": {
+    "invalidData": "Invalid data",
+    "saveError": "Error saving",
+    "loadError": "Error loading",
+    "deleteError": "Error deleting",
+    "uploadError": "Error uploading file",
+    "downloadError": "Error downloading file"
+  },
+  "course": {
+    "notFound": "Course not found",
+    "loadError": "Error loading course",
+    "saveError": "Error saving course",
+    "deleteError": "Error deleting course",
+    "generateError": "Error generating course"
+  },
+  "user": {
+    "notFound": "User not found",
+    "loadError": "Error loading user",
+    "saveError": "Error saving user",
+    "deleteError": "Error deleting user",
+    "invalidCredentials": "Invalid credentials",
+    "sessionExpired": "Session expired"
+  },
+  "scorm": {
+    "generateError": "Error generating SCORM package",
+    "downloadError": "Error downloading SCORM package",
+    "uploadError": "Error uploading file",
+    "buildError": "SCORM build error"
+  }
+}

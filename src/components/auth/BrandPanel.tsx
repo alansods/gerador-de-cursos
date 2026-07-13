@@ -1,4 +1,7 @@
+'use client'
+
 import { FileText, Layout, Package } from 'lucide-react'
+import { useTranslations } from 'next-intl'
 
 interface FeatureProps {
   icon: React.ReactNode
@@ -21,36 +24,35 @@ function Feature({ icon, title, description }: FeatureProps) {
 }
 
 export function BrandPanel() {
+  const t = useTranslations('auth.brandPanel')
+
   return (
     <aside className="brand-panel">
       <div className="brand-center">
         <span className="brand-kicker">
           <span className="dot" />
-          Plataforma educacional gerador SCORM
+          {t('kicker')}
         </span>
-        <h2 className="text-[38px] leading-tight font-medium tracking-tight mb-4">
-          Crie cursos digitais em minutos, não em semanas.
-        </h2>
+        <h2 className="text-[38px] leading-tight font-medium tracking-tight mb-4">{t('title')}</h2>
         <p className="text-base leading-relaxed text-white/85 mb-8 max-w-[42ch]">
-          Transforme roteiros em cursos SCORM completos com blocos interativos, quizzes e avaliação
-          automática — tudo integrado ao seu LMS.
+          {t('description')}
         </p>
 
         <div className="brand-features">
           <Feature
             icon={<FileText className="w-[18px] h-[18px]" strokeWidth={2} />}
-            title="Importação de roteiros"
-            description="Suba um arquivo .docx e deixe a IA estruturar unidades, lições e atividades."
+            title={t('feature1Title')}
+            description={t('feature1Description')}
           />
           <Feature
             icon={<Layout className="w-[18px] h-[18px]" strokeWidth={2} />}
-            title="Blocos prontos para usar"
-            description="Accordion, flipcard, quiz, lista, info box e modal — tudo com preview ao vivo."
+            title={t('feature2Title')}
+            description={t('feature2Description')}
           />
           <Feature
             icon={<Package className="w-[18px] h-[18px]" strokeWidth={2} />}
-            title="Export SCORM 1.2"
-            description="Gere pacote .zip compatível com Moodle, Canvas, TalentLMS e outros LMS."
+            title={t('feature3Title')}
+            description={t('feature3Description')}
           />
         </div>
       </div>

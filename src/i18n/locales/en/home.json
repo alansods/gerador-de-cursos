@@ -1,0 +1,57 @@
+{
+  "hero": {
+    "badge": "2025 Platform",
+    "title": "SCORM Course Generator",
+    "description": "Create, manage and publish SCORM courses compatible with leading LMS platforms. Produce standardized, interoperable and high-quality educational content.",
+    "createCourse": "Create New Course",
+    "viewCourses": "View All Courses"
+  },
+  "features": {
+    "title": "Why use our platform?",
+    "subtitle": "Powerful tools to create standardized e-learning content",
+    "scorm": {
+      "title": "SCORM Standard",
+      "description": "Generate courses compatible with SCORM 1.2 and 2004, ensuring interoperability with any LMS."
+    },
+    "speed": {
+      "title": "Fast Creation",
+      "description": "Automate SCORM package generation and reduce course production time."
+    },
+    "quality": {
+      "title": "Premium Quality",
+      "description": "Maintain excellence standards with validated templates and structures."
+    }
+  },
+  "cta": {
+    "title": "Ready to get started?",
+    "description": "Start creating your first SCORM course or explore existing packages to see everything the platform offers."
+  },
+  "activities": {
+    "title": "Recent Activities",
+    "subtitle": "Track the latest platform actions",
+    "noActivities": "No activities yet",
+    "noActivitiesDescription": "Once you or other users create or edit courses, activities will appear here.",
+    "viewAll": "View All Activities",
+    "by": "by",
+    "timeAgo": {
+      "justNow": "just now",
+      "minutesAgo": "{{count}} minute ago",
+      "minutesAgo_plural": "{{count}} minutes ago",
+      "hoursAgo": "{{count}} hour ago",
+      "hoursAgo_plural": "{{count}} hours ago",
+      "daysAgo": "{{count}} day ago",
+      "daysAgo_plural": "{{count}} days ago",
+      "weeksAgo": "{{count}} week ago",
+      "weeksAgo_plural": "{{count}} weeks ago"
+    },
+    "types": {
+      "curso_criado": "Course created",
+      "curso_editado": "Course edited",
+      "curso_deletado": "Course deleted",
+      "usuario_criado": "User created",
+      "usuario_editado": "User edited",
+      "usuario_deletado": "User deleted",
+      "scorm_gerado": "SCORM generated"
+    }
+  }
+}

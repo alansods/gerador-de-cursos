@@ -8,13 +8,16 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { toast } from 'sonner'
 import { ThemeToggle } from '@/components/ThemeToggle'
+import { LanguageToggle } from '@/components/LanguageToggle'
 import { BrandPanel } from '@/components/auth/BrandPanel'
 import { PasswordStrengthMeter } from '@/components/auth/PasswordStrengthMeter'
 import { User, Mail, Lock, Eye, EyeOff, ArrowRight } from 'lucide-react'
+import { useTranslations } from 'next-intl'
 
 export const dynamic = 'error'
 
 export default function CadastroPage() {
+  const t = useTranslations('auth')
   const [nome, setNome] = useState('')
   const [email, setEmail] = useState('')
   const [senha, setSenha] = useState('')
@@ -22,7 +25,7 @@ export default function CadastroPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [loading, setLoading] = useState(false)
-  const [passwordScore, setPasswordScore] = useState(0)
+  const [, setPasswordScore] = useState(0)
   const [errors, setErrors] = useState<{
     nome?: string
     email?: string
@@ -35,27 +38,27 @@ export default function CadastroPage() {
     const newErrors: typeof errors = {}
 
     if (!nome.trim()) {
-      newErrors.nome = 'Nome é obrigatório'
+      newErrors.nome = t('validation.nameRequired')
     } else if (nome.trim().length < 2) {
-      newErrors.nome = 'Nome deve ter no mínimo 2 caracteres'
+      newErrors.nome = t('validation.nameRequired')
     }
 
     if (!email.trim()) {
-      newErrors.email = 'E-mail é obrigatório'
+      newErrors.email = t('validation.emailRequired')
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      newErrors.email = 'E-mail inválido'
+      newErrors.email = t('validation.emailInvalid')
     }
 
     if (!senha) {
-      newErrors.senha = 'Senha é obrigatória'
+      newErrors.senha = t('validation.passwordRequired')
     } else if (senha.length < 8) {
-      newErrors.senha = 'Senha deve ter no mínimo 8 caracteres'
+      newErrors.senha = t('validation.passwordMinLength')
     }
 
     if (!confirmarSenha) {
-      newErrors.confirmarSenha = 'Confirmação de senha é obrigatória'
+      newErrors.confirmarSenha = t('validation.confirmPasswordRequired')
     } else if (senha !== confirmarSenha) {
-      newErrors.confirmarSenha = 'As senhas não coincidem'
+      newErrors.confirmarSenha = t('validation.passwordsNotMatch')
     }
 
     setErrors(newErrors)
@@ -89,17 +92,17 @@ export default function CadastroPage() {
       const data = await response.json()
 
       if (response.ok) {
-        toast.success('Conta criada! Faça login para continuar')
+        toast.success(t('success.signupSuccess'))
         router.push('/login')
       } else {
-        toast.error(data.error || 'Erro ao realizar cadastro')
-        if (data.error?.includes('já cadastrado')) {
-          setErrors({ ...errors, email: data.error })
+        toast.error(data.error || t('errors.signupFailed'))
+        if (data.error?.includes('já cadastrado') || data.error?.includes('already exists')) {
+          setErrors({ ...errors, email: t('errors.userExists') })
         }
       }
     } catch (error) {
       console.error('Erro no cadastro:', error)
-      toast.error('Erro ao conectar com o servidor')
+      toast.error(t('errors.serverError'))
     } finally {
       setLoading(false)
     }
@@ -107,7 +110,8 @@ export default function CadastroPage() {
 
   return (
     <>
-      <div className="fixed top-4 right-4 z-50">
+      <div className="fixed top-4 right-4 z-50 flex gap-2">
+        <LanguageToggle />
         <ThemeToggle />
       </div>
 
@@ -119,11 +123,9 @@ export default function CadastroPage() {
             <div className="form-inner w-full max-w-[420px]">
               <div className="form-head mb-7">
                 <h2 className="text-[26px] font-medium tracking-tight text-foreground">
-                  Criar sua conta
+                  {t('signup.title')}
                 </h2>
-                <p className="text-[15px] text-muted-foreground mt-2">
-                  Preencha os dados abaixo para começar.
-                </p>
+                <p className="text-[15px] text-muted-foreground mt-2">{t('signup.subtitle')}</p>
               </div>
 
               <form onSubmit={handleSubmit} className="space-y-4">
@@ -133,7 +135,8 @@ export default function CadastroPage() {
                     htmlFor="cadastro-nome"
                     className="text-[13px] font-medium text-foreground"
                   >
-                    Nome<span className="text-[#F15A29] ml-0.5">*</span>
+                    {t('signup.name')}
+                    <span className="text-[#F15A29] ml-0.5">*</span>
                   </Label>
                   <div className="input-wrap relative mt-1.5">
                     <User className="absolute left-3.5 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4 pointer-events-none" />
@@ -147,7 +150,7 @@ export default function CadastroPage() {
                           setErrors({ ...errors, nome: undefined })
                         }
                       }}
-                      placeholder="Maria Oliveira"
+                      placeholder={t('signup.namePlaceholder')}
                       className={`pl-10 h-[42px] border-border rounded-lg bg-white dark:bg-input-background text-sm ${
                         errors.nome ? 'border-red-500 focus-visible:ring-red-500' : ''
                       }`}
@@ -164,7 +167,8 @@ export default function CadastroPage() {
                     htmlFor="cadastro-email"
                     className="text-[13px] font-medium text-foreground"
                   >
-                    E-mail<span className="text-[#F15A29] ml-0.5">*</span>
+                    {t('signup.email')}
+                    <span className="text-[#F15A29] ml-0.5">*</span>
                   </Label>
                   <div className="input-wrap relative mt-1.5">
                     <Mail className="absolute left-3.5 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4 pointer-events-none" />
@@ -178,7 +182,7 @@ export default function CadastroPage() {
                           setErrors({ ...errors, email: undefined })
                         }
                       }}
-                      placeholder="maria.oliveira@senai.br"
+                      placeholder={t('signup.emailPlaceholder')}
                       className={`pl-10 h-[42px] border-border rounded-lg bg-white dark:bg-input-background text-sm ${
                         errors.email ? 'border-red-500 focus-visible:ring-red-500' : ''
                       }`}
@@ -196,7 +200,8 @@ export default function CadastroPage() {
                     htmlFor="cadastro-senha"
                     className="text-[13px] font-medium text-foreground"
                   >
-                    Senha<span className="text-[#F15A29] ml-0.5">*</span>
+                    {t('signup.password')}
+                    <span className="text-[#F15A29] ml-0.5">*</span>
                   </Label>
                   <div className="input-wrap relative mt-1.5">
                     <Lock className="absolute left-3.5 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4 pointer-events-none" />
@@ -210,7 +215,7 @@ export default function CadastroPage() {
                           setErrors({ ...errors, senha: undefined })
                         }
                       }}
-                      placeholder="Mínimo 8 caracteres"
+                      placeholder={t('signup.passwordPlaceholder')}
                       className={`pl-10 pr-10 h-[42px] border-border rounded-lg bg-white dark:bg-input-background text-sm ${
                         errors.senha ? 'border-red-500 focus-visible:ring-red-500' : ''
                       }`}
@@ -241,7 +246,8 @@ export default function CadastroPage() {
                     htmlFor="cadastro-confirmar-senha"
                     className="text-[13px] font-medium text-foreground"
                   >
-                    Confirmar senha<span className="text-[#F15A29] ml-0.5">*</span>
+                    {t('signup.confirmPassword')}
+                    <span className="text-[#F15A29] ml-0.5">*</span>
                   </Label>
                   <div className="input-wrap relative mt-1.5">
                     <Lock className="absolute left-3.5 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4 pointer-events-none" />
@@ -255,7 +261,7 @@ export default function CadastroPage() {
                           setErrors({ ...errors, confirmarSenha: undefined })
                         }
                       }}
-                      placeholder="Digite a senha novamente"
+                      placeholder={t('signup.confirmPasswordPlaceholder')}
                       className={`pl-10 pr-10 h-[42px] border-border rounded-lg bg-white dark:bg-input-background text-sm ${
                         errors.confirmarSenha ? 'border-red-500 focus-visible:ring-red-500' : ''
                       }`}
@@ -292,11 +298,11 @@ export default function CadastroPage() {
                   {loading ? (
                     <span className="flex items-center gap-2">
                       <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white" />
-                      Criando conta...
+                      {t('signup.signingUp')}
                     </span>
                   ) : (
                     <>
-                      Criar conta
+                      {t('signup.signUp')}
                       <ArrowRight className="ml-2 w-4 h-4" />
                     </>
                   )}
@@ -305,9 +311,9 @@ export default function CadastroPage() {
 
               {/* Link para Login */}
               <p className="switch-copy text-center mt-5 text-[13px] text-muted-foreground">
-                Já tem conta?{' '}
+                {t('signup.hasAccount')}{' '}
                 <Link href="/login" className="text-[#0047BB] font-medium hover:underline">
-                  Entrar
+                  {t('signup.signInLink')}
                 </Link>
               </p>
             </div>
