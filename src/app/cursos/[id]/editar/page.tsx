@@ -1258,18 +1258,34 @@ export default function EditarCursoPage() {
                     if (unidadeIndex !== safeIndex) return null
                     return (
                       <div key={unidade.id || `unidade-${unidadeIndex}`}>
-                        <CardHeader className="bg-linear-to-r from-gray-50 to-blue-50 dark:from-gray-800 dark:to-gray-800 border-b border-[#e5e7eb] dark:border-gray-700">
+                        <div className="pb-6">
                           <div className="flex items-center justify-between">
                             <div className="flex-1">
-                              <div className="flex items-center space-x-3">
-                                <Layers className="h-6 w-6 text-blue-600 dark:text-blue-400" />
-                                <h3 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-                                  {unidadeIndex + 1}. {unidade.titulo}
+                              <div style={{ marginBottom: '28px' }}>
+                                <div
+                                  style={{
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    gap: '6px',
+                                    fontSize: '12px',
+                                    fontWeight: '500',
+                                    color: '#0047BB',
+                                    background: 'rgba(0, 71, 187, 0.1)',
+                                    padding: '4px 10px',
+                                    borderRadius: '999px',
+                                    marginBottom: '14px',
+                                  }}
+                                >
+                                  <Layers style={{ width: '12px', height: '12px' }} />
+                                  Unidade {unidadeIndex + 1}
+                                </div>
+                                <h3 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">
+                                  {unidade.titulo}
                                 </h3>
+                                <p className="text-gray-600 dark:text-gray-400 text-sm">
+                                  {unidade.descricao}
+                                </p>
                               </div>
-                              <p className="mt-2 ml-9 text-gray-600 dark:text-gray-400 text-sm">
-                                {unidade.descricao}
-                              </p>
                             </div>
                             <div className="flex items-center gap-1 shrink-0">
                               <TooltipProvider>
@@ -1304,9 +1320,9 @@ export default function EditarCursoPage() {
                               </TooltipProvider>
                             </div>
                           </div>
-                        </CardHeader>
+                        </div>
 
-                        <CardContent className="pt-6">
+                        <div>
                           {/* Lista de Conteúdo */}
                           {(unidade.conteudo || []).length === 0 ? (
                             <div className="relative overflow-hidden rounded-xl border-2 border-dashed border-blue-300 bg-gradient-to-br from-blue-50 via-white to-purple-50 py-12 px-6">
@@ -1876,7 +1892,7 @@ export default function EditarCursoPage() {
                               </Button>
                             </div>
                           </div>
-                        </CardContent>
+                        </div>
                       </div>
                     )
                   })}
