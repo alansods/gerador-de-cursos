@@ -1030,7 +1030,7 @@ export default function EditarCursoPage() {
   // Verificar se está carregando ou se o curso não foi encontrado
   if (state.loading || isFetchingCurso || !state.cursoAtual) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="min-h-screen flex items-center justify-center bg-[#F5F7FA] dark:bg-gray-950">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
           <p className="text-gray-500">Carregando curso...</p>
@@ -1041,7 +1041,7 @@ export default function EditarCursoPage() {
 
   return (
     <PageTransition>
-      <div className="h-screen flex flex-col bg-linear-to-br from-blue-50 via-white to-purple-50 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950 overflow-hidden">
+      <div className="h-screen flex flex-col bg-[#F5F7FA] dark:bg-gray-950 overflow-hidden">
         {/* Header */}
         <div className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm border-b border-[#e5e7eb] dark:border-gray-800 sticky top-0 z-50">
           <div className="px-6 py-3">
@@ -1358,7 +1358,7 @@ export default function EditarCursoPage() {
                                 items={(unidade.conteudo || []).map((c) => c.id)}
                                 strategy={verticalListSortingStrategy}
                               >
-                                <div className="grid grid-cols-12 gap-3">
+                                <div className="grid grid-cols-12 gap-1">
                                   {(() => {
                                     type TipoInsert =
                                       | 'titulo'
@@ -1463,14 +1463,18 @@ export default function EditarCursoPage() {
                                         key={key}
                                         className={`group/div relative ${colSpanClass}`}
                                       >
-                                        <div className="opacity-0 group-hover/div:opacity-100 transition-opacity rounded-lg border-2 border-dashed border-blue-400 dark:border-blue-500 h-8 flex items-center justify-center bg-blue-50 dark:bg-blue-950/30">
+                                        <div className="relative flex items-center justify-center opacity-0 group-hover/div:opacity-100 transition-opacity">
+                                          {/* Linha horizontal */}
+                                          <div className="absolute inset-x-0 h-px bg-blue-600 dark:bg-blue-500"></div>
+
+                                          {/* Botão circular */}
                                           <TooltipProvider>
                                             <Tooltip>
                                               <DropdownMenu>
                                                 <TooltipTrigger asChild>
                                                   <DropdownMenuTrigger asChild>
                                                     <button
-                                                      className="text-blue-500 hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-300 flex items-center justify-center"
+                                                      className="relative z-10 flex items-center justify-center w-6 h-6 rounded-full bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white shadow-lg transition-all hover:scale-110"
                                                       onClick={(e) => {
                                                         e.stopPropagation()
                                                         insertAtIndex.current = {
@@ -1479,7 +1483,7 @@ export default function EditarCursoPage() {
                                                         }
                                                       }}
                                                     >
-                                                      <Plus className="h-4 w-4" />
+                                                      <Plus className="h-3.5 w-3.5" />
                                                     </button>
                                                   </DropdownMenuTrigger>
                                                 </TooltipTrigger>
