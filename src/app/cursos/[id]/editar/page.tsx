@@ -55,13 +55,6 @@ import {
   Sun,
 } from 'lucide-react'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
 
 import { SortableConteudoWrapper } from '@/components/SortableConteudoWrapper'
 import {
@@ -250,6 +243,7 @@ export default function EditarCursoPage() {
   } | null>(null)
   const [confirmarDeletarConteudo, setConfirmarDeletarConteudo] = useState(false)
   const [editarCursoModal, setEditarCursoModal] = useState(false)
+  const [modalAdicionarConteudo, setModalAdicionarConteudo] = useState(false)
 
   const [cargaHorariaEditada, setCargaHorariaEditada] = useState('')
   const [modalidadeEditada, setModalidadeEditada] = useState('')
@@ -1470,51 +1464,24 @@ export default function EditarCursoPage() {
                                           {/* Botão circular */}
                                           <TooltipProvider>
                                             <Tooltip>
-                                              <DropdownMenu>
-                                                <TooltipTrigger asChild>
-                                                  <DropdownMenuTrigger asChild>
-                                                    <button
-                                                      className="relative z-10 flex items-center justify-center w-6 h-6 rounded-full bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white shadow-lg transition-all hover:scale-110"
-                                                      onClick={(e) => {
-                                                        e.stopPropagation()
-                                                        insertAtIndex.current = {
-                                                          unidadeId: unidade.id,
-                                                          index: afterIndex,
-                                                        }
-                                                      }}
-                                                    >
-                                                      <Plus className="h-3.5 w-3.5" />
-                                                    </button>
-                                                  </DropdownMenuTrigger>
-                                                </TooltipTrigger>
-                                                <TooltipContent side="top" className="text-xs">
-                                                  Inserir conteúdo aqui
-                                                </TooltipContent>
-                                                <DropdownMenuContent
-                                                  align="center"
-                                                  className="w-40"
+                                              <TooltipTrigger asChild>
+                                                <button
+                                                  className="relative z-10 flex items-center justify-center w-6 h-6 rounded-full bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white shadow-lg transition-all hover:scale-110"
+                                                  onClick={(e) => {
+                                                    e.stopPropagation()
+                                                    insertAtIndex.current = {
+                                                      unidadeId: unidade.id,
+                                                      index: afterIndex,
+                                                    }
+                                                    setModalAdicionarConteudo(true)
+                                                  }}
                                                 >
-                                                  {tiposInsert.map(({ tipo, label, icon }) => (
-                                                    <DropdownMenuItem
-                                                      key={tipo}
-                                                      className="cursor-pointer gap-2"
-                                                      onClick={() => {
-                                                        insertAtIndex.current = {
-                                                          unidadeId: unidade.id,
-                                                          index: afterIndex,
-                                                        }
-                                                        handleSelecionarTipoConteudo(
-                                                          tipo,
-                                                          unidade.id
-                                                        )
-                                                      }}
-                                                    >
-                                                      {icon}
-                                                      {label}
-                                                    </DropdownMenuItem>
-                                                  ))}
-                                                </DropdownMenuContent>
-                                              </DropdownMenu>
+                                                  <Plus className="h-3.5 w-3.5" />
+                                                </button>
+                                              </TooltipTrigger>
+                                              <TooltipContent side="top" className="text-xs">
+                                                Inserir conteúdo aqui
+                                              </TooltipContent>
                                             </Tooltip>
                                           </TooltipProvider>
                                         </div>
@@ -1529,43 +1496,18 @@ export default function EditarCursoPage() {
                                           key={`empty-${afterIndex}`}
                                           className={`${colClass} group/empty`}
                                         >
-                                          <DropdownMenu>
-                                            <DropdownMenuTrigger asChild>
-                                              <button
-                                                className="w-full h-full min-h-[60px] rounded-lg border-2 border-dashed border-transparent flex items-center justify-center text-gray-400 dark:text-gray-500 opacity-0 group-hover/empty:opacity-100 group-hover/empty:border-gray-300 dark:group-hover/empty:border-gray-600 hover:!border-blue-400 dark:hover:!border-blue-500 hover:!text-blue-500 dark:hover:!text-blue-400 hover:!bg-blue-50 dark:hover:!bg-blue-950/20 transition-all"
-                                                onClick={() =>
-                                                  (insertAtIndex.current = {
-                                                    unidadeId: unidade.id,
-                                                    index: afterIndex,
-                                                  })
-                                                }
-                                              >
-                                                <Plus className="h-4 w-4" />
-                                              </button>
-                                            </DropdownMenuTrigger>
-                                            <DropdownMenuContent align="center" className="w-40">
-                                              {tiposInsert.map(({ tipo, label, icon }) => (
-                                                <DropdownMenuItem
-                                                  key={tipo}
-                                                  className="cursor-pointer gap-2"
-                                                  onClick={() => {
-                                                    insertAtIndex.current = {
-                                                      unidadeId: unidade.id,
-                                                      index: afterIndex,
-                                                    }
-                                                    handleSelecionarTipoConteudo(
-                                                      tipo,
-                                                      unidade.id,
-                                                      emptyCols as 6 | 12
-                                                    )
-                                                  }}
-                                                >
-                                                  {icon}
-                                                  {label}
-                                                </DropdownMenuItem>
-                                              ))}
-                                            </DropdownMenuContent>
-                                          </DropdownMenu>
+                                          <button
+                                            className="w-full h-full min-h-[60px] rounded-lg border-2 border-dashed border-transparent flex items-center justify-center text-gray-400 dark:text-gray-500 opacity-0 group-hover/empty:opacity-100 group-hover/empty:border-gray-300 dark:group-hover/empty:border-gray-600 hover:!border-blue-400 dark:hover:!border-blue-500 hover:!text-blue-500 dark:hover:!text-blue-400 hover:!bg-blue-50 dark:hover:!bg-blue-950/20 transition-all"
+                                            onClick={() => {
+                                              insertAtIndex.current = {
+                                                unidadeId: unidade.id,
+                                                index: afterIndex,
+                                              }
+                                              setModalAdicionarConteudo(true)
+                                            }}
+                                          >
+                                            <Plus className="h-4 w-4" />
+                                          </button>
                                         </div>
                                       )
                                     }
@@ -1587,7 +1529,19 @@ export default function EditarCursoPage() {
                                               colunas={item.colunas}
                                             >
                                               {(dragHandle) => (
-                                                <div className="group relative flex items-start p-6 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 hover:border-blue-500 dark:hover:border-blue-400 hover:shadow-lg rounded-xl transition-all">
+                                                <div
+                                                  className="group relative flex items-start p-6 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 hover:border-blue-500 dark:hover:border-blue-400 rounded-xl transition-all"
+                                                  style={{
+                                                    ['--accent' as string]: '#0047BB',
+                                                  }}
+                                                  onMouseEnter={(e) => {
+                                                    e.currentTarget.style.boxShadow =
+                                                      '0 6px 20px -8px color-mix(in srgb, var(--accent) 30%, transparent)'
+                                                  }}
+                                                  onMouseLeave={(e) => {
+                                                    e.currentTarget.style.boxShadow = ''
+                                                  }}
+                                                >
                                                   {/* Label do tipo de conteúdo */}
                                                   <span className="absolute top-2 left-6 opacity-0 group-hover:opacity-100 transition-opacity text-xs font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wider">
                                                     {item.tipo === 'titulo'
@@ -1954,6 +1908,204 @@ export default function EditarCursoPage() {
             </div>
           </div>
         </div>
+
+        {/* Modal para adicionar conteúdo */}
+        <Dialog open={modalAdicionarConteudo} onOpenChange={setModalAdicionarConteudo}>
+          <DialogContent className="sm:max-w-3xl max-h-[85vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="text-xl font-bold">Adicionar conteúdo</DialogTitle>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                Escolha o tipo de conteúdo que você quer incluir na unidade.
+              </p>
+            </DialogHeader>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mt-4">
+              {/* Título */}
+              <button
+                onClick={() => {
+                  if (insertAtIndex.current) {
+                    handleSelecionarTipoConteudo('titulo', insertAtIndex.current.unidadeId)
+                  }
+                  setModalAdicionarConteudo(false)
+                }}
+                className="flex flex-col items-start p-4 rounded-xl border-2 border-gray-200 dark:border-gray-700 hover:border-blue-500 dark:hover:border-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/20 transition-all group"
+              >
+                <div className="w-10 h-10 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center mb-3 group-hover:bg-blue-200 dark:group-hover:bg-blue-900/50 transition-colors">
+                  <Heading2 className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                </div>
+                <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100 mb-0.5">
+                  Título
+                </h3>
+                <p className="text-xs text-gray-500 dark:text-gray-400 text-left">
+                  Cabeçalho de seção
+                </p>
+              </button>
+
+              {/* Texto */}
+              <button
+                onClick={() => {
+                  if (insertAtIndex.current) {
+                    handleSelecionarTipoConteudo('paragrafo', insertAtIndex.current.unidadeId)
+                  }
+                  setModalAdicionarConteudo(false)
+                }}
+                className="flex flex-col items-start p-4 rounded-xl border-2 border-gray-200 dark:border-gray-700 hover:border-blue-500 dark:hover:border-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/20 transition-all group"
+              >
+                <div className="w-10 h-10 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center mb-3 group-hover:bg-blue-200 dark:group-hover:bg-blue-900/50 transition-colors">
+                  <Type className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                </div>
+                <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100 mb-0.5">
+                  Texto
+                </h3>
+                <p className="text-xs text-gray-500 dark:text-gray-400 text-left">
+                  Parágrafo de conteúdo
+                </p>
+              </button>
+
+              {/* Imagem */}
+              <button
+                onClick={() => {
+                  if (insertAtIndex.current) {
+                    handleSelecionarTipoConteudo('imagem', insertAtIndex.current.unidadeId)
+                  }
+                  setModalAdicionarConteudo(false)
+                }}
+                className="flex flex-col items-start p-4 rounded-xl border-2 border-gray-200 dark:border-gray-700 hover:border-blue-500 dark:hover:border-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/20 transition-all group"
+              >
+                <div className="w-10 h-10 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center mb-3 group-hover:bg-blue-200 dark:group-hover:bg-blue-900/50 transition-colors">
+                  <Image className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                </div>
+                <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100 mb-0.5">
+                  Imagem
+                </h3>
+                <p className="text-xs text-gray-500 dark:text-gray-400 text-left">
+                  Foto com legenda
+                </p>
+              </button>
+
+              {/* Lista */}
+              <button
+                onClick={() => {
+                  if (insertAtIndex.current) {
+                    handleSelecionarTipoConteudo('lista', insertAtIndex.current.unidadeId)
+                  }
+                  setModalAdicionarConteudo(false)
+                }}
+                className="flex flex-col items-start p-4 rounded-xl border-2 border-gray-200 dark:border-gray-700 hover:border-blue-500 dark:hover:border-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/20 transition-all group"
+              >
+                <div className="w-10 h-10 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center mb-3 group-hover:bg-blue-200 dark:group-hover:bg-blue-900/50 transition-colors">
+                  <List className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                </div>
+                <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100 mb-0.5">
+                  Lista
+                </h3>
+                <p className="text-xs text-gray-500 dark:text-gray-400 text-left">
+                  Itens ou passos
+                </p>
+              </button>
+
+              {/* Destaque (Info Box) */}
+              <button
+                onClick={() => {
+                  if (insertAtIndex.current) {
+                    handleSelecionarTipoConteudo('info-box', insertAtIndex.current.unidadeId)
+                  }
+                  setModalAdicionarConteudo(false)
+                }}
+                className="flex flex-col items-start p-4 rounded-xl border-2 border-gray-200 dark:border-gray-700 hover:border-blue-500 dark:hover:border-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/20 transition-all group"
+              >
+                <div className="w-10 h-10 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center mb-3 group-hover:bg-blue-200 dark:group-hover:bg-blue-900/50 transition-colors">
+                  <AlertTriangle className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                </div>
+                <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100 mb-0.5">
+                  Destaque
+                </h3>
+                <p className="text-xs text-gray-500 dark:text-gray-400 text-left">Dica ou aviso</p>
+              </button>
+
+              {/* Flashcards (FlipCard) */}
+              <button
+                onClick={() => {
+                  if (insertAtIndex.current) {
+                    handleSelecionarTipoConteudo('flipcard', insertAtIndex.current.unidadeId)
+                  }
+                  setModalAdicionarConteudo(false)
+                }}
+                className="flex flex-col items-start p-4 rounded-xl border-2 border-gray-200 dark:border-gray-700 hover:border-blue-500 dark:hover:border-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/20 transition-all group"
+              >
+                <div className="w-10 h-10 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center mb-3 group-hover:bg-blue-200 dark:group-hover:bg-blue-900/50 transition-colors">
+                  <RotateCcw className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                </div>
+                <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100 mb-0.5">
+                  Flashcards
+                </h3>
+                <p className="text-xs text-gray-500 dark:text-gray-400 text-left">
+                  Cartões de revisão
+                </p>
+              </button>
+
+              {/* Sanfona (Accordion) */}
+              <button
+                onClick={() => {
+                  if (insertAtIndex.current) {
+                    handleSelecionarTipoConteudo('accordion', insertAtIndex.current.unidadeId)
+                  }
+                  setModalAdicionarConteudo(false)
+                }}
+                className="flex flex-col items-start p-4 rounded-xl border-2 border-gray-200 dark:border-gray-700 hover:border-blue-500 dark:hover:border-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/20 transition-all group"
+              >
+                <div className="w-10 h-10 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center mb-3 group-hover:bg-blue-200 dark:group-hover:bg-blue-900/50 transition-colors">
+                  <ChevronDown className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                </div>
+                <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100 mb-0.5">
+                  Sanfona
+                </h3>
+                <p className="text-xs text-gray-500 dark:text-gray-400 text-left">
+                  Perguntas expansíveis
+                </p>
+              </button>
+
+              {/* Quiz */}
+              <button
+                onClick={() => {
+                  if (insertAtIndex.current) {
+                    handleSelecionarTipoConteudo('quiz', insertAtIndex.current.unidadeId)
+                  }
+                  setModalAdicionarConteudo(false)
+                }}
+                className="flex flex-col items-start p-4 rounded-xl border-2 border-gray-200 dark:border-gray-700 hover:border-blue-500 dark:hover:border-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/20 transition-all group"
+              >
+                <div className="w-10 h-10 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center mb-3 group-hover:bg-blue-200 dark:group-hover:bg-blue-900/50 transition-colors">
+                  <HelpCircle className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                </div>
+                <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100 mb-0.5">
+                  Quiz
+                </h3>
+                <p className="text-xs text-gray-500 dark:text-gray-400 text-left">
+                  Pergunta com resposta
+                </p>
+              </button>
+
+              {/* Subtítulo */}
+              <button
+                onClick={() => {
+                  if (insertAtIndex.current) {
+                    handleSelecionarTipoConteudo('subtitulo', insertAtIndex.current.unidadeId)
+                  }
+                  setModalAdicionarConteudo(false)
+                }}
+                className="flex flex-col items-start p-4 rounded-xl border-2 border-gray-200 dark:border-gray-700 hover:border-blue-500 dark:hover:border-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/20 transition-all group"
+              >
+                <div className="w-10 h-10 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center mb-3 group-hover:bg-blue-200 dark:group-hover:bg-blue-900/50 transition-colors">
+                  <Heading3 className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                </div>
+                <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100 mb-0.5">
+                  Subtítulo
+                </h3>
+                <p className="text-xs text-gray-500 dark:text-gray-400 text-left">Subcabeçalho</p>
+              </button>
+            </div>
+          </DialogContent>
+        </Dialog>
 
         {/* Modal para editar curso */}
         <Dialog open={editarCursoModal} onOpenChange={() => setEditarCursoModal(false)}>
