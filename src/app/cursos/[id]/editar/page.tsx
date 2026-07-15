@@ -14,6 +14,8 @@ import { useSCORM } from '@/hooks/useSCORM'
 import { ExportModal } from '@/components/ExportModal'
 import { RichTextEditor } from '@/components/RichTextEditor'
 import { PageTransition } from '@/components/PageTransition'
+import { EditableCard } from '@/components/EditableCard'
+import { TooltipButton } from '@/components/TooltipButton'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -54,7 +56,6 @@ import {
   Sun,
   Settings,
 } from 'lucide-react'
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { CourseSettingsDrawer } from '@/components/CourseSettingsDrawer'
 import { SortableConteudoWrapper } from '@/components/SortableConteudoWrapper'
 import {
@@ -163,11 +164,9 @@ export default function EditarCursoPage() {
   const [unidadeParaEditar, setUnidadeParaEditar] = useState<string | null>(null)
   const [exportModalOpen, setExportModalOpen] = useState(false)
   const [tituloUnidadeEditando, setTituloUnidadeEditando] = useState('')
-  const [confirmarDeletarUnidade, setConfirmarDeletarUnidade] = useState(false)
   const [isUploadingImage, setIsUploadingImage] = useState(false)
   const [imagePreviewUrl, setImagePreviewUrl] = useState<string | null>(null)
   const [isFetchingCurso, setIsFetchingCurso] = useState(false)
-  const [unidadeParaDeletar, setUnidadeParaDeletar] = useState<string | null>(null)
   const insertAtIndex = useRef<{ unidadeId: string; index: number } | null>(null)
   const pendingInsert = useRef<{ unidadeId: string; targetIndex: number } | null>(null)
   const [isSavingConteudo, setIsSavingConteudo] = useState(false)
@@ -326,11 +325,6 @@ export default function EditarCursoPage() {
     setDescricaoUnidadeEditando('')
   }
 
-  const closeConfirmarDeletarUnidadeModal = () => {
-    setConfirmarDeletarUnidade(false)
-    setUnidadeParaDeletar(null)
-  }
-
   const closeConfirmarDeletarConteudoModal = () => {
     setConfirmarDeletarConteudo(false)
     setConteudoParaDeletar(null)
@@ -408,11 +402,6 @@ export default function EditarCursoPage() {
       toast.success('Unidade atualizada')
       closeEditarUnidadeModal()
     }
-  }
-
-  const handleDeletarUnidade = (unidadeId: string) => {
-    setUnidadeParaDeletar(unidadeId)
-    setConfirmarDeletarUnidade(true)
   }
 
   const handleUploadImage = async (
@@ -968,67 +957,24 @@ export default function EditarCursoPage() {
           <div className="px-6 py-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="default"
-                        onClick={handleVoltar}
-                        className="h-10 w-10 p-0"
-                      >
-                        <ArrowLeft className="h-4 w-4" />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>Voltar</TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
+                <TooltipButton icon={ArrowLeft} tooltip="Voltar" onClick={handleVoltar} />
                 <h1 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
                   {state.cursoAtual.titulo}
                 </h1>
               </div>
 
               <div className="flex space-x-2">
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="default"
-                        onClick={() => setSettingsDrawerOpen(true)}
-                        className="h-10 w-10 p-0"
-                      >
-                        <Settings className="h-4 w-4" />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>Configurações do curso</TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="default"
-                        onClick={toggleDarkMode}
-                        className="h-10 w-10 p-0"
-                      >
-                        {isDarkMode ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>{isDarkMode ? 'Modo claro' : 'Modo escuro'}</TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button variant="ghost" onClick={handlePreview} className="h-10 w-10 p-0">
-                        <Eye className="h-4 w-4" />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>Preview</TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
+                <TooltipButton
+                  icon={Settings}
+                  tooltip="Configurações do curso"
+                  onClick={() => setSettingsDrawerOpen(true)}
+                />
+                <TooltipButton
+                  icon={isDarkMode ? Sun : Moon}
+                  tooltip={isDarkMode ? 'Modo claro' : 'Modo escuro'}
+                  onClick={toggleDarkMode}
+                />
+                <TooltipButton icon={Eye} tooltip="Preview" onClick={handlePreview} />
                 <Button
                   onClick={() => setExportModalOpen(true)}
                   className="bg-blue-600 hover:bg-blue-700 text-white"
@@ -1046,7 +992,7 @@ export default function EditarCursoPage() {
           <div className="flex-1 flex flex-col overflow-hidden">
             {/* Conteúdo Principal */}
             <div className="flex-1 overflow-y-auto px-6 py-6">
-              <div className="max-w-5xl mx-auto">
+              <div className="max-w-[760px] mx-auto">
                 {/* Card de Informações do Curso */}
                 <Card className="hidden mb-8 border-0 shadow-xl overflow-hidden bg-linear-to-br from-blue-600 via-blue-700 to-purple-600 dark:from-blue-800 dark:via-purple-800 dark:to-purple-900 text-white">
                   <CardHeader className="pb-6 pt-8 px-8">
@@ -1065,21 +1011,14 @@ export default function EditarCursoPage() {
                         </p>
                       </div>
                       <div className="shrink-0">
-                        <TooltipProvider>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Button
-                                variant="outline"
-                                size="lg"
-                                onClick={() => setEditarCursoModal(true)}
-                                className="p-3 bg-white/10 backdrop-blur-sm border-white/30 text-white hover:bg-white/20 hover:border-white/40 shadow-md transition-all"
-                              >
-                                <Edit className="h-5 w-5" />
-                              </Button>
-                            </TooltipTrigger>
-                            <TooltipContent>Editar informações do curso</TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
+                        <TooltipButton
+                          icon={Edit}
+                          tooltip="Editar informações do curso"
+                          onClick={() => setEditarCursoModal(true)}
+                          variant="outline"
+                          iconClassName="h-5 w-5"
+                          className="p-3 bg-white/10 backdrop-blur-sm border-white/30 text-white hover:bg-white/20 hover:border-white/40 shadow-md transition-all"
+                        />
                       </div>
                     </div>
                   </CardHeader>
@@ -1142,69 +1081,45 @@ export default function EditarCursoPage() {
                     if (unidadeIndex !== safeIndex) return null
                     return (
                       <div key={unidade.id || `unidade-${unidadeIndex}`}>
-                        <div className="pb-6">
-                          <div className="flex items-center justify-between">
-                            <div className="flex-1">
-                              <div style={{ marginBottom: '28px' }}>
-                                <div
-                                  style={{
-                                    display: 'inline-flex',
-                                    alignItems: 'center',
-                                    gap: '6px',
-                                    fontSize: '12px',
-                                    fontWeight: '500',
-                                    color: '#0047BB',
-                                    background: 'rgba(0, 71, 187, 0.1)',
-                                    padding: '4px 10px',
-                                    borderRadius: '999px',
-                                    marginBottom: '14px',
-                                  }}
-                                >
-                                  <Layers style={{ width: '12px', height: '12px' }} />
-                                  Unidade {unidadeIndex + 1}
-                                </div>
-                                <h3 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">
-                                  {unidade.titulo}
-                                </h3>
-                                <p className="text-gray-600 dark:text-gray-400 text-sm">
-                                  {unidade.descricao}
-                                </p>
-                              </div>
+                        <EditableCard
+                          className="mb-6"
+                          actions={
+                            <TooltipButton
+                              icon={Edit}
+                              tooltip="Editar unidade"
+                              onClick={() => openEditarUnidadeModal(unidade.id)}
+                              size="md"
+                              asButton={false}
+                              className="h-8 w-8 p-0 flex items-center justify-center hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors"
+                            />
+                          }
+                        >
+                          <div>
+                            <div
+                              style={{
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '6px',
+                                fontSize: '12px',
+                                fontWeight: '500',
+                                color: '#0047BB',
+                                background: 'rgba(0, 71, 187, 0.1)',
+                                padding: '4px 10px',
+                                borderRadius: '999px',
+                                marginBottom: '14px',
+                              }}
+                            >
+                              <Layers style={{ width: '12px', height: '12px' }} />
+                              Unidade {unidadeIndex + 1}
                             </div>
-                            <div className="flex items-center gap-1 shrink-0">
-                              <TooltipProvider>
-                                <Tooltip>
-                                  <TooltipTrigger asChild>
-                                    <Button
-                                      variant="ghost"
-                                      size="sm"
-                                      onClick={() => openEditarUnidadeModal(unidade.id)}
-                                      className="h-8 w-8 p-0"
-                                    >
-                                      <Edit className="h-4 w-4" />
-                                    </Button>
-                                  </TooltipTrigger>
-                                  <TooltipContent>Editar unidade</TooltipContent>
-                                </Tooltip>
-                              </TooltipProvider>
-                              <TooltipProvider>
-                                <Tooltip>
-                                  <TooltipTrigger asChild>
-                                    <Button
-                                      variant="ghost"
-                                      size="sm"
-                                      onClick={() => handleDeletarUnidade(unidade.id)}
-                                      className="h-8 w-8 p-0 text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20"
-                                    >
-                                      <Trash2 className="h-4 w-4" />
-                                    </Button>
-                                  </TooltipTrigger>
-                                  <TooltipContent>Deletar unidade</TooltipContent>
-                                </Tooltip>
-                              </TooltipProvider>
-                            </div>
+                            <h3 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">
+                              {unidade.titulo}
+                            </h3>
+                            <p className="text-gray-600 dark:text-gray-400 text-sm">
+                              {unidade.descricao}
+                            </p>
                           </div>
-                        </div>
+                        </EditableCard>
 
                         <div>
                           {/* Lista de Conteúdo */}
@@ -1300,28 +1215,23 @@ export default function EditarCursoPage() {
                                           <div className="absolute inset-x-0 h-px bg-blue-600 dark:bg-blue-500"></div>
 
                                           {/* Botão circular */}
-                                          <TooltipProvider>
-                                            <Tooltip>
-                                              <TooltipTrigger asChild>
-                                                <button
-                                                  className="relative z-10 flex items-center justify-center w-6 h-6 rounded-full bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white shadow-lg transition-all hover:scale-110"
-                                                  onClick={(e) => {
-                                                    e.stopPropagation()
-                                                    insertAtIndex.current = {
-                                                      unidadeId: unidade.id,
-                                                      index: afterIndex,
-                                                    }
-                                                    setModalAdicionarConteudo(true)
-                                                  }}
-                                                >
-                                                  <Plus className="h-3.5 w-3.5" />
-                                                </button>
-                                              </TooltipTrigger>
-                                              <TooltipContent side="top" className="text-xs">
-                                                Inserir conteúdo aqui
-                                              </TooltipContent>
-                                            </Tooltip>
-                                          </TooltipProvider>
+                                          <TooltipButton
+                                            icon={Plus}
+                                            tooltip="Inserir conteúdo aqui"
+                                            onClick={(e) => {
+                                              e?.stopPropagation()
+                                              insertAtIndex.current = {
+                                                unidadeId: unidade.id,
+                                                index: afterIndex,
+                                              }
+                                              setModalAdicionarConteudo(true)
+                                            }}
+                                            asButton={false}
+                                            size="sm"
+                                            tooltipSide="top"
+                                            tooltipClassName="text-xs"
+                                            className="relative z-10 flex items-center justify-center w-6 h-6 rounded-full bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white shadow-lg transition-all hover:scale-110"
+                                          />
                                         </div>
                                       </div>
                                     )
@@ -1367,22 +1277,10 @@ export default function EditarCursoPage() {
                                               colunas={item.colunas}
                                             >
                                               {(dragHandle) => (
-                                                <div
-                                                  className="group relative flex items-start p-6 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 hover:border-blue-500 dark:hover:border-blue-400 rounded-xl transition-all"
-                                                  style={{
-                                                    ['--accent' as string]: '#0047BB',
-                                                  }}
-                                                  onMouseEnter={(e) => {
-                                                    e.currentTarget.style.boxShadow =
-                                                      '0 6px 20px -8px color-mix(in srgb, var(--accent) 30%, transparent)'
-                                                  }}
-                                                  onMouseLeave={(e) => {
-                                                    e.currentTarget.style.boxShadow = ''
-                                                  }}
-                                                >
-                                                  {/* Label do tipo de conteúdo */}
-                                                  <span className="absolute top-2 left-6 opacity-0 group-hover:opacity-100 transition-opacity text-xs font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wider">
-                                                    {item.tipo === 'titulo'
+                                                <EditableCard
+                                                  flex
+                                                  label={
+                                                    item.tipo === 'titulo'
                                                       ? 'Título'
                                                       : item.tipo === 'subtitulo'
                                                         ? 'Subtítulo'
@@ -1400,8 +1298,57 @@ export default function EditarCursoPage() {
                                                                     ? 'Quiz'
                                                                     : item.tipo === 'info-box'
                                                                       ? 'Info Box'
-                                                                      : 'Conteúdo'}
-                                                  </span>
+                                                                      : 'Conteúdo'
+                                                  }
+                                                  actions={
+                                                    <>
+                                                      {dragHandle}
+                                                      <TooltipButton
+                                                        icon={Edit}
+                                                        tooltip="Editar"
+                                                        onClick={() =>
+                                                          setEditandoConteudo({
+                                                            unidadeId: unidade.id,
+                                                            conteudoId: item.id,
+                                                            tipo: item.tipo,
+                                                            conteudo: item.conteudo || '',
+                                                            tamanho: item.tamanho,
+                                                            legenda: item.legenda,
+                                                            fonte: item.fonte,
+                                                            corTexto: item.corTexto,
+                                                            alinhamento: item.alinhamento,
+                                                            colunas: item.colunas,
+                                                            items: item.items,
+                                                            tipoFrente: item.tipoFrente,
+                                                            imagemFrente: item.imagemFrente,
+                                                            tituloFrente: item.tituloFrente,
+                                                            conteudoVerso: item.conteudoVerso,
+                                                            alturaCard: item.alturaCard,
+                                                            itensLista: item.itensLista || [],
+                                                            tipoLista:
+                                                              item.tipoLista || 'nao-ordenada',
+                                                            quizData: item.quizData,
+                                                            tipoInfoBox: item.tipoInfoBox,
+                                                            tituloInfoBox: item.tituloInfoBox,
+                                                          })
+                                                        }
+                                                        asButton={false}
+                                                        size="sm"
+                                                        className="p-1.5 rounded text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
+                                                      />
+                                                      <TooltipButton
+                                                        icon={Trash2}
+                                                        tooltip="Deletar"
+                                                        onClick={() =>
+                                                          handleDeletarConteudo(unidade.id, item.id)
+                                                        }
+                                                        asButton={false}
+                                                        size="sm"
+                                                        className="p-1.5 rounded text-gray-600 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                                                      />
+                                                    </>
+                                                  }
+                                                >
                                                   <div className="flex-1 mt-1">
                                                     {item.tipo === 'titulo' ? (
                                                       <h3 className="font-bold text-lg text-gray-900 dark:text-gray-100">
@@ -1558,67 +1505,7 @@ export default function EditarCursoPage() {
                                                       />
                                                     )}
                                                   </div>
-                                                  {/* Botões de ação */}
-                                                  <div className="absolute top-2 right-2 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-1 shadow-sm">
-                                                    {dragHandle}
-                                                    <TooltipProvider>
-                                                      <Tooltip>
-                                                        <TooltipTrigger asChild>
-                                                          <button
-                                                            onClick={() =>
-                                                              setEditandoConteudo({
-                                                                unidadeId: unidade.id,
-                                                                conteudoId: item.id,
-                                                                tipo: item.tipo,
-                                                                conteudo: item.conteudo || '',
-                                                                tamanho: item.tamanho,
-                                                                legenda: item.legenda,
-                                                                fonte: item.fonte,
-                                                                corTexto: item.corTexto,
-                                                                alinhamento: item.alinhamento,
-                                                                colunas: item.colunas,
-                                                                items: item.items,
-                                                                tipoFrente: item.tipoFrente,
-                                                                imagemFrente: item.imagemFrente,
-                                                                tituloFrente: item.tituloFrente,
-                                                                conteudoVerso: item.conteudoVerso,
-                                                                alturaCard: item.alturaCard,
-                                                                itensLista: item.itensLista || [],
-                                                                tipoLista:
-                                                                  item.tipoLista || 'nao-ordenada',
-                                                                quizData: item.quizData,
-                                                                tipoInfoBox: item.tipoInfoBox,
-                                                                tituloInfoBox: item.tituloInfoBox,
-                                                              })
-                                                            }
-                                                            className="p-1.5 rounded text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
-                                                          >
-                                                            <Edit className="h-4 w-4" />
-                                                          </button>
-                                                        </TooltipTrigger>
-                                                        <TooltipContent>Editar</TooltipContent>
-                                                      </Tooltip>
-                                                    </TooltipProvider>
-                                                    <TooltipProvider>
-                                                      <Tooltip>
-                                                        <TooltipTrigger asChild>
-                                                          <button
-                                                            onClick={() =>
-                                                              handleDeletarConteudo(
-                                                                unidade.id,
-                                                                item.id
-                                                              )
-                                                            }
-                                                            className="p-1.5 rounded text-gray-600 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
-                                                          >
-                                                            <Trash2 className="h-4 w-4" />
-                                                          </button>
-                                                        </TooltipTrigger>
-                                                        <TooltipContent>Deletar</TooltipContent>
-                                                      </Tooltip>
-                                                    </TooltipProvider>
-                                                  </div>
-                                                </div>
+                                                </EditableCard>
                                               )}
                                             </SortableConteudoWrapper>
                                           ))}
@@ -3093,42 +2980,6 @@ export default function EditarCursoPage() {
                 disabled={!tituloUnidadeEditando.trim() || !descricaoUnidadeEditando.trim()}
               >
                 Salvar
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-
-        {/* Modal de confirmação para deletar unidade */}
-        <Dialog
-          open={confirmarDeletarUnidade && !!unidadeParaDeletar}
-          onOpenChange={() => setConfirmarDeletarUnidade(false)}
-        >
-          <DialogContent className="sm:max-w-md">
-            <DialogHeader>
-              <DialogTitle className="flex items-center gap-2">
-                <Trash2 className="h-5 w-5 text-red-600" />
-                Confirmar Exclusão
-              </DialogTitle>
-              <DialogDescription>
-                Tem certeza que deseja deletar esta unidade? Todos os conteúdos da unidade serão
-                removidos e esta ação não pode ser desfeita.
-              </DialogDescription>
-            </DialogHeader>
-            <DialogFooter>
-              <Button variant="outline" onClick={closeConfirmarDeletarUnidadeModal}>
-                Cancelar
-              </Button>
-              <Button
-                onClick={() => {
-                  if (unidadeParaDeletar && state.cursoAtual) {
-                    deletarUnidade(unidadeParaDeletar)
-                    toast.success('Unidade excluída')
-                  }
-                  closeConfirmarDeletarUnidadeModal()
-                }}
-                className="bg-red-600 hover:bg-red-700"
-              >
-                Excluir
               </Button>
             </DialogFooter>
           </DialogContent>

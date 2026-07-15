@@ -22,7 +22,7 @@ export function SortableConteudoWrapper({ id, colunas, children }: SortableConte
   }
 
   const dragHandle = (
-    <TooltipProvider>
+    <TooltipProvider delayDuration={200}>
       <Tooltip>
         <TooltipTrigger asChild>
           <button

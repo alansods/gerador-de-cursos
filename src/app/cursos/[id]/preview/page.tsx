@@ -1,27 +1,16 @@
-"use client";
+'use client'
 
 // Esta página não deve ser exportada estaticamente (usa context e hooks client-side)
 // O Next.js deve ignorar esta página durante build estático
-export const dynamic = 'error';
+export const dynamic = 'error'
 
-import { useEffect, useState } from "react";
-import { useParams, useRouter, usePathname } from "next/navigation";
-import { useGeradorCurso } from "@/context/GeradorCursoContext";
-import { PageTransition } from "@/components/PageTransition";
-import { Card, CardContent } from "@/components/ui/card";
-import {
-  Sheet,
-  SheetContent,
-  SheetTrigger,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+import { useEffect, useState } from 'react'
+import { useParams, useRouter, usePathname } from 'next/navigation'
+import { useGeradorCurso } from '@/context/GeradorCursoContext'
+import { PageTransition } from '@/components/PageTransition'
+import { Card, CardContent } from '@/components/ui/card'
+import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from '@/components/ui/sheet'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import {
   Menu,
   Home,
@@ -34,43 +23,43 @@ import {
   LogOut,
   Moon,
   Sun,
-} from "lucide-react";
-import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { useLMS } from "@/hooks/useLMS";
-import { useTheme } from "@/hooks/useTheme";
+} from 'lucide-react'
+import Link from 'next/link'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
+import { useLMS } from '@/hooks/useLMS'
+import { useTheme } from '@/hooks/useTheme'
 
 export default function PreviewCursoPage() {
-  const params = useParams();
-  const router = useRouter();
-  const { state, selecionarCurso } = useGeradorCurso();
-  const [menuOpen, setMenuOpen] = useState(false);
-  const { learnerName, isConnected } = useLMS();
-  const { isDarkMode, toggleDarkMode } = useTheme();
+  const params = useParams()
+  const router = useRouter()
+  const { state, selecionarCurso } = useGeradorCurso()
+  const [menuOpen, setMenuOpen] = useState(false)
+  const { learnerName, isConnected } = useLMS()
+  const { isDarkMode, toggleDarkMode } = useTheme()
 
-  const pathname = usePathname();
+  const pathname = usePathname()
   // Extrai o segmento do curso diretamente do pathname (sempre confiável)
-  const cursoUrlSegment = pathname.split('/')[2];
-  const cursoId = params?.id as string | undefined || cursoUrlSegment;
+  const cursoUrlSegment = pathname.split('/')[2]
+  const cursoId = (params?.id as string | undefined) || cursoUrlSegment
 
   // Selecionar o curso ao carregar a página
   // SEMPRE força refresh para garantir dados atualizados
   useEffect(() => {
     if (cursoId) {
-      selecionarCurso(cursoId, true); // forceRefresh = true
+      selecionarCurso(cursoId, true) // forceRefresh = true
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [cursoId]); // Remove selecionarCurso das deps para evitar loop infinito
+  }, [cursoId]) // Remove selecionarCurso das deps para evitar loop infinito
 
   // Usar cursoAtual do state (que é selecionado) ou buscar na lista
-  const curso = state.cursoAtual || state.cursos.find((c) => c.id === cursoId || c.slug === cursoId);
+  const curso = state.cursoAtual || state.cursos.find((c) => c.id === cursoId || c.slug === cursoId)
 
   useEffect(() => {
     if (!state.loading && !curso && state.cursos.length > 0) {
-      router.push("/cursos");
+      router.push('/cursos')
     }
-  }, [curso, router, state.loading, state.cursos.length]);
+  }, [curso, router, state.loading, state.cursos.length])
 
   // Loading state
   if (state.loading || (!curso && state.cursos.length === 0)) {
@@ -81,7 +70,7 @@ export default function PreviewCursoPage() {
           <p className="text-gray-600">Carregando curso...</p>
         </div>
       </div>
-    );
+    )
   }
 
   // Curso não encontrado (após loading)
@@ -89,12 +78,10 @@ export default function PreviewCursoPage() {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">
-            Curso não encontrado
-          </h1>
+          <h1 className="text-2xl font-bold text-gray-900 mb-4">Curso não encontrado</h1>
         </div>
       </div>
-    );
+    )
   }
 
   return (
@@ -145,7 +132,7 @@ export default function PreviewCursoPage() {
                   >
                     {/* Badge with number */}
                     <div className="shrink-0 w-10 h-10 rounded-lg bg-linear-to-br from-orange-400 to-orange-600 dark:from-orange-500 dark:to-orange-700 flex items-center justify-center text-white font-bold text-sm">
-                      {String(index + 1).padStart(2, "0")}
+                      {String(index + 1).padStart(2, '0')}
                     </div>
                     {/* Content */}
                     <div className="flex-1 min-w-0">
@@ -167,7 +154,7 @@ export default function PreviewCursoPage() {
           </div>
 
           {/* User Info and Logout */}
-          <TooltipProvider>
+          <TooltipProvider delayDuration={200}>
             <div className="flex items-center gap-3">
               <div className="flex items-center gap-2 text-gray-700 dark:text-gray-300">
                 <User className="h-5 w-5" />
@@ -176,43 +163,44 @@ export default function PreviewCursoPage() {
 
               {/* Dark Mode Toggle */}
               <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={toggleDarkMode}
-                  className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700"
-                >
-                  {isDarkMode ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
-                  <span className="sr-only">Alternar tema</span>
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>{isDarkMode ? 'Modo Claro' : 'Modo Escuro'}</TooltipContent>
-            </Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={toggleDarkMode}
+                    className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700"
+                  >
+                    {isDarkMode ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+                    <span className="sr-only">Alternar tema</span>
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>{isDarkMode ? 'Modo Claro' : 'Modo Escuro'}</TooltipContent>
+              </Tooltip>
 
-            <Tooltip>
-              <TooltipTrigger asChild>
+              <Tooltip>
+                <TooltipTrigger asChild>
                   <Button
                     variant="ghost"
                     size="icon"
                     onClick={() => {
                       if (
                         isConnected &&
-                        typeof window !== "undefined" &&
+                        typeof window !== 'undefined' &&
                         'SCORM' in window &&
-                        typeof (window as { SCORM?: { terminate: () => void } }).SCORM?.terminate === 'function'
+                        typeof (window as { SCORM?: { terminate: () => void } }).SCORM
+                          ?.terminate === 'function'
                       ) {
                         try {
-                          (window as { SCORM: { terminate: () => void } }).SCORM.terminate();
+                          ;(window as { SCORM: { terminate: () => void } }).SCORM.terminate()
                         } catch (error) {
-                          console.error("[LMS] Erro ao sair:", error);
+                          console.error('[LMS] Erro ao sair:', error)
                         }
                       }
                       // Fechar a janela ou redirecionar
                       if (window.parent !== window) {
-                        window.close();
+                        window.close()
                       } else {
-                        router.push("/cursos");
+                        router.push('/cursos')
                       }
                     }}
                     className="text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/30"
@@ -240,9 +228,7 @@ export default function PreviewCursoPage() {
               </div>
 
               {/* Course Title */}
-              <h1 className="text-3xl md:text-5xl font-bold mb-4">
-                {curso.titulo}
-              </h1>
+              <h1 className="text-3xl md:text-5xl font-bold mb-4">{curso.titulo}</h1>
 
               {/* Course Description */}
               <p className="text-lg md:text-xl text-blue-100 dark:text-gray-300 mb-8 max-w-3xl">
@@ -298,8 +284,7 @@ export default function PreviewCursoPage() {
                             {/* Unit Label */}
                             <div>
                               <span className="text-xs font-bold text-orange-600 dark:text-orange-400 uppercase tracking-wide">
-                                UNIDADE{" "}
-                                {String(unidadeIndex + 1).padStart(2, "0")}
+                                UNIDADE {String(unidadeIndex + 1).padStart(2, '0')}
                               </span>
                             </div>
 
@@ -335,5 +320,5 @@ export default function PreviewCursoPage() {
         </main>
       </div>
     </PageTransition>
-  );
+  )
 }

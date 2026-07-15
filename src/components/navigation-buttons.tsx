@@ -1,19 +1,14 @@
-import { Button } from "@/components/ui/button";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+import { Button } from '@/components/ui/button'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 
 interface NavigationButtonsProps {
-  aulaAtual: number;
-  totalAulas: number;
-  onAulaAnterior: () => void;
-  onProximaAula: () => void;
-  onToggleConcluida: () => void;
-  getAulaStatus: (aulaId: number) => string;
-  desabilitarAulaAnterior?: boolean;
+  aulaAtual: number
+  totalAulas: number
+  onAulaAnterior: () => void
+  onProximaAula: () => void
+  onToggleConcluida: () => void
+  getAulaStatus: (aulaId: number) => string
+  desabilitarAulaAnterior?: boolean
 }
 
 export function NavigationButtons({
@@ -25,21 +20,21 @@ export function NavigationButtons({
   getAulaStatus,
   desabilitarAulaAnterior = false,
 }: NavigationButtonsProps) {
-  const status = getAulaStatus(aulaAtual);
+  const status = getAulaStatus(aulaAtual)
 
   const scrollToTop = () => {
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  };
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
 
   const handleAulaAnterior = () => {
-    onAulaAnterior();
-    scrollToTop();
-  };
+    onAulaAnterior()
+    scrollToTop()
+  }
 
   const handleProximaAula = () => {
-    onProximaAula();
-    scrollToTop();
-  };
+    onProximaAula()
+    scrollToTop()
+  }
 
   return (
     <div className="py-6 mt-4">
@@ -68,32 +63,30 @@ export function NavigationButtons({
 
         {/* Botão Concluir abaixo no mobile */}
         <div className="flex justify-center">
-          <TooltipProvider>
+          <TooltipProvider delayDuration={200}>
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button
-                  variant={status === "concluida" ? "default" : "outline"}
+                  variant={status === 'concluida' ? 'default' : 'outline'}
                   size="sm"
                   className={`${
-                    status === "concluida"
-                      ? "bg-green-500 hover:bg-green-600 text-white"
-                      : "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800"
+                    status === 'concluida'
+                      ? 'bg-green-500 hover:bg-green-600 text-white'
+                      : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'
                   } w-full`}
                   onClick={(e) => {
-                    e.preventDefault();
-                    onToggleConcluida();
+                    e.preventDefault()
+                    onToggleConcluida()
                   }}
                 >
-                  {status === "concluida"
-                    ? "✓ Concluída"
-                    : "Marcar como concluída"}
+                  {status === 'concluida' ? '✓ Concluída' : 'Marcar como concluída'}
                 </Button>
               </TooltipTrigger>
               <TooltipContent>
                 <p>
-                  {status === "concluida"
-                    ? "Clique para desmarcar como concluída"
-                    : "Clique para marcar esta aula como concluída"}
+                  {status === 'concluida'
+                    ? 'Clique para desmarcar como concluída'
+                    : 'Clique para marcar esta aula como concluída'}
                 </p>
               </TooltipContent>
             </Tooltip>
@@ -115,32 +108,30 @@ export function NavigationButtons({
         </Button>
 
         {/* Botão Concluir no centro */}
-        <TooltipProvider>
+        <TooltipProvider delayDuration={200}>
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
-                variant={status === "concluida" ? "default" : "outline"}
+                variant={status === 'concluida' ? 'default' : 'outline'}
                 size="sm"
                 className={`${
-                  status === "concluida"
-                    ? "bg-green-500 hover:bg-green-600 text-white"
-                    : "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800"
+                  status === 'concluida'
+                    ? 'bg-green-500 hover:bg-green-600 text-white'
+                    : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'
                 }`}
                 onClick={(e) => {
-                  e.preventDefault();
-                  onToggleConcluida();
+                  e.preventDefault()
+                  onToggleConcluida()
                 }}
               >
-                {status === "concluida"
-                  ? "✓ Concluída"
-                  : "Marcar como concluída"}
+                {status === 'concluida' ? '✓ Concluída' : 'Marcar como concluída'}
               </Button>
             </TooltipTrigger>
             <TooltipContent>
               <p>
-                {status === "concluida"
-                  ? "Clique para desmarcar como concluída"
-                  : "Clique para marcar esta aula como concluída"}
+                {status === 'concluida'
+                  ? 'Clique para desmarcar como concluída'
+                  : 'Clique para marcar esta aula como concluída'}
               </p>
             </TooltipContent>
           </Tooltip>
@@ -157,5 +148,5 @@ export function NavigationButtons({
         </Button>
       </div>
     </div>
-  );
+  )
 }

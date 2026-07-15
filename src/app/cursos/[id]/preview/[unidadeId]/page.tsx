@@ -162,7 +162,7 @@ export default function PreviewUnidadePage() {
         </div>
 
         {/* User Info and Logout */}
-        <TooltipProvider>
+        <TooltipProvider delayDuration={200}>
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-2 text-gray-700 dark:text-gray-300">
               <User className="h-5 w-5" />

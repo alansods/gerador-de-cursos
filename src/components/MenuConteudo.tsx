@@ -44,7 +44,7 @@ export function MenuConteudo({
   }) => void
 }) {
   return (
-    <TooltipProvider>
+    <TooltipProvider delayDuration={200}>
       <DropdownMenu>
         <Tooltip>
           {/* os dois triggers compartilham o MESMO botão via asChild */}
