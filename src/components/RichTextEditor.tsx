@@ -81,7 +81,27 @@ export function RichTextEditor({
     syncContent()
   }, [syncContent])
 
-  if (!editor) return null
+  if (!editor) {
+    return (
+      <div className="border border-gray-300 dark:border-gray-600 rounded-lg overflow-hidden animate-pulse">
+        {/* Toolbar Skeleton */}
+        <div className="flex items-center gap-2 px-2 py-1.5 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
+          <div className="h-6 w-6 bg-gray-200 dark:bg-gray-700 rounded" />
+          <div className="h-6 w-6 bg-gray-200 dark:bg-gray-700 rounded" />
+          <div className="h-6 w-6 bg-gray-200 dark:bg-gray-700 rounded" />
+          <div className="w-px h-5 bg-gray-300 dark:bg-gray-600 mx-1" />
+          <div className="h-6 w-6 bg-gray-200 dark:bg-gray-700 rounded" />
+          <div className="h-6 w-6 bg-gray-200 dark:bg-gray-700 rounded" />
+        </div>
+        {/* Content Skeleton */}
+        <div className="px-3 py-2.5 bg-white dark:bg-gray-900 space-y-2" style={{ minHeight }}>
+          <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-3/4" />
+          <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-full" />
+          <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-5/6" />
+        </div>
+      </div>
+    )
+  }
 
   const ToolbarButton = ({
     onClick,

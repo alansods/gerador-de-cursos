@@ -34,9 +34,7 @@ export function SortableConteudoWrapper({ id, colunas, children }: SortableConte
             <GripVertical className="h-5 w-5" />
           </button>
         </TooltipTrigger>
-        <TooltipContent side="top" className="text-xs">
-          Arrastar para reordenar
-        </TooltipContent>
+        <TooltipContent side="top">Arrastar para reordenar</TooltipContent>
       </Tooltip>
     </TooltipProvider>
   )
