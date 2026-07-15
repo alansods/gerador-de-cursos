@@ -50,12 +50,12 @@ import {
   List,
   HelpCircle,
   AlertTriangle,
-  GripVertical,
   Moon,
   Sun,
+  Settings,
 } from 'lucide-react'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
-
+import { CourseSettingsDrawer } from '@/components/CourseSettingsDrawer'
 import { SortableConteudoWrapper } from '@/components/SortableConteudoWrapper'
 import {
   DndContext,
@@ -65,73 +65,10 @@ import {
   useSensors,
   closestCenter,
 } from '@dnd-kit/core'
-import {
-  SortableContext,
-  arrayMove,
-  verticalListSortingStrategy,
-  useSortable,
-} from '@dnd-kit/sortable'
-import { CSS } from '@dnd-kit/utilities'
+import { SortableContext, arrayMove, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import { QuizConteudo } from '@/components/QuizConteudo'
 import { InfoBox } from '@/components/info-box'
-import { QuizData, QuizQuestion } from '@/types/gerador-curso'
-
-function SortableUnidadeItem({
-  unidade,
-  idx,
-  isAtiva,
-  onClick,
-}: {
-  unidade: { id: string; titulo: string; descricao?: string; conteudo?: unknown[] }
-  idx: number
-  isAtiva: boolean
-  onClick: () => void
-}) {
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
-    id: unidade.id,
-  })
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-    opacity: isDragging ? 0.5 : 1,
-  }
-  return (
-    <div ref={setNodeRef} style={style} className="w-full">
-      <button
-        onClick={onClick}
-        className={`w-full text-left p-3 rounded-lg transition-all ${
-          isAtiva
-            ? 'bg-blue-600 text-white shadow-sm'
-            : 'hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300'
-        }`}
-      >
-        <div className="flex items-start gap-2">
-          <span
-            {...attributes}
-            {...listeners}
-            onClick={(e) => e.stopPropagation()}
-            className="cursor-grab active:cursor-grabbing shrink-0 mt-0.5 text-gray-300 hover:text-gray-500 dark:hover:text-gray-400"
-            aria-label="Arrastar para reordenar"
-          >
-            <GripVertical className="h-3.5 w-3.5" />
-          </span>
-          <span
-            className={`text-xs font-bold shrink-0 ${isAtiva ? 'text-blue-200' : 'text-blue-500 dark:text-blue-400'}`}
-          >
-            {idx + 1}.
-          </span>
-          <span className="text-xs font-semibold">{unidade.titulo}</span>
-        </div>
-        <p
-          className={`text-xs mt-1 ml-6 ${isAtiva ? 'text-blue-200' : 'text-gray-400 dark:text-gray-500'}`}
-        >
-          {(unidade.conteudo || []).length}{' '}
-          {(unidade.conteudo || []).length === 1 ? 'item' : 'itens'}
-        </p>
-      </button>
-    </div>
-  )
-}
+import { QuizData, QuizQuestion, Unidade } from '@/types/gerador-curso'
 
 export default function EditarCursoPage() {
   const {
@@ -248,7 +185,8 @@ export default function EditarCursoPage() {
   const [cargaHorariaEditada, setCargaHorariaEditada] = useState('')
   const [modalidadeEditada, setModalidadeEditada] = useState('')
   const [categoriaEditada, setCategoriaEditada] = useState('')
-  const [unidadeAtivaIndex, setUnidadeAtivaIndex] = useState(0)
+  const [unidadeAtivaIndex] = useState(0)
+  const [settingsDrawerOpen, setSettingsDrawerOpen] = useState(false)
 
   const cursoId = params.id as string
 
@@ -1010,17 +948,6 @@ export default function EditarCursoPage() {
     editarUnidade(unidadeId, { conteudo: novoConteudo })
   }
 
-  const handleDragEndUnidade = (event: DragEndEvent) => {
-    const { active, over } = event
-    if (!over || active.id === over.id) return
-    const unidades = [...(state.cursoAtual?.unidades || [])]
-    const oldIndex = unidades.findIndex((u) => u.id === active.id)
-    const newIndex = unidades.findIndex((u) => u.id === over.id)
-    const novas = arrayMove(unidades, oldIndex, newIndex)
-    reordenarUnidades(novas)
-    setUnidadeAtivaIndex(newIndex)
-  }
-
   // Verificar se está carregando ou se o curso não foi encontrado
   if (state.loading || isFetchingCurso || !state.cursoAtual) {
     return (
@@ -1035,7 +962,7 @@ export default function EditarCursoPage() {
 
   return (
     <PageTransition>
-      <div className="h-screen flex flex-col bg-[#F5F7FA] dark:bg-gray-950 overflow-hidden">
+      <div className="min-h-screen flex flex-col bg-[#F5F7FA] dark:bg-gray-950">
         {/* Header */}
         <div className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm border-b border-[#e5e7eb] dark:border-gray-800 sticky top-0 z-50">
           <div className="px-6 py-3">
@@ -1046,6 +973,21 @@ export default function EditarCursoPage() {
               </Button>
 
               <div className="flex space-x-2">
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="outline"
+                        size="default"
+                        onClick={() => setSettingsDrawerOpen(true)}
+                        className="h-10 w-10 p-0"
+                      >
+                        <Settings className="h-4 w-4" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>Configurações do curso</TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger asChild>
@@ -1084,87 +1026,14 @@ export default function EditarCursoPage() {
           </div>
         </div>
 
-        {/* Split Layout: Sidebar + Painel de Conteúdo */}
-        <div className="flex flex-1 overflow-hidden">
-          {/* Sidebar Esquerda - Lista de Unidades */}
-          <div className="w-64 border-r border-[#e5e7eb] dark:border-gray-800 flex flex-col overflow-hidden bg-white/60 dark:bg-gray-900/60 flex-shrink-0">
-            <div className="p-4 border-b border-[#e5e7eb] dark:border-gray-800">
-              <div className="flex items-center justify-between gap-2 mb-1">
-                <p className="text-xs font-medium text-blue-600 dark:text-blue-400 uppercase tracking-wide">
-                  Curso
-                </p>
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => setEditarCursoModal(true)}
-                        className="shrink-0 h-6 w-6 p-0"
-                      >
-                        <Edit className="h-3.5 w-3.5" />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>Editar curso</TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              </div>
-              <h2 className="text-sm font-bold text-gray-900 dark:text-gray-100 leading-tight">
-                {state.cursoAtual.titulo}
-              </h2>
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                {state.cursoAtual.cargaHoraria} · {state.cursoAtual.modalidade}
-                {state.cursoAtual.categoria && <> · {state.cursoAtual.categoria}</>}
-              </p>
-            </div>
-            <div className="flex-1 overflow-y-auto p-3 space-y-1">
-              {(state.cursoAtual.unidades || []).length === 0 ? (
-                <p className="text-xs text-center text-gray-400 dark:text-gray-500 py-8">
-                  Nenhuma unidade
-                </p>
-              ) : (
-                <DndContext
-                  sensors={dndSensors}
-                  collisionDetection={closestCenter}
-                  onDragEnd={handleDragEndUnidade}
-                >
-                  <SortableContext
-                    items={(state.cursoAtual.unidades || []).map((u) => u.id)}
-                    strategy={verticalListSortingStrategy}
-                  >
-                    {(state.cursoAtual.unidades || []).map((u, idx) => (
-                      <SortableUnidadeItem
-                        key={u.id || `sb-${idx}`}
-                        unidade={u}
-                        idx={idx}
-                        isAtiva={idx === unidadeAtivaIndex}
-                        onClick={() => setUnidadeAtivaIndex(idx)}
-                      />
-                    ))}
-                  </SortableContext>
-                </DndContext>
-              )}
-            </div>
-            <div className="p-3 border-t border-[#e5e7eb] dark:border-gray-800">
-              <Button
-                onClick={() => setAdicionarUnidadeModal(true)}
-                variant="outline"
-                size="sm"
-                className="w-full text-sm"
-              >
-                <Plus className="h-4 w-4 mr-1.5" />
-                Nova Unidade
-              </Button>
-            </div>
-          </div>
-
-          {/* Painel Direito - Conteúdo da Unidade Ativa */}
+        {/* Painel de Conteúdo - Largura Total */}
+        <div className="flex-1 overflow-hidden">
           <div className="flex-1 flex flex-col overflow-hidden">
             {/* Conteúdo Principal */}
             <div className="flex-1 overflow-y-auto px-6 py-6">
               <div className="max-w-5xl mx-auto">
                 {/* Card de Informações do Curso */}
-                <Card className="hidden mb-8 border-0 shadow-xl overflow-hidden bg-gradient-to-br from-blue-600 via-blue-700 to-purple-600 dark:from-blue-800 dark:via-purple-800 dark:to-purple-900 text-white">
+                <Card className="hidden mb-8 border-0 shadow-xl overflow-hidden bg-linear-to-br from-blue-600 via-blue-700 to-purple-600 dark:from-blue-800 dark:via-purple-800 dark:to-purple-900 text-white">
                   <CardHeader className="pb-6 pt-8 px-8">
                     <div className="flex items-start justify-between gap-4">
                       <div className="flex-1">
@@ -1180,7 +1049,7 @@ export default function EditarCursoPage() {
                           {state.cursoAtual.descricao}
                         </p>
                       </div>
-                      <div className="flex-shrink-0">
+                      <div className="shrink-0">
                         <TooltipProvider>
                           <Tooltip>
                             <TooltipTrigger asChild>
@@ -1325,7 +1194,7 @@ export default function EditarCursoPage() {
                         <div>
                           {/* Lista de Conteúdo */}
                           {(unidade.conteudo || []).length === 0 ? (
-                            <div className="relative overflow-hidden rounded-xl border-2 border-dashed border-blue-300 bg-gradient-to-br from-blue-50 via-white to-purple-50 py-12 px-6">
+                            <div className="relative overflow-hidden rounded-xl border-2 border-dashed border-blue-300 bg-linear-to-br from-blue-50 via-white to-purple-50 py-12 px-6">
                               {/* Decorative elements */}
                               <div className="absolute top-0 left-0 w-full h-full opacity-5">
                                 <div className="absolute top-4 left-4 w-32 h-32 bg-blue-500 rounded-full blur-3xl"></div>
@@ -1335,7 +1204,7 @@ export default function EditarCursoPage() {
                               <div className="relative text-center space-y-4">
                                 {/* Icon */}
                                 <div className="flex justify-center">
-                                  <div className="p-4 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full shadow-lg">
+                                  <div className="p-4 bg-linear-to-br from-blue-500 to-purple-600 rounded-full shadow-lg">
                                     <Plus className="h-8 w-8 text-white" />
                                   </div>
                                 </div>
@@ -1370,68 +1239,6 @@ export default function EditarCursoPage() {
                               >
                                 <div className="grid grid-cols-12 gap-1">
                                   {(() => {
-                                    type TipoInsert =
-                                      | 'titulo'
-                                      | 'subtitulo'
-                                      | 'paragrafo'
-                                      | 'imagem'
-                                      | 'accordion'
-                                      | 'flipcard'
-                                      | 'lista'
-                                      | 'quiz'
-                                      | 'info-box'
-                                    const tiposInsert: {
-                                      tipo: TipoInsert
-                                      label: string
-                                      icon: React.ReactNode
-                                    }[] = [
-                                      {
-                                        tipo: 'titulo',
-                                        label: 'Título',
-                                        icon: <Heading2 className="h-3.5 w-3.5" />,
-                                      },
-                                      {
-                                        tipo: 'subtitulo',
-                                        label: 'Subtítulo',
-                                        icon: <Heading3 className="h-3.5 w-3.5" />,
-                                      },
-                                      {
-                                        tipo: 'paragrafo',
-                                        label: 'Parágrafo',
-                                        icon: <Type className="h-3.5 w-3.5" />,
-                                      },
-                                      {
-                                        tipo: 'imagem',
-                                        label: 'Imagem',
-                                        icon: <Image className="h-3.5 w-3.5" />,
-                                      },
-                                      {
-                                        tipo: 'accordion',
-                                        label: 'Accordion',
-                                        icon: <ChevronDown className="h-3.5 w-3.5" />,
-                                      },
-                                      {
-                                        tipo: 'flipcard',
-                                        label: 'FlipCard',
-                                        icon: <RotateCcw className="h-3.5 w-3.5" />,
-                                      },
-                                      {
-                                        tipo: 'lista',
-                                        label: 'Lista',
-                                        icon: <List className="h-3.5 w-3.5" />,
-                                      },
-                                      {
-                                        tipo: 'quiz',
-                                        label: 'Quiz',
-                                        icon: <HelpCircle className="h-3.5 w-3.5" />,
-                                      },
-                                      {
-                                        tipo: 'info-box',
-                                        label: 'Info Box',
-                                        icon: <AlertTriangle className="h-3.5 w-3.5" />,
-                                      },
-                                    ]
-
                                     const conteudos = unidade.conteudo || []
 
                                     // Agrupar itens em linhas
@@ -1513,7 +1320,7 @@ export default function EditarCursoPage() {
                                           className={`${colClass} group/empty`}
                                         >
                                           <button
-                                            className="w-full h-full min-h-[60px] rounded-lg border-2 border-dashed border-transparent flex items-center justify-center text-gray-400 dark:text-gray-500 opacity-0 group-hover/empty:opacity-100 group-hover/empty:border-gray-300 dark:group-hover/empty:border-gray-600 hover:!border-blue-400 dark:hover:!border-blue-500 hover:!text-blue-500 dark:hover:!text-blue-400 hover:!bg-blue-50 dark:hover:!bg-blue-950/20 transition-all"
+                                            className="w-full h-full min-h-[60px] rounded-lg border-2 border-dashed border-transparent flex items-center justify-center text-gray-400 dark:text-gray-500 opacity-0 group-hover/empty:opacity-100 group-hover/empty:border-gray-300 dark:group-hover/empty:border-gray-600 hover:border-blue-400! dark:hover:border-blue-500! hover:text-blue-500! dark:hover:text-blue-400! hover:bg-blue-50! dark:hover:bg-blue-950/20! transition-all"
                                             onClick={() => {
                                               insertAtIndex.current = {
                                                 unidadeId: unidade.id,
@@ -1592,14 +1399,18 @@ export default function EditarCursoPage() {
                                                     ) : item.tipo === 'flipcard' ? (
                                                       <div className="border border-[#e5e7eb] dark:border-gray-700 rounded-lg p-4 bg-linear-to-br from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 text-center min-h-[72px] flex flex-col items-center justify-center gap-2">
                                                         {item.imagemFrente && (
-                                                          <img
-                                                            src={item.imagemFrente}
-                                                            alt=""
-                                                            className="max-h-14 mx-auto object-contain rounded"
-                                                            onError={(e) => {
-                                                              e.currentTarget.style.display = 'none'
-                                                            }}
-                                                          />
+                                                          <>
+                                                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                                                            <img
+                                                              src={item.imagemFrente}
+                                                              alt=""
+                                                              className="max-h-14 mx-auto object-contain rounded"
+                                                              onError={(e) => {
+                                                                e.currentTarget.style.display =
+                                                                  'none'
+                                                              }}
+                                                            />
+                                                          </>
                                                         )}
                                                         {item.tituloFrente ? (
                                                           <p className="font-semibold text-sm text-gray-800 dark:text-gray-200">
@@ -1634,20 +1445,21 @@ export default function EditarCursoPage() {
                                                     ) : item.tipo === 'imagem' ? (
                                                       <div className="space-y-2">
                                                         {item.fonte && (
-                                                          <p className="text-xs text-gray-500 dark:text-gray-400">
+                                                          <p className="text-xs text-gray-500 dark:text-gray-400 text-center">
                                                             Fonte: {item.fonte}
                                                           </p>
                                                         )}
+                                                        {/* eslint-disable-next-line @next/next/no-img-element */}
                                                         <img
                                                           src={item.conteudo}
                                                           alt={item.legenda || 'Imagem'}
-                                                          className={`h-auto object-contain border border-[#e5e7eb] dark:border-gray-700 rounded-md ${item.tamanho === 'pequena' ? 'max-w-xs' : item.tamanho === 'media' ? 'max-w-md' : 'max-w-full'}`}
+                                                          className={`h-auto object-contain border border-[#e5e7eb] dark:border-gray-700 rounded-md mx-auto ${item.tamanho === 'pequena' ? 'max-w-xs' : item.tamanho === 'media' ? 'max-w-md' : 'max-w-full'}`}
                                                           onError={(e) => {
                                                             e.currentTarget.style.display = 'none'
                                                           }}
                                                         />
                                                         {item.legenda && (
-                                                          <p className="text-sm text-gray-600 dark:text-gray-400 italic">
+                                                          <p className="text-sm text-gray-600 dark:text-gray-400 italic text-center">
                                                             {item.legenda}
                                                           </p>
                                                         )}
@@ -1812,6 +1624,7 @@ export default function EditarCursoPage() {
                                 className="h-auto py-4 px-3 flex flex-col items-center gap-2 bg-white dark:bg-gray-900 hover:bg-green-50 dark:hover:bg-green-900/30 hover:border-green-400 dark:hover:border-green-500 hover:shadow-md transition-all border-2 border-green-200 dark:border-green-800 group"
                               >
                                 <div className="p-2 bg-green-100 dark:bg-green-900/50 rounded-lg group-hover:bg-green-200 dark:group-hover:bg-green-800 transition-colors">
+                                  {/* eslint-disable-next-line jsx-a11y/alt-text */}
                                   <Image className="h-5 w-5 text-green-600 dark:text-green-400" />
                                 </div>
                                 <span className="text-xs font-semibold text-gray-700 dark:text-gray-300">
@@ -1988,6 +1801,7 @@ export default function EditarCursoPage() {
                 className="flex flex-col items-start p-4 rounded-xl border-2 border-gray-200 dark:border-gray-700 hover:border-blue-500 dark:hover:border-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/20 transition-all group"
               >
                 <div className="w-10 h-10 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center mb-3 group-hover:bg-blue-200 dark:group-hover:bg-blue-900/50 transition-colors">
+                  {/* eslint-disable-next-line jsx-a11y/alt-text */}
                   <Image className="h-5 w-5 text-blue-600 dark:text-blue-400" />
                 </div>
                 <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100 mb-0.5">
@@ -2232,6 +2046,7 @@ export default function EditarCursoPage() {
                   </>
                 ) : conteudoTemp.tipo === 'imagem' ? (
                   <>
+                    {/* eslint-disable-next-line jsx-a11y/alt-text */}
                     <Image className="h-5 w-5 text-blue-600" />
                     Adicionar Imagem
                   </>
@@ -2354,10 +2169,11 @@ export default function EditarCursoPage() {
                       {/* Preview da Imagem */}
                       {(imagePreviewUrl || conteudoTemp.conteudo) && (
                         <div className="mt-3">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
                           <img
                             src={imagePreviewUrl || conteudoTemp.conteudo}
                             alt="Preview"
-                            className="w-full h-auto rounded-lg border border-gray-300 dark:border-gray-600 max-h-40 object-contain bg-gray-50 dark:bg-gray-800"
+                            className="h-auto rounded-lg border border-gray-300 dark:border-gray-600 max-h-40 object-contain bg-gray-50 dark:bg-gray-800 mx-auto"
                             onError={() => setImagePreviewUrl(null)}
                           />
                         </div>
@@ -2588,10 +2404,11 @@ export default function EditarCursoPage() {
                         {/* Preview da Imagem */}
                         {(imagePreviewUrl || conteudoTemp.imagemFrente) && (
                           <div className="mt-3">
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
                             <img
                               src={imagePreviewUrl || conteudoTemp.imagemFrente}
                               alt="Preview"
-                              className="w-full h-auto rounded-lg border border-gray-300 max-h-40 object-contain bg-gray-50"
+                              className="h-auto rounded-lg border border-gray-300 max-h-40 object-contain bg-gray-50 mx-auto"
                               onError={() => setImagePreviewUrl(null)}
                             />
                           </div>
@@ -3160,7 +2977,7 @@ export default function EditarCursoPage() {
                   value={novaUnidade}
                   onChange={(e) => setNovaUnidade(e.target.value)}
                   placeholder="Título da unidade"
-                  onKeyPress={(e) => e.key === 'Enter' && handleAdicionarUnidade()}
+                  onKeyDown={(e) => e.key === 'Enter' && handleAdicionarUnidade()}
                 />
               </div>
 
@@ -3218,7 +3035,7 @@ export default function EditarCursoPage() {
                   value={tituloUnidadeEditando}
                   onChange={(e) => setTituloUnidadeEditando(e.target.value)}
                   placeholder="Digite o título da unidade..."
-                  onKeyPress={(e) => e.key === 'Enter' && handleSalvarEdicaoUnidade()}
+                  onKeyDown={(e) => e.key === 'Enter' && handleSalvarEdicaoUnidade()}
                 />
               </div>
 
@@ -3332,7 +3149,7 @@ export default function EditarCursoPage() {
         {/* Modal para editar conteúdo */}
         <Dialog open={!!editandoConteudo} onOpenChange={closeEditarConteudoModal}>
           <DialogContent
-            className={`${editandoConteudo?.tipo === 'quiz' ? 'sm:max-w-4xl max-h-[90vh]' : 'sm:max-w-2xl'}`}
+            className={`${editandoConteudo?.tipo === 'quiz' ? 'sm:max-w-4xl max-h-[90vh] overflow-y-auto' : 'sm:max-w-2xl max-h-[90vh] overflow-y-auto'}`}
           >
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2">
@@ -3341,7 +3158,10 @@ export default function EditarCursoPage() {
                 ) : editandoConteudo?.tipo === 'subtitulo' ? (
                   <Heading3 className="h-5 w-5 text-blue-600" />
                 ) : editandoConteudo?.tipo === 'imagem' ? (
-                  <Image className="h-5 w-5 text-blue-600" />
+                  <>
+                    {/* eslint-disable-next-line jsx-a11y/alt-text */}
+                    <Image className="h-5 w-5 text-blue-600" />
+                  </>
                 ) : editandoConteudo?.tipo === 'accordion' ? (
                   <ChevronDown className="h-5 w-5 text-blue-600" />
                 ) : editandoConteudo?.tipo === 'flipcard' ? (
@@ -3792,10 +3612,11 @@ export default function EditarCursoPage() {
                       {/* Preview da Imagem */}
                       {(imagePreviewUrl || editandoConteudo.conteudo) && (
                         <div className="mt-3">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
                           <img
                             src={imagePreviewUrl || editandoConteudo.conteudo}
                             alt="Preview"
-                            className="w-full h-auto rounded-lg border border-gray-300 max-h-40 object-contain bg-gray-50"
+                            className="h-auto rounded-lg border border-gray-300 max-h-40 object-contain bg-gray-50 mx-auto"
                             onError={() => setImagePreviewUrl(null)}
                           />
                         </div>
@@ -4066,10 +3887,11 @@ export default function EditarCursoPage() {
                         {/* Preview da Imagem */}
                         {(imagePreviewUrl || editandoConteudo.imagemFrente) && (
                           <div className="mt-3">
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
                             <img
                               src={imagePreviewUrl || editandoConteudo.imagemFrente}
                               alt="Preview"
-                              className="w-full h-auto rounded-lg border border-gray-300 max-h-40 object-contain bg-gray-50"
+                              className="h-auto rounded-lg border border-gray-300 max-h-40 object-contain bg-gray-50 mx-auto"
                               onError={() => setImagePreviewUrl(null)}
                             />
                           </div>
@@ -4482,6 +4304,32 @@ export default function EditarCursoPage() {
           courseId={state.cursoAtual?.id}
           isGeneratingPDF={isGeneratingPDF}
           isGeneratingSCORM={isGeneratingSCORM}
+        />
+
+        {/* Course Settings Drawer */}
+        <CourseSettingsDrawer
+          open={settingsDrawerOpen}
+          onOpenChange={setSettingsDrawerOpen}
+          courseData={{
+            titulo: state.cursoAtual.titulo,
+            descricao: state.cursoAtual.descricao || '',
+            categoria: state.cursoAtual.categoria || '',
+            cargaHoraria: state.cursoAtual.cargaHoraria,
+          }}
+          unidades={state.cursoAtual.unidades || []}
+          onSave={(courseData, unidades) => {
+            if (state.cursoAtual) {
+              editarCurso(state.cursoAtual.id, {
+                titulo: courseData.titulo,
+                descricao: courseData.descricao,
+                categoria: courseData.categoria,
+                cargaHoraria: courseData.cargaHoraria,
+              })
+              reordenarUnidades(unidades as Unidade[])
+            }
+          }}
+          onAddUnidade={() => setAdicionarUnidadeModal(true)}
+          onDeleteUnidade={(id) => deletarUnidade(id)}
         />
       </div>
     </PageTransition>

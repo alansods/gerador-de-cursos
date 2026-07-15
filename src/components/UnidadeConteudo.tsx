@@ -14,10 +14,9 @@ import { Unidade } from '@/types/gerador-curso'
 
 interface UnidadeConteudoProps {
   unidade: Unidade
-  unidadeIndex: number
 }
 
-export function UnidadeConteudo({ unidade, unidadeIndex }: UnidadeConteudoProps) {
+export function UnidadeConteudo({ unidade }: UnidadeConteudoProps) {
   return (
     <Card
       key={unidade.id}
@@ -47,7 +46,7 @@ export function UnidadeConteudo({ unidade, unidadeIndex }: UnidadeConteudoProps)
                 ) : item.tipo === 'imagem' ? (
                   <div className="space-y-3">
                     {item.fonte && (
-                      <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mb-2 text-center">
                         Fonte: {item.fonte}
                       </p>
                     )}
@@ -55,7 +54,7 @@ export function UnidadeConteudo({ unidade, unidadeIndex }: UnidadeConteudoProps)
                       <img
                         src={item.conteudo}
                         alt={item.legenda || 'Imagem'}
-                        className={`h-auto object-contain rounded-lg ${
+                        className={`h-auto object-contain rounded-lg mx-auto ${
                           item.tamanho === 'pequena'
                             ? 'max-w-xs'
                             : item.tamanho === 'media'
@@ -68,7 +67,7 @@ export function UnidadeConteudo({ unidade, unidadeIndex }: UnidadeConteudoProps)
                       />
                     </div>
                     {item.legenda && (
-                      <p className="text-sm text-gray-600 dark:text-gray-400 italic mt-2">
+                      <p className="text-sm text-gray-600 dark:text-gray-400 italic mt-2 text-center">
                         {item.legenda}
                       </p>
                     )}
@@ -119,7 +118,7 @@ export function UnidadeConteudo({ unidade, unidadeIndex }: UnidadeConteudoProps)
                   <div className="mb-4">
                     {item.itensLista && item.itensLista.length > 0 ? (
                       item.tipoLista === 'ordenada' ? (
-                        <div className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-xl p-6 border border-blue-200 dark:border-blue-800 shadow-sm">
+                        <div className="bg-linear-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-xl p-6 border border-blue-200 dark:border-blue-800 shadow-sm">
                           <ol className="space-y-3">
                             {item.itensLista.map((listaItem, idx) => (
                               <li
@@ -140,7 +139,7 @@ export function UnidadeConteudo({ unidade, unidadeIndex }: UnidadeConteudoProps)
                           </ol>
                         </div>
                       ) : item.tipoLista === 'check' ? (
-                        <div className="bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-xl p-6 border border-green-200 dark:border-green-800 shadow-sm">
+                        <div className="bg-linear-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-xl p-6 border border-green-200 dark:border-green-800 shadow-sm">
                           <ul className="space-y-3">
                             {item.itensLista.map((listaItem, idx) => (
                               <li
