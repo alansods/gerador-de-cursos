@@ -774,6 +774,7 @@ export default function EditarCursoPage() {
       | 'subtitulo'
       | 'titulo'
       | 'imagem'
+      | 'video'
       | 'accordion'
       | 'flipcard'
       | 'lista'
@@ -796,7 +797,9 @@ export default function EditarCursoPage() {
     tipoLista?: 'ordenada' | 'nao-ordenada' | 'check',
     quizData?: QuizData,
     tipoInfoBox?: 'atencao' | 'saiba_mais' | 'info' | 'curiosidade',
-    tituloInfoBox?: string
+    tituloInfoBox?: string,
+    videoUrl?: string,
+    videoTitulo?: string
   ) => {
     editarConteudo(unidadeId, conteudoId, {
       tipo,
@@ -818,6 +821,8 @@ export default function EditarCursoPage() {
       quizData,
       tipoInfoBox,
       tituloInfoBox,
+      videoUrl,
+      videoTitulo,
     })
     toast.success('Conteúdo atualizado')
     setEditandoConteudo(null)
@@ -1047,6 +1052,8 @@ export default function EditarCursoPage() {
         quizData: quizDataInitial,
         tipoInfoBox: tipo === 'info-box' ? 'info' : 'info',
         tituloInfoBox: tipo === 'info-box' ? '' : '',
+        videoUrl: '',
+        videoTitulo: '',
       })
     }
   }
@@ -4350,7 +4357,9 @@ export default function EditarCursoPage() {
                         editandoConteudo.tipoLista,
                         editandoConteudo.quizData,
                         editandoConteudo.tipoInfoBox,
-                        editandoConteudo.tituloInfoBox
+                        editandoConteudo.tituloInfoBox,
+                        editandoConteudo.videoUrl,
+                        editandoConteudo.videoTitulo
                       )
                       closeEditarConteudoModal()
                     }

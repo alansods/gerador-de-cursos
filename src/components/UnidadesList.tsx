@@ -18,13 +18,7 @@ import {
 } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { Input } from '@/components/ui/input'
-
-interface Unidade {
-  id: string
-  titulo: string
-  descricao?: string
-  conteudo?: unknown[]
-}
+import { Unidade } from '@/types/gerador-curso'
 
 interface UnidadesListProps {
   unidades: Unidade[]
