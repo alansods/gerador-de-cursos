@@ -7,6 +7,7 @@ import Testimonials from './_components/Testimonials'
 import Pricing from './_components/Pricing'
 import FAQ from './_components/FAQ'
 import CTA from './_components/CTA'
+import SectionDivider from './_components/SectionDivider'
 
 export const metadata: Metadata = {
   title: 'Gerador de Cursos SCORM com IA | Crie Cursos em Minutos',
@@ -58,12 +59,33 @@ export default function LandingPage() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
       <Hero />
+
+      <SectionDivider variant="simple" />
+
       <Features />
+
+      <SectionDivider variant="gradient" />
+
       <HowItWorks />
+
+      <SectionDivider variant="dots" />
+
       <UseCases />
+
+      <SectionDivider variant="gradient" />
+
       <Testimonials />
+
+      <SectionDivider variant="simple" />
+
       <Pricing />
+
+      <SectionDivider variant="gradient" />
+
       <FAQ />
+
+      <SectionDivider variant="dots" />
+
       <CTA />
     </>
   )
