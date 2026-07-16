@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "skills": {
+    "brand-landingpage": {
+      "source": "wshobson/agents",
+      "sourceType": "github",
+      "skillPath": "plugins/brand-landingpage/skills/brand-landingpage/SKILL.md",
+      "computedHash": "19f2f30c471359b5685a911b576c9ab576b30e7d4e3e838c4596f77465c1ffca"
+    }
+  }
+}
