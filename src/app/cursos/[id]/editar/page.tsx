@@ -29,6 +29,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
+import { Sheet, SheetContent, SheetFooter, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import {
   ArrowLeft,
   Plus,
@@ -48,6 +49,8 @@ import {
   Upload,
   Loader2,
   ChevronDown,
+  ChevronLeft,
+  ChevronRight,
   RotateCcw,
   List,
   HelpCircle,
@@ -57,6 +60,9 @@ import {
   Settings,
 } from 'lucide-react'
 import { CourseSettingsDrawer } from '@/components/CourseSettingsDrawer'
+import { ContentBlockDrawer } from '@/components/ContentBlockDrawer'
+import { UnidadesDropdown } from '@/components/UnidadesDropdown'
+import { ManageUnitsModal } from '@/components/ManageUnitsModal'
 import { SortableConteudoWrapper } from '@/components/SortableConteudoWrapper'
 import {
   DndContext,
@@ -69,7 +75,7 @@ import {
 import { SortableContext, arrayMove, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import { QuizConteudo } from '@/components/QuizConteudo'
 import { InfoBox } from '@/components/info-box'
-import { QuizData, QuizQuestion, Unidade } from '@/types/gerador-curso'
+import { QuizData, QuizQuestion, Unidade, ConteudoUnidade } from '@/types/gerador-curso'
 
 export default function EditarCursoPage() {
   const {
@@ -184,8 +190,15 @@ export default function EditarCursoPage() {
   const [cargaHorariaEditada, setCargaHorariaEditada] = useState('')
   const [modalidadeEditada, setModalidadeEditada] = useState('')
   const [categoriaEditada, setCategoriaEditada] = useState('')
-  const [unidadeAtivaIndex] = useState(0)
+  const [unidadeAtivaIndex, setUnidadeAtivaIndex] = useState(0)
   const [settingsDrawerOpen, setSettingsDrawerOpen] = useState(false)
+  const [manageUnitsModalOpen, setManageUnitsModalOpen] = useState(false)
+
+  const [contentDrawerOpen, setContentDrawerOpen] = useState(false)
+  const [contentDrawerMode, setContentDrawerMode] = useState<'add' | 'edit'>('add')
+  const [contentDrawerBlockData, setContentDrawerBlockData] =
+    useState<Partial<ConteudoUnidade> | null>(null)
+  const [contentDrawerUnidadeId, setContentDrawerUnidadeId] = useState<string>('')
 
   const cursoId = params.id as string
 
@@ -247,6 +260,11 @@ export default function EditarCursoPage() {
       setCategoriaEditada(state.cursoAtual.categoria)
     }
   }, [editarCursoModal, state.cursoAtual])
+
+  // Rolar para o topo ao mudar de unidade
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }, [unidadeAtivaIndex])
 
   // Reordenar item recém-adicionado para a posição correta após o state atualizar
   useEffect(() => {
@@ -486,6 +504,93 @@ export default function EditarCursoPage() {
     } finally {
       setIsUploadingImage(false)
     }
+  }
+
+  const handleOpenAddContentDrawer = (unidadeId: string, index: number) => {
+    insertAtIndex.current = { unidadeId, index }
+    setModalAdicionarConteudo(true)
+  }
+
+  const handleSelectBlockType = (tipo: ConteudoUnidade['tipo'], unidadeId: string) => {
+    setModalAdicionarConteudo(false)
+    setContentDrawerUnidadeId(unidadeId)
+    setContentDrawerMode('add')
+    setContentDrawerBlockData({ tipo })
+    setContentDrawerOpen(true)
+  }
+
+  const handleOpenEditContentDrawer = (unidadeId: string, conteudo: ConteudoUnidade) => {
+    setContentDrawerUnidadeId(unidadeId)
+    setContentDrawerMode('edit')
+    setContentDrawerBlockData(conteudo)
+    setContentDrawerOpen(true)
+  }
+
+  const handleSaveContentFromDrawer = async (data: Omit<ConteudoUnidade, 'id' | 'ordem'>) => {
+    if (contentDrawerMode === 'add') {
+      if (insertAtIndex.current) {
+        const { unidadeId, index } = insertAtIndex.current
+        adicionarConteudo(unidadeId, data)
+
+        if (
+          index <
+          (state.cursoAtual?.unidades?.find((u) => u.id === unidadeId)?.conteudo?.length || 0)
+        ) {
+          pendingInsert.current = { unidadeId, targetIndex: index }
+        }
+      }
+      toast.success('Conteúdo adicionado')
+    } else {
+      if (contentDrawerBlockData?.id) {
+        editarConteudo(contentDrawerUnidadeId, contentDrawerBlockData.id, data)
+        toast.success('Conteúdo atualizado')
+      }
+    }
+    setContentDrawerOpen(false)
+  }
+
+  const handleCancelContentDrawer = () => {
+    setContentDrawerOpen(false)
+    setContentDrawerBlockData(null)
+    setContentDrawerUnidadeId('')
+    insertAtIndex.current = null
+  }
+
+  const handleUploadImageForDrawer = async (file: File): Promise<string> => {
+    if (!file) throw new Error('Arquivo não fornecido')
+
+    const allowedTypes = [
+      'image/jpeg',
+      'image/jpg',
+      'image/png',
+      'image/gif',
+      'image/webp',
+      'image/svg+xml',
+    ]
+    if (!allowedTypes.includes(file.type)) {
+      throw new Error('Tipo de arquivo inválido. Use JPG, PNG, GIF, WEBP ou SVG.')
+    }
+
+    const maxSize = 10 * 1024 * 1024
+    if (file.size > maxSize) {
+      throw new Error('Arquivo muito grande. Máximo: 10MB')
+    }
+
+    const formData = new FormData()
+    formData.append('file', file)
+
+    const response = await fetch('/api/upload-image', {
+      method: 'POST',
+      body: formData,
+    })
+
+    const data = await response.json()
+
+    if (!response.ok || !data.success) {
+      throw new Error(data.error || 'Erro ao fazer upload')
+    }
+
+    return data.url
   }
 
   const handleSalvarConteudo = () => {
@@ -955,7 +1060,8 @@ export default function EditarCursoPage() {
         {/* Header */}
         <div className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm border-b border-[#e5e7eb] dark:border-gray-800 sticky top-0 z-50">
           <div className="px-6 py-3">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between gap-4">
+              {/* Esquerda */}
               <div className="flex items-center gap-3">
                 <TooltipButton icon={ArrowLeft} tooltip="Voltar" onClick={handleVoltar} />
                 <h1 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
@@ -963,6 +1069,17 @@ export default function EditarCursoPage() {
                 </h1>
               </div>
 
+              {/* Centro - Dropdown de Unidades */}
+              <div className="flex-1 flex justify-center">
+                <UnidadesDropdown
+                  unidades={state.cursoAtual.unidades}
+                  unidadeAtivaIndex={unidadeAtivaIndex}
+                  onSelectUnidade={setUnidadeAtivaIndex}
+                  onOpenManageModal={() => setManageUnitsModalOpen(true)}
+                />
+              </div>
+
+              {/* Direita */}
               <div className="flex space-x-2">
                 <TooltipButton
                   icon={Settings}
@@ -977,7 +1094,7 @@ export default function EditarCursoPage() {
                 <TooltipButton icon={Eye} tooltip="Preview" onClick={handlePreview} />
                 <Button
                   onClick={() => setExportModalOpen(true)}
-                  className="bg-blue-600 hover:bg-blue-700 text-white"
+                  className="bg-orange-600 hover:bg-orange-700 text-white"
                 >
                   <Download className="h-4 w-4 mr-2" />
                   Exportar
@@ -1082,7 +1199,6 @@ export default function EditarCursoPage() {
                     return (
                       <div key={unidade.id || `unidade-${unidadeIndex}`}>
                         <EditableCard
-                          className="mb-6"
                           actions={
                             <TooltipButton
                               icon={Edit}
@@ -1220,11 +1336,7 @@ export default function EditarCursoPage() {
                                             tooltip="Inserir conteúdo aqui"
                                             onClick={(e) => {
                                               e?.stopPropagation()
-                                              insertAtIndex.current = {
-                                                unidadeId: unidade.id,
-                                                index: afterIndex,
-                                              }
-                                              setModalAdicionarConteudo(true)
+                                              handleOpenAddContentDrawer(unidade.id, afterIndex)
                                             }}
                                             asButton={false}
                                             size="sm"
@@ -1247,11 +1359,7 @@ export default function EditarCursoPage() {
                                           <button
                                             className="w-full h-full min-h-[60px] rounded-lg border-2 border-dashed border-transparent flex items-center justify-center text-gray-400 dark:text-gray-500 opacity-0 group-hover/empty:opacity-100 group-hover/empty:border-gray-300 dark:group-hover/empty:border-gray-600 hover:border-blue-400! dark:hover:border-blue-500! hover:text-blue-500! dark:hover:text-blue-400! hover:bg-blue-50! dark:hover:bg-blue-950/20! transition-all"
                                             onClick={() => {
-                                              insertAtIndex.current = {
-                                                unidadeId: unidade.id,
-                                                index: afterIndex,
-                                              }
-                                              setModalAdicionarConteudo(true)
+                                              handleOpenAddContentDrawer(unidade.id, afterIndex)
                                             }}
                                           >
                                             <Plus className="h-4 w-4" />
@@ -1262,6 +1370,8 @@ export default function EditarCursoPage() {
 
                                     return rows.map((row, rowIndex) => (
                                       <React.Fragment key={`row-${rowIndex}`}>
+                                        {rowIndex === 0 &&
+                                          insertDropdown(-1, 'col-span-12', 'divider-first')}
                                         {rowIndex > 0 &&
                                           insertDropdown(
                                             row.startIndex - 1,
@@ -1307,30 +1417,10 @@ export default function EditarCursoPage() {
                                                         icon={Edit}
                                                         tooltip="Editar"
                                                         onClick={() =>
-                                                          setEditandoConteudo({
-                                                            unidadeId: unidade.id,
-                                                            conteudoId: item.id,
-                                                            tipo: item.tipo,
-                                                            conteudo: item.conteudo || '',
-                                                            tamanho: item.tamanho,
-                                                            legenda: item.legenda,
-                                                            fonte: item.fonte,
-                                                            corTexto: item.corTexto,
-                                                            alinhamento: item.alinhamento,
-                                                            colunas: item.colunas,
-                                                            items: item.items,
-                                                            tipoFrente: item.tipoFrente,
-                                                            imagemFrente: item.imagemFrente,
-                                                            tituloFrente: item.tituloFrente,
-                                                            conteudoVerso: item.conteudoVerso,
-                                                            alturaCard: item.alturaCard,
-                                                            itensLista: item.itensLista || [],
-                                                            tipoLista:
-                                                              item.tipoLista || 'nao-ordenada',
-                                                            quizData: item.quizData,
-                                                            tipoInfoBox: item.tipoInfoBox,
-                                                            tituloInfoBox: item.tituloInfoBox,
-                                                          })
+                                                          handleOpenEditContentDrawer(
+                                                            unidade.id,
+                                                            item
+                                                          )
                                                         }
                                                         asButton={false}
                                                         size="sm"
@@ -1511,12 +1601,6 @@ export default function EditarCursoPage() {
                                           ))}
                                         {row.totalCols < 12 &&
                                           emptySlot(row.endIndex, 12 - row.totalCols)}
-                                        {rowIndex === rows.length - 1 &&
-                                          insertDropdown(
-                                            conteudos.length - 1,
-                                            'col-span-12',
-                                            'divider-end'
-                                          )}
                                       </React.Fragment>
                                     ))
                                   })()}
@@ -1524,6 +1608,20 @@ export default function EditarCursoPage() {
                               </SortableContext>
                             </DndContext>
                           )}
+
+                          {/* Botão Adicionar Conteúdo */}
+                          <div className="mt-8">
+                            <button
+                              onClick={() => {
+                                const ultimoIndex = (unidade.conteudo || []).length
+                                handleOpenAddContentDrawer(unidade.id, ultimoIndex)
+                              }}
+                              className="w-full px-6 py-4 bg-white dark:bg-gray-800 border-2 border-dashed border-blue-500 dark:border-blue-400 text-blue-600 dark:text-blue-400 rounded-xl hover:bg-blue-50 dark:hover:bg-blue-950/20 transition-all flex items-center justify-center gap-2 font-semibold text-sm"
+                            >
+                              <Plus className="h-5 w-5" />
+                              <span>Adicionar conteúdo</span>
+                            </button>
+                          </div>
 
                           {/* Botões inline removidos — adicionados na barra fixa abaixo */}
                           <div className="hidden">
@@ -1628,6 +1726,39 @@ export default function EditarCursoPage() {
                   })}
                 </div>
 
+                {/* Navegação entre unidades */}
+                {(state.cursoAtual.unidades || []).length > 0 && (
+                  <div className="mt-12 mb-8">
+                    {/* Divisor */}
+                    <div className="mb-6">
+                      <div className="h-px bg-gray-200 dark:bg-gray-700"></div>
+                    </div>
+
+                    {/* Botões de navegação */}
+                    <div className="flex items-center justify-between">
+                      {/* Botão Anterior */}
+                      <button
+                        onClick={() => setUnidadeAtivaIndex(unidadeAtivaIndex - 1)}
+                        disabled={unidadeAtivaIndex === 0}
+                        className="group flex items-center justify-center gap-1 px-8 py-2.5 rounded-lg bg-blue-600 dark:bg-blue-600 text-white hover:bg-blue-700 dark:hover:bg-blue-700 transition-all disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-blue-600 dark:disabled:hover:bg-blue-600"
+                      >
+                        <ChevronLeft className="h-5 w-5 shrink-0" />
+                        <span className="text-sm font-medium">Anterior</span>
+                      </button>
+
+                      {/* Botão Próxima */}
+                      <button
+                        onClick={() => setUnidadeAtivaIndex(unidadeAtivaIndex + 1)}
+                        disabled={unidadeAtivaIndex >= (state.cursoAtual.unidades || []).length - 1}
+                        className="group flex items-center justify-center gap-1 px-8 py-2.5 rounded-lg bg-blue-600 dark:bg-blue-600 text-white hover:bg-blue-700 dark:hover:bg-blue-700 transition-all disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-blue-600 dark:disabled:hover:bg-blue-600"
+                      >
+                        <span className="text-sm font-medium">Próxima</span>
+                        <ChevronRight className="h-5 w-5 shrink-0" />
+                      </button>
+                    </div>
+                  </div>
+                )}
+
                 {(state.cursoAtual.unidades || []).length === 0 && (
                   <Card>
                     <CardContent className="text-center py-12">
@@ -1669,9 +1800,8 @@ export default function EditarCursoPage() {
               <button
                 onClick={() => {
                   if (insertAtIndex.current) {
-                    handleSelecionarTipoConteudo('titulo', insertAtIndex.current.unidadeId)
+                    handleSelectBlockType('titulo', insertAtIndex.current.unidadeId)
                   }
-                  setModalAdicionarConteudo(false)
                 }}
                 className="flex flex-col items-start p-4 rounded-xl border-2 border-gray-200 dark:border-gray-700 hover:border-blue-500 dark:hover:border-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/20 transition-all group"
               >
@@ -1690,9 +1820,8 @@ export default function EditarCursoPage() {
               <button
                 onClick={() => {
                   if (insertAtIndex.current) {
-                    handleSelecionarTipoConteudo('paragrafo', insertAtIndex.current.unidadeId)
+                    handleSelectBlockType('paragrafo', insertAtIndex.current.unidadeId)
                   }
-                  setModalAdicionarConteudo(false)
                 }}
                 className="flex flex-col items-start p-4 rounded-xl border-2 border-gray-200 dark:border-gray-700 hover:border-blue-500 dark:hover:border-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/20 transition-all group"
               >
@@ -1711,9 +1840,8 @@ export default function EditarCursoPage() {
               <button
                 onClick={() => {
                   if (insertAtIndex.current) {
-                    handleSelecionarTipoConteudo('imagem', insertAtIndex.current.unidadeId)
+                    handleSelectBlockType('imagem', insertAtIndex.current.unidadeId)
                   }
-                  setModalAdicionarConteudo(false)
                 }}
                 className="flex flex-col items-start p-4 rounded-xl border-2 border-gray-200 dark:border-gray-700 hover:border-blue-500 dark:hover:border-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/20 transition-all group"
               >
@@ -1733,9 +1861,8 @@ export default function EditarCursoPage() {
               <button
                 onClick={() => {
                   if (insertAtIndex.current) {
-                    handleSelecionarTipoConteudo('lista', insertAtIndex.current.unidadeId)
+                    handleSelectBlockType('lista', insertAtIndex.current.unidadeId)
                   }
-                  setModalAdicionarConteudo(false)
                 }}
                 className="flex flex-col items-start p-4 rounded-xl border-2 border-gray-200 dark:border-gray-700 hover:border-blue-500 dark:hover:border-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/20 transition-all group"
               >
@@ -1754,9 +1881,8 @@ export default function EditarCursoPage() {
               <button
                 onClick={() => {
                   if (insertAtIndex.current) {
-                    handleSelecionarTipoConteudo('info-box', insertAtIndex.current.unidadeId)
+                    handleSelectBlockType('info-box', insertAtIndex.current.unidadeId)
                   }
-                  setModalAdicionarConteudo(false)
                 }}
                 className="flex flex-col items-start p-4 rounded-xl border-2 border-gray-200 dark:border-gray-700 hover:border-blue-500 dark:hover:border-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/20 transition-all group"
               >
@@ -1773,9 +1899,8 @@ export default function EditarCursoPage() {
               <button
                 onClick={() => {
                   if (insertAtIndex.current) {
-                    handleSelecionarTipoConteudo('flipcard', insertAtIndex.current.unidadeId)
+                    handleSelectBlockType('flipcard', insertAtIndex.current.unidadeId)
                   }
-                  setModalAdicionarConteudo(false)
                 }}
                 className="flex flex-col items-start p-4 rounded-xl border-2 border-gray-200 dark:border-gray-700 hover:border-blue-500 dark:hover:border-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/20 transition-all group"
               >
@@ -1794,9 +1919,8 @@ export default function EditarCursoPage() {
               <button
                 onClick={() => {
                   if (insertAtIndex.current) {
-                    handleSelecionarTipoConteudo('accordion', insertAtIndex.current.unidadeId)
+                    handleSelectBlockType('accordion', insertAtIndex.current.unidadeId)
                   }
-                  setModalAdicionarConteudo(false)
                 }}
                 className="flex flex-col items-start p-4 rounded-xl border-2 border-gray-200 dark:border-gray-700 hover:border-blue-500 dark:hover:border-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/20 transition-all group"
               >
@@ -1815,9 +1939,8 @@ export default function EditarCursoPage() {
               <button
                 onClick={() => {
                   if (insertAtIndex.current) {
-                    handleSelecionarTipoConteudo('quiz', insertAtIndex.current.unidadeId)
+                    handleSelectBlockType('quiz', insertAtIndex.current.unidadeId)
                   }
-                  setModalAdicionarConteudo(false)
                 }}
                 className="flex flex-col items-start p-4 rounded-xl border-2 border-gray-200 dark:border-gray-700 hover:border-blue-500 dark:hover:border-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/20 transition-all group"
               >
@@ -1836,9 +1959,8 @@ export default function EditarCursoPage() {
               <button
                 onClick={() => {
                   if (insertAtIndex.current) {
-                    handleSelecionarTipoConteudo('subtitulo', insertAtIndex.current.unidadeId)
+                    handleSelectBlockType('subtitulo', insertAtIndex.current.unidadeId)
                   }
-                  setModalAdicionarConteudo(false)
                 }}
                 className="flex flex-col items-start p-4 rounded-xl border-2 border-gray-200 dark:border-gray-700 hover:border-blue-500 dark:hover:border-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/20 transition-all group"
               >
@@ -1999,9 +2121,6 @@ export default function EditarCursoPage() {
                   </>
                 )}
               </DialogTitle>
-              <DialogDescription>
-                Preencha os campos abaixo para adicionar o conteúdo
-              </DialogDescription>
             </DialogHeader>
             <div className="space-y-4 py-4">
               {conteudoTemp.tipo === 'imagem' ? (
@@ -2930,22 +3049,21 @@ export default function EditarCursoPage() {
           </DialogContent>
         </Dialog>
 
-        {/* Modal para editar unidade */}
-        <Dialog
+        {/* Drawer para editar unidade */}
+        <Sheet
           open={editarUnidadeModal && !!unidadeParaEditar}
           onOpenChange={() => setEditarUnidadeModal(false)}
         >
-          <DialogContent className="sm:max-w-2xl">
-            <DialogHeader>
-              <DialogTitle className="flex items-center gap-2">
+          <SheetContent>
+            <SheetHeader>
+              <SheetTitle className="flex items-center">
                 <Edit className="h-5 w-5 text-blue-600" />
                 Editar Unidade
-              </DialogTitle>
-              <DialogDescription>Atualize as informações da unidade</DialogDescription>
-            </DialogHeader>
+              </SheetTitle>
+            </SheetHeader>
             <div className="space-y-4 py-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Título da Unidade <span className="text-red-500">*</span>
                 </label>
                 <Input
@@ -2957,20 +3075,20 @@ export default function EditarCursoPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Descrição da Unidade <span className="text-red-500">*</span>
                 </label>
                 <textarea
                   value={descricaoUnidadeEditando}
                   onChange={(e) => setDescricaoUnidadeEditando(e.target.value)}
                   placeholder="Descreva o que os alunos aprenderão nesta unidade..."
-                  className="w-full p-3 border border-gray-300 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  rows={4}
+                  className="w-full p-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  rows={8}
                   required
                 />
               </div>
             </div>
-            <DialogFooter>
+            <SheetFooter>
               <Button variant="outline" onClick={closeEditarUnidadeModal}>
                 Cancelar
               </Button>
@@ -2981,9 +3099,9 @@ export default function EditarCursoPage() {
               >
                 Salvar
               </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+            </SheetFooter>
+          </SheetContent>
+        </Sheet>
 
         {/* Modal de confirmação para deletar conteúdo */}
         <Dialog
@@ -4205,7 +4323,7 @@ export default function EditarCursoPage() {
           courseData={{
             titulo: state.cursoAtual.titulo,
             descricao: state.cursoAtual.descricao || '',
-            categoria: state.cursoAtual.categoria || '',
+            categoria: state.cursoAtual.categoria || undefined,
             cargaHoraria: state.cursoAtual.cargaHoraria,
           }}
           unidades={state.cursoAtual.unidades || []}
@@ -4214,14 +4332,29 @@ export default function EditarCursoPage() {
               editarCurso(state.cursoAtual.id, {
                 titulo: courseData.titulo,
                 descricao: courseData.descricao,
-                categoria: courseData.categoria,
+                categoria: courseData.categoria || '',
                 cargaHoraria: courseData.cargaHoraria,
               })
               reordenarUnidades(unidades as Unidade[])
             }
           }}
-          onAddUnidade={() => setAdicionarUnidadeModal(true)}
-          onDeleteUnidade={(id) => deletarUnidade(id)}
+        />
+
+        {/* Manage Units Modal */}
+        <ManageUnitsModal
+          open={manageUnitsModalOpen}
+          onOpenChange={setManageUnitsModalOpen}
+          unidades={state.cursoAtual.unidades || []}
+        />
+
+        <ContentBlockDrawer
+          open={contentDrawerOpen}
+          onOpenChange={setContentDrawerOpen}
+          mode={contentDrawerMode}
+          blockData={contentDrawerBlockData}
+          onSave={handleSaveContentFromDrawer}
+          onCancel={handleCancelContentDrawer}
+          onUploadImage={handleUploadImageForDrawer}
         />
       </div>
     </PageTransition>

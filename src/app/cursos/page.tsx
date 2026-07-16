@@ -227,7 +227,7 @@ export default function CursosPage() {
                 <div className="flex flex-col gap-1 flex-1">
                   <span className="text-xs text-muted-foreground pl-1">Categoria</span>
                   <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                    <SelectTrigger className="w-full bg-card dark:bg-card border border-border">
+                    <SelectTrigger className="w-full">
                       <SelectValue placeholder="Categoria" />
                     </SelectTrigger>
                     <SelectContent>
@@ -244,7 +244,7 @@ export default function CursosPage() {
                 <div className="flex flex-col gap-1 flex-1">
                   <span className="text-xs text-muted-foreground pl-1">Modalidade</span>
                   <Select value={selectedFormat} onValueChange={setSelectedFormat}>
-                    <SelectTrigger className="w-full bg-card dark:bg-card border border-border">
+                    <SelectTrigger className="w-full">
                       <SelectValue placeholder="Modalidade" />
                     </SelectTrigger>
                     <SelectContent>

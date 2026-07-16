@@ -433,9 +433,6 @@ export default function UsuariosPage() {
                 <Plus className="h-5 w-5" />
                 Criar Novo Usuário
               </DialogTitle>
-              <DialogDescription>
-                Preencha os campos abaixo para criar um novo usuário no sistema.
-              </DialogDescription>
             </DialogHeader>
             <form onSubmit={handleCreate}>
               <div className="space-y-4 py-4">
