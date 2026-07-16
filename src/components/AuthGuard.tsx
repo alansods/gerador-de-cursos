@@ -34,6 +34,7 @@ export function AuthGuard({ children }: AuthGuardProps) {
     '/preview',
     '/pdf-preview',
     '/scorm-preview', // Para SCORM packages (standalone)
+    '/landingpage', // Landing page pública
   ]
 
   // Rotas autenticadas que ocultam a sidebar do app (modo imersivo)

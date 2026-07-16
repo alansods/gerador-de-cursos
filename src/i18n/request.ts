@@ -16,6 +16,7 @@ export default getRequestConfig(async () => {
     users: (await import(`./locales/${locale}/users.json`)).default,
     scorm: (await import(`./locales/${locale}/scorm.json`)).default,
     errors: (await import(`./locales/${locale}/errors.json`)).default,
+    landing: (await import(`./locales/${locale}/landing.json`)).default,
   }
 
   return {
