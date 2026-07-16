@@ -11,6 +11,7 @@ import {
   RotateCcw,
   ChevronDown,
   HelpCircle,
+  Video,
 } from 'lucide-react'
 import { ConteudoUnidade } from '@/types/gerador-curso'
 
@@ -39,6 +40,12 @@ const blockTypes: BlockTypeOption[] = [
     label: 'Imagem',
     description: 'Foto com legenda',
     icon: Image,
+  },
+  {
+    tipo: 'video',
+    label: 'Vídeo',
+    description: 'Vídeo do YouTube',
+    icon: Video,
   },
   {
     tipo: 'lista',
@@ -83,6 +90,15 @@ interface BlockTypeSelectorProps {
 }
 
 export function BlockTypeSelector({ onSelect }: BlockTypeSelectorProps) {
+  console.log('🔍 BlockTypeSelector - Total de tipos:', blockTypes.length)
+  console.log(
+    '🔍 BlockTypeSelector - Tipos disponíveis:',
+    blockTypes.map((t) => t.tipo)
+  )
+
+  const videoType = blockTypes.find((t) => t.tipo === 'video')
+  console.log('🔍 BlockTypeSelector - Tipo video encontrado?', videoType ? 'SIM' : 'NÃO', videoType)
+
   return (
     <div>
       <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">
@@ -94,6 +110,7 @@ export function BlockTypeSelector({ onSelect }: BlockTypeSelectorProps) {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
         {blockTypes.map((blockType) => {
+          console.log('🔍 Renderizando card:', blockType.tipo, blockType.label)
           const Icon = blockType.icon
           return (
             <button

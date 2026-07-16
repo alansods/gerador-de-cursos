@@ -30,7 +30,17 @@ export interface QuizData {
 
 export interface ConteudoUnidade {
   id: string
-  tipo: 'titulo' | 'paragrafo' | 'subtitulo' | 'imagem' | 'accordion' | 'flipcard' | 'lista' | 'quiz' | 'info-box'
+  tipo:
+    | 'titulo'
+    | 'paragrafo'
+    | 'subtitulo'
+    | 'imagem'
+    | 'accordion'
+    | 'flipcard'
+    | 'lista'
+    | 'quiz'
+    | 'info-box'
+    | 'video'
   conteudo: string
   ordem: number
   // Propriedades específicas para imagens
@@ -58,6 +68,9 @@ export interface ConteudoUnidade {
   // Propriedades específicas para info-box
   tipoInfoBox?: 'atencao' | 'saiba_mais' | 'info' | 'curiosidade'
   tituloInfoBox?: string
+  // Propriedades específicas para video
+  videoUrl?: string
+  videoTitulo?: string
 }
 
 export interface Unidade {
@@ -101,7 +114,11 @@ export interface GeradorCursoContextType {
   deletarUnidade: (id: string) => void
   reordenarUnidades: (unidades: Unidade[]) => void
   adicionarConteudo: (unidadeId: string, conteudo: Omit<ConteudoUnidade, 'id' | 'ordem'>) => void
-  editarConteudo: (unidadeId: string, conteudoId: string, conteudo: Partial<ConteudoUnidade>) => void
+  editarConteudo: (
+    unidadeId: string,
+    conteudoId: string,
+    conteudo: Partial<ConteudoUnidade>
+  ) => void
   deletarConteudo: (unidadeId: string, conteudoId: string) => void
   reordenarConteudo: (unidadeId: string, conteudo: ConteudoUnidade[]) => void
   salvarCurso: () => void

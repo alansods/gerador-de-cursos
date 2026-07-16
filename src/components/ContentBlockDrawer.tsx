@@ -19,6 +19,7 @@ import {
   Loader2,
   Plus,
   Trash2,
+  Video,
 } from 'lucide-react'
 import Image from 'next/image'
 import { ConteudoUnidade, AccordionItem, ListaItem } from '@/types/gerador-curso'
@@ -44,6 +45,7 @@ const getBlockTitle = (tipo: ConteudoUnidade['tipo'] | null, mode: 'add' | 'edit
     subtitulo: `${action} Subtítulo`,
     paragrafo: `${action} Texto`,
     imagem: `${action} Imagem`,
+    video: `${action} Vídeo`,
     lista: `${action} Lista`,
     'info-box': `${action} Destaque`,
     flipcard: `${action} Flashcards`,
@@ -60,6 +62,7 @@ const getBlockIcon = (tipo: ConteudoUnidade['tipo'] | null) => {
     subtitulo: Heading3,
     paragrafo: Type,
     imagem: ImageIcon,
+    video: Video,
     lista: List,
     'info-box': AlertTriangle,
     flipcard: RotateCcw,
@@ -67,6 +70,26 @@ const getBlockIcon = (tipo: ConteudoUnidade['tipo'] | null) => {
     quiz: HelpCircle,
   }
   return icons[tipo]
+}
+
+const extractYouTubeId = (url: string): string => {
+  if (!url) return ''
+
+  const patterns = [
+    /(?:https?:\/\/)?(?:www\.)?youtube\.com\/watch\?v=([^&]+)/,
+    /(?:https?:\/\/)?(?:www\.)?youtu\.be\/([^?]+)/,
+    /(?:https?:\/\/)?(?:www\.)?youtube\.com\/embed\/([^?]+)/,
+    /(?:https?:\/\/)?(?:www\.)?youtube\.com\/v\/([^?]+)/,
+  ]
+
+  for (const pattern of patterns) {
+    const match = url.match(pattern)
+    if (match && match[1]) {
+      return match[1]
+    }
+  }
+
+  return ''
 }
 
 export function ContentBlockDrawer({
@@ -78,9 +101,13 @@ export function ContentBlockDrawer({
   onCancel,
   onUploadImage,
 }: ContentBlockDrawerProps) {
+  console.log('🔍 ContentBlockDrawer - open:', open, 'mode:', mode, 'blockData:', blockData)
+
   const [selectedType, setSelectedType] = useState<ConteudoUnidade['tipo'] | null>(
     blockData?.tipo || null
   )
+
+  console.log('🔍 ContentBlockDrawer - selectedType:', selectedType)
   const [formData, setFormData] = useState<Partial<ConteudoUnidade>>({
     tipo: 'paragrafo',
     conteudo: '',
@@ -101,6 +128,8 @@ export function ContentBlockDrawer({
     quizData: undefined,
     tipoInfoBox: 'info',
     tituloInfoBox: '',
+    videoUrl: '',
+    videoTitulo: '',
     ...blockData,
   })
   const [isUploadingImage, setIsUploadingImage] = useState(false)
@@ -129,6 +158,8 @@ export function ContentBlockDrawer({
         quizData: undefined,
         tipoInfoBox: 'info',
         tituloInfoBox: '',
+        videoUrl: '',
+        videoTitulo: '',
         ...blockData,
       })
       if (blockData?.conteudo && blockData?.tipo === 'imagem') {
@@ -247,6 +278,16 @@ export function ContentBlockDrawer({
       case 'info-box':
         if (!formData.conteudo?.trim()) {
           toast.error('Preencha o conteúdo do destaque')
+          return false
+        }
+        break
+      case 'video':
+        if (!formData.videoUrl?.trim()) {
+          toast.error('Adicione o link do vídeo do YouTube')
+          return false
+        }
+        if (!formData.videoTitulo?.trim()) {
+          toast.error('Adicione um título para o vídeo')
           return false
         }
         break
@@ -529,6 +570,54 @@ export function ContentBlockDrawer({
                 placeholder="Digite a fonte da imagem..."
               />
             </div>
+          </div>
+        )
+
+      case 'video':
+        return (
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Título do Vídeo <span className="text-red-500">*</span>
+              </label>
+              <Input
+                value={formData.videoTitulo || ''}
+                onChange={(e) => setFormData({ ...formData, videoTitulo: e.target.value })}
+                placeholder="Digite o título do vídeo..."
+                autoFocus
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Link do YouTube <span className="text-red-500">*</span>
+              </label>
+              <Input
+                value={formData.videoUrl || ''}
+                onChange={(e) => setFormData({ ...formData, videoUrl: e.target.value })}
+                placeholder="Cole o link do vídeo do YouTube..."
+              />
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                Exemplo: https://www.youtube.com/watch?v=VIDEO_ID ou https://youtu.be/VIDEO_ID
+              </p>
+            </div>
+
+            {formData.videoUrl && (
+              <div className="mt-4">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Pré-visualização
+                </label>
+                <div className="aspect-video w-full rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-800">
+                  <iframe
+                    src={`https://www.youtube.com/embed/${extractYouTubeId(formData.videoUrl)}`}
+                    title="YouTube video preview"
+                    className="w-full h-full"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                  />
+                </div>
+              </div>
+            )}
           </div>
         )
 

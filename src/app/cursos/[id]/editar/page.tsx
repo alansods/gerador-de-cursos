@@ -110,6 +110,7 @@ export default function EditarCursoPage() {
       | 'subtitulo'
       | 'titulo'
       | 'imagem'
+      | 'video'
       | 'accordion'
       | 'flipcard'
       | 'lista'
@@ -133,6 +134,8 @@ export default function EditarCursoPage() {
     quizData?: QuizData
     tipoInfoBox?: 'atencao' | 'saiba_mais' | 'info' | 'curiosidade'
     tituloInfoBox?: string
+    videoUrl?: string
+    videoTitulo?: string
   } | null>(null)
   const [conteudoTemp, setConteudoTemp] = useState({
     tipo: 'paragrafo' as
@@ -140,6 +143,7 @@ export default function EditarCursoPage() {
       | 'subtitulo'
       | 'titulo'
       | 'imagem'
+      | 'video'
       | 'accordion'
       | 'flipcard'
       | 'lista'
@@ -164,6 +168,8 @@ export default function EditarCursoPage() {
     quizData: undefined as QuizData | undefined,
     tipoInfoBox: 'info' as 'atencao' | 'saiba_mais' | 'info' | 'curiosidade',
     tituloInfoBox: '',
+    videoUrl: '',
+    videoTitulo: '',
   })
   const [adicionarUnidadeModal, setAdicionarUnidadeModal] = useState(false)
   const [editarUnidadeModal, setEditarUnidadeModal] = useState(false)
@@ -273,10 +279,21 @@ export default function EditarCursoPage() {
       const unidade = state.cursoAtual?.unidades?.find((u) => u.id === unidadeId)
       if (unidade) {
         const c = [...(unidade.conteudo || [])]
+        console.log('🔍 useEffect reordenamento - c.length:', c.length, 'targetIndex:', targetIndex)
+        console.log(
+          '🔍 Array ANTES do arrayMove:',
+          c.map((item, i) => `[${i}] ${item.tipo} ordem:${item.ordem}`)
+        )
+
         if (c.length > 0 && targetIndex < c.length) {
           pendingInsert.current = null
           const reord = arrayMove(c, c.length - 1, targetIndex)
           reord.forEach((item, i) => (item.ordem = i))
+
+          console.log(
+            '🔍 Array DEPOIS do arrayMove:',
+            reord.map((item, i) => `[${i}] ${item.tipo} ordem:${item.ordem}`)
+          )
           editarUnidade(unidadeId, { conteudo: reord })
           return
         }
@@ -303,6 +320,8 @@ export default function EditarCursoPage() {
         conteudoVerso: '',
         alturaCard: '300px',
         itensLista: [],
+        videoUrl: '',
+        videoTitulo: '',
         tipoLista: 'nao-ordenada',
         quizData: undefined,
         tipoInfoBox: 'info',
@@ -370,6 +389,8 @@ export default function EditarCursoPage() {
       conteudoVerso: '',
       alturaCard: '300px',
       itensLista: [],
+      videoUrl: '',
+      videoTitulo: '',
       tipoLista: 'nao-ordenada',
       quizData: undefined,
       tipoInfoBox: 'info',
@@ -512,10 +533,12 @@ export default function EditarCursoPage() {
   }
 
   const handleSelectBlockType = (tipo: ConteudoUnidade['tipo'], unidadeId: string) => {
+    console.log('🔍 handleSelectBlockType - tipo:', tipo, 'unidadeId:', unidadeId)
     setModalAdicionarConteudo(false)
     setContentDrawerUnidadeId(unidadeId)
     setContentDrawerMode('add')
     setContentDrawerBlockData({ tipo })
+    console.log('🔍 Abrindo ContentDrawer com tipo:', tipo)
     setContentDrawerOpen(true)
   }
 
@@ -527,16 +550,25 @@ export default function EditarCursoPage() {
   }
 
   const handleSaveContentFromDrawer = async (data: Omit<ConteudoUnidade, 'id' | 'ordem'>) => {
+    console.log('🔍 handleSaveContentFromDrawer - mode:', contentDrawerMode, 'data:', data)
+    console.log('🔍 insertAtIndex.current:', insertAtIndex.current)
+
     if (contentDrawerMode === 'add') {
       if (insertAtIndex.current) {
         const { unidadeId, index } = insertAtIndex.current
+        console.log('🔍 Adicionando conteúdo - unidadeId:', unidadeId, 'index:', index)
+
+        const unidade = state.cursoAtual?.unidades?.find((u) => u.id === unidadeId)
+        const conteudoLength = unidade?.conteudo?.length || 0
+        console.log('🔍 Tamanho atual do conteúdo:', conteudoLength)
+
         adicionarConteudo(unidadeId, data)
 
-        if (
-          index <
-          (state.cursoAtual?.unidades?.find((u) => u.id === unidadeId)?.conteudo?.length || 0)
-        ) {
+        if (index < conteudoLength) {
+          console.log('🔍 Precisa reordenar - index:', index, '< conteudoLength:', conteudoLength)
           pendingInsert.current = { unidadeId, targetIndex: index }
+        } else {
+          console.log('🔍 NÃO precisa reordenar - adicionar no final')
         }
       }
       toast.success('Conteúdo adicionado')
@@ -1280,12 +1312,27 @@ export default function EditarCursoPage() {
                               onDragEnd={(e) => handleDragEndConteudo(e, unidade.id)}
                             >
                               <SortableContext
-                                items={(unidade.conteudo || []).map((c) => c.id)}
+                                items={(unidade.conteudo || [])
+                                  .sort((a, b) => a.ordem - b.ordem)
+                                  .map((c) => c.id)}
                                 strategy={verticalListSortingStrategy}
                               >
                                 <div className="grid grid-cols-12 gap-1">
                                   {(() => {
-                                    const conteudos = unidade.conteudo || []
+                                    const conteudos = (unidade.conteudo || []).sort(
+                                      (a, b) => a.ordem - b.ordem
+                                    )
+
+                                    console.log(
+                                      `🔍 Unidade ${unidade.titulo} - Total de conteúdos:`,
+                                      conteudos.length
+                                    )
+                                    conteudos.forEach((c, i) => {
+                                      console.log(
+                                        `  [${i}] ${c.tipo} - ordem: ${c.ordem} - id: ${c.id}`,
+                                        c.videoTitulo || c.conteudo?.substring(0, 30)
+                                      )
+                                    })
 
                                     // Agrupar itens em linhas
                                     type RowInfo = {
@@ -1317,6 +1364,13 @@ export default function EditarCursoPage() {
                                         totalCols: rSum,
                                       })
 
+                                    console.log('🟣 ROWS calculadas:', rows)
+                                    rows.forEach((r, i) => {
+                                      console.log(
+                                        `  Row ${i}: startIndex=${r.startIndex}, endIndex=${r.endIndex}, totalCols=${r.totalCols}`
+                                      )
+                                    })
+
                                     const insertDropdown = (
                                       afterIndex: number,
                                       colSpanClass: string,
@@ -1336,6 +1390,10 @@ export default function EditarCursoPage() {
                                             tooltip="Inserir conteúdo aqui"
                                             onClick={(e) => {
                                               e?.stopPropagation()
+                                              console.log(
+                                                '🔵 CLIQUE no botão inserir - afterIndex:',
+                                                afterIndex
+                                              )
                                               handleOpenAddContentDrawer(unidade.id, afterIndex)
                                             }}
                                             asButton={false}
@@ -1374,231 +1432,267 @@ export default function EditarCursoPage() {
                                           insertDropdown(-1, 'col-span-12', 'divider-first')}
                                         {rowIndex > 0 &&
                                           insertDropdown(
-                                            row.startIndex - 1,
+                                            row.startIndex,
                                             'col-span-12',
                                             `divider-${rowIndex}`
                                           )}
                                         {conteudos
                                           .slice(row.startIndex, row.endIndex + 1)
-                                          .map((item) => (
-                                            <SortableConteudoWrapper
-                                              key={item.id}
-                                              id={item.id}
-                                              colunas={item.colunas}
-                                            >
-                                              {(dragHandle) => (
-                                                <EditableCard
-                                                  flex
-                                                  label={
-                                                    item.tipo === 'titulo'
-                                                      ? 'Título'
-                                                      : item.tipo === 'subtitulo'
-                                                        ? 'Subtítulo'
-                                                        : item.tipo === 'paragrafo'
-                                                          ? 'Texto'
-                                                          : item.tipo === 'imagem'
-                                                            ? 'Imagem'
-                                                            : item.tipo === 'accordion'
-                                                              ? 'Accordion'
-                                                              : item.tipo === 'flipcard'
-                                                                ? 'FlipCard'
-                                                                : item.tipo === 'lista'
-                                                                  ? 'Lista'
-                                                                  : item.tipo === 'quiz'
-                                                                    ? 'Quiz'
-                                                                    : item.tipo === 'info-box'
-                                                                      ? 'Info Box'
-                                                                      : 'Conteúdo'
-                                                  }
-                                                  actions={
-                                                    <>
-                                                      {dragHandle}
-                                                      <TooltipButton
-                                                        icon={Edit}
-                                                        tooltip="Editar"
-                                                        onClick={() =>
-                                                          handleOpenEditContentDrawer(
-                                                            unidade.id,
-                                                            item
-                                                          )
-                                                        }
-                                                        asButton={false}
-                                                        size="sm"
-                                                        className="p-1.5 rounded text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
-                                                      />
-                                                      <TooltipButton
-                                                        icon={Trash2}
-                                                        tooltip="Deletar"
-                                                        onClick={() =>
-                                                          handleDeletarConteudo(unidade.id, item.id)
-                                                        }
-                                                        asButton={false}
-                                                        size="sm"
-                                                        className="p-1.5 rounded text-gray-600 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
-                                                      />
-                                                    </>
-                                                  }
-                                                >
-                                                  <div className="flex-1 mt-1">
-                                                    {item.tipo === 'titulo' ? (
-                                                      <h3 className="font-bold text-lg text-gray-900 dark:text-gray-100">
-                                                        {item.conteudo}
-                                                      </h3>
-                                                    ) : item.tipo === 'subtitulo' ? (
-                                                      <h4 className="font-semibold text-gray-900 dark:text-gray-100">
-                                                        {item.conteudo}
-                                                      </h4>
-                                                    ) : item.tipo === 'flipcard' ? (
-                                                      <div className="border border-[#e5e7eb] dark:border-gray-700 rounded-lg p-4 bg-linear-to-br from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 text-center min-h-[72px] flex flex-col items-center justify-center gap-2">
-                                                        {item.imagemFrente && (
-                                                          <>
-                                                            {/* eslint-disable-next-line @next/next/no-img-element */}
-                                                            <img
-                                                              src={item.imagemFrente}
-                                                              alt=""
-                                                              className="max-h-14 mx-auto object-contain rounded"
-                                                              onError={(e) => {
-                                                                e.currentTarget.style.display =
-                                                                  'none'
-                                                              }}
-                                                            />
-                                                          </>
-                                                        )}
-                                                        {item.tituloFrente ? (
-                                                          <p className="font-semibold text-sm text-gray-800 dark:text-gray-200">
-                                                            {item.tituloFrente}
-                                                          </p>
-                                                        ) : (
-                                                          <p className="text-xs text-gray-400 italic">
-                                                            Sem conteúdo na frente
-                                                          </p>
-                                                        )}
-                                                      </div>
-                                                    ) : item.tipo === 'accordion' ? (
-                                                      <div className="border border-[#e5e7eb] dark:border-gray-700 rounded-lg overflow-hidden">
-                                                        {(item.items || []).length === 0 ? (
-                                                          <p className="text-xs text-gray-400 italic p-3">
-                                                            Nenhum item
-                                                          </p>
-                                                        ) : (
-                                                          (item.items || []).map((acc, idx) => (
-                                                            <div
-                                                              key={acc.id || idx}
-                                                              className="flex items-center justify-between px-3 py-2 bg-gray-50 dark:bg-gray-800 border-b border-[#e5e7eb] dark:border-gray-700 last:border-b-0"
-                                                            >
-                                                              <span className="text-sm text-gray-700 dark:text-gray-300 truncate">
-                                                                {acc.titulo}
-                                                              </span>
-                                                              <ChevronDown className="h-3.5 w-3.5 text-gray-400 shrink-0 ml-2" />
-                                                            </div>
-                                                          ))
-                                                        )}
-                                                      </div>
-                                                    ) : item.tipo === 'imagem' ? (
-                                                      <div className="space-y-2">
-                                                        {item.fonte && (
-                                                          <p className="text-xs text-gray-500 dark:text-gray-400 text-center">
-                                                            Fonte: {item.fonte}
-                                                          </p>
-                                                        )}
-                                                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                                                        <img
-                                                          src={item.conteudo}
-                                                          alt={item.legenda || 'Imagem'}
-                                                          className={`h-auto object-contain border border-[#e5e7eb] dark:border-gray-700 rounded-md mx-auto ${item.tamanho === 'pequena' ? 'max-w-xs' : item.tamanho === 'media' ? 'max-w-md' : 'max-w-full'}`}
-                                                          onError={(e) => {
-                                                            e.currentTarget.style.display = 'none'
-                                                          }}
-                                                        />
-                                                        {item.legenda && (
-                                                          <p className="text-sm text-gray-600 dark:text-gray-400 italic text-center">
-                                                            {item.legenda}
-                                                          </p>
-                                                        )}
-                                                      </div>
-                                                    ) : item.tipo === 'lista' ? (
-                                                      <div className="space-y-1">
-                                                        {(item.itensLista || []).length === 0 ? (
-                                                          <p className="text-xs text-gray-400 italic">
-                                                            Nenhum item
-                                                          </p>
-                                                        ) : (
-                                                          (item.itensLista || []).map(
-                                                            (listaItem, idx) => (
-                                                              <div
-                                                                key={listaItem.id || idx}
-                                                                className="flex items-start gap-2 text-sm text-gray-700 dark:text-gray-300"
-                                                              >
-                                                                <span className="shrink-0 mt-0.5">
-                                                                  {item.tipoLista === 'ordenada' ? (
-                                                                    <span className="flex items-center justify-center w-4 h-4 bg-purple-500 text-white rounded-full text-xs font-semibold">
-                                                                      {idx + 1}
-                                                                    </span>
-                                                                  ) : item.tipoLista === 'check' ? (
-                                                                    <span className="flex items-center justify-center w-4 h-4 bg-green-500 text-white rounded">
-                                                                      <svg
-                                                                        className="w-2.5 h-2.5"
-                                                                        fill="none"
-                                                                        stroke="currentColor"
-                                                                        viewBox="0 0 24 24"
-                                                                      >
-                                                                        <path
-                                                                          strokeLinecap="round"
-                                                                          strokeLinejoin="round"
-                                                                          strokeWidth={3}
-                                                                          d="M5 13l4 4L19 7"
-                                                                        />
-                                                                      </svg>
-                                                                    </span>
-                                                                  ) : (
-                                                                    <span className="w-1.5 h-1.5 bg-purple-500 rounded-full mt-1.5 block" />
-                                                                  )}
-                                                                </span>
-                                                                <span className="line-clamp-1">
-                                                                  {listaItem.texto}
-                                                                </span>
-                                                              </div>
+                                          .map((item, itemIndex) => {
+                                            console.log(
+                                              `🔍 Renderizando conteúdo [${row.startIndex + itemIndex}]:`,
+                                              item.tipo,
+                                              item.id,
+                                              item.videoTitulo || item.conteudo?.substring(0, 50)
+                                            )
+                                            return (
+                                              <SortableConteudoWrapper
+                                                key={item.id}
+                                                id={item.id}
+                                                colunas={item.colunas}
+                                              >
+                                                {(dragHandle) => (
+                                                  <EditableCard
+                                                    flex
+                                                    label={
+                                                      item.tipo === 'titulo'
+                                                        ? 'Título'
+                                                        : item.tipo === 'subtitulo'
+                                                          ? 'Subtítulo'
+                                                          : item.tipo === 'paragrafo'
+                                                            ? 'Texto'
+                                                            : item.tipo === 'imagem'
+                                                              ? 'Imagem'
+                                                              : item.tipo === 'video'
+                                                                ? 'Vídeo'
+                                                                : item.tipo === 'accordion'
+                                                                  ? 'Accordion'
+                                                                  : item.tipo === 'flipcard'
+                                                                    ? 'FlipCard'
+                                                                    : item.tipo === 'lista'
+                                                                      ? 'Lista'
+                                                                      : item.tipo === 'quiz'
+                                                                        ? 'Quiz'
+                                                                        : item.tipo === 'info-box'
+                                                                          ? 'Info Box'
+                                                                          : 'Conteúdo'
+                                                    }
+                                                    actions={
+                                                      <>
+                                                        {dragHandle}
+                                                        <TooltipButton
+                                                          icon={Edit}
+                                                          tooltip="Editar"
+                                                          onClick={() =>
+                                                            handleOpenEditContentDrawer(
+                                                              unidade.id,
+                                                              item
                                                             )
-                                                          )
-                                                        )}
-                                                      </div>
-                                                    ) : item.tipo === 'quiz' ? (
-                                                      item.quizData ? (
-                                                        <QuizConteudo
-                                                          quizData={item.quizData}
-                                                          isEdicao={true}
+                                                          }
+                                                          asButton={false}
+                                                          size="sm"
+                                                          className="p-1.5 rounded text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
                                                         />
-                                                      ) : (
-                                                        <p className="text-xs text-gray-400 italic">
-                                                          Sem perguntas
-                                                        </p>
-                                                      )
-                                                    ) : item.tipo === 'info-box' ? (
-                                                      item.tipoInfoBox ? (
-                                                        <InfoBox
-                                                          tipo={item.tipoInfoBox}
-                                                          titulo={item.tituloInfoBox}
-                                                        >
-                                                          <div
-                                                            dangerouslySetInnerHTML={{
-                                                              __html: item.conteudo || '',
+                                                        <TooltipButton
+                                                          icon={Trash2}
+                                                          tooltip="Deletar"
+                                                          onClick={() =>
+                                                            handleDeletarConteudo(
+                                                              unidade.id,
+                                                              item.id
+                                                            )
+                                                          }
+                                                          asButton={false}
+                                                          size="sm"
+                                                          className="p-1.5 rounded text-gray-600 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                                                        />
+                                                      </>
+                                                    }
+                                                  >
+                                                    <div className="flex-1 mt-1">
+                                                      {item.tipo === 'titulo' ? (
+                                                        <h3 className="font-bold text-lg text-gray-900 dark:text-gray-100">
+                                                          {item.conteudo}
+                                                        </h3>
+                                                      ) : item.tipo === 'subtitulo' ? (
+                                                        <h4 className="font-semibold text-gray-900 dark:text-gray-100">
+                                                          {item.conteudo}
+                                                        </h4>
+                                                      ) : item.tipo === 'flipcard' ? (
+                                                        <div className="border border-[#e5e7eb] dark:border-gray-700 rounded-lg p-4 bg-linear-to-br from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 text-center min-h-[72px] flex flex-col items-center justify-center gap-2">
+                                                          {item.imagemFrente && (
+                                                            <>
+                                                              {/* eslint-disable-next-line @next/next/no-img-element */}
+                                                              <img
+                                                                src={item.imagemFrente}
+                                                                alt=""
+                                                                className="max-h-14 mx-auto object-contain rounded"
+                                                                onError={(e) => {
+                                                                  e.currentTarget.style.display =
+                                                                    'none'
+                                                                }}
+                                                              />
+                                                            </>
+                                                          )}
+                                                          {item.tituloFrente ? (
+                                                            <p className="font-semibold text-sm text-gray-800 dark:text-gray-200">
+                                                              {item.tituloFrente}
+                                                            </p>
+                                                          ) : (
+                                                            <p className="text-xs text-gray-400 italic">
+                                                              Sem conteúdo na frente
+                                                            </p>
+                                                          )}
+                                                        </div>
+                                                      ) : item.tipo === 'accordion' ? (
+                                                        <div className="border border-[#e5e7eb] dark:border-gray-700 rounded-lg overflow-hidden">
+                                                          {(item.items || []).length === 0 ? (
+                                                            <p className="text-xs text-gray-400 italic p-3">
+                                                              Nenhum item
+                                                            </p>
+                                                          ) : (
+                                                            (item.items || []).map((acc, idx) => (
+                                                              <div
+                                                                key={acc.id || idx}
+                                                                className="flex items-center justify-between px-3 py-2 bg-gray-50 dark:bg-gray-800 border-b border-[#e5e7eb] dark:border-gray-700 last:border-b-0"
+                                                              >
+                                                                <span className="text-sm text-gray-700 dark:text-gray-300 truncate">
+                                                                  {acc.titulo}
+                                                                </span>
+                                                                <ChevronDown className="h-3.5 w-3.5 text-gray-400 shrink-0 ml-2" />
+                                                              </div>
+                                                            ))
+                                                          )}
+                                                        </div>
+                                                      ) : item.tipo === 'imagem' ? (
+                                                        <div className="space-y-2">
+                                                          {item.fonte && (
+                                                            <p className="text-xs text-gray-500 dark:text-gray-400 text-center">
+                                                              Fonte: {item.fonte}
+                                                            </p>
+                                                          )}
+                                                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                                                          <img
+                                                            src={item.conteudo}
+                                                            alt={item.legenda || 'Imagem'}
+                                                            className={`h-auto object-contain border border-[#e5e7eb] dark:border-gray-700 rounded-md mx-auto ${item.tamanho === 'pequena' ? 'max-w-xs' : item.tamanho === 'media' ? 'max-w-md' : 'max-w-full'}`}
+                                                            onError={(e) => {
+                                                              e.currentTarget.style.display = 'none'
                                                             }}
                                                           />
-                                                        </InfoBox>
-                                                      ) : null
-                                                    ) : (
-                                                      <div
-                                                        className={`conteudo-paragrafo text-gray-700 dark:text-gray-300 ${item.alinhamento === 'centro' ? 'text-center' : item.alinhamento === 'direita' ? 'text-right' : item.alinhamento === 'justificado' ? 'text-justify' : 'text-left'}`}
-                                                        dangerouslySetInnerHTML={{
-                                                          __html: item.conteudo,
-                                                        }}
-                                                      />
-                                                    )}
-                                                  </div>
-                                                </EditableCard>
-                                              )}
-                                            </SortableConteudoWrapper>
-                                          ))}
+                                                          {item.legenda && (
+                                                            <p className="text-sm text-gray-600 dark:text-gray-400 italic text-center">
+                                                              {item.legenda}
+                                                            </p>
+                                                          )}
+                                                        </div>
+                                                      ) : item.tipo === 'video' ? (
+                                                        <div className="space-y-2">
+                                                          {item.videoTitulo && (
+                                                            <p className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+                                                              {item.videoTitulo}
+                                                            </p>
+                                                          )}
+                                                          <div className="aspect-video w-full rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-800 border border-[#e5e7eb] dark:border-gray-700">
+                                                            <div className="flex items-center justify-center h-full text-gray-500 dark:text-gray-400 text-sm">
+                                                              🎬 Vídeo:{' '}
+                                                              {item.videoUrl
+                                                                ? new URL(item.videoUrl).hostname
+                                                                : 'YouTube'}
+                                                            </div>
+                                                          </div>
+                                                          {item.videoUrl && (
+                                                            <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
+                                                              {item.videoUrl}
+                                                            </p>
+                                                          )}
+                                                        </div>
+                                                      ) : item.tipo === 'lista' ? (
+                                                        <div className="space-y-1">
+                                                          {(item.itensLista || []).length === 0 ? (
+                                                            <p className="text-xs text-gray-400 italic">
+                                                              Nenhum item
+                                                            </p>
+                                                          ) : (
+                                                            (item.itensLista || []).map(
+                                                              (listaItem, idx) => (
+                                                                <div
+                                                                  key={listaItem.id || idx}
+                                                                  className="flex items-start gap-2 text-sm text-gray-700 dark:text-gray-300"
+                                                                >
+                                                                  <span className="shrink-0 mt-0.5">
+                                                                    {item.tipoLista ===
+                                                                    'ordenada' ? (
+                                                                      <span className="flex items-center justify-center w-4 h-4 bg-purple-500 text-white rounded-full text-xs font-semibold">
+                                                                        {idx + 1}
+                                                                      </span>
+                                                                    ) : item.tipoLista ===
+                                                                      'check' ? (
+                                                                      <span className="flex items-center justify-center w-4 h-4 bg-green-500 text-white rounded">
+                                                                        <svg
+                                                                          className="w-2.5 h-2.5"
+                                                                          fill="none"
+                                                                          stroke="currentColor"
+                                                                          viewBox="0 0 24 24"
+                                                                        >
+                                                                          <path
+                                                                            strokeLinecap="round"
+                                                                            strokeLinejoin="round"
+                                                                            strokeWidth={3}
+                                                                            d="M5 13l4 4L19 7"
+                                                                          />
+                                                                        </svg>
+                                                                      </span>
+                                                                    ) : (
+                                                                      <span className="w-1.5 h-1.5 bg-purple-500 rounded-full mt-1.5 block" />
+                                                                    )}
+                                                                  </span>
+                                                                  <span className="line-clamp-1">
+                                                                    {listaItem.texto}
+                                                                  </span>
+                                                                </div>
+                                                              )
+                                                            )
+                                                          )}
+                                                        </div>
+                                                      ) : item.tipo === 'quiz' ? (
+                                                        item.quizData ? (
+                                                          <QuizConteudo
+                                                            quizData={item.quizData}
+                                                            isEdicao={true}
+                                                          />
+                                                        ) : (
+                                                          <p className="text-xs text-gray-400 italic">
+                                                            Sem perguntas
+                                                          </p>
+                                                        )
+                                                      ) : item.tipo === 'info-box' ? (
+                                                        item.tipoInfoBox ? (
+                                                          <InfoBox
+                                                            tipo={item.tipoInfoBox}
+                                                            titulo={item.tituloInfoBox}
+                                                          >
+                                                            <div
+                                                              dangerouslySetInnerHTML={{
+                                                                __html: item.conteudo || '',
+                                                              }}
+                                                            />
+                                                          </InfoBox>
+                                                        ) : null
+                                                      ) : (
+                                                        <div
+                                                          className={`conteudo-paragrafo text-gray-700 dark:text-gray-300 ${item.alinhamento === 'centro' ? 'text-center' : item.alinhamento === 'direita' ? 'text-right' : item.alinhamento === 'justificado' ? 'text-justify' : 'text-left'}`}
+                                                          dangerouslySetInnerHTML={{
+                                                            __html: item.conteudo,
+                                                          }}
+                                                        />
+                                                      )}
+                                                    </div>
+                                                  </EditableCard>
+                                                )}
+                                              </SortableConteudoWrapper>
+                                            )
+                                          })}
                                         {row.totalCols < 12 &&
                                           emptySlot(row.endIndex, 12 - row.totalCols)}
                                       </React.Fragment>
@@ -1854,6 +1948,45 @@ export default function EditarCursoPage() {
                 </h3>
                 <p className="text-xs text-gray-500 dark:text-gray-400 text-left">
                   Foto com legenda
+                </p>
+              </button>
+
+              {/* Vídeo */}
+              <button
+                onClick={() => {
+                  console.log('🎬 Clicou em Vídeo!')
+                  if (insertAtIndex.current) {
+                    handleSelectBlockType('video', insertAtIndex.current.unidadeId)
+                  }
+                }}
+                className="flex flex-col items-start p-4 rounded-xl border-2 border-gray-200 dark:border-gray-700 hover:border-blue-500 dark:hover:border-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/20 transition-all group"
+              >
+                <div className="w-10 h-10 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center mb-3 group-hover:bg-blue-200 dark:group-hover:bg-blue-900/50 transition-colors">
+                  <svg
+                    className="h-5 w-5 text-blue-600 dark:text-blue-400"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"
+                    />
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
+                  </svg>
+                </div>
+                <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100 mb-0.5">
+                  Vídeo
+                </h3>
+                <p className="text-xs text-gray-500 dark:text-gray-400 text-left">
+                  Vídeo do YouTube
                 </p>
               </button>
 
