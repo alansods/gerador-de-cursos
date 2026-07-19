@@ -1,6 +1,5 @@
 'use client'
 
-import { Card, CardContent } from '@/components/ui/card'
 import {
   Accordion,
   AccordionContent,
@@ -38,12 +37,8 @@ const extractYouTubeId = (url: string): string => {
 
 export function UnidadeConteudo({ unidade }: UnidadeConteudoProps) {
   return (
-    <Card
-      key={unidade.id}
-      id={unidade.id}
-      className="overflow-hidden scroll-mt-20 dark:bg-gray-800 dark:border-gray-700"
-    >
-      <CardContent className="px-6 py-8">
+    <div key={unidade.id} id={unidade.id} className="scroll-mt-20">
+      <div className="space-y-6">
         {unidade.conteudo.length === 0 ? (
           <div className="text-center py-12 text-gray-500 dark:text-gray-400">
             <p>Nenhum conteúdo adicionado.</p>
@@ -265,6 +260,38 @@ export function UnidadeConteudo({ unidade }: UnidadeConteudoProps) {
                       </div>
                     )}
                   </div>
+                ) : item.tipo === 'objetivos-aprendizagem' ? (
+                  <div className="mb-4 w-full">
+                    {item.itensObjetivos && item.itensObjetivos.length > 0 ? (
+                      <div className="flex flex-col gap-1 my-1">
+                        <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">
+                          Objetivos de aprendizagem
+                        </h2>
+                        <div className="flex flex-col gap-2.5 my-1">
+                          {item.itensObjetivos.map((objetivo, idx) => (
+                            <div
+                              key={objetivo.id || idx}
+                              className="flex gap-3 items-center bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-[10px] py-3.5 px-4"
+                            >
+                              <span className="w-[30px] h-[30px] rounded-lg bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 inline-flex items-center justify-center shrink-0 font-medium text-[13px] tabular-nums">
+                                {idx + 1}
+                              </span>
+                              <span
+                                className="text-sm text-gray-900 dark:text-gray-100 leading-[1.45]"
+                                dangerouslySetInnerHTML={{
+                                  __html: objetivo.texto,
+                                }}
+                              />
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="text-gray-500 dark:text-gray-400 text-sm italic p-4 border border-gray-300 dark:border-gray-700 rounded-lg">
+                        Objetivos de aprendizagem vazios
+                      </div>
+                    )}
+                  </div>
                 ) : (
                   <div
                     className={`text-gray-700 dark:text-gray-300 leading-relaxed text-base mb-3 ${
@@ -288,7 +315,7 @@ export function UnidadeConteudo({ unidade }: UnidadeConteudoProps) {
             ))}
           </div>
         )}
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   )
 }

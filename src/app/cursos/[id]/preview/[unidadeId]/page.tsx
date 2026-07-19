@@ -233,7 +233,7 @@ export default function PreviewUnidadePage() {
             padding: '2.5rem 2rem',
           }}
         >
-          <div className="max-w-7xl mx-auto flex items-center justify-between gap-6">
+          <div className="max-w-[900px] mx-auto flex items-center justify-between gap-6">
             <h1 style={{ fontSize: '2rem', fontWeight: 700, lineHeight: 1.2, margin: 0 }}>
               {unidade.titulo.replace(/^UNIDADE\s+\d+[:\s]*/i, '').trim()}
             </h1>
@@ -263,9 +263,11 @@ export default function PreviewUnidadePage() {
             </div>
           </div>
         </div>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="max-w-[900px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
           {/* Unit Content */}
-          <UnidadeConteudo unidade={unidade} />
+          <div className="space-y-6">
+            <UnidadeConteudo unidade={unidade} />
+          </div>
 
           {/* Navigation Buttons */}
           <div className="flex items-center justify-between gap-4 mt-8 pt-8 border-t-[1px] border-[#e5e7eb] dark:border-gray-700">
