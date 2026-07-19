@@ -2,6 +2,9 @@
 
 Web system for creating and exporting educational courses in the **SCORM 1.2** standard, with content generation powered by **Artificial Intelligence** (Google Gemini / OpenAI).
 
+<img width="2967" height="1591" alt="image" src="https://github.com/user-attachments/assets/2ef5d87e-59fd-44ff-a41b-67616ed2e9b1" />
+
+
 ---
 
 ## Features
