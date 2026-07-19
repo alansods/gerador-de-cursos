@@ -12,6 +12,7 @@ import {
   ChevronDown,
   HelpCircle,
   Video,
+  Target,
 } from 'lucide-react'
 import { ConteudoUnidade } from '@/types/gerador-curso'
 
@@ -52,6 +53,12 @@ const blockTypes: BlockTypeOption[] = [
     label: 'Lista',
     description: 'Itens ou passos',
     icon: List,
+  },
+  {
+    tipo: 'objetivos-aprendizagem',
+    label: 'Objetivos',
+    description: 'Objetivos de aprendizagem',
+    icon: Target,
   },
   {
     tipo: 'info-box',

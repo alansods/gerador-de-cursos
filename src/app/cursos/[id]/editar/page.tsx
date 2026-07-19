@@ -58,6 +58,7 @@ import {
   Moon,
   Sun,
   Settings,
+  Target,
 } from 'lucide-react'
 import { CourseSettingsDrawer } from '@/components/CourseSettingsDrawer'
 import { ContentBlockDrawer } from '@/components/ContentBlockDrawer'
@@ -1478,11 +1479,14 @@ export default function EditarCursoPage() {
                                                                     ? 'FlipCard'
                                                                     : item.tipo === 'lista'
                                                                       ? 'Lista'
-                                                                      : item.tipo === 'quiz'
-                                                                        ? 'Quiz'
-                                                                        : item.tipo === 'info-box'
-                                                                          ? 'Info Box'
-                                                                          : 'Conteúdo'
+                                                                      : item.tipo ===
+                                                                          'objetivos-aprendizagem'
+                                                                        ? 'Objetivos de Aprendizagem'
+                                                                        : item.tipo === 'quiz'
+                                                                          ? 'Quiz'
+                                                                          : item.tipo === 'info-box'
+                                                                            ? 'Info Box'
+                                                                            : 'Conteúdo'
                                                     }
                                                     actions={
                                                       <>
@@ -1656,6 +1660,31 @@ export default function EditarCursoPage() {
                                                                   </span>
                                                                   <span className="line-clamp-1">
                                                                     {listaItem.texto}
+                                                                  </span>
+                                                                </div>
+                                                              )
+                                                            )
+                                                          )}
+                                                        </div>
+                                                      ) : item.tipo === 'objetivos-aprendizagem' ? (
+                                                        <div className="space-y-1">
+                                                          {(item.itensObjetivos || []).length ===
+                                                          0 ? (
+                                                            <p className="text-xs text-gray-400 italic">
+                                                              Nenhum objetivo
+                                                            </p>
+                                                          ) : (
+                                                            (item.itensObjetivos || []).map(
+                                                              (objetivo, idx) => (
+                                                                <div
+                                                                  key={objetivo.id || idx}
+                                                                  className="flex items-start gap-2 text-sm text-gray-700 dark:text-gray-300"
+                                                                >
+                                                                  <span className="flex items-center justify-center w-5 h-5 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded font-semibold text-xs shrink-0">
+                                                                    {idx + 1}
+                                                                  </span>
+                                                                  <span className="line-clamp-2">
+                                                                    {objetivo.texto}
                                                                   </span>
                                                                 </div>
                                                               )
@@ -2014,6 +2043,26 @@ export default function EditarCursoPage() {
                 </h3>
                 <p className="text-xs text-gray-500 dark:text-gray-400 text-left">
                   Itens ou passos
+                </p>
+              </button>
+
+              {/* Objetivos de Aprendizagem */}
+              <button
+                onClick={() => {
+                  if (insertAtIndex.current) {
+                    handleSelectBlockType('objetivos-aprendizagem', insertAtIndex.current.unidadeId)
+                  }
+                }}
+                className="flex flex-col items-start p-4 rounded-xl border-2 border-gray-200 dark:border-gray-700 hover:border-blue-500 dark:hover:border-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/20 transition-all group"
+              >
+                <div className="w-10 h-10 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center mb-3 group-hover:bg-blue-200 dark:group-hover:bg-blue-900/50 transition-colors">
+                  <Target className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                </div>
+                <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100 mb-0.5">
+                  Objetivos
+                </h3>
+                <p className="text-xs text-gray-500 dark:text-gray-400 text-left">
+                  Objetivos de aprendizagem
                 </p>
               </button>
 

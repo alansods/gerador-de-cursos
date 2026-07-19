@@ -20,6 +20,7 @@ import {
   Plus,
   Trash2,
   Video,
+  Target,
 } from 'lucide-react'
 import Image from 'next/image'
 import { ConteudoUnidade, AccordionItem, ListaItem } from '@/types/gerador-curso'
@@ -47,6 +48,7 @@ const getBlockTitle = (tipo: ConteudoUnidade['tipo'] | null, mode: 'add' | 'edit
     imagem: `${action} Imagem`,
     video: `${action} Vídeo`,
     lista: `${action} Lista`,
+    'objetivos-aprendizagem': `${action} Objetivos de Aprendizagem`,
     'info-box': `${action} Destaque`,
     flipcard: `${action} Flashcards`,
     accordion: `${action} Sanfona`,
@@ -64,6 +66,7 @@ const getBlockIcon = (tipo: ConteudoUnidade['tipo'] | null) => {
     imagem: ImageIcon,
     video: Video,
     lista: List,
+    'objetivos-aprendizagem': Target,
     'info-box': AlertTriangle,
     flipcard: RotateCcw,
     accordion: ChevronDown,
@@ -125,6 +128,7 @@ export function ContentBlockDrawer({
     alturaCard: '300px',
     itensLista: [],
     tipoLista: 'nao-ordenada',
+    itensObjetivos: [],
     quizData: undefined,
     tipoInfoBox: 'info',
     tituloInfoBox: '',
@@ -155,6 +159,7 @@ export function ContentBlockDrawer({
         alturaCard: '300px',
         itensLista: [],
         tipoLista: 'nao-ordenada',
+        itensObjetivos: [],
         quizData: undefined,
         tipoInfoBox: 'info',
         tituloInfoBox: '',
@@ -262,6 +267,16 @@ export function ContentBlockDrawer({
         }
         if (formData.itensLista.some((item) => !item.texto.trim())) {
           toast.error('Todos os itens devem ter texto')
+          return false
+        }
+        break
+      case 'objetivos-aprendizagem':
+        if (!formData.itensObjetivos || formData.itensObjetivos.length === 0) {
+          toast.error('Adicione pelo menos um objetivo de aprendizagem')
+          return false
+        }
+        if (formData.itensObjetivos.some((item) => !item.texto.trim())) {
+          toast.error('Todos os objetivos devem ter texto')
           return false
         }
         break
@@ -390,6 +405,33 @@ export function ContentBlockDrawer({
     setFormData({
       ...formData,
       itensLista: formData.itensLista?.map((item) =>
+        item.id === id ? { ...item, texto: value } : item
+      ),
+    })
+  }
+
+  const handleAddObjetivo = () => {
+    const newItem: ListaItem = {
+      id: `objetivo-${Date.now()}`,
+      texto: '',
+    }
+    setFormData({
+      ...formData,
+      itensObjetivos: [...(formData.itensObjetivos || []), newItem],
+    })
+  }
+
+  const handleRemoveObjetivo = (id: string) => {
+    setFormData({
+      ...formData,
+      itensObjetivos: formData.itensObjetivos?.filter((item) => item.id !== id),
+    })
+  }
+
+  const handleUpdateObjetivo = (id: string, value: string) => {
+    setFormData({
+      ...formData,
+      itensObjetivos: formData.itensObjetivos?.map((item) =>
         item.id === id ? { ...item, texto: value } : item
       ),
     })
@@ -767,6 +809,61 @@ export function ContentBlockDrawer({
               <div className="text-center py-8 text-gray-500 dark:text-gray-400 text-sm border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg">
                 <p>Nenhum item adicionado ainda.</p>
                 <p className="text-xs mt-1">Clique em &quot;Adicionar Item&quot; para começar.</p>
+              </div>
+            )}
+          </div>
+        )
+
+      case 'objetivos-aprendizagem':
+        return (
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                Objetivos de Aprendizagem <span className="text-red-500">*</span>
+              </label>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={handleAddObjetivo}
+                className="text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-800 hover:bg-blue-50 dark:hover:bg-blue-950/20"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Adicionar Objetivo
+              </Button>
+            </div>
+
+            {formData.itensObjetivos && formData.itensObjetivos.length > 0 ? (
+              <div className="space-y-2 max-h-[400px] overflow-y-auto">
+                {formData.itensObjetivos.map((item, index) => (
+                  <div key={item.id} className="flex items-center gap-2">
+                    <span className="text-sm font-medium text-gray-500 dark:text-gray-400 w-6">
+                      {index + 1}.
+                    </span>
+                    <Input
+                      value={item.texto}
+                      onChange={(e) => handleUpdateObjetivo(item.id, e.target.value)}
+                      placeholder="Descreva o objetivo de aprendizagem..."
+                      className="flex-1"
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleRemoveObjetivo(item.id)}
+                      className="text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-950/20"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-8 text-gray-500 dark:text-gray-400 text-sm border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg">
+                <p>Nenhum objetivo adicionado ainda.</p>
+                <p className="text-xs mt-1">
+                  Clique em &quot;Adicionar Objetivo&quot; para começar.
+                </p>
               </div>
             )}
           </div>

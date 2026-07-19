@@ -41,6 +41,7 @@ export interface ConteudoUnidade {
     | 'quiz'
     | 'info-box'
     | 'video'
+    | 'objetivos-aprendizagem'
   conteudo: string
   ordem: number
   // Propriedades específicas para imagens
@@ -71,6 +72,8 @@ export interface ConteudoUnidade {
   // Propriedades específicas para video
   videoUrl?: string
   videoTitulo?: string
+  // Propriedades específicas para objetivos-aprendizagem
+  itensObjetivos?: ListaItem[]
 }
 
 export interface Unidade {

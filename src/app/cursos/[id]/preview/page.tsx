@@ -219,7 +219,7 @@ export default function PreviewCursoPage() {
         <main className="pt-16">
           {/* Hero Section - Dark Background */}
           <div className="bg-gradient-to-br from-blue-950 via-blue-900 to-blue-800 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 text-white py-16">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="max-w-[900px] mx-auto px-4 sm:px-6 lg:px-8">
               {/* Category Badge */}
               <div className="mb-4">
                 <Badge className="bg-white/20 dark:bg-white/10 text-white border-white/30 dark:border-white/20 hover:bg-white/30 dark:hover:bg-white/20">
@@ -250,7 +250,7 @@ export default function PreviewCursoPage() {
           </div>
 
           {/* Units Section */}
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+          <div className="max-w-[900px] mx-auto px-4 sm:px-6 lg:px-8 py-12">
             <h2 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-8 text-center">
               Unidades do Curso
             </h2>
