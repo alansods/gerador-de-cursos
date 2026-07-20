@@ -2,8 +2,8 @@
 
 import React from 'react'
 import { Button } from '@/components/ui/button'
-import { Menu, Home, User, LogOut, Moon, Sun } from 'lucide-react'
-import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from '@/components/ui/sheet'
+import { Menu, Home, BookOpen, X, User, LogOut, Moon, Sun } from 'lucide-react'
+import { Sheet, SheetContent, SheetTrigger, SheetTitle } from '@/components/ui/sheet'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import type { CursoGerado } from '@/types/gerador-curso'
 import { useLMS } from '@/hooks/useLMS'
@@ -24,19 +24,21 @@ export function SCORMNavbar({
 }: SCORMNavbarProps) {
   const { learnerName, isConnected } = useLMS()
   const { isDarkMode, toggleDarkMode } = useTheme()
+  const [open, setOpen] = React.useState(false)
 
   // Helper to handle navigation
   const handleNavClick = (e: React.MouseEvent, unitId: string | null) => {
     if (onNavigate) {
       e.preventDefault()
       onNavigate(unitId)
+      setOpen(false) // Close menu after navigation
     }
   }
 
   return (
     <nav className="fixed top-0 left-0 right-0 bg-white dark:bg-gray-800 border-b border-[#e5e7eb] dark:border-gray-700 z-50 h-16 flex items-center px-4">
       {showMenu && (
-        <Sheet>
+        <Sheet open={open} onOpenChange={setOpen}>
           <SheetTrigger asChild>
             <Button variant="ghost" size="icon">
               <Menu className="h-6 w-6" />
@@ -45,14 +47,33 @@ export function SCORMNavbar({
           </SheetTrigger>
           <SheetContent
             side="left"
-            className="w-[320px] sm:w-[400px] p-0 bg-linear-to-b from-gray-50 to-white dark:from-gray-950 dark:to-gray-800"
+            className="w-[min(380px,90vw)] p-0 bg-white dark:bg-[#1a202c]"
+            hideClose
+            style={{
+              boxShadow: '0 20px 50px rgba(0,0,0,.18)',
+            }}
           >
-            <SheetHeader className="px-6 pt-6 pb-4 border-b border-gray-100 dark:border-gray-700 bg-white dark:bg-gray-800">
-              <SheetTitle className="text-left text-xl font-bold text-gray-900 dark:text-gray-100">
-                Unidades do curso
-              </SheetTitle>
-            </SheetHeader>
-            <nav className="px-4 py-6 space-y-2 overflow-y-auto max-h-[calc(100vh-120px)]">
+            {/* Header */}
+            <div className="px-5 pt-5 pb-4 border-b border-[var(--border)] flex flex-row items-start gap-3">
+              <div className="flex-1">
+                <SheetTitle className="text-[15px] font-medium text-[var(--fg1)] mb-0.5">
+                  Conteúdo do curso
+                </SheetTitle>
+                <p className="text-xs text-[var(--fg2)] m-0">{curso.titulo}</p>
+              </div>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setOpen(false)}
+                className="w-8 h-8 rounded-md hover:bg-[var(--neutral-150)] text-[var(--fg2)] hover:text-[var(--fg1)]"
+                aria-label="Fechar"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+
+            {/* Menu Body */}
+            <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-0.5">
               {/* Home Button */}
               <a
                 href={
@@ -69,48 +90,44 @@ export function SCORMNavbar({
                 onClick={(e) => handleNavClick(e, null)}
                 target={onNavigate ? undefined : '_top'}
                 data-scorm-nav="true"
-                className="group flex items-center gap-3 p-4 rounded-xl border border-gray-200 dark:border-gray-700 hover:border-orange-300 dark:hover:border-orange-600 hover:bg-orange-50/50 dark:hover:bg-orange-900/30 transition-all duration-200 cursor-pointer"
+                className={`flex items-center gap-2.5 px-3 py-2.5 rounded-md text-[13.5px] leading-tight transition-all duration-150 ${
+                  !currentUnidadeId
+                    ? 'bg-[var(--brand-blue-soft)] dark:bg-[#1e3a8a] text-[var(--brand-blue)] font-medium'
+                    : 'text-[var(--fg2)] hover:bg-[var(--neutral-150)] dark:hover:bg-[var(--surface-muted)] hover:text-[var(--fg1)]'
+                }`}
+                style={{ marginBottom: '6px' }}
               >
-                <div className="shrink-0 w-10 h-10 rounded-lg bg-linear-to-br from-orange-400 to-orange-600 dark:from-orange-500 dark:to-orange-700 flex items-center justify-center text-white">
-                  <Home className="w-5 h-5" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <span className="block font-semibold text-gray-900 dark:text-gray-100 group-hover:text-orange-600 dark:group-hover:text-orange-400 transition-colors line-clamp-2 text-sm leading-snug">
-                    Página inicial
-                  </span>
-                </div>
+                <Home
+                  className="w-4 h-4 shrink-0"
+                  style={{ color: !currentUnidadeId ? 'var(--brand-blue)' : 'var(--fg3)' }}
+                />
+                <span>Página inicial</span>
               </a>
 
-              {/* Units Section */}
+              {/* Units Section Header */}
+              <div className="px-2.5 pt-3.5 pb-2 text-[11px] uppercase tracking-wider text-[var(--fg3)] font-medium">
+                Unidades
+              </div>
+
+              {/* Units List */}
               {(curso.unidades || []).map((u, index) => {
                 const isActive = currentUnidadeId ? u.id === currentUnidadeId : false
 
-                // Gerar href baseado no contexto (SCORM build vs dev/preview)
+                // Generate href based on context
                 let href: string
 
                 if (onNavigate) {
                   href = '#'
                 } else if (process.env.NEXT_PUBLIC_IS_SCORM_BUILD === 'true') {
-                  // SCORM build: estrutura de arquivos no ZIP
-                  // - index.html está na raiz
-                  // - unidades estão em scorm-preview/unidade/
                   if (currentUnidadeId) {
-                    // Estamos em uma unidade (scorm-preview/unidade/xxx.html)
                     href = u.id === currentUnidadeId ? '#' : `./${u.id}.html`
                   } else {
-                    // Estamos na página inicial (index.html na raiz)
-                    // ✅ Usar ./ para forçar caminho relativo ao diretório atual
                     href = `./scorm-preview/unidade/${u.id}.html`
                   }
                 } else {
-                  // Dev/Preview: estrutura de rotas do Next.js
-                  // - /scorm-preview -> página inicial
-                  // - /scorm-preview/unidade/[id] -> unidades
                   if (currentUnidadeId) {
-                    // Estamos em uma unidade
                     href = u.id === currentUnidadeId ? '#' : `${u.id}.html`
                   } else {
-                    // Estamos na página inicial
                     href = `unidade/${u.id}.html`
                   }
                 }
@@ -123,22 +140,19 @@ export function SCORMNavbar({
                     target={onNavigate ? undefined : '_top'}
                     data-scorm-nav="true"
                     data-unit-id={u.id}
-                    className={`group flex items-center gap-3 p-4 rounded-xl border transition-all duration-200 cursor-pointer ${
+                    className={`flex items-center gap-2.5 px-3 py-2.5 rounded-md text-[13.5px] leading-tight transition-all duration-150 ${
                       isActive
-                        ? 'border-orange-500 dark:border-orange-600 bg-orange-50/50 dark:bg-orange-900/30'
-                        : 'border-gray-200 dark:border-gray-700 hover:border-orange-300 dark:hover:border-orange-600 hover:bg-orange-50/50 dark:hover:bg-orange-900/30'
+                        ? 'bg-[var(--brand-blue-soft)] dark:bg-[#1e3a8a] text-[var(--brand-blue)] font-medium'
+                        : 'text-[var(--fg2)] hover:bg-[var(--neutral-150)] dark:hover:bg-[var(--surface-muted)] hover:text-[var(--fg1)]'
                     }`}
                   >
-                    {/* Badge with number */}
-                    <div className="shrink-0 w-10 h-10 rounded-lg bg-linear-to-br from-orange-400 to-orange-600 dark:from-orange-500 dark:to-orange-700 flex items-center justify-center text-white font-bold text-sm">
-                      {String(index + 1).padStart(2, '0')}
-                    </div>
-                    {/* Content */}
-                    <div className="flex-1 min-w-0">
-                      <p className="font-semibold text-gray-900 dark:text-gray-100 group-hover:text-orange-600 dark:group-hover:text-orange-400 transition-colors line-clamp-2 text-sm leading-snug">
-                        {u.titulo}
-                      </p>
-                    </div>
+                    <BookOpen
+                      className="w-4 h-4 shrink-0"
+                      style={{ color: isActive ? 'var(--brand-blue)' : 'var(--fg3)' }}
+                    />
+                    <span className="line-clamp-2">
+                      {index + 1}. {u.titulo}
+                    </span>
                   </a>
                 )
               })}
@@ -198,11 +212,10 @@ export function SCORMNavbar({
                       console.error('[LMS] Erro ao sair:', error)
                     }
                   }
-                  // Fechar a janela ou redirecionar
+                  // Close window or redirect
                   if (window.parent !== window) {
                     window.close()
                   } else {
-                    // No SCORM, só fechar janela
                     window.close()
                   }
                 }}

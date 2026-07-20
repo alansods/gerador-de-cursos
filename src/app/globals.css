@@ -123,6 +123,7 @@
   --bg-elevated: var(--neutral-0);
   --surface-card: var(--neutral-0);
   --surface-muted: var(--neutral-150);
+  --surface-sidebar: var(--neutral-0);
   --border-strong: var(--neutral-400);
 
   --success: var(--brand-green);
@@ -213,6 +214,7 @@
   --bg-elevated: var(--neutral-900);
   --surface-card: var(--neutral-900);
   --surface-muted: var(--neutral-800);
+  --surface-sidebar: var(--neutral-900);
   --fg1: #e3e8ef;
   --fg2: #94a3b8;
   --fg3: #64748b;

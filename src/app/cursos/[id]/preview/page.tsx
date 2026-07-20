@@ -9,7 +9,7 @@ import { useParams, useRouter, usePathname } from 'next/navigation'
 import { useGeradorCurso } from '@/context/GeradorCursoContext'
 import { PageTransition } from '@/components/PageTransition'
 import { Card, CardContent } from '@/components/ui/card'
-import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from '@/components/ui/sheet'
+import { Sheet, SheetContent, SheetTrigger, SheetTitle } from '@/components/ui/sheet'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import {
   Menu,
@@ -98,48 +98,79 @@ export default function PreviewCursoPage() {
             </SheetTrigger>
             <SheetContent
               side="left"
-              className="w-[320px] sm:w-[400px] p-0 bg-linear-to-b from-gray-50 to-white dark:from-gray-900 dark:to-gray-800"
+              className="w-[min(380px,90vw)] p-0 bg-white dark:bg-[#1a202c]"
+              hideClose
+              style={{
+                boxShadow: '0 20px 50px rgba(0,0,0,.18)',
+              }}
             >
-              <SheetHeader className="px-6 pt-6 pb-4 border-b border-gray-100 dark:border-gray-700 bg-white dark:bg-gray-800">
-                <SheetTitle className="text-left text-xl font-bold text-gray-900 dark:text-gray-100">
-                  Unidades do curso
-                </SheetTitle>
-              </SheetHeader>
-              <nav className="px-4 py-6 space-y-2 overflow-y-auto max-h-[calc(100vh-120px)]">
+              {/* Header */}
+              <div className="px-5 pt-5 pb-4 border-b border-[var(--border)] flex flex-row items-start gap-3">
+                <div className="flex-1">
+                  <SheetTitle className="text-[15px] font-medium text-[var(--fg1)] mb-0.5">
+                    Conteúdo do curso
+                  </SheetTitle>
+                  <p className="text-xs text-[var(--fg2)] m-0">{curso.titulo}</p>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setMenuOpen(false)}
+                  className="w-8 h-8 rounded-md hover:bg-[var(--neutral-150)] text-[var(--fg2)] hover:text-[var(--fg1)]"
+                  aria-label="Fechar"
+                >
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    className="h-4 w-4"
+                  >
+                    <path d="M18 6 6 18M6 6l12 12" />
+                  </svg>
+                </Button>
+              </div>
+
+              {/* Menu Body */}
+              <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-0.5">
                 {/* Home Button */}
                 <Link
                   href={`/cursos/${cursoUrlSegment}/preview`}
                   onClick={() => setMenuOpen(false)}
-                  className="group flex items-center gap-3 p-4 rounded-xl border border-orange-500 dark:border-orange-600 bg-orange-50/50 dark:bg-orange-900/30 transition-all duration-200"
+                  className="flex items-center gap-2.5 px-3 py-2.5 rounded-md text-[13.5px] leading-tight transition-all duration-150 bg-[var(--brand-blue-soft)] dark:bg-[#1e3a8a] text-[var(--brand-blue)] font-medium"
+                  style={{ marginBottom: '6px' }}
                 >
-                  <div className="shrink-0 w-10 h-10 rounded-lg bg-linear-to-br from-orange-400 to-orange-600 dark:from-orange-500 dark:to-orange-700 flex items-center justify-center text-white">
-                    <Home className="w-5 h-5" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <span className="block font-semibold text-gray-900 dark:text-gray-100 group-hover:text-orange-600 dark:group-hover:text-orange-400 transition-colors line-clamp-2 text-sm leading-snug">
-                      Página inicial
-                    </span>
-                  </div>
+                  <Home className="w-4 h-4 shrink-0" style={{ color: 'var(--brand-blue)' }} />
+                  <span>Página inicial</span>
                 </Link>
 
-                {/* Units Section */}
+                {/* Units Section Header */}
+                <div className="px-2.5 pt-3.5 pb-2 text-[11px] uppercase tracking-wider text-[var(--fg3)] font-medium">
+                  Unidades
+                </div>
+
+                {/* Units List */}
                 {(curso.unidades || []).map((unidade, index) => (
                   <Link
                     key={unidade.id || `unidade-${index}`}
                     href={`/cursos/${cursoUrlSegment}/preview/unidade-${index + 1}`}
                     onClick={() => setMenuOpen(false)}
-                    className="group flex items-center gap-3 p-4 rounded-xl border border-gray-200 dark:border-gray-700 hover:border-orange-300 dark:hover:border-orange-600 hover:bg-orange-50/50 dark:hover:bg-orange-900/30 transition-all duration-200"
+                    className="flex items-center gap-2.5 px-3 py-2.5 rounded-md text-[13.5px] leading-tight transition-all duration-150 text-[var(--fg2)] hover:bg-[var(--neutral-150)] dark:hover:bg-[var(--surface-muted)] hover:text-[var(--fg1)]"
                   >
-                    {/* Badge with number */}
-                    <div className="shrink-0 w-10 h-10 rounded-lg bg-linear-to-br from-orange-400 to-orange-600 dark:from-orange-500 dark:to-orange-700 flex items-center justify-center text-white font-bold text-sm">
-                      {String(index + 1).padStart(2, '0')}
-                    </div>
-                    {/* Content */}
-                    <div className="flex-1 min-w-0">
-                      <p className="font-semibold text-gray-900 dark:text-gray-100 group-hover:text-orange-600 dark:group-hover:text-orange-400 transition-colors line-clamp-2 text-sm leading-snug">
-                        {unidade.titulo}
-                      </p>
-                    </div>
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      className="w-4 h-4 shrink-0"
+                      style={{ color: 'var(--fg3)' }}
+                    >
+                      <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
+                      <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
+                    </svg>
+                    <span className="line-clamp-2">
+                      {index + 1}. {unidade.titulo}
+                    </span>
                   </Link>
                 ))}
               </nav>
