@@ -8,7 +8,7 @@ import {
 } from '@/components/ui/accordion'
 import { FlipCard } from '@/components/flipcard'
 import { QuizConteudo } from '@/components/QuizConteudo'
-import { InfoBox } from '@/components/info-box'
+import { InfoBox } from '@/components/InfoBox'
 import { Unidade } from '@/types/gerador-curso'
 
 interface UnidadeConteudoProps {

@@ -49,7 +49,7 @@ const getBlockTitle = (tipo: ConteudoUnidade['tipo'] | null, mode: 'add' | 'edit
     video: `${action} Vídeo`,
     lista: `${action} Lista`,
     'objetivos-aprendizagem': `${action} Objetivos de Aprendizagem`,
-    'info-box': `${action} Destaque`,
+    'info-box': `${action} Info Box`,
     flipcard: `${action} Flashcards`,
     accordion: `${action} Sanfona`,
     quiz: `${action} Quiz`,
@@ -874,7 +874,7 @@ export function ContentBlockDrawer({
           <div className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Tipo de Destaque <span className="text-red-500">*</span>
+                Tipo de Info Box <span className="text-red-500">*</span>
               </label>
               <select
                 value={formData.tipoInfoBox || 'info'}

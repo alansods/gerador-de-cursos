@@ -75,7 +75,7 @@ import {
 } from '@dnd-kit/core'
 import { SortableContext, arrayMove, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import { QuizConteudo } from '@/components/QuizConteudo'
-import { InfoBox } from '@/components/info-box'
+import { InfoBox } from '@/components/InfoBox'
 import { QuizData, QuizQuestion, Unidade, ConteudoUnidade } from '@/types/gerador-curso'
 
 export default function EditarCursoPage() {
@@ -2066,7 +2066,7 @@ export default function EditarCursoPage() {
                 </p>
               </button>
 
-              {/* Destaque (Info Box) */}
+              {/* Info Box */}
               <button
                 onClick={() => {
                   if (insertAtIndex.current) {
@@ -2079,7 +2079,7 @@ export default function EditarCursoPage() {
                   <AlertTriangle className="h-5 w-5 text-blue-600 dark:text-blue-400" />
                 </div>
                 <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100 mb-0.5">
-                  Destaque
+                  Info Box
                 </h3>
                 <p className="text-xs text-gray-500 dark:text-gray-400 text-left">Dica ou aviso</p>
               </button>
