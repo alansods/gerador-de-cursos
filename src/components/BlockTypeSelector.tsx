@@ -63,7 +63,7 @@ const blockTypes: BlockTypeOption[] = [
   {
     tipo: 'info-box',
     label: 'Info Box',
-    description: 'Dica ou aviso',
+    description: 'Cards de informação',
     icon: AlertTriangle,
   },
   {

@@ -7,6 +7,13 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Checkbox } from '@/components/ui/checkbox'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { toast } from 'sonner'
 import { PasswordStrengthMeter } from './PasswordStrengthMeter'
 import { User, Mail, Lock, Eye, EyeOff, ArrowRight } from 'lucide-react'
@@ -174,32 +181,32 @@ export function SignupForm() {
             Função na instituição<span className="text-[#F15A29] ml-0.5">*</span>
           </Label>
           <div className="input-wrap relative mt-1.5">
-            <select
-              id="signup-funcao"
+            <Select
               value={funcao}
-              onChange={(e) => {
-                setFuncao(e.target.value)
+              onValueChange={(value) => {
+                setFuncao(value)
                 if (errors.funcao) {
                   setErrors({ ...errors, funcao: undefined })
                 }
               }}
-              className={`w-full h-[42px] pl-3.5 pr-10 border border-border rounded-lg bg-background text-sm appearance-none cursor-pointer ${
-                errors.funcao ? 'border-red-500' : ''
-              }`}
               disabled={loading}
-              style={{
-                backgroundImage: `url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2364748B' stroke-width='2'><path d='m6 9 6 6 6-6'/></svg>")`,
-                backgroundRepeat: 'no-repeat',
-                backgroundPosition: 'right 12px center',
-                backgroundSize: '14px',
-              }}
             >
-              <option>Professor(a) / Instrutor(a)</option>
-              <option>Coordenador(a) pedagógico</option>
-              <option>Designer instrucional</option>
-              <option>Administrador(a)</option>
-              <option>Outros</option>
-            </select>
+              <SelectTrigger
+                id="signup-funcao"
+                className={`h-[42px] ${errors.funcao ? 'border-red-500' : ''}`}
+              >
+                <SelectValue placeholder="Selecione sua função" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Professor(a) / Instrutor(a)">
+                  Professor(a) / Instrutor(a)
+                </SelectItem>
+                <SelectItem value="Coordenador(a) pedagógico">Coordenador(a) pedagógico</SelectItem>
+                <SelectItem value="Designer instrucional">Designer instrucional</SelectItem>
+                <SelectItem value="Administrador(a)">Administrador(a)</SelectItem>
+                <SelectItem value="Outros">Outros</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
           {errors.funcao && <p className="text-xs text-red-500 mt-1.5">{errors.funcao}</p>}
         </div>

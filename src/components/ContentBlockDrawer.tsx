@@ -5,6 +5,14 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter } from '@/com
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card } from '@/components/ui/card'
+import { Textarea } from '@/components/ui/textarea'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import {
   Heading2,
   Heading3,
@@ -446,9 +454,6 @@ export function ContentBlockDrawer({
       )
     }
 
-    const commonInputClass =
-      'w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100'
-
     switch (selectedType) {
       case 'titulo':
       case 'subtitulo':
@@ -570,25 +575,28 @@ export function ContentBlockDrawer({
               </div>
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
                 Tamanho da Imagem <span className="text-red-500">*</span>
               </label>
-              <select
+              <Select
                 value={formData.tamanho || ''}
-                onChange={(e) =>
+                onValueChange={(value) =>
                   setFormData({
                     ...formData,
-                    tamanho: e.target.value as 'pequena' | 'media' | 'grande',
+                    tamanho: value as 'pequena' | 'media' | 'grande',
                   })
                 }
-                className={commonInputClass}
               >
-                <option value="">Selecione o tamanho</option>
-                <option value="pequena">Pequena (25%)</option>
-                <option value="media">Média (50%)</option>
-                <option value="grande">Grande (100%)</option>
-              </select>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Selecione o tamanho" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="pequena">Pequena (25%)</SelectItem>
+                  <SelectItem value="media">Média (50%)</SelectItem>
+                  <SelectItem value="grande">Grande (100%)</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
 
             <div>
@@ -718,13 +726,13 @@ export function ContentBlockDrawer({
                         <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
                           Conteúdo <span className="text-red-500">*</span>
                         </label>
-                        <textarea
+                        <Textarea
                           value={item.conteudo}
                           onChange={(e) =>
                             handleUpdateAccordionItem(item.id, 'conteudo', e.target.value)
                           }
                           placeholder="Conteúdo do item..."
-                          className={`${commonInputClass} resize-none text-sm`}
+                          className="resize-none text-sm"
                           rows={3}
                         />
                       </div>
@@ -744,24 +752,28 @@ export function ContentBlockDrawer({
       case 'lista':
         return (
           <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
                 Tipo de Lista <span className="text-red-500">*</span>
               </label>
-              <select
+              <Select
                 value={formData.tipoLista || 'nao-ordenada'}
-                onChange={(e) =>
+                onValueChange={(value) =>
                   setFormData({
                     ...formData,
-                    tipoLista: e.target.value as 'ordenada' | 'nao-ordenada' | 'check',
+                    tipoLista: value as 'ordenada' | 'nao-ordenada' | 'check',
                   })
                 }
-                className={commonInputClass}
               >
-                <option value="nao-ordenada">Não Ordenada (Bullets)</option>
-                <option value="ordenada">Ordenada (Numerada)</option>
-                <option value="check">Com Check</option>
-              </select>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Selecione o tipo" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="nao-ordenada">Não Ordenada (Bullets)</SelectItem>
+                  <SelectItem value="ordenada">Ordenada (Numerada)</SelectItem>
+                  <SelectItem value="check">Com Check</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="flex items-center justify-between">
@@ -872,29 +884,29 @@ export function ContentBlockDrawer({
       case 'info-box':
         return (
           <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
                 Tipo de Info Box <span className="text-red-500">*</span>
               </label>
-              <select
+              <Select
                 value={formData.tipoInfoBox || 'info'}
-                onChange={(e) =>
+                onValueChange={(value) =>
                   setFormData({
                     ...formData,
-                    tipoInfoBox: e.target.value as
-                      | 'atencao'
-                      | 'saiba_mais'
-                      | 'info'
-                      | 'curiosidade',
+                    tipoInfoBox: value as 'atencao' | 'saiba_mais' | 'info' | 'curiosidade',
                   })
                 }
-                className={commonInputClass}
               >
-                <option value="info">Informação</option>
-                <option value="atencao">Atenção</option>
-                <option value="saiba_mais">Saiba Mais</option>
-                <option value="curiosidade">Curiosidade</option>
-              </select>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Selecione o tipo" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="info">Informação</SelectItem>
+                  <SelectItem value="atencao">Atenção</SelectItem>
+                  <SelectItem value="saiba_mais">Saiba Mais</SelectItem>
+                  <SelectItem value="curiosidade">Curiosidade</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
 
             <div>
@@ -912,11 +924,11 @@ export function ContentBlockDrawer({
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Conteúdo <span className="text-red-500">*</span>
               </label>
-              <textarea
+              <Textarea
                 value={formData.conteudo || ''}
                 onChange={(e) => setFormData({ ...formData, conteudo: e.target.value })}
                 placeholder="Digite o conteúdo do destaque..."
-                className={`${commonInputClass} resize-none`}
+                className="resize-none"
                 rows={6}
               />
             </div>
@@ -942,24 +954,28 @@ export function ContentBlockDrawer({
       case 'flipcard':
         return (
           <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
                 Tipo de Frente <span className="text-red-500">*</span>
               </label>
-              <select
+              <Select
                 value={formData.tipoFrente || 'titulo'}
-                onChange={(e) =>
+                onValueChange={(value) =>
                   setFormData({
                     ...formData,
-                    tipoFrente: e.target.value as 'imagem' | 'imagem-titulo' | 'titulo',
+                    tipoFrente: value as 'imagem' | 'imagem-titulo' | 'titulo',
                   })
                 }
-                className={commonInputClass}
               >
-                <option value="imagem">Apenas Imagem</option>
-                <option value="imagem-titulo">Imagem com Título no Rodapé</option>
-                <option value="titulo">Apenas Título Centralizado</option>
-              </select>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Selecione o tipo" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="imagem">Apenas Imagem</SelectItem>
+                  <SelectItem value="imagem-titulo">Imagem com Título no Rodapé</SelectItem>
+                  <SelectItem value="titulo">Apenas Título Centralizado</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
 
             {(formData.tipoFrente === 'imagem' || formData.tipoFrente === 'imagem-titulo') && (
@@ -1012,11 +1028,11 @@ export function ContentBlockDrawer({
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Conteúdo do Verso <span className="text-red-500">*</span>
               </label>
-              <textarea
+              <Textarea
                 value={formData.conteudoVerso || ''}
                 onChange={(e) => setFormData({ ...formData, conteudoVerso: e.target.value })}
                 placeholder="Digite o conteúdo do verso..."
-                className={`${commonInputClass} resize-none`}
+                className="resize-none"
                 rows={6}
               />
             </div>
@@ -1043,7 +1059,7 @@ export function ContentBlockDrawer({
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="flex flex-col p-0 !w-[480px] !max-w-[480px]">
+      <SheetContent className="flex flex-col p-0 !w-[480px] !max-w-[480px] bg-white dark:bg-gray-900">
         <SheetHeader className="pb-4 border-b border-gray-200 dark:border-gray-700 px-6 pt-6">
           <div className="flex items-center gap-3">
             {Icon && (

@@ -71,7 +71,7 @@ export function CourseSettingsDrawer({
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="flex flex-col p-0 !w-[480px] !max-w-[480px]">
+      <SheetContent className="flex flex-col p-0 !w-[480px] !max-w-[480px] bg-white dark:bg-gray-900">
         <SheetHeader className="pb-4 border-b border-gray-200 dark:border-gray-700 px-6 pt-6">
           <div className="flex items-center gap-3">
             <div className="p-3 bg-blue-50 dark:bg-blue-950/20 rounded-lg">
@@ -111,7 +111,7 @@ export function CourseSettingsDrawer({
                 }
                 placeholder="Digite uma breve descrição"
                 rows={4}
-                className="w-full resize-none bg-white dark:bg-gray-800"
+                className="resize-none"
               />
             </div>
 

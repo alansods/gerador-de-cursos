@@ -19,6 +19,7 @@ import { TooltipButton } from '@/components/TooltipButton'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
 import { toast } from 'sonner'
 import {
@@ -2081,7 +2082,9 @@ export default function EditarCursoPage() {
                 <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100 mb-0.5">
                   Info Box
                 </h3>
-                <p className="text-xs text-gray-500 dark:text-gray-400 text-left">Dica ou aviso</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400 text-left">
+                  Cards de informação
+                </p>
               </button>
 
               {/* Flashcards (FlipCard) */}
@@ -2190,11 +2193,11 @@ export default function EditarCursoPage() {
                 <label className="text-sm font-medium text-gray-700 mb-2 block">
                   Descrição do Curso <span className="text-red-500">*</span>
                 </label>
-                <textarea
+                <Textarea
                   value={descricaoEditada}
                   onChange={(e) => setDescricaoEditada(e.target.value)}
                   placeholder="Descrição do curso"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
+                  className="resize-none"
                   rows={6}
                 />
               </div>
@@ -3210,11 +3213,11 @@ export default function EditarCursoPage() {
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Descrição da Unidade <span className="text-red-500">*</span>
                 </label>
-                <textarea
+                <Textarea
                   value={novaUnidadeDescricao}
                   onChange={(e) => setNovaUnidadeDescricao(e.target.value)}
                   placeholder="Descreva o que os alunos aprenderão nesta unidade..."
-                  className="w-full p-3 border border-gray-300 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="resize-none"
                   rows={4}
                   required
                 />
@@ -3267,11 +3270,11 @@ export default function EditarCursoPage() {
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Descrição da Unidade <span className="text-red-500">*</span>
                 </label>
-                <textarea
+                <Textarea
                   value={descricaoUnidadeEditando}
                   onChange={(e) => setDescricaoUnidadeEditando(e.target.value)}
                   placeholder="Descreva o que os alunos aprenderão nesta unidade..."
-                  className="w-full p-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="resize-none"
                   rows={8}
                   required
                 />
