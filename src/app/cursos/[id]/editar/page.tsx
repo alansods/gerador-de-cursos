@@ -1389,9 +1389,9 @@ export default function EditarCursoPage() {
                                         key={key}
                                         className={`group/div relative ${colSpanClass}`}
                                       >
-                                        <div className="relative flex items-center justify-center opacity-0 group-hover/div:opacity-100 transition-opacity">
+                                        <div className="relative flex items-center justify-center">
                                           {/* Linha horizontal */}
-                                          <div className="absolute inset-x-0 h-px bg-blue-600 dark:bg-blue-500"></div>
+                                          <div className="absolute inset-x-0 h-0.5 rounded-full bg-blue-600 dark:bg-blue-500 opacity-0 group-hover/div:opacity-35 transition-opacity duration-150"></div>
 
                                           {/* Botão circular */}
                                           <TooltipButton
@@ -1409,7 +1409,7 @@ export default function EditarCursoPage() {
                                             size="sm"
                                             tooltipSide="top"
                                             tooltipClassName="text-xs"
-                                            className="relative z-10 flex items-center justify-center w-6 h-6 rounded-full bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white shadow-lg transition-all hover:scale-110"
+                                            className="relative z-10 flex items-center justify-center w-[26px] h-[26px] rounded-full bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white shadow-lg opacity-0 scale-50 group-hover/div:opacity-100 group-hover/div:scale-100 transition-[opacity,scale] duration-150 ease-out"
                                           />
                                         </div>
                                       </div>
