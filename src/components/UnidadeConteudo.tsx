@@ -10,6 +10,7 @@ import { FlipCard } from '@/components/flipcard'
 import { QuizConteudo } from '@/components/QuizConteudo'
 import { InfoBox } from '@/components/InfoBox'
 import { Unidade } from '@/types/gerador-curso'
+import { Target } from 'lucide-react'
 
 interface UnidadeConteudoProps {
   unidade: Unidade
@@ -132,75 +133,46 @@ export function UnidadeConteudo({ unidade }: UnidadeConteudoProps) {
                 ) : item.tipo === 'lista' ? (
                   <div className="mb-4">
                     {item.itensLista && item.itensLista.length > 0 ? (
-                      item.tipoLista === 'ordenada' ? (
-                        <div className="bg-linear-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-xl p-6 border border-blue-200 dark:border-blue-800 shadow-sm">
-                          <ol className="space-y-3">
-                            {item.itensLista.map((listaItem, idx) => (
-                              <li
-                                key={listaItem.id || idx}
-                                className="flex items-start gap-3 p-3 bg-white dark:bg-gray-800 rounded-lg shadow-sm hover:shadow-md transition-shadow border-l-4 border-blue-500"
-                              >
-                                <span className="flex items-center justify-center w-8 h-8 bg-blue-500 text-white rounded-full font-semibold text-sm shrink-0">
-                                  {idx + 1}
-                                </span>
-                                <span
-                                  className="flex-1 text-gray-700 dark:text-gray-300 leading-relaxed pt-1"
-                                  dangerouslySetInnerHTML={{
-                                    __html: listaItem.texto,
-                                  }}
-                                />
-                              </li>
-                            ))}
-                          </ol>
-                        </div>
-                      ) : item.tipoLista === 'check' ? (
-                        <div className="bg-linear-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-xl p-6 border border-green-200 dark:border-green-800 shadow-sm">
-                          <ul className="space-y-3">
-                            {item.itensLista.map((listaItem, idx) => (
-                              <li
-                                key={listaItem.id || idx}
-                                className="flex items-start gap-3 p-3 bg-white dark:bg-gray-800 rounded-lg shadow-sm hover:shadow-md transition-shadow border-l-4 border-green-500"
-                              >
-                                <span className="flex items-center justify-center w-6 h-6 mt-0.5 bg-green-500 rounded shrink-0">
-                                  <svg
-                                    className="w-4 h-4 text-white"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    viewBox="0 0 24 24"
-                                  >
-                                    <path
-                                      strokeLinecap="round"
-                                      strokeLinejoin="round"
-                                      strokeWidth={2.5}
-                                      d="M5 13l4 4L19 7"
-                                    />
-                                  </svg>
-                                </span>
-                                <span
-                                  className="flex-1 text-gray-700 dark:text-gray-300 leading-relaxed"
-                                  dangerouslySetInnerHTML={{
-                                    __html: listaItem.texto,
-                                  }}
-                                />
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-                      ) : (
-                        <ul className="space-y-1.5">
-                          {item.itensLista.map((listaItem, idx) => (
-                            <li key={listaItem.id || idx} className="flex items-center gap-2.5">
-                              <span className="w-1.5 h-1.5 rounded-full bg-blue-500 shrink-0" />
-                              <span
-                                className="text-gray-700 dark:text-gray-300 leading-relaxed"
-                                dangerouslySetInnerHTML={{
-                                  __html: listaItem.texto,
-                                }}
-                              />
-                            </li>
-                          ))}
-                        </ul>
-                      )
+                      <ul className="space-y-3">
+                        {item.itensLista.map((listaItem, idx) => (
+                          <li
+                            key={listaItem.id || idx}
+                            className="flex items-center gap-4 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-4"
+                          >
+                            {item.tipoLista === 'check' ? (
+                              <span className="flex items-center justify-center w-9 h-9 rounded-lg bg-green-50 dark:bg-green-900/30 text-green-600 dark:text-green-400 shrink-0">
+                                <svg
+                                  className="w-4 h-4"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  viewBox="0 0 24 24"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2.5}
+                                    d="M5 13l4 4L19 7"
+                                  />
+                                </svg>
+                              </span>
+                            ) : item.tipoLista === 'nao-ordenada' ? (
+                              <span className="flex items-center justify-center w-9 h-9 rounded-lg bg-blue-50 dark:bg-blue-900/30 shrink-0">
+                                <span className="w-2 h-2 rounded-full bg-blue-500 dark:bg-blue-400" />
+                              </span>
+                            ) : (
+                              <span className="flex items-center justify-center w-9 h-9 rounded-lg bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 font-semibold text-sm tabular-nums shrink-0">
+                                {idx + 1}
+                              </span>
+                            )}
+                            <span
+                              className="flex-1 text-gray-700 dark:text-gray-300 leading-relaxed"
+                              dangerouslySetInnerHTML={{
+                                __html: listaItem.texto,
+                              }}
+                            />
+                          </li>
+                        ))}
+                      </ul>
                     ) : (
                       <div className="text-gray-500 dark:text-gray-400 text-sm italic p-4 border border-gray-300 dark:border-gray-700 rounded-lg">
                         Lista vazia
@@ -263,21 +235,21 @@ export function UnidadeConteudo({ unidade }: UnidadeConteudoProps) {
                 ) : item.tipo === 'objetivos-aprendizagem' ? (
                   <div className="mb-4 w-full">
                     {item.itensObjetivos && item.itensObjetivos.length > 0 ? (
-                      <div className="flex flex-col gap-1 my-1">
-                        <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">
-                          Objetivos de aprendizagem
-                        </h2>
-                        <div className="flex flex-col gap-2.5 my-1">
+                      <div className="flex items-start gap-6 rounded-2xl border border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-950/30 p-8">
+                        <div className="shrink-0 flex items-center justify-center w-16 h-16 rounded-full border-2 border-blue-600 dark:border-blue-400">
+                          <Target className="w-7 h-7 text-blue-600 dark:text-blue-400" />
+                        </div>
+                        <div className="flex flex-col gap-3 flex-1">
+                          <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
+                            Objetivos de aprendizagem
+                          </h2>
                           {item.itensObjetivos.map((objetivo, idx) => (
-                            <div
-                              key={objetivo.id || idx}
-                              className="flex gap-3 items-center bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-[10px] py-3.5 px-4"
-                            >
-                              <span className="w-[30px] h-[30px] rounded-lg bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 inline-flex items-center justify-center shrink-0 font-medium text-[13px] tabular-nums">
-                                {idx + 1}
+                            <div key={objetivo.id || idx} className="flex items-baseline gap-3">
+                              <span className="text-blue-600 dark:text-blue-400 font-semibold text-sm tabular-nums shrink-0">
+                                {String(idx + 1).padStart(2, '0')}
                               </span>
                               <span
-                                className="text-sm text-gray-900 dark:text-gray-100 leading-[1.45]"
+                                className="text-gray-800 dark:text-gray-200 leading-relaxed"
                                 dangerouslySetInnerHTML={{
                                   __html: objetivo.texto,
                                 }}
