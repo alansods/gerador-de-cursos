@@ -11,34 +11,34 @@ import type {
 type Curso = CursoGerado
 
 // ========================================================================
-// 🎨 CENTRAL DE DESIGN (THEME)
+// 🎨 CENTRAL DE DESIGN (THEME v2 — layout "apostila")
 // ========================================================================
 const THEME = {
   colors: {
-    primary: [37, 99, 235], // blue-600
-    text: [31, 41, 55], // gray-800
-    textMuted: [107, 114, 128], // gray-500
-    textLight: [255, 255, 255], // white
-    background: [252, 253, 254], // Quase branco
-    border: [229, 231, 235], // gray-200
+    primary: '#1B2B4B',
+    primaryDark: '#12203A',
+    accent: '#2E9BD6',
+    text: '#3A3A3A',
+    textMuted: '#8A8A8A',
+    boxBg: '#EEF3F8',
+    white: '#FFFFFF',
   },
   fonts: {
-    h1: { size: 24, style: 'bold' },
-    h2: { size: 18, style: 'bold' },
-    h3: { size: 16, style: 'bold' },
-    h4: { size: 14, style: 'bold' },
-    body: { size: 11, style: 'normal' },
-    bodyLg: { size: 12, style: 'normal' },
-    caption: { size: 10, style: 'italic' },
-    list: { size: 11, style: 'normal' },
+    bodySize: 10.5,
+    h1: 22,
+    h2: 16,
+    h3: 13,
+    caption: 8.5,
+    header: 8,
   },
   layout: {
-    margin: 20,
-    footerHeight: 20,
-    lineHeight: 1.5, // Multiplicador do tamanho da fonte
-    boxPadding: 5, // Padding interno para caixas
+    margin: 25,
+    lineHeight: 1.5,
+    boxPadding: 6,
+    headerY: 14,
+    contentTop: 30,
   },
-}
+} as const
 
 /** Converte cor hex (#rrggbb) em array RGB. Retorna null se inválida. */
 function hexToRgb(hex: string): number[] | null {
@@ -53,8 +53,107 @@ const PAGE_WIDTH = 210
 const PAGE_HEIGHT = 297
 const MARGIN = THEME.layout.margin
 const CONTENT_WIDTH = PAGE_WIDTH - MARGIN * 2
-const FOOTER_HEIGHT = THEME.layout.footerHeight
-const PAGE_BREAK_Y = PAGE_HEIGHT - MARGIN - FOOTER_HEIGHT
+const CONTENT_TOP = THEME.layout.contentTop
+const PAGE_BREAK_Y = PAGE_HEIGHT - MARGIN
+
+interface LoadedImage {
+  dataUrl: string
+  width: number
+  height: number
+}
+
+/** Baixa uma imagem e converte para dataURL JPEG embutível no jsPDF. */
+async function loadImage(url: string): Promise<LoadedImage | null> {
+  try {
+    const res = await fetch(url)
+    if (!res.ok) return null
+    const blob = await res.blob()
+    const bitmap = await createImageBitmap(blob)
+    const canvas = document.createElement('canvas')
+    canvas.width = bitmap.width
+    canvas.height = bitmap.height
+    const ctx = canvas.getContext('2d')
+    if (!ctx) return null
+    ctx.fillStyle = '#FFFFFF'
+    ctx.fillRect(0, 0, canvas.width, canvas.height)
+    ctx.drawImage(bitmap, 0, 0)
+    const dataUrl = canvas.toDataURL('image/jpeg', 0.85)
+    return { dataUrl, width: bitmap.width, height: bitmap.height }
+  } catch {
+    return null
+  }
+}
+
+/** Varre o curso e pré-carrega todas as imagens de blocos "imagem" em paralelo. */
+async function preloadImages(curso: Curso): Promise<Map<string, LoadedImage | null>> {
+  const map = new Map<string, LoadedImage | null>()
+  const tasks: Promise<void>[] = []
+
+  for (const unidade of curso.unidades || []) {
+    for (const item of unidade.conteudo || []) {
+      if (item.tipo === 'imagem' && item.conteudo) {
+        tasks.push(
+          loadImage(item.conteudo).then((img) => {
+            map.set(item.id, img)
+          })
+        )
+      }
+    }
+  }
+
+  await Promise.all(tasks)
+  return map
+}
+
+/** Gera os pontos de um hexágono centrado em (cx, cy) com raio r. */
+function hexagonPoints(cx: number, cy: number, r: number): [number, number][] {
+  const pts: [number, number][] = []
+  for (let i = 0; i < 6; i++) {
+    const angle = (Math.PI / 180) * (60 * i - 30)
+    pts.push([cx + r * Math.cos(angle), cy + r * Math.sin(angle)])
+  }
+  return pts
+}
+
+function drawHexagon(doc: jsPDF, cx: number, cy: number, r: number) {
+  const pts = hexagonPoints(cx, cy, r)
+  for (let i = 0; i < pts.length; i++) {
+    const [x1, y1] = pts[i]
+    const [x2, y2] = pts[(i + 1) % pts.length]
+    doc.line(x1, y1, x2, y2)
+  }
+}
+
+/** Desenha uma grade de hexágonos em linha fina, usada como padrão decorativo da capa. */
+function drawHexGrid(
+  doc: jsPDF,
+  originX: number,
+  originY: number,
+  radius: number,
+  cols: number,
+  rows: number
+) {
+  const hexWidth = radius * Math.sqrt(3)
+  const hexHeight = radius * 1.5
+  for (let row = 0; row < rows; row++) {
+    for (let col = 0; col < cols; col++) {
+      const offsetX = row % 2 === 0 ? 0 : hexWidth / 2
+      const cx = originX + col * hexWidth + offsetX
+      const cy = originY + row * hexHeight
+      drawHexagon(doc, cx, cy, radius)
+    }
+  }
+}
+
+interface TocEntry {
+  titulo: string
+  page: number
+}
+
+interface GabaritoEntry {
+  question: string
+  answer: string
+}
 
 /**
  * Função principal para gerar o PDF
@@ -66,42 +165,37 @@ export async function generateCoursePDF(curso: Curso, filename?: string): Promis
     format: 'a4',
   })
 
-  let currentPage = 1
+  // ========================================================================
+  // FONTES CUSTOMIZADAS (Open Sans) — carregadas sob demanda
+  // ========================================================================
+  const { OPEN_SANS_REGULAR_B64, OPEN_SANS_BOLD_B64, OPEN_SANS_ITALIC_B64, OPEN_SANS_LIGHT_B64 } =
+    await import('./pdf-fonts')
+
+  doc.addFileToVFS('OpenSans-Regular.ttf', OPEN_SANS_REGULAR_B64)
+  doc.addFont('OpenSans-Regular.ttf', 'OpenSans', 'normal')
+  doc.addFileToVFS('OpenSans-Bold.ttf', OPEN_SANS_BOLD_B64)
+  doc.addFont('OpenSans-Bold.ttf', 'OpenSans', 'bold')
+  doc.addFileToVFS('OpenSans-Italic.ttf', OPEN_SANS_ITALIC_B64)
+  doc.addFont('OpenSans-Italic.ttf', 'OpenSans', 'italic')
+  doc.addFileToVFS('OpenSans-Light.ttf', OPEN_SANS_LIGHT_B64)
+  doc.addFont('OpenSans-Light.ttf', 'OpenSans', 'light')
+
+  // Pré-carrega imagens dos blocos "imagem" antes de montar o documento
+  const loadedImages = await preloadImages(curso)
+  let figureCounter = 0
+  let quizGabarito: GabaritoEntry[] = []
 
   // ========================================================================
   // FUNÇÕES HELPER DE RENDERIZAÇÃO
   // ========================================================================
 
-  /** Adiciona rodapé com número da página */
-  const addFooter = (page: number, total: number) => {
-    doc.setPage(page)
-    doc.setFont(THEME.fonts.caption.style)
-    doc.setFontSize(THEME.fonts.caption.size - 1)
-    doc.setTextColor(
-      THEME.colors.textMuted[0],
-      THEME.colors.textMuted[1],
-      THEME.colors.textMuted[2]
-    )
-
-    // Linha
-    doc.setDrawColor(THEME.colors.border[0], THEME.colors.border[1], THEME.colors.border[2])
-    doc.line(MARGIN, PAGE_HEIGHT - FOOTER_HEIGHT, PAGE_WIDTH - MARGIN, PAGE_HEIGHT - FOOTER_HEIGHT)
-
-    // Texto
-    doc.text(`Página ${page} de ${total}`, PAGE_WIDTH / 2, PAGE_HEIGHT - FOOTER_HEIGHT / 2, {
-      align: 'center',
-      baseline: 'middle',
-    })
-  }
-
   /** Verifica se precisa de uma nova página e a adiciona se necessário */
   const checkPageBreak = (y: number, requiredSpace: number = 20): number => {
     if (y + requiredSpace > PAGE_BREAK_Y) {
       doc.addPage()
-      currentPage++
-      return MARGIN // Retorna a nova posição Y
+      return CONTENT_TOP
     }
-    return y // Retorna a posição Y atual
+    return y
   }
 
   /** Adiciona um espaço vertical */
@@ -113,7 +207,7 @@ export async function generateCoursePDF(curso: Curso, filename?: string): Promis
   const addSeparator = (y: number): number => {
     let newY = checkPageBreak(y, 10)
     newY = addSpace(newY, 5)
-    doc.setDrawColor(THEME.colors.border[0], THEME.colors.border[1], THEME.colors.border[2])
+    doc.setDrawColor(THEME.colors.boxBg)
     doc.line(MARGIN, newY, PAGE_WIDTH - MARGIN, newY)
     return addSpace(newY, 5)
   }
@@ -127,87 +221,100 @@ export async function generateCoursePDF(curso: Curso, filename?: string): Promis
     y: number,
     options: {
       fontSize?: number
-      fontStyle?: 'normal' | 'bold' | 'italic'
-      color?: number[]
+      fontStyle?: 'normal' | 'bold' | 'italic' | 'light'
+      color?: string
       align?: 'left' | 'center' | 'right' | 'justify'
       x?: number
       maxWidth?: number
       isHtml?: boolean
     } = {}
   ): number => {
-    // Padrões
-    const fontSize = options.fontSize || THEME.fonts.body.size
-    const fontStyle = options.fontStyle || THEME.fonts.body.style
-    const color = options.color || THEME.colors.text // Garante que a cor padrão seja TEXT
+    const fontSize = options.fontSize || THEME.fonts.bodySize
+    const fontStyle = options.fontStyle || 'normal'
+    const color = options.color || THEME.colors.text
     const align = options.align || 'left'
     const x = options.x || MARGIN
     const maxWidth = options.maxWidth || CONTENT_WIDTH - (x - MARGIN)
 
     const cleanText = options.isHtml ? cleanHtml(text) : text
+    if (!cleanText) return y
 
     doc.setFontSize(fontSize)
-    doc.setFont('helvetica', fontStyle)
-    doc.setTextColor(color[0], color[1], color[2])
+    doc.setFont('OpenSans', fontStyle)
+    doc.setTextColor(color)
 
-    const lines = doc.splitTextToSize(cleanText, maxWidth)
-    const lineHeight = fontSize * THEME.layout.lineHeight * 0.352778 // Converte pt->mm
+    const lines: string[] = doc.splitTextToSize(cleanText, maxWidth)
+    const lineHeight = fontSize * THEME.layout.lineHeight * 0.352778 // pt -> mm
 
     let currentY = y
 
-    lines.forEach((line: string) => {
-      currentY = checkPageBreak(currentY, lineHeight) // Verifica para cada linha
+    lines.forEach((line, idx) => {
+      currentY = checkPageBreak(currentY, lineHeight)
+      const isLastLine = idx === lines.length - 1
 
-      let xPos = x
-      if (align === 'center') {
-        xPos = x + maxWidth / 2
-      } else if (align === 'right') {
-        xPos = x + maxWidth
+      if (align === 'justify' && !isLastLine) {
+        doc.text(line, x, currentY, { maxWidth, align: 'justify', baseline: 'top' })
+      } else {
+        let xPos = x
+        let effectiveAlign: 'left' | 'center' | 'right' = 'left'
+        if (align === 'center') {
+          xPos = x + maxWidth / 2
+          effectiveAlign = 'center'
+        } else if (align === 'right') {
+          xPos = x + maxWidth
+          effectiveAlign = 'right'
+        }
+        doc.text(line, xPos, currentY, { align: effectiveAlign, baseline: 'top' })
       }
-
-      doc.text(line, xPos, currentY, { align, baseline: 'top' })
       currentY += lineHeight
     })
 
     return currentY
   }
 
-  /** Desenha uma caixa de fundo para destacar conteúdo */
-  const renderBox = (
+  /** Caixa de destaque v2: fundo claro + filete lateral em accent, com título opcional */
+  const renderBoxV2 = (
     y: number,
-    renderContentCallback: (y: number) => number, // Callback que desenha o conteúdo
-    padding: number = THEME.layout.boxPadding
+    renderContentCallback: (y: number) => number,
+    padding: number = THEME.layout.boxPadding,
+    title?: string
   ): number => {
-    let newY = checkPageBreak(y, 20) // Checa espaço para a caixa
-
+    let newY = checkPageBreak(y, 20)
     const startY = newY
+    const titleSpace = title ? 8 : 0
 
-    // Renderiza o conteúdo "falsamente" para medir a altura
-    let contentEndY = renderContentCallback(startY + padding)
+    let contentEndY = renderContentCallback(startY + padding + titleSpace)
     const boxHeight = contentEndY - startY
 
-    // Checa se a caixa inteira cabe
     if (startY + boxHeight + padding * 2 > PAGE_BREAK_Y) {
-      // Adicionado padding * 2 na checagem
-      newY = checkPageBreak(startY, boxHeight + padding * 2) // Força quebra de página
+      newY = checkPageBreak(startY, boxHeight + padding * 2)
     }
 
-    // Desenha a caixa de fundo
-    doc.setFillColor(
-      THEME.colors.background[0],
-      THEME.colors.background[1],
-      THEME.colors.background[2]
-    )
-    doc.rect(MARGIN, newY, CONTENT_WIDTH, boxHeight + padding * 2, 'F') // Adicionado padding * 2 na altura do retângulo
+    const totalHeight = boxHeight + padding * 2
+    doc.setFillColor(THEME.colors.boxBg)
+    doc.rect(MARGIN, newY, CONTENT_WIDTH, totalHeight, 'F')
+    doc.setFillColor(THEME.colors.accent)
+    doc.rect(MARGIN, newY, 1.5, totalHeight, 'F')
 
-    // Redesenha o conteúdo na posição correta da caixa
-    contentEndY = renderContentCallback(newY + padding)
+    let innerY = newY + padding
+    if (title) {
+      innerY = renderText(title, innerY, {
+        fontSize: THEME.fonts.h3,
+        fontStyle: 'bold',
+        color: THEME.colors.primary,
+        x: MARGIN + padding,
+        maxWidth: CONTENT_WIDTH - padding * 2,
+      })
+      innerY += 2
+    }
 
-    return contentEndY + padding // Retorna Y após o conteúdo + padding inferior
+    contentEndY = renderContentCallback(innerY)
+    return contentEndY + padding
   }
 
   /** Limpa tags HTML básicas para texto plano */
   const cleanHtml = (text: string): string => {
-    return text
+    return (text || '')
       .replace(/<br\s*\/?>/gi, '\n')
       .replace(/<\/p>/gi, '\n\n')
       .replace(/<[^>]+>/g, '')
@@ -220,184 +327,235 @@ export async function generateCoursePDF(curso: Curso, filename?: string): Promis
   }
 
   // ========================================================================
-  // FUNÇÕES DE RENDERIZAÇÃO DE PÁGINA
+  // CAPA
   // ========================================================================
-
-  /** Renderiza a Página de Capa (Layout Dividido) */
   const renderCoverPage = () => {
-    // Barra lateral azul
-    doc.setFillColor(THEME.colors.primary[0], THEME.colors.primary[1], THEME.colors.primary[2])
-    const sidebarWidth = 70 // 70mm
-    doc.rect(0, 0, sidebarWidth, PAGE_HEIGHT, 'F')
+    doc.setFillColor(THEME.colors.primary)
+    doc.rect(0, 0, PAGE_WIDTH, PAGE_HEIGHT, 'F')
 
-    // Área de conteúdo branca
-    let y = 60
-    const contentMarginLeft = sidebarWidth + 15
-    const contentCoverWidth = PAGE_WIDTH - contentMarginLeft - MARGIN
+    doc.setDrawColor(THEME.colors.primaryDark)
+    doc.setLineWidth(0.3)
+    drawHexGrid(doc, PAGE_WIDTH - 85, -15, 9, 6, 9)
 
-    // Título
-    y = renderText(curso.titulo || 'Curso', y, {
-      ...THEME.fonts.h1,
-      fontSize: 32, // Maior na capa
-      fontStyle: 'bold', // <<< MUDANÇA AQUI (Garantindo o negrito)
-      color: THEME.colors.text,
-      x: contentMarginLeft,
-      maxWidth: contentCoverWidth,
+    let y = 110
+    const titulo = curso.titulo || 'Curso'
+    const titleSize = titulo.length > 40 ? 26 : 32
+    y = renderText(titulo, y, {
+      fontSize: titleSize,
+      fontStyle: 'bold',
+      color: THEME.colors.white,
+      maxWidth: CONTENT_WIDTH,
     })
 
-    // Descrição
-    y = addSpace(y, 8)
-    y = renderText(curso.descricao || '', y, {
-      ...THEME.fonts.bodyLg,
-      color: THEME.colors.textMuted,
-      x: contentMarginLeft,
-      maxWidth: contentCoverWidth,
-    })
-
-    // Linha
-    y = addSpace(y, 10)
-    doc.setDrawColor(THEME.colors.primary[0], THEME.colors.primary[1], THEME.colors.primary[2])
-    doc.setLineWidth(1)
-    doc.line(contentMarginLeft, y, contentMarginLeft + contentCoverWidth * 0.5, y)
-    y = addSpace(y, 10)
-
-    // Infos (em caixa)
-    const renderInfosContent = (yPos: number) => {
-      let infoY = yPos
-      const infos = [
-        { label: 'Categoria', value: curso.categoria || 'N/A' },
-        { label: 'Carga Horária', value: curso.cargaHoraria || 'N/A' },
-        { label: 'Modalidade', value: curso.modalidade || 'N/A' },
-      ]
-
-      infos.forEach((info) => {
-        const tempY = renderText(`${info.label}:`, infoY, {
-          ...THEME.fonts.body,
-          fontStyle: 'bold',
-          color: THEME.colors.textMuted,
-          x: contentMarginLeft + THEME.layout.boxPadding,
-        })
-
-        renderText(info.value, infoY, {
-          ...THEME.fonts.body,
-          fontStyle: 'bold',
-          color: THEME.colors.primary,
-          x: contentMarginLeft + 35 + THEME.layout.boxPadding,
-        })
-        infoY = tempY // Avança para a próxima linha
-      })
-      return infoY
-    }
-
-    // Renderiza as infos dentro de uma caixa
-    renderBox(y, (yPos) => renderInfosContent(yPos), THEME.layout.boxPadding)
-  }
-
-  /** Renderiza a Página de Índice */
-  const renderIndexPage = (unidades: Unidade[] = []) => {
-    doc.addPage()
-    currentPage++
-    let y = MARGIN
-
-    // Título "Índice"
-    y = renderText('Índice', y, { ...THEME.fonts.h1, color: THEME.colors.primary })
-    y = addSeparator(y)
-    y = addSpace(y, 10)
-
-    unidades.forEach((unidade, index) => {
-      y = checkPageBreak(y, 20) // Checa espaço para cada item
-
-      // Título da Unidade
-      const titleY = renderText(`${index + 1}. ${unidade.titulo}`, y, {
-        ...THEME.fonts.h3,
-        fontSize: 14,
-        color: THEME.colors.text,
-      })
-
-      // Descrição (preview)
-      const descPreview =
-        unidade.descricao?.substring(0, 120) +
-        (unidade.descricao && unidade.descricao.length > 120 ? '...' : '')
-      const descY = renderText(descPreview || '', titleY, {
-        ...THEME.fonts.caption,
-        color: THEME.colors.textMuted,
-        x: MARGIN + 8, // Leve indentação
-        maxWidth: CONTENT_WIDTH - 8,
-      })
-
-      y = addSpace(descY, 8)
-    })
-  }
-
-  /** Renderiza todas as páginas de unidades e seus conteúdos */
-  const renderUnitPages = (unidades: Unidade[] = []) => {
-    unidades.forEach((unidade, unidadeIndex) => {
-      doc.addPage()
-      currentPage++
-      let y = 0 // Y começa no 0 para o cabeçalho
-
-      // Cabeçalho da Unidade
-      doc.setFillColor(THEME.colors.primary[0], THEME.colors.primary[1], THEME.colors.primary[2])
-      const headerHeight = 45 // <<< MUDANÇA AQUI (aumentado de 40 para 45)
-      doc.rect(0, 0, PAGE_WIDTH, headerHeight, 'F')
-
-      y = 15
-      renderText(`Unidade ${unidadeIndex + 1}`, y, {
-        ...THEME.fonts.body,
-        color: THEME.colors.textLight,
-        x: MARGIN,
-      })
-
-      y = renderText(unidade.titulo, 23, {
-        // <<< MUDANÇA AQUI (y de 22 para 23)
-        ...THEME.fonts.h2,
-        fontSize: 22, // <<< MUDANÇA AQUI (aumentado de 18 para 22)
-        color: THEME.colors.textLight,
-        x: MARGIN,
+    if (curso.descricao) {
+      y = addSpace(y, 6)
+      renderText(curso.descricao, y, {
+        fontSize: 13,
+        fontStyle: 'light',
+        color: THEME.colors.white,
         maxWidth: CONTENT_WIDTH,
       })
+    }
 
-      // Início do conteúdo
-      y = headerHeight + 10 // <<< MUDANÇA AQUI (de 50 para 55, para alinhar com headerHeight)
+    const footerY = PAGE_HEIGHT - 30
+    doc.setDrawColor(THEME.colors.accent)
+    doc.setLineWidth(0.5)
+    doc.line(MARGIN, footerY, PAGE_WIDTH - MARGIN, footerY)
 
-      // Descrição da Unidade (em uma caixa)
-      if (unidade.descricao) {
-        y = renderBox(
-          y,
-          (yPos) =>
-            renderText(unidade.descricao, yPos, {
-              ...THEME.fonts.body,
-              fontStyle: 'italic',
-              color: THEME.colors.textMuted,
-            }),
-          8 // Mais padding
-        )
-        y = addSpace(y, 5)
-      }
-
-      y = addSeparator(y)
-
-      // Renderiza o conteúdo da unidade
-      unidade.conteudo
-        .sort((a, b) => a.ordem - b.ordem) // Garante a ordem
-        .forEach((item) => {
-          y = renderContentItem(item, y)
-          y = addSpace(y, 5) // Espaço padrão entre elementos
-        })
+    const metaParts = [curso.categoria, curso.cargaHoraria, curso.modalidade].filter(Boolean)
+    renderText(metaParts.join('   ·   '), footerY + 6, {
+      fontSize: 10,
+      color: THEME.colors.accent,
+      maxWidth: CONTENT_WIDTH,
     })
   }
 
-  /**
-   * Função "roteadora" que renderiza um item de conteúdo específico
-   * e retorna a nova posição Y.
-   */
+  // ========================================================================
+  // ROSTO + FICHA TÉCNICA
+  // ========================================================================
+  const renderTitlePage = () => {
+    doc.addPage()
+    const y = PAGE_HEIGHT / 2 - 20
+    renderText(curso.titulo || 'Curso', y, {
+      fontSize: THEME.fonts.h1,
+      fontStyle: 'light',
+      color: THEME.colors.primary,
+      align: 'center',
+      maxWidth: CONTENT_WIDTH,
+    })
+  }
+
+  const renderCreditsPage = () => {
+    doc.addPage()
+    let y: number = MARGIN
+    y = renderText('Ficha Técnica', y, {
+      fontSize: THEME.fonts.h2,
+      fontStyle: 'bold',
+      color: THEME.colors.primary,
+    })
+    y = addSpace(y, 8)
+
+    const infos = [
+      { label: 'Categoria', value: curso.categoria },
+      { label: 'Carga Horária', value: curso.cargaHoraria },
+      { label: 'Modalidade', value: curso.modalidade },
+      {
+        label: 'Data de Criação',
+        value: curso.dataCriacao ? new Date(curso.dataCriacao).toLocaleDateString('pt-BR') : '',
+      },
+    ].filter((info) => info.value)
+
+    infos.forEach((info) => {
+      y = renderText(`${info.label}: ${info.value}`, y, {
+        fontSize: THEME.fonts.bodySize,
+        color: THEME.colors.textMuted,
+      })
+      y = addSpace(y, 3)
+    })
+  }
+
+  // ========================================================================
+  // SUMÁRIO (duas passadas)
+  // ========================================================================
+  let tocPageNumber = 0
+
+  const reserveTocPage = (unidadesCount: number) => {
+    doc.addPage()
+    tocPageNumber = doc.getNumberOfPages()
+    const reservedPages = unidadesCount > 20 ? 2 : 1
+    for (let i = 1; i < reservedPages; i++) {
+      doc.addPage()
+    }
+  }
+
+  const fillTocPage = (entries: TocEntry[]) => {
+    doc.setPage(tocPageNumber)
+    let y: number = MARGIN
+    y = renderText('Sumário', y, {
+      fontSize: THEME.fonts.h1,
+      fontStyle: 'bold',
+      color: THEME.colors.primary,
+    })
+    y = addSpace(y, 10)
+
+    if (entries.length === 0) {
+      renderText('Nenhuma unidade disponível.', y, {
+        fontSize: THEME.fonts.bodySize,
+        color: THEME.colors.textMuted,
+      })
+      return
+    }
+
+    entries.forEach((entry, idx) => {
+      if (y + 9 > PAGE_BREAK_Y) {
+        doc.setPage(doc.getCurrentPageInfo().pageNumber + 1)
+        y = MARGIN
+      }
+
+      const numberLabel = `${idx + 1}.`
+      doc.setFont('OpenSans', 'bold')
+      doc.setFontSize(THEME.fonts.bodySize)
+      doc.setTextColor(THEME.colors.accent)
+      doc.text(numberLabel, MARGIN, y, { baseline: 'top' })
+      const numberWidth = doc.getTextWidth(`${numberLabel}  `)
+
+      const titleX = MARGIN + numberWidth
+      const pageLabel = `${entry.page}`
+      doc.setFont('OpenSans', 'normal')
+      const pageLabelWidth = doc.getTextWidth(pageLabel)
+      const dotsEndX = PAGE_WIDTH - MARGIN - pageLabelWidth - 3
+
+      doc.setTextColor(THEME.colors.primary)
+      const maxTitleWidth = dotsEndX - titleX - 5
+      const titulo = doc.splitTextToSize(entry.titulo, maxTitleWidth)[0]
+      doc.text(titulo, titleX, y, { baseline: 'top' })
+      const titleWidth = doc.getTextWidth(titulo)
+
+      const dotsStartX = titleX + titleWidth + 2
+      const dotWidth = doc.getTextWidth('.')
+      let dots = ''
+      if (dotsEndX > dotsStartX) {
+        const count = Math.floor((dotsEndX - dotsStartX) / dotWidth)
+        dots = '.'.repeat(Math.max(count, 0))
+      }
+      doc.setTextColor(THEME.colors.textMuted)
+      doc.text(dots, dotsStartX, y, { baseline: 'top' })
+
+      doc.setTextColor(THEME.colors.primary)
+      doc.text(pageLabel, PAGE_WIDTH - MARGIN, y, { align: 'right', baseline: 'top' })
+
+      y += 9
+    })
+  }
+
+  // ========================================================================
+  // CABEÇALHO CORRIDO
+  // ========================================================================
+  const addRunningHeader = (page: number, label: string) => {
+    doc.setPage(page)
+    doc.setFont('OpenSans', 'bold')
+    doc.setFontSize(THEME.fonts.header)
+    doc.setTextColor(THEME.colors.primary)
+    doc.text(label, PAGE_WIDTH - MARGIN, THEME.layout.headerY, { align: 'right', baseline: 'top' })
+  }
+
+  // ========================================================================
+  // ABERTURA DE UNIDADE
+  // ========================================================================
+  const renderUnitOpener = (unidade: Unidade, index: number): number => {
+    doc.addPage()
+    const openerPage = doc.getNumberOfPages()
+    let y = 50
+
+    y = renderText(`UNIDADE ${index + 1}`, y, {
+      fontSize: 11,
+      fontStyle: 'bold',
+      color: THEME.colors.accent,
+    })
+    y = addSpace(y, 4)
+
+    y = renderText(unidade.titulo, y, {
+      fontSize: THEME.fonts.h1,
+      fontStyle: 'bold',
+      color: THEME.colors.primary,
+      maxWidth: CONTENT_WIDTH,
+    })
+    y = addSpace(y, 10)
+
+    if (unidade.descricao) {
+      renderText(unidade.descricao, y, {
+        fontSize: 12,
+        fontStyle: 'light',
+        color: THEME.colors.text,
+        maxWidth: CONTENT_WIDTH,
+      })
+    }
+
+    doc.setDrawColor(THEME.colors.accent)
+    doc.setLineWidth(0.8)
+    doc.line(MARGIN, PAGE_HEIGHT - 40, MARGIN + 30, PAGE_HEIGHT - 40)
+
+    return openerPage
+  }
+
+  // ========================================================================
+  // ROTEADOR DE BLOCOS DE CONTEÚDO
+  // ========================================================================
   const renderContentItem = (item: ConteudoUnidade, y: number): number => {
     switch (item.tipo) {
       case 'titulo':
-        return renderText(item.conteudo, y, { ...THEME.fonts.h3, color: THEME.colors.text })
+        return renderText(item.conteudo, y, {
+          fontSize: THEME.fonts.h2,
+          fontStyle: 'bold',
+          color: THEME.colors.primary,
+        })
 
       case 'subtitulo':
-        return renderText(item.conteudo, y, { ...THEME.fonts.h4, color: THEME.colors.text })
+        return renderText(item.conteudo, y, {
+          fontSize: THEME.fonts.h3,
+          fontStyle: 'bold',
+          color: THEME.colors.primary,
+        })
 
       case 'imagem':
         return renderImageBox(item, y)
@@ -414,136 +572,302 @@ export async function generateCoursePDF(curso: Curso, filename?: string): Promis
       case 'quiz':
         if (!item.quizData) {
           return renderText('Quiz sem dados configurados', y, {
-            fontSize: 12,
+            fontSize: THEME.fonts.bodySize,
             color: THEME.colors.textMuted,
           })
         }
         return renderQuizBox(item.quizData, y)
 
-      default: // Parágrafo
+      case 'info-box': {
+        const labels: Record<string, string> = {
+          atencao: 'Atenção',
+          saiba_mais: 'Saiba Mais',
+          info: 'Informação',
+          curiosidade: 'Curiosidade',
+        }
+        const title = item.tituloInfoBox || labels[item.tipoInfoBox || 'info'] || 'Saiba Mais'
+        return renderBoxV2(
+          y,
+          (yPos) =>
+            renderText(item.conteudo, yPos, {
+              fontSize: THEME.fonts.bodySize,
+              color: THEME.colors.text,
+              x: MARGIN + THEME.layout.boxPadding,
+              maxWidth: CONTENT_WIDTH - THEME.layout.boxPadding * 2,
+              isHtml: true,
+            }),
+          THEME.layout.boxPadding,
+          title
+        )
+      }
+
+      case 'video':
+        return renderBoxV2(
+          y,
+          (yPos) => {
+            let boxY = renderText(item.videoTitulo || 'Vídeo', yPos, {
+              fontSize: THEME.fonts.bodySize,
+              fontStyle: 'bold',
+              color: THEME.colors.primary,
+              x: MARGIN + THEME.layout.boxPadding,
+              maxWidth: CONTENT_WIDTH - THEME.layout.boxPadding * 2,
+            })
+            if (item.videoUrl) {
+              boxY = addSpace(boxY, 2)
+              doc.setFont('OpenSans', 'normal')
+              doc.setFontSize(THEME.fonts.caption)
+              doc.setTextColor(THEME.colors.accent)
+              doc.textWithLink(item.videoUrl, MARGIN + THEME.layout.boxPadding, boxY, {
+                url: item.videoUrl,
+              })
+              boxY += 5
+            }
+            return boxY
+          },
+          THEME.layout.boxPadding,
+          'Vídeo disponível online'
+        )
+
+      case 'objetivos-aprendizagem':
+        return renderBoxV2(
+          y,
+          (yPos) => {
+            let boxY = yPos
+            ;(item.itensObjetivos || []).forEach((objetivo, idx) => {
+              boxY = checkPageBreak(boxY, 8)
+              renderText(String(idx + 1).padStart(2, '0'), boxY, {
+                fontSize: THEME.fonts.bodySize,
+                fontStyle: 'bold',
+                color: THEME.colors.accent,
+                x: MARGIN + THEME.layout.boxPadding,
+              })
+              boxY = renderText(objetivo.texto, boxY, {
+                fontSize: THEME.fonts.bodySize,
+                color: THEME.colors.text,
+                x: MARGIN + THEME.layout.boxPadding + 12,
+                maxWidth: CONTENT_WIDTH - THEME.layout.boxPadding * 2 - 12,
+                isHtml: true,
+              })
+              boxY = addSpace(boxY, 2)
+            })
+            return boxY
+          },
+          THEME.layout.boxPadding,
+          'Objetivos de aprendizagem'
+        )
+
+      default: {
         const alignMap: Record<string, 'left' | 'center' | 'right' | 'justify'> = {
           esquerda: 'left',
           centro: 'center',
           direita: 'right',
           justificado: 'justify',
         }
+        const customColor = item.corTexto && hexToRgb(item.corTexto) ? item.corTexto : undefined
         return renderText(item.conteudo, y, {
-          ...THEME.fonts.body,
-          align: item.alinhamento ? alignMap[item.alinhamento] || 'left' : 'left',
-          color: (item.corTexto && hexToRgb(item.corTexto)) || THEME.colors.text,
+          fontSize: THEME.fonts.bodySize,
+          align: item.alinhamento ? alignMap[item.alinhamento] || 'justify' : 'justify',
+          color: customColor || THEME.colors.text,
           isHtml: true,
         })
+      }
     }
   }
 
   // ========================================================================
-  // FUNÇÕES DE RENDERIZAÇÃO DE CONTEÚDO (Item Específico)
+  // BLOCOS ESPECÍFICOS
   // ========================================================================
 
   const renderImageBox = (item: ConteudoUnidade, y: number): number => {
-    return renderBox(y, (yPos) => {
-      let boxY = yPos
-      if (item.fonte) {
-        boxY = renderText(`Fonte: ${item.fonte}`, boxY, {
-          ...THEME.fonts.caption,
-          color: THEME.colors.textMuted,
-        })
-      }
+    const loaded = loadedImages.get(item.id)
 
-      boxY = renderText(`[ Imagem: ${item.legenda || 'sem legenda'} ]`, boxY, {
-        ...THEME.fonts.body,
-        fontStyle: 'italic',
-        align: 'center',
-        color: THEME.colors.textMuted,
-      })
-
-      if (item.legenda) {
-        boxY = renderText(item.legenda, boxY, {
-          ...THEME.fonts.caption,
+    if (!loaded) {
+      return renderBoxV2(y, (yPos) => {
+        let boxY = yPos
+        boxY = renderText(`[ Imagem: ${item.legenda || 'sem legenda'} ]`, boxY, {
+          fontSize: THEME.fonts.bodySize,
+          fontStyle: 'italic',
           align: 'center',
           color: THEME.colors.textMuted,
         })
-      }
-      return boxY
-    })
+        if (item.fonte) {
+          boxY = renderText(`Fonte: ${item.fonte}`, boxY, {
+            fontSize: THEME.fonts.caption,
+            align: 'center',
+            color: THEME.colors.textMuted,
+          })
+        }
+        return boxY
+      })
+    }
+
+    figureCounter++
+    const widthRatio = item.tamanho === 'pequena' ? 0.5 : item.tamanho === 'media' ? 0.7 : 0.85
+    let drawW = CONTENT_WIDTH * widthRatio
+    let drawH = loaded.height * (drawW / loaded.width)
+
+    const maxUsableH = PAGE_BREAK_Y - CONTENT_TOP
+    if (drawH > maxUsableH) {
+      drawH = maxUsableH
+      drawW = loaded.width * (drawH / loaded.height)
+    }
+
+    const captionSpace = 16
+    let newY = checkPageBreak(y, drawH + captionSpace)
+    const x = MARGIN + (CONTENT_WIDTH - drawW) / 2
+
+    doc.addImage(loaded.dataUrl, 'JPEG', x, newY, drawW, drawH)
+    newY += drawH + 3
+
+    if (item.legenda) {
+      newY = renderText(`Figura ${figureCounter} – ${item.legenda}`, newY, {
+        fontSize: THEME.fonts.caption,
+        align: 'center',
+        color: THEME.colors.textMuted,
+      })
+    }
+    if (item.fonte) {
+      newY = renderText(`Fonte: ${item.fonte}`, newY, {
+        fontSize: THEME.fonts.caption,
+        align: 'center',
+        color: THEME.colors.textMuted,
+      })
+    }
+
+    return newY
   }
 
   const renderList = (items: ListaItem[], type: string = 'nao-ordenada', y: number): number => {
     let currentY = y
-    const itemIndent = MARGIN + 5
-    const itemMaxWidth = CONTENT_WIDTH - 5
+    const indent = 8
 
     items.forEach((item, index) => {
-      const prefix = type === 'ordenada' ? `${index + 1}. ` : '• '
-
       currentY = checkPageBreak(currentY, 10)
 
-      // Renderiza o prefixo
-      renderText(prefix, currentY, {
-        ...THEME.fonts.list,
-        fontStyle: 'bold',
-        color: THEME.colors.primary,
-        x: MARGIN,
-      })
+      if (type === 'ordenada') {
+        renderText(`${index + 1}.`, currentY, {
+          fontSize: THEME.fonts.bodySize,
+          fontStyle: 'bold',
+          color: THEME.colors.accent,
+          x: MARGIN,
+        })
+      } else {
+        doc.setFillColor(THEME.colors.accent)
+        doc.rect(MARGIN, currentY + 1.3, 1.8, 1.8, 'F')
+      }
 
-      // Renderiza o texto
       currentY = renderText(item.texto, currentY, {
-        ...THEME.fonts.list,
+        fontSize: THEME.fonts.bodySize,
         color: THEME.colors.text,
-        x: itemIndent,
-        maxWidth: itemMaxWidth,
+        x: MARGIN + indent,
+        maxWidth: CONTENT_WIDTH - indent,
+        isHtml: true,
       })
-      currentY = addSpace(currentY, 2) // Espaço entre itens
+      currentY = addSpace(currentY, 2)
     })
+
     return currentY
   }
 
   const renderAccordionBox = (items: AccordionItem[], y: number): number => {
-    return renderBox(y, (yPos) => {
+    return renderBoxV2(y, (yPos) => {
       let boxY = yPos
       items.forEach((item, index) => {
         if (index > 0) {
           boxY = addSpace(boxY, 3)
         }
-        // Título
         boxY = renderText(item.titulo, boxY, {
-          ...THEME.fonts.body,
+          fontSize: THEME.fonts.h3,
           fontStyle: 'bold',
           color: THEME.colors.primary,
+          x: MARGIN + THEME.layout.boxPadding,
+          maxWidth: CONTENT_WIDTH - THEME.layout.boxPadding * 2,
         })
-        // Conteúdo
+        boxY = addSpace(boxY, 2)
         boxY = renderText(item.conteudo, boxY, {
-          ...THEME.fonts.body,
+          fontSize: THEME.fonts.bodySize,
           color: THEME.colors.text,
+          x: MARGIN + THEME.layout.boxPadding,
+          maxWidth: CONTENT_WIDTH - THEME.layout.boxPadding * 2,
           isHtml: true,
         })
+        boxY = addSpace(boxY, 4)
       })
       return boxY
     })
   }
 
   const renderFlipcardBox = (item: ConteudoUnidade, y: number): number => {
-    return renderBox(y, (yPos) => {
-      let boxY = yPos
+    const frenteText = item.tituloFrente || ''
+    const versoText = item.conteudoVerso || ''
+    const shortEnough = frenteText.split(/\s+/).length < 40 && versoText.split(/\s+/).length < 40
 
-      // Frente
-      let frenteTitle = item.tituloFrente || ''
-      if (item.tipoFrente?.includes('imagem')) {
-        frenteTitle += ' [Imagem]'
+    return renderBoxV2(y, (yPos) => {
+      const padding = THEME.layout.boxPadding
+
+      if (shortEnough) {
+        const gap = 6
+        const colWidth = (CONTENT_WIDTH - padding * 2 - gap) / 2
+        const leftX = MARGIN + padding
+        const rightX = leftX + colWidth + gap
+
+        let leftY = renderText('FRENTE', yPos, {
+          fontSize: THEME.fonts.caption,
+          fontStyle: 'bold',
+          color: THEME.colors.accent,
+          x: leftX,
+        })
+        leftY = renderText(frenteText, leftY, {
+          fontSize: THEME.fonts.bodySize,
+          color: THEME.colors.text,
+          x: leftX,
+          maxWidth: colWidth,
+          isHtml: true,
+        })
+
+        let rightY = renderText('VERSO', yPos, {
+          fontSize: THEME.fonts.caption,
+          fontStyle: 'bold',
+          color: THEME.colors.accent,
+          x: rightX,
+        })
+        rightY = renderText(versoText, rightY, {
+          fontSize: THEME.fonts.bodySize,
+          color: THEME.colors.text,
+          x: rightX,
+          maxWidth: colWidth,
+          isHtml: true,
+        })
+
+        return Math.max(leftY, rightY)
       }
 
-      boxY = renderText(frenteTitle, boxY, {
-        ...THEME.fonts.body,
+      let boxY = yPos
+      boxY = renderText('FRENTE', boxY, {
+        fontSize: THEME.fonts.caption,
         fontStyle: 'bold',
-        color: THEME.colors.primary,
+        color: THEME.colors.accent,
+        x: MARGIN + padding,
       })
-
-      boxY = addSpace(boxY, 3)
-
-      // Verso
-      boxY = renderText(item.conteudoVerso || '', boxY, {
-        ...THEME.fonts.body,
+      boxY = renderText(frenteText, boxY, {
+        fontSize: THEME.fonts.bodySize,
         color: THEME.colors.text,
+        x: MARGIN + padding,
+        maxWidth: CONTENT_WIDTH - padding * 2,
+        isHtml: true,
+      })
+      boxY = addSpace(boxY, 4)
+      boxY = renderText('VERSO', boxY, {
+        fontSize: THEME.fonts.caption,
+        fontStyle: 'bold',
+        color: THEME.colors.accent,
+        x: MARGIN + padding,
+      })
+      boxY = renderText(versoText, boxY, {
+        fontSize: THEME.fonts.bodySize,
+        color: THEME.colors.text,
+        x: MARGIN + padding,
+        maxWidth: CONTENT_WIDTH - padding * 2,
         isHtml: true,
       })
       return boxY
@@ -551,51 +875,76 @@ export async function generateCoursePDF(curso: Curso, filename?: string): Promis
   }
 
   const renderQuizBox = (quiz: QuizData, y: number): number => {
-    return renderBox(y, (yPos) => {
-      let boxY = yPos
+    return renderBoxV2(
+      y,
+      (yPos) => {
+        let boxY = yPos
+        quiz.questions?.forEach((question, qIdx) => {
+          boxY = checkPageBreak(boxY, 25)
 
-      boxY = renderText('📝 Atividade: Quiz', boxY, {
-        ...THEME.fonts.h4,
-        color: THEME.colors.primary,
-      })
-      boxY = addSpace(boxY, 5)
-
-      quiz.questions?.forEach((question, qIdx) => {
-        boxY = checkPageBreak(boxY, 25)
-
-        // Pergunta
-        boxY = renderText(`Pergunta ${qIdx + 1}: ${question.pergunta}`, boxY, {
-          ...THEME.fonts.bodyLg,
-          fontStyle: 'bold',
-          color: THEME.colors.text,
-        })
-        boxY = addSpace(boxY, 3)
-
-        // Dica
-        if (question.dica) {
-          boxY = renderText(`💡 Dica: ${question.dica}`, boxY, {
-            ...THEME.fonts.caption,
-            color: THEME.colors.textMuted,
+          boxY = renderText(`${qIdx + 1}. ${question.pergunta}`, boxY, {
+            fontSize: THEME.fonts.h3,
+            fontStyle: 'bold',
+            color: THEME.colors.primary,
           })
-          boxY = addSpace(boxY, 3)
-        }
+          boxY = addSpace(boxY, 2)
 
-        // Opções
-        question.opcoes.forEach((opcao, oIdx) => {
-          const letter = String.fromCharCode(65 + oIdx)
-          const optionText = `${letter}) ${opcao.texto}`
-
-          boxY = renderText(optionText, boxY, {
-            ...THEME.fonts.body,
-            color: THEME.colors.text,
-            x: MARGIN + 5, // Indentação
-            maxWidth: CONTENT_WIDTH - 10,
+          question.opcoes.forEach((opcao, oIdx) => {
+            const letter = String.fromCharCode(65 + oIdx)
+            boxY = checkPageBreak(boxY, 8)
+            renderText(`${letter})`, boxY, {
+              fontSize: THEME.fonts.bodySize,
+              fontStyle: 'bold',
+              color: THEME.colors.accent,
+              x: MARGIN + 4,
+            })
+            boxY = renderText(opcao.texto, boxY, {
+              fontSize: THEME.fonts.bodySize,
+              color: THEME.colors.text,
+              x: MARGIN + 12,
+              maxWidth: CONTENT_WIDTH - 12,
+            })
           })
+
+          if (question.dica) {
+            boxY = addSpace(boxY, 1)
+            boxY = renderText(`Dica: ${question.dica}`, boxY, {
+              fontSize: THEME.fonts.caption,
+              fontStyle: 'italic',
+              color: THEME.colors.textMuted,
+            })
+          }
+
+          const correctIdx = question.opcoes.findIndex((o) => o.isCorrect)
+          quizGabarito.push({
+            question: `Questão ${qIdx + 1}`,
+            answer: correctIdx >= 0 ? String.fromCharCode(65 + correctIdx) : '-',
+          })
+
+          boxY = addSpace(boxY, 6)
         })
-        boxY = addSpace(boxY, 8) // Espaço entre perguntas
-      })
-      return boxY
+        return boxY
+      },
+      THEME.layout.boxPadding,
+      'Atividade: Quiz'
+    )
+  }
+
+  const renderGabarito = (items: GabaritoEntry[], y: number): number => {
+    let newY = addSeparator(y)
+    newY = renderText('Gabarito', newY, {
+      fontSize: THEME.fonts.h3,
+      fontStyle: 'bold',
+      color: THEME.colors.primary,
     })
+    newY = addSpace(newY, 3)
+    items.forEach((g) => {
+      newY = renderText(`${g.question} — alternativa ${g.answer}`, newY, {
+        fontSize: THEME.fonts.caption,
+        color: THEME.colors.textMuted,
+      })
+    })
+    return newY
   }
 
   // ========================================================================
@@ -604,27 +953,46 @@ export async function generateCoursePDF(curso: Curso, filename?: string): Promis
 
   const unidades = curso.unidades || []
 
-  // 1. Renderizar Capa
   renderCoverPage()
+  renderTitlePage()
+  renderCreditsPage()
+  reserveTocPage(unidades.length)
 
-  // 2. Renderizar Índice
-  if (unidades.length > 0) {
-    renderIndexPage(unidades)
-  }
+  const tocEntries: TocEntry[] = []
 
-  // 3. Renderizar Páginas de Unidade
-  if (unidades.length > 0) {
-    renderUnitPages(unidades)
-  }
+  unidades.forEach((unidade, index) => {
+    quizGabarito = []
+    const openerPage = renderUnitOpener(unidade, index)
+    tocEntries.push({ titulo: unidade.titulo, page: openerPage })
 
-  // 4. Adicionar Rodapés
+    doc.addPage()
+    let y: number = CONTENT_TOP
+
+    ;(unidade.conteudo || [])
+      .slice()
+      .sort((a, b) => a.ordem - b.ordem)
+      .forEach((item) => {
+        y = renderContentItem(item, y)
+        y = addSpace(y, 5)
+      })
+
+    if (quizGabarito.length > 0) {
+      renderGabarito(quizGabarito, y)
+    }
+  })
+
+  fillTocPage(tocEntries)
+
   const totalPages = doc.getNumberOfPages()
-  for (let i = 2; i <= totalPages; i++) {
-    // Começa do 2 (pós-capa)
-    addFooter(i, totalPages - 1) // Total de páginas é -1 (sem contar capa)
+  const firstContentPage = tocEntries[0]?.page ?? totalPages + 1
+  for (let p = firstContentPage; p <= totalPages; p++) {
+    let unitIdx = 0
+    for (let i = 0; i < tocEntries.length; i++) {
+      if (tocEntries[i].page <= p) unitIdx = i
+    }
+    addRunningHeader(p, `UNIDADE ${unitIdx + 1}   ${p}`)
   }
 
-  // 5. Salvar o PDF
   let fileName: string
   if (filename) {
     fileName = filename.endsWith('.pdf') ? filename : `${filename}.pdf`
@@ -633,4 +1001,3 @@ export async function generateCoursePDF(curso: Curso, filename?: string): Promis
   }
   doc.save(fileName)
 }
-2024
