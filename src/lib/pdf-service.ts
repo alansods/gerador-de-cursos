@@ -184,6 +184,10 @@ export async function generateCoursePDF(curso: Curso, filename?: string): Promis
   const loadedImages = await preloadImages(curso)
   let figureCounter = 0
   let quizGabarito: GabaritoEntry[] = []
+  /** Quando true, os helpers de renderização apenas calculam posições/alturas,
+   *  sem desenhar tinta real nem quebrar páginas — usado pela passada de
+   *  medição do renderBoxV2 para evitar duplicar conteúdo no PDF final. */
+  let measuring = false
 
   // ========================================================================
   // FUNÇÕES HELPER DE RENDERIZAÇÃO
@@ -191,6 +195,7 @@ export async function generateCoursePDF(curso: Curso, filename?: string): Promis
 
   /** Verifica se precisa de uma nova página e a adiciona se necessário */
   const checkPageBreak = (y: number, requiredSpace: number = 20): number => {
+    if (measuring) return y
     if (y + requiredSpace > PAGE_BREAK_Y) {
       doc.addPage()
       return CONTENT_TOP
@@ -252,19 +257,21 @@ export async function generateCoursePDF(curso: Curso, filename?: string): Promis
       currentY = checkPageBreak(currentY, lineHeight)
       const isLastLine = idx === lines.length - 1
 
-      if (align === 'justify' && !isLastLine) {
-        doc.text(line, x, currentY, { maxWidth, align: 'justify', baseline: 'top' })
-      } else {
-        let xPos = x
-        let effectiveAlign: 'left' | 'center' | 'right' = 'left'
-        if (align === 'center') {
-          xPos = x + maxWidth / 2
-          effectiveAlign = 'center'
-        } else if (align === 'right') {
-          xPos = x + maxWidth
-          effectiveAlign = 'right'
+      if (!measuring) {
+        if (align === 'justify' && !isLastLine) {
+          doc.text(line, x, currentY, { maxWidth, align: 'justify', baseline: 'top' })
+        } else {
+          let xPos = x
+          let effectiveAlign: 'left' | 'center' | 'right' = 'left'
+          if (align === 'center') {
+            xPos = x + maxWidth / 2
+            effectiveAlign = 'center'
+          } else if (align === 'right') {
+            xPos = x + maxWidth
+            effectiveAlign = 'right'
+          }
+          doc.text(line, xPos, currentY, { align: effectiveAlign, baseline: 'top' })
         }
-        doc.text(line, xPos, currentY, { align: effectiveAlign, baseline: 'top' })
       }
       currentY += lineHeight
     })
@@ -283,7 +290,9 @@ export async function generateCoursePDF(curso: Curso, filename?: string): Promis
     const startY = newY
     const titleSpace = title ? 8 : 0
 
+    measuring = true
     let contentEndY = renderContentCallback(startY + padding + titleSpace)
+    measuring = false
     const boxHeight = contentEndY - startY
 
     if (startY + boxHeight + padding * 2 > PAGE_BREAK_Y) {
@@ -505,6 +514,14 @@ export async function generateCoursePDF(curso: Curso, filename?: string): Promis
   const renderUnitOpener = (unidade: Unidade, index: number): number => {
     doc.addPage()
     const openerPage = doc.getNumberOfPages()
+
+    doc.setFillColor(THEME.colors.primary)
+    doc.rect(0, 0, PAGE_WIDTH, PAGE_HEIGHT, 'F')
+
+    doc.setDrawColor(THEME.colors.primaryDark)
+    doc.setLineWidth(0.3)
+    drawHexGrid(doc, PAGE_WIDTH - 85, -15, 9, 6, 9)
+
     let y = 50
 
     y = renderText(`UNIDADE ${index + 1}`, y, {
@@ -517,7 +534,7 @@ export async function generateCoursePDF(curso: Curso, filename?: string): Promis
     y = renderText(unidade.titulo, y, {
       fontSize: THEME.fonts.h1,
       fontStyle: 'bold',
-      color: THEME.colors.primary,
+      color: THEME.colors.white,
       maxWidth: CONTENT_WIDTH,
     })
     y = addSpace(y, 10)
@@ -526,7 +543,7 @@ export async function generateCoursePDF(curso: Curso, filename?: string): Promis
       renderText(unidade.descricao, y, {
         fontSize: 12,
         fontStyle: 'light',
-        color: THEME.colors.text,
+        color: THEME.colors.white,
         maxWidth: CONTENT_WIDTH,
       })
     }
@@ -614,12 +631,14 @@ export async function generateCoursePDF(curso: Curso, filename?: string): Promis
             })
             if (item.videoUrl) {
               boxY = addSpace(boxY, 2)
-              doc.setFont('OpenSans', 'normal')
-              doc.setFontSize(THEME.fonts.caption)
-              doc.setTextColor(THEME.colors.accent)
-              doc.textWithLink(item.videoUrl, MARGIN + THEME.layout.boxPadding, boxY, {
-                url: item.videoUrl,
-              })
+              if (!measuring) {
+                doc.setFont('OpenSans', 'normal')
+                doc.setFontSize(THEME.fonts.caption)
+                doc.setTextColor(THEME.colors.accent)
+                doc.textWithLink(item.videoUrl, MARGIN + THEME.layout.boxPadding, boxY, {
+                  url: item.videoUrl,
+                })
+              }
               boxY += 5
             }
             return boxY
@@ -915,11 +934,13 @@ export async function generateCoursePDF(curso: Curso, filename?: string): Promis
             })
           }
 
-          const correctIdx = question.opcoes.findIndex((o) => o.isCorrect)
-          quizGabarito.push({
-            question: `Questão ${qIdx + 1}`,
-            answer: correctIdx >= 0 ? String.fromCharCode(65 + correctIdx) : '-',
-          })
+          if (!measuring) {
+            const correctIdx = question.opcoes.findIndex((o) => o.isCorrect)
+            quizGabarito.push({
+              question: `Questão ${qIdx + 1}`,
+              answer: correctIdx >= 0 ? String.fromCharCode(65 + correctIdx) : '-',
+            })
+          }
 
           boxY = addSpace(boxY, 6)
         })
@@ -984,8 +1005,10 @@ export async function generateCoursePDF(curso: Curso, filename?: string): Promis
   fillTocPage(tocEntries)
 
   const totalPages = doc.getNumberOfPages()
+  const openerPages = new Set(tocEntries.map((entry) => entry.page))
   const firstContentPage = tocEntries[0]?.page ?? totalPages + 1
   for (let p = firstContentPage; p <= totalPages; p++) {
+    if (openerPages.has(p)) continue // página de abertura já tem seu próprio rótulo de unidade
     let unitIdx = 0
     for (let i = 0; i < tocEntries.length; i++) {
       if (tocEntries[i].page <= p) unitIdx = i
