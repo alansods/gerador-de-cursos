@@ -1,25 +1,30 @@
-# SCORM Course Generator
+# ScormStack
 
-Web system for creating and exporting educational courses in the **SCORM 1.2** standard, with content generation powered by **Artificial Intelligence** (Google Gemini / OpenAI).
+**Create professional SCORM courses in minutes — no team, no technical knowledge, no expensive tools.**
+
+Upload a Word or PDF document, AI structures the content, and the SCORM package is automatically generated — ready to import into Moodle or any LMS.
+
+**Problem:** producing SCORM courses requires expensive tools, a technical team, and days of work.  
+**Decision:** a web platform with AI generation that transforms documents into structured courses automatically.  
+**Result:** course production time and cost reduced from days to minutes, with no team or specialized tools required
 
 <img width="2967" height="1591" alt="image" src="https://github.com/user-attachments/assets/2ef5d87e-59fd-44ff-a41b-67616ed2e9b1" />
-
 
 ---
 
 ## Features
 
-- Create courses with multiple units and rich content (markdown)
-- **Automatic course generation via AI** from Word documents (.docx/.doc)
+- Automatic course generation via AI from Word documents (.docx/.doc)
   - AI uses **strictly the content from the uploaded document**, without inventing or adding extra information
-  - Supports two modes: **automatic** (AI chooses the best resources) and **with markers** (precise control via markers in the document)
+  - Two modes: **automatic** (AI chooses the best resources) and **with markers** (precise control via markers in the document)
   - Automatically structures content into units with interactive resources (accordion, quiz, flipcard, etc.)
+- Manual course creation with multiple units and rich content (markdown)
 - Interactive course preview before export
 - Export SCORM 1.2 packages compatible with any LMS
-- Integrated dark mode in the SCORM player
+- Player with integrated dark mode
+- Course PDF generation
 - JWT authentication (login/registration)
 - User management and activity logs
-- Course PDF generation
 - Image upload via Vercel Blob
 
 ---
@@ -38,6 +43,16 @@ Web system for creating and exporting educational courses in the **SCORM 1.2** s
 | Testing         | Jest + Testing Library + Playwright                      |
 | Deploy          | Vercel                                                   |
 | Package manager | pnpm                                                     |
+
+---
+
+## Technical Decisions
+
+**Isolated Vite player** — the generated SCORM package runs completely independently inside the LMS, with no dependency on the main application. This ensures maximum compatibility with any LMS.
+
+**Async generation with SCORMJob** — package generation is a heavy process. Instead of blocking the request, the job is queued and processed in the background, with status polling on the frontend. Solves Vercel's 60s timeout limit.
+
+**AI as extractor, not inventor** — Gemini is used to structure content from documents without consistent formatting. The prompt is built to use exclusively the content of the uploaded document, without hallucinating extra information.
 
 ---
 
@@ -66,22 +81,19 @@ DATABASE_URL=postgresql://user:password@host:port/database
 JWT_SECRET=your-secret-key-here
 NEXT_PUBLIC_APP_URL=http://localhost:3000
 
-# For AI course generation
+# AI course generation
 GOOGLE_AI_API_KEY=your-gemini-key
 OPENAI_API_KEY=your-openai-key   # optional
 
-# For image uploads
+# Image uploads
 BLOB_READ_WRITE_TOKEN=your-vercel-blob-token
 ```
 
 ### 3. Database
 
 ```bash
-# Create tables
-pnpm db:migrate
-
-# (Optional) Populate with initial data
-pnpm db:seed
+pnpm db:migrate   # create tables
+pnpm db:seed      # populate with initial data (optional)
 ```
 
 ### 4. Run in development
@@ -142,42 +154,39 @@ src/
 │   │   ├── cursos/             # Course CRUD
 │   │   ├── generate-course-from-text/  # AI generation
 │   │   ├── generate-scorm-v2/  # SCORM export
-│   │   ├── scorm-jobs/         # SCORM job queue
+│   │   ├── scorm-jobs/         # Job queue
 │   │   ├── scorm-status/       # Job status
 │   │   ├── scorm-download/     # ZIP download
 │   │   ├── users/              # User management
 │   │   ├── activities/         # Activity logs
 │   │   ├── extract-document/   # PDF/DOCX → text
 │   │   └── upload-image/       # Image uploads
-│   ├── scorm-preview/          # SCORM player (static Server Components)
-│   │   ├── layout.tsx
-│   │   ├── page.tsx
-│   │   └── unidade/[unidadeId]/page.tsx
+│   ├── scorm-preview/          # SCORM player
 │   ├── cursos/                 # Course management
 │   ├── home/                   # Dashboard
-│   ├── login/                  # Authentication
-│   ├── cadastro/               # Registration
-│   └── usuarios/               # User management
-├── components/                 # React components
-│   ├── SCORMNavbar.tsx         # SCORM player navbar
-│   ├── ThemeProvider.tsx       # Dark mode
-│   ├── ExportModal.tsx         # Export modal
-│   ├── PreviewCurso.tsx        # Interactive preview
-│   ├── scorm/                  # SCORM components
+│   ├── login/
+│   ├── cadastro/
+│   └── usuarios/
+├── components/
+│   ├── SCORMNavbar.tsx
+│   ├── ThemeProvider.tsx
+│   ├── ExportModal.tsx
+│   ├── PreviewCurso.tsx
+│   ├── scorm/
 │   └── ui/                     # shadcn/ui
-├── hooks/                      # Custom hooks
-│   ├── useSCORM.ts             # SCORM export
-│   ├── useLMS.ts               # SCORM API integration
-│   ├── useTheme.ts             # Dark mode
-│   └── useCurso.ts             # Course data
-├── lib/                        # Utilities and services
+├── hooks/
+│   ├── useSCORM.ts
+│   ├── useLMS.ts
+│   ├── useTheme.ts
+│   └── useCurso.ts
+├── lib/
 │   ├── scorm-build-service.ts  # In-memory SCORM generation
-│   ├── scorm-service.ts        # SCORM logic
-│   ├── auth.ts                 # Authentication
-│   ├── prisma.ts               # Prisma client
-│   └── pdf-service.ts          # PDF generation
-├── types/                      # TypeScript types
-└── context/                    # React Context
+│   ├── scorm-service.ts
+│   ├── auth.ts
+│   ├── prisma.ts
+│   └── pdf-service.ts
+├── types/
+└── context/
 
 prisma/
 └── schema.prisma               # Models: User, Curso, Activity, SCORMJob
@@ -191,7 +200,7 @@ generate-scorm-isolated.mjs     # Isolated SCORM build script
 
 | Model      | Description                                    |
 | ---------- | ---------------------------------------------- |
-| `User`     | System users (name, position, login, password) |
+| `User`     | System users                                   |
 | `Curso`    | Courses with units (JSON structure)            |
 | `Activity` | User action logs                               |
 | `SCORMJob` | Queue and status of async SCORM exports        |
@@ -205,10 +214,10 @@ generate-scorm-isolated.mjs     # Isolated SCORM build script
 3. Create a PostgreSQL database (Vercel Postgres or Supabase)
 4. Automatic deployment on every push to `main` branch
 
-> **Warning**: SCORM export via full Next.js build doesn't work on Vercel due to timeout (60s maximum on Pro plan, build takes 2-5 minutes). The current approach uses in-memory generation via `scorm-build-service.ts`.
+> **Warning**: SCORM export via full Next.js build doesn't work on Vercel due to the 60s timeout limit. The current approach uses in-memory generation via `scorm-build-service.ts`.
 
 ---
 
 ## License
 
-MIT License - Open source educational content generator.
+MIT — open source educational content generator.
