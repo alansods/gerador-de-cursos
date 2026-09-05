@@ -16,6 +16,7 @@ import { RichTextEditor } from '@/components/RichTextEditor'
 import { PageTransition } from '@/components/PageTransition'
 import { EditableCard } from '@/components/EditableCard'
 import { TooltipButton } from '@/components/TooltipButton'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -1106,11 +1107,18 @@ export default function EditarCursoPage() {
           <div className="px-6 py-3">
             <div className="flex items-center justify-between gap-4">
               {/* Esquerda */}
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-3 min-w-0">
                 <TooltipButton icon={ArrowLeft} tooltip="Voltar" onClick={handleVoltar} />
-                <h1 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-                  {state.cursoAtual.titulo}
-                </h1>
+                <TooltipProvider delayDuration={200}>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <h1 className="text-lg font-semibold text-gray-900 dark:text-gray-100 truncate max-w-[190px] md:max-w-[290px] cursor-default">
+                        {state.cursoAtual.titulo}
+                      </h1>
+                    </TooltipTrigger>
+                    <TooltipContent side="bottom">{state.cursoAtual.titulo}</TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
               </div>
 
               {/* Centro - Dropdown de Unidades */}
