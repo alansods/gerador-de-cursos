@@ -3,18 +3,33 @@
 import { createContext, useContext, useState, ReactNode, useEffect, useRef } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import { toast } from 'sonner'
+import {
+  can,
+  mapCargoParaRole,
+  ROLES,
+  type Acao,
+  type ContextoPermissao,
+  type RoleUsuario,
+} from '@/lib/permissions'
 
 interface User {
   id: string
   nome: string
   cargo: string
   usuario: string
+  role?: RoleUsuario
 }
 
 interface AuthContextType {
   user: User | null
   loading: boolean
   isAuthenticated: boolean
+  role: RoleUsuario | null
+  can: (acao: Acao, ctx?: ContextoPermissao) => boolean
+  isAdmin: boolean
+  podeGerenciarUsuarios: boolean
+  podeVerRevisao: boolean
+  podeCriarCurso: boolean
   login: (usuario: string, senha: string) => Promise<boolean>
   loginAsGuest: () => Promise<void>
   logout: () => Promise<void>
@@ -189,12 +204,28 @@ export function AuthProvider({ children, initialUser }: AuthProviderProps) {
 
   const isAuthenticated = !!user
 
+  const role: RoleUsuario | null = user
+    ? user.role && ROLES.includes(user.role)
+      ? user.role
+      : mapCargoParaRole(user.cargo)
+    : null
+
+  const usuarioPermissoes = user && role ? { id: user.id, role } : null
+
+  const checarPermissao = (acao: Acao, ctx?: ContextoPermissao) => can(usuarioPermissoes, acao, ctx)
+
   return (
     <AuthContext.Provider
       value={{
         user,
         loading,
         isAuthenticated,
+        role,
+        can: checarPermissao,
+        isAdmin: role === 'ADMIN',
+        podeGerenciarUsuarios: checarPermissao('usuario:gerenciar'),
+        podeVerRevisao: checarPermissao('revisao:ver'),
+        podeCriarCurso: checarPermissao('curso:criar'),
         login,
         loginAsGuest,
         logout,

@@ -1,11 +1,11 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { verifyAuth } from '@/lib/auth';
-import { prisma } from '@/lib/prisma';
+import { NextRequest, NextResponse } from 'next/server'
+import { verifyAuth, resolverRole } from '@/lib/auth'
+import { prisma } from '@/lib/prisma'
 
 export async function GET(request: NextRequest) {
   try {
     // Verificar autenticação
-    const payload = await verifyAuth(request);
+    const payload = await verifyAuth(request)
 
     // Buscar usuário no banco para garantir que ainda existe
     const user = await prisma.user.findUnique({
@@ -15,14 +15,12 @@ export async function GET(request: NextRequest) {
         usuario: true,
         nome: true,
         cargo: true,
+        role: true,
       },
-    });
+    })
 
     if (!user) {
-      return NextResponse.json(
-        { success: false, error: 'Usuário não encontrado' },
-        { status: 404 }
-      );
+      return NextResponse.json({ success: false, error: 'Usuário não encontrado' }, { status: 404 })
     }
 
     return NextResponse.json({
@@ -33,14 +31,11 @@ export async function GET(request: NextRequest) {
         usuario: user.usuario,
         nome: user.nome,
         cargo: user.cargo,
+        role: resolverRole(user.role, user.cargo),
       },
-    });
+    })
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Não autenticado';
-    return NextResponse.json(
-      { success: false, error: message },
-      { status: 401 }
-    );
+    const message = error instanceof Error ? error.message : 'Não autenticado'
+    return NextResponse.json({ success: false, error: message }, { status: 401 })
   }
 }
-

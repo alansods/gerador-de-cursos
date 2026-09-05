@@ -4,6 +4,19 @@ import bcrypt from 'bcryptjs'
 import { Prisma } from '@prisma/client'
 import { logActivity } from '@/lib/activity-logger'
 import { requireAuth, createErrorResponse } from '@/lib/auth'
+import { can, ROLES, type RoleUsuario } from '@/lib/permissions'
+import type { JWTPayload } from '@/lib/auth'
+
+function normalizarRole(role: unknown): RoleUsuario {
+  return typeof role === 'string' && ROLES.includes(role as RoleUsuario)
+    ? (role as RoleUsuario)
+    : 'CONTEUDISTA'
+}
+
+function negarSeNaoPodeGerenciar(user: JWTPayload) {
+  if (can(user, 'usuario:gerenciar')) return null
+  return createErrorResponse('Você não tem permissão para gerenciar usuários', 403)
+}
 
 // GET: Listar usuários com paginação e filtros
 export async function GET(request: NextRequest) {
@@ -12,6 +25,9 @@ export async function GET(request: NextRequest) {
   if (authResult instanceof NextResponse) {
     return authResult
   }
+
+  const semPermissao = negarSeNaoPodeGerenciar(authResult.user)
+  if (semPermissao) return semPermissao
 
   try {
     const searchParams = request.nextUrl.searchParams
@@ -54,6 +70,7 @@ export async function GET(request: NextRequest) {
           nome: true,
           usuario: true,
           cargo: true,
+          role: true,
           createdAt: true,
           updatedAt: true,
         },
@@ -92,13 +109,12 @@ export async function POST(request: NextRequest) {
     return authResult
   }
 
-  if (authResult.user.cargo === 'Convidado') {
-    return createErrorResponse('Você não tem permissão para criar usuários', 403)
-  }
+  const semPermissao = negarSeNaoPodeGerenciar(authResult.user)
+  if (semPermissao) return semPermissao
 
   try {
     const body = await request.json()
-    const { nome, usuario, senha, cargo } = body
+    const { nome, usuario, senha, cargo, role } = body
 
     if (!nome || !usuario || !senha || !cargo) {
       return NextResponse.json(
@@ -127,12 +143,14 @@ export async function POST(request: NextRequest) {
         usuario,
         senha: hashedPassword,
         cargo,
+        role: normalizarRole(role),
       },
       select: {
         id: true,
         nome: true,
         usuario: true,
         cargo: true,
+        role: true,
         createdAt: true,
       },
     })
@@ -144,6 +162,7 @@ export async function POST(request: NextRequest) {
       descricao: nome,
       entityId: user.id,
       entityType: 'usuario',
+      userId: authResult.user.id,
     })
 
     return NextResponse.json({ success: true, user })
@@ -164,13 +183,12 @@ export async function PUT(request: NextRequest) {
     return authResult
   }
 
-  if (authResult.user.cargo === 'Convidado') {
-    return createErrorResponse('Você não tem permissão para editar usuários', 403)
-  }
+  const semPermissao = negarSeNaoPodeGerenciar(authResult.user)
+  if (semPermissao) return semPermissao
 
   try {
     const body = await request.json()
-    const { id, nome, usuario, senha, cargo } = body
+    const { id, nome, usuario, senha, cargo, role } = body
 
     if (!id) {
       return NextResponse.json(
@@ -185,6 +203,10 @@ export async function PUT(request: NextRequest) {
       cargo,
     }
 
+    if (role !== undefined) {
+      updateData.role = normalizarRole(role)
+    }
+
     if (senha) {
       updateData.senha = await bcrypt.hash(senha, 10)
     }
@@ -197,6 +219,7 @@ export async function PUT(request: NextRequest) {
         nome: true,
         usuario: true,
         cargo: true,
+        role: true,
       },
     })
 
@@ -207,6 +230,7 @@ export async function PUT(request: NextRequest) {
       descricao: user.nome,
       entityId: user.id,
       entityType: 'usuario',
+      userId: authResult.user.id,
     })
 
     return NextResponse.json({ success: true, user })
@@ -234,9 +258,8 @@ export async function DELETE(request: NextRequest) {
     return authResult
   }
 
-  if (authResult.user.cargo === 'Convidado') {
-    return createErrorResponse('Você não tem permissão para deletar usuários', 403)
-  }
+  const semPermissao = negarSeNaoPodeGerenciar(authResult.user)
+  if (semPermissao) return semPermissao
 
   try {
     const searchParams = request.nextUrl.searchParams
@@ -266,6 +289,7 @@ export async function DELETE(request: NextRequest) {
       descricao: usuarioExistente?.nome || 'Usuário',
       entityId: id,
       entityType: 'usuario',
+      userId: authResult.user.id,
     })
 
     return NextResponse.json({ success: true })

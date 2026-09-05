@@ -10,14 +10,17 @@
 
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import { NextIntlClientProvider } from 'next-intl'
 import LoginPage from '@/app/login/page'
 import { AuthProvider } from '@/context/AuthContext'
+import authMessages from '@/i18n/locales/pt-BR/auth.json'
+import commonMessages from '@/i18n/locales/pt-BR/common.json'
 
-// Mock do fetch global para rastrear chamadas
+const messages = { auth: authMessages, common: commonMessages }
+
 const mockFetch = jest.fn()
 global.fetch = mockFetch
 
-// Mock do router
 const mockPush = jest.fn()
 jest.mock('next/navigation', () => ({
   useRouter: () => ({
@@ -30,216 +33,173 @@ jest.mock('next/navigation', () => ({
   useSearchParams: () => new URLSearchParams(),
 }))
 
+jest.mock('sonner', () => ({
+  toast: { error: jest.fn(), success: jest.fn(), info: jest.fn() },
+}))
+
+const semSessao = {
+  ok: true,
+  json: async () => ({ success: true, authenticated: false, user: null }),
+}
+
+const respostaLoginOk = {
+  ok: true,
+  json: async () => ({
+    success: true,
+    user: {
+      id: '1',
+      usuario: 'testuser',
+      nome: 'Test User',
+      cargo: 'Desenvolvedor',
+      role: 'CONTEUDISTA',
+    },
+  }),
+}
+
+const chamadasDeLogin = () =>
+  mockFetch.mock.calls.filter((call) => String(call[0]).includes('/api/auth/login'))
+
+const rotearFetch = (respostaLogin: unknown) => {
+  mockFetch.mockImplementation((url: string) =>
+    String(url).includes('/api/auth/login')
+      ? Promise.resolve(respostaLogin)
+      : Promise.resolve(semSessao)
+  )
+}
+
+const renderLoginPage = () =>
+  render(
+    <NextIntlClientProvider locale="pt-BR" messages={messages}>
+      <AuthProvider>
+        <LoginPage />
+      </AuthProvider>
+    </NextIntlClientProvider>
+  )
+
+const campoUsuario = () => screen.getByLabelText('Usuário')
+const campoSenha = () => screen.getByLabelText('Senha') as HTMLInputElement
+const botaoEntrar = () => screen.getByRole('button', { name: /^entrar$/i })
+
 describe('Integration - Login Flow', () => {
   beforeEach(() => {
     jest.clearAllMocks()
-    mockFetch.mockClear()
+    rotearFetch(respostaLoginOk)
   })
 
-  it('deve renderizar o formulário de login', () => {
-    // Arrange & Act
-    render(
-      <AuthProvider>
-        <LoginPage />
-      </AuthProvider>
-    )
+  it('deve renderizar o formulário de login', async () => {
+    renderLoginPage()
 
-    // Assert
-    expect(screen.getByLabelText(/usuário/i)).toBeInTheDocument()
-    expect(screen.getByLabelText(/senha/i)).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /entrar/i })).toBeInTheDocument()
+    expect(campoUsuario()).toBeInTheDocument()
+    expect(campoSenha()).toBeInTheDocument()
+    expect(botaoEntrar()).toBeInTheDocument()
+
+    await waitFor(() => expect(mockFetch).toHaveBeenCalled())
   })
 
   it('deve fazer login com credenciais válidas', async () => {
-    // Arrange
     const user = userEvent.setup()
 
-    mockFetch.mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({
-        success: true,
-        user: {
-          id: '1',
-          usuario: 'testuser',
-          nome: 'Test User',
-          cargo: 'Desenvolvedor',
-        },
-      }),
-    })
+    renderLoginPage()
 
-    render(
-      <AuthProvider>
-        <LoginPage />
-      </AuthProvider>
-    )
+    await user.type(campoUsuario(), 'testuser')
+    await user.type(campoSenha(), 'senha123')
+    await user.click(botaoEntrar())
 
-    // Act
-    await user.type(screen.getByLabelText(/usuário/i), 'testuser')
-    await user.type(screen.getByLabelText(/senha/i), 'senha123')
-    await user.click(screen.getByRole('button', { name: /entrar/i }))
-
-    // Assert
     await waitFor(() => {
-      // Verificar que a requisição foi feita corretamente
-      expect(mockFetch).toHaveBeenCalledTimes(1)
-      expect(mockFetch).toHaveBeenCalledWith(
-        '/api/auth/login',
-        expect.objectContaining({
-          method: 'POST',
-          body: JSON.stringify({
-            usuario: 'testuser',
-            senha: 'senha123',
-          }),
-        })
-      )
-
-      // Verificar que houve redirecionamento
       expect(mockPush).toHaveBeenCalledWith('/home')
     })
 
-    // IMPORTANTE: Verificar que NÃO houve requisições duplicadas
-    expect(mockFetch).toHaveBeenCalledTimes(1)
+    expect(chamadasDeLogin()).toHaveLength(1)
+    expect(chamadasDeLogin()[0][1]).toEqual(
+      expect.objectContaining({
+        method: 'POST',
+        body: JSON.stringify({ usuario: 'testuser', senha: 'senha123' }),
+      })
+    )
   })
 
   it('deve mostrar erro com credenciais inválidas', async () => {
-    // Arrange
     const user = userEvent.setup()
 
-    mockFetch.mockResolvedValueOnce({
+    rotearFetch({
       ok: false,
-      json: async () => ({
-        success: false,
-        error: 'Credenciais inválidas',
-      }),
+      json: async () => ({ success: false, error: 'Credenciais inválidas' }),
     })
 
-    render(
-      <AuthProvider>
-        <LoginPage />
-      </AuthProvider>
-    )
+    renderLoginPage()
 
-    // Act
-    await user.type(screen.getByLabelText(/usuário/i), 'wronguser')
-    await user.type(screen.getByLabelText(/senha/i), 'wrongpass')
-    await user.click(screen.getByRole('button', { name: /entrar/i }))
+    await user.type(campoUsuario(), 'wronguser')
+    await user.type(campoSenha(), 'wrongpass')
+    await user.click(botaoEntrar())
 
-    // Assert
     await waitFor(() => {
-      expect(mockFetch).toHaveBeenCalledTimes(1)
+      expect(chamadasDeLogin()).toHaveLength(1)
     })
 
-    // Verificar que NÃO houve redirecionamento
     expect(mockPush).not.toHaveBeenCalled()
-
-    // Verificar que NÃO houve requisições duplicadas
-    expect(mockFetch).toHaveBeenCalledTimes(1)
+    expect(chamadasDeLogin()).toHaveLength(1)
   })
 
   it('deve validar campos obrigatórios', async () => {
-    // Arrange
     const user = userEvent.setup()
 
-    render(
-      <AuthProvider>
-        <LoginPage />
-      </AuthProvider>
-    )
+    renderLoginPage()
 
-    // Act - tentar submeter formulário vazio
-    await user.click(screen.getByRole('button', { name: /entrar/i }))
+    await user.click(botaoEntrar())
 
-    // Assert
     await waitFor(() => {
-      expect(screen.getByText(/usuário é obrigatório/i)).toBeInTheDocument()
-      expect(screen.getByText(/senha é obrigatória/i)).toBeInTheDocument()
+      expect(screen.getByText('Usuário é obrigatório')).toBeInTheDocument()
+      expect(screen.getByText('Senha é obrigatória')).toBeInTheDocument()
     })
 
-    // Verificar que NÃO foi feita nenhuma requisição
-    expect(mockFetch).not.toHaveBeenCalled()
+    expect(chamadasDeLogin()).toHaveLength(0)
   })
 
   it('deve mostrar/ocultar senha ao clicar no ícone', async () => {
-    // Arrange
     const user = userEvent.setup()
 
-    render(
-      <AuthProvider>
-        <LoginPage />
-      </AuthProvider>
-    )
+    renderLoginPage()
 
-    const senhaInput = screen.getByLabelText(/senha/i) as HTMLInputElement
-
-    // Assert - inicialmente é tipo password
+    const senhaInput = campoSenha()
     expect(senhaInput.type).toBe('password')
 
-    // Act - clicar para mostrar senha
-    const toggleButton = screen.getByRole('button', { name: '', hidden: true })
+    const toggleButton = senhaInput.parentElement!.querySelector('button')!
     await user.click(toggleButton)
 
-    // Assert - agora é tipo text
-    await waitFor(() => {
-      expect(senhaInput.type).toBe('text')
-    })
+    await waitFor(() => expect(senhaInput.type).toBe('text'))
 
-    // Act - clicar novamente para ocultar
     await user.click(toggleButton)
 
-    // Assert - volta a ser password
-    await waitFor(() => {
-      expect(senhaInput.type).toBe('password')
-    })
+    await waitFor(() => expect(senhaInput.type).toBe('password'))
   })
 
   it('deve desabilitar o formulário durante o login', async () => {
-    // Arrange
     const user = userEvent.setup()
 
-    // Simular uma requisição lenta
-    mockFetch.mockImplementation(
-      () =>
-        new Promise((resolve) => {
-          setTimeout(
-            () =>
-              resolve({
-                ok: true,
-                json: async () => ({
-                  success: true,
-                  user: { id: '1', usuario: 'test', nome: 'Test', cargo: 'Dev' },
-                }),
-              }),
-            100
-          )
-        })
+    mockFetch.mockImplementation((url: string) =>
+      String(url).includes('/api/auth/login')
+        ? new Promise((resolve) => setTimeout(() => resolve(respostaLoginOk), 100))
+        : Promise.resolve(semSessao)
     )
 
-    render(
-      <AuthProvider>
-        <LoginPage />
-      </AuthProvider>
-    )
+    renderLoginPage()
 
-    const usuarioInput = screen.getByLabelText(/usuário/i)
-    const senhaInput = screen.getByLabelText(/senha/i)
-    const submitButton = screen.getByRole('button', { name: /entrar/i })
+    const usuarioInput = campoUsuario()
+    const senhaInput = campoSenha()
+    const submitButton = botaoEntrar()
 
-    // Act
     await user.type(usuarioInput, 'testuser')
     await user.type(senhaInput, 'senha123')
     await user.click(submitButton)
 
-    // Assert - verificar que os campos estão desabilitados durante o loading
     expect(usuarioInput).toBeDisabled()
     expect(senhaInput).toBeDisabled()
-    expect(submitButton).toBeDisabled()
+    expect(screen.getByRole('button', { name: /entrando/i })).toBeDisabled()
 
-    // Aguardar conclusão
     await waitFor(() => {
       expect(mockPush).toHaveBeenCalled()
     })
 
-    // Verificar que foi feita apenas UMA requisição (não duplicada)
-    expect(mockFetch).toHaveBeenCalledTimes(1)
+    expect(chamadasDeLogin()).toHaveLength(1)
   })
 })

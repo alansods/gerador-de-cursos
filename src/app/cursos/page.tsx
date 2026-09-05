@@ -328,9 +328,17 @@ export default function CursosPage() {
                     units={curso.unidades?.length || 0}
                     format={curso.modalidade}
                     createdAt={curso.dataCriacao}
+                    status={curso.status}
+                    ownerNome={curso.ownerNome}
+                    canEdit={curso.permissoes?.podeEditar ?? false}
+                    canDelete={curso.permissoes?.podeExcluir ?? false}
+                    canRequestAccess={curso.permissoes?.podeSolicitarAcesso ?? false}
                     onPreview={() => handlePreviewCurso(curso.id)}
                     onEdit={() => handleEditarCurso(curso.slug || curso.id)}
                     onDelete={() => setShowDeleteConfirm(curso.id)}
+                    onRequestAccess={() =>
+                      toast.info('Solicitação de acesso disponível na próxima etapa')
+                    }
                     onExport={() => handleOpenExportModal(curso)}
                   />
                 ))}

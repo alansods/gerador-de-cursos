@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requireAuth, createErrorResponse, createSuccessResponse } from '@/lib/auth'
+import { assertCan, ForbiddenError, permissoesDoCurso } from '@/lib/permissions'
 import { CursoGerado, Unidade } from '@/types/gerador-curso'
 import { logActivity } from '@/lib/activity-logger'
 import { generateUniqueSlug, slugifyUnidades } from '@/lib/slug'
@@ -28,6 +29,12 @@ type UnidadeInput = {
  * Lista cursos com paginação e filtros
  */
 export async function GET(req: NextRequest) {
+  const authResult = await requireAuth(req)
+
+  if (authResult instanceof NextResponse) {
+    return authResult
+  }
+
   try {
     const { searchParams } = new URL(req.url)
     const page = parseInt(searchParams.get('page') || '1', 10)
@@ -35,9 +42,14 @@ export async function GET(req: NextRequest) {
     const search = searchParams.get('search') || ''
     const category = searchParams.get('category') || ''
     const modality = searchParams.get('modality') || ''
+    const escopo = searchParams.get('escopo') || 'todos'
 
     // Construir filtros
     const where: Prisma.CursoWhereInput = {}
+
+    if (escopo === 'meus') {
+      where.ownerId = authResult.user.id
+    }
 
     if (search) {
       where.OR = [
@@ -63,6 +75,7 @@ export async function GET(req: NextRequest) {
       skip: (page - 1) * limit,
       take: limit,
       orderBy: { dataCriacao: 'desc' },
+      include: { owner: { select: { id: true, nome: true } } },
     })
 
     // Converter para formato CursoGerado com normalização de unidades
@@ -100,6 +113,11 @@ export async function GET(req: NextRequest) {
         categoria: curso.categoria,
         layout: curso.layout,
         unidades: unidadesNormalizadas,
+        status: curso.status,
+        version: curso.version,
+        ownerId: curso.ownerId ?? undefined,
+        ownerNome: curso.owner?.nome ?? undefined,
+        permissoes: permissoesDoCurso(authResult.user, curso),
         dataCriacao: curso.dataCriacao,
         dataModificacao: curso.dataModificacao,
       }
@@ -132,6 +150,8 @@ export async function POST(req: NextRequest) {
   }
 
   try {
+    assertCan(authResult.user, 'curso:criar')
+
     const body = await req.json()
     const { titulo, descricao, cargaHoraria, modalidade, categoria, layout, unidades } = body
 
@@ -177,6 +197,7 @@ export async function POST(req: NextRequest) {
         categoria,
         layout: layout || 'classico',
         unidades: unidadesNormalizadas,
+        ownerId: authResult.user.id,
       },
     })
 
@@ -201,12 +222,19 @@ export async function POST(req: NextRequest) {
       categoria: curso.categoria,
       layout: curso.layout,
       unidades: (curso.unidades as unknown as Unidade[]) || [],
+      status: curso.status,
+      version: curso.version,
+      ownerId: curso.ownerId ?? undefined,
+      permissoes: permissoesDoCurso(authResult.user, curso),
       dataCriacao: curso.dataCriacao,
       dataModificacao: curso.dataModificacao,
     }
 
     return createSuccessResponse({ curso: cursoFormatado }, 201)
   } catch (error) {
+    if (error instanceof ForbiddenError) {
+      return createErrorResponse(error.message, 403)
+    }
     console.error('Erro ao criar curso:', error)
     return createErrorResponse('Erro ao criar curso', 500, error)
   }
@@ -225,7 +253,17 @@ export async function PUT(req: NextRequest) {
 
   try {
     const body = await req.json()
-    const { id, titulo, descricao, cargaHoraria, modalidade, categoria, layout, unidades } = body
+    const {
+      id,
+      titulo,
+      descricao,
+      cargaHoraria,
+      modalidade,
+      categoria,
+      layout,
+      unidades,
+      version,
+    } = body
 
     if (!id) {
       return createErrorResponse('ID do curso é obrigatório', 400)
@@ -238,6 +276,22 @@ export async function PUT(req: NextRequest) {
 
     if (!cursoExistente) {
       return createErrorResponse('Curso não encontrado', 404)
+    }
+
+    assertCan(authResult.user, 'curso:editar', { curso: cursoExistente })
+
+    // Guarda de concorrência: rejeita escrita baseada numa versão desatualizada
+    if (typeof version === 'number' && version !== cursoExistente.version) {
+      return NextResponse.json(
+        {
+          success: false,
+          error:
+            'O curso foi alterado por outra pessoa. Recarregue para ver a versão mais recente.',
+          conflito: true,
+          versaoAtual: cursoExistente.version,
+        },
+        { status: 409 }
+      )
     }
 
     // Normalizar unidades se fornecidas
@@ -286,6 +340,8 @@ export async function PUT(req: NextRequest) {
         ...(categoria && { categoria }),
         ...(layout && { layout }),
         ...(unidadesNormalizadas !== undefined && { unidades: unidadesNormalizadas }),
+        ...(cursoExistente.status === 'REPROVADO' && { status: 'EM_ANDAMENTO' as const }),
+        version: { increment: 1 },
       },
     })
 
@@ -310,12 +366,19 @@ export async function PUT(req: NextRequest) {
       categoria: curso.categoria,
       layout: curso.layout,
       unidades: (curso.unidades as unknown as Unidade[]) || [],
+      status: curso.status,
+      version: curso.version,
+      ownerId: curso.ownerId ?? undefined,
+      permissoes: permissoesDoCurso(authResult.user, curso),
       dataCriacao: curso.dataCriacao,
       dataModificacao: curso.dataModificacao,
     }
 
     return createSuccessResponse({ curso: cursoFormatado })
   } catch (error) {
+    if (error instanceof ForbiddenError) {
+      return createErrorResponse(error.message, 403)
+    }
     console.error('Erro ao atualizar curso:', error)
     return createErrorResponse('Erro ao atualizar curso', 500, error)
   }
@@ -330,10 +393,6 @@ export async function DELETE(req: NextRequest) {
 
   if (authResult instanceof NextResponse) {
     return authResult // Retorna erro 401 se não autenticado
-  }
-
-  if (authResult.user.cargo === 'Convidado') {
-    return createErrorResponse('Você não tem permissão para deletar cursos', 403)
   }
 
   try {
@@ -353,6 +412,8 @@ export async function DELETE(req: NextRequest) {
       return createErrorResponse('Curso não encontrado', 404)
     }
 
+    assertCan(authResult.user, 'curso:excluir', { curso: cursoExistente })
+
     // Deletar curso
     await prisma.curso.delete({
       where: { id },
@@ -370,6 +431,9 @@ export async function DELETE(req: NextRequest) {
 
     return createSuccessResponse({ message: 'Curso deletado com sucesso' })
   } catch (error) {
+    if (error instanceof ForbiddenError) {
+      return createErrorResponse(error.message, 403)
+    }
     console.error('Erro ao deletar curso:', error)
     return createErrorResponse('Erro ao deletar curso', 500, error)
   }

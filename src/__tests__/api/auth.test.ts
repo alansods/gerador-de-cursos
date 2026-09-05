@@ -1,4 +1,7 @@
 /**
+ * @jest-environment node
+ */
+/**
  * Testes de API - Autenticação
  *
  * Testa os endpoints de autenticação:
@@ -32,6 +35,7 @@ describe('API - Authentication', () => {
         senha: hashedPassword,
         nome: 'Test User',
         cargo: 'Desenvolvedor',
+        role: 'CONTEUDISTA',
         dataCriacao: new Date(),
       }
 
@@ -60,6 +64,7 @@ describe('API - Authentication', () => {
         usuario: 'testuser',
         nome: 'Test User',
         cargo: 'Desenvolvedor',
+        role: 'CONTEUDISTA',
       })
       expect(response.headers.get('Set-Cookie')).toContain('token=')
 
@@ -104,6 +109,7 @@ describe('API - Authentication', () => {
         senha: hashedPassword,
         nome: 'Test User',
         cargo: 'Desenvolvedor',
+        role: 'CONTEUDISTA',
         dataCriacao: new Date(),
       }
 
@@ -163,6 +169,7 @@ describe('API - Authentication', () => {
         senha: 'hashed',
         nome: 'Test User',
         cargo: 'Desenvolvedor',
+        role: 'CONTEUDISTA',
         dataCriacao: new Date(),
       }
 
@@ -178,7 +185,7 @@ describe('API - Authentication', () => {
 
       const request = new NextRequest('http://localhost:3000/api/auth/me', {
         headers: {
-          Cookie: `token=${token}`,
+          Cookie: `auth-token=${token}`,
         },
       })
 
@@ -194,6 +201,7 @@ describe('API - Authentication', () => {
         usuario: 'testuser',
         nome: 'Test User',
         cargo: 'Desenvolvedor',
+        role: 'CONTEUDISTA',
       })
 
       // CRÍTICO: Verificar que foi feita apenas UMA consulta ao banco

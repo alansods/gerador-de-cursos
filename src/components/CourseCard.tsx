@@ -7,23 +7,33 @@ import {
   Trash2,
   Download,
   Sparkles,
-} from "lucide-react";
-import { Card } from "./ui/card";
-import { Button } from "./ui/button";
-import { Badge } from "./ui/badge";
+  UserRound,
+  KeyRound,
+} from 'lucide-react'
+import { Card } from './ui/card'
+import { Button } from './ui/button'
+import { Badge } from './ui/badge'
+import { STATUS_CURSO_LABELS, STATUS_CURSO_CLASSES } from '@/lib/status-curso'
+import type { StatusCurso } from '@/lib/permissions'
 
 interface CourseCardProps {
-  title: string;
-  description: string;
-  category: string;
-  duration: string;
-  units: number;
-  format: string;
-  createdAt?: Date | string;
-  onPreview?: () => void;
-  onEdit?: () => void;
-  onDelete?: () => void;
-  onExport?: () => void;
+  title: string
+  description: string
+  category: string
+  duration: string
+  units: number
+  format: string
+  createdAt?: Date | string
+  status?: StatusCurso
+  ownerNome?: string
+  canEdit?: boolean
+  canDelete?: boolean
+  canRequestAccess?: boolean
+  onPreview?: () => void
+  onEdit?: () => void
+  onDelete?: () => void
+  onExport?: () => void
+  onRequestAccess?: () => void
 }
 
 export function CourseCard({
@@ -34,27 +44,32 @@ export function CourseCard({
   units,
   format,
   createdAt,
+  status,
+  ownerNome,
+  canEdit = true,
+  canDelete = true,
+  canRequestAccess = false,
   onPreview,
   onEdit,
   onDelete,
   onExport,
+  onRequestAccess,
 }: CourseCardProps) {
   const truncateText = (text: string, maxLength: number = 150) => {
-    if (text.length <= maxLength) return text;
-    return text.substring(0, maxLength).trim() + "...";
-  };
+    if (text.length <= maxLength) return text
+    return text.substring(0, maxLength).trim() + '...'
+  }
 
   // Verificar se o curso foi criado há menos de 24h
   const isNewCourse = () => {
-    if (!createdAt) return false;
+    if (!createdAt) return false
 
-    const createdDate = new Date(createdAt);
-    const now = new Date();
-    const diffInHours =
-      (now.getTime() - createdDate.getTime()) / (1000 * 60 * 60);
+    const createdDate = new Date(createdAt)
+    const now = new Date()
+    const diffInHours = (now.getTime() - createdDate.getTime()) / (1000 * 60 * 60)
 
-    return diffInHours < 24;
-  };
+    return diffInHours < 24
+  }
 
   return (
     <Card className="overflow-hidden hover:shadow-lg transition-shadow flex flex-col h-full">
@@ -78,14 +93,25 @@ export function CourseCard({
                   Novo
                 </Badge>
               )}
+              {status && (
+                <Badge variant="secondary" className={`border-0 ${STATUS_CURSO_CLASSES[status]}`}>
+                  {STATUS_CURSO_LABELS[status]}
+                </Badge>
+              )}
             </div>
             <h3 className="mb-2 text-card-foreground">{title}</h3>
             <p
               className="text-muted-foreground"
-              style={{ fontSize: "0.875rem", lineHeight: "1.5" }}
+              style={{ fontSize: '0.875rem', lineHeight: '1.5' }}
             >
               {truncateText(description)}
             </p>
+            {ownerNome && (
+              <p className="mt-2 flex items-center gap-1.5 text-xs text-muted-foreground">
+                <UserRound className="w-3.5 h-3.5 shrink-0" />
+                <span className="truncate">{ownerNome}</span>
+              </p>
+            )}
           </div>
         </div>
 
@@ -93,30 +119,21 @@ export function CourseCard({
         <div className="grid grid-cols-3 gap-2 sm:gap-4 py-4 border-t border-b border-border">
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-1 sm:gap-2">
             <Clock className="w-4 h-4 text-muted-foreground shrink-0" />
-            <p
-              style={{ fontSize: "0.75rem" }}
-              className="text-muted-foreground sm:text-sm"
-            >
+            <p style={{ fontSize: '0.75rem' }} className="text-muted-foreground sm:text-sm">
               {duration}
             </p>
           </div>
 
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-1 sm:gap-2">
             <BookOpen className="w-4 h-4 text-muted-foreground shrink-0" />
-            <p
-              style={{ fontSize: "0.75rem" }}
-              className="text-muted-foreground sm:text-sm"
-            >
+            <p style={{ fontSize: '0.75rem' }} className="text-muted-foreground sm:text-sm">
               {units} unidades
             </p>
           </div>
 
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-1 sm:gap-2">
             <Calendar className="w-4 h-4 text-muted-foreground shrink-0" />
-            <p
-              style={{ fontSize: "0.75rem" }}
-              className="text-muted-foreground sm:text-sm"
-            >
+            <p style={{ fontSize: '0.75rem' }} className="text-muted-foreground sm:text-sm">
               {format}
             </p>
           </div>
@@ -134,29 +151,39 @@ export function CourseCard({
               <Eye className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
               <span>Preview</span>
             </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              className="flex-1 gap-1 sm:gap-2 h-8 text-xs sm:text-sm px-2 sm:px-3"
-              onClick={onEdit}
-            >
-              <Pencil className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
-              <span>Editar</span>
-            </Button>
-            <Button
-              variant="outline"
-              size="icon"
-              className="h-8 w-8 border-0"
-              onClick={onDelete}
-            >
-              <Trash2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-destructive" />
-            </Button>
+            {canEdit && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="flex-1 gap-1 sm:gap-2 h-8 text-xs sm:text-sm px-2 sm:px-3"
+                onClick={onEdit}
+              >
+                <Pencil className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
+                <span>Editar</span>
+              </Button>
+            )}
+            {canRequestAccess && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="flex-1 gap-1 sm:gap-2 h-8 text-xs sm:text-sm px-2 sm:px-3"
+                onClick={onRequestAccess}
+              >
+                <KeyRound className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
+                <span>Solicitar acesso</span>
+              </Button>
+            )}
+            {canDelete && (
+              <Button variant="outline" size="icon" className="h-8 w-8 border-0" onClick={onDelete}>
+                <Trash2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-destructive" />
+              </Button>
+            )}
           </div>
           <Button
             size="sm"
             className="w-full gap-2 bg-[#F15A29] hover:bg-[#F15A29]/90 text-white h-8 text-xs sm:text-sm"
             onClick={onExport}
-            style={{ backgroundColor: "#F15A29" }}
+            style={{ backgroundColor: '#F15A29' }}
           >
             <Download className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
             <span>Exportar</span>
@@ -164,5 +191,5 @@ export function CourseCard({
         </div>
       </div>
     </Card>
-  );
+  )
 }

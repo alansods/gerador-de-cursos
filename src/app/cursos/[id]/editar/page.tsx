@@ -239,6 +239,17 @@ export default function EditarCursoPage() {
     }
   }, [state.cursoAtual, cursoId])
 
+  // Bloquear a edição para quem não tem permissão no curso
+  useEffect(() => {
+    const curso = state.cursoAtual
+    const ehEsteCurso = curso?.id === cursoId || curso?.slug === cursoId
+
+    if (ehEsteCurso && curso?.permissoes && !curso.permissoes.podeEditar) {
+      toast.error('Você não tem permissão para editar este curso')
+      router.replace(`/cursos/${curso.slug || curso.id}/preview`)
+    }
+  }, [state.cursoAtual, cursoId, router])
+
   // Atualizar preview da imagem ao editar conteúdo
   useEffect(() => {
     if (editandoConteudo?.tipo === 'imagem' && editandoConteudo.conteudo) {

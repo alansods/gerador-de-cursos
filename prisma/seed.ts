@@ -363,6 +363,7 @@ async function main() {
     data: {
       nome: 'Administrador',
       cargo: 'Administrador',
+      role: 'ADMIN',
       usuario: 'admin',
       senha: senhaHashAdmin,
     },
@@ -380,6 +381,7 @@ async function main() {
     data: {
       nome: 'Usuário Convidado',
       cargo: 'Convidado',
+      role: 'CONVIDADO',
       usuario: 'convidado',
       senha: senhaHashConvidado,
     },
@@ -401,7 +403,7 @@ async function main() {
   for (const cursoData of cursosExemplo) {
     try {
       const curso = await prisma.curso.create({
-        data: cursoData,
+        data: { ...cursoData, ownerId: usuarioAdmin.id },
       })
       cursosCriados++
       console.log(`✅ Curso criado: ${curso.titulo}`)

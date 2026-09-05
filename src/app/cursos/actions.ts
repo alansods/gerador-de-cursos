@@ -1,6 +1,8 @@
 'use server'
 
 import { prisma } from '@/lib/prisma'
+import { getServerUser } from '@/lib/auth-server'
+import { permissoesDoCurso } from '@/lib/permissions'
 import type { CursoGerado } from '@/types/gerador-curso'
 
 export interface BuscarCursosParams {
@@ -9,6 +11,7 @@ export interface BuscarCursosParams {
   search?: string
   category?: string
   modality?: string
+  escopo?: 'meus' | 'todos'
 }
 
 export interface BuscarCursosResult {
@@ -27,8 +30,15 @@ export async function buscarCursos({
   search,
   category,
   modality,
+  escopo = 'todos',
 }: BuscarCursosParams): Promise<BuscarCursosResult> {
   try {
+    const user = await getServerUser()
+
+    if (!user) {
+      return { cursos: [], nextCursor: null, hasMore: false, total: 0 }
+    }
+
     // Construir filtros dinâmicos
     const where: {
       OR?: Array<{
@@ -38,7 +48,12 @@ export async function buscarCursos({
       }>
       categoria?: string
       modalidade?: string
+      ownerId?: string
     } = {}
+
+    if (escopo === 'meus') {
+      where.ownerId = user.id
+    }
 
     // Filtro de busca (título, descrição ou categoria)
     if (search && search.trim()) {
@@ -65,6 +80,7 @@ export async function buscarCursos({
     // Buscar cursos com cursor pagination
     const cursos = await prisma.curso.findMany({
       where,
+      include: { owner: { select: { id: true, nome: true } } },
       take: limit + 1, // Pegar 1 a mais para saber se há próxima página
       ...(cursor
         ? {
@@ -94,6 +110,11 @@ export async function buscarCursos({
         modalidade: curso.modalidade,
         cargaHoraria: curso.cargaHoraria,
         unidades: curso.unidades as unknown as CursoGerado['unidades'],
+        status: curso.status,
+        version: curso.version,
+        ownerId: curso.ownerId ?? undefined,
+        ownerNome: curso.owner?.nome ?? undefined,
+        permissoes: permissoesDoCurso(user, curso),
         dataCriacao: curso.dataCriacao,
         dataModificacao: curso.dataModificacao,
       })

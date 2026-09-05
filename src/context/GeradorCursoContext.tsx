@@ -1,6 +1,7 @@
 'use client'
 
-import React, { createContext, useContext, useReducer, useEffect, useCallback } from 'react'
+import React, { createContext, useContext, useReducer, useEffect, useCallback, useRef } from 'react'
+import { toast } from 'sonner'
 import {
   CursoGerado,
   Unidade,
@@ -106,6 +107,8 @@ const GeradorCursoContext = createContext<GeradorCursoContextType | undefined>(u
 // Provider
 export function GeradorCursoProvider({ children }: { children: React.ReactNode }) {
   const [state, dispatch] = useReducer(geradorCursoReducer, initialState)
+  const stateRef = useRef(state)
+  stateRef.current = state
 
   // REMOVIDO: Carregamento inicial de cursos
   // A página de cursos agora gerencia sua própria paginação e busca
@@ -156,13 +159,31 @@ export function GeradorCursoProvider({ children }: { children: React.ReactNode }
 
   const editarCurso = useCallback(async (id: string, curso: Partial<CursoGerado>) => {
     try {
+      const cursoEmCache = stateRef.current.cursos.find((c) => c.id === id)
+      const version = curso.version ?? cursoEmCache?.version
+
       const response = await fetch('/api/cursos', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id, ...curso }),
+        body: JSON.stringify({ id, ...curso, ...(version !== undefined && { version }) }),
       })
 
       const data = await response.json()
+
+      if (response.status === 409) {
+        const atual = await fetch(`/api/cursos/${id}`, {
+          headers: { 'Cache-Control': 'no-cache' },
+        }).then((r) => r.json())
+
+        if (atual.success && atual.curso) {
+          dispatch({ type: 'EDITAR_CURSO', payload: { id, curso: atual.curso } })
+        }
+
+        toast.error(
+          'Este curso foi alterado por outra pessoa. Recarregamos a versão mais recente — refaça sua última mudança.'
+        )
+        throw new Error('conflito-de-versao')
+      }
 
       if (data.success && data.curso) {
         dispatch({ type: 'EDITAR_CURSO', payload: { id, curso: data.curso } })

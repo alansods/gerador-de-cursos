@@ -10,18 +10,37 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum RoleUsuario {
+  ADMIN
+  GESTOR
+  CONTEUDISTA
+  REVISOR
+  CONVIDADO
+}
+
+enum StatusCurso {
+  EM_ANDAMENTO
+  EM_REVISAO
+  APROVADO
+  REPROVADO
+}
+
 // Modelo de Usuário
 model User {
-  id         String     @id @default(cuid())
-  nome       String
-  cargo      String
-  usuario    String     @unique
-  senha      String
-  createdAt  DateTime   @default(now()) @map("created_at")
-  updatedAt  DateTime   @updatedAt @map("updated_at")
-  activities Activity[]
+  id             String      @id @default(cuid())
+  nome           String
+  cargo          String
+  role           RoleUsuario @default(CONTEUDISTA)
+  usuario        String      @unique
+  senha          String
+  createdAt      DateTime    @default(now()) @map("created_at")
+  updatedAt      DateTime    @updatedAt @map("updated_at")
+  activities     Activity[]
+  cursos         Curso[]     @relation("CursoOwner")
+  cursosRevisados Curso[]    @relation("CursoRevisor")
 
   @@index([usuario])
+  @@index([role])
   @@map("users")
 }
 
@@ -36,20 +55,29 @@ model Comment {
 
 // Modelo de Cursos (adaptado do sistema existente)
 model Curso {
-  id               String   @id @default(cuid())
+  id               String      @id @default(cuid())
   titulo           String
-  slug             String?  @unique
+  slug             String?     @unique
   descricao        String
-  cargaHoraria     String   @map("carga_horaria")
+  cargaHoraria     String      @map("carga_horaria")
   modalidade       String
   categoria        String
-  layout           String   @default("classico")
-  unidades         Json     @default("[]")
-  dataCriacao      DateTime @default(now()) @map("data_criacao")
-  dataModificacao  DateTime @updatedAt @map("data_modificacao")
+  layout           String      @default("classico")
+  unidades         Json        @default("[]")
+  status           StatusCurso @default(EM_ANDAMENTO)
+  version          Int         @default(0)
+  ownerId          String?     @map("owner_id")
+  owner            User?       @relation("CursoOwner", fields: [ownerId], references: [id], onDelete: SetNull)
+  revisadoPorId    String?     @map("revisado_por_id")
+  revisadoPor      User?       @relation("CursoRevisor", fields: [revisadoPorId], references: [id], onDelete: SetNull)
+  revisadoEm       DateTime?   @map("revisado_em")
+  dataCriacao      DateTime    @default(now()) @map("data_criacao")
+  dataModificacao  DateTime    @updatedAt @map("data_modificacao")
 
   @@index([titulo])
   @@index([categoria])
+  @@index([ownerId])
+  @@index([status])
   @@map("cursos")
 }
 

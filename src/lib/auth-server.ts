@@ -1,22 +1,18 @@
-import { cookies } from 'next/headers';
-import { jwtVerify } from 'jose';
-import { prisma, ensureConnection } from '@/lib/prisma';
+import { cookies } from 'next/headers'
+import { jwtVerify } from 'jose'
+import { prisma, ensureConnection } from '@/lib/prisma'
+import { resolverRole, type JWTPayload } from '@/lib/auth'
 
 // Validar que JWT_SECRET está definido
 if (!process.env.JWT_SECRET) {
   throw new Error(
     '❌ JWT_SECRET não está definido! Configure a variável de ambiente JWT_SECRET no .env.local'
-  );
+  )
 }
 
-export const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET);
+export const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET)
 
-export interface JWTPayload {
-  id: string;
-  usuario: string;
-  nome: string;
-  cargo: string;
-}
+export type { JWTPayload }
 
 /**
  * Verifica autenticação no servidor (Server Component)
@@ -24,43 +20,43 @@ export interface JWTPayload {
  */
 export async function getServerUser(): Promise<JWTPayload | null> {
   try {
-    const cookieStore = await cookies();
-    const token = cookieStore.get('auth-token')?.value;
+    const cookieStore = await cookies()
+    const token = cookieStore.get('auth-token')?.value
 
     if (!token) {
-      return null;
+      return null
     }
 
     try {
-      const { payload } = await jwtVerify(token, JWT_SECRET);
-      
+      const { payload } = await jwtVerify(token, JWT_SECRET)
+
       // Garantir conexão com banco antes de buscar usuário
-      await ensureConnection();
-      
+      await ensureConnection()
+
       // Buscar usuário no banco para garantir que ainda existe
       const user = await prisma.user.findUnique({
         where: { id: payload.id as string },
-        select: { id: true, nome: true, cargo: true, usuario: true },
-      });
+        select: { id: true, nome: true, cargo: true, usuario: true, role: true },
+      })
 
       if (!user) {
-        return null;
+        return null
       }
 
-      // Type-safe conversion from jose JWTPayload to our JWTPayload
+      // O papel vem do banco para que mudanças de role valham sem re-login
       return {
-        id: payload.id as string,
-        usuario: payload.usuario as string,
-        nome: payload.nome as string,
-        cargo: payload.cargo as string,
-      };
+        id: user.id,
+        usuario: user.usuario,
+        nome: user.nome,
+        cargo: user.cargo,
+        role: resolverRole(user.role, user.cargo),
+      }
     } catch (error) {
       // Se houver erro de conexão ou token inválido, retornar null
-      return null;
+      return null
     }
   } catch (error) {
     // Se houver erro ao ler cookies, retornar null
-    return null;
+    return null
   }
 }
-

@@ -1,42 +1,36 @@
-import { NextRequest, NextResponse } from 'next/server';
-import bcrypt from 'bcryptjs';
-import { SignJWT } from 'jose';
-import { prisma } from '@/lib/prisma';
-import { JWT_SECRET } from '@/lib/auth';
+import { NextRequest, NextResponse } from 'next/server'
+import bcrypt from 'bcryptjs'
+import { SignJWT } from 'jose'
+import { prisma } from '@/lib/prisma'
+import { JWT_SECRET } from '@/lib/auth'
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
-    const { usuario, senha } = body;
+    const body = await request.json()
+    const { usuario, senha } = body
 
     // Validação
     if (!usuario || !senha) {
       return NextResponse.json(
         { success: false, error: 'Usuário e senha são obrigatórios' },
         { status: 400 }
-      );
+      )
     }
 
     // Buscar usuário no banco
     const user = await prisma.user.findUnique({
       where: { usuario },
-    });
+    })
 
     if (!user) {
-      return NextResponse.json(
-        { success: false, error: 'Credenciais inválidas' },
-        { status: 401 }
-      );
+      return NextResponse.json({ success: false, error: 'Credenciais inválidas' }, { status: 401 })
     }
 
     // Verificar senha
-    const isPasswordValid = await bcrypt.compare(senha, user.senha);
+    const isPasswordValid = await bcrypt.compare(senha, user.senha)
 
     if (!isPasswordValid) {
-      return NextResponse.json(
-        { success: false, error: 'Credenciais inválidas' },
-        { status: 401 }
-      );
+      return NextResponse.json({ success: false, error: 'Credenciais inválidas' }, { status: 401 })
     }
 
     // Criar token JWT
@@ -45,10 +39,11 @@ export async function POST(request: NextRequest) {
       usuario: user.usuario,
       nome: user.nome,
       cargo: user.cargo,
+      role: user.role,
     })
       .setProtectedHeader({ alg: 'HS256' })
       .setExpirationTime('24h')
-      .sign(JWT_SECRET);
+      .sign(JWT_SECRET)
 
     // Criar resposta
     const response = NextResponse.json({
@@ -58,8 +53,9 @@ export async function POST(request: NextRequest) {
         usuario: user.usuario,
         nome: user.nome,
         cargo: user.cargo,
+        role: user.role,
       },
-    });
+    })
 
     // Definir cookie
     response.cookies.set('auth-token', token, {
@@ -68,15 +64,11 @@ export async function POST(request: NextRequest) {
       sameSite: 'lax',
       maxAge: 60 * 60 * 24, // 24 horas
       path: '/',
-    });
+    })
 
-    return response;
+    return response
   } catch (error) {
-    console.error('Erro no login:', error);
-    return NextResponse.json(
-      { success: false, error: 'Erro interno do servidor' },
-      { status: 500 }
-    );
+    console.error('Erro no login:', error)
+    return NextResponse.json({ success: false, error: 'Erro interno do servidor' }, { status: 500 })
   }
 }
-

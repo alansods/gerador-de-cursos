@@ -1,5 +1,51 @@
 // Learn more: https://github.com/testing-library/jest-dom
 import '@testing-library/jest-dom'
+import { TextEncoder, TextDecoder } from 'util'
+
+// jsdom nao expoe TextEncoder/TextDecoder, exigidos pela cadeia de autenticacao (jose)
+if (typeof globalThis.TextEncoder === 'undefined') {
+  globalThis.TextEncoder = TextEncoder
+  globalThis.TextDecoder = TextDecoder
+}
+
+// jsdom tambem nao expoe as APIs de rede que next/server exige ao ser importado
+for (const nome of ['Request', 'Response', 'Headers', 'FormData', 'ReadableStream']) {
+  if (typeof globalThis[nome] === 'undefined') {
+    const doNode = require('node:stream/web')[nome] ?? require('node:buffer')[nome]
+    if (doNode) globalThis[nome] = doNode
+  }
+}
+
+// jsdom nao implementa matchMedia, usado pelo useTheme
+if (typeof window !== 'undefined' && typeof window.matchMedia === 'undefined') {
+  window.matchMedia = (query) => ({
+    matches: false,
+    media: query,
+    onchange: null,
+    addListener: () => {},
+    removeListener: () => {},
+    addEventListener: () => {},
+    removeEventListener: () => {},
+    dispatchEvent: () => false,
+  })
+}
+
+// jsdom nao implementa ResizeObserver, exigido por componentes do Radix
+if (typeof globalThis.ResizeObserver === 'undefined') {
+  globalThis.ResizeObserver = class {
+    observe() {}
+    unobserve() {}
+    disconnect() {}
+  }
+}
+
+// jsdom nao implementa as APIs de ponteiro/scroll que o Radix usa
+if (typeof Element !== 'undefined') {
+  Element.prototype.hasPointerCapture = Element.prototype.hasPointerCapture || (() => false)
+  Element.prototype.setPointerCapture = Element.prototype.setPointerCapture || (() => {})
+  Element.prototype.releasePointerCapture = Element.prototype.releasePointerCapture || (() => {})
+  Element.prototype.scrollIntoView = Element.prototype.scrollIntoView || (() => {})
+}
 
 // Mock environment variables for tests
 process.env.JWT_SECRET = 'test-jwt-secret-key-for-testing-purposes-only'
@@ -37,6 +83,7 @@ jest.mock('@/lib/prisma', () => ({
     curso: {
       findMany: jest.fn(),
       findUnique: jest.fn(),
+      findFirst: jest.fn(),
       create: jest.fn(),
       update: jest.fn(),
       delete: jest.fn(),

@@ -15,18 +15,39 @@ import {
   Menu,
   X,
   Package,
+  ClipboardCheck,
 } from 'lucide-react'
+import type { Acao } from '@/lib/permissions'
 import { Button } from './ui/button'
 import { useTheme } from '@/hooks/useTheme'
 import { useAuth } from '@/context/AuthContext'
 import { usePathname } from 'next/navigation'
 import Link from 'next/link'
 
-const navItems = [
+const navItems: Array<{
+  icon: typeof Home
+  label: string
+  href: string
+  active: boolean
+  acao?: Acao
+}> = [
   { icon: Home, label: 'Início', href: '/home', active: false },
   { icon: BookOpen, label: 'Cursos', href: '/cursos', active: true },
   { icon: Package, label: 'Builds SCORM', href: '/scorm-jobs', active: false },
-  { icon: Users, label: 'Usuários', href: '/usuarios', active: false },
+  {
+    icon: ClipboardCheck,
+    label: 'Revisão',
+    href: '/revisao',
+    active: false,
+    acao: 'revisao:ver',
+  },
+  {
+    icon: Users,
+    label: 'Usuários',
+    href: '/usuarios',
+    active: false,
+    acao: 'usuario:gerenciar',
+  },
   {
     icon: Settings,
     label: 'Configurações',
@@ -40,8 +61,9 @@ export function Sidebar() {
   const [isHovered, setIsHovered] = useState(false)
   const [isMobileOpen, setIsMobileOpen] = useState(false)
   const { isDarkMode, toggleDarkMode } = useTheme()
-  const { user, logout } = useAuth()
+  const { user, logout, can } = useAuth()
   const pathname = usePathname()
+  const itensVisiveis = navItems.filter((item) => !item.acao || can(item.acao))
 
   const isExpanded = isPinned || isHovered
 
@@ -136,7 +158,7 @@ export function Sidebar() {
         {/* Navigation */}
         <nav className="flex-1 p-4 pt-6">
           <div className="space-y-3">
-            {navItems.map((item) => {
+            {itensVisiveis.map((item) => {
               const Icon = item.icon
               const isActive =
                 pathname === item.href ||

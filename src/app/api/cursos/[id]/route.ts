@@ -1,6 +1,7 @@
-import { NextRequest } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { createErrorResponse, createSuccessResponse } from '@/lib/auth'
+import { requireAuth, createErrorResponse, createSuccessResponse } from '@/lib/auth'
+import { permissoesDoCurso } from '@/lib/permissions'
 import { ConteudoUnidade, CursoGerado, Unidade } from '@/types/gerador-curso'
 import { slugifyUnidades } from '@/lib/slug'
 
@@ -9,12 +10,19 @@ import { slugifyUnidades } from '@/lib/slug'
  * Busca um curso por ID ou slug
  */
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const authResult = await requireAuth(req)
+
+  if (authResult instanceof NextResponse) {
+    return authResult
+  }
+
   try {
     const { id } = await params
 
     // Tenta encontrar por ID primeiro; se não achar, tenta por slug
     const curso = await prisma.curso.findFirst({
       where: { OR: [{ id }, { slug: id }] },
+      include: { owner: { select: { id: true, nome: true } } },
     })
 
     if (!curso) {
@@ -56,6 +64,11 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       categoria: curso.categoria,
       layout: curso.layout,
       unidades: unidadesNormalizadas,
+      status: curso.status,
+      version: curso.version,
+      ownerId: curso.ownerId ?? undefined,
+      ownerNome: curso.owner?.nome ?? undefined,
+      permissoes: permissoesDoCurso(authResult.user, curso),
       dataCriacao: curso.dataCriacao,
       dataModificacao: curso.dataModificacao,
     }

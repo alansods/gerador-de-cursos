@@ -29,10 +29,19 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import { ROLES, ROLE_LABELS, type RoleUsuario } from '@/lib/permissions'
 interface User {
   id: string
   nome: string
   cargo: string
+  role: RoleUsuario
   usuario: string
   createdAt: string
   updatedAt: string
@@ -66,6 +75,7 @@ export default function UsuariosPage() {
   const [formData, setFormData] = useState({
     nome: '',
     cargo: '',
+    role: 'CONTEUDISTA' as RoleUsuario,
     usuario: '',
     senha: '',
   })
@@ -134,7 +144,7 @@ export default function UsuariosPage() {
       const data = await response.json()
       if (data.success) {
         toast.success('Usuário criado com sucesso!')
-        setFormData({ nome: '', cargo: '', usuario: '', senha: '' })
+        setFormData({ nome: '', cargo: '', role: 'CONTEUDISTA', usuario: '', senha: '' })
         fetchUsers(pagination.page, searchTerm, startDate, endDate)
       } else {
         toast.error(data.error || 'Erro ao criar usuário')
@@ -172,7 +182,7 @@ export default function UsuariosPage() {
       const data = await response.json()
       if (data.success) {
         toast.success('Usuário atualizado com sucesso!')
-        setFormData({ nome: '', cargo: '', usuario: '', senha: '' })
+        setFormData({ nome: '', cargo: '', role: 'CONTEUDISTA', usuario: '', senha: '' })
         fetchUsers(pagination.page, searchTerm, startDate, endDate)
       } else {
         toast.error(data.error || 'Erro ao atualizar usuário')
@@ -216,6 +226,7 @@ export default function UsuariosPage() {
     setFormData({
       nome: user.nome,
       cargo: user.cargo,
+      role: user.role,
       usuario: user.usuario,
       senha: '',
     })
@@ -237,7 +248,7 @@ export default function UsuariosPage() {
             description="Crie, edite e gerencie usuários do sistema"
             actionLabel="Novo Usuário"
             onAction={() => {
-              setFormData({ nome: '', cargo: '', usuario: '', senha: '' })
+              setFormData({ nome: '', cargo: '', role: 'CONTEUDISTA', usuario: '', senha: '' })
               setShowCreateModal(true)
             }}
           />
@@ -323,7 +334,10 @@ export default function UsuariosPage() {
                           <TableCell className="font-medium">{user.nome}</TableCell>
                           <TableCell>{user.usuario}</TableCell>
                           <TableCell>
-                            <Badge variant="secondary">{user.cargo}</Badge>
+                            <div className="flex flex-wrap items-center gap-1.5">
+                              <Badge variant="secondary">{user.cargo}</Badge>
+                              <Badge variant="outline">{ROLE_LABELS[user.role]}</Badge>
+                            </div>
                           </TableCell>
                           <TableCell>
                             {new Date(user.createdAt).toLocaleDateString('pt-BR')}
@@ -361,9 +375,10 @@ export default function UsuariosPage() {
                           <h3 className="font-medium text-foreground truncate">{user.nome}</h3>
                           <p className="text-sm text-muted-foreground truncate">@{user.usuario}</p>
                         </div>
-                        <Badge variant="secondary" className="shrink-0">
-                          {user.cargo}
-                        </Badge>
+                        <div className="flex shrink-0 flex-col items-end gap-1">
+                          <Badge variant="secondary">{user.cargo}</Badge>
+                          <Badge variant="outline">{ROLE_LABELS[user.role]}</Badge>
+                        </div>
                       </div>
                       <div className="flex items-center justify-between">
                         <p className="text-sm text-muted-foreground">
@@ -455,6 +470,26 @@ export default function UsuariosPage() {
                   />
                 </div>
                 <div className="space-y-2">
+                  <Label htmlFor="role">Papel de acesso</Label>
+                  <Select
+                    value={formData.role}
+                    onValueChange={(value) =>
+                      setFormData({ ...formData, role: value as RoleUsuario })
+                    }
+                  >
+                    <SelectTrigger id="role">
+                      <SelectValue placeholder="Selecione o papel" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {ROLES.map((role) => (
+                        <SelectItem key={role} value={role}>
+                          {ROLE_LABELS[role]}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
                   <Label htmlFor="usuario">Nome de Usuário</Label>
                   <Input
                     id="usuario"
@@ -524,6 +559,26 @@ export default function UsuariosPage() {
                     value={formData.cargo}
                     onChange={(e) => setFormData({ ...formData, cargo: e.target.value })}
                   />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit-role">Papel de acesso</Label>
+                  <Select
+                    value={formData.role}
+                    onValueChange={(value) =>
+                      setFormData({ ...formData, role: value as RoleUsuario })
+                    }
+                  >
+                    <SelectTrigger id="edit-role">
+                      <SelectValue placeholder="Selecione o papel" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {ROLES.map((role) => (
+                        <SelectItem key={role} value={role}>
+                          {ROLE_LABELS[role]}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="edit-usuario">Nome de Usuário</Label>

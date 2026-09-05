@@ -1,4 +1,7 @@
 /**
+ * @jest-environment node
+ */
+/**
  * Testes de API - Cursos
  *
  * Testa os endpoints de cursos:
@@ -10,7 +13,12 @@
  */
 
 import { NextRequest } from 'next/server'
-import { GET as listCursosHandler, POST as createCursoHandler, PUT as updateCursoHandler, DELETE as deleteCursoHandler } from '@/app/api/cursos/route'
+import {
+  GET as listCursosHandler,
+  POST as createCursoHandler,
+  PUT as updateCursoHandler,
+  DELETE as deleteCursoHandler,
+} from '@/app/api/cursos/route'
 import { GET as getCursoByIdHandler } from '@/app/api/cursos/[id]/route'
 import { prisma } from '@/lib/prisma'
 import { SignJWT } from 'jose'
@@ -19,12 +27,23 @@ import { SignJWT } from 'jose'
 const mockPrisma = prisma as jest.Mocked<typeof prisma>
 
 // Helper para criar token de autenticação
-async function createAuthToken(userId: string = '1') {
+async function createAuthToken(userId: string = '1', role: string = 'ADMIN') {
   const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET)
-  return await new SignJWT({ id: userId })
+  return await new SignJWT({
+    id: userId,
+    usuario: 'testuser',
+    nome: 'Test User',
+    cargo: 'Administrador',
+    role,
+  })
     .setProtectedHeader({ alg: 'HS256' })
     .setExpirationTime('24h')
     .sign(JWT_SECRET)
+}
+
+async function authHeaders(role: string = 'ADMIN') {
+  const token = await createAuthToken('1', role)
+  return { 'Content-Type': 'application/json', Cookie: `auth-token=${token}` }
 }
 
 describe('API - Cursos', () => {
@@ -44,6 +63,14 @@ describe('API - Cursos', () => {
           modalidade: 'Online',
           categoria: 'Tecnologia',
           unidades: [],
+          layout: 'classico',
+          slug: null,
+          status: 'EM_ANDAMENTO',
+          version: 0,
+          ownerId: '1',
+          owner: { id: '1', nome: 'Test User' },
+          revisadoPorId: null,
+          revisadoEm: null,
           dataCriacao: new Date(),
           dataModificacao: new Date(),
         },
@@ -55,6 +82,14 @@ describe('API - Cursos', () => {
           modalidade: 'Presencial',
           categoria: 'Gestão',
           unidades: [],
+          layout: 'classico',
+          slug: null,
+          status: 'EM_ANDAMENTO',
+          version: 0,
+          ownerId: '1',
+          owner: { id: '1', nome: 'Test User' },
+          revisadoPorId: null,
+          revisadoEm: null,
           dataCriacao: new Date(),
           dataModificacao: new Date(),
         },
@@ -63,7 +98,9 @@ describe('API - Cursos', () => {
       mockPrisma.curso.count.mockResolvedValue(2)
       mockPrisma.curso.findMany.mockResolvedValue(mockCursos)
 
-      const request = new NextRequest('http://localhost:3000/api/cursos?page=1&limit=6')
+      const request = new NextRequest('http://localhost:3000/api/cursos?page=1&limit=6', {
+        headers: await authHeaders(),
+      })
 
       // Act
       const response = await listCursosHandler(request)
@@ -96,6 +133,14 @@ describe('API - Cursos', () => {
           modalidade: 'Online',
           categoria: 'Tecnologia',
           unidades: [],
+          layout: 'classico',
+          slug: null,
+          status: 'EM_ANDAMENTO',
+          version: 0,
+          ownerId: '1',
+          owner: { id: '1', nome: 'Test User' },
+          revisadoPorId: null,
+          revisadoEm: null,
           dataCriacao: new Date(),
           dataModificacao: new Date(),
         },
@@ -105,7 +150,8 @@ describe('API - Cursos', () => {
       mockPrisma.curso.findMany.mockResolvedValue(mockCursos)
 
       const request = new NextRequest(
-        'http://localhost:3000/api/cursos?page=1&limit=6&search=JavaScript&category=Tecnologia&modality=Online'
+        'http://localhost:3000/api/cursos?page=1&limit=6&search=JavaScript&category=Tecnologia&modality=Online',
+        { headers: await authHeaders() }
       )
 
       // Act
@@ -138,17 +184,27 @@ describe('API - Cursos', () => {
         modalidade: 'Online',
         categoria: 'Tecnologia',
         unidades: [],
+        layout: 'classico',
+        slug: null,
+        status: 'EM_ANDAMENTO',
+        version: 0,
+        ownerId: '1',
+        owner: { id: '1', nome: 'Test User' },
+        revisadoPorId: null,
+        revisadoEm: null,
         dataCriacao: new Date(),
         dataModificacao: new Date(),
       }
 
-      mockPrisma.curso.findUnique.mockResolvedValue(mockCurso)
+      mockPrisma.curso.findFirst.mockResolvedValue(mockCurso)
 
-      const request = new NextRequest('http://localhost:3000/api/cursos/1')
+      const request = new NextRequest('http://localhost:3000/api/cursos/1', {
+        headers: await authHeaders(),
+      })
 
       // Act
       const response = await getCursoByIdHandler(request, {
-        params: Promise.resolve({ id: '1' })
+        params: Promise.resolve({ id: '1' }),
       })
       const data = await response.json()
 
@@ -158,18 +214,20 @@ describe('API - Cursos', () => {
       expect(data.curso.id).toBe('1')
 
       // Verificar que foi chamado apenas uma vez
-      expect(mockPrisma.curso.findUnique).toHaveBeenCalledTimes(1)
+      expect(mockPrisma.curso.findFirst).toHaveBeenCalledTimes(1)
     })
 
     it('deve retornar 404 se curso não existir', async () => {
       // Arrange
-      mockPrisma.curso.findUnique.mockResolvedValue(null)
+      mockPrisma.curso.findFirst.mockResolvedValue(null)
 
-      const request = new NextRequest('http://localhost:3000/api/cursos/999')
+      const request = new NextRequest('http://localhost:3000/api/cursos/999', {
+        headers: await authHeaders(),
+      })
 
       // Act
       const response = await getCursoByIdHandler(request, {
-        params: Promise.resolve({ id: '999' })
+        params: Promise.resolve({ id: '999' }),
       })
       const data = await response.json()
 
@@ -190,6 +248,7 @@ describe('API - Cursos', () => {
         senha: 'hashed',
         nome: 'Test User',
         cargo: 'Desenvolvedor',
+        role: 'ADMIN',
         dataCriacao: new Date(),
       }
 
@@ -201,6 +260,14 @@ describe('API - Cursos', () => {
         modalidade: 'Online',
         categoria: 'Tecnologia',
         unidades: [],
+        layout: 'classico',
+        slug: null,
+        status: 'EM_ANDAMENTO',
+        version: 0,
+        ownerId: '1',
+        owner: { id: '1', nome: 'Test User' },
+        revisadoPorId: null,
+        revisadoEm: null,
         dataCriacao: new Date(),
         dataModificacao: new Date(),
       }
@@ -212,7 +279,7 @@ describe('API - Cursos', () => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Cookie: `token=${token}`,
+          Cookie: `auth-token=${token}`,
         },
         body: JSON.stringify({
           titulo: 'Novo Curso',
@@ -270,6 +337,7 @@ describe('API - Cursos', () => {
         senha: 'hashed',
         nome: 'Test User',
         cargo: 'Desenvolvedor',
+        role: 'ADMIN',
         dataCriacao: new Date(),
       }
 
@@ -279,7 +347,7 @@ describe('API - Cursos', () => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Cookie: `token=${token}`,
+          Cookie: `auth-token=${token}`,
         },
         body: JSON.stringify({
           titulo: '',
@@ -308,6 +376,7 @@ describe('API - Cursos', () => {
         senha: 'hashed',
         nome: 'Test User',
         cargo: 'Desenvolvedor',
+        role: 'ADMIN',
         dataCriacao: new Date(),
       }
 
@@ -319,18 +388,27 @@ describe('API - Cursos', () => {
         modalidade: 'Online',
         categoria: 'Tecnologia',
         unidades: [],
+        layout: 'classico',
+        slug: null,
+        status: 'EM_ANDAMENTO',
+        version: 0,
+        ownerId: '1',
+        owner: { id: '1', nome: 'Test User' },
+        revisadoPorId: null,
+        revisadoEm: null,
         dataCriacao: new Date(),
         dataModificacao: new Date(),
       }
 
       mockPrisma.user.findUnique.mockResolvedValue(mockUser)
+      mockPrisma.curso.findUnique.mockResolvedValue(mockCurso)
       mockPrisma.curso.update.mockResolvedValue(mockCurso)
 
       const request = new NextRequest('http://localhost:3000/api/cursos', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          Cookie: `token=${token}`,
+          Cookie: `auth-token=${token}`,
         },
         body: JSON.stringify({
           id: '1',
@@ -384,6 +462,7 @@ describe('API - Cursos', () => {
         senha: 'hashed',
         nome: 'Test User',
         cargo: 'Desenvolvedor',
+        role: 'ADMIN',
         dataCriacao: new Date(),
       }
 
@@ -393,7 +472,7 @@ describe('API - Cursos', () => {
       const request = new NextRequest('http://localhost:3000/api/cursos?id=1', {
         method: 'DELETE',
         headers: {
-          Cookie: `token=${token}`,
+          Cookie: `auth-token=${token}`,
         },
       })
 
