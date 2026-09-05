@@ -474,40 +474,69 @@ Os dados temporários da verificação (usuário `conteudista_teste` e curso "Cu
 >
 > Dois testes de regressão adicionados em `src/__tests__/api/cursos.test.ts`: token ADMIN + banco CONVIDADO → 403; usuário removido do banco → 401.
 
+## Fase 1.9 — Duas rotas de API sem autenticação (encontrado depois da Fase 3)
+
+Uma varredura de todas as rotas em `src/app/api` procurando por `requireAuth`/`verifyAuth`/`getServerUser` revelou **duas rotas sem nenhuma checagem**, que a Fase 1 não cobriu porque a revisão daquela fase se concentrou em `/api/cursos` e `/api/users`.
+
+O middleware **não as protegia**: `src/middleware.ts` só age quando `regraDaRota(pathname)` casa — isto é, apenas `/usuarios`, `/api/users` e `/revisao`. Todo o resto cai em `NextResponse.next()`, e a autenticação das demais rotas depende exclusivamente do `requireAuth` dentro de cada handler. Onde ele faltava, a rota era pública de verdade.
+
+| Rota                     | Antes            | Impacto                                                                                                |
+| ------------------------ | ---------------- | ------------------------------------------------------------------------------------------------------ |
+| `GET /api/activities`    | `200` sem cookie | Log de atividades inteiro exposto: nomes, `usuario` de login, cargos, títulos de curso e `entityId`s   |
+| `POST /api/upload-image` | `200` sem cookie | Qualquer pessoa na internet gravava até 10 MB no Vercel Blob da conta e recebia a URL pública de volta |
+
+Verificado ao vivo antes e depois (`/api/cursos` sem cookie já respondia `401`, servindo de controle):
+
+```
+antes:   GET /api/activities   → 200 + payload completo
+         POST /api/upload-image → 200 + url do blob
+depois:  GET /api/activities   → 401
+         POST /api/upload-image → 401
+         (com cookie de admin, ambas voltam a 200)
+```
+
+Correção: `requireAuth` no topo dos dois handlers, no mesmo padrão das demais rotas. `auth/login`, `auth/cadastro` e `auth/logout` seguem sem auth por definição; `sample-document` serve um arquivo de exemplo estático.
+
+**Ficou de fora, para decisão do usuário:** `ALLOWED_TYPES` em `upload-image` aceita `image/svg+xml`, e SVG carrega script. Como o Blob serve de outra origem, o alcance é limitado, mas passa a hospedar conteúdo arbitrário sob o domínio do projeto. Remover o tipo é uma linha, mas muda comportamento existente — não foi feito.
+
+**Pendência de limpeza:** a verificação gravou dois PNGs de 8 bytes no Blob de produção (`cursos/1788637369923-r2j5bp12v1r.png` e `cursos/1788637417434-zeh6s5ctjud.png`). Apagar com `del()` do `@vercel/blob` ou pelo painel da Vercel.
+
 ## Fase 2 — Colaboração, revisão e comentários
+
+> **Implementada e commitada em `9d7f2674`.** O checklist abaixo foi conferido arquivo a arquivo depois do commit — a marcação reflete o que existe no código, não o que se pretendia fazer. Os itens de 2.5 seguem desmarcados porque são fluxos de navegador que ainda não foram executados.
 
 ### 2.1 Schema
 
-- [ ] Enums `PapelColaborador` e `StatusSolicitacao` criados
-- [ ] Models `CursoColaborador`, `CursoAccessRequest`, `CursoComentario` com os `@@unique` indicados
-- [ ] Model `Comment` removido e diretório vazio `src/app/api/comments/` excluído
-- [ ] `pnpm db:migrate` roda limpo
+- [x] Enums `PapelColaborador` e `StatusSolicitacao` criados
+- [x] Models `CursoColaborador`, `CursoAccessRequest`, `CursoComentario` com os `@@unique` indicados
+- [x] Model `Comment` removido e diretório vazio `src/app/api/comments/` excluído
+- [x] Migration `20260905190000_add_colaboracao_revisao_comentarios` aplicada com `npx prisma migrate deploy` (nunca `pnpm db:migrate` neste projeto)
 
 ### 2.2 APIs
 
-- [ ] `POST|GET /api/cursos/[id]/solicitacoes` com as regras de quem pode
-- [ ] `PATCH /api/solicitacoes/[id]` aprova/nega e cria `CursoColaborador` ao aprovar
-- [ ] `GET /api/solicitacoes/pendentes` para o sino
-- [ ] `GET|DELETE /api/cursos/[id]/colaboradores` (listar e revogar)
-- [ ] `GET|POST|DELETE /api/cursos/[id]/comentarios`
-- [ ] `PATCH /api/cursos/[id]/status` com transições válidas; inválidas retornam 422
-- [ ] Curso `REPROVADO` volta a `EM_ANDAMENTO` ao ser editado
+- [x] `POST|GET /api/cursos/[id]/solicitacoes` com as regras de quem pode
+- [x] `PATCH /api/solicitacoes/[id]` aprova/nega e cria `CursoColaborador` ao aprovar
+- [x] `GET /api/solicitacoes/pendentes` para o sino
+- [x] `GET|DELETE /api/cursos/[id]/colaboradores` (listar e revogar)
+- [x] `GET|POST|DELETE /api/cursos/[id]/comentarios`
+- [x] `PATCH /api/cursos/[id]/status` com transições válidas; inválidas retornam 422
+- [x] Curso `REPROVADO` volta a `EM_ANDAMENTO` ao ser editado — `src/app/api/cursos/route.ts:358`
 
 ### 2.3 Activities
 
-- [ ] 8 novos tipos registrados em `activity-logger.ts`
-- [ ] Ícones e labels dos novos tipos tratados em `home/page.tsx`
-- [ ] Feed da home filtra atividades de cursos que o usuário não pode ver
+- [x] 8 novos tipos registrados em `activity-logger.ts`
+- [x] Ícones e labels dos novos tipos tratados em `home/page.tsx`
+- [ ] ~~Feed da home filtra atividades de cursos que o usuário não pode ver~~ — **sem efeito na matriz decidida**: "listar/ver qualquer curso" é ✅ para os cinco papéis, então não existe curso invisível para um usuário autenticado e o filtro seria código morto. Só passa a fazer sentido se a visibilidade de curso deixar de ser universal.
 
 ### 2.4 UI
 
-- [ ] Página `/revisao` com tabela (título, criador, status, criado, modificado, aprovado, revisor, nº comentários), filtros e busca
-- [ ] Painel de revisão no preview: thread de comentários + Aprovar/Reprovar (comentário obrigatório ao reprovar)
-- [ ] Botão "Enviar para revisão" para o dono
-- [ ] Botão "Solicitar acesso" no `CourseCard` de cursos de terceiros
-- [ ] Sino de notificações na `Navbar` com aprovar/negar inline (EDITOR/LEITOR) e polling de 60s
-- [ ] Drawer "Colaboradores" no `CourseSettingsDrawer` com revogação
-- [ ] Namespace `collaboration.json` + chaves novas em `courses.json`/`home.json` nos **dois** idiomas
+- [x] Página `/revisao` com tabela (título, criador, status, criado, modificado, aprovado, revisor, nº comentários), filtros e busca
+- [x] Painel de revisão no preview: thread de comentários + Aprovar/Reprovar (comentário obrigatório ao reprovar) — `src/components/revisao/PainelRevisao.tsx`, montado em `src/app/cursos/[id]/preview/page.tsx:69`
+- [x] Botão "Enviar para revisão" para o dono
+- [x] Botão "Solicitar acesso" no `CourseCard` de cursos de terceiros
+- [x] Sino de notificações na `Navbar` com aprovar/negar inline (EDITOR/LEITOR) e polling de 60s
+- [x] Drawer "Colaboradores" no `CourseSettingsDrawer` com revogação
+- [ ] Namespace `collaboration.json` + chaves novas em `courses.json`/`home.json` nos **dois** idiomas — **deliberadamente não feito**: toda a UI nova ficou em pt-BR fixo, como o resto do app (só `/login` usa `next-intl` hoje). Migrar só a Fase 2 deixaria a inconsistência pior. Decisão pendente do usuário.
 
 ### 2.5 Verificação da Fase 2
 

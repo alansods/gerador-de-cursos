@@ -1,10 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { put } from '@vercel/blob'
+import { requireAuth } from '@/lib/auth'
 
 const MAX_SIZE_BYTES = 10 * 1024 * 1024
 const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml']
 
 export async function POST(request: NextRequest) {
+  const authResult = await requireAuth(request)
+
+  if (authResult instanceof NextResponse) {
+    return authResult
+  }
+
   try {
     const formData = await request.formData()
     const file = formData.get('file')
