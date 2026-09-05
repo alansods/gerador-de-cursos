@@ -18,6 +18,14 @@ import {
   UserPlus,
   Edit,
   Trash2,
+  KeyRound,
+  UserCheck,
+  UserX,
+  ShieldOff,
+  Send,
+  BadgeCheck,
+  XCircle,
+  MessageSquare,
 } from 'lucide-react'
 import { PageTransition } from '@/components/PageTransition'
 import { useEffect, useState } from 'react'
@@ -150,6 +158,54 @@ export default function HomePage() {
           icon: Trash2,
           iconBg: 'bg-orange-500/10',
           iconColor: '#f97316',
+        }
+      case 'acesso_solicitado':
+        return {
+          icon: KeyRound,
+          iconBg: 'bg-sky-500/10',
+          iconColor: '#0ea5e9',
+        }
+      case 'acesso_aprovado':
+        return {
+          icon: UserCheck,
+          iconBg: 'bg-emerald-500/10',
+          iconColor: '#10b981',
+        }
+      case 'acesso_negado':
+        return {
+          icon: UserX,
+          iconBg: 'bg-red-500/10',
+          iconColor: '#ef4444',
+        }
+      case 'acesso_revogado':
+        return {
+          icon: ShieldOff,
+          iconBg: 'bg-orange-500/10',
+          iconColor: '#f97316',
+        }
+      case 'curso_enviado_revisao':
+        return {
+          icon: Send,
+          iconBg: 'bg-amber-500/10',
+          iconColor: '#f59e0b',
+        }
+      case 'curso_aprovado':
+        return {
+          icon: BadgeCheck,
+          iconBg: 'bg-emerald-500/10',
+          iconColor: '#10b981',
+        }
+      case 'curso_reprovado':
+        return {
+          icon: XCircle,
+          iconBg: 'bg-red-500/10',
+          iconColor: '#ef4444',
+        }
+      case 'curso_comentado':
+        return {
+          icon: MessageSquare,
+          iconBg: 'bg-violet-500/10',
+          iconColor: '#8b5cf6',
         }
       default:
         return {

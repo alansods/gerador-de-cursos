@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requireAuth, createErrorResponse, createSuccessResponse } from '@/lib/auth'
 import { permissoesDoCurso } from '@/lib/permissions'
+import { buscarColaboracao } from '@/lib/curso-acesso'
 import { ConteudoUnidade, CursoGerado, Unidade } from '@/types/gerador-curso'
 import { slugifyUnidades } from '@/lib/slug'
 
@@ -28,6 +29,8 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     if (!curso) {
       return createErrorResponse('Curso não encontrado', 404)
     }
+
+    const colaboracao = await buscarColaboracao(curso.id, authResult.user.id)
 
     // Normalizar unidades: garantir IDs, slugs e estrutura correta
     const unidadesOriginais = (curso.unidades as Partial<Unidade>[]) || []
@@ -68,7 +71,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       version: curso.version,
       ownerId: curso.ownerId ?? undefined,
       ownerNome: curso.owner?.nome ?? undefined,
-      permissoes: permissoesDoCurso(authResult.user, curso),
+      permissoes: permissoesDoCurso(authResult.user, curso, colaboracao),
       dataCriacao: curso.dataCriacao,
       dataModificacao: curso.dataModificacao,
     }

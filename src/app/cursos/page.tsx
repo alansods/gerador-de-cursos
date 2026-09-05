@@ -101,6 +101,25 @@ export default function CursosPage() {
     setSelectedFormat('Todas Modalidades')
   }
 
+  const handleSolicitarAcesso = async (cursoId: string, titulo: string) => {
+    try {
+      const response = await fetch(`/api/cursos/${cursoId}/solicitacoes`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ papelSolicitado: 'EDITOR' }),
+      })
+      const data = await response.json()
+
+      if (data.success) {
+        toast.success(`Acesso solicitado. O dono de "${titulo}" precisa aprovar.`)
+      } else {
+        toast.error(data.error || 'Erro ao solicitar acesso')
+      }
+    } catch {
+      toast.error('Erro ao conectar com o servidor')
+    }
+  }
+
   const handleCriarCurso = () => router.push('/cursos/novo')
   const handleEditarCurso = (id: string) => {
     selecionarCurso(id)
@@ -336,9 +355,7 @@ export default function CursosPage() {
                     onPreview={() => handlePreviewCurso(curso.id)}
                     onEdit={() => handleEditarCurso(curso.slug || curso.id)}
                     onDelete={() => setShowDeleteConfirm(curso.id)}
-                    onRequestAccess={() =>
-                      toast.info('Solicitação de acesso disponível na próxima etapa')
-                    }
+                    onRequestAccess={() => handleSolicitarAcesso(curso.id, curso.titulo)}
                     onExport={() => handleOpenExportModal(curso)}
                   />
                 ))}

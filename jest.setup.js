@@ -89,6 +89,26 @@ jest.mock('@/lib/prisma', () => ({
       delete: jest.fn(),
       count: jest.fn(),
     },
+    cursoColaborador: {
+      findMany: jest.fn().mockResolvedValue([]),
+      findUnique: jest.fn().mockResolvedValue(null),
+      delete: jest.fn(),
+      upsert: jest.fn(),
+    },
+    cursoAccessRequest: {
+      findMany: jest.fn().mockResolvedValue([]),
+      findUnique: jest.fn().mockResolvedValue(null),
+      upsert: jest.fn(),
+      update: jest.fn(),
+      updateMany: jest.fn(),
+    },
+    cursoComentario: {
+      findMany: jest.fn().mockResolvedValue([]),
+      findUnique: jest.fn().mockResolvedValue(null),
+      create: jest.fn(),
+      delete: jest.fn(),
+    },
+    $transaction: jest.fn((ops) => Promise.all(ops)),
   },
   ensureConnection: jest.fn().mockResolvedValue(undefined),
 }))

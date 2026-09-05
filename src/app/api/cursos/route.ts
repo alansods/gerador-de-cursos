@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requireAuth, createErrorResponse, createSuccessResponse } from '@/lib/auth'
 import { assertCan, ForbiddenError, permissoesDoCurso } from '@/lib/permissions'
+import { buscarColaboracao } from '@/lib/curso-acesso'
 import { CursoGerado, Unidade } from '@/types/gerador-curso'
 import { logActivity } from '@/lib/activity-logger'
 import { generateUniqueSlug, slugifyUnidades } from '@/lib/slug'
@@ -78,6 +79,14 @@ export async function GET(req: NextRequest) {
       include: { owner: { select: { id: true, nome: true } } },
     })
 
+    // Colaborações do usuário nos cursos listados, numa consulta só, para que
+    // um colaborador não apareça sem permissão de edição na listagem
+    const colaboracoes = await prisma.cursoColaborador.findMany({
+      where: { userId: authResult.user.id, cursoId: { in: cursos.map((c) => c.id) } },
+      select: { cursoId: true, papel: true },
+    })
+    const colaboracaoPorCurso = new Map(colaboracoes.map((c) => [c.cursoId, { papel: c.papel }]))
+
     // Converter para formato CursoGerado com normalização de unidades
     const cursosFormatados: CursoGerado[] = cursos.map((curso) => {
       // Normalizar unidades: garantir IDs, slugs e estrutura correta
@@ -117,7 +126,11 @@ export async function GET(req: NextRequest) {
         version: curso.version,
         ownerId: curso.ownerId ?? undefined,
         ownerNome: curso.owner?.nome ?? undefined,
-        permissoes: permissoesDoCurso(authResult.user, curso),
+        permissoes: permissoesDoCurso(
+          authResult.user,
+          curso,
+          colaboracaoPorCurso.get(curso.id) ?? null
+        ),
         dataCriacao: curso.dataCriacao,
         dataModificacao: curso.dataModificacao,
       }
@@ -278,7 +291,9 @@ export async function PUT(req: NextRequest) {
       return createErrorResponse('Curso não encontrado', 404)
     }
 
-    assertCan(authResult.user, 'curso:editar', { curso: cursoExistente })
+    const colaboracao = await buscarColaboracao(id, authResult.user.id)
+
+    assertCan(authResult.user, 'curso:editar', { curso: cursoExistente, colaboracao })
 
     // Guarda de concorrência: rejeita escrita baseada numa versão desatualizada
     if (typeof version === 'number' && version !== cursoExistente.version) {
@@ -369,7 +384,7 @@ export async function PUT(req: NextRequest) {
       status: curso.status,
       version: curso.version,
       ownerId: curso.ownerId ?? undefined,
-      permissoes: permissoesDoCurso(authResult.user, curso),
+      permissoes: permissoesDoCurso(authResult.user, curso, colaboracao),
       dataCriacao: curso.dataCriacao,
       dataModificacao: curso.dataModificacao,
     }

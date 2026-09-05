@@ -25,6 +25,18 @@ enum StatusCurso {
   REPROVADO
 }
 
+enum PapelColaborador {
+  EDITOR
+  LEITOR
+}
+
+enum StatusSolicitacao {
+  PENDENTE
+  APROVADA
+  NEGADA
+  REVOGADA
+}
+
 // Modelo de Usuário
 model User {
   id             String      @id @default(cuid())
@@ -38,19 +50,15 @@ model User {
   activities     Activity[]
   cursos         Curso[]     @relation("CursoOwner")
   cursosRevisados Curso[]    @relation("CursoRevisor")
+  colaboracoes         CursoColaborador[]   @relation("ColaboracaoUsuario")
+  colaboracoesConcedidas CursoColaborador[] @relation("ColaboracaoConcedente")
+  solicitacoes         CursoAccessRequest[] @relation("SolicitacaoSolicitante")
+  solicitacoesRespondidas CursoAccessRequest[] @relation("SolicitacaoRespondente")
+  comentarios          CursoComentario[]    @relation("ComentarioAutor")
 
   @@index([usuario])
   @@index([role])
   @@map("users")
-}
-
-// Modelo de Comentários (exemplo do prompt)
-model Comment {
-  id        Int      @id @default(autoincrement())
-  text      String
-  createdAt DateTime @default(now())
-
-  @@map("comments")
 }
 
 // Modelo de Cursos (adaptado do sistema existente)
@@ -73,12 +81,69 @@ model Curso {
   revisadoEm       DateTime?   @map("revisado_em")
   dataCriacao      DateTime    @default(now()) @map("data_criacao")
   dataModificacao  DateTime    @updatedAt @map("data_modificacao")
+  colaboradores    CursoColaborador[]
+  solicitacoes     CursoAccessRequest[]
+  comentarios      CursoComentario[]
 
   @@index([titulo])
   @@index([categoria])
   @@index([ownerId])
   @@index([status])
   @@map("cursos")
+}
+
+// Acesso concedido a um curso de terceiro
+model CursoColaborador {
+  id             String           @id @default(cuid())
+  cursoId        String           @map("curso_id")
+  curso          Curso            @relation(fields: [cursoId], references: [id], onDelete: Cascade)
+  userId         String           @map("user_id")
+  user           User             @relation("ColaboracaoUsuario", fields: [userId], references: [id], onDelete: Cascade)
+  papel          PapelColaborador
+  concedidoPorId String?          @map("concedido_por_id")
+  concedidoPor   User?            @relation("ColaboracaoConcedente", fields: [concedidoPorId], references: [id], onDelete: SetNull)
+  createdAt      DateTime         @default(now()) @map("created_at")
+
+  @@unique([cursoId, userId])
+  @@index([userId])
+  @@map("curso_colaboradores")
+}
+
+// Pedido de acesso a um curso de terceiro
+model CursoAccessRequest {
+  id              String            @id @default(cuid())
+  cursoId         String            @map("curso_id")
+  curso           Curso             @relation(fields: [cursoId], references: [id], onDelete: Cascade)
+  solicitanteId   String            @map("solicitante_id")
+  solicitante     User              @relation("SolicitacaoSolicitante", fields: [solicitanteId], references: [id], onDelete: Cascade)
+  papelSolicitado PapelColaborador  @default(EDITOR) @map("papel_solicitado")
+  status          StatusSolicitacao @default(PENDENTE)
+  mensagem        String?
+  respondidoPorId String?           @map("respondido_por_id")
+  respondidoPor   User?             @relation("SolicitacaoRespondente", fields: [respondidoPorId], references: [id], onDelete: SetNull)
+  respondidoEm    DateTime?         @map("respondido_em")
+  createdAt       DateTime          @default(now()) @map("created_at")
+  updatedAt       DateTime          @updatedAt @map("updated_at")
+
+  @@unique([cursoId, solicitanteId])
+  @@index([status])
+  @@index([solicitanteId])
+  @@map("curso_access_requests")
+}
+
+// Thread única de comentários por curso
+model CursoComentario {
+  id        String   @id @default(cuid())
+  cursoId   String   @map("curso_id")
+  curso     Curso    @relation(fields: [cursoId], references: [id], onDelete: Cascade)
+  autorId   String   @map("autor_id")
+  autor     User     @relation("ComentarioAutor", fields: [autorId], references: [id], onDelete: Cascade)
+  texto     String
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([cursoId, createdAt])
+  @@map("curso_comentarios")
 }
 
 // Modelo de Atividades (log de ações dos usuários)

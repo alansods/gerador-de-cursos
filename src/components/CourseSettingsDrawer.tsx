@@ -16,6 +16,8 @@ import { Settings } from 'lucide-react'
 import { LayoutSelector } from '@/components/course/LayoutSelector'
 import { DEFAULT_LAYOUT_ID } from '@/components/course/layouts'
 
+import { GerenciarColaboradores } from '@/components/colaboracao/GerenciarColaboradores'
+
 interface Unidade {
   id: string
   titulo: string
@@ -32,6 +34,8 @@ interface CourseData {
 }
 
 interface CourseSettingsDrawerProps {
+  cursoId?: string
+  podeGerenciarColaboradores?: boolean
   open: boolean
   onOpenChange: (open: boolean) => void
   courseData: CourseData
@@ -40,6 +44,8 @@ interface CourseSettingsDrawerProps {
 }
 
 export function CourseSettingsDrawer({
+  cursoId,
+  podeGerenciarColaboradores = false,
   open,
   onOpenChange,
   courseData,
@@ -168,6 +174,15 @@ export function CourseSettingsDrawer({
                 onChange={(layout) => setLocalCourseData({ ...localCourseData, layout })}
               />
             </div>
+
+            {cursoId && podeGerenciarColaboradores && (
+              <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
+                <GerenciarColaboradores
+                  cursoId={cursoId}
+                  podeGerenciar={podeGerenciarColaboradores}
+                />
+              </div>
+            )}
           </div>
         </div>
 

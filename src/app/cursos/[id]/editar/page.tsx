@@ -4540,6 +4540,10 @@ export default function EditarCursoPage() {
 
         {/* Course Settings Drawer */}
         <CourseSettingsDrawer
+          cursoId={state.cursoAtual.id}
+          podeGerenciarColaboradores={
+            state.cursoAtual.permissoes?.podeGerenciarColaboradores ?? false
+          }
           open={settingsDrawerOpen}
           onOpenChange={setSettingsDrawerOpen}
           courseData={{

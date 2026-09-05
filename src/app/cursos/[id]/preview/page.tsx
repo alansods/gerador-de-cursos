@@ -10,6 +10,7 @@ import { useGeradorCurso } from '@/context/GeradorCursoContext'
 import { PageTransition } from '@/components/PageTransition'
 import { Loader2 } from 'lucide-react'
 import { CoursePlayer } from '@/components/course/CoursePlayer'
+import { PainelRevisao } from '@/components/revisao/PainelRevisao'
 
 export default function PreviewCursoPage() {
   const params = useParams()
@@ -65,6 +66,7 @@ export default function PreviewCursoPage() {
   return (
     <PageTransition>
       <CoursePlayer curso={curso} />
+      <PainelRevisao curso={curso} onStatusAlterado={() => selecionarCurso(cursoId, true)} />
     </PageTransition>
   )
 }
