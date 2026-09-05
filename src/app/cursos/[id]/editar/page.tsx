@@ -77,6 +77,8 @@ import {
 import { SortableContext, arrayMove, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import { QuizConteudo } from '@/components/QuizConteudo'
 import { InfoBox } from '@/components/InfoBox'
+import { BlockThemeProvider } from '@/components/course/blocks'
+import { resolveLayout } from '@/components/course/layouts'
 import { QuizData, QuizQuestion, Unidade, ConteudoUnidade } from '@/types/gerador-curso'
 
 export default function EditarCursoPage() {
@@ -92,6 +94,7 @@ export default function EditarCursoPage() {
     editarCurso,
     selecionarCurso,
   } = useGeradorCurso()
+  const editorBlockTheme = resolveLayout(state.cursoAtual?.layout).meta.blockTheme
   const { openPreview } = usePreview()
   const { isDarkMode, toggleDarkMode } = useTheme()
   const { generatePDF, isGenerating: isGeneratingPDF } = usePDF()
@@ -1315,429 +1318,435 @@ export default function EditarCursoPage() {
                               </div>
                             </div>
                           ) : (
-                            <DndContext
-                              sensors={dndSensors}
-                              collisionDetection={closestCenter}
-                              onDragEnd={(e) => handleDragEndConteudo(e, unidade.id)}
-                            >
-                              <SortableContext
-                                items={(unidade.conteudo || [])
-                                  .sort((a, b) => a.ordem - b.ordem)
-                                  .map((c) => c.id)}
-                                strategy={verticalListSortingStrategy}
+                            <BlockThemeProvider theme={editorBlockTheme}>
+                              <DndContext
+                                sensors={dndSensors}
+                                collisionDetection={closestCenter}
+                                onDragEnd={(e) => handleDragEndConteudo(e, unidade.id)}
                               >
-                                <div className="grid grid-cols-12 gap-1">
-                                  {(() => {
-                                    const conteudos = (unidade.conteudo || []).sort(
-                                      (a, b) => a.ordem - b.ordem
-                                    )
-
-                                    console.log(
-                                      `🔍 Unidade ${unidade.titulo} - Total de conteúdos:`,
-                                      conteudos.length
-                                    )
-                                    conteudos.forEach((c, i) => {
-                                      console.log(
-                                        `  [${i}] ${c.tipo} - ordem: ${c.ordem} - id: ${c.id}`,
-                                        c.videoTitulo || c.conteudo?.substring(0, 30)
+                                <SortableContext
+                                  items={(unidade.conteudo || [])
+                                    .sort((a, b) => a.ordem - b.ordem)
+                                    .map((c) => c.id)}
+                                  strategy={verticalListSortingStrategy}
+                                >
+                                  <div className="grid grid-cols-12 gap-1">
+                                    {(() => {
+                                      const conteudos = (unidade.conteudo || []).sort(
+                                        (a, b) => a.ordem - b.ordem
                                       )
-                                    })
 
-                                    // Agrupar itens em linhas
-                                    type RowInfo = {
-                                      startIndex: number
-                                      endIndex: number
-                                      totalCols: number
-                                    }
-                                    const rows: RowInfo[] = []
-                                    let rStart = 0,
-                                      rSum = 0
-                                    conteudos.forEach((it, i) => {
-                                      const cols = it.colunas || 12
-                                      if (i > 0 && rSum + cols > 12) {
-                                        rows.push({
-                                          startIndex: rStart,
-                                          endIndex: i - 1,
-                                          totalCols: rSum,
-                                        })
-                                        rStart = i
-                                        rSum = cols
-                                      } else {
-                                        rSum += cols
-                                      }
-                                    })
-                                    if (conteudos.length > 0)
-                                      rows.push({
-                                        startIndex: rStart,
-                                        endIndex: conteudos.length - 1,
-                                        totalCols: rSum,
+                                      console.log(
+                                        `🔍 Unidade ${unidade.titulo} - Total de conteúdos:`,
+                                        conteudos.length
+                                      )
+                                      conteudos.forEach((c, i) => {
+                                        console.log(
+                                          `  [${i}] ${c.tipo} - ordem: ${c.ordem} - id: ${c.id}`,
+                                          c.videoTitulo || c.conteudo?.substring(0, 30)
+                                        )
                                       })
 
-                                    console.log('🟣 ROWS calculadas:', rows)
-                                    rows.forEach((r, i) => {
-                                      console.log(
-                                        `  Row ${i}: startIndex=${r.startIndex}, endIndex=${r.endIndex}, totalCols=${r.totalCols}`
-                                      )
-                                    })
+                                      // Agrupar itens em linhas
+                                      type RowInfo = {
+                                        startIndex: number
+                                        endIndex: number
+                                        totalCols: number
+                                      }
+                                      const rows: RowInfo[] = []
+                                      let rStart = 0,
+                                        rSum = 0
+                                      conteudos.forEach((it, i) => {
+                                        const cols = it.colunas || 12
+                                        if (i > 0 && rSum + cols > 12) {
+                                          rows.push({
+                                            startIndex: rStart,
+                                            endIndex: i - 1,
+                                            totalCols: rSum,
+                                          })
+                                          rStart = i
+                                          rSum = cols
+                                        } else {
+                                          rSum += cols
+                                        }
+                                      })
+                                      if (conteudos.length > 0)
+                                        rows.push({
+                                          startIndex: rStart,
+                                          endIndex: conteudos.length - 1,
+                                          totalCols: rSum,
+                                        })
 
-                                    const insertDropdown = (
-                                      afterIndex: number,
-                                      colSpanClass: string,
-                                      key: string
-                                    ) => (
-                                      <div
-                                        key={key}
-                                        className={`group/div relative ${colSpanClass}`}
-                                      >
-                                        <div className="relative flex items-center justify-center">
-                                          {/* Linha horizontal */}
-                                          <div className="absolute inset-x-0 h-0.5 rounded-full bg-blue-600 dark:bg-blue-500 opacity-0 group-hover/div:opacity-35 transition-opacity duration-150"></div>
+                                      console.log('🟣 ROWS calculadas:', rows)
+                                      rows.forEach((r, i) => {
+                                        console.log(
+                                          `  Row ${i}: startIndex=${r.startIndex}, endIndex=${r.endIndex}, totalCols=${r.totalCols}`
+                                        )
+                                      })
 
-                                          {/* Botão circular */}
-                                          <TooltipButton
-                                            icon={Plus}
-                                            tooltip="Inserir conteúdo aqui"
-                                            onClick={(e) => {
-                                              e?.stopPropagation()
-                                              console.log(
-                                                '🔵 CLIQUE no botão inserir - afterIndex:',
-                                                afterIndex
-                                              )
-                                              handleOpenAddContentDrawer(unidade.id, afterIndex)
-                                            }}
-                                            asButton={false}
-                                            size="sm"
-                                            tooltipSide="top"
-                                            tooltipClassName="text-xs"
-                                            className="relative z-10 flex items-center justify-center w-[26px] h-[26px] rounded-full bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white shadow-lg opacity-0 scale-50 group-hover/div:opacity-100 group-hover/div:scale-100 transition-[opacity,scale] duration-150 ease-out"
-                                          />
-                                        </div>
-                                      </div>
-                                    )
-
-                                    const emptySlot = (afterIndex: number, emptyCols: number) => {
-                                      const colClass =
-                                        emptyCols === 6 ? 'md:col-span-6' : 'col-span-12'
-                                      return (
+                                      const insertDropdown = (
+                                        afterIndex: number,
+                                        colSpanClass: string,
+                                        key: string
+                                      ) => (
                                         <div
-                                          key={`empty-${afterIndex}`}
-                                          className={`${colClass} group/empty`}
+                                          key={key}
+                                          className={`group/div relative ${colSpanClass}`}
                                         >
-                                          <button
-                                            className="w-full h-full min-h-[60px] rounded-lg border-2 border-dashed border-transparent flex items-center justify-center text-gray-400 dark:text-gray-500 opacity-0 group-hover/empty:opacity-100 group-hover/empty:border-gray-300 dark:group-hover/empty:border-gray-600 hover:border-blue-400! dark:hover:border-blue-500! hover:text-blue-500! dark:hover:text-blue-400! hover:bg-blue-50! dark:hover:bg-blue-950/20! transition-all"
-                                            onClick={() => {
-                                              handleOpenAddContentDrawer(unidade.id, afterIndex)
-                                            }}
-                                          >
-                                            <Plus className="h-4 w-4" />
-                                          </button>
+                                          <div className="relative flex items-center justify-center">
+                                            {/* Linha horizontal */}
+                                            <div className="absolute inset-x-0 h-0.5 rounded-full bg-blue-600 dark:bg-blue-500 opacity-0 group-hover/div:opacity-35 transition-opacity duration-150"></div>
+
+                                            {/* Botão circular */}
+                                            <TooltipButton
+                                              icon={Plus}
+                                              tooltip="Inserir conteúdo aqui"
+                                              onClick={(e) => {
+                                                e?.stopPropagation()
+                                                console.log(
+                                                  '🔵 CLIQUE no botão inserir - afterIndex:',
+                                                  afterIndex
+                                                )
+                                                handleOpenAddContentDrawer(unidade.id, afterIndex)
+                                              }}
+                                              asButton={false}
+                                              size="sm"
+                                              tooltipSide="top"
+                                              tooltipClassName="text-xs"
+                                              className="relative z-10 flex items-center justify-center w-[26px] h-[26px] rounded-full bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white shadow-lg opacity-0 scale-50 group-hover/div:opacity-100 group-hover/div:scale-100 transition-[opacity,scale] duration-150 ease-out"
+                                            />
+                                          </div>
                                         </div>
                                       )
-                                    }
 
-                                    return rows.map((row, rowIndex) => (
-                                      <React.Fragment key={`row-${rowIndex}`}>
-                                        {rowIndex === 0 &&
-                                          insertDropdown(-1, 'col-span-12', 'divider-first')}
-                                        {rowIndex > 0 &&
-                                          insertDropdown(
-                                            row.startIndex,
-                                            'col-span-12',
-                                            `divider-${rowIndex}`
-                                          )}
-                                        {conteudos
-                                          .slice(row.startIndex, row.endIndex + 1)
-                                          .map((item, itemIndex) => {
-                                            console.log(
-                                              `🔍 Renderizando conteúdo [${row.startIndex + itemIndex}]:`,
-                                              item.tipo,
-                                              item.id,
-                                              item.videoTitulo || item.conteudo?.substring(0, 50)
-                                            )
-                                            return (
-                                              <SortableConteudoWrapper
-                                                key={item.id}
-                                                id={item.id}
-                                                colunas={item.colunas}
-                                              >
-                                                {(dragHandle) => (
-                                                  <EditableCard
-                                                    flex
-                                                    label={
-                                                      item.tipo === 'titulo'
-                                                        ? 'Título'
-                                                        : item.tipo === 'subtitulo'
-                                                          ? 'Subtítulo'
-                                                          : item.tipo === 'paragrafo'
-                                                            ? 'Texto'
-                                                            : item.tipo === 'imagem'
-                                                              ? 'Imagem'
-                                                              : item.tipo === 'video'
-                                                                ? 'Vídeo'
-                                                                : item.tipo === 'accordion'
-                                                                  ? 'Accordion'
-                                                                  : item.tipo === 'flipcard'
-                                                                    ? 'FlipCard'
-                                                                    : item.tipo === 'lista'
-                                                                      ? 'Lista'
-                                                                      : item.tipo ===
-                                                                          'objetivos-aprendizagem'
-                                                                        ? 'Objetivos de Aprendizagem'
-                                                                        : item.tipo === 'quiz'
-                                                                          ? 'Quiz'
-                                                                          : item.tipo === 'info-box'
-                                                                            ? 'Info Box'
-                                                                            : 'Conteúdo'
-                                                    }
-                                                    actions={
-                                                      <>
-                                                        {dragHandle}
-                                                        <TooltipButton
-                                                          icon={Edit}
-                                                          tooltip="Editar"
-                                                          onClick={() =>
-                                                            handleOpenEditContentDrawer(
-                                                              unidade.id,
-                                                              item
-                                                            )
-                                                          }
-                                                          asButton={false}
-                                                          size="sm"
-                                                          className="p-1.5 rounded text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
-                                                        />
-                                                        <TooltipButton
-                                                          icon={Trash2}
-                                                          tooltip="Deletar"
-                                                          onClick={() =>
-                                                            handleDeletarConteudo(
-                                                              unidade.id,
-                                                              item.id
-                                                            )
-                                                          }
-                                                          asButton={false}
-                                                          size="sm"
-                                                          className="p-1.5 rounded text-gray-600 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
-                                                        />
-                                                      </>
-                                                    }
-                                                  >
-                                                    <div className="flex-1 mt-1">
-                                                      {item.tipo === 'titulo' ? (
-                                                        <h3 className="font-bold text-lg text-gray-900 dark:text-gray-100">
-                                                          {item.conteudo}
-                                                        </h3>
-                                                      ) : item.tipo === 'subtitulo' ? (
-                                                        <h4 className="font-semibold text-gray-900 dark:text-gray-100">
-                                                          {item.conteudo}
-                                                        </h4>
-                                                      ) : item.tipo === 'flipcard' ? (
-                                                        <div className="border border-[#e5e7eb] dark:border-gray-700 rounded-lg p-4 bg-linear-to-br from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 text-center min-h-[72px] flex flex-col items-center justify-center gap-2">
-                                                          {item.imagemFrente && (
-                                                            <>
-                                                              {/* eslint-disable-next-line @next/next/no-img-element */}
-                                                              <img
-                                                                src={item.imagemFrente}
-                                                                alt=""
-                                                                className="max-h-14 mx-auto object-contain rounded"
-                                                                onError={(e) => {
-                                                                  e.currentTarget.style.display =
-                                                                    'none'
-                                                                }}
-                                                              />
-                                                            </>
-                                                          )}
-                                                          {item.tituloFrente ? (
-                                                            <p className="font-semibold text-sm text-gray-800 dark:text-gray-200">
-                                                              {item.tituloFrente}
-                                                            </p>
-                                                          ) : (
-                                                            <p className="text-xs text-gray-400 italic">
-                                                              Sem conteúdo na frente
-                                                            </p>
-                                                          )}
-                                                        </div>
-                                                      ) : item.tipo === 'accordion' ? (
-                                                        <div className="border border-[#e5e7eb] dark:border-gray-700 rounded-lg overflow-hidden">
-                                                          {(item.items || []).length === 0 ? (
-                                                            <p className="text-xs text-gray-400 italic p-3">
-                                                              Nenhum item
-                                                            </p>
-                                                          ) : (
-                                                            (item.items || []).map((acc, idx) => (
-                                                              <div
-                                                                key={acc.id || idx}
-                                                                className="flex items-center justify-between px-3 py-2 bg-gray-50 dark:bg-gray-800 border-b border-[#e5e7eb] dark:border-gray-700 last:border-b-0"
-                                                              >
-                                                                <span className="text-sm text-gray-700 dark:text-gray-300 truncate">
-                                                                  {acc.titulo}
-                                                                </span>
-                                                                <ChevronDown className="h-3.5 w-3.5 text-gray-400 shrink-0 ml-2" />
-                                                              </div>
-                                                            ))
-                                                          )}
-                                                        </div>
-                                                      ) : item.tipo === 'imagem' ? (
-                                                        <div className="space-y-2">
-                                                          {item.fonte && (
-                                                            <p className="text-xs text-gray-500 dark:text-gray-400 text-center">
-                                                              Fonte: {item.fonte}
-                                                            </p>
-                                                          )}
-                                                          {/* eslint-disable-next-line @next/next/no-img-element */}
-                                                          <img
-                                                            src={item.conteudo}
-                                                            alt={item.legenda || 'Imagem'}
-                                                            className={`h-auto object-contain border border-[#e5e7eb] dark:border-gray-700 rounded-md mx-auto ${item.tamanho === 'pequena' ? 'max-w-xs' : item.tamanho === 'media' ? 'max-w-md' : 'max-w-full'}`}
-                                                            onError={(e) => {
-                                                              e.currentTarget.style.display = 'none'
-                                                            }}
+                                      const emptySlot = (afterIndex: number, emptyCols: number) => {
+                                        const colClass =
+                                          emptyCols === 6 ? 'md:col-span-6' : 'col-span-12'
+                                        return (
+                                          <div
+                                            key={`empty-${afterIndex}`}
+                                            className={`${colClass} group/empty`}
+                                          >
+                                            <button
+                                              className="w-full h-full min-h-[60px] rounded-lg border-2 border-dashed border-transparent flex items-center justify-center text-gray-400 dark:text-gray-500 opacity-0 group-hover/empty:opacity-100 group-hover/empty:border-gray-300 dark:group-hover/empty:border-gray-600 hover:border-blue-400! dark:hover:border-blue-500! hover:text-blue-500! dark:hover:text-blue-400! hover:bg-blue-50! dark:hover:bg-blue-950/20! transition-all"
+                                              onClick={() => {
+                                                handleOpenAddContentDrawer(unidade.id, afterIndex)
+                                              }}
+                                            >
+                                              <Plus className="h-4 w-4" />
+                                            </button>
+                                          </div>
+                                        )
+                                      }
+
+                                      return rows.map((row, rowIndex) => (
+                                        <React.Fragment key={`row-${rowIndex}`}>
+                                          {rowIndex === 0 &&
+                                            insertDropdown(-1, 'col-span-12', 'divider-first')}
+                                          {rowIndex > 0 &&
+                                            insertDropdown(
+                                              row.startIndex,
+                                              'col-span-12',
+                                              `divider-${rowIndex}`
+                                            )}
+                                          {conteudos
+                                            .slice(row.startIndex, row.endIndex + 1)
+                                            .map((item, itemIndex) => {
+                                              console.log(
+                                                `🔍 Renderizando conteúdo [${row.startIndex + itemIndex}]:`,
+                                                item.tipo,
+                                                item.id,
+                                                item.videoTitulo || item.conteudo?.substring(0, 50)
+                                              )
+                                              return (
+                                                <SortableConteudoWrapper
+                                                  key={item.id}
+                                                  id={item.id}
+                                                  colunas={item.colunas}
+                                                >
+                                                  {(dragHandle) => (
+                                                    <EditableCard
+                                                      flex
+                                                      label={
+                                                        item.tipo === 'titulo'
+                                                          ? 'Título'
+                                                          : item.tipo === 'subtitulo'
+                                                            ? 'Subtítulo'
+                                                            : item.tipo === 'paragrafo'
+                                                              ? 'Texto'
+                                                              : item.tipo === 'imagem'
+                                                                ? 'Imagem'
+                                                                : item.tipo === 'video'
+                                                                  ? 'Vídeo'
+                                                                  : item.tipo === 'accordion'
+                                                                    ? 'Accordion'
+                                                                    : item.tipo === 'flipcard'
+                                                                      ? 'FlipCard'
+                                                                      : item.tipo === 'lista'
+                                                                        ? 'Lista'
+                                                                        : item.tipo ===
+                                                                            'objetivos-aprendizagem'
+                                                                          ? 'Objetivos de Aprendizagem'
+                                                                          : item.tipo === 'quiz'
+                                                                            ? 'Quiz'
+                                                                            : item.tipo ===
+                                                                                'info-box'
+                                                                              ? 'Info Box'
+                                                                              : 'Conteúdo'
+                                                      }
+                                                      actions={
+                                                        <>
+                                                          {dragHandle}
+                                                          <TooltipButton
+                                                            icon={Edit}
+                                                            tooltip="Editar"
+                                                            onClick={() =>
+                                                              handleOpenEditContentDrawer(
+                                                                unidade.id,
+                                                                item
+                                                              )
+                                                            }
+                                                            asButton={false}
+                                                            size="sm"
+                                                            className="p-1.5 rounded text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
                                                           />
-                                                          {item.legenda && (
-                                                            <p className="text-sm text-gray-600 dark:text-gray-400 italic text-center">
-                                                              {item.legenda}
-                                                            </p>
-                                                          )}
-                                                        </div>
-                                                      ) : item.tipo === 'video' ? (
-                                                        <div className="space-y-2">
-                                                          {item.videoTitulo && (
-                                                            <p className="text-sm font-semibold text-gray-700 dark:text-gray-300">
-                                                              {item.videoTitulo}
-                                                            </p>
-                                                          )}
-                                                          <div className="aspect-video w-full rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-800 border border-[#e5e7eb] dark:border-gray-700">
-                                                            <div className="flex items-center justify-center h-full text-gray-500 dark:text-gray-400 text-sm">
-                                                              🎬 Vídeo:{' '}
-                                                              {item.videoUrl
-                                                                ? new URL(item.videoUrl).hostname
-                                                                : 'YouTube'}
-                                                            </div>
+                                                          <TooltipButton
+                                                            icon={Trash2}
+                                                            tooltip="Deletar"
+                                                            onClick={() =>
+                                                              handleDeletarConteudo(
+                                                                unidade.id,
+                                                                item.id
+                                                              )
+                                                            }
+                                                            asButton={false}
+                                                            size="sm"
+                                                            className="p-1.5 rounded text-gray-600 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                                                          />
+                                                        </>
+                                                      }
+                                                    >
+                                                      <div className="flex-1 mt-1">
+                                                        {item.tipo === 'titulo' ? (
+                                                          <h3 className="font-bold text-lg text-gray-900 dark:text-gray-100">
+                                                            {item.conteudo}
+                                                          </h3>
+                                                        ) : item.tipo === 'subtitulo' ? (
+                                                          <h4 className="font-semibold text-gray-900 dark:text-gray-100">
+                                                            {item.conteudo}
+                                                          </h4>
+                                                        ) : item.tipo === 'flipcard' ? (
+                                                          <div className="border border-[#e5e7eb] dark:border-gray-700 rounded-lg p-4 bg-linear-to-br from-(--block-accent,#2563eb)/8 to-(--block-accent,#2563eb)/15 text-center min-h-[72px] flex flex-col items-center justify-center gap-2">
+                                                            {item.imagemFrente && (
+                                                              <>
+                                                                {/* eslint-disable-next-line @next/next/no-img-element */}
+                                                                <img
+                                                                  src={item.imagemFrente}
+                                                                  alt=""
+                                                                  className="max-h-14 mx-auto object-contain rounded"
+                                                                  onError={(e) => {
+                                                                    e.currentTarget.style.display =
+                                                                      'none'
+                                                                  }}
+                                                                />
+                                                              </>
+                                                            )}
+                                                            {item.tituloFrente ? (
+                                                              <p className="font-semibold text-sm text-gray-800 dark:text-gray-200">
+                                                                {item.tituloFrente}
+                                                              </p>
+                                                            ) : (
+                                                              <p className="text-xs text-gray-400 italic">
+                                                                Sem conteúdo na frente
+                                                              </p>
+                                                            )}
                                                           </div>
-                                                          {item.videoUrl && (
-                                                            <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
-                                                              {item.videoUrl}
-                                                            </p>
-                                                          )}
-                                                        </div>
-                                                      ) : item.tipo === 'lista' ? (
-                                                        <div className="space-y-1">
-                                                          {(item.itensLista || []).length === 0 ? (
-                                                            <p className="text-xs text-gray-400 italic">
-                                                              Nenhum item
-                                                            </p>
-                                                          ) : (
-                                                            (item.itensLista || []).map(
-                                                              (listaItem, idx) => (
+                                                        ) : item.tipo === 'accordion' ? (
+                                                          <div className="border border-[#e5e7eb] dark:border-gray-700 rounded-lg overflow-hidden">
+                                                            {(item.items || []).length === 0 ? (
+                                                              <p className="text-xs text-gray-400 italic p-3">
+                                                                Nenhum item
+                                                              </p>
+                                                            ) : (
+                                                              (item.items || []).map((acc, idx) => (
                                                                 <div
-                                                                  key={listaItem.id || idx}
-                                                                  className="flex items-start gap-2 text-sm text-gray-700 dark:text-gray-300"
+                                                                  key={acc.id || idx}
+                                                                  className="flex items-center justify-between px-3 py-2 bg-gray-50 dark:bg-gray-800 border-b border-[#e5e7eb] dark:border-gray-700 last:border-b-0"
                                                                 >
-                                                                  <span className="shrink-0 mt-0.5">
-                                                                    {item.tipoLista ===
-                                                                    'ordenada' ? (
-                                                                      <span className="flex items-center justify-center w-4 h-4 bg-purple-500 text-white rounded-full text-xs font-semibold">
-                                                                        {idx + 1}
-                                                                      </span>
-                                                                    ) : item.tipoLista ===
-                                                                      'check' ? (
-                                                                      <span className="flex items-center justify-center w-4 h-4 bg-green-500 text-white rounded">
-                                                                        <svg
-                                                                          className="w-2.5 h-2.5"
-                                                                          fill="none"
-                                                                          stroke="currentColor"
-                                                                          viewBox="0 0 24 24"
-                                                                        >
-                                                                          <path
-                                                                            strokeLinecap="round"
-                                                                            strokeLinejoin="round"
-                                                                            strokeWidth={3}
-                                                                            d="M5 13l4 4L19 7"
-                                                                          />
-                                                                        </svg>
-                                                                      </span>
-                                                                    ) : (
-                                                                      <span className="w-1.5 h-1.5 bg-purple-500 rounded-full mt-1.5 block" />
-                                                                    )}
+                                                                  <span className="text-sm text-gray-700 dark:text-gray-300 truncate">
+                                                                    {acc.titulo}
                                                                   </span>
-                                                                  <span className="line-clamp-1">
-                                                                    {listaItem.texto}
-                                                                  </span>
+                                                                  <ChevronDown className="h-3.5 w-3.5 text-gray-400 shrink-0 ml-2" />
                                                                 </div>
-                                                              )
-                                                            )
-                                                          )}
-                                                        </div>
-                                                      ) : item.tipo === 'objetivos-aprendizagem' ? (
-                                                        <div className="space-y-1">
-                                                          {(item.itensObjetivos || []).length ===
-                                                          0 ? (
-                                                            <p className="text-xs text-gray-400 italic">
-                                                              Nenhum objetivo
-                                                            </p>
-                                                          ) : (
-                                                            (item.itensObjetivos || []).map(
-                                                              (objetivo, idx) => (
-                                                                <div
-                                                                  key={objetivo.id || idx}
-                                                                  className="flex items-start gap-2 text-sm text-gray-700 dark:text-gray-300"
-                                                                >
-                                                                  <span className="flex items-center justify-center w-5 h-5 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded font-semibold text-xs shrink-0">
-                                                                    {idx + 1}
-                                                                  </span>
-                                                                  <span className="line-clamp-2">
-                                                                    {objetivo.texto}
-                                                                  </span>
-                                                                </div>
-                                                              )
-                                                            )
-                                                          )}
-                                                        </div>
-                                                      ) : item.tipo === 'quiz' ? (
-                                                        item.quizData ? (
-                                                          <QuizConteudo
-                                                            quizData={item.quizData}
-                                                            isEdicao={true}
-                                                          />
-                                                        ) : (
-                                                          <p className="text-xs text-gray-400 italic">
-                                                            Sem perguntas
-                                                          </p>
-                                                        )
-                                                      ) : item.tipo === 'info-box' ? (
-                                                        item.tipoInfoBox ? (
-                                                          <InfoBox
-                                                            tipo={item.tipoInfoBox}
-                                                            titulo={item.tituloInfoBox}
-                                                          >
-                                                            <div
-                                                              dangerouslySetInnerHTML={{
-                                                                __html: item.conteudo || '',
+                                                              ))
+                                                            )}
+                                                          </div>
+                                                        ) : item.tipo === 'imagem' ? (
+                                                          <div className="space-y-2">
+                                                            {item.fonte && (
+                                                              <p className="text-xs text-gray-500 dark:text-gray-400 text-center">
+                                                                Fonte: {item.fonte}
+                                                              </p>
+                                                            )}
+                                                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                                                            <img
+                                                              src={item.conteudo}
+                                                              alt={item.legenda || 'Imagem'}
+                                                              className={`h-auto object-contain border border-[#e5e7eb] dark:border-gray-700 rounded-md mx-auto ${item.tamanho === 'pequena' ? 'max-w-xs' : item.tamanho === 'media' ? 'max-w-md' : 'max-w-full'}`}
+                                                              onError={(e) => {
+                                                                e.currentTarget.style.display =
+                                                                  'none'
                                                               }}
                                                             />
-                                                          </InfoBox>
-                                                        ) : null
-                                                      ) : (
-                                                        <div
-                                                          className={`conteudo-paragrafo text-gray-700 dark:text-gray-300 ${item.alinhamento === 'centro' ? 'text-center' : item.alinhamento === 'direita' ? 'text-right' : item.alinhamento === 'justificado' ? 'text-justify' : 'text-left'}`}
-                                                          dangerouslySetInnerHTML={{
-                                                            __html: item.conteudo,
-                                                          }}
-                                                        />
-                                                      )}
-                                                    </div>
-                                                  </EditableCard>
-                                                )}
-                                              </SortableConteudoWrapper>
-                                            )
-                                          })}
-                                        {row.totalCols < 12 &&
-                                          emptySlot(row.endIndex, 12 - row.totalCols)}
-                                      </React.Fragment>
-                                    ))
-                                  })()}
-                                </div>
-                              </SortableContext>
-                            </DndContext>
+                                                            {item.legenda && (
+                                                              <p className="text-sm text-gray-600 dark:text-gray-400 italic text-center">
+                                                                {item.legenda}
+                                                              </p>
+                                                            )}
+                                                          </div>
+                                                        ) : item.tipo === 'video' ? (
+                                                          <div className="space-y-2">
+                                                            {item.videoTitulo && (
+                                                              <p className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+                                                                {item.videoTitulo}
+                                                              </p>
+                                                            )}
+                                                            <div className="aspect-video w-full rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-800 border border-[#e5e7eb] dark:border-gray-700">
+                                                              <div className="flex items-center justify-center h-full text-gray-500 dark:text-gray-400 text-sm">
+                                                                🎬 Vídeo:{' '}
+                                                                {item.videoUrl
+                                                                  ? new URL(item.videoUrl).hostname
+                                                                  : 'YouTube'}
+                                                              </div>
+                                                            </div>
+                                                            {item.videoUrl && (
+                                                              <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
+                                                                {item.videoUrl}
+                                                              </p>
+                                                            )}
+                                                          </div>
+                                                        ) : item.tipo === 'lista' ? (
+                                                          <div className="space-y-1">
+                                                            {(item.itensLista || []).length ===
+                                                            0 ? (
+                                                              <p className="text-xs text-gray-400 italic">
+                                                                Nenhum item
+                                                              </p>
+                                                            ) : (
+                                                              (item.itensLista || []).map(
+                                                                (listaItem, idx) => (
+                                                                  <div
+                                                                    key={listaItem.id || idx}
+                                                                    className="flex items-start gap-2 text-sm text-gray-700 dark:text-gray-300"
+                                                                  >
+                                                                    <span className="shrink-0 mt-0.5">
+                                                                      {item.tipoLista ===
+                                                                      'ordenada' ? (
+                                                                        <span className="flex items-center justify-center w-4 h-4 bg-(--block-accent,#2563eb) text-white rounded-full text-xs font-semibold">
+                                                                          {idx + 1}
+                                                                        </span>
+                                                                      ) : item.tipoLista ===
+                                                                        'check' ? (
+                                                                        <span className="flex items-center justify-center w-4 h-4 bg-green-500 text-white rounded">
+                                                                          <svg
+                                                                            className="w-2.5 h-2.5"
+                                                                            fill="none"
+                                                                            stroke="currentColor"
+                                                                            viewBox="0 0 24 24"
+                                                                          >
+                                                                            <path
+                                                                              strokeLinecap="round"
+                                                                              strokeLinejoin="round"
+                                                                              strokeWidth={3}
+                                                                              d="M5 13l4 4L19 7"
+                                                                            />
+                                                                          </svg>
+                                                                        </span>
+                                                                      ) : (
+                                                                        <span className="w-1.5 h-1.5 bg-(--block-accent,#2563eb) rounded-full mt-1.5 block" />
+                                                                      )}
+                                                                    </span>
+                                                                    <span className="line-clamp-1">
+                                                                      {listaItem.texto}
+                                                                    </span>
+                                                                  </div>
+                                                                )
+                                                              )
+                                                            )}
+                                                          </div>
+                                                        ) : item.tipo ===
+                                                          'objetivos-aprendizagem' ? (
+                                                          <div className="space-y-1">
+                                                            {(item.itensObjetivos || []).length ===
+                                                            0 ? (
+                                                              <p className="text-xs text-gray-400 italic">
+                                                                Nenhum objetivo
+                                                              </p>
+                                                            ) : (
+                                                              (item.itensObjetivos || []).map(
+                                                                (objetivo, idx) => (
+                                                                  <div
+                                                                    key={objetivo.id || idx}
+                                                                    className="flex items-start gap-2 text-sm text-gray-700 dark:text-gray-300"
+                                                                  >
+                                                                    <span className="flex items-center justify-center w-5 h-5 bg-(--block-accent,#2563eb)/10 text-(--block-accent,#2563eb) rounded font-semibold text-xs shrink-0">
+                                                                      {idx + 1}
+                                                                    </span>
+                                                                    <span className="line-clamp-2">
+                                                                      {objetivo.texto}
+                                                                    </span>
+                                                                  </div>
+                                                                )
+                                                              )
+                                                            )}
+                                                          </div>
+                                                        ) : item.tipo === 'quiz' ? (
+                                                          item.quizData ? (
+                                                            <QuizConteudo
+                                                              quizData={item.quizData}
+                                                              isEdicao={true}
+                                                            />
+                                                          ) : (
+                                                            <p className="text-xs text-gray-400 italic">
+                                                              Sem perguntas
+                                                            </p>
+                                                          )
+                                                        ) : item.tipo === 'info-box' ? (
+                                                          item.tipoInfoBox ? (
+                                                            <InfoBox
+                                                              tipo={item.tipoInfoBox}
+                                                              titulo={item.tituloInfoBox}
+                                                            >
+                                                              <div
+                                                                dangerouslySetInnerHTML={{
+                                                                  __html: item.conteudo || '',
+                                                                }}
+                                                              />
+                                                            </InfoBox>
+                                                          ) : null
+                                                        ) : (
+                                                          <div
+                                                            className={`conteudo-paragrafo text-gray-700 dark:text-gray-300 ${item.alinhamento === 'centro' ? 'text-center' : item.alinhamento === 'direita' ? 'text-right' : item.alinhamento === 'justificado' ? 'text-justify' : 'text-left'}`}
+                                                            dangerouslySetInnerHTML={{
+                                                              __html: item.conteudo,
+                                                            }}
+                                                          />
+                                                        )}
+                                                      </div>
+                                                    </EditableCard>
+                                                  )}
+                                                </SortableConteudoWrapper>
+                                              )
+                                            })}
+                                          {row.totalCols < 12 &&
+                                            emptySlot(row.endIndex, 12 - row.totalCols)}
+                                        </React.Fragment>
+                                      ))
+                                    })()}
+                                  </div>
+                                </SortableContext>
+                              </DndContext>
+                            </BlockThemeProvider>
                           )}
 
                           {/* Botão Adicionar Conteúdo */}
@@ -4519,6 +4528,7 @@ export default function EditarCursoPage() {
             descricao: state.cursoAtual.descricao || '',
             categoria: state.cursoAtual.categoria || undefined,
             cargaHoraria: state.cursoAtual.cargaHoraria,
+            layout: state.cursoAtual.layout,
           }}
           unidades={state.cursoAtual.unidades || []}
           onSave={(courseData, unidades) => {
@@ -4528,6 +4538,7 @@ export default function EditarCursoPage() {
                 descricao: courseData.descricao,
                 categoria: courseData.categoria || '',
                 cargaHoraria: courseData.cargaHoraria,
+                layout: courseData.layout,
               })
               reordenarUnidades(unidades as Unidade[])
             }

@@ -3,14 +3,15 @@ import { Button } from '@/components/ui/button'
 import { UnidadeConteudo } from '@/components/UnidadeConteudo'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import type { CursoGerado } from '@/types/gerador-curso'
+import { classicoMeta } from './meta'
 
-interface SCORMUnitProps {
+interface ClassicoUnitProps {
   curso: CursoGerado
   unidadeId: string
   onNavigate: (unitId: string | null) => void
 }
 
-export function SCORMUnit({ curso, unidadeId, onNavigate }: SCORMUnitProps) {
+export function ClassicoUnit({ curso, unidadeId, onNavigate }: ClassicoUnitProps) {
   const unidade = curso.unidades?.find((u) => u.id === unidadeId)
 
   if (!unidade) {
@@ -80,7 +81,7 @@ export function SCORMUnit({ curso, unidadeId, onNavigate }: SCORMUnitProps) {
       </div>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Unit Content */}
-        <UnidadeConteudo unidade={unidade} />
+        <UnidadeConteudo unidade={unidade} theme={classicoMeta.blockTheme} />
 
         {/* Navigation Buttons */}
         <div className="flex items-center justify-between gap-4 mt-8 pt-8 border-t-[1px] border-[#e5e7eb] dark:border-gray-700">

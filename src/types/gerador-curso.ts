@@ -93,6 +93,7 @@ export interface CursoGerado {
   cargaHoraria: string
   modalidade: string
   categoria: string
+  layout?: string
   dataCriacao: Date
   dataModificacao: Date
   unidades: Unidade[]

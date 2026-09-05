@@ -13,6 +13,8 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Settings } from 'lucide-react'
+import { LayoutSelector } from '@/components/course/LayoutSelector'
+import { DEFAULT_LAYOUT_ID } from '@/components/course/layouts'
 
 interface Unidade {
   id: string
@@ -26,6 +28,7 @@ interface CourseData {
   descricao: string
   categoria?: string
   cargaHoraria: string
+  layout?: string
 }
 
 interface CourseSettingsDrawerProps {
@@ -153,6 +156,16 @@ export function CourseSettingsDrawer({
                 }
                 placeholder="Ex: 20 horas"
                 className="w-full"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                Layout do curso
+              </label>
+              <LayoutSelector
+                value={localCourseData.layout || DEFAULT_LAYOUT_ID}
+                onChange={(layout) => setLocalCourseData({ ...localCourseData, layout })}
               />
             </div>
           </div>

@@ -1,16 +1,16 @@
-import React from "react";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Clock, GraduationCap, Layers, ArrowRight } from "lucide-react";
-import type { CursoGerado } from "@/types/gerador-curso";
+import React from 'react'
+import { Card, CardContent } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
+import { Clock, GraduationCap, Layers, ArrowRight } from 'lucide-react'
+import type { CursoGerado } from '@/types/gerador-curso'
 
-interface SCORMHomeProps {
-  curso: CursoGerado;
-  onNavigate: (unitId: string) => void;
+interface ClassicoHomeProps {
+  curso: CursoGerado
+  onNavigate: (unitId: string) => void
 }
 
-export function SCORMHome({ curso, onNavigate }: SCORMHomeProps) {
+export function ClassicoHome({ curso, onNavigate }: ClassicoHomeProps) {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pt-16">
       {/* Hero Section - Dark Background */}
@@ -24,14 +24,10 @@ export function SCORMHome({ curso, onNavigate }: SCORMHomeProps) {
           </div>
 
           {/* Course Title */}
-          <h1 className="text-3xl md:text-5xl font-bold mb-4">
-            {curso.titulo}
-          </h1>
+          <h1 className="text-3xl md:text-5xl font-bold mb-4">{curso.titulo}</h1>
 
           {/* Course Description */}
-          <p className="text-lg md:text-xl text-blue-100 mb-8 max-w-3xl">
-            {curso.descricao}
-          </p>
+          <p className="text-lg md:text-xl text-blue-100 mb-8 max-w-3xl">{curso.descricao}</p>
 
           {/* Course Metadata */}
           <div className="flex flex-wrap gap-6">
@@ -82,8 +78,7 @@ export function SCORMHome({ curso, onNavigate }: SCORMHomeProps) {
                         {/* Unit Label */}
                         <div>
                           <span className="text-xs font-bold text-orange-600 uppercase tracking-wide">
-                            UNIDADE{" "}
-                            {String(unidadeIndex + 1).padStart(2, "0")}
+                            UNIDADE {String(unidadeIndex + 1).padStart(2, '0')}
                           </span>
                         </div>
 
@@ -117,5 +112,5 @@ export function SCORMHome({ curso, onNavigate }: SCORMHomeProps) {
         </div>
       </div>
     </div>
-  );
+  )
 }

@@ -43,6 +43,7 @@ model Curso {
   cargaHoraria     String   @map("carga_horaria")
   modalidade       String
   categoria        String
+  layout           String   @default("classico")
   unidades         Json     @default("[]")
   dataCriacao      DateTime @default(now()) @map("data_criacao")
   dataModificacao  DateTime @updatedAt @map("data_modificacao")
