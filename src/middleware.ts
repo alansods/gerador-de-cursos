@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { jwtVerify } from 'jose'
-import { can, mapCargoParaRole, ROLES, type Acao, type RoleUsuario } from '@/lib/permissions'
+import { can, mapCargoParaRole, ROLES, type RoleUsuario } from '@/lib/permissions'
+import { casaPrefixo, regraDaRota } from '@/lib/rotas-protegidas'
 
 const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET)
 
@@ -11,11 +12,6 @@ const ROTAS_PUBLICAS = [
   '/preview',
   '/pdf-preview',
   '/scorm-preview',
-]
-
-const ROTAS_PROTEGIDAS: Array<{ prefixos: string[]; acao: Acao }> = [
-  { prefixos: ['/usuarios', '/api/users'], acao: 'usuario:gerenciar' },
-  { prefixos: ['/revisao'], acao: 'revisao:ver' },
 ]
 
 interface SessaoMiddleware {
@@ -45,10 +41,8 @@ export default async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl
   const ehApi = pathname.startsWith('/api')
 
-  const ehPublica = ROTAS_PUBLICAS.some((rota) => pathname.startsWith(rota))
-  const regra = ROTAS_PROTEGIDAS.find(({ prefixos }) =>
-    prefixos.some((prefixo) => pathname.startsWith(prefixo))
-  )
+  const ehPublica = ROTAS_PUBLICAS.some((rota) => casaPrefixo(pathname, rota))
+  const regra = regraDaRota(pathname)
 
   if (!ehPublica && regra) {
     const sessao = await lerSessao(req)

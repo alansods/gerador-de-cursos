@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { jwtVerify } from 'jose'
+import { prisma } from '@/lib/prisma'
 import { mapCargoParaRole, ROLES, type RoleUsuario } from '@/lib/permissions'
 
 // Validar que JWT_SECRET está definido
@@ -59,15 +60,30 @@ export async function verifyAuth(req: NextRequest): Promise<JWTPayload> {
 /**
  * Middleware para proteger rotas da API
  * Retorna o payload do JWT se válido, ou um erro NextResponse
+ *
+ * O `role` é relido do banco a cada requisição: o token vive 24h, e sem essa
+ * releitura um usuário rebaixado manteria os privilégios antigos até expirar.
  */
 export async function requireAuth(req: NextRequest): Promise<{ user: JWTPayload } | NextResponse> {
+  let user: JWTPayload
+
   try {
-    const user = await verifyAuth(req)
-    return { user }
+    user = await verifyAuth(req)
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Não autenticado'
     return NextResponse.json({ success: false, error: message }, { status: 401 })
   }
+
+  const atual = await prisma.user.findUnique({
+    where: { id: user.id },
+    select: { nome: true, cargo: true, role: true },
+  })
+
+  if (!atual) {
+    return NextResponse.json({ success: false, error: 'Usuário não encontrado' }, { status: 401 })
+  }
+
+  return { user: { ...user, nome: atual.nome, cargo: atual.cargo, role: atual.role } }
 }
 
 /**

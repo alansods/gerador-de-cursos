@@ -37,6 +37,15 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { ROLES, ROLE_LABELS, type RoleUsuario } from '@/lib/permissions'
+
+const TODOS_OS_PAPEIS = 'Todos os papéis'
+const DIAS_PARA_USUARIO_RECENTE = 7
+
+function ehUsuarioRecente(createdAt: string) {
+  const limite = Date.now() - DIAS_PARA_USUARIO_RECENTE * 24 * 60 * 60 * 1000
+  return new Date(createdAt).getTime() >= limite
+}
+
 interface User {
   id: string
   nome: string
@@ -58,6 +67,7 @@ export default function UsuariosPage() {
   const [searchTerm, setSearchTerm] = useState('')
   const [startDate, setStartDate] = useState('')
   const [endDate, setEndDate] = useState('')
+  const [selectedRole, setSelectedRole] = useState(TODOS_OS_PAPEIS)
   const [pagination, setPagination] = useState<PaginationInfo>({
     page: 1,
     limit: 10,
@@ -81,7 +91,7 @@ export default function UsuariosPage() {
   })
   // Fetch users
   const fetchUsers = useCallback(
-    async (page = 1, search = '', start = '', end = '') => {
+    async (page = 1, search = '', start = '', end = '', role = TODOS_OS_PAPEIS) => {
       try {
         setLoading(true)
         const params = new URLSearchParams({
@@ -91,6 +101,7 @@ export default function UsuariosPage() {
         })
         if (start) params.append('startDate', start)
         if (end) params.append('endDate', end)
+        if (role !== TODOS_OS_PAPEIS) params.append('role', role)
         const response = await fetch(`/api/users?${params}`)
         const data = await response.json()
         if (data.success) {
@@ -110,17 +121,19 @@ export default function UsuariosPage() {
   )
 
   useEffect(() => {
-    fetchUsers(1, searchTerm, startDate, endDate)
-  }, [searchTerm, startDate, endDate, fetchUsers])
+    fetchUsers(1, searchTerm, startDate, endDate, selectedRole)
+  }, [searchTerm, startDate, endDate, selectedRole, fetchUsers])
 
   // Check if there are active filters
-  const hasActiveFilters = searchTerm !== '' || startDate !== '' || endDate !== ''
+  const hasActiveFilters =
+    searchTerm !== '' || startDate !== '' || endDate !== '' || selectedRole !== TODOS_OS_PAPEIS
 
   // Clear all filters
   const clearFilters = () => {
     setSearchTerm('')
     setStartDate('')
     setEndDate('')
+    setSelectedRole(TODOS_OS_PAPEIS)
   }
 
   // Create user
@@ -145,7 +158,7 @@ export default function UsuariosPage() {
       if (data.success) {
         toast.success('Usuário criado com sucesso!')
         setFormData({ nome: '', cargo: '', role: 'CONTEUDISTA', usuario: '', senha: '' })
-        fetchUsers(pagination.page, searchTerm, startDate, endDate)
+        fetchUsers(pagination.page, searchTerm, startDate, endDate, selectedRole)
       } else {
         toast.error(data.error || 'Erro ao criar usuário')
       }
@@ -183,7 +196,7 @@ export default function UsuariosPage() {
       if (data.success) {
         toast.success('Usuário atualizado com sucesso!')
         setFormData({ nome: '', cargo: '', role: 'CONTEUDISTA', usuario: '', senha: '' })
-        fetchUsers(pagination.page, searchTerm, startDate, endDate)
+        fetchUsers(pagination.page, searchTerm, startDate, endDate, selectedRole)
       } else {
         toast.error(data.error || 'Erro ao atualizar usuário')
       }
@@ -207,7 +220,7 @@ export default function UsuariosPage() {
       const data = await response.json()
       if (data.success) {
         toast.success('Usuário deletado com sucesso!')
-        fetchUsers(pagination.page, searchTerm, startDate, endDate)
+        fetchUsers(pagination.page, searchTerm, startDate, endDate, selectedRole)
       } else {
         toast.error(data.error || 'Erro ao deletar usuário')
       }
@@ -287,6 +300,23 @@ export default function UsuariosPage() {
                 />
               </div>
 
+              <div className="flex flex-col gap-1 flex-1">
+                <span className="text-xs text-muted-foreground pl-1">Papel</span>
+                <Select value={selectedRole} onValueChange={setSelectedRole}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder={TODOS_OS_PAPEIS} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value={TODOS_OS_PAPEIS}>{TODOS_OS_PAPEIS}</SelectItem>
+                    {ROLES.map((role) => (
+                      <SelectItem key={role} value={role}>
+                        {ROLE_LABELS[role]}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
               {/* Clear Filters Button */}
               {hasActiveFilters && (
                 <Button
@@ -337,6 +367,11 @@ export default function UsuariosPage() {
                             <div className="flex flex-wrap items-center gap-1.5">
                               <Badge variant="secondary">{user.cargo}</Badge>
                               <Badge variant="outline">{ROLE_LABELS[user.role]}</Badge>
+                              {ehUsuarioRecente(user.createdAt) && (
+                                <Badge className="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300">
+                                  Novo
+                                </Badge>
+                              )}
                             </div>
                           </TableCell>
                           <TableCell>
@@ -378,6 +413,11 @@ export default function UsuariosPage() {
                         <div className="flex shrink-0 flex-col items-end gap-1">
                           <Badge variant="secondary">{user.cargo}</Badge>
                           <Badge variant="outline">{ROLE_LABELS[user.role]}</Badge>
+                          {ehUsuarioRecente(user.createdAt) && (
+                            <Badge className="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300">
+                              Novo
+                            </Badge>
+                          )}
                         </div>
                       </div>
                       <div className="flex items-center justify-between">
@@ -414,7 +454,13 @@ export default function UsuariosPage() {
                         variant="outline"
                         size="sm"
                         onClick={() =>
-                          fetchUsers(pagination.page - 1, searchTerm, startDate, endDate)
+                          fetchUsers(
+                            pagination.page - 1,
+                            searchTerm,
+                            startDate,
+                            endDate,
+                            selectedRole
+                          )
                         }
                         disabled={pagination.page === 1}
                       >
@@ -427,7 +473,13 @@ export default function UsuariosPage() {
                         variant="outline"
                         size="sm"
                         onClick={() =>
-                          fetchUsers(pagination.page + 1, searchTerm, startDate, endDate)
+                          fetchUsers(
+                            pagination.page + 1,
+                            searchTerm,
+                            startDate,
+                            endDate,
+                            selectedRole
+                          )
                         }
                         disabled={pagination.page === pagination.totalPages}
                       >

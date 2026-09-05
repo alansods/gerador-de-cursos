@@ -46,9 +46,23 @@ async function authHeaders(role: string = 'ADMIN') {
   return { 'Content-Type': 'application/json', Cookie: `auth-token=${token}` }
 }
 
+// `requireAuth` relê o papel do banco a cada requisição, então todo teste
+// autenticado precisa do usuário correspondente ao token
+const usuarioAutenticado = {
+  id: '1',
+  usuario: 'testuser',
+  senha: 'hashed',
+  nome: 'Test User',
+  cargo: 'Administrador',
+  role: 'ADMIN',
+  createdAt: new Date(),
+  updatedAt: new Date(),
+}
+
 describe('API - Cursos', () => {
   beforeEach(() => {
     jest.clearAllMocks()
+    mockPrisma.user.findUnique.mockResolvedValue(usuarioAutenticado as never)
   })
 
   describe('GET /api/cursos', () => {
@@ -315,6 +329,74 @@ describe('API - Cursos', () => {
           cargaHoraria: '40h',
           modalidade: 'Online',
           categoria: 'Tecnologia',
+        }),
+      })
+
+      // Act
+      const response = await createCursoHandler(request)
+      const data = await response.json()
+
+      // Assert
+      expect(response.status).toBe(401)
+      expect(data.success).toBe(false)
+      expect(mockPrisma.curso.create).not.toHaveBeenCalled()
+    })
+
+    it('deve usar o papel do banco, não o do token, quando o admin rebaixa o usuário', async () => {
+      // Arrange: token emitido enquanto o usuário ainda era ADMIN,
+      // mas o banco já registra o rebaixamento para CONVIDADO
+      const token = await createAuthToken('1', 'ADMIN')
+
+      mockPrisma.user.findUnique.mockResolvedValue({
+        ...usuarioAutenticado,
+        role: 'CONVIDADO',
+      } as never)
+
+      const request = new NextRequest('http://localhost:3000/api/cursos', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Cookie: `auth-token=${token}`,
+        },
+        body: JSON.stringify({
+          titulo: 'Curso Proibido',
+          descricao: 'Não deve ser criado',
+          cargaHoraria: '40h',
+          modalidade: 'Online',
+          categoria: 'Tecnologia',
+          unidades: [],
+        }),
+      })
+
+      // Act
+      const response = await createCursoHandler(request)
+      const data = await response.json()
+
+      // Assert
+      expect(response.status).toBe(403)
+      expect(data.success).toBe(false)
+      expect(mockPrisma.curso.create).not.toHaveBeenCalled()
+    })
+
+    it('deve retornar 401 quando o usuário do token não existe mais no banco', async () => {
+      // Arrange
+      const token = await createAuthToken()
+
+      mockPrisma.user.findUnique.mockResolvedValue(null as never)
+
+      const request = new NextRequest('http://localhost:3000/api/cursos', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Cookie: `auth-token=${token}`,
+        },
+        body: JSON.stringify({
+          titulo: 'Curso Órfão',
+          descricao: 'Autor removido',
+          cargaHoraria: '40h',
+          modalidade: 'Online',
+          categoria: 'Tecnologia',
+          unidades: [],
         }),
       })
 

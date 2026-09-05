@@ -14,15 +14,16 @@ O objetivo é introduzir 5 papéis com permissões reais, dar dono aos cursos, p
 
 ## Decisões tomadas
 
-| Tema                 | Decisão                                                                     |
-| -------------------- | --------------------------------------------------------------------------- |
-| Papéis               | `ADMIN`, `GESTOR`, `CONTEUDISTA`, `REVISOR`, `CONVIDADO`                    |
-| Status do curso      | `EM_ANDAMENTO` → `EM_REVISAO` → `APROVADO` / `REPROVADO`                    |
-| Colaboração          | Solicitação do interessado + aprovação do dono (papel `EDITOR` ou `LEITOR`) |
-| Comentários          | Thread única por curso (sem âncora em bloco)                                |
-| Tempo real           | Liveblocks, **limitado a 2 usuários simultâneos por curso**, com fallback   |
-| Exportação SCORM/PDF | Permanece liberada em qualquer status (decisão explícita do usuário)        |
-| Entrega              | 3 fases / 3 PRs                                                             |
+| Tema                     | Decisão                                                                                                |
+| ------------------------ | ------------------------------------------------------------------------------------------------------ |
+| Papéis                   | `ADMIN`, `GESTOR`, `CONTEUDISTA`, `REVISOR`, `CONVIDADO`                                               |
+| Status do curso          | `EM_ANDAMENTO` → `EM_REVISAO` → `APROVADO` / `REPROVADO`                                               |
+| Colaboração              | Solicitação do interessado + aprovação do dono (papel `EDITOR` ou `LEITOR`)                            |
+| Comentários              | Thread única por curso (sem âncora em bloco)                                                           |
+| Tempo real               | Liveblocks, **limitado a 2 usuários simultâneos por curso**, com fallback                              |
+| Exportação SCORM/PDF     | Permanece liberada em qualquer status (decisão explícita do usuário)                                   |
+| Role no cadastro público | Novo usuário nasce `CONTEUDISTA`; só o ADMIN muda a role em `/usuarios` (decisão explícita do usuário) |
+| Entrega                  | 3 fases / 3 PRs                                                                                        |
 
 ### Matriz de permissões
 
@@ -136,6 +137,57 @@ pnpm dev
 
 ---
 
+# Fase 1.8 — Revisão de roles pelo admin em `/usuarios`
+
+## Context
+
+Depois que a Fase 1 subiu, ficou a pergunta de **como a role é definida no cadastro**. O estado atual é: a página `/cadastro` envia apenas `nome`, `usuario` e `senha` (`src/app/cadastro/page.tsx:85-89`) e a API grava `role: 'CONTEUDISTA'` fixo (`src/app/api/auth/cadastro/route.ts:37`) — **o usuário não escolhe a própria role**, e só o ADMIN altera depois via `/api/users`.
+
+Levantei que `CONTEUDISTA` não é o nível mais baixo: quem se cadastra sozinho já cria, edita e exclui cursos. Sugeri nascer como `CONVIDADO` e o admin promover; **o usuário decidiu manter `CONTEUDISTA`**, com o admin ajustando a role na página de usuários quando necessário. O `CONVIDADO` continua como está: vê todos os cursos, não edita nem exclui nada.
+
+Com isso, **nada muda no cadastro nem no módulo de permissões** — ambos já atendem à decisão. O que falta é dar ao admin as ferramentas para revisar quem entrou e corrigir a role: hoje `/usuarios` filtra só por texto e por intervalo de datas, e não há como isolar os usuários por papel nem perceber quem é recém-chegado.
+
+**Escopo:** apenas a tela e a API de usuários. Não mexe em `permissions.ts`, no cadastro, no login nem nas rotas de curso.
+
+## O que já está correto (verificado, não precisa de mudança)
+
+- Cadastro público não aceita `role` no body — impossível se autoatribuir papel.
+- `POST`/`PUT /api/users` só aceitam `role` de quem passa por `negarSeNaoPodeGerenciar` (ADMIN), e normalizam com `normalizarRole()` (`src/app/api/users/route.ts:10-14`), caindo em `CONTEUDISTA` se vier lixo.
+- `CONVIDADO` já é somente-leitura: `curso:criar`, `curso:editar`, `curso:excluir` e `curso:comentar` retornam `false` (`src/lib/permissions.ts:101-111`), e ele enxerga todos os cursos porque o `GET /api/cursos` não filtra por papel.
+- A tabela de `/usuarios` já mostra o badge de role e os modais de criar/editar já têm o `<Select>` de papel.
+
+## 1.8.1 Filtro por role — `src/app/api/users/route.ts`
+
+No `GET`, ler `role` do `searchParams` e, quando for um valor válido de `ROLES`, adicionar `where.role`. Reaproveitar o `normalizarRole` não serve aqui (ele força `CONTEUDISTA` no default); usar a checagem direta com `ROLES.includes(...)` para que um valor ausente ou inválido simplesmente não filtre nada.
+
+O `orderBy: { createdAt: 'desc' }` já existente mantém os mais novos no topo — não mexer.
+
+## 1.8.2 Filtro na UI — `src/app/usuarios/page.tsx`
+
+- Novo estado `selectedRole` (default `'Todos os papéis'`), no mesmo padrão de `searchTerm`/`startDate`/`endDate`.
+- `<Select>` na barra de filtros populado por `ROLES` + `ROLE_LABELS` (ambos já importados na linha 39), ao lado dos campos de data.
+- Passar `role` para `fetchUsers` e incluí-lo no `useEffect` de dependências (linha ~113) e nas chamadas de paginação (linhas ~417 e ~430).
+- Somar ao `hasActiveFilters` (linha 117) e ao "Limpar filtros".
+
+## 1.8.3 Badge de usuário recente
+
+Badge `Novo` ao lado dos badges de cargo/role, nas **duas** renderizações da lista (desktop ~linha 338 e mobile ~linha 379), quando `createdAt` for dos últimos 7 dias.
+
+**Limitação a assumir explicitamente:** esse badge marca _qualquer_ usuário criado há pouco, inclusive os que o próprio admin cadastrou — não distingue autocadastro de criação manual. Distinguir com precisão exigiria uma coluna nova no schema (ex.: `autoCadastro Boolean`), o que está fora do escopo escolhido. Como a lista já vem ordenada do mais novo para o mais antigo e o volume de usuários é baixo, o badge cumpre o papel de chamar atenção para revisão.
+
+## 1.8.4 Verificação
+
+1. `pnpm dev`, login como `admin`, abrir `/usuarios`.
+2. Filtrar por cada papel → a tabela e o total da paginação acompanham; `curl -b cookie "localhost:3000/api/users?role=CONTEUDISTA"` retorna só conteudistas.
+3. `?role=LIXO` e `?role=` → lista completa, sem erro.
+4. Criar uma conta em `/cadastro` → aparece no topo de `/usuarios` como `Conteudista` com o badge `Novo`.
+5. Trocar a role dessa conta para `REVISOR` no modal de edição → badge atualiza e ela some do filtro `Conteudista`.
+6. Rebaixar/promover a conta e, **com o mesmo cookie**, chamar `POST /api/cursos` → o novo papel vale na hora, sem re-login, porque `requireAuth` relê o papel do banco.
+7. Login `convidado` → continua vendo todos os cursos, sem botões de editar/excluir.
+8. `pnpm test` e `pnpm build` verdes.
+
+---
+
 # Fase 2 — Colaboração, revisão e comentários
 
 ## 2.1 Schema
@@ -184,7 +236,7 @@ Como o feed da home lista atividades de todos, filtrar para que o usuário só v
 
 ## 2.4 UI
 
-- **Página nova `/revisao`** (`src/app/revisao/page.tsx`) — tabela com: título, criador, status (badge), data de criação, data de modificação, data de aprovação, revisor, nº de comentários. Filtros por status/criador e busca. Reaproveitar o padrão de tabela + paginação de `src/app/usuarios/page.tsx`.
+- **Página nova `/revisao`** (`src/app/revisao/page.tsx`) — o `layout.tsx` de gate já existe; basta criar a página. Tabela com: título, criador, status (badge), data de criação, data de modificação, data de aprovação, revisor, nº de comentários. Filtros por status/criador e busca. Reaproveitar o padrão de tabela + paginação de `src/app/usuarios/page.tsx`.
 - **Página de visualização do curso** (`src/app/cursos/[id]/preview`): painel lateral de revisão com a thread de comentários (`CursoComentarios.tsx`) e botões **Aprovar** / **Reprovar** (com comentário obrigatório ao reprovar) para quem tem `curso:aprovar`. Para o dono, botão **Enviar para revisão**.
 - **`CourseCard`**: botão "Solicitar acesso" em cursos de terceiros.
 - **Sino de notificações** na `src/components/layout/Navbar.tsx` — solicitações pendentes nos meus cursos, com aprovar/negar inline escolhendo `EDITOR` ou `LEITOR`. Polling de 60s (padrão já usado em `scorm-jobs`).
@@ -264,7 +316,7 @@ O plano gratuito **pausa a atividade** ao estourar a cota mensal (não é um err
 
 ## Riscos conhecidos
 
-1. **Tokens JWT em circulação** não têm `role` — mitigado pelo fallback `cargo → role` em `verifyAuth`; expiram sozinhos em 24h.
+1. ~~**Tokens JWT em circulação** não têm `role`~~ **Resolvido de forma mais ampla:** além do fallback `cargo → role` em `verifyAuth`, o `requireAuth` passou a reler o papel do banco a cada requisição, então o conteúdo do token deixou de importar para autorização.
 2. ~~**Cursos órfãos** (sem `ownerId` após o backfill) ficam editáveis só por ADMIN/GESTOR.~~ **Resolvido:** os 7 cursos de seed sem `activity` de `curso_criado` foram atribuídos ao `admin`. Zero cursos sem dono.
 3. ~~**`GET /api/cursos` passa a exigir auth**~~ **Verificado:** `/preview` e `/pdf-preview` não existem como rotas, `/landingpage` não faz fetch e `/scorm-preview` lê do filesystem em build time. Nenhuma página pública depende da API.
 4. **Cota do Liveblocks**: 3.000 min/mês no free. O limite de 2 usuários por sala reduz o consumo, mas o fallback da §3.3 é o que garante que o app não quebre.
@@ -295,7 +347,7 @@ Os dados temporários da verificação (usuário `conteudista_teste` e curso "Cu
 
 **Risco 2 resolvido:** o backfill deixou 7 dos 9 cursos com `owner_id NULL` (os cursos de seed, que não têm `activity` de `curso_criado` para o SQL usar). Por decisão do usuário, os 7 foram atribuídos ao `admin`. **Nenhum curso está sem dono** (0 de 9).
 
-**Próximo passo:** Fase 2 — colaboração, revisão e comentários.
+**Próximo passo:** Fase 2 — colaboração, revisão e comentários. A Fase 1 está no commit `8f32a8b5` do branch `feat/user-roles`; a Fase 1.8 está implementada e verificada, **ainda não commitada**.
 
 **Artefatos duráveis** (sobrevivem a `/compact`, troca de modelo e Remote Control, porque estão em disco):
 
@@ -385,6 +437,42 @@ Os dados temporários da verificação (usuário `conteudista_teste` e curso "Cu
 - [x] dois `PUT` com o mesmo `version` → o segundo retorna 409
 - [x] `pnpm build` e `pnpm test` verdes
 - [x] **Fase 1 concluída** — pronta para PR
+
+## Fase 1.8 — Revisão de roles pelo admin em `/usuarios`
+
+- [x] Cadastro público não aceita `role` no body e grava `CONTEUDISTA` fixo — decisão confirmada, sem mudança
+- [x] `CONVIDADO` vê todos os cursos e não edita/exclui/comenta — verificado em `permissions.ts`, sem mudança
+- [x] `GET /api/users` aceita `?role=` e ignora valor inválido ou ausente
+- [x] `<Select>` de papel na barra de filtros de `/usuarios`, somado a `hasActiveFilters` e a "Limpar filtros"
+- [x] `role` propagado para `fetchUsers`, para o `useEffect` de dependências e para as chamadas de paginação
+- [x] Badge `Novo` (últimos 7 dias) nas duas renderizações da lista — desktop e mobile
+- [x] **Correção não prevista:** `requireAuth` relê o papel do banco a cada requisição (ver abaixo)
+- [x] **Correção não prevista:** gate autoritativo de página via `exigirPermissao`, fechando a defasagem do middleware (ver abaixo)
+- [x] Rotas protegidas em fonte única (`src/lib/rotas-protegidas.ts`), consumida pelo middleware e pelo teste estrutural
+- [x] `/usuarios` e `/revisao` com `layout.tsx` de gate; teste falha se uma rota protegida ficar sem o seu
+- [x] Verificação 1.8.4 executada de ponta a ponta
+- [x] `pnpm build` e `pnpm test` verdes (57 testes)
+- [x] **Fase 1.8 concluída**
+
+> **Defeito encontrado na verificação — troca de papel não surtia efeito nas APIs.** O item 6 da verificação 1.8.4 assumia que rebaixar um usuário passava a valer na hora; não passava. `/api/auth/me` lê o papel do banco (a UI atualizava), mas `requireAuth` confiava no `role` gravado dentro do JWT, que vive 24h — um usuário rebaixado de CONTEUDISTA para REVISOR continuou criando cursos com `201`. Pior: a UI o mostrava como REVISOR enquanto a API o tratava como CONTEUDISTA.
+>
+> Corrigido em `src/lib/auth.ts`: `requireAuth` agora relê `nome`, `cargo` e `role` do banco a cada requisição e devolve **401** se o usuário não existir mais (antes, o cookie de um usuário deletado continuava válido). `verifyAuth` segue sendo a checagem pura do token. Como todas as rotas de API passam por `requireAuth`, a correção fecha o buraco num ponto só. Custo: uma consulta por requisição autenticada — irrelevante aqui, já que toda rota consulta o banco de qualquer forma.
+>
+> **Defasagem do middleware, resolvida.** O `src/middleware.ts` lê o papel do token porque Prisma não roda no edge — sozinho, ele deixaria um usuário rebaixado abrir a casca de uma página protegida por até 24h. Alternativas descartadas: middleware com runtime Node só é estável no Next 15.5 (o projeto está no 15.3.3, onde é experimental) e ainda colocaria uma consulta ao banco em toda navegação; encurtar o TTL do token exigiria fluxo de refresh.
+>
+> Solução adotada: **gate autoritativo em Server Component**. `src/app/usuarios/layout.tsx` chama `getServerUser()` (que já lê o papel do banco, `src/lib/auth-server.ts:37-53`) e faz `redirect('/login')` ou `redirect('/home')`. Roda em runtime Node, sem infra nova, e o custo da consulta existe só nas rotas protegidas. O middleware continua como primeiro filtro barato e defesa em profundidade.
+>
+> Verificado com o mesmo cookie, sem re-login: rebaixar de ADMIN para CONTEUDISTA faz `/usuarios` responder `NEXT_REDIRECT;replace;/home` na hora, e promover de volta libera a página imediatamente.
+>
+> **Detalhe de teste que confunde:** `curl` vê `200` mesmo com o redirect acontecendo, e o corpo ainda contém o texto da página. O root layout já começou a streamar quando o gate roda, então o Next entrega o `NEXT_REDIRECT` dentro do payload RSC em vez de um header HTTP, e o payload carrega o chunk do filho junto — o navegador honra o redirect e nunca mostra a página. Para verificar por linha de comando, procure `NEXT_REDIRECT;replace;/…` no corpo; **status e presença do texto não servem como sinal**.
+>
+> **Estrutura, para não depender de memória.** Em vez de repetir a regra em cada rota, as rotas protegidas viraram fonte única em `src/lib/rotas-protegidas.ts` (`ROTAS_PROTEGIDAS`, `regraDaRota`, `prefixosDePagina`), consumida pelo `src/middleware.ts`; a trava de página virou `exigirPermissao(acao)` em `src/lib/page-guard.ts`, e cada layout protegido tem duas linhas. `regraDaRota` passou a casar prefixo exato ou filho (`/usuarios`, `/usuarios/123`), não mais `startsWith` cru — `/usuariospublicos` deixou de ser capturado por engano.
+>
+> `src/__tests__/lib/rotas-protegidas.test.ts` falha se alguém adicionar uma rota de página em `ROTAS_PROTEGIDAS` sem o `layout.tsx` correspondente chamando `exigirPermissao` com a ação certa. Guarda verificada na prática: removendo `src/app/revisao/layout.tsx`, o teste quebra e nomeia o prefixo faltante.
+>
+> **`/revisao` já está gateada** por `src/app/revisao/layout.tsx`, criada antecipadamente. Hoje o gate fica inerte porque sem `page.tsx` o 404 acontece antes do layout rodar — verificado com um stub temporário: com página presente, um usuário com token `REVISOR` mas banco `CONTEUDISTA` recebe `NEXT_REDIRECT;replace;/home`, e o admin passa. Na Fase 2 basta criar a página.
+>
+> Dois testes de regressão adicionados em `src/__tests__/api/cursos.test.ts`: token ADMIN + banco CONVIDADO → 403; usuário removido do banco → 401.
 
 ## Fase 2 — Colaboração, revisão e comentários
 

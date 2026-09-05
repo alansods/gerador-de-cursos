@@ -36,11 +36,16 @@ export async function GET(request: NextRequest) {
     const search = searchParams.get('search') || ''
     const startDate = searchParams.get('startDate')
     const endDate = searchParams.get('endDate')
+    const role = searchParams.get('role')
 
     const skip = (page - 1) * limit
 
     // Construir filtro
     const where: Prisma.UserWhereInput = {}
+
+    if (role && ROLES.includes(role as RoleUsuario)) {
+      where.role = role as RoleUsuario
+    }
 
     if (search) {
       where.OR = [
