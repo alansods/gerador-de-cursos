@@ -9,19 +9,19 @@ import type { CursoGerado } from '@/types/gerador-curso'
 import { useLMS } from '@/hooks/useLMS'
 import { useTheme } from '@/hooks/useTheme'
 
-interface SCORMNavbarProps {
+interface ClassicoNavbarProps {
   curso: CursoGerado
   currentUnidadeId?: string
   showMenu?: boolean
   onNavigate?: (unitId: string | null) => void
 }
 
-export function SCORMNavbar({
+export function ClassicoNavbar({
   curso,
   currentUnidadeId,
   showMenu = true,
   onNavigate,
-}: SCORMNavbarProps) {
+}: ClassicoNavbarProps) {
   const { learnerName, isConnected } = useLMS()
   const { isDarkMode, toggleDarkMode } = useTheme()
   const [open, setOpen] = React.useState(false)

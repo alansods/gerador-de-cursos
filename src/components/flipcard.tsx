@@ -29,14 +29,14 @@ export function FlipCard({
   const maxWidth = larguraCard || '400px'
 
   return (
-    <div 
-      className="flip-card-wrapper group" 
-      style={{ 
-        height: altura, 
+    <div
+      className="flip-card-wrapper group"
+      style={{
+        height: altura,
         width: largura,
         maxWidth: maxWidth,
         minHeight: '300px',
-        margin: '0 auto'
+        margin: '0 auto',
       }}
     >
       <div
@@ -52,7 +52,7 @@ export function FlipCard({
               <div className="absolute top-3 right-3 z-10 bg-gray-100/80 dark:bg-gray-200/80 rounded-full p-1.5 opacity-60 group-hover:opacity-80 transition-opacity">
                 <RotateCcw className="h-4 w-4 text-gray-600 dark:text-gray-700" />
               </div>
-              
+
               <div className="relative h-full w-full">
                 {imagemFrente && (
                   <img
@@ -74,12 +74,12 @@ export function FlipCard({
               </div>
             </Card>
           ) : tipoFrente === 'imagem' ? (
-            <Card className="h-full w-full flex items-center justify-center overflow-hidden bg-gradient-to-br from-blue-50 via-blue-100 to-indigo-50 dark:from-gray-800 dark:via-gray-900 dark:to-gray-800 border-2 border-blue-200 dark:border-gray-700 shadow-lg hover:shadow-xl transition-shadow duration-300 relative group rounded-xl">
+            <Card className="h-full w-full flex items-center justify-center overflow-hidden bg-gradient-to-br from-(--block-accent,#2563eb)/8 via-(--block-accent,#2563eb)/15 to-(--block-accent,#2563eb)/5 dark:from-gray-800 dark:via-gray-900 dark:to-gray-800 border-2 border-(--block-accent,#2563eb)/25 dark:border-gray-700 shadow-lg hover:shadow-xl transition-shadow duration-300 relative group rounded-xl">
               {/* Ícone de clique */}
               <div className="absolute top-4 right-4 z-10 bg-white/90 dark:bg-gray-800/90 rounded-full p-2 shadow-md opacity-70 group-hover:opacity-100 transition-opacity">
-                <RotateCcw className="h-5 w-5 text-blue-600 dark:text-blue-400 animate-pulse" />
+                <RotateCcw className="h-5 w-5 text-(--block-accent,#2563eb) animate-pulse" />
               </div>
-              
+
               {imagemFrente && (
                 <img
                   src={imagemFrente}
@@ -92,12 +92,12 @@ export function FlipCard({
               )}
             </Card>
           ) : (
-            <Card className="h-full w-full flex items-center justify-center overflow-hidden bg-gradient-to-br from-blue-50 via-blue-100 to-indigo-50 dark:from-gray-800 dark:via-gray-900 dark:to-gray-800 border-2 border-blue-200 dark:border-gray-700 shadow-lg hover:shadow-xl transition-shadow duration-300 relative group rounded-xl">
+            <Card className="h-full w-full flex items-center justify-center overflow-hidden bg-gradient-to-br from-(--block-accent,#2563eb)/8 via-(--block-accent,#2563eb)/15 to-(--block-accent,#2563eb)/5 dark:from-gray-800 dark:via-gray-900 dark:to-gray-800 border-2 border-(--block-accent,#2563eb)/25 dark:border-gray-700 shadow-lg hover:shadow-xl transition-shadow duration-300 relative group rounded-xl">
               {/* Ícone de clique */}
               <div className="absolute top-4 right-4 z-10 bg-white/90 dark:bg-gray-800/90 rounded-full p-2 shadow-md opacity-70 group-hover:opacity-100 transition-opacity">
-                <RotateCcw className="h-5 w-5 text-blue-600 dark:text-blue-400 animate-pulse" />
+                <RotateCcw className="h-5 w-5 text-(--block-accent,#2563eb) animate-pulse" />
               </div>
-              
+
               <div className="p-8 text-center w-full">
                 <h3 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">
                   {tituloFrente || 'Card'}
@@ -113,19 +113,19 @@ export function FlipCard({
 
         {/* Verso do card */}
         <div className="flip-card-back">
-          <Card className="h-full w-full flex flex-col bg-[#E8F0FE] dark:bg-[#D0E0FC] border border-blue-200 dark:border-blue-300 overflow-hidden shadow-sm relative rounded-xl">
+          <Card className="h-full w-full flex flex-col bg-(--block-accent-soft,#eff6ff) border border-(--block-accent,#2563eb)/20 overflow-hidden shadow-sm relative rounded-xl">
             {/* Ícone de clique no verso também */}
             <div className="absolute top-3 right-3 z-10 bg-gray-100/80 dark:bg-gray-200/80 rounded-full p-1.5 opacity-60 hover:opacity-80 transition-opacity">
               <RotateCcw className="h-4 w-4 text-gray-600 dark:text-gray-700" />
             </div>
-            
+
             {/* Conteúdo do verso */}
             <div className="flex-1 overflow-y-auto overflow-x-hidden px-6 pt-14 pb-20">
               <div
-                className="text-[#1A237E] dark:text-[#283593] leading-relaxed text-base"
-                style={{ 
+                className="text-(--block-accent-ink,#1e3a8a) leading-relaxed text-base"
+                style={{
                   wordWrap: 'break-word',
-                  overflowWrap: 'break-word'
+                  overflowWrap: 'break-word',
                 }}
                 dangerouslySetInnerHTML={{ __html: conteudoVerso }}
               />
@@ -133,8 +133,8 @@ export function FlipCard({
 
             {/* Footer com título */}
             {tituloFrente && (
-              <div className="absolute bottom-0 left-0 right-0 bg-[#D0E0FC] dark:bg-[#B8D4F8] border-t border-blue-300/50 px-6 py-4">
-                <p className="text-base font-bold text-[#1A237E] dark:text-[#283593] text-center">
+              <div className="absolute bottom-0 left-0 right-0 bg-(--block-accent-soft,#eff6ff) border-t border-(--block-accent,#2563eb)/25 px-6 py-4">
+                <p className="text-base font-bold text-(--block-accent-ink,#1e3a8a) text-center">
                   {tituloFrente}
                 </p>
               </div>
@@ -147,7 +147,9 @@ export function FlipCard({
         .flip-card-wrapper {
           perspective: 1200px;
           width: 100%;
-          transition: transform 0.3s ease, box-shadow 0.3s ease;
+          transition:
+            transform 0.3s ease,
+            box-shadow 0.3s ease;
         }
 
         .flip-card-wrapper:hover {

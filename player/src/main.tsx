@@ -11,7 +11,7 @@ declare global {
   }
 }
 
-// Expõe o wrapper como window.SCORM — os hooks existentes (useLMS, SCORMPlayer)
+// Expõe o wrapper como window.SCORM — os hooks existentes (useLMS, CoursePlayer)
 // já esperam esse objeto nesse endereço
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 ;(window as any).SCORM = scormAPI

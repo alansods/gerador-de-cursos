@@ -98,6 +98,7 @@ export async function GET(req: NextRequest) {
         cargaHoraria: curso.cargaHoraria,
         modalidade: curso.modalidade,
         categoria: curso.categoria,
+        layout: curso.layout,
         unidades: unidadesNormalizadas,
         dataCriacao: curso.dataCriacao,
         dataModificacao: curso.dataModificacao,
@@ -132,7 +133,7 @@ export async function POST(req: NextRequest) {
 
   try {
     const body = await req.json()
-    const { titulo, descricao, cargaHoraria, modalidade, categoria, unidades } = body
+    const { titulo, descricao, cargaHoraria, modalidade, categoria, layout, unidades } = body
 
     // Validar campos obrigatórios
     if (!titulo || !descricao || !cargaHoraria || !modalidade || !categoria) {
@@ -174,6 +175,7 @@ export async function POST(req: NextRequest) {
         cargaHoraria,
         modalidade,
         categoria,
+        layout: layout || 'classico',
         unidades: unidadesNormalizadas,
       },
     })
@@ -197,6 +199,7 @@ export async function POST(req: NextRequest) {
       cargaHoraria: curso.cargaHoraria,
       modalidade: curso.modalidade,
       categoria: curso.categoria,
+      layout: curso.layout,
       unidades: (curso.unidades as unknown as Unidade[]) || [],
       dataCriacao: curso.dataCriacao,
       dataModificacao: curso.dataModificacao,
@@ -222,7 +225,7 @@ export async function PUT(req: NextRequest) {
 
   try {
     const body = await req.json()
-    const { id, titulo, descricao, cargaHoraria, modalidade, categoria, unidades } = body
+    const { id, titulo, descricao, cargaHoraria, modalidade, categoria, layout, unidades } = body
 
     if (!id) {
       return createErrorResponse('ID do curso é obrigatório', 400)
@@ -281,6 +284,7 @@ export async function PUT(req: NextRequest) {
         ...(cargaHoraria && { cargaHoraria }),
         ...(modalidade && { modalidade }),
         ...(categoria && { categoria }),
+        ...(layout && { layout }),
         ...(unidadesNormalizadas !== undefined && { unidades: unidadesNormalizadas }),
       },
     })
@@ -304,6 +308,7 @@ export async function PUT(req: NextRequest) {
       cargaHoraria: curso.cargaHoraria,
       modalidade: curso.modalidade,
       categoria: curso.categoria,
+      layout: curso.layout,
       unidades: (curso.unidades as unknown as Unidade[]) || [],
       dataCriacao: curso.dataCriacao,
       dataModificacao: curso.dataModificacao,

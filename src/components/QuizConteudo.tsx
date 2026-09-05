@@ -186,7 +186,7 @@ export function QuizConteudo({ quizData, isEdicao = false }: QuizConteudoProps) 
             {/* Header */}
             <div className="px-5 py-3 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between gap-4">
               <div className="flex items-center gap-3 min-w-0">
-                <span className="text-xs font-semibold text-blue-600 dark:text-blue-400 whitespace-nowrap">
+                <span className="text-xs font-semibold text-(--block-accent,#2563eb) whitespace-nowrap">
                   {questionIndex + 1} / {totalQuestions}
                 </span>
                 <span className="text-xs text-gray-400 dark:text-gray-500 hidden sm:inline">
@@ -199,7 +199,7 @@ export function QuizConteudo({ quizData, isEdicao = false }: QuizConteudoProps) 
               {/* Barra de progresso */}
               <div className="flex-1 h-1.5 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">
                 <div
-                  className="h-full bg-blue-500 rounded-full transition-all duration-300"
+                  className="h-full bg-(--block-accent,#2563eb) rounded-full transition-all duration-300"
                   style={{ width: `${((questionIndex + 1) / totalQuestions) * 100}%` }}
                 />
               </div>
@@ -208,7 +208,7 @@ export function QuizConteudo({ quizData, isEdicao = false }: QuizConteudoProps) 
             <div className="p-5 space-y-5">
               {/* Pergunta */}
               <p className="text-base font-medium text-gray-900 dark:text-gray-100 leading-relaxed">
-                <span className="text-blue-500 dark:text-blue-400 mr-1">{questionIndex + 1}.</span>
+                <span className="text-(--block-accent,#2563eb) mr-1">{questionIndex + 1}.</span>
                 {question.pergunta}
               </p>
 
@@ -231,7 +231,7 @@ export function QuizConteudo({ quizData, isEdicao = false }: QuizConteudoProps) 
                             : showAsIncorrect
                               ? 'border-red-400 dark:border-red-600 bg-red-50 dark:bg-red-900/20'
                               : isSelected
-                                ? 'border-blue-400 dark:border-blue-600 bg-blue-50 dark:bg-blue-900/20'
+                                ? 'border-(--block-accent,#2563eb) bg-(--block-accent,#2563eb)/10'
                                 : dimmed
                                   ? 'border-gray-100 dark:border-gray-800 opacity-40'
                                   : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-800/50 cursor-pointer'
@@ -245,7 +245,7 @@ export function QuizConteudo({ quizData, isEdicao = false }: QuizConteudoProps) 
                               : showAsIncorrect
                                 ? 'bg-red-500 text-white'
                                 : isSelected
-                                  ? 'bg-blue-500 text-white'
+                                  ? 'bg-(--block-accent,#2563eb) text-white'
                                   : 'bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400'
                           }`}
                         >
@@ -339,7 +339,7 @@ export function QuizConteudo({ quizData, isEdicao = false }: QuizConteudoProps) 
                         size="sm"
                         onClick={handleConfirmar}
                         disabled={!qSelectedOption}
-                        className="gap-1.5 bg-blue-600 hover:bg-blue-700 disabled:opacity-40 text-white"
+                        className="gap-1.5 bg-(--block-accent,#2563eb) hover:opacity-90 disabled:opacity-40 text-white"
                       >
                         Confirmar
                       </Button>
@@ -361,7 +361,7 @@ export function QuizConteudo({ quizData, isEdicao = false }: QuizConteudoProps) 
                         <Button
                           size="sm"
                           onClick={checkAndShowResults}
-                          className="gap-1.5 bg-blue-600 hover:bg-blue-700 text-white"
+                          className="gap-1.5 bg-(--block-accent,#2563eb) hover:opacity-90 text-white"
                         >
                           Ver Resultado
                           <ChevronRight className="h-4 w-4" />

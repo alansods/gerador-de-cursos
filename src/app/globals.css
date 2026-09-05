@@ -4,6 +4,20 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* Tema de acento dos blocos de conteúdo (quiz, flipcard, info-box, objetivos, lista),
+   definido pelo BlockThemeProvider por layout — resolve para a variante clara ou
+   escura conforme a classe .dark no documento. */
+[data-block-theme] {
+  --block-accent: var(--block-accent-light);
+  --block-accent-soft: var(--block-accent-soft-light);
+  --block-accent-ink: var(--block-accent-ink-light);
+}
+.dark [data-block-theme] {
+  --block-accent: var(--block-accent-dark);
+  --block-accent-soft: var(--block-accent-soft-dark);
+  --block-accent-ink: var(--block-accent-ink-dark);
+}
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);

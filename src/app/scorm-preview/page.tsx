@@ -1,31 +1,31 @@
-import React from "react";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Clock, GraduationCap, Layers, ArrowRight } from "lucide-react";
-import type { CursoGerado } from "@/types/gerador-curso";
-import { SCORMPlayer } from "@/components/scorm/SCORMPlayer";
-import fs from "fs/promises";
+import React from 'react'
+import { Card, CardContent } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
+import { Clock, GraduationCap, Layers, ArrowRight } from 'lucide-react'
+import type { CursoGerado } from '@/types/gerador-curso'
+import { CoursePlayer } from '@/components/course/CoursePlayer'
+import fs from 'fs/promises'
 
 // Forçar geração estática completa (sem RSC fetches)
-export const dynamic = "force-static";
+export const dynamic = 'force-static'
 
 // Função para carregar dados do curso durante o build
 async function getCursoData(): Promise<CursoGerado | null> {
   if (process.env.SCORM_BUILD_CURSO_FILE) {
     try {
-      const cursoFile = process.env.SCORM_BUILD_CURSO_FILE;
-      const cursoData = await fs.readFile(cursoFile, "utf-8");
-      return JSON.parse(cursoData) as CursoGerado;
+      const cursoFile = process.env.SCORM_BUILD_CURSO_FILE
+      const cursoData = await fs.readFile(cursoFile, 'utf-8')
+      return JSON.parse(cursoData) as CursoGerado
     } catch (error) {
-      console.error("[scorm-preview] Erro ao carregar curso:", error);
+      console.error('[scorm-preview] Erro ao carregar curso:', error)
     }
   }
-  return null;
+  return null
 }
 
 export default async function SCORMPreviewPage() {
-  const curso = await getCursoData();
+  const curso = await getCursoData()
 
   if (!curso) {
     return (
@@ -39,10 +39,8 @@ export default async function SCORMPreviewPage() {
           </p>
         </div>
       </div>
-    );
+    )
   }
 
-  return (
-    <SCORMPlayer curso={curso} />
-  );
+  return <CoursePlayer curso={curso} />
 }

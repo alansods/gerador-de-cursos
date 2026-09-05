@@ -26,6 +26,8 @@ import {
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { TokenMeter, type TokenUsage } from '@/components/TokenMeter'
+import { LayoutSelector } from '@/components/course/LayoutSelector'
+import { DEFAULT_LAYOUT_ID } from '@/components/course/layouts'
 
 export default function NovoCursoPage() {
   const router = useRouter()
@@ -38,6 +40,7 @@ export default function NovoCursoPage() {
     cargaHoraria: '',
     modalidade: '',
   })
+  const [layout, setLayout] = useState(DEFAULT_LAYOUT_ID)
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [isLoading, setIsLoading] = useState(false)
 
@@ -299,7 +302,7 @@ export default function NovoCursoPage() {
       setProgress(80)
 
       // Passo 3: Criar curso no banco (remover instrutor se existir)
-      const cursoParaSalvar = { ...course }
+      const cursoParaSalvar = { ...course, layout }
       // Remover instrutor se existir (campo foi removido do schema)
       if ('instrutor' in cursoParaSalvar) {
         const curso = cursoParaSalvar as { instrutor?: unknown; [key: string]: unknown }
@@ -339,7 +342,7 @@ export default function NovoCursoPage() {
 
     setIsLoading(true)
     try {
-      await criarCurso({ ...formData, unidades: [] })
+      await criarCurso({ ...formData, layout, unidades: [] })
       toast.success('Curso criado')
       router.push('/cursos')
     } catch (error) {
@@ -374,6 +377,16 @@ export default function NovoCursoPage() {
               </p>
             </div>
           </div>
+
+          {/* Layout do curso */}
+          <Card className="mb-6">
+            <CardContent className="pt-6">
+              <label className="text-sm font-medium text-gray-700 dark:text-gray-300 block mb-3">
+                Layout do curso
+              </label>
+              <LayoutSelector value={layout} onChange={setLayout} />
+            </CardContent>
+          </Card>
 
           {/* Form */}
           <Card>

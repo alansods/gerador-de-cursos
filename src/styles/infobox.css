@@ -154,10 +154,10 @@
   stroke-width: 2;
 }
 .infobox.info .infobox-chev {
-  color: #0047bb;
+  color: var(--block-accent, #0047bb);
 }
 .infobox.info .infobox-head:hover .infobox-chev {
-  background: rgba(0, 71, 187, 0.12);
+  background: color-mix(in srgb, var(--block-accent, #0047bb) 12%, transparent);
 }
 .infobox.warn .infobox-chev {
   color: #d94a1e;
@@ -249,15 +249,15 @@
 
 /* Color variants */
 .infobox.info {
-  background: #e3f2fd;
-  border-color: rgba(0, 71, 187, 0.2);
+  background: var(--block-accent-soft, #e3f2fd);
+  border-color: color-mix(in srgb, var(--block-accent, #0047bb) 20%, transparent);
 }
 .infobox.info .infobox-icon {
-  background: rgba(0, 71, 187, 0.14);
-  color: #0047bb;
+  background: color-mix(in srgb, var(--block-accent, #0047bb) 14%, transparent);
+  color: var(--block-accent, #0047bb);
 }
 .infobox.info .infobox-tag {
-  color: #0047bb;
+  color: var(--block-accent, #0047bb);
 }
 .infobox.warn {
   background: rgba(253, 151, 43, 0.08);
@@ -280,4 +280,36 @@
 }
 .infobox.recap .infobox-tag {
   color: #00c853;
+}
+
+/* Modo escuro — o texto e os fundos acima assumem uma página clara; sem isso o texto
+   quase preto (#0f172a) fica ilegível sobre fundo escuro. */
+.dark .infobox h4,
+.dark .infobox p,
+.dark .infobox ul {
+  color: #e2e8f0;
+}
+.dark .infobox.warn {
+  background: rgba(253, 151, 43, 0.14);
+  border-color: rgba(253, 151, 43, 0.4);
+}
+.dark .infobox.warn .infobox-icon {
+  background: rgba(253, 151, 43, 0.22);
+  color: #fdba74;
+}
+.dark .infobox.warn .infobox-tag,
+.dark .infobox.warn .infobox-chev {
+  color: #fdba74;
+}
+.dark .infobox.recap {
+  background: rgba(0, 200, 83, 0.14);
+  border-color: rgba(0, 200, 83, 0.4);
+}
+.dark .infobox.recap .infobox-icon {
+  background: rgba(0, 200, 83, 0.22);
+  color: #6ee7b7;
+}
+.dark .infobox.recap .infobox-tag,
+.dark .infobox.recap .infobox-chev {
+  color: #6ee7b7;
 }
