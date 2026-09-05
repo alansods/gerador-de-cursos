@@ -524,42 +524,56 @@ Os dados temporários da verificação (usuário `conteudista_teste` e curso "Cu
 
 ## Fase 3 — Tempo real com Liveblocks
 
+> **Implementado, mas NÃO verificado em execução.** Falta `LIVEBLOCKS_SECRET_KEY`: é preciso criar uma conta em https://liveblocks.io e colar a chave no `.env.local`, além de ligar `NEXT_PUBLIC_COLLAB_ENABLED=true`. Sem isso nada em tempo real chega a conectar — e é exatamente esse o comportamento de fallback, que **foi** verificado.
+>
+> Dois detalhes de API que só apareceram ao compilar: o `RoomEvent` precisa ser `type` e não `interface` (interface não satisfaz `JsonObject` por não ter index signature implícita) e não aceita propriedade opcional (`nome?: string` virou `nome: string | null`).
+>
+> A sala é `curso:<segmento da URL>`, que pode ser id ou slug. O endpoint de auth resolve os dois, e os links do app usam sempre `slug || id`, então na prática as duas pessoas caem na mesma sala. Se alguém digitar a URL na outra forma, abriria uma sala separada — aceitável hoje, vale trocar pelo id canônico se virar problema.
+
 ### 3.1 Setup
 
-- [ ] `@liveblocks/client`, `@liveblocks/react`, `@liveblocks/node` instalados
-- [ ] `LIVEBLOCKS_SECRET_KEY` e `NEXT_PUBLIC_COLLAB_ENABLED` documentados no `.env.example` e configurados na Vercel
-- [ ] `src/liveblocks.config.ts` com `Presence` e `RoomEvent` tipados
-- [ ] `src/lib/collab-config.ts` com `MAX_COLAB_SIMULTANEOS = 2` e comentário sobre os limites do plano gratuito
+- [x] `@liveblocks/client`, `@liveblocks/react`, `@liveblocks/node` instalados (3.24.1)
+- [x] `LIVEBLOCKS_SECRET_KEY` e `NEXT_PUBLIC_COLLAB_ENABLED` documentados no `.env.example`
+- [ ] Chave real criada e configurada localmente e na Vercel — **pendente, depende de conta no Liveblocks**
+- [x] `src/liveblocks.config.ts` com `Presence` e `RoomEvent` tipados
+- [x] `src/lib/collab-config.ts` com `MAX_COLAB_SIMULTANEOS = 2` e a justificativa do plano gratuito
 
 ### 3.2 Auth endpoint
 
-- [ ] `/api/liveblocks-auth` valida sessão e permissão do curso
-- [ ] Concede `FULL_ACCESS` a quem edita e `READ_ACCESS` a quem só visualiza
-- [ ] Limite de 2 usuários ativos aplicado via `getActiveUsers`; terceiro recebe 403
+- [x] `/api/liveblocks-auth` valida sessão e permissão do curso
+- [x] Concede `FULL_ACCESS` a quem edita e `READ_ACCESS` a quem só visualiza
+- [x] Limite de 2 usuários ativos aplicado via `getActiveUsers`; terceiro recebe 403 (código escrito, sem execução real)
+- [x] Sem chave configurada, responde 503 em vez de estourar — verificado
 
 ### 3.3 Fallback
 
-- [ ] `CollabProvider` só monta `RoomProvider` com flag ligada e auth OK
-- [ ] `useErrorListener` trata `-1`, `4001`, `4005` e genéricos → desmonta realtime + toast único
-- [ ] `useLostConnectionListener` com toasts de reconexão
-- [ ] Aviso de "sala cheia" sem bloquear a edição
+- [x] `CollabProvider` só monta `RoomProvider` com a flag ligada e o auth OK
+- [x] `useErrorListener` trata `4001`, `4005` e genéricos → desmonta realtime + toast único
+- [x] `useLostConnectionListener` com toasts de reconexão
+- [x] Aviso de "sala cheia" sem bloquear a edição
 
 ### 3.4 Componentes
 
-- [ ] `CollabCursors` com throttle ~50ms e coordenadas **relativas ao container** (sobrevive a scroll/zoom)
-- [ ] `CollabAvatars` no header do editor
-- [ ] `useCollabEvents` conectado aos handlers de add/edit/delete de bloco e unidade + reorder
-- [ ] Recebimento de evento dispara toast **e** refetch do curso
-- [ ] Bug corrigido: `toast.error('Conteúdo excluído')` em `editar/page.tsx:340`
+- [x] `CollabCursors` com throttle de 50ms e coordenadas **normalizadas (0..1) pelo container**, não `clientX/clientY`
+- [x] `CollabAvatars` no header do editor
+- [x] `useCollabEvents` ligado a adicionar/editar/excluir bloco, adicionar/editar unidade e reordenar
+- [x] Recebimento de evento dispara toast **e** `selecionarCurso(id, true)`
+- [x] Bug corrigido: `toast.error('Conteúdo excluído')` virou `toast.success`
 
 ### 3.5 Verificação da Fase 3
+
+**Verificado:**
+
+- [x] `NEXT_PUBLIC_COLLAB_ENABLED` desligado → editor abre em 200, zero erro no log, comportamento idêntico ao anterior
+- [x] Flag ligada **sem** chave → editor abre em 200, auth responde 503, zero erro
+- [x] `pnpm build` compila e os 60 testes passam
+
+**Pendente até existir uma chave do Liveblocks:**
 
 - [ ] duas janelas, dois usuários → avatares no header e cursor do outro com nome e cor
 - [ ] adicionar bloco em A reflete em B com toast, sem reload
 - [ ] excluir bloco, renomear unidade e reordenar sincronizam
 - [ ] terceira janela: editor abre normal, aviso de sala cheia, console limpo
-- [ ] `NEXT_PUBLIC_COLLAB_ENABLED=false` → editor idêntico ao comportamento atual
-- [ ] chave Liveblocks inválida → toast único, nenhuma quebra
+- [ ] chave inválida → toast único, nenhuma quebra
 - [ ] queda de rede → "Reconectando…" e depois "Reconectado"
-- [ ] `pnpm build` e `pnpm test` verdes
 - [ ] **Fase 3 concluída** — pronta para PR

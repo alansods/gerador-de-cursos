@@ -7,6 +7,7 @@ export const dynamic = 'error'
 import React, { useState, useEffect, useRef } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import { useGeradorCurso } from '@/context/GeradorCursoContext'
+import { useAuth } from '@/context/AuthContext'
 import { usePreview } from '@/hooks/usePreview'
 import { useTheme } from '@/hooks/useTheme'
 import { usePDF } from '@/hooks/usePDF'
@@ -14,6 +15,10 @@ import { useSCORM } from '@/hooks/useSCORM'
 import { ExportModal } from '@/components/ExportModal'
 import { RichTextEditor } from '@/components/RichTextEditor'
 import { PageTransition } from '@/components/PageTransition'
+import { CollabProvider } from '@/components/collab/CollabProvider'
+import { CollabAvatars } from '@/components/collab/CollabAvatars'
+import { CollabCursors } from '@/components/collab/CollabCursors'
+import { useCollabEvents } from '@/hooks/useCollabEvents'
 import { EditableCard } from '@/components/EditableCard'
 import { TooltipButton } from '@/components/TooltipButton'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
@@ -82,7 +87,12 @@ import { BlockThemeProvider } from '@/components/course/blocks'
 import { resolveLayout } from '@/components/course/layouts'
 import { QuizData, QuizQuestion, Unidade, ConteudoUnidade } from '@/types/gerador-curso'
 
-export default function EditarCursoPage() {
+/** Rótulo curto do bloco para o toast do outro usuário */
+function tituloDoBloco(bloco: { titulo?: string; conteudo?: string; tipo?: string }) {
+  return bloco.titulo?.trim() || bloco.conteudo?.trim().slice(0, 40) || bloco.tipo
+}
+
+function EditorCurso() {
   const {
     state,
     adicionarUnidade,
@@ -95,6 +105,7 @@ export default function EditarCursoPage() {
     editarCurso,
     selecionarCurso,
   } = useGeradorCurso()
+  const { user } = useAuth()
   const editorBlockTheme = resolveLayout(state.cursoAtual?.layout).meta.blockTheme
   const { openPreview } = usePreview()
   const { isDarkMode, toggleDarkMode } = useTheme()
@@ -102,6 +113,14 @@ export default function EditarCursoPage() {
   const { generateSCORM, isGeneratingSCORM } = useSCORM()
   const router = useRouter()
   const params = useParams()
+  const containerColabRef = useRef<HTMLDivElement | null>(null)
+  const cursoIdAtual = state.cursoAtual?.id
+  const { avisar } = useCollabEvents({
+    onMudancaRemota: () => {
+      if (cursoIdAtual) selecionarCurso(cursoIdAtual, true)
+    },
+  })
+  const nomeAutor = user?.nome ?? 'Alguém'
 
   const [novaUnidade, setNovaUnidade] = useState('')
   const [novaUnidadeDescricao, setNovaUnidadeDescricao] = useState('')
@@ -320,6 +339,7 @@ export default function EditarCursoPage() {
       shouldCloseModal.current = false
       setIsSavingConteudo(false)
       toast.success('Conteúdo adicionado')
+      avisar('adicionou', 'bloco', nomeAutor)
       setConteudoTemp({
         tipo: 'paragrafo',
         conteudo: '',
@@ -348,7 +368,8 @@ export default function EditarCursoPage() {
     if (shouldCloseDeleteModal.current) {
       shouldCloseDeleteModal.current = false
       setIsDeletingConteudo(false)
-      toast.error('Conteúdo excluído')
+      toast.success('Conteúdo excluído')
+      avisar('excluiu', 'bloco', nomeAutor)
       setConfirmarDeletarConteudo(false)
       setConteudoParaDeletar(null)
     }
@@ -443,6 +464,7 @@ export default function EditarCursoPage() {
         conteudo: [],
       })
       toast.success('Unidade adicionada')
+      avisar('adicionou', 'unidade', nomeAutor, novaUnidade.trim())
       setNovaUnidade('')
       setNovaUnidadeDescricao('')
       setAdicionarUnidadeModal(false)
@@ -456,6 +478,7 @@ export default function EditarCursoPage() {
         descricao: descricaoUnidadeEditando.trim(),
       })
       toast.success('Unidade atualizada')
+      avisar('editou', 'unidade', nomeAutor, tituloUnidadeEditando.trim())
       closeEditarUnidadeModal()
     }
   }
@@ -589,10 +612,12 @@ export default function EditarCursoPage() {
         }
       }
       toast.success('Conteúdo adicionado')
+      avisar('adicionou', 'bloco', nomeAutor, tituloDoBloco(data))
     } else {
       if (contentDrawerBlockData?.id) {
         editarConteudo(contentDrawerUnidadeId, contentDrawerBlockData.id, data)
         toast.success('Conteúdo atualizado')
+        avisar('editou', 'bloco', nomeAutor, tituloDoBloco(data))
       }
     }
     setContentDrawerOpen(false)
@@ -1096,6 +1121,7 @@ export default function EditarCursoPage() {
     const novoConteudo = arrayMove(conteudo, oldIndex, newIndex)
     novoConteudo.forEach((c, i) => (c.ordem = i))
     editarUnidade(unidadeId, { conteudo: novoConteudo })
+    avisar('reordenou', 'bloco', nomeAutor)
   }
 
   // Verificar se está carregando ou se o curso não foi encontrado
@@ -1112,7 +1138,11 @@ export default function EditarCursoPage() {
 
   return (
     <PageTransition>
-      <div className="min-h-screen flex flex-col bg-[#F5F7FA] dark:bg-gray-950">
+      <div
+        ref={containerColabRef}
+        className="relative min-h-screen flex flex-col bg-[#F5F7FA] dark:bg-gray-950"
+      >
+        <CollabCursors containerRef={containerColabRef} />
         {/* Header */}
         <div className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm border-b border-[#e5e7eb] dark:border-gray-800 sticky top-0 z-50">
           <div className="px-6 py-3">
@@ -1143,7 +1173,8 @@ export default function EditarCursoPage() {
               </div>
 
               {/* Direita */}
-              <div className="flex space-x-2">
+              <div className="flex items-center space-x-2">
+                <CollabAvatars />
                 <TooltipButton
                   icon={Settings}
                   tooltip="Configurações do curso"
@@ -4586,5 +4617,16 @@ export default function EditarCursoPage() {
         />
       </div>
     </PageTransition>
+  )
+}
+
+export default function EditarCursoPage() {
+  const params = useParams()
+  const cursoId = (params?.id as string | undefined) ?? ''
+
+  return (
+    <CollabProvider cursoId={cursoId}>
+      <EditorCurso />
+    </CollabProvider>
   )
 }
