@@ -6,7 +6,7 @@ import { logActivity } from '@/lib/activity-logger'
 
 const TAMANHO_MAXIMO = 2000
 
-const autorSelecionado = { select: { id: true, nome: true, usuario: true, role: true } }
+const autorSelecionado = { select: { id: true, nome: true, email: true, role: true } }
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const authResult = await requireAuth(req)

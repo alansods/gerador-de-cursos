@@ -1,59 +1,36 @@
 'use client'
 
-import { useCallback } from 'react'
-import { useBroadcastEvent, useEventListener, useLostConnectionListener } from '@liveblocks/react'
-import { toast } from 'sonner'
+import { useCallback, useEffect } from 'react'
 import { useEstadoColab } from '@/components/collab/CollabProvider'
-import type { AcaoColab, AlvoColab, EventoColab } from '@/liveblocks.config'
-
-const ROTULO_ALVO: Record<AlvoColab, string> = {
-  bloco: 'o bloco',
-  unidade: 'a unidade',
-}
-
-const ROTULO_ACAO: Record<AcaoColab, string> = {
-  adicionou: 'adicionou',
-  editou: 'editou',
-  excluiu: 'excluiu',
-  reordenou: 'reordenou',
-}
-
-function mensagem({ autor, acao, alvo, nome }: EventoColab) {
-  const base = `${autor} ${ROTULO_ACAO[acao]} ${ROTULO_ALVO[alvo]}`
-  return nome ? `${base} "${nome}"` : base
-}
+import type { AcaoColab, AlvoColab } from '@/liveblocks.config'
 
 interface Opcoes {
   /** Recarrega o curso quando o outro lado muda algo, para o estado não divergir */
   onMudancaRemota: () => void
 }
 
+/**
+ * Interface do editor com a colaboração. Não chama nenhum hook do Liveblocks:
+ * eles exigem o RoomProvider, que só é montado com a colaboração ligada, e o
+ * editor precisa funcionar igual sem chave configurada. Quem fala com a sala é
+ * a PonteDeEventos dentro do CollabProvider, alcançada aqui por refs.
+ */
 export function useCollabEvents({ onMudancaRemota }: Opcoes) {
-  const { ativo } = useEstadoColab()
-  const broadcast = useBroadcastEvent()
+  const { ativo, broadcastRef, mudancaRemotaRef } = useEstadoColab()
 
-  useEventListener(({ event }) => {
-    if (event.tipo !== 'conteudo') return
-    toast.info(mensagem(event))
-    onMudancaRemota()
-  })
-
-  useLostConnectionListener((evento) => {
-    if (evento === 'lost') {
-      toast.loading('Conexão de colaboração perdida. Reconectando…', { id: 'colab-conexao' })
-    } else if (evento === 'restored') {
-      toast.success('Reconectado', { id: 'colab-conexao' })
-    } else if (evento === 'failed') {
-      toast.error('Não foi possível reconectar a colaboração', { id: 'colab-conexao' })
+  useEffect(() => {
+    mudancaRemotaRef.current = onMudancaRemota
+    return () => {
+      mudancaRemotaRef.current = null
     }
-  })
+  }, [onMudancaRemota, mudancaRemotaRef])
 
   const avisar = useCallback(
     (acao: AcaoColab, alvo: AlvoColab, autor: string, nome?: string) => {
       if (!ativo) return
-      broadcast({ tipo: 'conteudo', acao, alvo, autor, nome: nome ?? null })
+      broadcastRef.current?.({ tipo: 'conteudo', acao, alvo, autor, nome: nome ?? null })
     },
-    [ativo, broadcast]
+    [ativo, broadcastRef]
   )
 
   return { avisar }

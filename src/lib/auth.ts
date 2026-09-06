@@ -14,7 +14,7 @@ export const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET)
 
 export interface JWTPayload {
   id: string
-  usuario: string
+  email: string
   nome: string
   role: RoleUsuario
 }
@@ -48,7 +48,7 @@ export async function verifyAuth(req: NextRequest): Promise<JWTPayload> {
     // Type-safe conversion from jose JWTPayload to our JWTPayload
     return {
       id: payload.id as string,
-      usuario: payload.usuario as string,
+      email: payload.email as string,
       nome: payload.nome as string,
       role: resolverRole(payload.role, payload.cargo as string | undefined),
     }

@@ -31,7 +31,7 @@ describe('API - Authentication', () => {
       const hashedPassword = await bcrypt.hash('senha123', 10)
       const mockUser = {
         id: '1',
-        usuario: 'testuser',
+        email: 'testuser@senai.br',
         senha: hashedPassword,
         nome: 'Test User',
         cargo: 'Desenvolvedor',
@@ -44,7 +44,7 @@ describe('API - Authentication', () => {
       const request = new NextRequest('http://localhost:3000/api/auth/login', {
         method: 'POST',
         body: JSON.stringify({
-          usuario: 'testuser',
+          email: 'testuser@senai.br',
           senha: 'senha123',
         }),
         headers: {
@@ -61,7 +61,7 @@ describe('API - Authentication', () => {
       expect(data.success).toBe(true)
       expect(data.user).toEqual({
         id: '1',
-        usuario: 'testuser',
+        email: 'testuser@senai.br',
         nome: 'Test User',
         role: 'CONTEUDISTA',
       })
@@ -78,7 +78,7 @@ describe('API - Authentication', () => {
       const request = new NextRequest('http://localhost:3000/api/auth/login', {
         method: 'POST',
         body: JSON.stringify({
-          usuario: 'wronguser',
+          email: 'wronguser',
           senha: 'wrongpass',
         }),
         headers: {
@@ -104,7 +104,7 @@ describe('API - Authentication', () => {
       const hashedPassword = await bcrypt.hash('senhaCorreta', 10)
       const mockUser = {
         id: '1',
-        usuario: 'testuser',
+        email: 'testuser@senai.br',
         senha: hashedPassword,
         nome: 'Test User',
         cargo: 'Desenvolvedor',
@@ -117,7 +117,7 @@ describe('API - Authentication', () => {
       const request = new NextRequest('http://localhost:3000/api/auth/login', {
         method: 'POST',
         body: JSON.stringify({
-          usuario: 'testuser',
+          email: 'testuser@senai.br',
           senha: 'senhaErrada',
         }),
         headers: {
@@ -140,7 +140,7 @@ describe('API - Authentication', () => {
       const request = new NextRequest('http://localhost:3000/api/auth/login', {
         method: 'POST',
         body: JSON.stringify({
-          usuario: '',
+          email: '',
           senha: '',
         }),
         headers: {
@@ -155,7 +155,7 @@ describe('API - Authentication', () => {
       // Assert
       expect(response.status).toBe(400)
       expect(data.success).toBe(false)
-      expect(data.error).toBe('Usuário e senha são obrigatórios')
+      expect(data.error).toBe('E-mail e senha são obrigatórios')
     })
   })
 
@@ -164,7 +164,7 @@ describe('API - Authentication', () => {
       // Arrange
       const mockUser = {
         id: '1',
-        usuario: 'testuser',
+        email: 'testuser@senai.br',
         senha: 'hashed',
         nome: 'Test User',
         cargo: 'Desenvolvedor',
@@ -197,7 +197,7 @@ describe('API - Authentication', () => {
       expect(data.success).toBe(true)
       expect(data.user).toEqual({
         id: '1',
-        usuario: 'testuser',
+        email: 'testuser@senai.br',
         nome: 'Test User',
         role: 'CONTEUDISTA',
       })

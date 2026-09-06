@@ -48,7 +48,7 @@ const respostaLoginOk = {
     success: true,
     user: {
       id: '1',
-      usuario: 'testuser',
+      email: 'testuser@senai.br',
       nome: 'Test User',
       cargo: 'Desenvolvedor',
       role: 'CONTEUDISTA',
@@ -76,7 +76,7 @@ const renderLoginPage = () =>
     </NextIntlClientProvider>
   )
 
-const campoUsuario = () => screen.getByLabelText('Usuário')
+const campoUsuario = () => screen.getByLabelText('E-mail')
 const campoSenha = () => screen.getByLabelText('Senha') as HTMLInputElement
 const botaoEntrar = () => screen.getByRole('button', { name: /^entrar$/i })
 
@@ -101,7 +101,7 @@ describe('Integration - Login Flow', () => {
 
     renderLoginPage()
 
-    await user.type(campoUsuario(), 'testuser')
+    await user.type(campoUsuario(), 'testuser@senai.br')
     await user.type(campoSenha(), 'senha123')
     await user.click(botaoEntrar())
 
@@ -113,7 +113,7 @@ describe('Integration - Login Flow', () => {
     expect(chamadasDeLogin()[0][1]).toEqual(
       expect.objectContaining({
         method: 'POST',
-        body: JSON.stringify({ usuario: 'testuser', senha: 'senha123' }),
+        body: JSON.stringify({ email: 'testuser@senai.br', senha: 'senha123' }),
       })
     )
   })
@@ -148,7 +148,7 @@ describe('Integration - Login Flow', () => {
     await user.click(botaoEntrar())
 
     await waitFor(() => {
-      expect(screen.getByText('Usuário é obrigatório')).toBeInTheDocument()
+      expect(screen.getByText('E-mail é obrigatório')).toBeInTheDocument()
       expect(screen.getByText('Senha é obrigatória')).toBeInTheDocument()
     })
 
@@ -188,7 +188,7 @@ describe('Integration - Login Flow', () => {
     const senhaInput = campoSenha()
     const submitButton = botaoEntrar()
 
-    await user.type(usuarioInput, 'testuser')
+    await user.type(usuarioInput, 'testuser@senai.br')
     await user.type(senhaInput, 'senha123')
     await user.click(submitButton)
 

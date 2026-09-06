@@ -12,7 +12,7 @@ export async function GET(request: NextRequest) {
       where: { id: payload.id },
       select: {
         id: true,
-        usuario: true,
+        email: true,
         nome: true,
         role: true,
       },
@@ -27,7 +27,7 @@ export async function GET(request: NextRequest) {
       authenticated: true,
       user: {
         id: user.id,
-        usuario: user.usuario,
+        email: user.email,
         nome: user.nome,
         role: user.role,
       },

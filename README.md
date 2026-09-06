@@ -23,7 +23,9 @@ Upload a Word or PDF document, AI structures the content, and the SCORM package 
 - Export SCORM 1.2 packages compatible with any LMS
 - Player with integrated dark mode
 - Course PDF generation
-- JWT authentication (login/registration)
+- JWT authentication (login/registration) with role-based access (ADMIN, GESTOR, CONTEUDISTA, REVISOR, CONVIDADO)
+- Course ownership, access requests/collaborators, and an editorial review workflow
+- Real-time co-editing (presence avatars and cursors) via Liveblocks
 - User management and activity logs
 - Image upload via Vercel Blob
 
@@ -60,7 +62,7 @@ Upload a Word or PDF document, AI structures the content, and the SCORM package 
 
 - Node.js 20+
 - pnpm
-- PostgreSQL (Supabase or Vercel Postgres)
+- PostgreSQL (Neon)
 
 ---
 
@@ -74,19 +76,22 @@ pnpm install
 
 ### 2. Environment variables
 
-Create `.env.local` at the root:
+Copy `.env.example` to `.env` at the root and fill in the values:
 
 ```bash
 DATABASE_URL=postgresql://user:password@host:port/database
 JWT_SECRET=your-secret-key-here
-NEXT_PUBLIC_APP_URL=http://localhost:3000
 
 # AI course generation
-GOOGLE_AI_API_KEY=your-gemini-key
+GEMINI_API_KEY=your-gemini-key
 OPENAI_API_KEY=your-openai-key   # optional
 
-# Image uploads
+# Image uploads (optional)
 BLOB_READ_WRITE_TOKEN=your-vercel-blob-token
+
+# Real-time collaboration (optional) — https://liveblocks.io
+LIVEBLOCKS_SECRET_KEY=your-liveblocks-key
+NEXT_PUBLIC_COLLAB_ENABLED=true
 ```
 
 ### 3. Database
@@ -189,7 +194,7 @@ src/
 └── context/
 
 prisma/
-└── schema.prisma               # Models: User, Curso, Activity, SCORMJob
+└── schema.prisma               # Models: User, Curso, CursoColaborador, CursoAccessRequest, CursoComentario, Activity, SCORMJob
 
 generate-scorm-isolated.mjs     # Isolated SCORM build script
 ```
@@ -198,12 +203,15 @@ generate-scorm-isolated.mjs     # Isolated SCORM build script
 
 ## Database
 
-| Model      | Description                                    |
-| ---------- | ---------------------------------------------- |
-| `User`     | System users                                   |
-| `Curso`    | Courses with units (JSON structure)            |
-| `Activity` | User action logs                               |
-| `SCORMJob` | Queue and status of async SCORM exports        |
+| Model                | Description                                                              |
+| -------------------- | ------------------------------------------------------------------------ |
+| `User`               | System users, with role (ADMIN, GESTOR, CONTEUDISTA, REVISOR, CONVIDADO) |
+| `Curso`              | Courses with units (JSON), owner, editorial status and version           |
+| `CursoColaborador`   | Users granted access to edit a course                                    |
+| `CursoAccessRequest` | Access requests to a course (pending/approved/denied/revoked)            |
+| `CursoComentario`    | Review comments on a course                                              |
+| `Activity`           | User action logs                                                         |
+| `SCORMJob`           | Queue and status of async SCORM exports                                  |
 
 ---
 
@@ -211,7 +219,7 @@ generate-scorm-isolated.mjs     # Isolated SCORM build script
 
 1. Connect the repository on [Vercel](https://vercel.com)
 2. Configure environment variables in the Vercel dashboard
-3. Create a PostgreSQL database (Vercel Postgres or Supabase)
+3. Create a PostgreSQL database (Neon)
 4. Automatic deployment on every push to `main` branch
 
 > **Warning**: SCORM export via full Next.js build doesn't work on Vercel due to the 60s timeout limit. The current approach uses in-memory generation via `scorm-build-service.ts`.

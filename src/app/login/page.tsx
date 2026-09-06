@@ -18,21 +18,21 @@ export const dynamic = 'error'
 
 export default function LoginPage() {
   const t = useTranslations('auth')
-  const [usuario, setUsuario] = useState('')
+  const [email, setEmail] = useState('')
   const [senha, setSenha] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [rememberMe, setRememberMe] = useState(true)
   const [loading, setLoading] = useState(false)
   const [loadingGuest, setLoadingGuest] = useState(false)
-  const [errors, setErrors] = useState<{ usuario?: string; senha?: string }>({})
+  const [errors, setErrors] = useState<{ email?: string; senha?: string }>({})
   const { login, loginAsGuest } = useAuth()
   const router = useRouter()
 
   const validate = () => {
-    const newErrors: { usuario?: string; senha?: string } = {}
+    const newErrors: { email?: string; senha?: string } = {}
 
-    if (!usuario.trim()) {
-      newErrors.usuario = t('validation.usernameRequired')
+    if (!email.trim()) {
+      newErrors.email = t('validation.usernameRequired')
     }
 
     if (!senha) {
@@ -51,7 +51,7 @@ export default function LoginPage() {
     }
 
     setLoading(true)
-    const success = await login(usuario.trim(), senha)
+    const success = await login(email.trim(), senha)
     setLoading(false)
 
     if (success) {
@@ -88,35 +88,30 @@ export default function LoginPage() {
               <form onSubmit={handleSubmit} className="space-y-4">
                 {/* Campo Usuário */}
                 <div className="field">
-                  <Label
-                    htmlFor="login-usuario"
-                    className="text-[13px] font-medium text-foreground"
-                  >
+                  <Label htmlFor="login-email" className="text-[13px] font-medium text-foreground">
                     {t('login.username')}
                   </Label>
                   <div className="input-wrap relative mt-1.5">
                     <User className="absolute left-3.5 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4 pointer-events-none" />
                     <Input
-                      id="login-usuario"
+                      id="login-email"
                       type="text"
-                      value={usuario}
+                      value={email}
                       onChange={(e) => {
-                        setUsuario(e.target.value)
-                        if (errors.usuario) {
-                          setErrors({ ...errors, usuario: undefined })
+                        setEmail(e.target.value)
+                        if (errors.email) {
+                          setErrors({ ...errors, email: undefined })
                         }
                       }}
                       placeholder={t('login.usernamePlaceholder')}
                       className={`pl-10 h-[42px] border-border rounded-lg bg-white dark:bg-input-background text-sm ${
-                        errors.usuario ? 'border-red-500 focus-visible:ring-red-500' : ''
+                        errors.email ? 'border-red-500 focus-visible:ring-red-500' : ''
                       }`}
                       disabled={loading || loadingGuest}
                       autoComplete="username"
                     />
                   </div>
-                  {errors.usuario && (
-                    <p className="text-xs text-red-500 mt-1.5">{errors.usuario}</p>
-                  )}
+                  {errors.email && <p className="text-xs text-red-500 mt-1.5">{errors.email}</p>}
                 </div>
 
                 {/* Campo Senha */}

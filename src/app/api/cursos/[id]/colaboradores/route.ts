@@ -31,7 +31,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       where: { cursoId: id },
       orderBy: { createdAt: 'asc' },
       include: {
-        user: { select: { id: true, nome: true, usuario: true, role: true } },
+        user: { select: { id: true, nome: true, email: true, role: true } },
         concedidoPor: { select: { id: true, nome: true } },
       },
     })

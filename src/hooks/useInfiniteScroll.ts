@@ -1,12 +1,14 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { buscarCursos, type BuscarCursosParams } from '@/app/cursos/actions'
 import type { CursoGerado } from '@/types/gerador-curso'
+import type { StatusCurso } from '@/lib/permissions'
 
 interface UseInfiniteScrollOptions {
   limit?: number
   search?: string
   category?: string
   modality?: string
+  status?: StatusCurso
 }
 
 interface UseInfiniteScrollReturn {
@@ -28,6 +30,7 @@ export function useInfiniteScroll({
   search,
   category,
   modality,
+  status,
 }: UseInfiniteScrollOptions): UseInfiniteScrollReturn {
   const [cursos, setCursos] = useState<CursoGerado[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -63,6 +66,7 @@ export function useInfiniteScroll({
         search,
         category,
         modality,
+        status,
       }
 
       const result = await buscarCursos(params)
@@ -84,7 +88,7 @@ export function useInfiniteScroll({
         setIsLoading(false)
       }
     }
-  }, [limit, search, category, modality])
+  }, [limit, search, category, modality, status])
 
   // Carregar mais cursos (próxima página)
   const loadMore = useCallback(async () => {
@@ -102,6 +106,7 @@ export function useInfiniteScroll({
         search,
         category,
         modality,
+        status,
       }
 
       const result = await buscarCursos(params)
@@ -117,7 +122,7 @@ export function useInfiniteScroll({
       isLoadingRef.current = false
       setIsLoadingMore(false)
     }
-  }, [cursor, hasMore, limit, search, category, modality])
+  }, [cursor, hasMore, limit, search, category, modality, status])
 
   // Função para forçar atualização (refresh)
   const refresh = useCallback(async () => {

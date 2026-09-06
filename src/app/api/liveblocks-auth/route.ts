@@ -24,7 +24,7 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const { room } = await req.json()
+    const { room, resolver } = await req.json()
     const cursoId = typeof room === 'string' ? room.replace(/^curso:/, '') : ''
 
     if (!cursoId) {
@@ -50,15 +50,43 @@ export async function POST(req: NextRequest) {
       return createErrorResponse('Curso não encontrado', 404)
     }
 
-    const roomId = SALA_DO_CURSO(cursoId)
+    // A sala é sempre ancorada no id canônico: slug muda ao renomear o curso e
+    // dois clientes que chegaram por formatos de URL diferentes (id vs slug)
+    // acabariam em salas distintas, sem se enxergar
+    const roomId = SALA_DO_CURSO(referencia.id)
     const podeEditar = podeEditarCurso(authResult.user, curso, colaboracao)
 
     // Limite do plano gratuito: recusa o terceiro participante, mas quem já
-    // está na sala pode reconectar sem ser barrado
-    const { data: ativos } = await liveblocks.getActiveUsers(roomId)
+    // está na sala pode reconectar sem ser barrado. A sala só passa a existir na
+    // primeira conexão; até lá getActiveUsers responde 404, o que aqui significa
+    // sala vazia
+    const ativos = await liveblocks
+      .getActiveUsers(roomId)
+      .then(({ data }) => data)
+      .catch((erro) => {
+        if ((erro as { status?: number }).status === 404) return []
+        throw erro
+      })
     const distintos = new Set(ativos.map((u) => u.id).filter(Boolean))
+    const salaCheia = distintos.size >= MAX_COLAB_SIMULTANEOS && !distintos.has(authResult.user.id)
 
-    if (distintos.size >= MAX_COLAB_SIMULTANEOS && !distintos.has(authResult.user.id)) {
+    // Pré-check do CollabProvider: só resolve o id canônico da sala e diz se dá
+    // pra entrar, sem emitir token do Liveblocks
+    if (resolver) {
+      if (salaCheia) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: `Já há ${MAX_COLAB_SIMULTANEOS} pessoas editando este curso`,
+            salaCheia: true,
+          },
+          { status: 403 }
+        )
+      }
+      return NextResponse.json({ success: true, cursoId: referencia.id })
+    }
+
+    if (salaCheia) {
       return NextResponse.json(
         {
           success: false,

@@ -9,6 +9,7 @@ import {
   Sparkles,
   UserRound,
   KeyRound,
+  Clock3,
 } from 'lucide-react'
 import { Card } from './ui/card'
 import { Button } from './ui/button'
@@ -27,6 +28,7 @@ interface CourseCardProps {
   status?: StatusCurso
   ownerNome?: string
   canRequestAccess?: boolean
+  accessRequested?: boolean
   onPreview?: () => void
   onEdit?: () => void
   onDelete?: () => void
@@ -45,6 +47,7 @@ export function CourseCard({
   status,
   ownerNome,
   canRequestAccess = false,
+  accessRequested = false,
   onPreview,
   onEdit,
   onDelete,
@@ -156,21 +159,31 @@ export function CourseCard({
               <Pencil className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
               <span>Editar</span>
             </Button>
-            {canRequestAccess && (
-              <Button
-                variant="outline"
-                size="sm"
-                className="flex-1 gap-1 sm:gap-2 h-8 text-xs sm:text-sm px-2 sm:px-3"
-                onClick={onRequestAccess}
-              >
-                <KeyRound className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
-                <span>Solicitar acesso</span>
-              </Button>
-            )}
             <Button variant="outline" size="icon" className="h-8 w-8 border-0" onClick={onDelete}>
               <Trash2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-destructive" />
             </Button>
           </div>
+          {canRequestAccess && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="w-full gap-2 h-8 text-xs sm:text-sm"
+              onClick={onRequestAccess}
+              disabled={accessRequested}
+            >
+              {accessRequested ? (
+                <>
+                  <Clock3 className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
+                  <span>Aguardando acesso</span>
+                </>
+              ) : (
+                <>
+                  <KeyRound className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
+                  <span>Solicitar acesso</span>
+                </>
+              )}
+            </Button>
+          )}
           <Button
             size="sm"
             className="w-full gap-2 bg-[#F15A29] hover:bg-[#F15A29]/90 text-white h-8 text-xs sm:text-sm"

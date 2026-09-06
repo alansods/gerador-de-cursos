@@ -12,13 +12,13 @@ export interface ValidationResult {
 /**
  * Valida dados de login
  */
-export function validateLoginData(usuario: string, senha: string): ValidationResult {
+export function validateLoginData(email: string, senha: string): ValidationResult {
   const errors: Record<string, string> = {}
 
-  if (!usuario.trim()) {
-    errors.usuario = ERROR_MESSAGES.VALIDATION.REQUIRED_FIELD
-  } else if (usuario.trim().length < VALIDATION_RULES.USER.MIN_USERNAME_LENGTH) {
-    errors.usuario = ERROR_MESSAGES.VALIDATION.USERNAME_TOO_SHORT
+  if (!email.trim()) {
+    errors.email = ERROR_MESSAGES.VALIDATION.REQUIRED_FIELD
+  } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
+    errors.email = 'E-mail inválido'
   }
 
   if (!senha) {
@@ -38,7 +38,7 @@ export function validateLoginData(usuario: string, senha: string): ValidationRes
  */
 export function validateCadastroData(data: {
   nome: string
-  usuario: string
+  email: string
   senha: string
 }): ValidationResult {
   const errors: Record<string, string> = {}
@@ -49,10 +49,10 @@ export function validateCadastroData(data: {
     errors.nome = `Nome deve ter no mínimo ${VALIDATION_RULES.USER.MIN_NAME_LENGTH} caracteres`
   }
 
-  if (!data.usuario.trim()) {
-    errors.usuario = ERROR_MESSAGES.VALIDATION.REQUIRED_FIELD
-  } else if (data.usuario.trim().length < VALIDATION_RULES.USER.MIN_USERNAME_LENGTH) {
-    errors.usuario = ERROR_MESSAGES.VALIDATION.USERNAME_TOO_SHORT
+  if (!data.email.trim()) {
+    errors.email = ERROR_MESSAGES.VALIDATION.REQUIRED_FIELD
+  } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email.trim())) {
+    errors.email = 'E-mail inválido'
   }
 
   if (!data.senha) {

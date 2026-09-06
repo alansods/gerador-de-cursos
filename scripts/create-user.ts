@@ -15,14 +15,14 @@ async function main() {
   try {
     // Verificar se usuário já existe
     const usuarioExistente = await prisma.user.findUnique({
-      where: { usuario: 'convidado' },
+      where: { email: 'convidado@senai.br' },
     })
 
     if (usuarioExistente) {
       console.log('⚠️  Usuário convidado já existe!')
       console.log(`   ID: ${usuarioExistente.id}`)
       console.log(`   Nome: ${usuarioExistente.nome}`)
-      console.log(`   Usuário: ${usuarioExistente.usuario}`)
+      console.log(`   Usuário: ${usuarioExistente.email}`)
       return
     }
 
@@ -33,7 +33,7 @@ async function main() {
     const usuarioConvidado = await prisma.user.create({
       data: {
         nome: 'Usuário Convidado',
-        usuario: 'convidado',
+        email: 'convidado@senai.br',
         senha: senhaHash,
       },
     })
@@ -41,7 +41,7 @@ async function main() {
     console.log('✅ Usuário convidado criado com sucesso!')
     console.log(`   ID: ${usuarioConvidado.id}`)
     console.log(`   Nome: ${usuarioConvidado.nome}`)
-    console.log(`   Usuário: ${usuarioConvidado.usuario}`)
+    console.log(`   Usuário: ${usuarioConvidado.email}`)
     console.log(`   Senha: senai2025`)
   } catch (error) {
     console.error('❌ Erro ao criar usuário:', error)

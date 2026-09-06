@@ -50,7 +50,7 @@ interface User {
   id: string
   nome: string
   role: RoleUsuario
-  usuario: string
+  email: string
   createdAt: string
   updatedAt: string
 }
@@ -84,7 +84,7 @@ export default function UsuariosPage() {
   const [formData, setFormData] = useState({
     nome: '',
     role: 'CONTEUDISTA' as RoleUsuario,
-    usuario: '',
+    email: '',
     senha: '',
   })
   // Fetch users
@@ -137,7 +137,7 @@ export default function UsuariosPage() {
   // Create user
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!formData.nome || !formData.usuario || !formData.senha) {
+    if (!formData.nome || !formData.email || !formData.senha) {
       toast.error('Todos os campos são obrigatórios')
       return
     }
@@ -155,7 +155,7 @@ export default function UsuariosPage() {
       const data = await response.json()
       if (data.success) {
         toast.success('Usuário criado com sucesso!')
-        setFormData({ nome: '', role: 'CONTEUDISTA', usuario: '', senha: '' })
+        setFormData({ nome: '', role: 'CONTEUDISTA', email: '', senha: '' })
         fetchUsers(pagination.page, searchTerm, startDate, endDate, selectedRole)
       } else {
         toast.error(data.error || 'Erro ao criar usuário')
@@ -172,7 +172,7 @@ export default function UsuariosPage() {
   const handleUpdate = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!selectedUser) return
-    if (!formData.nome || !formData.usuario) {
+    if (!formData.nome || !formData.email) {
       toast.error('Nome e usuário são obrigatórios')
       return
     }
@@ -193,7 +193,7 @@ export default function UsuariosPage() {
       const data = await response.json()
       if (data.success) {
         toast.success('Usuário atualizado com sucesso!')
-        setFormData({ nome: '', role: 'CONTEUDISTA', usuario: '', senha: '' })
+        setFormData({ nome: '', role: 'CONTEUDISTA', email: '', senha: '' })
         fetchUsers(pagination.page, searchTerm, startDate, endDate, selectedRole)
       } else {
         toast.error(data.error || 'Erro ao atualizar usuário')
@@ -237,7 +237,7 @@ export default function UsuariosPage() {
     setFormData({
       nome: user.nome,
       role: user.role,
-      usuario: user.usuario,
+      email: user.email,
       senha: '',
     })
     setShowEditModal(true)
@@ -258,7 +258,7 @@ export default function UsuariosPage() {
             description="Crie, edite e gerencie usuários do sistema"
             actionLabel="Novo Usuário"
             onAction={() => {
-              setFormData({ nome: '', role: 'CONTEUDISTA', usuario: '', senha: '' })
+              setFormData({ nome: '', role: 'CONTEUDISTA', email: '', senha: '' })
               setShowCreateModal(true)
             }}
           />
@@ -270,7 +270,7 @@ export default function UsuariosPage() {
               <SearchInput
                 value={searchTerm}
                 onChange={setSearchTerm}
-                placeholder="Nome ou usuário..."
+                placeholder="Nome ou e-mail..."
               />
             </div>
 
@@ -349,7 +349,7 @@ export default function UsuariosPage() {
                     <TableHeader>
                       <TableRow>
                         <TableHead>Nome</TableHead>
-                        <TableHead>Usuário</TableHead>
+                        <TableHead>E-mail</TableHead>
                         <TableHead>Papel</TableHead>
                         <TableHead>Data de Criação</TableHead>
                         <TableHead className="text-right">Ações</TableHead>
@@ -368,7 +368,7 @@ export default function UsuariosPage() {
                               )}
                             </div>
                           </TableCell>
-                          <TableCell>{user.usuario}</TableCell>
+                          <TableCell>{user.email}</TableCell>
                           <TableCell>
                             <Badge variant="outline">{ROLE_LABELS[user.role]}</Badge>
                           </TableCell>
@@ -413,7 +413,7 @@ export default function UsuariosPage() {
                               </Badge>
                             )}
                           </div>
-                          <p className="text-sm text-muted-foreground truncate">@{user.usuario}</p>
+                          <p className="text-sm text-muted-foreground truncate">{user.email}</p>
                         </div>
                         <div className="flex shrink-0 flex-col items-end gap-1">
                           <Badge variant="outline">{ROLE_LABELS[user.role]}</Badge>
@@ -532,11 +532,11 @@ export default function UsuariosPage() {
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="usuario">Nome de Usuário</Label>
+                  <Label htmlFor="email">E-mail</Label>
                   <Input
-                    id="usuario"
-                    value={formData.usuario}
-                    onChange={(e) => setFormData({ ...formData, usuario: e.target.value })}
+                    id="email"
+                    value={formData.email}
+                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                     placeholder="Digite o nome de usuário"
                   />
                 </div>
@@ -615,11 +615,11 @@ export default function UsuariosPage() {
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="edit-usuario">Nome de Usuário</Label>
+                  <Label htmlFor="edit-email">E-mail</Label>
                   <Input
-                    id="edit-usuario"
-                    value={formData.usuario}
-                    onChange={(e) => setFormData({ ...formData, usuario: e.target.value })}
+                    id="edit-email"
+                    value={formData.email}
+                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                   />
                 </div>
                 <div className="space-y-2">

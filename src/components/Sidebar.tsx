@@ -15,13 +15,13 @@ import {
   Menu,
   X,
   Package,
-  ClipboardCheck,
 } from 'lucide-react'
 import { ROLE_LABELS, type Acao } from '@/lib/permissions'
 import { Button } from './ui/button'
 import { useTheme } from '@/hooks/useTheme'
 import { useAuth } from '@/context/AuthContext'
 import { usePathname } from 'next/navigation'
+import { SinoSolicitacoes } from '@/components/colaboracao/SinoSolicitacoes'
 import Link from 'next/link'
 
 const navItems: Array<{
@@ -34,13 +34,6 @@ const navItems: Array<{
   { icon: Home, label: 'Início', href: '/home', active: false },
   { icon: BookOpen, label: 'Cursos', href: '/cursos', active: true },
   { icon: Package, label: 'Builds SCORM', href: '/scorm-jobs', active: false },
-  {
-    icon: ClipboardCheck,
-    label: 'Revisão',
-    href: '/revisao',
-    active: false,
-    acao: 'revisao:ver',
-  },
   {
     icon: Users,
     label: 'Usuários',
@@ -182,6 +175,10 @@ export function Sidebar() {
                 </Link>
               )
             })}
+
+            <div className={isExpanded ? '' : 'flex justify-center'}>
+              <SinoSolicitacoes expandido={isExpanded} />
+            </div>
           </div>
         </nav>
 
@@ -224,7 +221,7 @@ export function Sidebar() {
               <div className="flex-1 min-w-0 overflow-hidden">
                 <p className="truncate text-foreground">{user?.nome || 'Usuário'}</p>
                 <p className="text-muted-foreground truncate" style={{ fontSize: '0.875rem' }}>
-                  {user?.usuario || ''}
+                  {user?.email || ''}
                 </p>
               </div>
             )}

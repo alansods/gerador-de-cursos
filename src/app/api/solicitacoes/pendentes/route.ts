@@ -30,7 +30,7 @@ export async function GET(req: NextRequest) {
       take: 20,
       include: {
         curso: { select: { id: true, titulo: true } },
-        solicitante: { select: { id: true, nome: true, usuario: true } },
+        solicitante: { select: { id: true, nome: true, email: true } },
       },
     })
 

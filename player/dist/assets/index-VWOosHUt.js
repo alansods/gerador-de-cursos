@@ -244,7 +244,9 @@ For more information, see https://radix-ui.com/primitives/docs/components/${r.do
         .flip-card-wrapper {
           perspective: 1200px;
           width: 100%;
-          transition: transform 0.3s ease, box-shadow 0.3s ease;
+          transition:
+            transform 0.3s ease,
+            box-shadow 0.3s ease;
         }
 
         .flip-card-wrapper:hover {

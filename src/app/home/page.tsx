@@ -39,7 +39,7 @@ interface Activity {
   user?: {
     id: string
     nome: string
-    usuario: string
+    email: string
   } | null
 }
 

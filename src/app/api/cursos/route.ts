@@ -7,6 +7,10 @@ import { CursoGerado, Unidade } from '@/types/gerador-curso'
 import { logActivity } from '@/lib/activity-logger'
 import { generateUniqueSlug, slugifyUnidades } from '@/lib/slug'
 import { Prisma } from '@prisma/client'
+import type { StatusCurso } from '@/lib/permissions'
+
+/** Status cuja revisão deixa de valer assim que o conteúdo muda. */
+const REVISAO_INVALIDADA_AO_EDITAR: StatusCurso[] = ['APROVADO', 'REPROVADO']
 
 type UnidadeConteudo = {
   id?: string
@@ -83,9 +87,22 @@ export async function GET(req: NextRequest) {
     // um colaborador não apareça sem permissão de edição na listagem
     const colaboracoes = await prisma.cursoColaborador.findMany({
       where: { userId: authResult.user.id, cursoId: { in: cursos.map((c) => c.id) } },
-      select: { cursoId: true, papel: true },
+      select: { cursoId: true },
     })
-    const colaboracaoPorCurso = new Map(colaboracoes.map((c) => [c.cursoId, { papel: c.papel }]))
+    const colaboracaoPorCurso = new Map(
+      colaboracoes.map((c) => [c.cursoId, { concedida: true as const }])
+    )
+
+    // Solicitações de acesso pendentes do usuário, para exibir "Aguardando acesso"
+    const solicitacoesPendentes = await prisma.cursoAccessRequest.findMany({
+      where: {
+        solicitanteId: authResult.user.id,
+        cursoId: { in: cursos.map((c) => c.id) },
+        status: 'PENDENTE',
+      },
+      select: { cursoId: true },
+    })
+    const solicitacaoPendentePorCurso = new Set(solicitacoesPendentes.map((s) => s.cursoId))
 
     // Converter para formato CursoGerado com normalização de unidades
     const cursosFormatados: CursoGerado[] = cursos.map((curso) => {
@@ -131,6 +148,7 @@ export async function GET(req: NextRequest) {
           curso,
           colaboracaoPorCurso.get(curso.id) ?? null
         ),
+        solicitacaoPendente: solicitacaoPendentePorCurso.has(curso.id),
         dataCriacao: curso.dataCriacao,
         dataModificacao: curso.dataModificacao,
       }
@@ -355,7 +373,14 @@ export async function PUT(req: NextRequest) {
         ...(categoria && { categoria }),
         ...(layout && { layout }),
         ...(unidadesNormalizadas !== undefined && { unidades: unidadesNormalizadas }),
-        ...(cursoExistente.status === 'REPROVADO' && { status: 'EM_ANDAMENTO' as const }),
+        // Editar invalida a revisão: um curso aprovado cujo conteúdo mudou não
+        // foi aprovado nesta versão, e o revisor registrado nunca a viu.
+        // Vale para APROVADO e REPROVADO — os dois voltam a rascunho.
+        ...(REVISAO_INVALIDADA_AO_EDITAR.includes(cursoExistente.status) && {
+          status: 'EM_ANDAMENTO' as const,
+          revisadoPorId: null,
+          revisadoEm: null,
+        }),
         version: { increment: 1 },
       },
     })

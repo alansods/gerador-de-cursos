@@ -1,10 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requireAuth, createErrorResponse, createSuccessResponse } from '@/lib/auth'
-import { can, type PapelColaborador } from '@/lib/permissions'
+import { can } from '@/lib/permissions'
 import { logActivity } from '@/lib/activity-logger'
-
-const PAPEIS: PapelColaborador[] = ['EDITOR', 'LEITOR']
 
 /**
  * PATCH /api/solicitacoes/[id]
@@ -21,7 +19,6 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     const { id } = await params
     const body = await req.json()
     const acao = body.acao as 'aprovar' | 'negar'
-    const papel: PapelColaborador = PAPEIS.includes(body.papel) ? body.papel : 'EDITOR'
 
     if (acao !== 'aprovar' && acao !== 'negar') {
       return createErrorResponse('Ação inválida: use "aprovar" ou "negar"', 400)
@@ -54,7 +51,6 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
         where: { id },
         data: {
           status: aprovada ? 'APROVADA' : 'NEGADA',
-          papelSolicitado: papel,
           respondidoPorId: authResult.user.id,
           respondidoEm: new Date(),
         },
@@ -71,10 +67,9 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
               create: {
                 cursoId: solicitacao.cursoId,
                 userId: solicitacao.solicitanteId,
-                papel,
                 concedidoPorId: authResult.user.id,
               },
-              update: { papel, concedidoPorId: authResult.user.id },
+              update: { concedidoPorId: authResult.user.id },
             }),
           ]
         : []),
@@ -89,7 +84,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       userId: authResult.user.id,
     })
 
-    return createSuccessResponse({ id, status: aprovada ? 'APROVADA' : 'NEGADA', papel })
+    return createSuccessResponse({ id, status: aprovada ? 'APROVADA' : 'NEGADA' })
   } catch (error) {
     console.error('Erro ao responder solicitação:', error)
     return createErrorResponse('Erro ao responder solicitação', 500, error)

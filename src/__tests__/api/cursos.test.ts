@@ -31,7 +31,7 @@ async function createAuthToken(userId: string = '1', role: string = 'ADMIN') {
   const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET)
   return await new SignJWT({
     id: userId,
-    usuario: 'testuser',
+    email: 'testuser@senai.br',
     nome: 'Test User',
     cargo: 'Administrador',
     role,
@@ -50,7 +50,7 @@ async function authHeaders(role: string = 'ADMIN') {
 // autenticado precisa do usuário correspondente ao token
 const usuarioAutenticado = {
   id: '1',
-  usuario: 'testuser',
+  email: 'testuser@senai.br',
   senha: 'hashed',
   nome: 'Test User',
   cargo: 'Administrador',
@@ -258,7 +258,7 @@ describe('API - Cursos', () => {
       const token = await createAuthToken()
       const mockUser = {
         id: '1',
-        usuario: 'testuser',
+        email: 'testuser@senai.br',
         senha: 'hashed',
         nome: 'Test User',
         cargo: 'Desenvolvedor',
@@ -415,7 +415,7 @@ describe('API - Cursos', () => {
       const token = await createAuthToken()
       const mockUser = {
         id: '1',
-        usuario: 'testuser',
+        email: 'testuser@senai.br',
         senha: 'hashed',
         nome: 'Test User',
         cargo: 'Desenvolvedor',
@@ -449,12 +449,83 @@ describe('API - Cursos', () => {
   })
 
   describe('PUT /api/cursos', () => {
+    async function editar(statusAtual: string) {
+      const token = await createAuthToken()
+      const mockUser = {
+        id: '1',
+        email: 'testuser@senai.br',
+        senha: 'hashed',
+        nome: 'Test User',
+        role: 'ADMIN',
+        dataCriacao: new Date(),
+      }
+      const mockCurso = {
+        id: '1',
+        titulo: 'Curso',
+        descricao: 'Desc',
+        cargaHoraria: '60h',
+        modalidade: 'Online',
+        categoria: 'Tecnologia',
+        unidades: [],
+        layout: 'classico',
+        slug: null,
+        status: statusAtual,
+        version: 0,
+        ownerId: '1',
+        owner: { id: '1', nome: 'Test User' },
+        revisadoPorId: 'revisor-1',
+        revisadoEm: new Date(),
+        dataCriacao: new Date(),
+        dataModificacao: new Date(),
+      }
+
+      mockPrisma.user.findUnique.mockResolvedValue(mockUser as never)
+      mockPrisma.curso.findUnique.mockResolvedValue(mockCurso as never)
+      mockPrisma.curso.update.mockResolvedValue(mockCurso as never)
+
+      const request = new NextRequest('http://localhost:3000/api/cursos', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', Cookie: `auth-token=${token}` },
+        body: JSON.stringify({ id: '1', titulo: 'Curso Editado', version: 0 }),
+      })
+
+      const res = await updateCursoHandler(request)
+      return { res, dados: mockPrisma.curso.update.mock.calls[0]?.[0]?.data }
+    }
+
+    it('devolve curso APROVADO para EM_ANDAMENTO e limpa a revisão ao editar', async () => {
+      const { res, dados } = await editar('APROVADO')
+
+      expect(res.status).toBe(200)
+      expect(dados.status).toBe('EM_ANDAMENTO')
+      expect(dados.revisadoPorId).toBeNull()
+      expect(dados.revisadoEm).toBeNull()
+    })
+
+    it('devolve curso REPROVADO para EM_ANDAMENTO ao editar', async () => {
+      const { dados } = await editar('REPROVADO')
+
+      expect(dados.status).toBe('EM_ANDAMENTO')
+    })
+
+    it('não mexe no status de um curso EM_ANDAMENTO', async () => {
+      const { dados } = await editar('EM_ANDAMENTO')
+
+      expect(dados.status).toBeUndefined()
+    })
+
+    it('não mexe no status de um curso EM_REVISAO', async () => {
+      const { dados } = await editar('EM_REVISAO')
+
+      expect(dados.status).toBeUndefined()
+    })
+
     it('deve atualizar curso com autenticação válida', async () => {
       // Arrange
       const token = await createAuthToken()
       const mockUser = {
         id: '1',
-        usuario: 'testuser',
+        email: 'testuser@senai.br',
         senha: 'hashed',
         nome: 'Test User',
         cargo: 'Desenvolvedor',
@@ -540,7 +611,7 @@ describe('API - Cursos', () => {
       const token = await createAuthToken()
       const mockUser = {
         id: '1',
-        usuario: 'testuser',
+        email: 'testuser@senai.br',
         senha: 'hashed',
         nome: 'Test User',
         cargo: 'Desenvolvedor',

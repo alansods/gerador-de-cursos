@@ -7,19 +7,20 @@ import { JWT_SECRET } from '@/lib/auth'
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { usuario, senha } = body
+    const { email, senha } = body
 
     // Validação
-    if (!usuario || !senha) {
+    if (!email || !senha) {
       return NextResponse.json(
-        { success: false, error: 'Usuário e senha são obrigatórios' },
+        { success: false, error: 'E-mail e senha são obrigatórios' },
         { status: 400 }
       )
     }
 
-    // Buscar usuário no banco
+    // O e-mail é gravado em minúsculas; normalizar aqui evita que a caixa
+    // digitada no login impeça a entrada
     const user = await prisma.user.findUnique({
-      where: { usuario },
+      where: { email: String(email).trim().toLowerCase() },
     })
 
     if (!user) {
@@ -36,7 +37,7 @@ export async function POST(request: NextRequest) {
     // Criar token JWT
     const token = await new SignJWT({
       id: user.id,
-      usuario: user.usuario,
+      email: user.email,
       nome: user.nome,
       role: user.role,
     })
@@ -49,7 +50,7 @@ export async function POST(request: NextRequest) {
       success: true,
       user: {
         id: user.id,
-        usuario: user.usuario,
+        email: user.email,
         nome: user.nome,
         role: user.role,
       },

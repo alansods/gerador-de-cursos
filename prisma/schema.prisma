@@ -25,11 +25,6 @@ enum StatusCurso {
   REPROVADO
 }
 
-enum PapelColaborador {
-  EDITOR
-  LEITOR
-}
-
 enum StatusSolicitacao {
   PENDENTE
   APROVADA
@@ -42,7 +37,7 @@ model User {
   id             String      @id @default(cuid())
   nome           String
   role           RoleUsuario @default(CONTEUDISTA)
-  usuario        String      @unique
+  email          String      @unique
   senha          String
   createdAt      DateTime    @default(now()) @map("created_at")
   updatedAt      DateTime    @updatedAt @map("updated_at")
@@ -55,7 +50,7 @@ model User {
   solicitacoesRespondidas CursoAccessRequest[] @relation("SolicitacaoRespondente")
   comentarios          CursoComentario[]    @relation("ComentarioAutor")
 
-  @@index([usuario])
+  @@index([email])
   @@index([role])
   @@map("users")
 }
@@ -98,7 +93,6 @@ model CursoColaborador {
   curso          Curso            @relation(fields: [cursoId], references: [id], onDelete: Cascade)
   userId         String           @map("user_id")
   user           User             @relation("ColaboracaoUsuario", fields: [userId], references: [id], onDelete: Cascade)
-  papel          PapelColaborador
   concedidoPorId String?          @map("concedido_por_id")
   concedidoPor   User?            @relation("ColaboracaoConcedente", fields: [concedidoPorId], references: [id], onDelete: SetNull)
   createdAt      DateTime         @default(now()) @map("created_at")
@@ -115,7 +109,6 @@ model CursoAccessRequest {
   curso           Curso             @relation(fields: [cursoId], references: [id], onDelete: Cascade)
   solicitanteId   String            @map("solicitante_id")
   solicitante     User              @relation("SolicitacaoSolicitante", fields: [solicitanteId], references: [id], onDelete: Cascade)
-  papelSolicitado PapelColaborador  @default(EDITOR) @map("papel_solicitado")
   status          StatusSolicitacao @default(PENDENTE)
   mensagem        String?
   respondidoPorId String?           @map("respondido_por_id")

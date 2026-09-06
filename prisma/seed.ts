@@ -363,7 +363,7 @@ async function main() {
     data: {
       nome: 'Administrador',
       role: 'ADMIN',
-      usuario: 'admin',
+      email: 'admin@senai.br',
       senha: senhaHashAdmin,
     },
   })
@@ -380,7 +380,7 @@ async function main() {
     data: {
       nome: 'Usuário Convidado',
       role: 'CONVIDADO',
-      usuario: 'convidado',
+      email: 'convidado@senai.br',
       senha: senhaHashConvidado,
     },
   })

@@ -558,6 +558,20 @@ O plano original só especificou o caso `REPROVADO`, então isto não é um desv
 2. Curso aprovado vira somente-leitura até alguém devolvê-lo a `EM_ANDAMENTO` pelo `PATCH` de status (que já permite `APROVADO → EM_ANDAMENTO`).
 3. Deixar como está, aceitando que "aprovado" signifique "foi aprovado alguma vez".
 
+### 2.8 Revisão consolidada no preview — página `/revisao` removida
+
+> Mudança posterior à Fase 2. As menções a `/revisao` acima (itens 2.4, matriz, checklists das Fases 1/1.8/2) são **registro histórico**: a página chegou a existir. Esta nota é a que vale agora.
+
+Decisão: **não há mais página/rota `/revisao` dedicada.** A revisão editorial acontece por curso, dentro do preview, via `PainelRevisao` (`src/components/revisao/PainelRevisao.tsx`, montado em `src/app/cursos/[id]/preview/page.tsx`), acessível pela ação **Revisar** na lista de cursos (`/cursos/[id]/preview?revisao=1`). O gate real é `curso:aprovar` (aprovar/reprovar) e `curso:comentar`; a lista já expõe "Revisar" via `podeRevisar` (`podeComentar || podeAprovar || podeEnviarRevisao`).
+
+**Removidos:**
+
+- `src/app/revisao/page.tsx` e `src/app/revisao/layout.tsx` (página e gate).
+- `src/app/api/revisao/route.ts` (a listagem de revisão; os dados já vêm de `GET /api/cursos` com filtro de status).
+- **Código morto do gate antigo:** a ação `revisao:ver` (`src/lib/permissions.ts`) e o derivado `podeVerRevisao` (`src/context/AuthContext.tsx`), que só serviam para proteger a página removida — mais a entrada correspondente no teste da matriz (`permissions.test.ts`). Nada mais os consumia. `ROTAS_PROTEGIDAS` já não listava `/revisao` (a rota do preview é autenticada por si). Suíte de permissões verde (25 testes).
+
+Efeito colateral: `GESTOR` deixou de ter uma ação `revisao:ver` própria, mas continua podendo aprovar/reprovar (`curso:aprovar`) e comentar — que é o que importa para revisar no preview.
+
 ### 2.5 Verificação da Fase 2
 
 - [ ] solicitação de acesso aparece no sino do dono
@@ -573,17 +587,19 @@ O plano original só especificou o caso `REPROVADO`, então isto não é um desv
 
 ## Fase 3 — Tempo real com Liveblocks
 
-> **Implementado, mas NÃO verificado em execução.** Falta `LIVEBLOCKS_SECRET_KEY`: é preciso criar uma conta em https://liveblocks.io e colar a chave no `.env.local`, além de ligar `NEXT_PUBLIC_COLLAB_ENABLED=true`. Sem isso nada em tempo real chega a conectar — e é exatamente esse o comportamento de fallback, que **foi** verificado.
+> **Implementado e verificado em execução.** Com `LIVEBLOCKS_SECRET_KEY` e `NEXT_PUBLIC_COLLAB_ENABLED=true` configurados, dois usuários (admin no notebook + conteudista no celular) editando o mesmo curso viram os avatares no header e o cursor do outro com nome e cor. **Decisão:** permanecer no Liveblocks. A marca d'água "Powered by Liveblocks" é do plano gratuito (só some no plano pago, ~US$30/mês; por código só dá para reposicionar via `badgeLocation`) — aceita como custo do tier grátis para uma ferramenta interna.
 >
 > Dois detalhes de API que só apareceram ao compilar: o `RoomEvent` precisa ser `type` e não `interface` (interface não satisfaz `JsonObject` por não ter index signature implícita) e não aceita propriedade opcional (`nome?: string` virou `nome: string | null`).
 >
-> A sala é `curso:<segmento da URL>`, que pode ser id ou slug. O endpoint de auth resolve os dois, e os links do app usam sempre `slug || id`, então na prática as duas pessoas caem na mesma sala. Se alguém digitar a URL na outra forma, abriria uma sala separada — aceitável hoje, vale trocar pelo id canônico se virar problema.
+> **Correção aplicada — sala ancorada no id canônico.** A sala era `curso:<segmento da URL>`, que pode ser id ou slug; dois clientes que chegavam por formatos diferentes caíam em salas separadas e não se enxergavam. O `/api/liveblocks-auth` passou a resolver o id canônico do curso e usá-lo como `roomId`, e o `CollabProvider` obtém esse id (via `resolver: true` no pré-check) para o `RoomProvider`. Como bônus, resiste à troca de slug ao renomear o curso.
+>
+> **Correção aplicada — `getActiveUsers` 404.** A sala só existe após a primeira conexão; até lá `getActiveUsers` responde 404, o que derrubava o auth em 500 e impedia qualquer um de entrar. Agora o 404 é tratado como sala vazia.
 
 ### 3.1 Setup
 
 - [x] `@liveblocks/client`, `@liveblocks/react`, `@liveblocks/node` instalados (3.24.1)
 - [x] `LIVEBLOCKS_SECRET_KEY` e `NEXT_PUBLIC_COLLAB_ENABLED` documentados no `.env.example`
-- [ ] Chave real criada e configurada localmente e na Vercel — **pendente, depende de conta no Liveblocks**
+- [x] Chave real configurada localmente (`.env`); **pendente:** confirmar a chave na Vercel para produção
 - [x] `src/liveblocks.config.ts` com `Presence` e `RoomEvent` tipados
 - [x] `src/lib/collab-config.ts` com `MAX_COLAB_SIMULTANEOS = 2` e a justificativa do plano gratuito
 
@@ -591,7 +607,9 @@ O plano original só especificou o caso `REPROVADO`, então isto não é um desv
 
 - [x] `/api/liveblocks-auth` valida sessão e permissão do curso
 - [x] Concede `FULL_ACCESS` a quem edita e `READ_ACCESS` a quem só visualiza
-- [x] Limite de 2 usuários ativos aplicado via `getActiveUsers`; terceiro recebe 403 (código escrito, sem execução real)
+- [x] Limite de 2 usuários ativos aplicado via `getActiveUsers`; terceiro recebe 403
+- [x] `getActiveUsers` trata 404 (sala ainda inexistente) como sala vazia, sem estourar 500
+- [x] Sala ancorada no id canônico do curso (resolve slug/id), evitando salas separadas
 - [x] Sem chave configurada, responde 503 em vez de estourar — verificado
 
 ### 3.3 Fallback
@@ -616,10 +634,10 @@ O plano original só especificou o caso `REPROVADO`, então isto não é um desv
 - [x] `NEXT_PUBLIC_COLLAB_ENABLED` desligado → editor abre em 200, zero erro no log, comportamento idêntico ao anterior
 - [x] Flag ligada **sem** chave → editor abre em 200, auth responde 503, zero erro
 - [x] `pnpm build` compila e os 60 testes passam
+- [x] duas janelas, dois usuários → avatares no header e cursor do outro com nome e cor
 
-**Pendente até existir uma chave do Liveblocks:**
+**Pendente (verificação manual de navegador):**
 
-- [ ] duas janelas, dois usuários → avatares no header e cursor do outro com nome e cor
 - [ ] adicionar bloco em A reflete em B com toast, sem reload
 - [ ] excluir bloco, renomear unidade e reordenar sincronizam
 - [ ] terceira janela: editor abre normal, aviso de sala cheia, console limpo

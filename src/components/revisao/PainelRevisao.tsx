@@ -1,6 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useState } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { toast } from 'sonner'
 import { MessageSquare, Send, Check, X, Trash2, Loader2, ClipboardCheck } from 'lucide-react'
 import {
@@ -22,7 +23,7 @@ interface Comentario {
   id: string
   texto: string
   createdAt: string
-  autor: { id: string; nome: string; usuario: string; role: string }
+  autor: { id: string; nome: string; email: string; role: string }
   podeExcluir: boolean
 }
 
@@ -32,7 +33,8 @@ interface Props {
 }
 
 export function PainelRevisao({ curso, onStatusAlterado }: Props) {
-  const [aberto, setAberto] = useState(false)
+  const searchParams = useSearchParams()
+  const [aberto, setAberto] = useState(searchParams.get('revisao') === '1')
   const [comentarios, setComentarios] = useState<Comentario[]>([])
   const [carregando, setCarregando] = useState(false)
   const [texto, setTexto] = useState('')

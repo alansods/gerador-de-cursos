@@ -12,7 +12,22 @@ import { ExportModal } from '@/components/ExportModal'
 import { PageTransition } from '@/components/PageTransition'
 import { InfiniteScrollTrigger } from '@/components/InfiniteScrollTrigger'
 import { Button } from '@/components/ui/button'
-import { CourseCard } from '@/components/CourseCard'
+import { Badge } from '@/components/ui/badge'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import {
   Select,
   SelectContent,
@@ -22,6 +37,8 @@ import {
 } from '@/components/ui/select'
 import { toast } from 'sonner'
 import type { CursoGerado } from '@/types/gerador-curso'
+import type { StatusCurso } from '@/lib/permissions'
+import { STATUS_CURSO, STATUS_CURSO_LABELS, STATUS_CURSO_CLASSES } from '@/lib/status-curso'
 import {
   Dialog,
   DialogContent,
@@ -30,7 +47,22 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import { Plus, Loader2, AlertCircle, X, BookOpen } from 'lucide-react'
+import {
+  Plus,
+  Loader2,
+  AlertCircle,
+  X,
+  BookOpen,
+  MoreHorizontal,
+  Eye,
+  ClipboardCheck,
+  Pencil,
+  Download,
+  KeyRound,
+  Clock3,
+  Trash2,
+  Sparkles,
+} from 'lucide-react'
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useDebounce } from '@/hooks/useDebounce'
@@ -50,6 +82,12 @@ const CATEGORIES = [
 
 const MODALIDADES = ['Todas Modalidades', 'Presencial', 'Online', 'Híbrido']
 
+const isNewCourse = (createdAt?: Date | string) => {
+  if (!createdAt) return false
+  const diffInHours = (Date.now() - new Date(createdAt).getTime()) / (1000 * 60 * 60)
+  return diffInHours < 24
+}
+
 export default function CursosPage() {
   const { state, deletarCurso, selecionarCurso } = useGeradorCurso()
   const { openPreview } = usePreview()
@@ -60,11 +98,13 @@ export default function CursosPage() {
   const [isDeletingCurso, setIsDeletingCurso] = useState(false)
   const [exportModalOpen, setExportModalOpen] = useState(false)
   const [selectedCursoForExport, setSelectedCursoForExport] = useState<CursoGerado | null>(null)
+  const [acessosSolicitados, setAcessosSolicitados] = useState<Set<string>>(new Set())
 
   // Estados de busca e filtros
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedCategory, setSelectedCategory] = useState<string>('Todas Categorias')
   const [selectedFormat, setSelectedFormat] = useState<string>('Todas Modalidades')
+  const [selectedStatus, setSelectedStatus] = useState<StatusCurso | 'todos'>('todos')
 
   // Debounce do searchTerm para evitar múltiplas requisições
   const debouncedSearchTerm = useDebounce(searchTerm, 500)
@@ -83,6 +123,7 @@ export default function CursosPage() {
     search: debouncedSearchTerm,
     category: selectedCategory !== 'Todas Categorias' ? selectedCategory : undefined,
     modality: selectedFormat !== 'Todas Modalidades' ? selectedFormat : undefined,
+    status: selectedStatus !== 'todos' ? selectedStatus : undefined,
   })
 
   // Cursos exibidos
@@ -92,13 +133,15 @@ export default function CursosPage() {
   const hasActiveFilters =
     debouncedSearchTerm !== '' ||
     selectedCategory !== 'Todas Categorias' ||
-    selectedFormat !== 'Todas Modalidades'
+    selectedFormat !== 'Todas Modalidades' ||
+    selectedStatus !== 'todos'
 
   // Limpar filtros
   const clearFilters = () => {
     setSearchTerm('')
     setSelectedCategory('Todas Categorias')
     setSelectedFormat('Todas Modalidades')
+    setSelectedStatus('todos')
   }
 
   const handleSolicitarAcesso = async (cursoId: string, titulo: string) => {
@@ -106,11 +149,12 @@ export default function CursosPage() {
       const response = await fetch(`/api/cursos/${cursoId}/solicitacoes`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ papelSolicitado: 'EDITOR' }),
+        body: JSON.stringify({}),
       })
       const data = await response.json()
 
       if (data.success) {
+        setAcessosSolicitados((prev) => new Set(prev).add(cursoId))
         toast.success(`Acesso solicitado. O dono de "${titulo}" precisa aprovar.`)
       } else {
         toast.error(data.error || 'Erro ao solicitar acesso')
@@ -134,6 +178,9 @@ export default function CursosPage() {
       // Fallback: abrir preview diretamente
       window.open(`/cursos/${id}/preview`, '_blank')
     }
+  }
+  const handleRevisarCurso = (curso: CursoGerado) => {
+    router.push(`/cursos/${curso.slug || curso.id}/preview?revisao=1`)
   }
 
   const handleOpenExportModal = (curso: CursoGerado) => {
@@ -276,6 +323,27 @@ export default function CursosPage() {
                   </Select>
                 </div>
 
+                {/* Filtro por Status */}
+                <div className="flex flex-col gap-1 flex-1">
+                  <span className="text-xs text-muted-foreground pl-1">Status</span>
+                  <Select
+                    value={selectedStatus}
+                    onValueChange={(value) => setSelectedStatus(value as StatusCurso | 'todos')}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="todos">Todos os status</SelectItem>
+                      {STATUS_CURSO.map((status) => (
+                        <SelectItem key={status} value={status}>
+                          {STATUS_CURSO_LABELS[status]}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
                 {/* Botão Limpar Filtros */}
                 {hasActiveFilters && (
                   <Button
@@ -336,36 +404,140 @@ export default function CursosPage() {
             </div>
           ) : !showError ? (
             <>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {paginatedCourses.map((curso) => (
-                  <CourseCard
-                    key={curso.id}
-                    title={curso.titulo}
-                    description={curso.descricao}
-                    category={curso.categoria}
-                    duration={curso.cargaHoraria}
-                    units={curso.unidades?.length || 0}
-                    format={curso.modalidade}
-                    createdAt={curso.dataCriacao}
-                    status={curso.status}
-                    ownerNome={curso.ownerNome}
-                    canRequestAccess={curso.permissoes?.podeSolicitarAcesso ?? false}
-                    onPreview={() => handlePreviewCurso(curso.id)}
-                    onEdit={() =>
-                      curso.permissoes?.podeEditar
-                        ? handleEditarCurso(curso.slug || curso.id)
-                        : toast.error('Você não tem permissão para editar este curso')
-                    }
-                    onDelete={() =>
-                      curso.permissoes?.podeExcluir
-                        ? setShowDeleteConfirm(curso.id)
-                        : toast.error('Você não tem permissão para excluir este curso')
-                    }
-                    onRequestAccess={() => handleSolicitarAcesso(curso.id, curso.titulo)}
-                    onExport={() => handleOpenExportModal(curso)}
-                  />
-                ))}
-              </div>
+              <Table className="min-w-[860px]">
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Curso</TableHead>
+                    <TableHead>Categoria</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Dono</TableHead>
+                    <TableHead>Carga</TableHead>
+                    <TableHead>Modalidade</TableHead>
+                    <TableHead className="w-12 text-right">Ações</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {paginatedCourses.map((curso) => {
+                    const permissoes = curso.permissoes
+                    const podeRevisar =
+                      permissoes?.podeComentar ||
+                      permissoes?.podeAprovar ||
+                      permissoes?.podeEnviarRevisao
+                    const acessoSolicitado =
+                      acessosSolicitados.has(curso.id) || (curso.solicitacaoPendente ?? false)
+
+                    return (
+                      <TableRow key={curso.id}>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <span className="font-medium text-foreground">{curso.titulo}</span>
+                            {isNewCourse(curso.dataCriacao) && (
+                              <Badge
+                                variant="secondary"
+                                className="bg-linear-to-r from-emerald-500 to-green-500 text-white border-0 gap-1"
+                              >
+                                <Sparkles className="w-3 h-3" />
+                                Novo
+                              </Badge>
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-muted-foreground">{curso.categoria}</TableCell>
+                        <TableCell>
+                          {curso.status && (
+                            <Badge
+                              variant="secondary"
+                              className={`border-0 ${STATUS_CURSO_CLASSES[curso.status]}`}
+                            >
+                              {STATUS_CURSO_LABELS[curso.status]}
+                            </Badge>
+                          )}
+                        </TableCell>
+                        <TableCell className="text-muted-foreground">
+                          {curso.ownerNome || '—'}
+                        </TableCell>
+                        <TableCell className="text-muted-foreground whitespace-nowrap">
+                          {curso.cargaHoraria}
+                        </TableCell>
+                        <TableCell className="text-muted-foreground">{curso.modalidade}</TableCell>
+                        <TableCell className="text-right">
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8"
+                                aria-label="Ações do curso"
+                              >
+                                <MoreHorizontal className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="w-52">
+                              <DropdownMenuItem onClick={() => handlePreviewCurso(curso.id)}>
+                                <Eye className="h-4 w-4" />
+                                Preview
+                              </DropdownMenuItem>
+
+                              {podeRevisar && (
+                                <DropdownMenuItem onClick={() => handleRevisarCurso(curso)}>
+                                  <ClipboardCheck className="h-4 w-4" />
+                                  Revisar
+                                </DropdownMenuItem>
+                              )}
+
+                              {permissoes?.podeEditar && (
+                                <DropdownMenuItem
+                                  onClick={() => handleEditarCurso(curso.slug || curso.id)}
+                                >
+                                  <Pencil className="h-4 w-4" />
+                                  Editar
+                                </DropdownMenuItem>
+                              )}
+
+                              <DropdownMenuItem onClick={() => handleOpenExportModal(curso)}>
+                                <Download className="h-4 w-4" />
+                                Exportar
+                              </DropdownMenuItem>
+
+                              {permissoes?.podeSolicitarAcesso && (
+                                <DropdownMenuItem
+                                  disabled={acessoSolicitado}
+                                  onClick={() => handleSolicitarAcesso(curso.id, curso.titulo)}
+                                >
+                                  {acessoSolicitado ? (
+                                    <>
+                                      <Clock3 className="h-4 w-4" />
+                                      Aguardando acesso
+                                    </>
+                                  ) : (
+                                    <>
+                                      <KeyRound className="h-4 w-4" />
+                                      Solicitar acesso
+                                    </>
+                                  )}
+                                </DropdownMenuItem>
+                              )}
+
+                              {permissoes?.podeExcluir && (
+                                <>
+                                  <DropdownMenuSeparator />
+                                  <DropdownMenuItem
+                                    className="text-destructive focus:text-destructive"
+                                    onClick={() => setShowDeleteConfirm(curso.id)}
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                    Excluir
+                                  </DropdownMenuItem>
+                                </>
+                              )}
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </TableCell>
+                      </TableRow>
+                    )
+                  })}
+                </TableBody>
+              </Table>
 
               {/* Infinite Scroll Trigger */}
               <InfiniteScrollTrigger

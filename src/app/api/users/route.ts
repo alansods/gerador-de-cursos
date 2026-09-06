@@ -19,6 +19,8 @@ function negarSeNaoPodeGerenciar(user: JWTPayload) {
 }
 
 // GET: Listar usuários com paginação e filtros
+const EMAIL_VALIDO = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+
 export async function GET(request: NextRequest) {
   const authResult = await requireAuth(request)
 
@@ -50,7 +52,7 @@ export async function GET(request: NextRequest) {
     if (search) {
       where.OR = [
         { nome: { contains: search, mode: 'insensitive' } },
-        { usuario: { contains: search, mode: 'insensitive' } },
+        { email: { contains: search, mode: 'insensitive' } },
       ]
     }
 
@@ -72,7 +74,7 @@ export async function GET(request: NextRequest) {
         select: {
           id: true,
           nome: true,
-          usuario: true,
+          email: true,
           role: true,
           createdAt: true,
           updatedAt: true,
@@ -117,25 +119,27 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json()
-    const { nome, usuario, senha, role } = body
+    const { nome, email, senha, role } = body
 
-    if (!nome || !usuario || !senha) {
+    if (!nome || !email || !senha) {
       return NextResponse.json(
         { success: false, error: 'Todos os campos são obrigatórios' },
         { status: 400 }
       )
     }
 
-    // Verificar duplicidade
+    const emailNormalizado = String(email).trim().toLowerCase()
+
+    if (!EMAIL_VALIDO.test(emailNormalizado)) {
+      return NextResponse.json({ success: false, error: 'E-mail inválido' }, { status: 400 })
+    }
+
     const existingUser = await prisma.user.findUnique({
-      where: { usuario },
+      where: { email: emailNormalizado },
     })
 
     if (existingUser) {
-      return NextResponse.json(
-        { success: false, error: 'Nome de usuário já existe' },
-        { status: 409 }
-      )
+      return NextResponse.json({ success: false, error: 'E-mail já cadastrado' }, { status: 409 })
     }
 
     const hashedPassword = await bcrypt.hash(senha, 10)
@@ -143,14 +147,14 @@ export async function POST(request: NextRequest) {
     const user = await prisma.user.create({
       data: {
         nome,
-        usuario,
+        email: emailNormalizado,
         senha: hashedPassword,
         role: normalizarRole(role),
       },
       select: {
         id: true,
         nome: true,
-        usuario: true,
+        email: true,
         role: true,
         createdAt: true,
       },
@@ -189,7 +193,7 @@ export async function PUT(request: NextRequest) {
 
   try {
     const body = await request.json()
-    const { id, nome, usuario, senha, role } = body
+    const { id, nome, email, senha, role } = body
 
     if (!id) {
       return NextResponse.json(
@@ -200,7 +204,16 @@ export async function PUT(request: NextRequest) {
 
     const updateData: Prisma.UserUpdateInput = {
       nome,
-      usuario,
+    }
+
+    if (email !== undefined) {
+      const emailNormalizado = String(email).trim().toLowerCase()
+
+      if (!EMAIL_VALIDO.test(emailNormalizado)) {
+        return NextResponse.json({ success: false, error: 'E-mail inválido' }, { status: 400 })
+      }
+
+      updateData.email = emailNormalizado
     }
 
     if (role !== undefined) {
@@ -217,7 +230,7 @@ export async function PUT(request: NextRequest) {
       select: {
         id: true,
         nome: true,
-        usuario: true,
+        email: true,
         role: true,
       },
     })

@@ -39,7 +39,6 @@ describe('Rotas protegidas', () => {
     expect(regraDaRota('/usuarios')?.acao).toBe('usuario:gerenciar')
     expect(regraDaRota('/usuarios/123')?.acao).toBe('usuario:gerenciar')
     expect(regraDaRota('/api/users')?.acao).toBe('usuario:gerenciar')
-    expect(regraDaRota('/revisao')?.acao).toBe('revisao:ver')
 
     expect(regraDaRota('/usuariospublicos')).toBeUndefined()
     expect(regraDaRota('/cursos')).toBeUndefined()

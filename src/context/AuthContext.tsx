@@ -8,7 +8,7 @@ import { can, ROLES, type Acao, type ContextoPermissao, type RoleUsuario } from 
 interface User {
   id: string
   nome: string
-  usuario: string
+  email: string
   role?: RoleUsuario
 }
 
@@ -20,9 +20,8 @@ interface AuthContextType {
   can: (acao: Acao, ctx?: ContextoPermissao) => boolean
   isAdmin: boolean
   podeGerenciarUsuarios: boolean
-  podeVerRevisao: boolean
   podeCriarCurso: boolean
-  login: (usuario: string, senha: string) => Promise<boolean>
+  login: (email: string, senha: string) => Promise<boolean>
   loginAsGuest: () => Promise<void>
   logout: () => Promise<void>
   setUser: (user: User | null) => void
@@ -42,7 +41,7 @@ export function AuthProvider({ children, initialUser }: AuthProviderProps) {
   const pathname = usePathname()
   const checkSessionRef = useRef(false) // Prevenir verificações duplicadas
 
-  const login = async (usuario: string, senha: string): Promise<boolean> => {
+  const login = async (email: string, senha: string): Promise<boolean> => {
     setLoading(true)
     try {
       const response = await fetch('/api/auth/login', {
@@ -50,7 +49,7 @@ export function AuthProvider({ children, initialUser }: AuthProviderProps) {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ usuario, senha }),
+        body: JSON.stringify({ email, senha }),
       })
 
       const data = await response.json()
@@ -79,7 +78,7 @@ export function AuthProvider({ children, initialUser }: AuthProviderProps) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          usuario: 'convidado',
+          email: 'convidado',
           senha: 'convidado',
         }),
       })
@@ -175,7 +174,7 @@ export function AuthProvider({ children, initialUser }: AuthProviderProps) {
         const data = await response.json()
 
         if (data.success && data.authenticated && data.user) {
-          console.log('[AuthContext] ✅ Sessão válida, usuário:', data.user.usuario)
+          console.log('[AuthContext] ✅ Sessão válida, usuário:', data.user.email)
           setUser(data.user)
         } else {
           console.log('[AuthContext] ℹ️ Nenhuma sessão ativa')
@@ -215,7 +214,6 @@ export function AuthProvider({ children, initialUser }: AuthProviderProps) {
         can: checarPermissao,
         isAdmin: role === 'ADMIN',
         podeGerenciarUsuarios: checarPermissao('usuario:gerenciar'),
-        podeVerRevisao: checarPermissao('revisao:ver'),
         podeCriarCurso: checarPermissao('curso:criar'),
         login,
         loginAsGuest,

@@ -26,7 +26,7 @@ export async function GET(req: NextRequest) {
           select: {
             id: true,
             nome: true,
-            usuario: true,
+            email: true,
           },
         },
       },
@@ -45,7 +45,7 @@ export async function GET(req: NextRequest) {
         ? {
             id: activity.user.id,
             nome: activity.user.nome,
-            usuario: activity.user.usuario,
+            email: activity.user.email,
           }
         : null,
       createdAt: activity.createdAt,

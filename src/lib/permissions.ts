@@ -1,6 +1,10 @@
 export type RoleUsuario = 'ADMIN' | 'GESTOR' | 'CONTEUDISTA' | 'REVISOR' | 'CONVIDADO'
 
-export type PapelColaborador = 'EDITOR' | 'LEITOR'
+/**
+ * Colaboração concedida num curso. Não há graus: constar como colaborador
+ * significa acesso total ao curso. `null` quando não há colaboração.
+ */
+export type Colaboracao = { concedida: true } | null
 
 export type StatusCurso = 'EM_ANDAMENTO' | 'EM_REVISAO' | 'APROVADO' | 'REPROVADO'
 
@@ -23,7 +27,6 @@ export type Acao =
   | 'curso:aprovar'
   | 'curso:solicitarAcesso'
   | 'usuario:gerenciar'
-  | 'revisao:ver'
   | 'colaborador:gerenciar'
 
 export interface UsuarioPermissoes {
@@ -39,7 +42,7 @@ export interface CursoPermissoes {
 
 export interface ContextoPermissao {
   curso?: CursoPermissoes | null
-  colaboracao?: { papel: PapelColaborador } | null
+  colaboracao?: Colaboracao
 }
 
 export class ForbiddenError extends Error {
@@ -64,13 +67,13 @@ function isDono(user: UsuarioPermissoes, curso?: CursoPermissoes | null) {
 export function podeEditarCurso(
   user: UsuarioPermissoes | null | undefined,
   curso?: CursoPermissoes | null,
-  colaboracao?: { papel: PapelColaborador } | null
+  colaboracao?: Colaboracao
 ): boolean {
   if (!user) return false
   if (user.role === 'ADMIN' || user.role === 'GESTOR') return true
   if (user.role !== 'CONTEUDISTA') return false
   if (isDono(user, curso)) return true
-  return colaboracao?.papel === 'EDITOR'
+  return Boolean(colaboracao)
 }
 
 export function podeExcluirCurso(
@@ -95,9 +98,6 @@ export function can(
     case 'usuario:gerenciar':
       return user.role === 'ADMIN'
 
-    case 'revisao:ver':
-      return user.role === 'ADMIN' || user.role === 'GESTOR' || user.role === 'REVISOR'
-
     case 'curso:criar':
       return user.role === 'ADMIN' || user.role === 'GESTOR' || user.role === 'CONTEUDISTA'
 
@@ -117,7 +117,7 @@ export function can(
       return user.role === 'ADMIN' || user.role === 'GESTOR' || user.role === 'REVISOR'
 
     case 'curso:solicitarAcesso':
-      return user.role === 'CONTEUDISTA' && !isDono(user, curso)
+      return user.role === 'CONTEUDISTA' && !isDono(user, curso) && !colaboracao
 
     case 'colaborador:gerenciar':
       return user.role === 'ADMIN' || user.role === 'GESTOR' || isDono(user, curso)
@@ -140,7 +140,7 @@ export function assertCan(
 export function permissoesDoCurso(
   user: UsuarioPermissoes | null | undefined,
   curso?: CursoPermissoes | null,
-  colaboracao?: { papel: PapelColaborador } | null
+  colaboracao?: Colaboracao
 ) {
   const ctx = { curso, colaboracao }
   return {

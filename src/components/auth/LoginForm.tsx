@@ -11,21 +11,21 @@ import { useAuth } from '@/context/AuthContext'
 import { User, Lock, Eye, EyeOff, UserCircle, ArrowRight } from 'lucide-react'
 
 export function LoginForm() {
-  const [usuario, setUsuario] = useState('')
+  const [email, setEmail] = useState('')
   const [senha, setSenha] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const [loadingGuest, setLoadingGuest] = useState(false)
   const [rememberMe, setRememberMe] = useState(true)
-  const [errors, setErrors] = useState<{ usuario?: string; senha?: string }>({})
+  const [errors, setErrors] = useState<{ email?: string; senha?: string }>({})
   const { login, loginAsGuest } = useAuth()
   const router = useRouter()
 
   const validate = () => {
-    const newErrors: { usuario?: string; senha?: string } = {}
+    const newErrors: { email?: string; senha?: string } = {}
 
-    if (!usuario.trim()) {
-      newErrors.usuario = 'Usuário é obrigatório'
+    if (!email.trim()) {
+      newErrors.email = 'E-mail é obrigatório'
     }
 
     if (!senha) {
@@ -44,7 +44,7 @@ export function LoginForm() {
     }
 
     setLoading(true)
-    const success = await login(usuario.trim(), senha)
+    const success = await login(email.trim(), senha)
     setLoading(false)
 
     if (success) {
@@ -68,32 +68,32 @@ export function LoginForm() {
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
-        {/* Campo Usuário */}
+        {/* Campo E-mail */}
         <div className="field">
-          <Label htmlFor="login-usuario" className="text-[13px] font-medium text-foreground">
-            Usuário
+          <Label htmlFor="login-email" className="text-[13px] font-medium text-foreground">
+            E-mail
           </Label>
           <div className="input-wrap relative mt-1.5">
             <User className="absolute left-3.5 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4 pointer-events-none" />
             <Input
-              id="login-usuario"
-              type="text"
-              value={usuario}
+              id="login-email"
+              type="email"
+              value={email}
               onChange={(e) => {
-                setUsuario(e.target.value)
-                if (errors.usuario) {
-                  setErrors({ ...errors, usuario: undefined })
+                setEmail(e.target.value)
+                if (errors.email) {
+                  setErrors({ ...errors, email: undefined })
                 }
               }}
               placeholder="Digite seu usuário"
               className={`pl-10 h-[42px] border-border rounded-lg bg-white text-sm ${
-                errors.usuario ? 'border-red-500 focus-visible:ring-red-500' : ''
+                errors.email ? 'border-red-500 focus-visible:ring-red-500' : ''
               }`}
               disabled={loading || loadingGuest}
               autoComplete="username"
             />
           </div>
-          {errors.usuario && <p className="text-xs text-red-500 mt-1.5">{errors.usuario}</p>}
+          {errors.email && <p className="text-xs text-red-500 mt-1.5">{errors.email}</p>}
         </div>
 
         {/* Campo Senha */}

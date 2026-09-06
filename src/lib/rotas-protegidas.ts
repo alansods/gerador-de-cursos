@@ -7,7 +7,6 @@ export interface RotaProtegida {
 
 export const ROTAS_PROTEGIDAS: RotaProtegida[] = [
   { prefixos: ['/usuarios', '/api/users'], acao: 'usuario:gerenciar' },
-  { prefixos: ['/revisao'], acao: 'revisao:ver' },
 ]
 
 /**

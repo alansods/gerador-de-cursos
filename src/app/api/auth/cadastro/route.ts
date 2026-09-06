@@ -5,23 +5,30 @@ import { prisma } from '@/lib/prisma'
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { nome, usuario, senha } = body
+    const { nome, email, senha } = body
 
     // Validação
-    if (!nome || !usuario || !senha) {
+    if (!nome || !email || !senha) {
       return NextResponse.json(
-        { success: false, error: 'Nome, usuário e senha são obrigatórios' },
+        { success: false, error: 'Nome, e-mail e senha são obrigatórios' },
         { status: 400 }
       )
     }
 
-    // Verificar se usuário já existe
+    // O e-mail é o login: normalizar evita que Maria@x.com e maria@x.com
+    // virem duas contas distintas
+    const emailNormalizado = String(email).trim().toLowerCase()
+
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailNormalizado)) {
+      return NextResponse.json({ success: false, error: 'E-mail inválido' }, { status: 400 })
+    }
+
     const existingUser = await prisma.user.findUnique({
-      where: { usuario },
+      where: { email: emailNormalizado },
     })
 
     if (existingUser) {
-      return NextResponse.json({ success: false, error: 'Usuário já cadastrado' }, { status: 409 })
+      return NextResponse.json({ success: false, error: 'E-mail já cadastrado' }, { status: 409 })
     }
 
     // Hash da senha
@@ -31,13 +38,13 @@ export async function POST(request: NextRequest) {
     const user = await prisma.user.create({
       data: {
         nome: nome.trim(),
-        usuario: usuario.trim(),
+        email: emailNormalizado,
         senha: hashedPassword,
         role: 'CONTEUDISTA',
       },
       select: {
         id: true,
-        usuario: true,
+        email: true,
         nome: true,
         role: true,
       },
@@ -47,7 +54,7 @@ export async function POST(request: NextRequest) {
       success: true,
       user: {
         id: user.id,
-        usuario: user.usuario,
+        email: user.email,
         nome: user.nome,
         role: user.role,
       },

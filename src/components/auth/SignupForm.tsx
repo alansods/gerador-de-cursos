@@ -36,7 +36,9 @@ export function SignupForm() {
       newErrors.nome = 'Nome deve ter no mínimo 2 caracteres'
     }
 
-    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    if (!email.trim()) {
+      newErrors.email = 'E-mail é obrigatório'
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       newErrors.email = 'E-mail inválido'
     }
 
@@ -64,7 +66,6 @@ export function SignupForm() {
     setLoading(true)
     try {
       const nomeCompleto = nome.trim()
-      const usuario = email ? email.split('@')[0] : nome.trim().toLowerCase()
 
       const response = await fetch('/api/auth/cadastro', {
         method: 'POST',
@@ -73,7 +74,7 @@ export function SignupForm() {
         },
         body: JSON.stringify({
           nome: nomeCompleto,
-          usuario,
+          email: email.trim().toLowerCase(),
           senha,
         }),
       })

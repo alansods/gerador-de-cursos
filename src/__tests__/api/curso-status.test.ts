@@ -32,7 +32,7 @@ async function cookieDe(userId: string, role: string) {
   const segredo = new TextEncoder().encode(process.env.JWT_SECRET)
   const token = await new SignJWT({
     id: userId,
-    usuario: 'testuser',
+    email: 'testuser@senai.br',
     nome: 'Test User',
     cargo: 'Usuário',
     role,
@@ -47,7 +47,7 @@ async function cookieDe(userId: string, role: string) {
 function usuarioNoBanco(id: string, role: string) {
   return {
     id,
-    usuario: 'testuser',
+    email: 'testuser@senai.br',
     senha: 'hashed',
     nome: 'Test User',
     cargo: 'Usuário',
@@ -66,7 +66,7 @@ function cursoComStatus(status: StatusCurso, ownerId: string | null = DONO_ID) {
     version: 0,
     revisadoPorId: null,
     revisadoEm: null,
-    owner: ownerId ? { id: ownerId, nome: 'Dono', usuario: 'dono' } : null,
+    owner: ownerId ? { id: ownerId, nome: 'Dono', email: 'dono' } : null,
   }
 }
 

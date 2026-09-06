@@ -103,6 +103,7 @@ export interface CursoGerado {
   ownerId?: string
   ownerNome?: string
   permissoes?: PermissoesCurso
+  solicitacaoPendente?: boolean
   dataCriacao: Date
   dataModificacao: Date
   unidades: Unidade[]

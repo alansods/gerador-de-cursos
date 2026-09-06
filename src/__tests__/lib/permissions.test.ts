@@ -39,16 +39,6 @@ describe('can - ações globais', () => {
       },
     ],
     [
-      'revisao:ver',
-      {
-        ADMIN: true,
-        GESTOR: true,
-        CONTEUDISTA: false,
-        REVISOR: true,
-        CONVIDADO: false,
-      },
-    ],
-    [
       'curso:criar',
       {
         ADMIN: true,
@@ -103,29 +93,19 @@ describe('podeEditarCurso', () => {
     expect(podeEditarCurso(usuario('CONTEUDISTA'), cursoDe('outro'))).toBe(false)
   })
 
-  it('CONTEUDISTA edita curso alheio como colaborador EDITOR', () => {
-    expect(
-      podeEditarCurso(usuario('CONTEUDISTA'), cursoDe('outro'), {
-        papel: 'EDITOR',
-      })
-    ).toBe(true)
+  it('CONTEUDISTA edita curso alheio quando tem colaboração concedida', () => {
+    expect(podeEditarCurso(usuario('CONTEUDISTA'), cursoDe('outro'), { concedida: true })).toBe(
+      true
+    )
   })
 
-  it('colaborador LEITOR não edita', () => {
-    expect(
-      podeEditarCurso(usuario('CONTEUDISTA'), cursoDe('outro'), {
-        papel: 'LEITOR',
-      })
-    ).toBe(false)
+  it('CONTEUDISTA sem colaboração não edita curso alheio', () => {
+    expect(podeEditarCurso(usuario('CONTEUDISTA'), cursoDe('outro'), null)).toBe(false)
   })
 
-  it('REVISOR e CONVIDADO nunca editam, mesmo como colaborador EDITOR', () => {
-    expect(podeEditarCurso(usuario('REVISOR'), cursoDe('outro'), { papel: 'EDITOR' })).toBe(false)
-    expect(
-      podeEditarCurso(usuario('CONVIDADO'), cursoDe('outro'), {
-        papel: 'EDITOR',
-      })
-    ).toBe(false)
+  it('REVISOR e CONVIDADO nunca editam, mesmo com colaboração concedida', () => {
+    expect(podeEditarCurso(usuario('REVISOR'), cursoDe('outro'), { concedida: true })).toBe(false)
+    expect(podeEditarCurso(usuario('CONVIDADO'), cursoDe('outro'), { concedida: true })).toBe(false)
   })
 
   it('curso órfão (sem dono) só é editável por ADMIN e GESTOR', () => {
@@ -141,7 +121,7 @@ describe('podeExcluirCurso', () => {
     expect(
       can(usuario('CONTEUDISTA'), 'curso:excluir', {
         curso: cursoDe('outro'),
-        colaboracao: { papel: 'EDITOR' },
+        colaboracao: { concedida: true },
       })
     ).toBe(false)
   })
@@ -162,6 +142,15 @@ describe('curso:solicitarAcesso', () => {
       })
     ).toBe(false)
     expect(can(usuario('REVISOR'), 'curso:solicitarAcesso', { curso })).toBe(false)
+  })
+
+  it('não solicita acesso a curso onde já é colaborador', () => {
+    expect(
+      can(usuario('CONTEUDISTA'), 'curso:solicitarAcesso', {
+        curso: cursoDe('outro'),
+        colaboracao: { concedida: true },
+      })
+    ).toBe(false)
   })
 })
 

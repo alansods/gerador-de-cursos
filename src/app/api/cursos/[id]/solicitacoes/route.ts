@@ -1,12 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requireAuth, createErrorResponse, createSuccessResponse } from '@/lib/auth'
-import { can, type PapelColaborador } from '@/lib/permissions'
+import { can } from '@/lib/permissions'
 import { logActivity } from '@/lib/activity-logger'
 
-const PAPEIS: PapelColaborador[] = ['EDITOR', 'LEITOR']
-
-const solicitanteSelecionado = { select: { id: true, nome: true, usuario: true } }
+const solicitanteSelecionado = { select: { id: true, nome: true, email: true } }
 
 /** Dono do curso, ADMIN e GESTOR enxergam as solicitações */
 function podeVerSolicitacoes(role: string, ownerId: string | null, userId: string) {
@@ -56,9 +54,6 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   try {
     const { id } = await params
     const body = await req.json().catch(() => ({}))
-    const papelSolicitado: PapelColaborador = PAPEIS.includes(body.papelSolicitado)
-      ? body.papelSolicitado
-      : 'EDITOR'
     const mensagem = typeof body.mensagem === 'string' ? body.mensagem.trim().slice(0, 500) : null
 
     const curso = await prisma.curso.findUnique({
@@ -76,7 +71,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 
     const jaColabora = await prisma.cursoColaborador.findUnique({
       where: { cursoId_userId: { cursoId: id, userId: authResult.user.id } },
-      select: { papel: true },
+      select: { id: true },
     })
 
     if (jaColabora) {
@@ -90,11 +85,9 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       create: {
         cursoId: id,
         solicitanteId: authResult.user.id,
-        papelSolicitado,
         mensagem,
       },
       update: {
-        papelSolicitado,
         mensagem,
         status: 'PENDENTE',
         respondidoPorId: null,

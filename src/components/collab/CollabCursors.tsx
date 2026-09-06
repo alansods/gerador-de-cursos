@@ -31,16 +31,23 @@ function Cursor({ x, y, nome, cor }: { x: number; y: number; nome: string; cor: 
  * As coordenadas trafegam normalizadas (0..1) em relação ao container, e não
  * como clientX/clientY: assim o cursor do outro cai no lugar certo mesmo com
  * scroll diferente, zoom diferente ou tela de tamanho diferente.
+ *
+ * A checagem de `ativo` fica no componente externo porque `useOthers` e
+ * `useUpdateMyPresence` exigem o RoomProvider, que só existe quando a
+ * colaboração está ligada.
  */
 export function CollabCursors({ containerRef }: { containerRef: RefObject<HTMLElement | null> }) {
   const { ativo } = useEstadoColab()
+  if (!ativo) return null
+  return <Cursores containerRef={containerRef} />
+}
+
+function Cursores({ containerRef }: { containerRef: RefObject<HTMLElement | null> }) {
   const others = useOthers()
   const updateMyPresence = useUpdateMyPresence()
   const ultimoEnvio = useRef(0)
 
   useEffect(() => {
-    if (!ativo) return
-
     const container = containerRef.current
     if (!container) return
 
@@ -69,9 +76,7 @@ export function CollabCursors({ containerRef }: { containerRef: RefObject<HTMLEl
       container.removeEventListener('pointermove', aoMover)
       container.removeEventListener('pointerleave', aoSair)
     }
-  }, [ativo, containerRef, updateMyPresence])
-
-  if (!ativo) return null
+  }, [containerRef, updateMyPresence])
 
   const caixa = containerRef.current?.getBoundingClientRect()
   if (!caixa) return null

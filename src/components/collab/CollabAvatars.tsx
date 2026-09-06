@@ -24,13 +24,24 @@ function Avatar({ nome, cor }: { nome: string; cor: string }) {
   )
 }
 
-/** Pilha de avatares de quem está no curso agora, no header do editor */
+/**
+ * Pilha de avatares de quem está no curso agora, no header do editor.
+ *
+ * A checagem de `ativo` fica no componente externo porque `useOthers`/`useSelf`
+ * exigem o RoomProvider, que só existe quando a colaboração está ligada —
+ * chamá-los antes de checar derrubaria o editor inteiro sem chave do Liveblocks.
+ */
 export function CollabAvatars() {
   const { ativo } = useEstadoColab()
+  if (!ativo) return null
+  return <Avatares />
+}
+
+function Avatares() {
   const others = useOthers()
   const eu = useSelf()
 
-  if (!ativo || others.length === 0) return null
+  if (others.length === 0) return null
 
   return (
     <div className="flex items-center -space-x-2" aria-label="Pessoas editando agora">
