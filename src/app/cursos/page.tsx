@@ -349,12 +349,18 @@ export default function CursosPage() {
                     createdAt={curso.dataCriacao}
                     status={curso.status}
                     ownerNome={curso.ownerNome}
-                    canEdit={curso.permissoes?.podeEditar ?? false}
-                    canDelete={curso.permissoes?.podeExcluir ?? false}
                     canRequestAccess={curso.permissoes?.podeSolicitarAcesso ?? false}
                     onPreview={() => handlePreviewCurso(curso.id)}
-                    onEdit={() => handleEditarCurso(curso.slug || curso.id)}
-                    onDelete={() => setShowDeleteConfirm(curso.id)}
+                    onEdit={() =>
+                      curso.permissoes?.podeEditar
+                        ? handleEditarCurso(curso.slug || curso.id)
+                        : toast.error('Você não tem permissão para editar este curso')
+                    }
+                    onDelete={() =>
+                      curso.permissoes?.podeExcluir
+                        ? setShowDeleteConfirm(curso.id)
+                        : toast.error('Você não tem permissão para excluir este curso')
+                    }
                     onRequestAccess={() => handleSolicitarAcesso(curso.id, curso.titulo)}
                     onExport={() => handleOpenExportModal(curso)}
                   />

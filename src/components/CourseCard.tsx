@@ -26,8 +26,6 @@ interface CourseCardProps {
   createdAt?: Date | string
   status?: StatusCurso
   ownerNome?: string
-  canEdit?: boolean
-  canDelete?: boolean
   canRequestAccess?: boolean
   onPreview?: () => void
   onEdit?: () => void
@@ -46,8 +44,6 @@ export function CourseCard({
   createdAt,
   status,
   ownerNome,
-  canEdit = true,
-  canDelete = true,
   canRequestAccess = false,
   onPreview,
   onEdit,
@@ -151,17 +147,15 @@ export function CourseCard({
               <Eye className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
               <span>Preview</span>
             </Button>
-            {canEdit && (
-              <Button
-                variant="outline"
-                size="sm"
-                className="flex-1 gap-1 sm:gap-2 h-8 text-xs sm:text-sm px-2 sm:px-3"
-                onClick={onEdit}
-              >
-                <Pencil className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
-                <span>Editar</span>
-              </Button>
-            )}
+            <Button
+              variant="outline"
+              size="sm"
+              className="flex-1 gap-1 sm:gap-2 h-8 text-xs sm:text-sm px-2 sm:px-3"
+              onClick={onEdit}
+            >
+              <Pencil className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
+              <span>Editar</span>
+            </Button>
             {canRequestAccess && (
               <Button
                 variant="outline"
@@ -173,11 +167,9 @@ export function CourseCard({
                 <span>Solicitar acesso</span>
               </Button>
             )}
-            {canDelete && (
-              <Button variant="outline" size="icon" className="h-8 w-8 border-0" onClick={onDelete}>
-                <Trash2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-destructive" />
-              </Button>
-            )}
+            <Button variant="outline" size="icon" className="h-8 w-8 border-0" onClick={onDelete}>
+              <Trash2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-destructive" />
+            </Button>
           </div>
           <Button
             size="sm"

@@ -538,6 +538,26 @@ Correção: `requireAuth` no topo dos dois handlers, no mesmo padrão das demais
 - [x] Drawer "Colaboradores" no `CourseSettingsDrawer` com revogação
 - [ ] Namespace `collaboration.json` + chaves novas em `courses.json`/`home.json` nos **dois** idiomas — **deliberadamente não feito**: toda a UI nova ficou em pt-BR fixo, como o resto do app (só `/login` usa `next-intl` hoje). Migrar só a Fase 2 deixaria a inconsistência pior. Decisão pendente do usuário.
 
+### 2.6 Testes automatizados da máquina de status
+
+As rotas da Fase 2 subiram sem nenhum teste. `src/__tests__/api/curso-status.test.ts` cobre a parte de maior risco — a máquina de transição e os portões de permissão do `PATCH /api/cursos/[id]/status` — com 25 casos: a tabela de `transicaoValida` (7 transições válidas, 6 inválidas) e 12 casos da rota (401 sem sessão, 400 em status fora do enum, 404, 422 em transição inválida _antes_ de checar permissão, dono envia para revisão, não-dono recebe 403, conteudista não aprova nem sendo dono, revisor aprova gravando `revisadoPorId`/`revisadoEm`, comentário obrigatório ao reprovar — inclusive só-espaços —, comentário gravado na mesma transação, e limpeza de `revisadoPorId` ao voltar de `APROVADO`).
+
+Total da suíte: **85 testes em 7 suítes** (era 60 em 6). `activity: { create }` foi adicionado ao mock do Prisma em `jest.setup.js` — faltava, e fazia o `logActivity` cair no `catch` silenciosamente durante os testes.
+
+O mock é tipado localmente no arquivo em vez de usar `jest.Mocked<typeof prisma>`, que não reescreve os métodos genéricos do Prisma como mocks. Por isso o arquivo novo não soma nenhum erro aos **31 erros de `tsc` pré-existentes em `src/__tests__`** (o código de produção segue com zero).
+
+**Ainda sem cobertura:** solicitações, colaboradores e comentários. São as próximas se quiser reduzir o teste manual.
+
+### 2.7 Buraco no fluxo editorial — curso `APROVADO` continua editável
+
+`PUT /api/cursos` reverte o status para `EM_ANDAMENTO` quando o curso está `REPROVADO` (`src/app/api/cursos/route.ts:358`), mas **não faz nada quando está `APROVADO`**. Na prática: o dono envia para revisão, o revisor aprova, e depois o dono reescreve o conteúdo inteiro — o curso continua exibindo o selo "Aprovado" e `revisadoPorId` aponta para um revisor que nunca viu essa versão. O SCORM exportado sai como aprovado.
+
+O plano original só especificou o caso `REPROVADO`, então isto não é um desvio da implementação — é uma lacuna da especificação. **Não foi alterado**, porque a escolha é de política editorial:
+
+1. Editar um curso aprovado o devolve a `EM_ANDAMENTO` (simétrico ao `REPROVADO`; obriga nova revisão).
+2. Curso aprovado vira somente-leitura até alguém devolvê-lo a `EM_ANDAMENTO` pelo `PATCH` de status (que já permite `APROVADO → EM_ANDAMENTO`).
+3. Deixar como está, aceitando que "aprovado" signifique "foi aprovado alguma vez".
+
 ### 2.5 Verificação da Fase 2
 
 - [ ] solicitação de acesso aparece no sino do dono

@@ -108,6 +108,10 @@ jest.mock('@/lib/prisma', () => ({
       create: jest.fn(),
       delete: jest.fn(),
     },
+    activity: {
+      findMany: jest.fn().mockResolvedValue([]),
+      create: jest.fn(),
+    },
     $transaction: jest.fn((ops) => Promise.all(ops)),
   },
   ensureConnection: jest.fn().mockResolvedValue(undefined),
