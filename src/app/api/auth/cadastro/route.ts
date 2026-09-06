@@ -33,14 +33,12 @@ export async function POST(request: NextRequest) {
         nome: nome.trim(),
         usuario: usuario.trim(),
         senha: hashedPassword,
-        cargo: 'Usuário', // Cargo padrão
         role: 'CONTEUDISTA',
       },
       select: {
         id: true,
         usuario: true,
         nome: true,
-        cargo: true,
         role: true,
       },
     })
@@ -51,7 +49,6 @@ export async function POST(request: NextRequest) {
         id: user.id,
         usuario: user.usuario,
         nome: user.nome,
-        cargo: user.cargo,
         role: user.role,
       },
     })

@@ -3,19 +3,11 @@
 import { createContext, useContext, useState, ReactNode, useEffect, useRef } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import { toast } from 'sonner'
-import {
-  can,
-  mapCargoParaRole,
-  ROLES,
-  type Acao,
-  type ContextoPermissao,
-  type RoleUsuario,
-} from '@/lib/permissions'
+import { can, ROLES, type Acao, type ContextoPermissao, type RoleUsuario } from '@/lib/permissions'
 
 interface User {
   id: string
   nome: string
-  cargo: string
   usuario: string
   role?: RoleUsuario
 }
@@ -204,11 +196,10 @@ export function AuthProvider({ children, initialUser }: AuthProviderProps) {
 
   const isAuthenticated = !!user
 
-  const role: RoleUsuario | null = user
-    ? user.role && ROLES.includes(user.role)
-      ? user.role
-      : mapCargoParaRole(user.cargo)
-    : null
+  // Sem papel reconhecido o usuário fica sem permissão alguma (falha fechada).
+  // `/api/auth/me` sempre devolve o papel lido do banco, então isso só acontece
+  // se a sessão ainda não carregou.
+  const role: RoleUsuario | null = user?.role && ROLES.includes(user.role) ? user.role : null
 
   const usuarioPermissoes = user && role ? { id: user.id, role } : null
 

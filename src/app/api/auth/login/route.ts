@@ -38,7 +38,6 @@ export async function POST(request: NextRequest) {
       id: user.id,
       usuario: user.usuario,
       nome: user.nome,
-      cargo: user.cargo,
       role: user.role,
     })
       .setProtectedHeader({ alg: 'HS256' })
@@ -52,7 +51,6 @@ export async function POST(request: NextRequest) {
         id: user.id,
         usuario: user.usuario,
         nome: user.nome,
-        cargo: user.cargo,
         role: user.role,
       },
     })

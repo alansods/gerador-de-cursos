@@ -1,22 +1,17 @@
-"use client";
+'use client'
 
-import { useState } from "react";
-import { usePathname } from "next/navigation";
-import Link from "next/link";
-import { useAuth } from "@/context/AuthContext";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import {
-  Home,
-  BookOpen,
-  LogOut,
-  User,
-  GraduationCap,
-} from "lucide-react";
-import { cn } from "@/lib/utils";
+import { useState } from 'react'
+import { usePathname } from 'next/navigation'
+import Link from 'next/link'
+import { useAuth } from '@/context/AuthContext'
+import { ROLE_LABELS } from '@/lib/permissions'
+import { Button } from '@/components/ui/button'
+import { Card } from '@/components/ui/card'
+import { Home, BookOpen, LogOut, User, GraduationCap } from 'lucide-react'
+import { cn } from '@/lib/utils'
 
 interface NavigationDrawerProps {
-  children: React.ReactNode;
+  children: React.ReactNode
 }
 
 // Componente NavLink para os itens do menu
@@ -26,58 +21,58 @@ const NavLink = ({
   active,
   isHovered,
 }: {
-  href: string;
-  children: React.ReactNode;
-  active?: boolean;
-  isHovered?: boolean;
+  href: string
+  children: React.ReactNode
+  active?: boolean
+  isHovered?: boolean
 }) => (
   <Link href={href}>
     <Button
       variant="ghost"
       className={cn(
-        "w-full justify-start gap-2 transition-all duration-200",
+        'w-full justify-start gap-2 transition-all duration-200',
         active
-          ? "bg-white text-blue-900 hover:bg-white hover:text-blue-900 shadow-md"
-          : "text-blue-100 hover:bg-white/10 hover:text-white",
-        isHovered ? "px-4" : "px-3 justify-center"
+          ? 'bg-white text-blue-900 hover:bg-white hover:text-blue-900 shadow-md'
+          : 'text-blue-100 hover:bg-white/10 hover:text-white',
+        isHovered ? 'px-4' : 'px-3 justify-center'
       )}
     >
       {children}
     </Button>
   </Link>
-);
+)
 
 export function NavigationDrawer({ children }: NavigationDrawerProps) {
-  const [isHovered, setIsHovered] = useState(false);
-  const pathname = usePathname();
-  const { user, logout } = useAuth();
+  const [isHovered, setIsHovered] = useState(false)
+  const pathname = usePathname()
+  const { user, logout, role } = useAuth()
 
   const menuItems = [
     {
-      label: "Home",
+      label: 'Home',
       icon: Home,
-      href: "/home",
-      active: pathname === "/home" || pathname === "/",
+      href: '/home',
+      active: pathname === '/home' || pathname === '/',
     },
     {
-      label: "Cursos",
+      label: 'Cursos',
       icon: BookOpen,
-      href: "/cursos",
-      active: pathname?.startsWith("/cursos"),
+      href: '/cursos',
+      active: pathname?.startsWith('/cursos'),
     },
-  ];
+  ]
 
   const handleLogout = async () => {
-    await logout();
-  };
+    await logout()
+  }
 
   return (
     <div className="flex min-h-screen bg-gray-50">
       {/* Sidebar Lateral Esquerda */}
       <aside
         className={cn(
-          "fixed left-0 top-0 h-full bg-gradient-to-b from-blue-900 via-blue-800 to-indigo-900 border-r border-blue-700/50 shadow-2xl z-50 transition-all duration-300 ease-in-out overflow-hidden",
-          isHovered ? "w-72" : "w-20"
+          'fixed left-0 top-0 h-full bg-gradient-to-b from-blue-900 via-blue-800 to-indigo-900 border-r border-blue-700/50 shadow-2xl z-50 transition-all duration-300 ease-in-out overflow-hidden',
+          isHovered ? 'w-72' : 'w-20'
         )}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
@@ -91,12 +86,8 @@ export function NavigationDrawer({ children }: NavigationDrawerProps) {
               </div>
               {isHovered && (
                 <div className="min-w-0">
-                  <h2 className="text-xl font-bold text-white truncate">
-                    Gerador de Cursos
-                  </h2>
-                  <p className="text-xs text-blue-100/80 truncate">
-                    SCORM Platform
-                  </p>
+                  <h2 className="text-xl font-bold text-white truncate">Gerador de Cursos</h2>
+                  <p className="text-xs text-blue-100/80 truncate">SCORM Platform</p>
                 </div>
               )}
             </div>
@@ -107,7 +98,7 @@ export function NavigationDrawer({ children }: NavigationDrawerProps) {
             {/* Links de Navegação (Topo) */}
             <nav className="flex flex-col gap-2 px-3 overflow-y-auto [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-white/5 [&::-webkit-scrollbar-track]:rounded-full [&::-webkit-scrollbar-thumb]:bg-white/20 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:hover:bg-white/30">
               {menuItems.map((item) => {
-                const Icon = item.icon;
+                const Icon = item.icon
                 return (
                   <NavLink
                     key={item.href}
@@ -116,13 +107,9 @@ export function NavigationDrawer({ children }: NavigationDrawerProps) {
                     isHovered={isHovered}
                   >
                     <Icon className="h-4 w-4 flex-shrink-0" />
-                    {isHovered && (
-                      <span>
-                        {item.label}
-                      </span>
-                    )}
+                    {isHovered && <span>{item.label}</span>}
                   </NavLink>
-                );
+                )
               })}
             </nav>
 
@@ -139,7 +126,7 @@ export function NavigationDrawer({ children }: NavigationDrawerProps) {
                           {user.nome}
                         </p>
                         <p className="text-xs text-blue-100/80 truncate">
-                          {user.cargo}
+                          {role ? ROLE_LABELS[role] : ''}
                         </p>
                       </div>
                     )}
@@ -152,17 +139,13 @@ export function NavigationDrawer({ children }: NavigationDrawerProps) {
                 onClick={handleLogout}
                 variant="outline"
                 className={cn(
-                  "w-full justify-start gap-2 bg-red-500 hover:bg-red-600 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-200",
-                  !isHovered && "justify-center"
+                  'w-full justify-start gap-2 bg-red-500 hover:bg-red-600 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-200',
+                  !isHovered && 'justify-center'
                 )}
-                title={!isHovered ? "Sair" : undefined}
+                title={!isHovered ? 'Sair' : undefined}
               >
                 <LogOut className="h-4 w-4 flex-shrink-0" />
-                {isHovered && (
-                  <span>
-                    Sair
-                  </span>
-                )}
+                {isHovered && <span>Sair</span>}
               </Button>
             </div>
           </div>
@@ -171,8 +154,8 @@ export function NavigationDrawer({ children }: NavigationDrawerProps) {
         {/* Efeito de brilho no hover */}
         <div
           className={cn(
-            "absolute top-0 left-0 w-full h-full pointer-events-none transition-opacity duration-300",
-            isHovered ? "opacity-100" : "opacity-0"
+            'absolute top-0 left-0 w-full h-full pointer-events-none transition-opacity duration-300',
+            isHovered ? 'opacity-100' : 'opacity-0'
           )}
         >
           <div className="absolute inset-0 bg-gradient-to-r from-white/5 via-transparent to-transparent" />
@@ -182,14 +165,12 @@ export function NavigationDrawer({ children }: NavigationDrawerProps) {
       {/* Conteúdo da página com margem para a sidebar */}
       <main
         className={cn(
-          "flex-1 transition-all duration-300 ease-in-out",
-          isHovered ? "ml-72" : "ml-20"
+          'flex-1 transition-all duration-300 ease-in-out',
+          isHovered ? 'ml-72' : 'ml-20'
         )}
       >
         {children}
       </main>
-
     </div>
-  );
+  )
 }
-

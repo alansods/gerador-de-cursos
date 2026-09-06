@@ -41,7 +41,6 @@ enum StatusSolicitacao {
 model User {
   id             String      @id @default(cuid())
   nome           String
-  cargo          String
   role           RoleUsuario @default(CONTEUDISTA)
   usuario        String      @unique
   senha          String

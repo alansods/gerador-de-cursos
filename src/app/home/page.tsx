@@ -40,7 +40,6 @@ interface Activity {
     id: string
     nome: string
     usuario: string
-    cargo: string
   } | null
 }
 

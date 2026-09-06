@@ -5,12 +5,13 @@ import { Users, Trash2, Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { ROLE_LABELS, type RoleUsuario } from '@/lib/permissions'
 
 interface Colaborador {
   id: string
   papel: 'EDITOR' | 'LEITOR'
   createdAt: string
-  user: { id: string; nome: string; usuario: string; cargo: string; role: string }
+  user: { id: string; nome: string; usuario: string; role: RoleUsuario }
   concedidoPor: { id: string; nome: string } | null
 }
 
@@ -94,7 +95,8 @@ export function GerenciarColaboradores({ cursoId, podeGerenciar }: Props) {
               <div className="min-w-0">
                 <p className="truncate text-sm font-medium">{colaborador.user.nome}</p>
                 <p className="truncate text-xs text-muted-foreground">
-                  {colaborador.user.cargo} · concedido por {colaborador.concedidoPor?.nome ?? '—'}
+                  {ROLE_LABELS[colaborador.user.role as RoleUsuario]} · concedido por{' '}
+                  {colaborador.concedidoPor?.nome ?? '—'}
                 </p>
               </div>
               <div className="flex shrink-0 items-center gap-2">

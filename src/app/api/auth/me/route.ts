@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { verifyAuth, resolverRole } from '@/lib/auth'
+import { verifyAuth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 
 export async function GET(request: NextRequest) {
@@ -14,7 +14,6 @@ export async function GET(request: NextRequest) {
         id: true,
         usuario: true,
         nome: true,
-        cargo: true,
         role: true,
       },
     })
@@ -30,8 +29,7 @@ export async function GET(request: NextRequest) {
         id: user.id,
         usuario: user.usuario,
         nome: user.nome,
-        cargo: user.cargo,
-        role: resolverRole(user.role, user.cargo),
+        role: user.role,
       },
     })
   } catch (error) {

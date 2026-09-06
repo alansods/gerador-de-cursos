@@ -17,7 +17,7 @@ import {
   Package,
   ClipboardCheck,
 } from 'lucide-react'
-import type { Acao } from '@/lib/permissions'
+import { ROLE_LABELS, type Acao } from '@/lib/permissions'
 import { Button } from './ui/button'
 import { useTheme } from '@/hooks/useTheme'
 import { useAuth } from '@/context/AuthContext'
@@ -61,7 +61,7 @@ export function Sidebar() {
   const [isHovered, setIsHovered] = useState(false)
   const [isMobileOpen, setIsMobileOpen] = useState(false)
   const { isDarkMode, toggleDarkMode } = useTheme()
-  const { user, logout, can } = useAuth()
+  const { user, logout, can, role } = useAuth()
   const pathname = usePathname()
   const itensVisiveis = navItems.filter((item) => !item.acao || can(item.acao))
 
@@ -149,7 +149,7 @@ export function Sidebar() {
                 className="text-muted-foreground whitespace-nowrap"
                 style={{ fontSize: '0.875rem' }}
               >
-                {user?.cargo || 'Usuário'}
+                {role ? ROLE_LABELS[role] : 'Usuário'}
               </p>
             </div>
           </div>

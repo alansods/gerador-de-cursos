@@ -362,7 +362,6 @@ async function main() {
   const usuarioAdmin = await prisma.user.create({
     data: {
       nome: 'Administrador',
-      cargo: 'Administrador',
       role: 'ADMIN',
       usuario: 'admin',
       senha: senhaHashAdmin,
@@ -380,7 +379,6 @@ async function main() {
   const usuarioConvidado = await prisma.user.create({
     data: {
       nome: 'Usuário Convidado',
-      cargo: 'Convidado',
       role: 'CONVIDADO',
       usuario: 'convidado',
       senha: senhaHashConvidado,

@@ -16,13 +16,14 @@ export interface JWTPayload {
   id: string
   usuario: string
   nome: string
-  cargo: string
   role: RoleUsuario
 }
 
 /**
- * Tokens emitidos antes da introdução de roles não carregam o campo `role`.
- * Enquanto expiram (24h), o papel é derivado do `cargo` com o mesmo mapa da migração.
+ * Tokens emitidos antes da introdução de roles não carregam o campo `role`, e sim
+ * o antigo `cargo`. A coluna `cargo` não existe mais, mas esses tokens seguem
+ * válidos por até 24h depois do deploy, então o papel ainda é derivado do `cargo`
+ * que veio dentro do próprio token enquanto eles expiram.
  */
 export function resolverRole(role: unknown, cargo?: string | null): RoleUsuario {
   if (typeof role === 'string' && ROLES.includes(role as RoleUsuario)) {
@@ -49,7 +50,6 @@ export async function verifyAuth(req: NextRequest): Promise<JWTPayload> {
       id: payload.id as string,
       usuario: payload.usuario as string,
       nome: payload.nome as string,
-      cargo: payload.cargo as string,
       role: resolverRole(payload.role, payload.cargo as string | undefined),
     }
   } catch {
@@ -76,14 +76,14 @@ export async function requireAuth(req: NextRequest): Promise<{ user: JWTPayload 
 
   const atual = await prisma.user.findUnique({
     where: { id: user.id },
-    select: { nome: true, cargo: true, role: true },
+    select: { nome: true, role: true },
   })
 
   if (!atual) {
     return NextResponse.json({ success: false, error: 'Usuário não encontrado' }, { status: 401 })
   }
 
-  return { user: { ...user, nome: atual.nome, cargo: atual.cargo, role: atual.role } }
+  return { user: { ...user, nome: atual.nome, role: atual.role } }
 }
 
 /**

@@ -63,7 +63,6 @@ describe('API - Authentication', () => {
         id: '1',
         usuario: 'testuser',
         nome: 'Test User',
-        cargo: 'Desenvolvedor',
         role: 'CONTEUDISTA',
       })
       expect(response.headers.get('Set-Cookie')).toContain('token=')
@@ -200,7 +199,6 @@ describe('API - Authentication', () => {
         id: '1',
         usuario: 'testuser',
         nome: 'Test User',
-        cargo: 'Desenvolvedor',
         role: 'CONTEUDISTA',
       })
 

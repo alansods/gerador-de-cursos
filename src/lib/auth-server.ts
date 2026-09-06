@@ -1,7 +1,7 @@
 import { cookies } from 'next/headers'
 import { jwtVerify } from 'jose'
 import { prisma, ensureConnection } from '@/lib/prisma'
-import { resolverRole, type JWTPayload } from '@/lib/auth'
+import { type JWTPayload } from '@/lib/auth'
 
 // Validar que JWT_SECRET está definido
 if (!process.env.JWT_SECRET) {
@@ -36,7 +36,7 @@ export async function getServerUser(): Promise<JWTPayload | null> {
       // Buscar usuário no banco para garantir que ainda existe
       const user = await prisma.user.findUnique({
         where: { id: payload.id as string },
-        select: { id: true, nome: true, cargo: true, usuario: true, role: true },
+        select: { id: true, nome: true, usuario: true, role: true },
       })
 
       if (!user) {
@@ -48,8 +48,7 @@ export async function getServerUser(): Promise<JWTPayload | null> {
         id: user.id,
         usuario: user.usuario,
         nome: user.nome,
-        cargo: user.cargo,
-        role: resolverRole(user.role, user.cargo),
+        role: user.role,
       }
     } catch (error) {
       // Se houver erro de conexão ou token inválido, retornar null

@@ -6,7 +6,7 @@ import { logActivity } from '@/lib/activity-logger'
 
 const PAPEIS: PapelColaborador[] = ['EDITOR', 'LEITOR']
 
-const solicitanteSelecionado = { select: { id: true, nome: true, usuario: true, cargo: true } }
+const solicitanteSelecionado = { select: { id: true, nome: true, usuario: true } }
 
 /** Dono do curso, ADMIN e GESTOR enxergam as solicitações */
 function podeVerSolicitacoes(role: string, ownerId: string | null, userId: string) {

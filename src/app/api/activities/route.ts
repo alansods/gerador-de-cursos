@@ -27,7 +27,6 @@ export async function GET(req: NextRequest) {
             id: true,
             nome: true,
             usuario: true,
-            cargo: true,
           },
         },
       },
@@ -47,7 +46,6 @@ export async function GET(req: NextRequest) {
             id: activity.user.id,
             nome: activity.user.nome,
             usuario: activity.user.usuario,
-            cargo: activity.user.cargo,
           }
         : null,
       createdAt: activity.createdAt,

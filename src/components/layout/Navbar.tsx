@@ -4,6 +4,7 @@ import React from 'react'
 import { Button } from '@/components/ui/button'
 import { ArrowLeft, Eye, Download, Save, LogOut, User, Moon, Sun } from 'lucide-react'
 import { useAuth } from '@/context/AuthContext'
+import { ROLE_LABELS } from '@/lib/permissions'
 import Link from 'next/link'
 import { useTheme } from '@/hooks/useTheme'
 import { LanguageToggle } from '@/components/LanguageToggle'
@@ -32,7 +33,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   title,
   showUserInfo = true,
 }) => {
-  const { user, logout } = useAuth()
+  const { user, logout, role } = useAuth()
   const { isDarkMode, toggleDarkMode } = useTheme()
 
   const handleLogout = async () => {
@@ -138,7 +139,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                   </div>
                   <div className="hidden lg:block">
                     <p className="font-medium text-foreground">{user.nome}</p>
-                    <p className="text-xs text-muted-foreground">{user.cargo}</p>
+                    <p className="text-xs text-muted-foreground">{role ? ROLE_LABELS[role] : ''}</p>
                   </div>
                 </div>
                 <Button

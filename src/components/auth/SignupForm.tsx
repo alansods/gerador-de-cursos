@@ -7,13 +7,6 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Checkbox } from '@/components/ui/checkbox'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
 import { toast } from 'sonner'
 import { PasswordStrengthMeter } from './PasswordStrengthMeter'
 import { User, Mail, Lock, Eye, EyeOff, ArrowRight } from 'lucide-react'
@@ -21,7 +14,6 @@ import { User, Mail, Lock, Eye, EyeOff, ArrowRight } from 'lucide-react'
 export function SignupForm() {
   const [nome, setNome] = useState('')
   const [email, setEmail] = useState('')
-  const [funcao, setFuncao] = useState('Professor(a) / Instrutor(a)')
   const [senha, setSenha] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [aceitoTermos, setAceitoTermos] = useState(false)
@@ -30,7 +22,6 @@ export function SignupForm() {
   const [errors, setErrors] = useState<{
     nome?: string
     email?: string
-    funcao?: string
     senha?: string
     termos?: string
   }>({})
@@ -47,10 +38,6 @@ export function SignupForm() {
 
     if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       newErrors.email = 'E-mail inválido'
-    }
-
-    if (!funcao) {
-      newErrors.funcao = 'Função é obrigatória'
     }
 
     if (!senha) {
@@ -88,7 +75,6 @@ export function SignupForm() {
           nome: nomeCompleto,
           usuario,
           senha,
-          cargo: funcao,
         }),
       })
 
@@ -173,42 +159,6 @@ export function SignupForm() {
           </div>
 
           {errors.email && <p className="text-xs text-red-500 mt-1.5">{errors.email}</p>}
-        </div>
-
-        {/* Campo Função */}
-        <div className="field">
-          <Label htmlFor="signup-funcao" className="text-[13px] font-medium text-foreground">
-            Função na instituição<span className="text-[#F15A29] ml-0.5">*</span>
-          </Label>
-          <div className="input-wrap relative mt-1.5">
-            <Select
-              value={funcao}
-              onValueChange={(value) => {
-                setFuncao(value)
-                if (errors.funcao) {
-                  setErrors({ ...errors, funcao: undefined })
-                }
-              }}
-              disabled={loading}
-            >
-              <SelectTrigger
-                id="signup-funcao"
-                className={`h-[42px] ${errors.funcao ? 'border-red-500' : ''}`}
-              >
-                <SelectValue placeholder="Selecione sua função" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="Professor(a) / Instrutor(a)">
-                  Professor(a) / Instrutor(a)
-                </SelectItem>
-                <SelectItem value="Coordenador(a) pedagógico">Coordenador(a) pedagógico</SelectItem>
-                <SelectItem value="Designer instrucional">Designer instrucional</SelectItem>
-                <SelectItem value="Administrador(a)">Administrador(a)</SelectItem>
-                <SelectItem value="Outros">Outros</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          {errors.funcao && <p className="text-xs text-red-500 mt-1.5">{errors.funcao}</p>}
         </div>
 
         {/* Campo Senha com Strength Meter */}

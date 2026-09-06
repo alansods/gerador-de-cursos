@@ -51,7 +51,6 @@ export async function GET(request: NextRequest) {
       where.OR = [
         { nome: { contains: search, mode: 'insensitive' } },
         { usuario: { contains: search, mode: 'insensitive' } },
-        { cargo: { contains: search, mode: 'insensitive' } },
       ]
     }
 
@@ -74,7 +73,6 @@ export async function GET(request: NextRequest) {
           id: true,
           nome: true,
           usuario: true,
-          cargo: true,
           role: true,
           createdAt: true,
           updatedAt: true,
@@ -119,9 +117,9 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json()
-    const { nome, usuario, senha, cargo, role } = body
+    const { nome, usuario, senha, role } = body
 
-    if (!nome || !usuario || !senha || !cargo) {
+    if (!nome || !usuario || !senha) {
       return NextResponse.json(
         { success: false, error: 'Todos os campos são obrigatórios' },
         { status: 400 }
@@ -147,14 +145,12 @@ export async function POST(request: NextRequest) {
         nome,
         usuario,
         senha: hashedPassword,
-        cargo,
         role: normalizarRole(role),
       },
       select: {
         id: true,
         nome: true,
         usuario: true,
-        cargo: true,
         role: true,
         createdAt: true,
       },
@@ -193,7 +189,7 @@ export async function PUT(request: NextRequest) {
 
   try {
     const body = await request.json()
-    const { id, nome, usuario, senha, cargo, role } = body
+    const { id, nome, usuario, senha, role } = body
 
     if (!id) {
       return NextResponse.json(
@@ -205,7 +201,6 @@ export async function PUT(request: NextRequest) {
     const updateData: Prisma.UserUpdateInput = {
       nome,
       usuario,
-      cargo,
     }
 
     if (role !== undefined) {
@@ -223,7 +218,6 @@ export async function PUT(request: NextRequest) {
         id: true,
         nome: true,
         usuario: true,
-        cargo: true,
         role: true,
       },
     })

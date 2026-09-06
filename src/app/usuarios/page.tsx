@@ -49,7 +49,6 @@ function ehUsuarioRecente(createdAt: string) {
 interface User {
   id: string
   nome: string
-  cargo: string
   role: RoleUsuario
   usuario: string
   createdAt: string
@@ -84,7 +83,6 @@ export default function UsuariosPage() {
   // Form states
   const [formData, setFormData] = useState({
     nome: '',
-    cargo: '',
     role: 'CONTEUDISTA' as RoleUsuario,
     usuario: '',
     senha: '',
@@ -139,7 +137,7 @@ export default function UsuariosPage() {
   // Create user
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!formData.nome || !formData.cargo || !formData.usuario || !formData.senha) {
+    if (!formData.nome || !formData.usuario || !formData.senha) {
       toast.error('Todos os campos são obrigatórios')
       return
     }
@@ -157,7 +155,7 @@ export default function UsuariosPage() {
       const data = await response.json()
       if (data.success) {
         toast.success('Usuário criado com sucesso!')
-        setFormData({ nome: '', cargo: '', role: 'CONTEUDISTA', usuario: '', senha: '' })
+        setFormData({ nome: '', role: 'CONTEUDISTA', usuario: '', senha: '' })
         fetchUsers(pagination.page, searchTerm, startDate, endDate, selectedRole)
       } else {
         toast.error(data.error || 'Erro ao criar usuário')
@@ -174,8 +172,8 @@ export default function UsuariosPage() {
   const handleUpdate = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!selectedUser) return
-    if (!formData.nome || !formData.cargo || !formData.usuario) {
-      toast.error('Nome, cargo e usuário são obrigatórios')
+    if (!formData.nome || !formData.usuario) {
+      toast.error('Nome e usuário são obrigatórios')
       return
     }
     if (formData.senha && formData.senha.length < 6) {
@@ -195,7 +193,7 @@ export default function UsuariosPage() {
       const data = await response.json()
       if (data.success) {
         toast.success('Usuário atualizado com sucesso!')
-        setFormData({ nome: '', cargo: '', role: 'CONTEUDISTA', usuario: '', senha: '' })
+        setFormData({ nome: '', role: 'CONTEUDISTA', usuario: '', senha: '' })
         fetchUsers(pagination.page, searchTerm, startDate, endDate, selectedRole)
       } else {
         toast.error(data.error || 'Erro ao atualizar usuário')
@@ -238,7 +236,6 @@ export default function UsuariosPage() {
     setSelectedUser(user)
     setFormData({
       nome: user.nome,
-      cargo: user.cargo,
       role: user.role,
       usuario: user.usuario,
       senha: '',
@@ -261,7 +258,7 @@ export default function UsuariosPage() {
             description="Crie, edite e gerencie usuários do sistema"
             actionLabel="Novo Usuário"
             onAction={() => {
-              setFormData({ nome: '', cargo: '', role: 'CONTEUDISTA', usuario: '', senha: '' })
+              setFormData({ nome: '', role: 'CONTEUDISTA', usuario: '', senha: '' })
               setShowCreateModal(true)
             }}
           />
@@ -273,7 +270,7 @@ export default function UsuariosPage() {
               <SearchInput
                 value={searchTerm}
                 onChange={setSearchTerm}
-                placeholder="Nome, usuário ou cargo..."
+                placeholder="Nome ou usuário..."
               />
             </div>
 
@@ -353,7 +350,7 @@ export default function UsuariosPage() {
                       <TableRow>
                         <TableHead>Nome</TableHead>
                         <TableHead>Usuário</TableHead>
-                        <TableHead>Cargo</TableHead>
+                        <TableHead>Papel</TableHead>
                         <TableHead>Data de Criação</TableHead>
                         <TableHead className="text-right">Ações</TableHead>
                       </TableRow>
@@ -361,18 +358,19 @@ export default function UsuariosPage() {
                     <TableBody>
                       {users.map((user) => (
                         <TableRow key={user.id}>
-                          <TableCell className="font-medium">{user.nome}</TableCell>
-                          <TableCell>{user.usuario}</TableCell>
-                          <TableCell>
+                          <TableCell className="font-medium">
                             <div className="flex flex-wrap items-center gap-1.5">
-                              <Badge variant="secondary">{user.cargo}</Badge>
-                              <Badge variant="outline">{ROLE_LABELS[user.role]}</Badge>
+                              <span>{user.nome}</span>
                               {ehUsuarioRecente(user.createdAt) && (
                                 <Badge className="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300">
                                   Novo
                                 </Badge>
                               )}
                             </div>
+                          </TableCell>
+                          <TableCell>{user.usuario}</TableCell>
+                          <TableCell>
+                            <Badge variant="outline">{ROLE_LABELS[user.role]}</Badge>
                           </TableCell>
                           <TableCell>
                             {new Date(user.createdAt).toLocaleDateString('pt-BR')}
@@ -407,17 +405,18 @@ export default function UsuariosPage() {
                     <div key={user.id} className="p-4 space-y-3">
                       <div className="flex items-start justify-between gap-3">
                         <div className="flex-1 min-w-0">
-                          <h3 className="font-medium text-foreground truncate">{user.nome}</h3>
+                          <div className="flex flex-wrap items-center gap-1.5">
+                            <h3 className="font-medium text-foreground truncate">{user.nome}</h3>
+                            {ehUsuarioRecente(user.createdAt) && (
+                              <Badge className="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300">
+                                Novo
+                              </Badge>
+                            )}
+                          </div>
                           <p className="text-sm text-muted-foreground truncate">@{user.usuario}</p>
                         </div>
                         <div className="flex shrink-0 flex-col items-end gap-1">
-                          <Badge variant="secondary">{user.cargo}</Badge>
                           <Badge variant="outline">{ROLE_LABELS[user.role]}</Badge>
-                          {ehUsuarioRecente(user.createdAt) && (
-                            <Badge className="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300">
-                              Novo
-                            </Badge>
-                          )}
                         </div>
                       </div>
                       <div className="flex items-center justify-between">
@@ -513,15 +512,6 @@ export default function UsuariosPage() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="cargo">Cargo</Label>
-                  <Input
-                    id="cargo"
-                    value={formData.cargo}
-                    onChange={(e) => setFormData({ ...formData, cargo: e.target.value })}
-                    placeholder="Ex: Administrador, Professor, etc"
-                  />
-                </div>
-                <div className="space-y-2">
                   <Label htmlFor="role">Papel de acesso</Label>
                   <Select
                     value={formData.role}
@@ -602,14 +592,6 @@ export default function UsuariosPage() {
                     id="edit-nome"
                     value={formData.nome}
                     onChange={(e) => setFormData({ ...formData, nome: e.target.value })}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="edit-cargo">Cargo</Label>
-                  <Input
-                    id="edit-cargo"
-                    value={formData.cargo}
-                    onChange={(e) => setFormData({ ...formData, cargo: e.target.value })}
                   />
                 </div>
                 <div className="space-y-2">

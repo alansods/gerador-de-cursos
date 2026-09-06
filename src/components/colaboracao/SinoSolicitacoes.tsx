@@ -21,7 +21,7 @@ interface Solicitacao {
   mensagem: string | null
   createdAt: string
   curso: { id: string; titulo: string }
-  solicitante: { id: string; nome: string; usuario: string; cargo: string }
+  solicitante: { id: string; nome: string; usuario: string }
 }
 
 export function SinoSolicitacoes() {
