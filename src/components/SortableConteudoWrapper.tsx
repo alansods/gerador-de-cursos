@@ -43,7 +43,7 @@ export function SortableConteudoWrapper({ id, colunas, children }: SortableConte
     <div
       ref={setNodeRef}
       style={style}
-      className={`group ${colunas === 6 ? 'md:col-span-6' : 'md:col-span-12'} ${
+      className={`group col-span-12 ${colunas === 6 ? 'md:col-span-6' : 'md:col-span-12'} ${
         isDragging ? 'opacity-50' : ''
       }`}
     >

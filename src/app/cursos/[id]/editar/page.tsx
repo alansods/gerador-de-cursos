@@ -1145,15 +1145,15 @@ function EditorCurso() {
         <CollabCursors containerRef={containerColabRef} />
         {/* Header */}
         <div className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm border-b border-[#e5e7eb] dark:border-gray-800 sticky top-0 z-50">
-          <div className="px-6 py-3">
-            <div className="flex items-center justify-between gap-4">
+          <div className="px-3 sm:px-6 py-3">
+            <div className="flex items-center justify-between gap-2 sm:gap-4 flex-wrap md:flex-nowrap">
               {/* Esquerda */}
-              <div className="flex items-center gap-3 min-w-0">
+              <div className="order-1 flex items-center gap-2 sm:gap-3 min-w-0">
                 <TooltipButton icon={ArrowLeft} tooltip="Voltar" onClick={handleVoltar} />
                 <TooltipProvider delayDuration={200}>
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <h1 className="text-lg font-semibold text-gray-900 dark:text-gray-100 truncate max-w-[190px] md:max-w-[290px] cursor-default">
+                      <h1 className="text-lg font-semibold text-gray-900 dark:text-gray-100 truncate max-w-[120px] sm:max-w-[190px] md:max-w-[290px] cursor-default">
                         {state.cursoAtual.titulo}
                       </h1>
                     </TooltipTrigger>
@@ -1162,19 +1162,11 @@ function EditorCurso() {
                 </TooltipProvider>
               </div>
 
-              {/* Centro - Dropdown de Unidades */}
-              <div className="flex-1 flex justify-center">
-                <UnidadesDropdown
-                  unidades={state.cursoAtual.unidades}
-                  unidadeAtivaIndex={unidadeAtivaIndex}
-                  onSelectUnidade={setUnidadeAtivaIndex}
-                  onOpenManageModal={() => setManageUnitsModalOpen(true)}
-                />
-              </div>
-
               {/* Direita */}
-              <div className="flex items-center space-x-2">
-                <CollabAvatars />
+              <div className="order-2 md:order-3 flex items-center gap-1 sm:gap-2 shrink-0">
+                <div className="hidden sm:block">
+                  <CollabAvatars />
+                </div>
                 <TooltipButton
                   icon={Settings}
                   tooltip="Configurações do curso"
@@ -1188,11 +1180,21 @@ function EditorCurso() {
                 <TooltipButton icon={Eye} tooltip="Preview" onClick={handlePreview} />
                 <Button
                   onClick={() => setExportModalOpen(true)}
-                  className="bg-orange-600 hover:bg-orange-700 text-white"
+                  className="bg-orange-600 hover:bg-orange-700 text-white px-3 sm:px-4"
                 >
-                  <Download className="h-4 w-4 mr-2" />
-                  Exportar
+                  <Download className="h-4 w-4 sm:mr-2" />
+                  <span className="hidden sm:inline">Exportar</span>
                 </Button>
+              </div>
+
+              {/* Centro - Dropdown de Unidades */}
+              <div className="order-3 md:order-2 w-full md:w-auto md:flex-1 flex justify-center">
+                <UnidadesDropdown
+                  unidades={state.cursoAtual.unidades}
+                  unidadeAtivaIndex={unidadeAtivaIndex}
+                  onSelectUnidade={setUnidadeAtivaIndex}
+                  onOpenManageModal={() => setManageUnitsModalOpen(true)}
+                />
               </div>
             </div>
           </div>
@@ -1202,7 +1204,7 @@ function EditorCurso() {
         <div className="flex-1 overflow-hidden">
           <div className="flex-1 flex flex-col overflow-hidden">
             {/* Conteúdo Principal */}
-            <div className="flex-1 overflow-y-auto px-6 py-6">
+            <div className="flex-1 overflow-y-auto px-3 sm:px-6 py-6">
               <div className="max-w-[760px] mx-auto">
                 {/* Card de Informações do Curso */}
                 <Card className="hidden mb-8 border-0 shadow-xl overflow-hidden bg-linear-to-br from-blue-600 via-blue-700 to-purple-600 dark:from-blue-800 dark:via-purple-800 dark:to-purple-900 text-white">
@@ -1471,7 +1473,9 @@ function EditorCurso() {
 
                                       const emptySlot = (afterIndex: number, emptyCols: number) => {
                                         const colClass =
-                                          emptyCols === 6 ? 'md:col-span-6' : 'col-span-12'
+                                          emptyCols === 6
+                                            ? 'col-span-12 md:col-span-6'
+                                            : 'col-span-12'
                                         return (
                                           <div
                                             key={`empty-${afterIndex}`}
@@ -1576,7 +1580,7 @@ function EditorCurso() {
                                                         </>
                                                       }
                                                     >
-                                                      <div className="flex-1 mt-1">
+                                                      <div className="flex-1 min-w-0 mt-1">
                                                         {item.tipo === 'titulo' ? (
                                                           <h3 className="font-bold text-lg text-gray-900 dark:text-gray-100">
                                                             {item.conteudo}
@@ -1621,12 +1625,12 @@ function EditorCurso() {
                                                               (item.items || []).map((acc, idx) => (
                                                                 <div
                                                                   key={acc.id || idx}
-                                                                  className="flex items-center justify-between px-3 py-2 bg-gray-50 dark:bg-gray-800 border-b border-[#e5e7eb] dark:border-gray-700 last:border-b-0"
+                                                                  className="flex items-center justify-between gap-2 px-3 py-2 bg-gray-50 dark:bg-gray-800 border-b border-[#e5e7eb] dark:border-gray-700 last:border-b-0"
                                                                 >
-                                                                  <span className="text-sm text-gray-700 dark:text-gray-300 truncate">
+                                                                  <span className="text-sm text-gray-700 dark:text-gray-300 truncate min-w-0 flex-1">
                                                                     {acc.titulo}
                                                                   </span>
-                                                                  <ChevronDown className="h-3.5 w-3.5 text-gray-400 shrink-0 ml-2" />
+                                                                  <ChevronDown className="h-3.5 w-3.5 text-gray-400 shrink-0" />
                                                                 </div>
                                                               ))
                                                             )}

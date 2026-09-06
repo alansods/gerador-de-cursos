@@ -289,6 +289,18 @@
 .dark .infobox ul {
   color: #e2e8f0;
 }
+.dark .infobox.info {
+  background: color-mix(in srgb, var(--block-accent, #0047bb) 22%, #0b1220);
+  border-color: color-mix(in srgb, var(--block-accent, #0047bb) 45%, transparent);
+}
+.dark .infobox.info .infobox-icon {
+  background: color-mix(in srgb, var(--block-accent, #0047bb) 30%, transparent);
+  color: color-mix(in srgb, var(--block-accent, #0047bb) 55%, white);
+}
+.dark .infobox.info .infobox-tag,
+.dark .infobox.info .infobox-chev {
+  color: color-mix(in srgb, var(--block-accent, #0047bb) 55%, white);
+}
 .dark .infobox.warn {
   background: rgba(253, 151, 43, 0.14);
   border-color: rgba(253, 151, 43, 0.4);

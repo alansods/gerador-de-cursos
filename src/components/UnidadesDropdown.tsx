@@ -46,11 +46,11 @@ export function UnidadesDropdown({
             <DropdownMenuTrigger asChild>
               <Button
                 variant="outline"
-                className="flex items-center gap-2 px-4 py-2 h-auto min-w-[200px] justify-between bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-750"
+                className="flex items-center gap-2 px-4 py-2 h-auto w-full sm:min-w-[200px] sm:w-auto justify-between bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-750"
               >
-                <div className="flex items-center gap-2">
-                  <BookOpen className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-                  <span className="text-sm font-medium truncate max-w-[300px]">
+                <div className="flex items-center gap-2 min-w-0">
+                  <BookOpen className="h-4 w-4 text-blue-600 dark:text-blue-400 shrink-0" />
+                  <span className="text-sm font-medium truncate max-w-[200px] sm:max-w-[300px]">
                     {tituloAtivoCompleto}
                   </span>
                 </div>
@@ -61,7 +61,10 @@ export function UnidadesDropdown({
           <TooltipContent side="bottom">{tituloAtivoCompleto}</TooltipContent>
         </Tooltip>
       </TooltipProvider>
-      <DropdownMenuContent align="center" className="w-[320px] max-h-[400px] overflow-y-auto">
+      <DropdownMenuContent
+        align="center"
+        className="w-[calc(100vw-2rem)] sm:w-[320px] max-h-[400px] overflow-y-auto"
+      >
         {unidades.map((unidade, index) => (
           <TooltipProvider key={unidade.id} delayDuration={200}>
             <Tooltip>
