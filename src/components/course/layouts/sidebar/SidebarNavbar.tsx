@@ -3,7 +3,8 @@
 import React from 'react'
 import { Button } from '@/components/ui/button'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
-import { Home, User, LogOut, Moon, Sun } from 'lucide-react'
+import { Sheet, SheetContent, SheetTrigger, SheetTitle } from '@/components/ui/sheet'
+import { Home, User, LogOut, Moon, Sun, Menu } from 'lucide-react'
 import type { CursoGerado } from '@/types/gerador-curso'
 import { useLMS } from '@/hooks/useLMS'
 import { useTheme } from '@/hooks/useTheme'
@@ -17,6 +18,7 @@ interface SidebarNavbarProps {
 export function SidebarNavbar({ curso, currentUnidadeId, onNavigate }: SidebarNavbarProps) {
   const { learnerName, isConnected } = useLMS()
   const { isDarkMode, toggleDarkMode } = useTheme()
+  const [open, setOpen] = React.useState(false)
 
   const handleLogout = () => {
     if (
@@ -34,8 +36,13 @@ export function SidebarNavbar({ curso, currentUnidadeId, onNavigate }: SidebarNa
     window.close()
   }
 
-  return (
-    <aside className="w-72 shrink-0 sticky top-0 h-screen overflow-y-auto flex flex-col border-r border-[#e6e4f0] dark:border-[#2c2839] bg-white dark:bg-[#1a1725] px-4 py-6">
+  const handleNavigate = (unitId: string | null) => {
+    onNavigate(unitId)
+    setOpen(false)
+  }
+
+  const navContent = (
+    <>
       <div className="px-2 pb-5">
         <h2 className="text-sm font-extrabold tracking-tight text-gray-900 dark:text-gray-50 line-clamp-2">
           {curso.titulo}
@@ -51,7 +58,7 @@ export function SidebarNavbar({ curso, currentUnidadeId, onNavigate }: SidebarNa
       <nav className="flex flex-col gap-0.5">
         <button
           type="button"
-          onClick={() => onNavigate(null)}
+          onClick={() => handleNavigate(null)}
           className={`flex items-center gap-2.5 px-2.5 py-2.5 rounded-lg text-sm font-semibold text-left transition-colors ${
             !currentUnidadeId
               ? 'bg-violet-50 dark:bg-violet-950/40 text-violet-600 dark:text-violet-400'
@@ -73,7 +80,7 @@ export function SidebarNavbar({ curso, currentUnidadeId, onNavigate }: SidebarNa
             <button
               key={unidade.id}
               type="button"
-              onClick={() => onNavigate(unidade.id)}
+              onClick={() => handleNavigate(unidade.id)}
               className={`flex items-center gap-2.5 px-2.5 py-2.5 rounded-lg text-sm font-semibold text-left transition-colors ${
                 isActive
                   ? 'bg-violet-50 dark:bg-violet-950/40 text-violet-600 dark:text-violet-400'
@@ -138,6 +145,42 @@ export function SidebarNavbar({ curso, currentUnidadeId, onNavigate }: SidebarNa
           </Tooltip>
         </TooltipProvider>
       </div>
-    </aside>
+    </>
+  )
+
+  return (
+    <>
+      <div className="md:hidden fixed top-0 left-0 right-0 z-40 flex items-center gap-3 border-b border-[#e6e4f0] dark:border-[#2c2839] bg-white dark:bg-[#1a1725] px-3 h-14">
+        <Sheet open={open} onOpenChange={setOpen}>
+          <SheetTrigger asChild>
+            <Button variant="ghost" size="icon">
+              <Menu className="h-5 w-5" />
+              <span className="sr-only">Abrir menu</span>
+            </Button>
+          </SheetTrigger>
+          <SheetContent
+            side="left"
+            className="w-[min(320px,85vw)] p-4 flex flex-col bg-white dark:bg-[#1a1725]"
+          >
+            <SheetTitle className="sr-only">Navegação do curso</SheetTitle>
+            {navContent}
+          </SheetContent>
+        </Sheet>
+        <TooltipProvider delayDuration={200}>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <h2 className="flex-1 min-w-0 pr-3 truncate text-sm font-extrabold tracking-tight text-gray-900 dark:text-gray-50 cursor-default">
+                {curso.titulo}
+              </h2>
+            </TooltipTrigger>
+            <TooltipContent side="bottom">{curso.titulo}</TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      </div>
+
+      <aside className="hidden md:flex w-72 shrink-0 sticky top-0 h-screen overflow-y-auto flex-col border-r border-[#e6e4f0] dark:border-[#2c2839] bg-white dark:bg-[#1a1725] px-4 py-6">
+        {navContent}
+      </aside>
+    </>
   )
 }

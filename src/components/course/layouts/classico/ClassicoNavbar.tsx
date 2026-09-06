@@ -13,7 +13,7 @@ interface ClassicoNavbarProps {
   curso: CursoGerado
   currentUnidadeId?: string
   showMenu?: boolean
-  onNavigate?: (unitId: string | null) => void
+  onNavigate: (unitId: string | null) => void
 }
 
 export function ClassicoNavbar({
@@ -28,11 +28,9 @@ export function ClassicoNavbar({
 
   // Helper to handle navigation
   const handleNavClick = (e: React.MouseEvent, unitId: string | null) => {
-    if (onNavigate) {
-      e.preventDefault()
-      onNavigate(unitId)
-      setOpen(false) // Close menu after navigation
-    }
+    e.preventDefault()
+    onNavigate(unitId)
+    setOpen(false) // Close menu after navigation
   }
 
   return (
@@ -76,20 +74,8 @@ export function ClassicoNavbar({
             <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-0.5">
               {/* Home Button */}
               <a
-                href={
-                  onNavigate
-                    ? '#'
-                    : process.env.NEXT_PUBLIC_IS_SCORM_BUILD === 'true'
-                      ? currentUnidadeId
-                        ? '../../index.html'
-                        : '#'
-                      : currentUnidadeId
-                        ? '../index.html'
-                        : '#'
-                }
+                href="#"
                 onClick={(e) => handleNavClick(e, null)}
-                target={onNavigate ? undefined : '_top'}
-                data-scorm-nav="true"
                 className={`flex items-center gap-2.5 px-3 py-2.5 rounded-md text-[13.5px] leading-tight transition-all duration-150 ${
                   !currentUnidadeId
                     ? 'bg-[var(--brand-blue-soft)] dark:bg-[#1e3a8a] text-[var(--brand-blue)] font-medium'
@@ -113,33 +99,11 @@ export function ClassicoNavbar({
               {(curso.unidades || []).map((u, index) => {
                 const isActive = currentUnidadeId ? u.id === currentUnidadeId : false
 
-                // Generate href based on context
-                let href: string
-
-                if (onNavigate) {
-                  href = '#'
-                } else if (process.env.NEXT_PUBLIC_IS_SCORM_BUILD === 'true') {
-                  if (currentUnidadeId) {
-                    href = u.id === currentUnidadeId ? '#' : `./${u.id}.html`
-                  } else {
-                    href = `./scorm-preview/unidade/${u.id}.html`
-                  }
-                } else {
-                  if (currentUnidadeId) {
-                    href = u.id === currentUnidadeId ? '#' : `${u.id}.html`
-                  } else {
-                    href = `unidade/${u.id}.html`
-                  }
-                }
-
                 return (
                   <a
                     key={u.id}
-                    href={href}
+                    href="#"
                     onClick={(e) => handleNavClick(e, u.id)}
-                    target={onNavigate ? undefined : '_top'}
-                    data-scorm-nav="true"
-                    data-unit-id={u.id}
                     className={`flex items-center gap-2.5 px-3 py-2.5 rounded-md text-[13.5px] leading-tight transition-all duration-150 ${
                       isActive
                         ? 'bg-[var(--brand-blue-soft)] dark:bg-[#1e3a8a] text-[var(--brand-blue)] font-medium'

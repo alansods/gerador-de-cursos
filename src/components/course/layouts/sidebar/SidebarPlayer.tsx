@@ -56,11 +56,13 @@ export function SidebarPlayer({ curso }: SidebarPlayerProps) {
         onNavigate={handleNavigate}
       />
 
-      {currentUnitId ? (
-        <SidebarUnit curso={curso} unidadeId={currentUnitId} onNavigate={handleNavigate} />
-      ) : (
-        <SidebarHome curso={curso} onNavigate={handleNavigate} />
-      )}
+      <div className="flex-1 min-w-0 pt-14 md:pt-0">
+        {currentUnitId ? (
+          <SidebarUnit curso={curso} unidadeId={currentUnitId} onNavigate={handleNavigate} />
+        ) : (
+          <SidebarHome curso={curso} onNavigate={handleNavigate} />
+        )}
+      </div>
     </div>
   )
 }
