@@ -7,11 +7,11 @@ import { Button } from '@/components/ui/button'
 import { Info } from 'lucide-react'
 
 export function GuestBanner() {
-  const { user } = useAuth()
+  const { user, role } = useAuth()
   const router = useRouter()
 
   // Só renderiza se for convidado
-  if (!user || user.cargo !== 'Convidado') {
+  if (!user || role !== 'CONVIDADO') {
     return null
   }
 
