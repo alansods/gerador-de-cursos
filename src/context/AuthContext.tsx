@@ -78,7 +78,7 @@ export function AuthProvider({ children, initialUser }: AuthProviderProps) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          email: 'convidado',
+          email: 'convidado@senai.br',
           senha: 'convidado',
         }),
       })

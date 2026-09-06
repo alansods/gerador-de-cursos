@@ -70,7 +70,7 @@ export function podeEditarCurso(
   colaboracao?: Colaboracao
 ): boolean {
   if (!user) return false
-  if (user.role === 'ADMIN' || user.role === 'GESTOR') return true
+  if (user.role === 'ADMIN' || user.role === 'GESTOR' || user.role === 'CONVIDADO') return true
   if (user.role !== 'CONTEUDISTA') return false
   if (isDono(user, curso)) return true
   return Boolean(colaboracao)

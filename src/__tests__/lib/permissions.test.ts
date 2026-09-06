@@ -103,9 +103,12 @@ describe('podeEditarCurso', () => {
     expect(podeEditarCurso(usuario('CONTEUDISTA'), cursoDe('outro'), null)).toBe(false)
   })
 
-  it('REVISOR e CONVIDADO nunca editam, mesmo com colaboração concedida', () => {
+  it('REVISOR nunca edita, mesmo com colaboração concedida', () => {
     expect(podeEditarCurso(usuario('REVISOR'), cursoDe('outro'), { concedida: true })).toBe(false)
-    expect(podeEditarCurso(usuario('CONVIDADO'), cursoDe('outro'), { concedida: true })).toBe(false)
+  })
+
+  it('CONVIDADO edita qualquer curso, como ADMIN e GESTOR', () => {
+    expect(podeEditarCurso(usuario('CONVIDADO'), cursoDe('outro'))).toBe(true)
   })
 
   it('curso órfão (sem dono) só é editável por ADMIN e GESTOR', () => {
