@@ -170,6 +170,12 @@ export function CollabProvider({ cursoId, children }: Props) {
     toast.info(mensagem)
   }
 
+  useEffect(() => {
+    return () => {
+      document.getElementById('liveblocks-badge')?.remove()
+    }
+  }, [])
+
   const ativo = COLAB_HABILITADO && autorizado === true && !falhou
 
   if (!ativo) {
@@ -184,7 +190,7 @@ export function CollabProvider({ cursoId, children }: Props) {
     <ColabContext.Provider
       value={{ ativo: true, salaCheia: false, broadcastRef, mudancaRemotaRef }}
     >
-      <LiveblocksProvider authEndpoint="/api/liveblocks-auth">
+      <LiveblocksProvider authEndpoint="/api/liveblocks-auth" badgeLocation="bottom-left">
         <MonitorDeErros onFalha={desligarPorErro} />
         <RoomProvider
           id={SALA_DO_CURSO(cursoIdCanonico ?? cursoId)}
