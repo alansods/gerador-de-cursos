@@ -12,8 +12,8 @@ por esforço e por dependência técnica. Antes deles, uma fase de preparação 
 elimina a duplicação de metadados que hoje torna cada bloco novo caro, e uma limpeza
 opcional (0-B) que remove o gerador SCORM de fallback.
 
-**Andamento:** 0-A e Fase 1 implementadas; 0-B pendente (prioridade baixa); Fases 2 e 3
-pendentes.
+**Andamento:** 0-A, Fase 1 e Fase 2 implementadas (commit `c1691ce6`); 0-B pendente
+(prioridade baixa); Fase 3 pendente.
 
 ### Blocos selecionados
 
@@ -338,6 +338,37 @@ modoCarrossel?: 'carrossel' | 'grade'
 
 ## Fase 2 — Blocos que exigem upload de arquivo novo
 
+**Status: implementada.**
+
+### Decisões tomadas durante a implementação
+
+**O upload foi reescrito, não estendido.** A restrição de 4,5 MB confirmou-se pela
+documentação do `@vercel/blob`, e o `MAX_SIZE_BYTES = 10 MB` da rota antiga era
+inalcançável em produção. Os três pontos de upload de imagem foram migrados junto —
+estavam todos no caminho quebrado. A prop `onUploadImage` do `ContentBlockDrawer` e a
+função que a alimentava saíram, já que o drawer agora chama `enviarArquivo` direto.
+
+**Autenticação assimétrica na rota, de propósito.** A confirmação do upload é uma
+chamada servidor-a-servidor do Vercel Blob, **sem** o cookie do usuário. Aplicar
+`requireAuth` nela faria todo upload falhar. Só o pedido de token exige autenticação
+(`body.type !== 'blob.upload-completed'`); a autenticidade da confirmação vem da
+assinatura que o `handleUpload` verifica. Não remova essa condicional.
+
+**`handleUpload` vem de `@vercel/blob/client`,** não de `@vercel/blob` — o pacote v2
+exporta ambos os lados do fluxo pelo subcaminho `/client`, inclusive o que roda no
+servidor.
+
+**`video` não declara `extrairMidias`, de propósito.** YouTube e Vimeo são páginas de
+streaming, não arquivos para embutir. O teste que exige extrator para todo bloco com
+`exigeMidiaDoDocumento` carrega essa exceção nomeada — é o único caso, e novos blocos
+de mídia não devem entrar nessa lista sem motivo equivalente.
+
+**Pendência conhecida:** a pasta dentro do ZIP continua se chamando `images/`, e a
+temporária local `public/scorm-images/`, embora agora contenham também áudio e PDF. O
+prefixo dos arquivos passou a ser `midia-`, e a função virou `detectMediaUrls`, mas
+renomear as pastas mexe em cinco pontos de `scorm-service.ts` e `scorm-build-service.ts`
+sem nenhum teste cobrindo a geração do ZIP. Fica para quando houver esse teste.
+
 ### Generalizar o upload
 
 `src/app/api/upload-image/route.ts` aceita apenas `image/*` e limita a 10 MB.
@@ -642,6 +673,19 @@ camada de UI, não strings literais no catálogo. Definir isso na Fase 0-A, quan
    sobrou (`grep -r "blob.vercel-storage.com"` no ZIP extraído não deve achar nada).
 4. **LMS real** (SCORM Cloud ou Moodle): interação, progresso e nota via
    `cmi.core.score.raw`; retomar a sessão e conferir o progresso restaurado.
+
+### O que os testes não alcançam
+
+Três pontos exigem verificação manual, e nenhum deles é reproduzível no ambiente de
+desenvolvimento:
+
+1. **Upload real acima de 4,5 MB, em produção.** É exatamente o cenário que falhava
+   antes e que só se manifesta na Vercel.
+2. **Exportação SCORM com áudio ou PDF**: descompactar o ZIP e confirmar que o arquivo
+   foi embutido, e que nenhuma URL de `blob.vercel-storage.com` sobreviveu.
+3. **O `<object>` do PDF renderizando.** O Chrome headless não tem plugin de PDF, então
+   o screenshot sempre mostra o fallback — o que prova o fallback, não o caminho
+   principal.
 
 ### Verificação visual sem navegador interativo
 
