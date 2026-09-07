@@ -119,14 +119,16 @@ export interface GeradorCursoState {
 
 export interface GeradorCursoContextType {
   state: GeradorCursoState
-  criarCurso: (curso: Omit<CursoGerado, 'id' | 'dataCriacao' | 'dataModificacao'>) => void
+  criarCurso: (
+    curso: Omit<CursoGerado, 'id' | 'dataCriacao' | 'dataModificacao'>
+  ) => Promise<string>
   editarCurso: (id: string, curso: Partial<CursoGerado>) => void
   deletarCurso: (id: string) => void
   selecionarCurso: (id: string, forceRefresh?: boolean) => void
-  adicionarUnidade: (unidade: Omit<Unidade, 'id' | 'ordem'>) => void
-  editarUnidade: (id: string, unidade: Partial<Unidade>) => void
-  deletarUnidade: (id: string) => void
-  reordenarUnidades: (unidades: Unidade[]) => void
+  adicionarUnidade: (unidade: Omit<Unidade, 'id' | 'ordem'>) => Promise<void>
+  editarUnidade: (id: string, unidade: Partial<Unidade>) => Promise<void>
+  deletarUnidade: (id: string) => Promise<void>
+  reordenarUnidades: (unidades: Unidade[]) => Promise<void>
   adicionarConteudo: (unidadeId: string, conteudo: Omit<ConteudoUnidade, 'id' | 'ordem'>) => void
   editarConteudo: (
     unidadeId: string,

@@ -2,6 +2,10 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requireAuth, createErrorResponse, createSuccessResponse } from '@/lib/auth'
 import { GoogleGenerativeAI } from '@google/generative-ai'
 import { CursoGerado } from '@/types/gerador-curso'
+import { normalizarCursoGerado, type ResumoGeracao } from '@/lib/blocos'
+import { detectarMarcadores, type ModoLeitura } from '@/lib/marcadores'
+
+export const maxDuration = 60
 
 interface TokenUsage {
   promptTokens: number
@@ -23,11 +27,13 @@ export async function POST(req: NextRequest) {
 
   try {
     const body = await req.json()
-    const { text, mode = 'auto' } = body as { text: string; mode?: 'auto' | 'markers' }
+    const { text, mode } = body as { text: string; mode?: ModoLeitura }
 
     if (!text || typeof text !== 'string' || text.trim().length === 0) {
       return createErrorResponse('Texto não fornecido ou inválido', 400)
     }
+
+    const modoLeitura: ModoLeitura = mode ?? detectarMarcadores(text).modo
 
     // Verificar se há API key configurada
     const geminiApiKey = process.env.GEMINI_API_KEY
@@ -45,18 +51,26 @@ export async function POST(req: NextRequest) {
     let tokenUsage: TokenUsage | undefined
 
     if (geminiApiKey) {
-      const result = await generateWithGemini(text, geminiApiKey, mode)
+      const result = await generateWithGemini(text, geminiApiKey, modoLeitura)
       course = result.course
       tokenUsage = result.tokenUsage
     } else if (openaiApiKey) {
-      const result = await generateWithOpenAI(text, openaiApiKey, mode)
+      const result = await generateWithOpenAI(text, openaiApiKey, modoLeitura)
       course = result.course
       tokenUsage = result.tokenUsage
     } else {
       throw new Error('Nenhuma API de IA disponível')
     }
 
-    return createSuccessResponse({ course, tokenUsage })
+    const { curso: cursoNormalizado, resumo } = normalizarCursoGerado(course)
+    registrarDescartes(resumo)
+
+    return createSuccessResponse({
+      course: cursoNormalizado,
+      tokenUsage,
+      resumo,
+      modo: modoLeitura,
+    })
   } catch (error) {
     console.error('Erro ao gerar curso:', error)
     return createErrorResponse(
@@ -67,13 +81,21 @@ export async function POST(req: NextRequest) {
   }
 }
 
+function registrarDescartes(resumo: ResumoGeracao) {
+  if (resumo.descartados.length === 0) return
+
+  console.warn(
+    `⚠️ ${resumo.descartados.length} bloco(s) descartado(s) na normalização:`,
+    resumo.descartados.map((d) => `${d.unidade} · ${d.tipo}: ${d.motivo}`).join(' | ')
+  )
+}
+
 /**
  * Monta o prompt compartilhado para Gemini e OpenAI.
- * Inclui instruções para reconhecer os marcadores de recursos interativos
- * (ACCORDION_INICIO/FIM, QUIZ_INICIO/FIM, FLIPCARD_INICIO/FIM) e gerar
- * o JSON correto para cada tipo.
+ * Inclui instruções para reconhecer os marcadores de recursos e gerar
+ * o JSON correto para cada um dos tipos de bloco suportados.
  */
-function buildPrompt(text: string, mode: 'auto' | 'markers' = 'auto'): string {
+function buildPrompt(text: string, mode: ModoLeitura = 'auto'): string {
   const truncated =
     text.substring(0, 150000) + (text.length > 150000 ? '\n\n[... texto truncado ...]' : '')
 
@@ -97,13 +119,16 @@ Cada Unidade:
 
 ## Recursos disponíveis
 
-### 1. paragrafo
-{ "titulo": "string", "tipo": "paragrafo", "conteudo": "<p>HTML</p>" }
+### 1. titulo
+{ "titulo": "string", "tipo": "titulo", "conteudo": "Texto do título" }
 
 ### 2. subtitulo
 { "titulo": "string", "tipo": "subtitulo", "conteudo": "Texto do subtítulo" }
 
-### 3. lista
+### 3. paragrafo
+{ "titulo": "string", "tipo": "paragrafo", "conteudo": "<p>HTML</p>" }
+
+### 4. lista
 {
   "titulo": "string",
   "tipo": "lista",
@@ -118,7 +143,27 @@ Cada Unidade:
 - Use "check" para requisitos, critérios ou itens verificáveis
 - Use "nao-ordenada" para listas simples de itens
 
-### 4. accordion
+### 5. objetivos-aprendizagem
+{
+  "titulo": "string",
+  "tipo": "objetivos-aprendizagem",
+  "conteudo": "",
+  "itensObjetivos": [
+    { "id": "obj-1", "texto": "Identificar os componentes de um CLP" },
+    { "id": "obj-2", "texto": "Configurar entradas e saídas digitais" }
+  ]
+}
+
+### 6. info-box
+{
+  "titulo": "string",
+  "tipo": "info-box",
+  "conteudo": "<p>Conteúdo</p>",
+  "tipoInfoBox": "atencao" | "saiba_mais" | "info" | "curiosidade",
+  "tituloInfoBox": "Título da caixa"
+}
+
+### 7. accordion
 {
   "titulo": "string",
   "tipo": "accordion",
@@ -129,7 +174,17 @@ Cada Unidade:
   ]
 }
 
-### 5. quiz — OBRIGATÓRIO: exatamente 5 opções; apenas uma com "isCorrect": true
+### 8. flipcard
+{
+  "titulo": "string",
+  "tipo": "flipcard",
+  "conteudo": "",
+  "tipoFrente": "titulo",
+  "tituloFrente": "Conceito ou pergunta na frente",
+  "conteudoVerso": "<p>Explicação no verso</p>"
+}
+
+### 9. quiz — OBRIGATÓRIO: exatamente 5 opções; apenas uma com "isCorrect": true
 {
   "titulo": "string",
   "tipo": "quiz",
@@ -152,23 +207,23 @@ Cada Unidade:
   }
 }
 
-### 6. flipcard
+### 10. imagem — apenas com URL presente no documento
 {
   "titulo": "string",
-  "tipo": "flipcard",
-  "conteudo": "",
-  "tipoFrente": "titulo",
-  "tituloFrente": "Conceito ou pergunta na frente",
-  "conteudoVerso": "<p>Explicação no verso</p>"
+  "tipo": "imagem",
+  "conteudo": "https://exemplo.com/painel.png",
+  "legenda": "Legenda da imagem",
+  "fonte": "Crédito da imagem",
+  "tamanho": "pequena" | "media" | "grande"
 }
 
-### 7. info-box
+### 11. video — apenas com URL presente no documento
 {
   "titulo": "string",
-  "tipo": "info-box",
-  "conteudo": "<p>Conteúdo</p>",
-  "tipoInfoBox": "atencao" | "saiba_mais" | "info" | "curiosidade",
-  "tituloInfoBox": "Título da caixa"
+  "tipo": "video",
+  "conteudo": "",
+  "videoUrl": "https://www.youtube.com/watch?v=xxxxxxxxxxx",
+  "videoTitulo": "Título do vídeo"
 }
 
 ## Regras gerais
@@ -177,6 +232,7 @@ Cada Unidade:
 - IDs únicos simples: "item-1", "q-1", "op-1"
 - HTML (em campos "conteudo") apenas com: <p>, <strong>, <em>
 - Para listas, use SEMPRE o campo "itensLista" — NUNCA coloque listas em HTML no campo "conteudo"
+- Para objetivos de aprendizagem, use SEMPRE o campo "itensObjetivos"
 - Retorne APENAS o JSON válido, sem markdown, sem explicações
 
 ## IMPORTANTE: Uso estrito do conteúdo do documento
@@ -186,12 +242,14 @@ Cada Unidade:
 - NÃO invente, crie ou adicione informações que não estejam no texto original
 - NÃO adicione exemplos, casos práticos, curiosidades ou contextos extras por conta própria
 - NÃO expanda conceitos além do que está escrito no documento
+- NUNCA gere blocos "imagem" ou "video" sem uma URL que apareça literalmente no documento —
+  na ausência de URL, o bloco simplesmente não existe
 - Use apenas as informações, exemplos e dados que foram explicitamente fornecidos no texto
 - Se o documento for curto ou superficial, o curso gerado também deve refletir isso
 - Sua função é ESTRUTURAR e ORGANIZAR o conteúdo existente, não criar conteúdo novo`
 
   if (mode === 'markers') {
-    return `Você é um especialista em design instrucional. Analise o texto abaixo e gere uma estrutura de curso em JSON respeitando os marcadores de recursos interativos presentes no texto.
+    return `Você é um especialista em design instrucional. Analise o texto abaixo e gere uma estrutura de curso em JSON respeitando os marcadores de recursos presentes no texto.
 
 ${sharedStructure}
 
@@ -207,21 +265,36 @@ ${sharedStructure}
 - Bloco FLIPCARD_INICIO...FLIPCARD_FIM → tipo "flipcard"
   - "Frente:" ou "Título:" → tituloFrente
   - "Verso:" → conteudoVerso (em HTML)
-- Conteúdo fora de marcadores → use paragrafo, subtitulo ou lista conforme adequado
+- Bloco OBJETIVOS_INICIO...OBJETIVOS_FIM → tipo "objetivos-aprendizagem"
+  - Cada linha "Objetivo:" → itensObjetivos[].texto
+- Bloco INFOBOX_INICIO...INFOBOX_FIM → tipo "info-box"
+  - "Tipo:" → tipoInfoBox (atencao | saiba_mais | info | curiosidade; use "info" se ausente)
+  - "Título:" → tituloInfoBox
+  - "Conteúdo:" → conteudo (em HTML)
+- Bloco LISTA_INICIO...LISTA_FIM → tipo "lista"
+  - "Tipo:" → tipoLista (ordenada | nao-ordenada | check; use "nao-ordenada" se ausente)
+  - Cada linha "Item:" → itensLista[].texto
+- Bloco IMAGEM_INICIO...IMAGEM_FIM → tipo "imagem"
+  - "URL:" → conteudo; "Legenda:" → legenda; "Fonte:" → fonte; "Tamanho:" → tamanho
+- Bloco VIDEO_INICIO...VIDEO_FIM → tipo "video"
+  - "URL:" → videoUrl; "Título:" → videoTitulo
+- Conteúdo fora de marcadores → use titulo, subtitulo, paragrafo ou lista conforme adequado
 
 ## Texto para analisar
 
 ${truncated}`
   }
 
-  // mode === 'auto'
   return `Você é um especialista em design instrucional. Analise o texto abaixo e gere uma estrutura de curso em JSON, escolhendo automaticamente o recurso mais adequado para cada parte do conteúdo.
 
 ${sharedStructure}
 
 ## Diretrizes de escolha automática
 
+- Título de seção explícito, diferente do título da unidade → titulo
+- Divisão interna de uma seção → subtitulo
 - Texto introdutório ou explicativo → paragrafo
+- "Objetivos", "ao final desta unidade você será capaz de" → objetivos-aprendizagem
 - Lista de ingredientes, materiais, características → lista (tipoLista: "nao-ordenada")
 - Passos numerados de um processo → lista (tipoLista: "ordenada")
 - Requisitos, critérios verificáveis → lista (tipoLista: "check")
@@ -229,6 +302,8 @@ ${sharedStructure}
 - Termo técnico + definição, pergunta retórica + resposta → flipcard
 - "Atenção:", "Importante:", aviso de segurança → info-box (tipoInfoBox: "atencao")
 - "Sabia que", curiosidade, fato interessante → info-box (tipoInfoBox: "curiosidade")
+- URL de imagem no texto → imagem, com a legenda que estiver ao lado
+- URL de YouTube ou Vimeo no texto → video
 - Revisão ao final de cada unidade → quiz (1 a 3 perguntas baseadas no conteúdo real)
 - Use ao menos 1 recurso interativo (accordion, quiz ou flipcard) por unidade
 
@@ -243,7 +318,7 @@ ${truncated}`
 async function generateWithGemini(
   text: string,
   apiKey: string,
-  mode: 'auto' | 'markers' = 'auto'
+  mode: ModoLeitura = 'auto'
 ): Promise<{ course: CursoGerado; tokenUsage: TokenUsage }> {
   const genAI = new GoogleGenerativeAI(apiKey)
 
@@ -329,7 +404,7 @@ async function generateWithGemini(
 async function generateWithOpenAI(
   text: string,
   apiKey: string,
-  mode: 'auto' | 'markers' = 'auto'
+  mode: ModoLeitura = 'auto'
 ): Promise<{ course: CursoGerado; tokenUsage: TokenUsage }> {
   const { default: OpenAI } = await import('openai')
   const openai = new OpenAI({ apiKey })

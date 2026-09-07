@@ -45,7 +45,7 @@ describe('can - ações globais', () => {
         GESTOR: true,
         CONTEUDISTA: true,
         REVISOR: false,
-        CONVIDADO: false,
+        CONVIDADO: true,
       },
     ],
     [
@@ -179,8 +179,9 @@ describe('colaborador:gerenciar', () => {
 
 describe('assertCan', () => {
   it('lança ForbiddenError quando negado', () => {
-    expect(() => assertCan(usuario('CONVIDADO'), 'curso:criar')).toThrow(ForbiddenError)
+    expect(() => assertCan(usuario('REVISOR'), 'curso:criar')).toThrow(ForbiddenError)
     expect(() => assertCan(usuario('ADMIN'), 'curso:criar')).not.toThrow()
+    expect(() => assertCan(usuario('CONVIDADO'), 'curso:criar')).not.toThrow()
   })
 
   it('ForbiddenError carrega status 403', () => {

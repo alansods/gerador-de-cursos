@@ -99,7 +99,12 @@ export function can(
       return user.role === 'ADMIN'
 
     case 'curso:criar':
-      return user.role === 'ADMIN' || user.role === 'GESTOR' || user.role === 'CONTEUDISTA'
+      return (
+        user.role === 'ADMIN' ||
+        user.role === 'GESTOR' ||
+        user.role === 'CONTEUDISTA' ||
+        user.role === 'CONVIDADO'
+      )
 
     case 'curso:editar':
       return podeEditarCurso(user, curso, colaboracao)

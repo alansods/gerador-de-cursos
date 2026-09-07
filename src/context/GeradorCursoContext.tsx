@@ -266,7 +266,7 @@ export function GeradorCursoProvider({ children }: { children: React.ReactNode }
   // Gerenciamento de unidades
   const adicionarUnidade = useCallback(
     (unidade: Omit<Unidade, 'id' | 'ordem'>) => {
-      if (!state.cursoAtual) return
+      if (!state.cursoAtual) return Promise.resolve()
 
       const novaUnidade: Unidade = {
         ...unidade,
@@ -275,38 +275,38 @@ export function GeradorCursoProvider({ children }: { children: React.ReactNode }
       }
 
       const unidadesAtualizadas = [...(state.cursoAtual.unidades || []), novaUnidade]
-      editarCurso(state.cursoAtual.id, { unidades: unidadesAtualizadas })
+      return editarCurso(state.cursoAtual.id, { unidades: unidadesAtualizadas })
     },
     [state.cursoAtual, editarCurso]
   )
 
   const editarUnidade = useCallback(
     (unidadeId: string, dados: Partial<Unidade>) => {
-      if (!state.cursoAtual) return
+      if (!state.cursoAtual) return Promise.resolve()
 
       const unidadesAtualizadas = state.cursoAtual.unidades?.map((u) =>
         u.id === unidadeId ? { ...u, ...dados } : u
       )
 
-      editarCurso(state.cursoAtual.id, { unidades: unidadesAtualizadas })
+      return editarCurso(state.cursoAtual.id, { unidades: unidadesAtualizadas })
     },
     [state.cursoAtual, editarCurso]
   )
 
   const deletarUnidade = useCallback(
     (unidadeId: string) => {
-      if (!state.cursoAtual) return
+      if (!state.cursoAtual) return Promise.resolve()
 
       const unidadesAtualizadas = state.cursoAtual.unidades?.filter((u) => u.id !== unidadeId)
-      editarCurso(state.cursoAtual.id, { unidades: unidadesAtualizadas })
+      return editarCurso(state.cursoAtual.id, { unidades: unidadesAtualizadas })
     },
     [state.cursoAtual, editarCurso]
   )
 
   const reordenarUnidades = useCallback(
     (unidades: Unidade[]) => {
-      if (!state.cursoAtual) return
-      editarCurso(state.cursoAtual.id, { unidades })
+      if (!state.cursoAtual) return Promise.resolve()
+      return editarCurso(state.cursoAtual.id, { unidades })
     },
     [state.cursoAtual, editarCurso]
   )

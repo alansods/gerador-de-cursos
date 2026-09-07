@@ -6,13 +6,13 @@
 export const FILE_SIZE_LIMITS = {
   IMAGE: 10 * 1024 * 1024, // 10MB
   DOCUMENT: 10 * 1024 * 1024, // 10MB
-} as const;
+} as const
 
 // Tempos de expiração
 export const EXPIRATION_TIMES = {
   JWT_TOKEN: '7d',
   COOKIE_MAX_AGE: 60 * 60 * 24 * 7, // 7 dias em segundos
-} as const;
+} as const
 
 // Tipos de arquivo aceitos
 export const ACCEPTED_FILE_TYPES = {
@@ -21,10 +21,25 @@ export const ACCEPTED_FILE_TYPES = {
     'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
     'application/msword',
   ],
-} as const;
+} as const
+
+// Categorias e modalidades de curso (mesma lista usada nos filtros e na criação)
+export const CATEGORIAS_CURSO = [
+  'Gastronomia',
+  'Tecnologia',
+  'Marketing',
+  'Design',
+  'Gestão',
+  'Arte',
+  'Idiomas',
+] as const
+
+export const MODALIDADES_CURSO = ['Presencial', 'Online', 'Híbrido'] as const
+
+export const MODALIDADE_PADRAO = 'Online'
 
 // Rotas públicas (sem autenticação)
-export const PUBLIC_ROUTES = ['/login', '/cadastro', '/'] as const;
+export const PUBLIC_ROUTES = ['/login', '/cadastro', '/'] as const
 
 // Validações de formulário
 export const VALIDATION_RULES = {
@@ -38,7 +53,15 @@ export const VALIDATION_RULES = {
     MIN_TITLE_LENGTH: 3,
     MIN_DESCRIPTION_LENGTH: 10,
   },
-} as const;
+  NOVO_CURSO: {
+    TITULO_MIN: 5,
+    TITULO_MAX: 120,
+    DESCRICAO_MIN: 30,
+    DESCRICAO_MAX: 600,
+    CARGA_MIN: 1,
+    CARGA_MAX: 999,
+  },
+} as const
 
 // Mensagens de erro padrão
 export const ERROR_MESSAGES = {
@@ -59,4 +82,4 @@ export const ERROR_MESSAGES = {
     DATABASE_ERROR: 'Erro ao conectar com banco de dados',
     NOT_FOUND: 'Recurso não encontrado',
   },
-} as const;
+} as const

@@ -1130,7 +1130,7 @@ function EditorCurso() {
       <div className="min-h-screen flex items-center justify-center bg-[#F5F7FA] dark:bg-gray-950">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-500">Carregando curso...</p>
+          <p className="text-gray-500 dark:text-gray-400">Carregando curso...</p>
         </div>
       </div>
     )
@@ -1335,41 +1335,7 @@ function EditorCurso() {
 
                         <div>
                           {/* Lista de Conteúdo */}
-                          {(unidade.conteudo || []).length === 0 ? (
-                            <div className="relative overflow-hidden rounded-xl border-2 border-dashed border-blue-300 bg-linear-to-br from-blue-50 via-white to-purple-50 py-12 px-6">
-                              {/* Decorative elements */}
-                              <div className="absolute top-0 left-0 w-full h-full opacity-5">
-                                <div className="absolute top-4 left-4 w-32 h-32 bg-blue-500 rounded-full blur-3xl"></div>
-                                <div className="absolute bottom-4 right-4 w-40 h-40 bg-purple-500 rounded-full blur-3xl"></div>
-                              </div>
-
-                              <div className="relative text-center space-y-4">
-                                {/* Icon */}
-                                <div className="flex justify-center">
-                                  <div className="p-4 bg-linear-to-br from-blue-500 to-purple-600 rounded-full shadow-lg">
-                                    <Plus className="h-8 w-8 text-white" />
-                                  </div>
-                                </div>
-
-                                {/* Title and Description */}
-                                <div className="space-y-2">
-                                  <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100">
-                                    Comece a criar seu conteúdo!
-                                  </h3>
-                                  <p className="text-gray-600 dark:text-gray-400 max-w-md mx-auto">
-                                    Esta unidade ainda está vazia. Use os botões abaixo para
-                                    adicionar títulos, parágrafos, imagens e muito mais.
-                                  </p>
-                                </div>
-
-                                {/* Hint */}
-                                <div className="flex items-center justify-center gap-2 text-sm text-blue-600 dark:text-blue-400 font-medium pt-2">
-                                  <Type className="h-4 w-4" />
-                                  <span>Escolha um tipo de conteúdo para começar</span>
-                                </div>
-                              </div>
-                            </div>
-                          ) : (
+                          {(unidade.conteudo || []).length === 0 ? null : (
                             <BlockThemeProvider theme={editorBlockTheme}>
                               <DndContext
                                 sensors={dndSensors}
@@ -1956,13 +1922,13 @@ function EditorCurso() {
                 {(state.cursoAtual.unidades || []).length === 0 && (
                   <Card>
                     <CardContent className="text-center py-12">
-                      <div className="mx-auto w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mb-6">
-                        <BookmarkPlus className="h-12 w-12 text-gray-400" />
+                      <div className="mx-auto w-24 h-24 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mb-6">
+                        <BookmarkPlus className="h-12 w-12 text-gray-400 dark:text-gray-400" />
                       </div>
-                      <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                      <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-50 mb-2">
                         Nenhuma unidade criada
                       </h3>
-                      <p className="text-gray-600 mb-8">
+                      <p className="text-gray-600 dark:text-gray-300 mb-8">
                         Comece adicionando a primeira unidade do seu curso
                       </p>
                       <Button
@@ -4589,16 +4555,16 @@ function EditorCurso() {
             layout: state.cursoAtual.layout,
           }}
           unidades={state.cursoAtual.unidades || []}
-          onSave={(courseData, unidades) => {
+          onSave={async (courseData, unidades) => {
             if (state.cursoAtual) {
-              editarCurso(state.cursoAtual.id, {
+              await editarCurso(state.cursoAtual.id, {
                 titulo: courseData.titulo,
                 descricao: courseData.descricao,
                 categoria: courseData.categoria || '',
                 cargaHoraria: courseData.cargaHoraria,
                 layout: courseData.layout,
               })
-              reordenarUnidades(unidades as Unidade[])
+              await reordenarUnidades(unidades as Unidade[])
             }
           }}
         />

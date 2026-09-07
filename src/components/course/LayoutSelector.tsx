@@ -1,8 +1,9 @@
 'use client'
 
-import { Check, LayoutTemplate } from 'lucide-react'
+import { Check } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { layoutRegistry } from './layouts'
+import { MiniaturaLayout } from './novo/MiniaturaLayout'
 
 interface LayoutSelectorProps {
   value: string
@@ -34,9 +35,7 @@ export function LayoutSelector({ value, onChange, className }: LayoutSelectorPro
                 <Check className="w-3 h-3" />
               </span>
             )}
-            <div className="w-10 h-10 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center mb-3">
-              <LayoutTemplate className="h-5 w-5 text-blue-600 dark:text-blue-400" />
-            </div>
+            <MiniaturaLayout layoutId={meta.id} className="w-full h-20 mb-3" />
             <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-1">
               {meta.nome}
             </h3>

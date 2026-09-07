@@ -29,6 +29,7 @@ interface UnidadesListProps {
   editingId?: string
   onStartEdit?: (id: string) => void
   onCancelEdit?: () => void
+  disabled?: boolean
 }
 
 function SortableUnidadeItem({
@@ -39,6 +40,7 @@ function SortableUnidadeItem({
   isEditing,
   onStartEdit,
   onCancelEdit,
+  disabled,
 }: {
   unidade: Unidade
   index: number
@@ -47,6 +49,7 @@ function SortableUnidadeItem({
   isEditing: boolean
   onStartEdit: (id: string) => void
   onCancelEdit: () => void
+  disabled?: boolean
 }) {
   const [editValue, setEditValue] = useState(unidade.titulo)
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
@@ -110,13 +113,15 @@ function SortableUnidadeItem({
             />
             <button
               onClick={handleSaveEdit}
-              className="p-1.5 text-green-600 hover:bg-green-50 dark:hover:bg-green-950/20 rounded transition-all"
+              disabled={disabled}
+              className="p-1.5 text-green-600 hover:bg-green-50 dark:hover:bg-green-950/20 rounded transition-all disabled:opacity-40 disabled:cursor-not-allowed"
             >
               <Check className="h-4 w-4" />
             </button>
             <button
               onClick={handleCancelEdit}
-              className="p-1.5 text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 rounded transition-all"
+              disabled={disabled}
+              className="p-1.5 text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 rounded transition-all disabled:opacity-40 disabled:cursor-not-allowed"
             >
               <X className="h-4 w-4" />
             </button>
@@ -132,13 +137,15 @@ function SortableUnidadeItem({
         <>
           <button
             onClick={() => onStartEdit(unidade.id)}
-            className="p-2 text-gray-400 dark:text-gray-500 hover:text-blue-500 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/20 rounded-lg transition-all"
+            disabled={disabled}
+            className="p-2 text-gray-400 dark:text-gray-500 hover:text-blue-500 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/20 rounded-lg transition-all disabled:opacity-40 disabled:cursor-not-allowed"
           >
             <Pencil className="h-4 w-4" />
           </button>
           <button
             onClick={() => onDelete(unidade.id)}
-            className="p-2 text-gray-400 dark:text-gray-500 hover:text-red-500 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/20 rounded-lg transition-all"
+            disabled={disabled}
+            className="p-2 text-gray-400 dark:text-gray-500 hover:text-red-500 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/20 rounded-lg transition-all disabled:opacity-40 disabled:cursor-not-allowed"
           >
             <Trash2 className="h-4 w-4" />
           </button>
@@ -157,6 +164,7 @@ export function UnidadesList({
   editingId,
   onStartEdit,
   onCancelEdit,
+  disabled,
 }: UnidadesListProps) {
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -198,6 +206,7 @@ export function UnidadesList({
                 isEditing={editingId === unidade.id}
                 onStartEdit={onStartEdit || (() => {})}
                 onCancelEdit={onCancelEdit || (() => {})}
+                disabled={disabled}
               />
             ))}
           </div>
@@ -206,7 +215,8 @@ export function UnidadesList({
 
       <button
         onClick={onAdd}
-        className="w-full py-4 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg text-blue-600 dark:text-blue-400 hover:border-blue-400 dark:hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-950/20 transition-all flex items-center justify-center gap-2"
+        disabled={disabled}
+        className="w-full py-4 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg text-blue-600 dark:text-blue-400 hover:border-blue-400 dark:hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-950/20 transition-all flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed"
       >
         <Plus className="h-4 w-4" />
         <span className="text-sm font-medium">Nova unidade</span>

@@ -344,12 +344,12 @@ describe('API - Cursos', () => {
 
     it('deve usar o papel do banco, não o do token, quando o admin rebaixa o usuário', async () => {
       // Arrange: token emitido enquanto o usuário ainda era ADMIN,
-      // mas o banco já registra o rebaixamento para CONVIDADO
+      // mas o banco já registra o rebaixamento para REVISOR
       const token = await createAuthToken('1', 'ADMIN')
 
       mockPrisma.user.findUnique.mockResolvedValue({
         ...usuarioAutenticado,
-        role: 'CONVIDADO',
+        role: 'REVISOR',
       } as never)
 
       const request = new NextRequest('http://localhost:3000/api/cursos', {

@@ -68,19 +68,11 @@ import { useRouter } from 'next/navigation'
 import { useDebounce } from '@/hooks/useDebounce'
 import { SearchInput } from '@/components/SearchInput'
 import { PageHeader } from '@/components/PageHeader'
+import { CATEGORIAS_CURSO, MODALIDADES_CURSO } from '@/lib/constants'
 
-const CATEGORIES = [
-  'Todas Categorias',
-  'Gastronomia',
-  'Tecnologia',
-  'Marketing',
-  'Design',
-  'Gestão',
-  'Arte',
-  'Idiomas',
-]
+const CATEGORIES = ['Todas Categorias', ...CATEGORIAS_CURSO]
 
-const MODALIDADES = ['Todas Modalidades', 'Presencial', 'Online', 'Híbrido']
+const MODALIDADES = ['Todas Modalidades', ...MODALIDADES_CURSO]
 
 const isNewCourse = (createdAt?: Date | string) => {
   if (!createdAt) return false

@@ -15,6 +15,7 @@ import {
 import { Settings } from 'lucide-react'
 import { LayoutSelector } from '@/components/course/LayoutSelector'
 import { DEFAULT_LAYOUT_ID } from '@/components/course/layouts'
+import { CATEGORIAS_CURSO } from '@/lib/constants'
 
 import { GerenciarColaboradores } from '@/components/colaboracao/GerenciarColaboradores'
 
@@ -138,15 +139,11 @@ export function CourseSettingsDrawer({
                   <SelectValue placeholder="Selecione uma categoria" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="tecnologia">Tecnologia</SelectItem>
-                  <SelectItem value="negocios">Negócios</SelectItem>
-                  <SelectItem value="design">Design</SelectItem>
-                  <SelectItem value="marketing">Marketing</SelectItem>
-                  <SelectItem value="desenvolvimento-pessoal">Desenvolvimento Pessoal</SelectItem>
-                  <SelectItem value="saude-bem-estar">Saúde e Bem-estar</SelectItem>
-                  <SelectItem value="linguas">Línguas</SelectItem>
-                  <SelectItem value="gastronomia">Gastronomia</SelectItem>
-                  <SelectItem value="outros">Outros</SelectItem>
+                  {CATEGORIAS_CURSO.map((categoria) => (
+                    <SelectItem key={categoria} value={categoria}>
+                      {categoria}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
