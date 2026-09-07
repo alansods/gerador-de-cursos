@@ -34,6 +34,31 @@ export interface CarrosselItem {
   fonte?: string
 }
 
+export interface HotspotItem {
+  id: string
+  x: number
+  y: number
+  titulo: string
+  conteudo: string
+}
+
+export interface ParAssociacao {
+  id: string
+  esquerda: string
+  direita: string
+}
+
+export interface ItemCategorizado {
+  id: string
+  texto: string
+}
+
+export interface CategoriaItem {
+  id: string
+  nome: string
+  itens: ItemCategorizado[]
+}
+
 export interface QuizItem {
   id: string
   texto: string // texto da opção de resposta
@@ -72,6 +97,9 @@ export interface ConteudoUnidade {
     | 'carrossel'
     | 'audio'
     | 'pdf'
+    | 'imagem-interativa'
+    | 'associacao'
+    | 'categorizacao'
   conteudo: string
   ordem: number
   // Propriedades específicas para imagens
@@ -122,6 +150,13 @@ export interface ConteudoUnidade {
   pdfUrl?: string
   pdfTitulo?: string
   permitirDownloadPdf?: boolean
+  // Propriedades específicas para imagem-interativa
+  imagemBase?: string
+  hotspots?: HotspotItem[]
+  // Propriedades específicas para associacao
+  paresAssociacao?: ParAssociacao[]
+  // Propriedades específicas para categorizacao
+  categorias?: CategoriaItem[]
 }
 
 export interface Unidade {

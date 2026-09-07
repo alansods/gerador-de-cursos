@@ -1,5 +1,7 @@
 import {
   AlertTriangle,
+  ArrowLeftRight,
+  Boxes,
   ChevronDown,
   Heading2,
   Heading3,
@@ -9,6 +11,7 @@ import {
   GalleryHorizontal,
   List,
   Milestone,
+  MousePointerClick,
   RotateCcw,
   Target,
   Minus,
@@ -19,6 +22,7 @@ import {
   type LucideIcon,
 } from 'lucide-react'
 import type {
+  CategoriaItem,
   ConteudoUnidade,
   CursoGerado,
   ListaItem,
@@ -65,6 +69,9 @@ const TIPOS_FRENTE = ['imagem', 'imagem-titulo', 'titulo'] as const
 const ESTILOS_SEPARADOR = ['linha', 'espaco', 'linha-icone'] as const
 const ORIENTACOES_TIMELINE = ['vertical', 'horizontal'] as const
 const MODOS_CARROSSEL = ['carrossel', 'grade'] as const
+
+const MINIMO_PARES = 2
+const MINIMO_CATEGORIAS = 2
 
 const OPCOES_POR_PERGUNTA = 5
 
@@ -384,6 +391,69 @@ export const CATALOGO_BLOCOS: Record<TipoBloco, MetaBloco> = {
     },
     extrairMidias: (b) => [b.pdfUrl],
   },
+  'imagem-interativa': {
+    tipo: 'imagem-interativa',
+    rotulo: 'Imagem interativa',
+    rotuloPlural: 'imagens interativas',
+    marcador: 'HOTSPOT',
+    geravelPorIA: true,
+    exigeMidiaDoDocumento: true,
+    validar: (b) => ehUrl(b.imagemBase) && !!b.hotspots?.some((h) => temTexto(h.titulo)),
+    icone: MousePointerClick,
+    descricao: 'Imagem com pontos clicáveis',
+    categoria: 'interativo',
+    padroes: () => ({ imagemBase: '', hotspots: [] }),
+    validarFormulario: (b) => {
+      if (!temTexto(b.imagemBase)) return 'Adicione a imagem de fundo'
+      if (!b.hotspots?.length) return 'Adicione pelo menos um ponto na imagem'
+      if (b.hotspots.some((h) => !temTexto(h.titulo))) return 'Todos os pontos devem ter um título'
+      return null
+    },
+    extrairMidias: (b) => [b.imagemBase],
+  },
+  associacao: {
+    tipo: 'associacao',
+    rotulo: 'Associação',
+    rotuloPlural: 'associações',
+    marcador: 'ASSOCIACAO',
+    geravelPorIA: true,
+    exigeMidiaDoDocumento: false,
+    validar: (b) =>
+      (b.paresAssociacao ?? []).filter((p) => temTexto(p.esquerda) && temTexto(p.direita)).length >=
+      MINIMO_PARES,
+    icone: ArrowLeftRight,
+    descricao: 'Relacionar colunas',
+    categoria: 'avaliativo',
+    padroes: () => ({ paresAssociacao: [] }),
+    validarFormulario: (b) => {
+      if ((b.paresAssociacao?.length ?? 0) < MINIMO_PARES)
+        return `Adicione pelo menos ${MINIMO_PARES} pares`
+      if (b.paresAssociacao?.some((p) => !temTexto(p.esquerda) || !temTexto(p.direita)))
+        return 'Todos os pares devem ter os dois lados preenchidos'
+      return null
+    },
+  },
+  categorizacao: {
+    tipo: 'categorizacao',
+    rotulo: 'Categorização',
+    rotuloPlural: 'categorizações',
+    marcador: 'CATEGORIZACAO',
+    geravelPorIA: true,
+    exigeMidiaDoDocumento: false,
+    validar: (b) => categoriasValidas(b.categorias).length >= MINIMO_CATEGORIAS,
+    icone: Boxes,
+    descricao: 'Agrupar itens em categorias',
+    categoria: 'avaliativo',
+    padroes: () => ({ categorias: [] }),
+    validarFormulario: (b) => {
+      if ((b.categorias?.length ?? 0) < MINIMO_CATEGORIAS)
+        return `Adicione pelo menos ${MINIMO_CATEGORIAS} categorias`
+      if (b.categorias?.some((c) => !temTexto(c.nome))) return 'Todas as categorias devem ter nome'
+      if (b.categorias?.some((c) => !c.itens?.some((i) => temTexto(i.texto))))
+        return 'Cada categoria precisa de pelo menos um item'
+      return null
+    },
+  },
 }
 
 function baseBloco(): Partial<ConteudoUnidade> {
@@ -597,6 +667,28 @@ function corrigirBloco(bloco: ConteudoUnidade): ConteudoUnidade {
     corrigido.permitirDownloadPdf = corrigido.permitirDownloadPdf !== false
   }
 
+  if (corrigido.tipo === 'imagem-interativa') {
+    corrigido.hotspots = (corrigido.hotspots ?? [])
+      .filter((h) => temTexto(h?.titulo))
+      .map((h, indice) => ({
+        ...h,
+        id: temTexto(h.id) ? h.id : `hotspot-${indice + 1}`,
+        x: emPercentual(h.x),
+        y: emPercentual(h.y),
+        conteudo: typeof h.conteudo === 'string' ? h.conteudo : '',
+      }))
+  }
+
+  if (corrigido.tipo === 'associacao') {
+    corrigido.paresAssociacao = (corrigido.paresAssociacao ?? [])
+      .filter((p) => temTexto(p?.esquerda) && temTexto(p?.direita))
+      .map((p, indice) => ({ ...p, id: temTexto(p.id) ? p.id : `par-${indice + 1}` }))
+  }
+
+  if (corrigido.tipo === 'categorizacao') {
+    corrigido.categorias = categoriasValidas(corrigido.categorias)
+  }
+
   if (corrigido.tipo === 'quiz') {
     const questions = (corrigido.quizData?.questions ?? [])
       .map(corrigirPergunta)
@@ -668,9 +760,35 @@ function motivoInvalido(tipo: TipoBloco): string {
       return 'sem URL de áudio válida'
     case 'pdf':
       return 'sem URL de PDF válida'
+    case 'imagem-interativa':
+      return 'sem imagem de fundo ou sem pontos com título'
+    case 'associacao':
+      return `com menos de ${MINIMO_PARES} pares completos`
+    case 'categorizacao':
+      return `com menos de ${MINIMO_CATEGORIAS} categorias com nome e itens`
     default:
       return 'sem conteúdo'
   }
+}
+
+function categoriasValidas(categorias?: CategoriaItem[]): CategoriaItem[] {
+  return (categorias ?? [])
+    .filter((c) => temTexto(c?.nome) && !!c?.itens?.some((i) => temTexto(i?.texto)))
+    .map((c, indice) => ({
+      ...c,
+      id: temTexto(c.id) ? c.id : `cat-${indice + 1}`,
+      itens: c.itens
+        .filter((i) => temTexto(i?.texto))
+        .map((i, posicao) => ({
+          ...i,
+          id: temTexto(i.id) ? i.id : `cat-${indice + 1}-item-${posicao + 1}`,
+        })),
+    }))
+}
+
+function emPercentual(valor: unknown): number {
+  const numero = typeof valor === 'number' && Number.isFinite(valor) ? valor : 50
+  return Math.min(100, Math.max(0, numero))
 }
 
 function itensValidos(itens?: ListaItem[]): ListaItem[] | null {

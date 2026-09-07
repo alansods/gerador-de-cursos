@@ -338,6 +338,126 @@ describe('blocos da fase 2', () => {
   })
 })
 
+describe('blocos da fase 3', () => {
+  it('descarta imagem interativa sem imagem de fundo ou sem ponto com título', () => {
+    const { curso, resumo } = normalizarCursoGerado(
+      cursoCom([
+        { tipo: 'imagem-interativa', conteudo: '', imagemBase: 'nao-url', hotspots: [] },
+        {
+          tipo: 'imagem-interativa',
+          conteudo: '',
+          imagemBase: 'https://x.com/a.png',
+          hotspots: [{ id: '', x: 10, y: 20, titulo: '', conteudo: '' }],
+        },
+        {
+          tipo: 'imagem-interativa',
+          conteudo: '',
+          imagemBase: 'https://x.com/a.png',
+          hotspots: [{ id: '', x: 10, y: 20, titulo: 'Casco', conteudo: '' }],
+        },
+      ])
+    )
+
+    expect(curso.unidades[0].conteudo).toHaveLength(1)
+    expect(resumo.descartados.map((d) => d.motivo)).toEqual([
+      'sem imagem de fundo ou sem pontos com título',
+      'sem imagem de fundo ou sem pontos com título',
+    ])
+  })
+
+  it('prende as coordenadas do hotspot na faixa de 0 a 100', () => {
+    const { curso } = normalizarCursoGerado(
+      cursoCom([
+        {
+          tipo: 'imagem-interativa',
+          conteudo: '',
+          imagemBase: 'https://x.com/a.png',
+          hotspots: [
+            { id: '', x: -30, y: 480, titulo: 'A', conteudo: '' },
+            { id: '', x: NaN as unknown as number, y: 40, titulo: 'B', conteudo: '' },
+          ],
+        },
+      ])
+    )
+
+    const hotspots = curso.unidades[0].conteudo[0].hotspots!
+    expect(hotspots.map((h) => [h.x, h.y])).toEqual([
+      [0, 100],
+      [50, 40],
+    ])
+    expect(hotspots.map((h) => h.id)).toEqual(['hotspot-1', 'hotspot-2'])
+  })
+
+  it('exige dois pares completos na associação', () => {
+    const { curso, resumo } = normalizarCursoGerado(
+      cursoCom([
+        {
+          tipo: 'associacao',
+          conteudo: '',
+          paresAssociacao: [
+            { id: '', esquerda: 'NR-6', direita: 'EPI' },
+            { id: '', esquerda: 'NR-5', direita: '' },
+          ],
+        },
+        {
+          tipo: 'associacao',
+          conteudo: '',
+          paresAssociacao: [
+            { id: '', esquerda: 'NR-6', direita: 'EPI' },
+            { id: '', esquerda: 'NR-5', direita: 'CIPA' },
+          ],
+        },
+      ])
+    )
+
+    expect(curso.unidades[0].conteudo).toHaveLength(1)
+    expect(resumo.descartados[0].motivo).toBe('com menos de 2 pares completos')
+    expect(curso.unidades[0].conteudo[0].paresAssociacao!.map((p) => p.id)).toEqual([
+      'par-1',
+      'par-2',
+    ])
+  })
+
+  it('descarta categoria sem nome ou sem item e exige duas restantes', () => {
+    const { curso, resumo } = normalizarCursoGerado(
+      cursoCom([
+        {
+          tipo: 'categorizacao',
+          conteudo: '',
+          categorias: [
+            { id: '', nome: 'Cabeça', itens: [{ id: '', texto: 'Capacete' }] },
+            { id: '', nome: '', itens: [{ id: '', texto: 'Luva' }] },
+            { id: '', nome: 'Vazia', itens: [] },
+          ],
+        },
+        {
+          tipo: 'categorizacao',
+          conteudo: '',
+          categorias: [
+            { id: '', nome: 'Cabeça', itens: [{ id: '', texto: 'Capacete' }] },
+            {
+              id: '',
+              nome: 'Membros',
+              itens: [
+                { id: '', texto: 'Luva' },
+                { id: '', texto: '' },
+              ],
+            },
+          ],
+        },
+      ])
+    )
+
+    expect(curso.unidades[0].conteudo).toHaveLength(1)
+    expect(resumo.descartados[0].motivo).toBe('com menos de 2 categorias com nome e itens')
+
+    const categorias = curso.unidades[0].conteudo[0].categorias!
+    expect(categorias.map((c) => c.id)).toEqual(['cat-1', 'cat-2'])
+    expect(categorias[1].itens.map((i) => i.texto)).toEqual(['Luva'])
+    expect(categorias[1].itens[0].id).toBe('cat-2-item-1')
+  })
+})
+
 describe('normalizarCursoGerado', () => {
   it('reindexa ordem e preenche ids ausentes', () => {
     const { curso } = normalizarCursoGerado(

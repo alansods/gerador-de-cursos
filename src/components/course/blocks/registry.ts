@@ -17,6 +17,9 @@ import { LinhaDoTempoBlock } from './LinhaDoTempoBlock'
 import { CarrosselBlock } from './CarrosselBlock'
 import { AudioBlock } from './AudioBlock'
 import { PdfBlock } from './PdfBlock'
+import { ImagemInterativaBlock } from './ImagemInterativaBlock'
+import { AssociacaoBlock } from './AssociacaoBlock'
+import { CategorizacaoBlock } from './CategorizacaoBlock'
 
 export interface BlockProps {
   item: ConteudoUnidade
@@ -41,4 +44,7 @@ export const blockRegistry: Record<ConteudoUnidade['tipo'], ComponentType<BlockP
   carrossel: CarrosselBlock,
   audio: AudioBlock,
   pdf: PdfBlock,
+  'imagem-interativa': ImagemInterativaBlock,
+  associacao: AssociacaoBlock,
+  categorizacao: CategorizacaoBlock,
 }

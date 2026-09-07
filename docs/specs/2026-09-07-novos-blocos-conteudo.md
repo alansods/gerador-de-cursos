@@ -12,8 +12,8 @@ por esforço e por dependência técnica. Antes deles, uma fase de preparação 
 elimina a duplicação de metadados que hoje torna cada bloco novo caro, e uma limpeza
 opcional (0-B) que remove o gerador SCORM de fallback.
 
-**Andamento:** 0-A, Fase 1 e Fase 2 implementadas (commit `c1691ce6`); 0-B pendente
-(prioridade baixa); Fase 3 pendente.
+**Andamento:** 0-A, Fase 1, Fase 2 e Fase 3 implementadas — os 9 blocos estão
+entregues. 0-B segue pendente (prioridade baixa).
 
 ### Blocos selecionados
 
@@ -530,6 +530,8 @@ permitirDownloadPdf?: boolean
 
 ## Fase 3 — Blocos interativos e avaliativos
 
+**Status: implementada.**
+
 ### `imagem-interativa`
 
 ```ts
@@ -550,9 +552,15 @@ entre editor, preview e LMS.
 
 - `validar`: `imagemBase` válida e ao menos um hotspot com `titulo`.
 - Drawer: editor de coordenadas por clique sobre a miniatura da imagem, com lista
-  lateral dos hotspots para edição de texto.
+  dos hotspots para edição de texto. Cada ponto também traz campos numéricos de
+  posição, para que o autor consiga posicionar sem depender do clique.
 - Acessibilidade: cada hotspot é um `<button>` focável, alcançável por Tab, não uma
   `div` com `onClick`.
+- O conteúdo abre num popup ancorado ao ponto (`role="dialog"`), com botão de fechar.
+  Fecha ao clicar fora, ao clicar no mesmo ponto de novo e com `Escape`; ao fechar,
+  o foco volta para o ponto que o abriu. O painel se ancora à esquerda quando `x < 25`
+  e à direita quando `x > 75`, e sobe acima do ponto quando `y > 60`, para não
+  transbordar a imagem.
 
 ### `associacao` e `categorizacao`
 
@@ -585,6 +593,66 @@ categorias?: CategoriaItem[]
 **Acessibilidade é requisito, não opcional.** Além do arrastar com mouse, precisa
 funcionar por teclado: selecionar o item, selecionar o destino, confirmar. Sem isso
 o bloco é inutilizável para parte dos alunos e reprova em auditoria de acessibilidade.
+
+---
+
+### Decisões tomadas na implementação da Fase 3
+
+**Uma base compartilhada em vez de dois blocos separados.** `associacao` e
+`categorizacao` são o mesmo problema com parâmetros diferentes: um conjunto de fichas,
+um conjunto de alvos, e um alvo correto por ficha. A associação é o caso de
+capacidade 1 (cada alvo recebe uma ficha); a categorização é o caso de capacidade
+livre. `AtribuicaoInterativa.tsx` implementa isso uma vez e os dois blocos apenas
+traduzem seus dados para `fichas` e `alvos`. Consequência: a acessibilidade, o
+embaralhamento e a apuração existem em um lugar só.
+
+**O caminho por clique é o principal; arrastar é o extra.** O plano falava em
+"arrastar e soltar com alternativa por teclado", mas construir na ordem inversa sai
+melhor: fichas e alvos são `<button>` de verdade, então Tab e Enter funcionam sem
+nenhum código de teclado, e o `draggable` nativo do HTML apenas reaproveita a mesma
+função `mover`. Não entrou biblioteca de drag-and-drop — dnd-kit dentro do iframe de
+um LMS é risco desnecessário para o que aqui são dois cliques.
+
+**O embaralhamento acontece depois da montagem, não durante.** As páginas
+`scorm-preview` são `force-static`: embaralhar durante o render produziria HTML
+diferente no servidor e no cliente, e o React derrubaria a hidratação. A ordem
+inicial é a do autor e o `useEffect` embaralha logo em seguida.
+
+**`Ficha` e `Zona` vivem no módulo, não dentro do componente.** Definidas dentro,
+seriam um tipo novo a cada render e o React remontaria os botões, perdendo o foco do
+teclado — quebrando exatamente o requisito de acessibilidade que motivou o bloco.
+
+**Coordenadas de hotspot são presas na faixa 0–100 em `corrigirBloco`.** A IA erra
+escala com facilidade (manda pixel onde se espera percentual); um valor fora da faixa
+posicionaria o ponto fora da imagem, sem nenhum aviso. `emPercentual` também converte
+valor não numérico para 50 em vez de descartar o ponto.
+
+**`imagem-interativa` é proibida no modo automático da IA.** Ela pode ser gerada a
+partir do marcador `HOTSPOT`, onde o autor informou as coordenadas, mas no modo `auto`
+não há de onde tirar posição de ponto — a IA inventaria coordenadas sobre uma imagem
+que não vê.
+
+### Verificação executada
+
+- `pnpm build` limpo e 256 testes passando (17 novos: 4 de catálogo em
+  `blocos.test.ts`, 6 de interação em `atribuicao-interativa.test.tsx` e 7 de abrir
+  e fechar o popup em `imagem-interativa.test.tsx`).
+- Render conferido no player Vite com os três blocos na mesma unidade, em modo
+  escuro: hotspot em (50, 25) cai na linha média vertical e em (32, 72) no quadrante
+  inferior esquerdo de uma imagem de teste com quadrantes coloridos. O popup foi
+  conferido nas três posições — centro, borda esquerda (8, 80) e borda direita
+  (92, 15) — sem vazar da imagem em nenhuma delas.
+- Transbordo medido, não estimado: `scrollWidth == clientWidth == 485`, nenhum
+  elemento ultrapassando o viewport.
+
+### Pendente de verificação manual
+
+- Exportar um SCORM com bloco `imagem-interativa` e confirmar que a imagem de fundo
+  foi embutida no ZIP (o `extrairMidias` está declarado e coberto por teste, mas o
+  download em si só acontece na exportação real).
+- Confirmar num LMS que o `cmi.core.score.raw` recebe a nota de `associacao` e
+  `categorizacao` — o formato `{ acertos, total }` é o mesmo do quiz, então usa o
+  caminho já existente.
 
 ---
 

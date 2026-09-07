@@ -15,7 +15,13 @@ import {
 } from '@/components/ui/select'
 import { HelpCircle, Upload, Loader2, Plus, Trash2 } from 'lucide-react'
 import Image from 'next/image'
-import { ConteudoUnidade, AccordionItem, ListaItem } from '@/types/gerador-curso'
+import {
+  ConteudoUnidade,
+  AccordionItem,
+  ListaItem,
+  CategoriaItem,
+  HotspotItem,
+} from '@/types/gerador-curso'
 import { CATALOGO_BLOCOS, criarBlocoVazio } from '@/lib/blocos'
 import { POLITICA_MIDIAS, type CategoriaMidia } from '@/lib/midias'
 import { enviarArquivo } from '@/lib/upload-cliente'
@@ -220,6 +226,257 @@ function EditorDeItens<T extends { id: string }>({
         </div>
       ) : (
         <p className="text-sm text-gray-500 dark:text-gray-400 italic">{vazio}</p>
+      )}
+    </div>
+  )
+}
+
+function EditorDeCategorias({
+  categorias,
+  onChange,
+}: {
+  categorias: CategoriaItem[]
+  onChange: (categorias: CategoriaItem[]) => void
+}) {
+  const atualizar = (id: string, mudanca: Partial<CategoriaItem>) =>
+    onChange(categorias.map((c) => (c.id === id ? { ...c, ...mudanca } : c)))
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+          Categorias <span className="text-red-500">*</span>
+        </label>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={() =>
+            onChange([...categorias, { id: `cat-${Date.now()}`, nome: '', itens: [] }])
+          }
+          className="text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-800 hover:bg-blue-50 dark:hover:bg-blue-950/20"
+        >
+          <Plus className="h-4 w-4 mr-2" />
+          Adicionar
+        </Button>
+      </div>
+
+      {categorias.length > 0 ? (
+        <div className="space-y-3 max-h-[400px] overflow-y-auto">
+          {categorias.map((categoria, index) => (
+            <Card key={categoria.id} className="p-4">
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+                  Categoria {index + 1}
+                </span>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => onChange(categorias.filter((outra) => outra.id !== categoria.id))}
+                  className="text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/20"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
+
+              <Input
+                value={categoria.nome}
+                onChange={(e) => atualizar(categoria.id, { nome: e.target.value })}
+                placeholder="Nome da categoria..."
+                className="text-sm"
+              />
+
+              <div className="mt-3 space-y-2">
+                {categoria.itens.map((entrada) => (
+                  <div key={entrada.id} className="flex items-center gap-2">
+                    <Input
+                      value={entrada.texto}
+                      onChange={(e) =>
+                        atualizar(categoria.id, {
+                          itens: categoria.itens.map((outro) =>
+                            outro.id === entrada.id ? { ...outro, texto: e.target.value } : outro
+                          ),
+                        })
+                      }
+                      placeholder="Item desta categoria..."
+                      className="text-sm"
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() =>
+                        atualizar(categoria.id, {
+                          itens: categoria.itens.filter((outro) => outro.id !== entrada.id),
+                        })
+                      }
+                      className="text-red-600 dark:text-red-400"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ))}
+
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() =>
+                    atualizar(categoria.id, {
+                      itens: [...categoria.itens, { id: `item-${Date.now()}`, texto: '' }],
+                    })
+                  }
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Adicionar item
+                </Button>
+              </div>
+            </Card>
+          ))}
+        </div>
+      ) : (
+        <p className="text-sm text-gray-500 dark:text-gray-400 italic">
+          Nenhuma categoria adicionada ainda.
+        </p>
+      )}
+    </div>
+  )
+}
+
+function EditorDeHotspots({
+  imagemBase,
+  hotspots,
+  onChange,
+}: {
+  imagemBase: string
+  hotspots: HotspotItem[]
+  onChange: (hotspots: HotspotItem[]) => void
+}) {
+  const atualizar = (id: string, mudanca: Partial<HotspotItem>) =>
+    onChange(hotspots.map((h) => (h.id === id ? { ...h, ...mudanca } : h)))
+
+  const adicionarNoClique = (evento: React.MouseEvent<HTMLDivElement>) => {
+    const area = evento.currentTarget.getBoundingClientRect()
+    const x = Math.round(((evento.clientX - area.left) / area.width) * 100)
+    const y = Math.round(((evento.clientY - area.top) / area.height) * 100)
+    onChange([...hotspots, { id: `hotspot-${Date.now()}`, x, y, titulo: '', conteudo: '' }])
+  }
+
+  return (
+    <div className="space-y-4">
+      <div>
+        <div className="mb-2 flex items-center justify-between">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+            Pontos <span className="text-red-500">*</span>
+          </label>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() =>
+              onChange([
+                ...hotspots,
+                { id: `hotspot-${Date.now()}`, x: 50, y: 50, titulo: '', conteudo: '' },
+              ])
+            }
+            className="text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-800 hover:bg-blue-50 dark:hover:bg-blue-950/20"
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            Adicionar
+          </Button>
+        </div>
+        {imagemBase ? (
+          <>
+            <div
+              onClick={adicionarNoClique}
+              className="relative inline-block max-w-full cursor-crosshair rounded-lg border border-gray-200 dark:border-gray-700"
+            >
+              <img src={imagemBase} alt="" className="max-w-full h-auto rounded-lg" />
+              {hotspots.map((hotspot, index) => (
+                <span
+                  key={hotspot.id}
+                  style={{ left: `${hotspot.x}%`, top: `${hotspot.y}%` }}
+                  className="absolute flex h-6 w-6 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border-2 border-white bg-blue-600 text-xs font-bold text-white shadow"
+                >
+                  {index + 1}
+                </span>
+              ))}
+            </div>
+            <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+              Clique sobre a imagem para adicionar um ponto, ou use os campos de posição de cada
+              ponto abaixo.
+            </p>
+          </>
+        ) : (
+          <p className="text-sm text-gray-500 dark:text-gray-400 italic">
+            Envie a imagem de fundo para posicionar os pontos.
+          </p>
+        )}
+      </div>
+
+      {hotspots.length > 0 && (
+        <div className="space-y-3 max-h-[300px] overflow-y-auto">
+          {hotspots.map((hotspot, index) => (
+            <Card key={hotspot.id} className="p-4">
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+                  Ponto {index + 1}
+                </span>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => onChange(hotspots.filter((outro) => outro.id !== hotspot.id))}
+                  className="text-red-600 dark:text-red-400"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
+              <div className="space-y-3">
+                <div className="grid grid-cols-2 gap-3">
+                  {(['x', 'y'] as const).map((eixo) => (
+                    <div key={eixo}>
+                      <label
+                        htmlFor={`${hotspot.id}-${eixo}`}
+                        className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1"
+                      >
+                        {eixo === 'x' ? 'Horizontal (%)' : 'Vertical (%)'}
+                      </label>
+                      <Input
+                        id={`${hotspot.id}-${eixo}`}
+                        type="number"
+                        min={0}
+                        max={100}
+                        value={hotspot[eixo]}
+                        onChange={(e) =>
+                          atualizar(hotspot.id, {
+                            [eixo]: Math.min(100, Math.max(0, Number(e.target.value) || 0)),
+                          })
+                        }
+                        className="text-sm"
+                      />
+                    </div>
+                  ))}
+                </div>
+
+                <Input
+                  value={hotspot.titulo}
+                  onChange={(e) => atualizar(hotspot.id, { titulo: e.target.value })}
+                  placeholder="Título do ponto..."
+                  className="text-sm"
+                />
+                <Textarea
+                  value={hotspot.conteudo}
+                  onChange={(e) => atualizar(hotspot.id, { conteudo: e.target.value })}
+                  placeholder="Descrição exibida ao clicar..."
+                  rows={3}
+                  className="text-sm"
+                />
+              </div>
+            </Card>
+          ))}
+        </div>
       )}
     </div>
   )
@@ -1215,6 +1472,69 @@ export function ContentBlockDrawer({
               Permitir download do arquivo
             </label>
           </div>
+        )
+
+      case 'imagem-interativa':
+        return (
+          <div className="space-y-5">
+            <CampoArquivo
+              categoria="imagem"
+              rotulo="Imagem de fundo"
+              url={formData.imagemBase || ''}
+              onUrl={(imagemBase) => setFormData({ ...formData, imagemBase })}
+            />
+
+            <EditorDeHotspots
+              imagemBase={formData.imagemBase || ''}
+              hotspots={formData.hotspots || []}
+              onChange={(hotspots) => setFormData({ ...formData, hotspots })}
+            />
+
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                Legenda
+              </label>
+              <Input
+                value={formData.legenda || ''}
+                onChange={(e) => setFormData({ ...formData, legenda: e.target.value })}
+                placeholder="Legenda da imagem..."
+              />
+            </div>
+          </div>
+        )
+
+      case 'associacao':
+        return (
+          <EditorDeItens
+            rotulo="Pares"
+            rotuloItem="Par"
+            vazio="Nenhum par adicionado ainda."
+            itens={formData.paresAssociacao || []}
+            criarItem={() => ({ id: `par-${Date.now()}`, esquerda: '', direita: '' })}
+            onChange={(paresAssociacao) => setFormData({ ...formData, paresAssociacao })}
+            campos={[
+              {
+                chave: 'esquerda',
+                rotulo: 'Item fixo',
+                obrigatorio: true,
+                placeholder: 'Ex.: Água',
+              },
+              {
+                chave: 'direita',
+                rotulo: 'Correspondente',
+                obrigatorio: true,
+                placeholder: 'Ex.: H₂O',
+              },
+            ]}
+          />
+        )
+
+      case 'categorizacao':
+        return (
+          <EditorDeCategorias
+            categorias={formData.categorias || []}
+            onChange={(categorias) => setFormData({ ...formData, categorias })}
+          />
         )
 
       default:

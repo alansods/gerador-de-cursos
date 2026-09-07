@@ -291,6 +291,48 @@ Cada Unidade:
   "permitirDownloadPdf": true
 }
 
+### 18. imagem-interativa — apenas com URL presente no documento
+{
+  "titulo": "string",
+  "tipo": "imagem-interativa",
+  "conteudo": "",
+  "imagemBase": "https://exemplo.com/equipamento.png",
+  "legenda": "Legenda da imagem",
+  "hotspots": [
+    {
+      "id": "hotspot-1",
+      "x": 50,
+      "y": 20,
+      "titulo": "Nome da parte",
+      "conteudo": "<p>Explicação exibida ao clicar</p>"
+    }
+  ]
+}
+
+### 19. associacao
+{
+  "titulo": "string",
+  "tipo": "associacao",
+  "conteudo": "",
+  "paresAssociacao": [
+    { "id": "par-1", "esquerda": "Termo fixo", "direita": "Correspondente" }
+  ]
+}
+
+### 20. categorizacao
+{
+  "titulo": "string",
+  "tipo": "categorizacao",
+  "conteudo": "",
+  "categorias": [
+    {
+      "id": "cat-1",
+      "nome": "Nome da categoria",
+      "itens": [{ "id": "cat-1-item-1", "texto": "Item que pertence a esta categoria" }]
+    }
+  ]
+}
+
 ## Regras gerais
 
 - NÃO use "aulas" — use sempre "conteudo"
@@ -367,6 +409,20 @@ ${sharedStructure}
   - "URL:" → pdfUrl; "Título:" → pdfTitulo
   - "Permitir Download:" → permitirDownloadPdf (sim/não → true/false; use true se ausente)
   - Nunca invente URL de PDF: sem URL, o bloco não existe
+- Bloco HOTSPOT_INICIO...HOTSPOT_FIM → tipo "imagem-interativa"
+  - "URL:" → imagemBase; "Legenda:" → legenda
+  - "X do Ponto N:" → hotspots[N].x; "Y do Ponto N:" → hotspots[N].y (números de 0 a 100)
+  - "Título do Ponto N:" → hotspots[N].titulo
+  - "Conteúdo do Ponto N:" → hotspots[N].conteudo (em HTML)
+  - Nunca invente URL de imagem nem coordenadas: sem URL, o bloco não existe
+- Bloco ASSOCIACAO_INICIO...ASSOCIACAO_FIM → tipo "associacao"
+  - "Item N:" → paresAssociacao[N].esquerda
+  - "Correspondente N:" → paresAssociacao[N].direita
+  - Descarte o par que não tiver os dois lados; são necessários no mínimo 2 pares
+- Bloco CATEGORIZACAO_INICIO...CATEGORIZACAO_FIM → tipo "categorizacao"
+  - "Categoria N:" → categorias[N].nome
+  - "Item M da Categoria N:" → categorias[N].itens[M].texto
+  - São necessárias no mínimo 2 categorias, cada uma com ao menos 1 item
 - Conteúdo fora de marcadores → use titulo, subtitulo, paragrafo ou lista conforme adequado
 
 ## Texto para analisar
@@ -391,6 +447,8 @@ ${sharedStructure}
 - 2 a 5 alternativas comparáveis do mesmo assunto (perfis, abordagens, papéis) → tabs
 - Fatos com data, evolução histórica, cronologia de etapas → linha-do-tempo
 - Termo técnico + definição, pergunta retórica + resposta → flipcard
+- 4 ou mais pares "termo — definição" do mesmo assunto → associacao
+- Itens explicitamente agrupados em 2 ou mais conjuntos nomeados → categorizacao
 - "Atenção:", "Importante:", aviso de segurança → info-box (tipoInfoBox: "atencao")
 - "Sabia que", curiosidade, fato interessante → info-box (tipoInfoBox: "curiosidade")
 - URL de imagem no texto → imagem, com a legenda que estiver ao lado
@@ -400,6 +458,7 @@ ${sharedStructure}
 - Revisão ao final de cada unidade → quiz (1 a 3 perguntas baseadas no conteúdo real)
 - Use ao menos 1 recurso interativo (accordion, tabs, quiz ou flipcard) por unidade
 - NUNCA gere o bloco separador no modo automático
+- NUNCA gere o bloco imagem-interativa no modo automático: as coordenadas dos pontos precisam vir do documento
 
 ## Texto para analisar
 
