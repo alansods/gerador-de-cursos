@@ -14,6 +14,7 @@ import { ObjetivosBlock } from './ObjetivosBlock'
 
 export interface BlockProps {
   item: ConteudoUnidade
+  blocoIndex?: number
 }
 
 export const blockRegistry: Record<ConteudoUnidade['tipo'], ComponentType<BlockProps>> = {

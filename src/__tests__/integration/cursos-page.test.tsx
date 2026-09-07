@@ -14,7 +14,6 @@ import CursosPage from '@/app/cursos/page'
 import { buscarCursos } from '@/app/cursos/actions'
 import { AuthProvider } from '@/context/AuthContext'
 import { GeradorCursoProvider } from '@/context/GeradorCursoContext'
-import { ProgressoProvider } from '@/context/ProgressoContext'
 
 const mockFetch = jest.fn()
 global.fetch = mockFetch
@@ -86,9 +85,7 @@ const renderCursosPage = () =>
   render(
     <AuthProvider>
       <GeradorCursoProvider>
-        <ProgressoProvider>
-          <CursosPage />
-        </ProgressoProvider>
+        <CursosPage />
       </GeradorCursoProvider>
     </AuthProvider>
   )

@@ -17,23 +17,13 @@ declare global {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 ;(window as any).SCORM = scormAPI
 
-// Inicializa sessão SCORM e define status inicial
-const initialized = scormAPI.init()
-if (initialized) {
-  const status = scormAPI.getValue('cmi.core.lesson_status')
-  if (!status || status === 'not attempted') {
-    scormAPI.setValue('cmi.core.lesson_status', 'incomplete')
-    scormAPI.save()
-  }
-  console.log('[SCORM-PLAYER] Sessão iniciada, status:', status || 'not attempted')
+// Abre a sessão. Status, bookmark, suspend_data e session_time são responsabilidade
+// do useProgressoScorm, montado pelos layouts de curso.
+if (scormAPI.init()) {
+  console.log('[SCORM-PLAYER] Sessão iniciada, status:', scormAPI.getStatus() || 'not attempted')
 } else {
   console.warn('[SCORM-PLAYER] Rodando sem LMS (modo offline/preview)')
 }
-
-// Finaliza sessão ao fechar a aba/janela
-window.addEventListener('beforeunload', () => {
-  scormAPI.terminate()
-})
 
 const courseData = window.__COURSE_DATA__
 

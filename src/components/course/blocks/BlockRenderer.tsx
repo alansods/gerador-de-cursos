@@ -20,14 +20,14 @@ export function BlockRenderer({ conteudo, theme }: BlockRendererProps) {
   return (
     <BlockThemeProvider theme={theme}>
       <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
-        {conteudo.map((item) => {
+        {conteudo.map((item, index) => {
           const Block = blockRegistry[item.tipo] || ParagrafoBlock
           return (
             <div
               key={item.id}
               className={`${item.colunas === 6 ? 'md:col-span-6' : 'md:col-span-12'}`}
             >
-              <Block item={item} />
+              <Block item={item} blocoIndex={index} />
             </div>
           )
         })}

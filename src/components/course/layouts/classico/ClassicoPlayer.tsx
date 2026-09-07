@@ -1,6 +1,8 @@
 'use client'
-import React, { useState, useEffect } from 'react'
+import React from 'react'
 import type { CursoGerado } from '@/types/gerador-curso'
+import { useProgressoScorm } from '@/hooks/useProgressoScorm'
+import { ProgressoScormProvider } from '@/components/course/ProgressoScormContext'
 import { ClassicoNavbar } from './ClassicoNavbar'
 import { ClassicoHome } from './ClassicoHome'
 import { ClassicoUnit } from './ClassicoUnit'
@@ -10,64 +12,29 @@ interface ClassicoPlayerProps {
 }
 
 export function ClassicoPlayer({ curso }: ClassicoPlayerProps) {
-  const [currentUnitId, setCurrentUnitId] = useState<string | null>(null)
-
-  // Effect to sync with SCORM LMS if needed, or handle initial load
-  useEffect(() => {
-    // Check if there's a saved location in SCORM
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const scorm = (window as any).SCORM
-    if (typeof window !== 'undefined' && scorm) {
-      try {
-        const savedLocation = scorm.getValue('cmi.core.lesson_location')
-        if (savedLocation && savedLocation !== 'index' && savedLocation !== '') {
-          // Verify if unit exists
-          const unitExists = curso.unidades.some((u) => u.id === savedLocation)
-          if (unitExists) {
-            setCurrentUnitId(savedLocation)
-          }
-        }
-      } catch (e) {
-        console.warn('Error reading SCORM location:', e)
-      }
-    }
-  }, [curso.unidades])
+  const { unidadeAtual, navegar, registrarQuiz } = useProgressoScorm(curso)
 
   const handleNavigate = (unitId: string | null) => {
-    setCurrentUnitId(unitId)
-
-    // Save location to SCORM
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const scorm = (window as any).SCORM
-    if (typeof window !== 'undefined' && scorm) {
-      try {
-        const location = unitId || 'index'
-        scorm.setValue('cmi.core.lesson_location', location)
-        scorm.save()
-        console.log('[SCORM-SPA] Saved location:', location)
-      } catch (e) {
-        console.warn('Error saving SCORM location:', e)
-      }
-    }
-
-    // Scroll to top
+    navegar(unitId)
     window.scrollTo(0, 0)
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <ClassicoNavbar
-        curso={curso}
-        currentUnidadeId={currentUnitId || undefined}
-        showMenu={true}
-        onNavigate={handleNavigate}
-      />
+    <ProgressoScormProvider valor={{ unidadeId: unidadeAtual, registrarQuiz }}>
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+        <ClassicoNavbar
+          curso={curso}
+          currentUnidadeId={unidadeAtual || undefined}
+          showMenu={true}
+          onNavigate={handleNavigate}
+        />
 
-      {currentUnitId ? (
-        <ClassicoUnit curso={curso} unidadeId={currentUnitId} onNavigate={handleNavigate} />
-      ) : (
-        <ClassicoHome curso={curso} onNavigate={handleNavigate} />
-      )}
-    </div>
+        {unidadeAtual ? (
+          <ClassicoUnit curso={curso} unidadeId={unidadeAtual} onNavigate={handleNavigate} />
+        ) : (
+          <ClassicoHome curso={curso} onNavigate={handleNavigate} />
+        )}
+      </div>
+    </ProgressoScormProvider>
   )
 }

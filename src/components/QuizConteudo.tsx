@@ -18,9 +18,10 @@ import { QuizData } from '@/types/gerador-curso'
 interface QuizConteudoProps {
   quizData: QuizData
   isEdicao?: boolean
+  onResultado?: (resultado: { acertos: number; total: number }) => void
 }
 
-export function QuizConteudo({ quizData, isEdicao = false }: QuizConteudoProps) {
+export function QuizConteudo({ quizData, isEdicao = false, onResultado }: QuizConteudoProps) {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0)
   const [selectedOptions, setSelectedOptions] = useState<Record<string, string>>({})
   const [showFeedbacks, setShowFeedbacks] = useState<Record<string, boolean>>({})
@@ -82,6 +83,8 @@ export function QuizConteudo({ quizData, isEdicao = false }: QuizConteudoProps) 
     const answered = Object.keys(showFeedbacks).length
     if (answered === total && currentQuestionIndex === total - 1) {
       setShowResults(true)
+      const { correctAnswers } = calculateResults()
+      onResultado?.({ acertos: correctAnswers, total })
     }
   }
 

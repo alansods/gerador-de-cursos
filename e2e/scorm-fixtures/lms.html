@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <title>LMS falso</title>
+    <style>
+      body { font: 13px system-ui; margin: 0 }
+      iframe { width: 100%; height: 80vh; border: 0; border-top: 2px solid #333 }
+    </style>
+  </head>
+  <body>
+    <script>
+      const inicial = JSON.parse(sessionStorage.getItem('cmi') || 'null') || {
+        'cmi.core.lesson_status': 'not attempted',
+        'cmi.core.lesson_location': '',
+        'cmi.suspend_data': '',
+        'cmi.core.student_name': 'Aluno Teste',
+        'cmi.core.exit': '',
+        'cmi.core.session_time': '',
+      }
+
+      const cmi = { ...inicial }
+      const chamadas = []
+      let erro = '0'
+      let iniciado = false
+      let finalizado = false
+
+      window.__cmi = cmi
+      window.__chamadas = chamadas
+      window.__estado = () => ({ cmi: { ...cmi }, iniciado, finalizado })
+
+      window.API = {
+        LMSInitialize() {
+          iniciado = true
+          chamadas.push('Initialize')
+          erro = '0'
+          return 'true'
+        },
+        LMSFinish() {
+          finalizado = true
+          chamadas.push('Finish')
+          sessionStorage.setItem('cmi', JSON.stringify(cmi))
+          erro = '0'
+          return 'true'
+        },
+        LMSGetValue(el) {
+          chamadas.push('Get:' + el)
+          erro = '0'
+          return cmi[el] ?? ''
+        },
+        LMSSetValue(el, v) {
+          chamadas.push('Set:' + el + '=' + v)
+          cmi[el] = String(v)
+          erro = '0'
+          return 'true'
+        },
+        LMSCommit() {
+          chamadas.push('Commit')
+          sessionStorage.setItem('cmi', JSON.stringify(cmi))
+          erro = '0'
+          return 'true'
+        },
+        LMSGetLastError: () => erro,
+        LMSGetErrorString: () => '',
+      }
+    </script>
+    <iframe src="./index.html"></iframe>
+  </body>
+</html>

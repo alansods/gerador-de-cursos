@@ -1,22 +1,22 @@
 // Caminho do Ficheiro: src/lib/scorm-service.ts
 
-import JSZip from 'jszip';
-import fs from 'fs/promises';
-import path from 'path';
+import JSZip from 'jszip'
+import fs from 'fs/promises'
+import path from 'path'
 // Importe os seus tipos TypeScript. Ajuste o caminho se estiver incorreto.
-import { CursoGerado, Unidade, ConteudoUnidade } from '@/types/gerador-curso';
+import { CursoGerado, Unidade, ConteudoUnidade } from '@/types/gerador-curso'
 
 /**
  * Escapa caracteres especiais HTML/XML para uso seguro em texto
  */
 function escapeHtml(str: string | undefined | null): string {
-  if (!str) return '';
+  if (!str) return ''
   return str
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#039;');
+    .replace(/'/g, '&#039;')
 }
 
 // =======================================================================
@@ -30,32 +30,39 @@ function escapeHtml(str: string | undefined | null): string {
 function renderConteudo(conteudo: ConteudoUnidade): string {
   const getAlignment = (alinhamento: string | undefined) => {
     switch (alinhamento) {
-      case 'centro': return 'text-center';
-      case 'direita': return 'text-right';
-      default: return 'text-left';
+      case 'centro':
+        return 'text-center'
+      case 'direita':
+        return 'text-right'
+      default:
+        return 'text-left'
     }
-  };
+  }
 
   const getImageSize = (tamanho: string | undefined) => {
     switch (tamanho) {
-      case 'pequena': return 'max-w-sm';
-      case 'media': return 'max-w-md';
-      case 'grande': return 'max-w-full';
-      default: return 'max-w-md';
+      case 'pequena':
+        return 'max-w-sm'
+      case 'media':
+        return 'max-w-md'
+      case 'grande':
+        return 'max-w-full'
+      default:
+        return 'max-w-md'
     }
-  };
+  }
 
   switch (conteudo.tipo) {
     case 'titulo':
-      return `<h1 class="text-3xl sm:text-4xl font-bold mt-8 mb-4 text-gray-900">${conteudo.conteudo}</h1>`;
+      return `<h1 class="text-3xl sm:text-4xl font-bold mt-8 mb-4 text-gray-900">${conteudo.conteudo}</h1>`
 
     case 'subtitulo':
-      return `<h2 class="text-2xl sm:text-3xl font-semibold mt-6 mb-3 text-gray-800">${conteudo.conteudo}</h2>`;
+      return `<h2 class="text-2xl sm:text-3xl font-semibold mt-6 mb-3 text-gray-800">${conteudo.conteudo}</h2>`
 
     case 'paragrafo':
       return `<p class="text-base sm:text-lg leading-relaxed text-gray-700 mb-4 whitespace-pre-wrap ${getAlignment(conteudo.alinhamento)}" style="color: ${conteudo.corTexto || 'inherit'};">
         ${conteudo.conteudo}
-      </p>`;
+      </p>`
 
     case 'imagem':
       return `
@@ -65,22 +72,22 @@ function renderConteudo(conteudo: ConteudoUnidade): string {
           ${conteudo.legenda ? `<figcaption class="text-sm text-gray-600 mt-2 italic">${conteudo.legenda}</figcaption>` : ''}
           ${conteudo.fonte ? `<small class="text-xs text-gray-500 block mt-1">Fonte: ${conteudo.fonte}</small>` : ''}
         </figure>
-      `;
+      `
 
     // --- Stubs para os seus outros tipos de conteúdo ---
     case 'accordion':
-      const itemsAccordion = conteudo.items || [];
+      const itemsAccordion = conteudo.items || []
       return `
         <div class="border rounded-lg overflow-hidden my-6">
           <h3 class="px-6 py-4 bg-gray-50 text-lg font-semibold border-b text-gray-800">Accordion (Conteúdo Interativo)</h3>
           <div class="p-6 text-gray-700 whitespace-pre-wrap space-y-2">
-            ${itemsAccordion.map(item => `<div><strong>${item.titulo}:</strong> ${item.conteudo}</div>`).join('')}
+            ${itemsAccordion.map((item) => `<div><strong>${item.titulo}:</strong> ${item.conteudo}</div>`).join('')}
           </div>
         </div>
-      `;
+      `
 
     case 'flipcard':
-       return `
+      return `
         <div class="border rounded-lg overflow-hidden my-6 bg-blue-50">
           <h3 class="px-6 py-4 bg-blue-100 text-lg font-semibold border-b border-blue-200 text-blue-800">Flipcard (Conteúdo Interativo)</h3>
           <div class="p-6 text-blue-700 whitespace-pre-wrap space-y-2">
@@ -88,23 +95,23 @@ function renderConteudo(conteudo: ConteudoUnidade): string {
             <p><strong>Verso:</strong> ${conteudo.conteudoVerso || ''}</p>
           </div>
         </div>
-      `;
+      `
 
     case 'quiz':
-      const questions = conteudo.quizData?.questions || [];
+      const questions = conteudo.quizData?.questions || []
       return `
         <div class="border rounded-lg overflow-hidden my-6 bg-yellow-50">
           <h3 class="px-6 py-4 bg-yellow-100 text-lg font-semibold border-b border-yellow-200 text-yellow-800">Quiz (Conteúdo Interativo)</h3>
           <div class="p-6 text-yellow-700 whitespace-pre-wrap space-y-2">
-            ${questions.map(q => `<p><strong>Pergunta:</strong> ${q.pergunta}</p>`).join('')}
+            ${questions.map((q) => `<p><strong>Pergunta:</strong> ${q.pergunta}</p>`).join('')}
           </div>
         </div>
-      `;
+      `
 
     case 'lista':
     case 'info-box':
     default:
-      return `<div class="p-4 bg-gray-100 rounded-lg my-6 text-gray-600 italic">(Conteúdo do tipo '${conteudo.tipo}' não renderizado no SCORM)</div>`;
+      return `<div class="p-4 bg-gray-100 rounded-lg my-6 text-gray-600 italic">(Conteúdo do tipo '${conteudo.tipo}' não renderizado no SCORM)</div>`
   }
 }
 
@@ -112,23 +119,28 @@ function renderConteudo(conteudo: ConteudoUnidade): string {
  * Gera o HTML completo do player (index.html), agora como uma SPA.
  */
 function generateIndexHtml(curso: CursoGerado): string {
-  
   // --- HTML para a PÁGINA DO PLAYER ---
   // Gera o HTML de uma única unidade (para a área de conteúdo)
   const generateUnitHtml = (unidade: Unidade) => `
     <div id="unit-${unidade.id}" class="course-unit" style="display: none;">
-      ${unidade.conteudo.sort((a, b) => a.ordem - b.ordem).map(renderConteudo).join('\n')}
+      ${unidade.conteudo
+        .sort((a, b) => a.ordem - b.ordem)
+        .map(renderConteudo)
+        .join('\n')}
     </div>
-  `;
+  `
 
   // Gera os links da "Sheet" (gaveta) de navegação
   const generateSheetLinks = (unidades: Unidade[]) => {
-    return unidades.sort((a, b) => a.ordem - b.ordem).map((unidade, index) => `
+    return unidades
+      .sort((a, b) => a.ordem - b.ordem)
+      .map(
+        (unidade, index) => `
       <a href="#" 
          data-unit-id="${unidade.id}" 
          class="unit-link-sheet group flex items-center gap-3 p-4 rounded-xl border border-gray-200 hover:border-orange-300 hover:bg-orange-50/50 transition-all duration-200">
         <div class="shrink-0 w-10 h-10 rounded-lg bg-linear-to-br from-orange-400 to-orange-600 flex items-center justify-center text-white font-bold text-sm">
-          ${String(index + 1).padStart(2, "0")}
+          ${String(index + 1).padStart(2, '0')}
         </div>
         <div class="flex-1 min-w-0">
           <p class="font-semibold text-gray-900 group-hover:text-orange-600 transition-colors line-clamp-2 text-sm leading-snug">
@@ -136,18 +148,21 @@ function generateIndexHtml(curso: CursoGerado): string {
           </p>
         </div>
       </a>
-    `).join('\n');
-  };
+    `
+      )
+      .join('\n')
+  }
 
   // Gera os botões de Navegação (Anterior/Próxima)
   const generateNavButtons = (unidades: Unidade[]) => {
-    const sortedUnits = unidades.sort((a, b) => a.ordem - b.ordem);
+    const sortedUnits = unidades.sort((a, b) => a.ordem - b.ordem)
 
-    return sortedUnits.map((unidade, index) => {
-      const prev = index > 0 ? sortedUnits[index - 1] : null;
-      const next = index < sortedUnits.length - 1 ? sortedUnits[index + 1] : null;
-      
-      return `
+    return sortedUnits
+      .map((unidade, index) => {
+        const prev = index > 0 ? sortedUnits[index - 1] : null
+        const next = index < sortedUnits.length - 1 ? sortedUnits[index + 1] : null
+
+        return `
         <div id="nav-unit-${unidade.id}" class="course-nav" style="display: none;">
           <a href="#" ${prev ? `data-unit-id="${prev.id}"` : 'disabled'} 
              class="nav-prev flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-md disabled:opacity-50 disabled:cursor-not-allowed ${!prev ? 'pointer-events-none' : ''}">
@@ -165,9 +180,10 @@ function generateIndexHtml(curso: CursoGerado): string {
             <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
           </a>
         </div>
-      `;
-    }).join('\n');
-  };
+      `
+      })
+      .join('\n')
+  }
 
   // --- HTML para a PÁGINA DO MENU (HERO) ---
   // Gera o HTML para a lista de unidades (Cards)
@@ -177,9 +193,12 @@ function generateIndexHtml(curso: CursoGerado): string {
         <div class="bg-white rounded-lg shadow border p-12 text-center text-gray-500">
           <p>Nenhuma unidade criada ainda.</p>
         </div>
-      `;
+      `
     }
-    return unidades.sort((a, b) => a.ordem - b.ordem).map((unidade, index) => `
+    return unidades
+      .sort((a, b) => a.ordem - b.ordem)
+      .map(
+        (unidade, index) => `
       <a href="#" 
          data-unit-id="${unidade.id}" 
          class="unit-link-hero block bg-white hover:border-orange-600 border border-gray-200 rounded-lg shadow overflow-hidden transition-all duration-200 cursor-pointer">
@@ -193,7 +212,7 @@ function generateIndexHtml(curso: CursoGerado): string {
             <div class="flex-1 text-center sm:text-left">
               <div>
                 <span class="text-xs font-bold text-orange-600 uppercase tracking-wide">
-                  UNIDADE ${String(index + 1).padStart(2, "0")}
+                  UNIDADE ${String(index + 1).padStart(2, '0')}
                 </span>
               </div>
               <h3 class="text-xl md:text-2xl font-bold text-gray-900 leading-tight">${escapeHtml(unidade.titulo)}</h3>
@@ -207,8 +226,10 @@ function generateIndexHtml(curso: CursoGerado): string {
           </div>
         </div>
       </a>
-    `).join('\n');
-  };
+    `
+      )
+      .join('\n')
+  }
 
   // --- HTML PRINCIPAL (SPA) ---
   return `<!DOCTYPE html>
@@ -297,7 +318,10 @@ function generateIndexHtml(curso: CursoGerado): string {
     <main class="flex-1 p-6 sm:p-10 mt-16 overflow-y-auto">
       <div class="max-w-4xl mx-auto">
         <div id="course-content-area">
-          ${curso.unidades.sort((a, b) => a.ordem - b.ordem).map(generateUnitHtml).join('\n')}
+          ${curso.unidades
+            .sort((a, b) => a.ordem - b.ordem)
+            .map(generateUnitHtml)
+            .join('\n')}
         </div>
         
         <!-- Navegação Anterior/Próxima (recriada do seu código) -->
@@ -387,7 +411,7 @@ function generateIndexHtml(curso: CursoGerado): string {
 
   <script>
     var scorm = SCORM; 
-    var units = ${JSON.stringify(curso.unidades.sort((a, b) => a.ordem - b.ordem).map(u => ({ id: u.id, titulo: u.titulo })))};
+    var units = ${JSON.stringify(curso.unidades.sort((a, b) => a.ordem - b.ordem).map((u) => ({ id: u.id, titulo: u.titulo })))};
     var lessonStatus = 'incomplete';
     var studentName = 'Convidado';
     var currentUnitId = '';
@@ -585,15 +609,26 @@ function generateIndexHtml(curso: CursoGerado): string {
     };
   </script>
 </body>
-</html>`;
+</html>`
 }
 
 // =======================================================================
 // 2. GERADOR DO MANIFESTO (imsmanifest.xml)
 // =======================================================================
-export function generateManifest(curso: CursoGerado): string {
-  const sanitizedTitle = curso.titulo.replace(/[^a-zA-Z0-9_-]/g, '_');
-  
+const ARQUIVOS_FALLBACK_SPA = [
+  'index.html',
+  'scorm_api_wrapper.js',
+  'imscp_rootv1p1p2.xsd',
+  'adlcp_rootv1p2.xsd',
+  'imsmd_rootv1p2p1.xsd',
+]
+
+export function generateManifest(curso: CursoGerado, arquivos?: string[]): string {
+  const sanitizedTitle = curso.titulo.replace(/[^a-zA-Z0-9_-]/g, '_')
+  const listaArquivos = (arquivos?.length ? arquivos : ARQUIVOS_FALLBACK_SPA)
+    .map((f) => `      <file href="${escapeHtml(f)}"/>`)
+    .join('\n')
+
   return `<?xml version="1.0" encoding="UTF-8"?>
 <manifest xmlns="http://www.imsproject.org/xsd/imscp_rootv1p1p2" 
           xmlns:adlcp="http://www.adlnet.org/xsd/adlcp_rootv1p2" 
@@ -617,15 +652,10 @@ export function generateManifest(curso: CursoGerado): string {
   <resources>
     <!-- O recurso principal (SCO) é o index.html -->
     <resource identifier="RES-${sanitizedTitle}" type="webcontent" adlcp:scormtype="sco" href="index.html">
-      <file href="index.html"/>
-      <!-- Não precisamos mais do player.html -->
-      <file href="scorm_api_wrapper.js"/>
-      <file href="imscp_rootv1p1p2.xsd"/>
-      <file href="adlcp_rootv1p2.xsd"/>
-      <file href="imsmd_rootv1p2p1.xsd"/>
+${listaArquivos}
     </resource>
   </resources>
-</manifest>`;
+</manifest>`
 }
 
 // =======================================================================
@@ -694,7 +724,7 @@ var SCORM = (function(){
     };
 })();
 console.log('📦 [SCORM-PLAYER] SCORM Wrapper carregado com sucesso.');
-`;
+`
 }
 
 // =======================================================================
@@ -704,8 +734,8 @@ export function getXSDs(): { [key: string]: string } {
   return {
     'imscp_rootv1p1p2.xsd': `<?xml version="1.0" encoding="UTF-8"?><xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" targetNamespace="http://www.imsproject.org/xsd/imscp_rootv1p1p2" version="IMS CP 1.1.2"><xsd:annotation><xsd:documentation>Schema simplificado para validação.</xsd:documentation></xsd:annotation></xsd:schema>`,
     'adlcp_rootv1p2.xsd': `<?xml version="1.0" encoding="UTF-8"?><xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" targetNamespace="http://www.adlnet.org/xsd/adlcp_rootv1p2"><xsd:annotation><xsd:documentation>Schema simplificado para validação ADL.</xsd:documentation></xsd:annotation></xsd:schema>`,
-    'imsmd_rootv1p2p1.xsd': `<?xml version="1.0" encoding="UTF-8"?><xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" targetNamespace="http://www.imsglobal.org/xsd/imsmd_rootv1p2p1"><xsd:annotation><xsd:documentation>Schema simplificado para metadados IMS.</xsd:documentation></xsd:annotation></xsd:schema>`
-  };
+    'imsmd_rootv1p2p1.xsd': `<?xml version="1.0" encoding="UTF-8"?><xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" targetNamespace="http://www.imsglobal.org/xsd/imsmd_rootv1p2p1"><xsd:annotation><xsd:documentation>Schema simplificado para metadados IMS.</xsd:documentation></xsd:annotation></xsd:schema>`,
+  }
 }
 
 // =======================================================================
@@ -721,128 +751,128 @@ export async function generateSCORMFromPlayerDist(
   curso: CursoGerado,
   cursoId?: string
 ): Promise<Buffer> {
-  console.log(`📦 [SCORM Service] Iniciando geração via Vite player para: ${curso.titulo}`);
+  console.log(`📦 [SCORM Service] Iniciando geração via Vite player para: ${curso.titulo}`)
 
-  const distDir = path.join(process.cwd(), 'player', 'dist');
+  const distDir = path.join(process.cwd(), 'player', 'dist')
 
   // Verificar se o player foi buildado
   try {
-    await fs.access(path.join(distDir, 'index.html'));
+    await fs.access(path.join(distDir, 'index.html'))
   } catch {
     throw new Error(
       'player/dist/index.html não encontrado. Execute "pnpm build:player" antes de exportar.'
-    );
+    )
   }
 
-  const zip = new JSZip();
+  const zip = new JSZip()
+  const arquivosNoZip: string[] = []
 
   // 1. Copiar todos os arquivos de player/dist/ para o ZIP recursivamente
   async function addDirectoryToZip(dir: string, zipPrefix: string): Promise<void> {
-    const entries = await fs.readdir(dir, { withFileTypes: true });
+    const entries = await fs.readdir(dir, { withFileTypes: true })
     for (const entry of entries) {
-      const fullPath = path.join(dir, entry.name);
-      const zipPath = zipPrefix ? `${zipPrefix}/${entry.name}` : entry.name;
+      const fullPath = path.join(dir, entry.name)
+      const zipPath = zipPrefix ? `${zipPrefix}/${entry.name}` : entry.name
       if (entry.isDirectory()) {
-        await addDirectoryToZip(fullPath, zipPath);
+        await addDirectoryToZip(fullPath, zipPath)
       } else {
-        const content = await fs.readFile(fullPath);
-        zip.file(zipPath, content);
+        const content = await fs.readFile(fullPath)
+        zip.file(zipPath, content)
+        arquivosNoZip.push(zipPath)
       }
     }
   }
 
-  await addDirectoryToZip(distDir, '');
+  await addDirectoryToZip(distDir, '')
 
   // 2. Injetar course data no index.html (sobrescreve o arquivo copiado)
-  let indexHtml = await fs.readFile(path.join(distDir, 'index.html'), 'utf-8');
-  const courseJson = JSON.stringify(curso);
-  indexHtml = indexHtml.replace(
-    'null /* COURSE_DATA_PLACEHOLDER */',
-    courseJson
-  );
+  let indexHtml = await fs.readFile(path.join(distDir, 'index.html'), 'utf-8')
+  const courseJson = JSON.stringify(curso)
+  indexHtml = indexHtml.replace('null /* COURSE_DATA_PLACEHOLDER */', courseJson)
   // Remover atributo crossorigin que o Vite adiciona — muitos LMSes bloqueiam
   // carregamento de assets com esse atributo por política de CORS
-  indexHtml = indexHtml.replace(/ crossorigin/g, '');
+  indexHtml = indexHtml.replace(/ crossorigin/g, '')
   // Garantir que o charset UTF-8 está declarado (evita mojibake no LMS)
   if (!indexHtml.includes('charset')) {
-    indexHtml = indexHtml.replace('<head>', '<head>\n  <meta charset="UTF-8" />');
+    indexHtml = indexHtml.replace('<head>', '<head>\n  <meta charset="UTF-8" />')
   }
-  zip.file('index.html', Buffer.from(indexHtml, 'utf-8'));
+  zip.file('index.html', Buffer.from(indexHtml, 'utf-8'))
 
   // 3. Embutir imagens baixadas localmente (mesma lógica do generateSCORMPackage)
   if (cursoId) {
-    const imagesDir = path.join(process.cwd(), 'public', 'scorm-images', cursoId);
+    const imagesDir = path.join(process.cwd(), 'public', 'scorm-images', cursoId)
     try {
-      const imageFiles = await fs.readdir(imagesDir);
+      const imageFiles = await fs.readdir(imagesDir)
       for (const file of imageFiles) {
-        const filePath = path.join(imagesDir, file);
-        const fileContent = await fs.readFile(filePath);
-        zip.file(`images/${file}`, fileContent);
+        const filePath = path.join(imagesDir, file)
+        const fileContent = await fs.readFile(filePath)
+        zip.file(`images/${file}`, fileContent)
+        arquivosNoZip.push(`images/${file}`)
       }
-      console.log(`   🖼️ [SCORM Service] ${imageFiles.length} imagem(ns) embutida(s) no ZIP`);
+      console.log(`   🖼️ [SCORM Service] ${imageFiles.length} imagem(ns) embutida(s) no ZIP`)
     } catch {
-      console.log(`   ℹ️ [SCORM Service] Nenhuma imagem local encontrada para embutir`);
+      console.log(`   ℹ️ [SCORM Service] Nenhuma imagem local encontrada para embutir`)
     }
   }
 
   // 4. Gerar imsmanifest.xml
-  zip.file('imsmanifest.xml', generateManifest(curso));
+  zip.file('imsmanifest.xml', generateManifest(curso, arquivosNoZip))
 
-  console.log(`✅ [SCORM Service] Pacote (Vite player) gerado com sucesso para: ${curso.titulo}`);
+  console.log(`✅ [SCORM Service] Pacote (Vite player) gerado com sucesso para: ${curso.titulo}`)
 
   return zip.generateAsync({
     type: 'nodebuffer',
     compression: 'DEFLATE',
     compressionOptions: { level: 9 },
-  });
+  })
 }
 
 export async function generateSCORMPackage(curso: CursoGerado, cursoId?: string): Promise<Buffer> {
-  console.log(`📦 [SCORM Service] Iniciando geração do pacote para: ${curso.titulo}`);
+  console.log(`📦 [SCORM Service] Iniciando geração do pacote para: ${curso.titulo}`)
 
-  const zip = new JSZip();
+  const zip = new JSZip()
 
   // 1. Gerar e adicionar o Manifesto
-  const manifestContent = generateManifest(curso);
-  zip.file('imsmanifest.xml', manifestContent);
+  const manifestContent = generateManifest(curso)
+  zip.file('imsmanifest.xml', manifestContent)
 
   // 2. Gerar o HTML do player e embutir imagens locais no ZIP
-  let indexHtmlContent = generateIndexHtml(curso);
+  let indexHtmlContent = generateIndexHtml(curso)
 
   if (cursoId) {
-    const imagesDir = path.join(process.cwd(), 'public', 'scorm-images', cursoId);
+    const imagesDir = path.join(process.cwd(), 'public', 'scorm-images', cursoId)
     try {
-      const imageFiles = await fs.readdir(imagesDir);
+      const imageFiles = await fs.readdir(imagesDir)
       for (const file of imageFiles) {
-        const filePath = path.join(imagesDir, file);
-        const fileContent = await fs.readFile(filePath);
-        zip.file(`images/${file}`, fileContent);
+        const filePath = path.join(imagesDir, file)
+        const fileContent = await fs.readFile(filePath)
+        zip.file(`images/${file}`, fileContent)
       }
       // Substituir caminhos absolutos /scorm-images/{cursoId}/ por relativos images/
       indexHtmlContent = indexHtmlContent.replace(
         new RegExp(`/scorm-images/${cursoId}/`, 'g'),
         'images/'
-      );
-      console.log(`   🖼️ [SCORM Service] ${imageFiles.length} imagem(ns) embutida(s) no ZIP`);
+      )
+      console.log(`   🖼️ [SCORM Service] ${imageFiles.length} imagem(ns) embutida(s) no ZIP`)
     } catch {
       // Diretório de imagens não existe — seguir sem imagens
-      console.log(`   ℹ️ [SCORM Service] Nenhuma imagem local encontrada para embutir`);
+      console.log(`   ℹ️ [SCORM Service] Nenhuma imagem local encontrada para embutir`)
     }
   }
 
-  zip.file('index.html', indexHtmlContent);
+  zip.file('index.html', indexHtmlContent)
 
   // 3. Gerar e adicionar o Wrapper da API
-  const wrapperContent = generateScormWrapper();
-  zip.file('scorm_api_wrapper.js', wrapperContent);
+  const wrapperContent = generateScormWrapper()
+  zip.file('scorm_api_wrapper.js', wrapperContent)
 
   // 4. Adicionar os arquivos XSD
-  const xsds = getXSDs();
+  const xsds = getXSDs()
   for (const [filename, content] of Object.entries(xsds)) {
-    zip.file(filename, content);
+    zip.file(filename, content)
   }
 
-  console.log(`✅ [SCORM Service] Pacote gerado com sucesso para: ${curso.titulo}`);
+  console.log(`✅ [SCORM Service] Pacote gerado com sucesso para: ${curso.titulo}`)
 
   // 5. Gerar o .zip como um Buffer
   const zipBuffer = await zip.generateAsync({
@@ -851,7 +881,7 @@ export async function generateSCORMPackage(curso: CursoGerado, cursoId?: string)
     compressionOptions: {
       level: 9,
     },
-  });
+  })
 
-  return zipBuffer;
+  return zipBuffer
 }

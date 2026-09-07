@@ -2,7 +2,6 @@ import type { Metadata } from 'next'
 import { Geist, Geist_Mono } from 'next/font/google'
 import './globals.css'
 import { GeradorCursoProvider } from '@/context/GeradorCursoContext'
-import { ProgressoProvider } from '@/context/ProgressoContext'
 import { AuthProviderWrapper } from '@/components/AuthProviderWrapper'
 import { ThemeProvider } from '@/components/ThemeProvider'
 import { I18nProvider } from '@/i18n/provider'
@@ -55,9 +54,7 @@ export default async function RootLayout({
         <I18nProvider locale={locale} messages={messages}>
           <ThemeProvider>
             <AuthProviderWrapper>
-              <GeradorCursoProvider>
-                <ProgressoProvider>{children}</ProgressoProvider>
-              </GeradorCursoProvider>
+              <GeradorCursoProvider>{children}</GeradorCursoProvider>
             </AuthProviderWrapper>
             <Toaster position="bottom-right" richColors closeButton />
           </ThemeProvider>

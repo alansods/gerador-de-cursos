@@ -26,6 +26,27 @@ interface SCORM2004API {
 
 type SCORMAPIType = SCORM12API | SCORM2004API
 
+type ElementoLogico =
+  | 'location'
+  | 'suspendData'
+  | 'status'
+  | 'scoreRaw'
+  | 'scoreMin'
+  | 'scoreMax'
+  | 'sessionTime'
+  | 'exit'
+
+const ELEMENTOS: Record<ElementoLogico, { scorm12: string; scorm2004: string }> = {
+  location: { scorm12: 'cmi.core.lesson_location', scorm2004: 'cmi.location' },
+  suspendData: { scorm12: 'cmi.suspend_data', scorm2004: 'cmi.suspend_data' },
+  status: { scorm12: 'cmi.core.lesson_status', scorm2004: 'cmi.completion_status' },
+  scoreRaw: { scorm12: 'cmi.core.score.raw', scorm2004: 'cmi.score.raw' },
+  scoreMin: { scorm12: 'cmi.core.score.min', scorm2004: 'cmi.score.min' },
+  scoreMax: { scorm12: 'cmi.core.score.max', scorm2004: 'cmi.score.max' },
+  sessionTime: { scorm12: 'cmi.core.session_time', scorm2004: 'cmi.session_time' },
+  exit: { scorm12: 'cmi.core.exit', scorm2004: 'cmi.exit' },
+}
+
 function findAPI(win: Window): SCORMAPIType | null {
   let searchWin: Window = win
   let attempts = 0
@@ -37,7 +58,10 @@ function findAPI(win: Window): SCORMAPIType | null {
       return (searchWin as unknown as Record<string, unknown>).API as SCORM12API
     }
     // SCORM 2004
-    if ('API_1484_11' in searchWin && (searchWin as unknown as Record<string, unknown>).API_1484_11) {
+    if (
+      'API_1484_11' in searchWin &&
+      (searchWin as unknown as Record<string, unknown>).API_1484_11
+    ) {
       return (searchWin as unknown as Record<string, unknown>).API_1484_11 as SCORM2004API
     }
     if (!searchWin.parent || searchWin.parent === searchWin) break
@@ -77,10 +101,22 @@ export interface SCORMWrapper {
   getValue: (param: string) => string
   setValue: (param: string, value: string) => boolean
   getStudentName: () => string
+  getLocation: () => string
+  setLocation: (valor: string) => boolean
+  getSuspendData: () => string
+  setSuspendData: (valor: string) => boolean
+  getStatus: () => string
+  setStatus: (valor: 'incomplete' | 'completed' | 'passed' | 'failed') => boolean
+  setScore: (nota: number) => boolean
+  setSessionTime: (valor: string) => boolean
+  setExit: (valor: 'suspend' | '') => boolean
 }
 
 function createSCORMWrapper(): SCORMWrapper {
   const API = typeof window !== 'undefined' ? findAPI(window) : null
+  const usa12 = !API || is12(API)
+  const chave = (elemento: ElementoLogico) =>
+    usa12 ? ELEMENTOS[elemento].scorm12 : ELEMENTOS[elemento].scorm2004
 
   if (API) {
     console.log('[SCORM-PLAYER] ✅ API encontrada:', is12(API) ? 'SCORM 1.2' : 'SCORM 2004')
@@ -131,6 +167,46 @@ function createSCORMWrapper(): SCORMWrapper {
       const name12 = this.getValue('cmi.core.student_name')
       const name2004 = this.getValue('cmi.learner_name')
       return name12 || name2004 || 'Convidado'
+    },
+
+    getLocation() {
+      return this.getValue(chave('location'))
+    },
+
+    setLocation(valor: string) {
+      return this.setValue(chave('location'), valor)
+    },
+
+    getSuspendData() {
+      return this.getValue(chave('suspendData'))
+    },
+
+    setSuspendData(valor: string) {
+      return this.setValue(chave('suspendData'), valor)
+    },
+
+    getStatus() {
+      return this.getValue(chave('status'))
+    },
+
+    setStatus(valor: 'incomplete' | 'completed' | 'passed' | 'failed') {
+      return this.setValue(chave('status'), valor)
+    },
+
+    setScore(nota: number) {
+      const limitada = Math.max(0, Math.min(100, Math.round(nota)))
+      const ok = this.setValue(chave('scoreRaw'), String(limitada))
+      this.setValue(chave('scoreMin'), '0')
+      this.setValue(chave('scoreMax'), '100')
+      return ok
+    },
+
+    setSessionTime(valor: string) {
+      return this.setValue(chave('sessionTime'), valor)
+    },
+
+    setExit(valor: 'suspend' | '') {
+      return this.setValue(chave('exit'), valor)
     },
   }
 }
