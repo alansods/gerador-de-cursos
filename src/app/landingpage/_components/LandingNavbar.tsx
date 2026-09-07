@@ -4,11 +4,11 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { Menu, X, Moon, Sun } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { useTheme } from 'next-themes'
+import { useTheme } from '@/hooks/useTheme'
 
 export default function LandingNavbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-  const { theme, setTheme } = useTheme()
+  const { isDarkMode, toggleDarkMode } = useTheme()
 
   const scrollToSection = (sectionId: string) => {
     const element = document.querySelector(sectionId)
@@ -18,9 +18,7 @@ export default function LandingNavbar() {
     }
   }
 
-  const toggleTheme = () => {
-    setTheme(theme === 'dark' ? 'light' : 'dark')
-  }
+  const toggleTheme = toggleDarkMode
 
   return (
     <nav className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -131,7 +129,7 @@ export default function LandingNavbar() {
               <Button variant="outline" onClick={toggleTheme} className="w-full justify-start">
                 <Sun className="mr-2 h-5 w-5 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
                 <Moon className="absolute ml-8 h-5 w-5 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
-                <span className="ml-6">{theme === 'dark' ? 'Modo Claro' : 'Modo Escuro'}</span>
+                <span className="ml-6">{isDarkMode ? 'Modo Claro' : 'Modo Escuro'}</span>
               </Button>
             </div>
 

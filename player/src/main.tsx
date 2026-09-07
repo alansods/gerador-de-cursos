@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom/client'
 import './styles.css'
 import App from './App'
 import { scormAPI } from './scorm-api'
+import { ThemeProvider } from '@/components/ThemeProvider'
 import type { CursoGerado } from '@/types/gerador-curso'
 
 declare global {
@@ -38,6 +39,8 @@ const courseData = window.__COURSE_DATA__
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
-    <App curso={courseData} />
+    <ThemeProvider>
+      <App curso={courseData} />
+    </ThemeProvider>
   </React.StrictMode>
 )

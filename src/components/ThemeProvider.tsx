@@ -1,21 +1,40 @@
-'use client';
+'use client'
 
-import { useEffect } from 'react';
+import { ThemeProvider as NextThemesProvider } from 'next-themes'
+
+const CHAVE_ANTIGA = 'darkMode'
+const CHAVE_ATUAL = 'theme'
+
+function migrarPreferenciaAntiga() {
+  if (typeof window === 'undefined') return
+
+  try {
+    const antiga = localStorage.getItem(CHAVE_ANTIGA)
+    if (antiga === null) return
+
+    if (localStorage.getItem(CHAVE_ATUAL) === null) {
+      const tema = antiga === 'true' ? 'dark' : 'light'
+      localStorage.setItem(CHAVE_ATUAL, tema)
+      document.documentElement.classList.toggle('dark', tema === 'dark')
+    }
+
+    localStorage.removeItem(CHAVE_ANTIGA)
+  } catch {
+    // localStorage indisponível (modo privado, cookies bloqueados)
+  }
+}
+
+migrarPreferenciaAntiga()
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  useEffect(() => {
-    // Aplicar tema imediatamente ao carregar usando a mesma chave que useTheme
-    const savedTheme = localStorage.getItem('darkMode');
-    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-
-    const shouldBeDark = savedTheme === 'true' || (savedTheme === null && prefersDark);
-
-    if (shouldBeDark) {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
-  }, []);
-
-  return <>{children}</>;
+  return (
+    <NextThemesProvider
+      attribute="class"
+      defaultTheme="system"
+      enableSystem
+      disableTransitionOnChange
+    >
+      {children}
+    </NextThemesProvider>
+  )
 }
