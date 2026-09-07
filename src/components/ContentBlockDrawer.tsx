@@ -13,25 +13,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import {
-  Heading2,
-  Heading3,
-  Type,
-  Image as ImageIcon,
-  List,
-  AlertTriangle,
-  RotateCcw,
-  ChevronDown,
-  HelpCircle,
-  Upload,
-  Loader2,
-  Plus,
-  Trash2,
-  Video,
-  Target,
-} from 'lucide-react'
+import { HelpCircle, Upload, Loader2, Plus, Trash2 } from 'lucide-react'
 import Image from 'next/image'
 import { ConteudoUnidade, AccordionItem, ListaItem } from '@/types/gerador-curso'
+import { CATALOGO_BLOCOS, criarBlocoVazio } from '@/lib/blocos'
+import { POLITICA_MIDIAS, type CategoriaMidia } from '@/lib/midias'
+import { enviarArquivo } from '@/lib/upload-cliente'
 import { RichTextEditor } from './RichTextEditor'
 import { toast } from 'sonner'
 
@@ -42,45 +29,6 @@ interface ContentBlockDrawerProps {
   blockData: Partial<ConteudoUnidade> | null
   onSave: (data: Omit<ConteudoUnidade, 'id' | 'ordem'>) => void
   onCancel: () => void
-  onUploadImage?: (file: File, forFlipcard?: boolean) => Promise<string>
-}
-
-const getBlockTitle = (tipo: ConteudoUnidade['tipo'] | null, mode: 'add' | 'edit'): string => {
-  const action = mode === 'add' ? 'Adicionar' : 'Editar'
-  if (!tipo) return 'Adicionar conteúdo'
-
-  const titles: Record<ConteudoUnidade['tipo'], string> = {
-    titulo: `${action} Título`,
-    subtitulo: `${action} Subtítulo`,
-    paragrafo: `${action} Texto`,
-    imagem: `${action} Imagem`,
-    video: `${action} Vídeo`,
-    lista: `${action} Lista`,
-    'objetivos-aprendizagem': `${action} Objetivos de Aprendizagem`,
-    'info-box': `${action} Info Box`,
-    flipcard: `${action} Flashcards`,
-    accordion: `${action} Sanfona`,
-    quiz: `${action} Quiz`,
-  }
-  return titles[tipo]
-}
-
-const getBlockIcon = (tipo: ConteudoUnidade['tipo'] | null) => {
-  if (!tipo) return null
-  const icons: Record<ConteudoUnidade['tipo'], React.ElementType> = {
-    titulo: Heading2,
-    subtitulo: Heading3,
-    paragrafo: Type,
-    imagem: ImageIcon,
-    video: Video,
-    lista: List,
-    'objetivos-aprendizagem': Target,
-    'info-box': AlertTriangle,
-    flipcard: RotateCcw,
-    accordion: ChevronDown,
-    quiz: HelpCircle,
-  }
-  return icons[tipo]
 }
 
 const extractYouTubeId = (url: string): string => {
@@ -103,6 +51,180 @@ const extractYouTubeId = (url: string): string => {
   return ''
 }
 
+function CampoArquivo({
+  categoria,
+  rotulo,
+  url,
+  onUrl,
+}: {
+  categoria: CategoriaMidia
+  rotulo: string
+  url: string
+  onUrl: (url: string) => void
+}) {
+  const [enviando, setEnviando] = useState(false)
+  const politica = POLITICA_MIDIAS[categoria]
+
+  const aoSelecionar = async (arquivo: File) => {
+    setEnviando(true)
+    try {
+      const { url: enviada, aviso } = await enviarArquivo(arquivo, categoria)
+      onUrl(enviada)
+      if (aviso) toast.warning(aviso)
+      else toast.success(`${politica.rotulo} enviado`)
+    } catch (erro) {
+      toast.error(erro instanceof Error ? erro.message : 'Erro ao enviar o arquivo')
+    } finally {
+      setEnviando(false)
+    }
+  }
+
+  return (
+    <div className="space-y-2">
+      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+        {rotulo} <span className="text-red-500">*</span>
+      </label>
+
+      <div className="flex items-center gap-2">
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          disabled={enviando}
+          onClick={() => document.getElementById(`arquivo-${categoria}`)?.click()}
+        >
+          {enviando ? (
+            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+          ) : (
+            <Upload className="h-4 w-4 mr-2" />
+          )}
+          {enviando ? 'Enviando...' : 'Escolher arquivo'}
+        </Button>
+        <input
+          id={`arquivo-${categoria}`}
+          type="file"
+          accept={politica.extensoes}
+          className="hidden"
+          onChange={(e) => {
+            const arquivo = e.target.files?.[0]
+            if (arquivo) aoSelecionar(arquivo)
+            e.target.value = ''
+          }}
+        />
+      </div>
+
+      <Input
+        value={url}
+        onChange={(e) => onUrl(e.target.value)}
+        placeholder="ou cole a URL aqui..."
+        className="text-sm"
+      />
+
+      <p className="text-xs text-gray-500 dark:text-gray-400">{politica.dicaTamanho}</p>
+    </div>
+  )
+}
+
+interface CampoItem<T> {
+  chave: keyof T & string
+  rotulo: string
+  obrigatorio?: boolean
+  multilinha?: boolean
+  placeholder?: string
+}
+
+function EditorDeItens<T extends { id: string }>({
+  rotulo,
+  rotuloItem,
+  itens,
+  campos,
+  criarItem,
+  onChange,
+  vazio,
+}: {
+  rotulo: string
+  rotuloItem: string
+  itens: T[]
+  campos: CampoItem<T>[]
+  criarItem: () => T
+  onChange: (itens: T[]) => void
+  vazio: string
+}) {
+  const atualizar = (id: string, chave: string, valor: string) =>
+    onChange(itens.map((item) => (item.id === id ? { ...item, [chave]: valor } : item)))
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+          {rotulo} <span className="text-red-500">*</span>
+        </label>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={() => onChange([...itens, criarItem()])}
+          className="text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-800 hover:bg-blue-50 dark:hover:bg-blue-950/20"
+        >
+          <Plus className="h-4 w-4 mr-2" />
+          Adicionar
+        </Button>
+      </div>
+
+      {itens.length > 0 ? (
+        <div className="space-y-3 max-h-[400px] overflow-y-auto">
+          {itens.map((item, index) => (
+            <Card key={item.id} className="p-4">
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+                  {rotuloItem} {index + 1}
+                </span>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => onChange(itens.filter((outro) => outro.id !== item.id))}
+                  className="text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-950/20"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
+              <div className="space-y-3">
+                {campos.map((campo) => (
+                  <div key={campo.chave}>
+                    <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
+                      {campo.rotulo}
+                      {campo.obrigatorio && <span className="text-red-500"> *</span>}
+                    </label>
+                    {campo.multilinha ? (
+                      <Textarea
+                        value={String(item[campo.chave] ?? '')}
+                        onChange={(e) => atualizar(item.id, campo.chave, e.target.value)}
+                        placeholder={campo.placeholder}
+                        rows={3}
+                        className="text-sm"
+                      />
+                    ) : (
+                      <Input
+                        value={String(item[campo.chave] ?? '')}
+                        onChange={(e) => atualizar(item.id, campo.chave, e.target.value)}
+                        placeholder={campo.placeholder}
+                        className="text-sm"
+                      />
+                    )}
+                  </div>
+                ))}
+              </div>
+            </Card>
+          ))}
+        </div>
+      ) : (
+        <p className="text-sm text-gray-500 dark:text-gray-400 italic">{vazio}</p>
+      )}
+    </div>
+  )
+}
+
 export function ContentBlockDrawer({
   open,
   onOpenChange,
@@ -110,38 +232,13 @@ export function ContentBlockDrawer({
   blockData,
   onSave,
   onCancel,
-  onUploadImage,
 }: ContentBlockDrawerProps) {
-  console.log('🔍 ContentBlockDrawer - open:', open, 'mode:', mode, 'blockData:', blockData)
-
   const [selectedType, setSelectedType] = useState<ConteudoUnidade['tipo'] | null>(
     blockData?.tipo || null
   )
 
-  console.log('🔍 ContentBlockDrawer - selectedType:', selectedType)
   const [formData, setFormData] = useState<Partial<ConteudoUnidade>>({
-    tipo: 'paragrafo',
-    conteudo: '',
-    tamanho: 'media',
-    legenda: '',
-    fonte: '',
-    corTexto: '#000000',
-    alinhamento: 'esquerda',
-    colunas: 12,
-    items: [],
-    tipoFrente: 'titulo',
-    imagemFrente: '',
-    tituloFrente: '',
-    conteudoVerso: '',
-    alturaCard: '300px',
-    itensLista: [],
-    tipoLista: 'nao-ordenada',
-    itensObjetivos: [],
-    quizData: undefined,
-    tipoInfoBox: 'info',
-    tituloInfoBox: '',
-    videoUrl: '',
-    videoTitulo: '',
+    ...criarBlocoVazio(blockData?.tipo || 'paragrafo'),
     ...blockData,
   })
   const [isUploadingImage, setIsUploadingImage] = useState(false)
@@ -151,28 +248,7 @@ export function ContentBlockDrawer({
     if (open) {
       setSelectedType(blockData?.tipo || null)
       setFormData({
-        tipo: 'paragrafo',
-        conteudo: '',
-        tamanho: 'media',
-        legenda: '',
-        fonte: '',
-        corTexto: '#000000',
-        alinhamento: 'esquerda',
-        colunas: 12,
-        items: [],
-        tipoFrente: 'titulo',
-        imagemFrente: '',
-        tituloFrente: '',
-        conteudoVerso: '',
-        alturaCard: '300px',
-        itensLista: [],
-        tipoLista: 'nao-ordenada',
-        itensObjetivos: [],
-        quizData: undefined,
-        tipoInfoBox: 'info',
-        tituloInfoBox: '',
-        videoUrl: '',
-        videoTitulo: '',
+        ...criarBlocoVazio(blockData?.tipo || 'paragrafo'),
         ...blockData,
       })
       if (blockData?.conteudo && blockData?.tipo === 'imagem') {
@@ -192,13 +268,7 @@ export function ContentBlockDrawer({
 
   const handleCancel = () => {
     setSelectedType(null)
-    setFormData({
-      tipo: 'paragrafo',
-      conteudo: '',
-      tamanho: 'media',
-      legenda: '',
-      fonte: '',
-    })
+    setFormData(criarBlocoVazio('paragrafo'))
     setImagePreviewUrl(null)
     onCancel()
   }
@@ -206,160 +276,29 @@ export function ContentBlockDrawer({
   const validateForm = (): boolean => {
     if (!selectedType) return false
 
-    switch (selectedType) {
-      case 'titulo':
-      case 'subtitulo':
-      case 'paragrafo':
-        if (!formData.conteudo?.trim()) {
-          toast.error('Preencha o conteúdo')
-          return false
-        }
-        break
-      case 'imagem':
-        if (!formData.conteudo?.trim()) {
-          toast.error('Adicione uma imagem')
-          return false
-        }
-        if (!formData.tamanho) {
-          toast.error('Selecione o tamanho da imagem')
-          return false
-        }
-        if (!formData.legenda?.trim()) {
-          toast.error('Adicione uma legenda')
-          return false
-        }
-        if (!formData.fonte?.trim()) {
-          toast.error('Adicione a fonte da imagem')
-          return false
-        }
-        break
-      case 'accordion':
-        if (!formData.items || formData.items.length === 0) {
-          toast.error('Adicione pelo menos um item ao accordion')
-          return false
-        }
-        if (formData.items.some((item) => !item.titulo.trim() || !item.conteudo.trim())) {
-          toast.error('Todos os itens devem ter título e conteúdo')
-          return false
-        }
-        break
-      case 'flipcard':
-        if (!formData.tipoFrente) {
-          toast.error('Selecione o tipo de frente do flipcard')
-          return false
-        }
-        if (formData.tipoFrente === 'imagem' && !formData.imagemFrente?.trim()) {
-          toast.error('Adicione uma imagem para a frente do flipcard')
-          return false
-        }
-        if (
-          formData.tipoFrente === 'imagem-titulo' &&
-          (!formData.imagemFrente?.trim() || !formData.tituloFrente?.trim())
-        ) {
-          toast.error('Adicione uma imagem e um título para a frente do flipcard')
-          return false
-        }
-        if (formData.tipoFrente === 'titulo' && !formData.tituloFrente?.trim()) {
-          toast.error('Adicione um título para a frente do flipcard')
-          return false
-        }
-        if (!formData.conteudoVerso?.trim()) {
-          toast.error('Adicione o conteúdo do verso do flipcard')
-          return false
-        }
-        break
-      case 'lista':
-        if (!formData.itensLista || formData.itensLista.length === 0) {
-          toast.error('Adicione pelo menos um item à lista')
-          return false
-        }
-        if (formData.itensLista.some((item) => !item.texto.trim())) {
-          toast.error('Todos os itens devem ter texto')
-          return false
-        }
-        break
-      case 'objetivos-aprendizagem':
-        if (!formData.itensObjetivos || formData.itensObjetivos.length === 0) {
-          toast.error('Adicione pelo menos um objetivo de aprendizagem')
-          return false
-        }
-        if (formData.itensObjetivos.some((item) => !item.texto.trim())) {
-          toast.error('Todos os objetivos devem ter texto')
-          return false
-        }
-        break
-      case 'quiz':
-        if (
-          !formData.quizData ||
-          !formData.quizData.questions ||
-          formData.quizData.questions.length === 0
-        ) {
-          toast.error('O quiz deve ter pelo menos uma pergunta')
-          return false
-        }
-        break
-      case 'info-box':
-        if (!formData.conteudo?.trim()) {
-          toast.error('Preencha o conteúdo do destaque')
-          return false
-        }
-        break
-      case 'video':
-        if (!formData.videoUrl?.trim()) {
-          toast.error('Adicione o link do vídeo do YouTube')
-          return false
-        }
-        if (!formData.videoTitulo?.trim()) {
-          toast.error('Adicione um título para o vídeo')
-          return false
-        }
-        break
+    const erro = CATALOGO_BLOCOS[selectedType].validarFormulario(formData)
+    if (erro) {
+      toast.error(erro)
+      return false
     }
     return true
   }
 
   const handleUploadImage = async (file: File, forFlipcard: boolean = false) => {
-    if (!onUploadImage) {
-      toast.error('Upload de imagem não configurado')
-      return
-    }
-
-    const allowedTypes = [
-      'image/jpeg',
-      'image/jpg',
-      'image/png',
-      'image/gif',
-      'image/webp',
-      'image/svg+xml',
-    ]
-    if (!allowedTypes.includes(file.type)) {
-      toast.error('Tipo de arquivo inválido. Use JPG, PNG, GIF, WEBP ou SVG.')
-      return
-    }
-
-    const maxSize = 10 * 1024 * 1024
-    if (file.size > maxSize) {
-      toast.error('Arquivo muito grande. Máximo: 10MB')
-      return
-    }
-
     setIsUploadingImage(true)
     setImagePreviewUrl(null)
 
     try {
-      const url = await onUploadImage(file, forFlipcard)
+      const { url, aviso } = await enviarArquivo(file, 'imagem')
 
-      if (forFlipcard) {
-        setFormData({ ...formData, imagemFrente: url })
-      } else {
-        setFormData({ ...formData, conteudo: url })
-      }
+      if (forFlipcard) setFormData({ ...formData, imagemFrente: url })
+      else setFormData({ ...formData, conteudo: url })
 
       setImagePreviewUrl(url)
-      toast.success('Imagem enviada')
+      if (aviso) toast.warning(aviso)
+      else toast.success('Imagem enviada')
     } catch (error) {
-      console.error('Erro ao fazer upload:', error)
-      toast.error('Erro ao enviar imagem')
+      toast.error(error instanceof Error ? error.message : 'Erro ao enviar imagem')
     } finally {
       setIsUploadingImage(false)
     }
@@ -1050,12 +989,241 @@ export function ContentBlockDrawer({
           </div>
         )
 
+      case 'separador':
+        return (
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+              Estilo
+            </label>
+            <Select
+              value={formData.estiloSeparador || 'linha'}
+              onValueChange={(value) =>
+                setFormData({
+                  ...formData,
+                  estiloSeparador: value as ConteudoUnidade['estiloSeparador'],
+                })
+              }
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="linha">Linha</SelectItem>
+                <SelectItem value="linha-icone">Linha com ícone</SelectItem>
+                <SelectItem value="espaco">Apenas espaço</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        )
+
+      case 'tabs':
+        return (
+          <EditorDeItens
+            rotulo="Abas"
+            rotuloItem="Aba"
+            vazio="Nenhuma aba adicionada ainda."
+            itens={formData.itensTabs || []}
+            criarItem={() => ({ id: `tab-${Date.now()}`, titulo: '', conteudo: '' })}
+            onChange={(itensTabs) => setFormData({ ...formData, itensTabs })}
+            campos={[
+              {
+                chave: 'titulo',
+                rotulo: 'Título',
+                obrigatorio: true,
+                placeholder: 'Título da aba...',
+              },
+              {
+                chave: 'conteudo',
+                rotulo: 'Conteúdo',
+                obrigatorio: true,
+                multilinha: true,
+                placeholder: 'Conteúdo da aba...',
+              },
+            ]}
+          />
+        )
+
+      case 'linha-do-tempo':
+        return (
+          <div className="space-y-5">
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                Orientação
+              </label>
+              <Select
+                value={formData.orientacaoTimeline || 'vertical'}
+                onValueChange={(value) =>
+                  setFormData({
+                    ...formData,
+                    orientacaoTimeline: value as ConteudoUnidade['orientacaoTimeline'],
+                  })
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="vertical">Vertical</SelectItem>
+                  <SelectItem value="horizontal">Horizontal</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <EditorDeItens
+              rotulo="Eventos"
+              rotuloItem="Evento"
+              vazio="Nenhum evento adicionado ainda."
+              itens={formData.itensTimeline || []}
+              criarItem={() => ({
+                id: `evento-${Date.now()}`,
+                data: '',
+                titulo: '',
+                descricao: '',
+              })}
+              onChange={(itensTimeline) => setFormData({ ...formData, itensTimeline })}
+              campos={[
+                { chave: 'data', rotulo: 'Data', placeholder: 'Ex.: 1990 ou Março/2024' },
+                {
+                  chave: 'titulo',
+                  rotulo: 'Título',
+                  obrigatorio: true,
+                  placeholder: 'Título do evento...',
+                },
+                {
+                  chave: 'descricao',
+                  rotulo: 'Descrição',
+                  multilinha: true,
+                  placeholder: 'Descrição do evento...',
+                },
+              ]}
+            />
+          </div>
+        )
+
+      case 'carrossel':
+        return (
+          <div className="space-y-5">
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                Exibição
+              </label>
+              <Select
+                value={formData.modoCarrossel || 'carrossel'}
+                onValueChange={(value) =>
+                  setFormData({
+                    ...formData,
+                    modoCarrossel: value as ConteudoUnidade['modoCarrossel'],
+                  })
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="carrossel">Carrossel</SelectItem>
+                  <SelectItem value="grade">Grade</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <EditorDeItens
+              rotulo="Imagens"
+              rotuloItem="Imagem"
+              vazio="Nenhuma imagem adicionada ainda."
+              itens={formData.itensCarrossel || []}
+              criarItem={() => ({ id: `img-${Date.now()}`, url: '', legenda: '', fonte: '' })}
+              onChange={(itensCarrossel) => setFormData({ ...formData, itensCarrossel })}
+              campos={[
+                {
+                  chave: 'url',
+                  rotulo: 'URL da imagem',
+                  obrigatorio: true,
+                  placeholder: 'https://...',
+                },
+                { chave: 'legenda', rotulo: 'Legenda', placeholder: 'Legenda da imagem...' },
+                { chave: 'fonte', rotulo: 'Fonte', placeholder: 'Fonte da imagem...' },
+              ]}
+            />
+          </div>
+        )
+
+      case 'audio':
+        return (
+          <div className="space-y-5">
+            <CampoArquivo
+              categoria="audio"
+              rotulo="Arquivo de áudio"
+              url={formData.audioUrl || ''}
+              onUrl={(audioUrl) => setFormData({ ...formData, audioUrl })}
+            />
+
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                Título <span className="text-red-500">*</span>
+              </label>
+              <Input
+                value={formData.audioTitulo || ''}
+                onChange={(e) => setFormData({ ...formData, audioTitulo: e.target.value })}
+                placeholder="Título do áudio..."
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                Transcrição
+              </label>
+              <Textarea
+                value={formData.transcricao || ''}
+                onChange={(e) => setFormData({ ...formData, transcricao: e.target.value })}
+                placeholder="Transcrição do áudio (recomendada para acessibilidade)..."
+                rows={5}
+              />
+            </div>
+          </div>
+        )
+
+      case 'pdf':
+        return (
+          <div className="space-y-5">
+            <CampoArquivo
+              categoria="documento"
+              rotulo="Arquivo PDF"
+              url={formData.pdfUrl || ''}
+              onUrl={(pdfUrl) => setFormData({ ...formData, pdfUrl })}
+            />
+
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                Título <span className="text-red-500">*</span>
+              </label>
+              <Input
+                value={formData.pdfTitulo || ''}
+                onChange={(e) => setFormData({ ...formData, pdfTitulo: e.target.value })}
+                placeholder="Título do documento..."
+              />
+            </div>
+
+            <label className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+              <input
+                type="checkbox"
+                checked={formData.permitirDownloadPdf !== false}
+                onChange={(e) =>
+                  setFormData({ ...formData, permitirDownloadPdf: e.target.checked })
+                }
+                className="h-4 w-4"
+              />
+              Permitir download do arquivo
+            </label>
+          </div>
+        )
+
       default:
         return null
     }
   }
 
-  const Icon = getBlockIcon(selectedType)
+  const meta = selectedType ? CATALOGO_BLOCOS[selectedType] : null
+  const Icon = meta?.icone
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -1071,7 +1239,7 @@ export function ContentBlockDrawer({
               <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                 {mode === 'add' ? 'ADICIONAR' : 'EDITAR'}
               </p>
-              <SheetTitle className="text-xl">{getBlockTitle(selectedType, mode)}</SheetTitle>
+              <SheetTitle className="text-xl">{meta?.rotulo ?? 'Conteúdo'}</SheetTitle>
             </div>
           </div>
         </SheetHeader>

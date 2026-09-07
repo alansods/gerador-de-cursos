@@ -226,6 +226,71 @@ Cada Unidade:
   "videoTitulo": "Título do vídeo"
 }
 
+### 12. tabs
+{
+  "titulo": "string",
+  "tipo": "tabs",
+  "conteudo": "",
+  "itensTabs": [
+    { "id": "tab-1", "titulo": "Título da aba", "conteudo": "<p>HTML</p>" }
+  ]
+}
+
+### 13. linha-do-tempo
+{
+  "titulo": "string",
+  "tipo": "linha-do-tempo",
+  "conteudo": "",
+  "orientacaoTimeline": "vertical" | "horizontal",
+  "itensTimeline": [
+    {
+      "id": "evento-1",
+      "data": "1943",
+      "titulo": "Título do evento",
+      "descricao": "<p>HTML</p>"
+    }
+  ]
+}
+
+### 14. carrossel — apenas com URLs presentes no documento
+{
+  "titulo": "string",
+  "tipo": "carrossel",
+  "conteudo": "",
+  "modoCarrossel": "carrossel" | "grade",
+  "itensCarrossel": [
+    {
+      "id": "img-1",
+      "url": "https://exemplo.com/foto.png",
+      "legenda": "Legenda",
+      "fonte": "Crédito"
+    }
+  ]
+}
+
+### 15. separador — só quando o documento marcar explicitamente
+{ "titulo": "string", "tipo": "separador", "conteudo": "", "estiloSeparador": "linha" }
+
+### 16. audio — apenas com URL presente no documento
+{
+  "titulo": "string",
+  "tipo": "audio",
+  "conteudo": "",
+  "audioUrl": "https://exemplo.com/narracao.mp3",
+  "audioTitulo": "Título do áudio",
+  "transcricao": "<p>Transcrição em HTML</p>"
+}
+
+### 17. pdf — apenas com URL presente no documento
+{
+  "titulo": "string",
+  "tipo": "pdf",
+  "conteudo": "",
+  "pdfUrl": "https://exemplo.com/ficha.pdf",
+  "pdfTitulo": "Título do documento",
+  "permitirDownloadPdf": true
+}
+
 ## Regras gerais
 
 - NÃO use "aulas" — use sempre "conteudo"
@@ -278,6 +343,30 @@ ${sharedStructure}
   - "URL:" → conteudo; "Legenda:" → legenda; "Fonte:" → fonte; "Tamanho:" → tamanho
 - Bloco VIDEO_INICIO...VIDEO_FIM → tipo "video"
   - "URL:" → videoUrl; "Título:" → videoTitulo
+- Bloco TABS_INICIO...TABS_FIM → tipo "tabs"
+  - "Título da Aba N:" → itensTabs[N].titulo
+  - "Conteúdo da Aba N:" → itensTabs[N].conteudo (em HTML)
+- Bloco TIMELINE_INICIO...TIMELINE_FIM → tipo "linha-do-tempo"
+  - "Orientação:" → orientacaoTimeline (vertical | horizontal; use "vertical" se ausente)
+  - "Data:" → itensTimeline[].data
+  - "Título do Evento:" → itensTimeline[].titulo
+  - "Descrição do Evento:" → itensTimeline[].descricao (em HTML)
+- Bloco CARROSSEL_INICIO...CARROSSEL_FIM → tipo "carrossel"
+  - "Exibição:" → modoCarrossel (carrossel | grade; use "carrossel" se ausente)
+  - "URL da Imagem N:" → itensCarrossel[N].url
+  - "Legenda da Imagem N:" → itensCarrossel[N].legenda
+  - "Fonte da Imagem N:" → itensCarrossel[N].fonte
+  - Nunca invente URL de imagem: sem URL, a imagem não entra
+- Bloco SEPARADOR_INICIO...SEPARADOR_FIM → tipo "separador"
+  - "Estilo:" → estiloSeparador (linha | espaco | linha-icone; use "linha" se ausente)
+- Bloco AUDIO_INICIO...AUDIO_FIM → tipo "audio"
+  - "URL:" → audioUrl; "Título:" → audioTitulo
+  - "Transcrição:" → transcricao (em HTML)
+  - Nunca invente URL de áudio: sem URL, o bloco não existe
+- Bloco PDF_INICIO...PDF_FIM → tipo "pdf"
+  - "URL:" → pdfUrl; "Título:" → pdfTitulo
+  - "Permitir Download:" → permitirDownloadPdf (sim/não → true/false; use true se ausente)
+  - Nunca invente URL de PDF: sem URL, o bloco não existe
 - Conteúdo fora de marcadores → use titulo, subtitulo, paragrafo ou lista conforme adequado
 
 ## Texto para analisar
@@ -299,13 +388,18 @@ ${sharedStructure}
 - Passos numerados de um processo → lista (tipoLista: "ordenada")
 - Requisitos, critérios verificáveis → lista (tipoLista: "check")
 - 3 ou mais tópicos relacionados com subconteúdo → accordion
+- 2 a 5 alternativas comparáveis do mesmo assunto (perfis, abordagens, papéis) → tabs
+- Fatos com data, evolução histórica, cronologia de etapas → linha-do-tempo
 - Termo técnico + definição, pergunta retórica + resposta → flipcard
 - "Atenção:", "Importante:", aviso de segurança → info-box (tipoInfoBox: "atencao")
 - "Sabia que", curiosidade, fato interessante → info-box (tipoInfoBox: "curiosidade")
 - URL de imagem no texto → imagem, com a legenda que estiver ao lado
 - URL de YouTube ou Vimeo no texto → video
+- URL de arquivo .mp3, .m4a ou .ogg no texto → audio
+- URL de arquivo .pdf no texto → pdf
 - Revisão ao final de cada unidade → quiz (1 a 3 perguntas baseadas no conteúdo real)
-- Use ao menos 1 recurso interativo (accordion, quiz ou flipcard) por unidade
+- Use ao menos 1 recurso interativo (accordion, tabs, quiz ou flipcard) por unidade
+- NUNCA gere o bloco separador no modo automático
 
 ## Texto para analisar
 

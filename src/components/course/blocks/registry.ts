@@ -11,6 +11,12 @@ import { QuizBlock } from './QuizBlock'
 import { InfoBoxBlock } from './InfoBoxBlock'
 import { VideoBlock } from './VideoBlock'
 import { ObjetivosBlock } from './ObjetivosBlock'
+import { SeparadorBlock } from './SeparadorBlock'
+import { TabsBlock } from './TabsBlock'
+import { LinhaDoTempoBlock } from './LinhaDoTempoBlock'
+import { CarrosselBlock } from './CarrosselBlock'
+import { AudioBlock } from './AudioBlock'
+import { PdfBlock } from './PdfBlock'
 
 export interface BlockProps {
   item: ConteudoUnidade
@@ -29,4 +35,10 @@ export const blockRegistry: Record<ConteudoUnidade['tipo'], ComponentType<BlockP
   'info-box': InfoBoxBlock,
   video: VideoBlock,
   'objetivos-aprendizagem': ObjetivosBlock,
+  separador: SeparadorBlock,
+  tabs: TabsBlock,
+  'linha-do-tempo': LinhaDoTempoBlock,
+  carrossel: CarrosselBlock,
+  audio: AudioBlock,
+  pdf: PdfBlock,
 }

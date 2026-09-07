@@ -14,6 +14,26 @@ export interface ListaItem {
   texto: string
 }
 
+export interface TabItem {
+  id: string
+  titulo: string
+  conteudo: string
+}
+
+export interface TimelineItem {
+  id: string
+  data: string
+  titulo: string
+  descricao: string
+}
+
+export interface CarrosselItem {
+  id: string
+  url: string
+  legenda?: string
+  fonte?: string
+}
+
 export interface QuizItem {
   id: string
   texto: string // texto da opção de resposta
@@ -46,6 +66,12 @@ export interface ConteudoUnidade {
     | 'info-box'
     | 'video'
     | 'objetivos-aprendizagem'
+    | 'separador'
+    | 'tabs'
+    | 'linha-do-tempo'
+    | 'carrossel'
+    | 'audio'
+    | 'pdf'
   conteudo: string
   ordem: number
   // Propriedades específicas para imagens
@@ -78,6 +104,24 @@ export interface ConteudoUnidade {
   videoTitulo?: string
   // Propriedades específicas para objetivos-aprendizagem
   itensObjetivos?: ListaItem[]
+  // Propriedades específicas para separador
+  estiloSeparador?: 'linha' | 'espaco' | 'linha-icone'
+  // Propriedades específicas para tabs
+  itensTabs?: TabItem[]
+  // Propriedades específicas para linha-do-tempo
+  itensTimeline?: TimelineItem[]
+  orientacaoTimeline?: 'vertical' | 'horizontal'
+  // Propriedades específicas para carrossel
+  itensCarrossel?: CarrosselItem[]
+  modoCarrossel?: 'carrossel' | 'grade'
+  // Propriedades específicas para audio
+  audioUrl?: string
+  audioTitulo?: string
+  transcricao?: string
+  // Propriedades específicas para pdf
+  pdfUrl?: string
+  pdfTitulo?: string
+  permitirDownloadPdf?: boolean
 }
 
 export interface Unidade {

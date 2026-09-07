@@ -65,7 +65,6 @@ import {
   Moon,
   Sun,
   Settings,
-  Target,
 } from 'lucide-react'
 import { CourseSettingsDrawer } from '@/components/CourseSettingsDrawer'
 import { ContentBlockDrawer } from '@/components/ContentBlockDrawer'
@@ -86,6 +85,8 @@ import { InfoBox } from '@/components/InfoBox'
 import { BlockThemeProvider } from '@/components/course/blocks'
 import { resolveLayout } from '@/components/course/layouts'
 import { QuizData, QuizQuestion, Unidade, ConteudoUnidade } from '@/types/gerador-curso'
+import { CATALOGO_BLOCOS, CATEGORIAS_BLOCO, TIPOS_BLOCO, criarBlocoVazio } from '@/lib/blocos'
+import { enviarArquivo } from '@/lib/upload-cliente'
 
 /** Rótulo curto do bloco para o toast do outro usuário */
 function tituloDoBloco(bloco: { titulo?: string; conteudo?: string; tipo?: string }) {
@@ -163,38 +164,8 @@ function EditorCurso() {
     videoTitulo?: string
   } | null>(null)
   const [conteudoTemp, setConteudoTemp] = useState({
-    tipo: 'paragrafo' as
-      | 'paragrafo'
-      | 'subtitulo'
-      | 'titulo'
-      | 'imagem'
-      | 'video'
-      | 'accordion'
-      | 'flipcard'
-      | 'lista'
-      | 'quiz'
-      | 'info-box',
-    conteudo: '',
+    ...criarBlocoVazio('paragrafo'),
     unidadeId: '',
-    tamanho: 'media' as 'pequena' | 'media' | 'grande',
-    legenda: '',
-    fonte: '',
-    corTexto: '#000000',
-    alinhamento: 'esquerda' as 'esquerda' | 'centro' | 'direita' | 'justificado',
-    colunas: 12 as 6 | 12,
-    items: [] as Array<{ id: string; titulo: string; conteudo: string }>,
-    tipoFrente: 'titulo' as 'imagem' | 'imagem-titulo' | 'titulo',
-    imagemFrente: '',
-    tituloFrente: '',
-    conteudoVerso: '',
-    alturaCard: '300px',
-    itensLista: [] as Array<{ id: string; texto: string }>,
-    tipoLista: 'nao-ordenada' as 'ordenada' | 'nao-ordenada' | 'check',
-    quizData: undefined as QuizData | undefined,
-    tipoInfoBox: 'info' as 'atencao' | 'saiba_mais' | 'info' | 'curiosidade',
-    tituloInfoBox: '',
-    videoUrl: '',
-    videoTitulo: '',
   })
   const [adicionarUnidadeModal, setAdicionarUnidadeModal] = useState(false)
   const [editarUnidadeModal, setEditarUnidadeModal] = useState(false)
@@ -490,44 +461,13 @@ function EditorCurso() {
   ) => {
     if (!file) return
 
-    // Validar tipo
-    const allowedTypes = [
-      'image/jpeg',
-      'image/jpg',
-      'image/png',
-      'image/gif',
-      'image/webp',
-      'image/svg+xml',
-    ]
-    if (!allowedTypes.includes(file.type)) {
-      toast.error('Tipo de arquivo inválido. Use JPG, PNG, GIF, WEBP ou SVG.')
-      return
-    }
-
-    // Validar tamanho (10MB)
-    const maxSize = 10 * 1024 * 1024
-    if (file.size > maxSize) {
-      toast.error('Arquivo muito grande. Máximo: 10MB')
-      return
-    }
-
     setIsUploadingImage(true)
     setImagePreviewUrl(null)
 
     try {
-      const formData = new FormData()
-      formData.append('file', file)
-
-      const response = await fetch('/api/upload-image', {
-        method: 'POST',
-        body: formData,
-      })
-
-      const data = await response.json()
-
-      if (!response.ok || !data.success) {
-        throw new Error(data.error || 'Erro ao fazer upload')
-      }
+      const { url: urlEnviada, aviso } = await enviarArquivo(file, 'imagem')
+      if (aviso) toast.warning(aviso)
+      const data = { url: urlEnviada }
 
       // Atualizar URL da imagem no estado correto
       if (forFlipcard) {
@@ -573,12 +513,10 @@ function EditorCurso() {
   }
 
   const handleSelectBlockType = (tipo: ConteudoUnidade['tipo'], unidadeId: string) => {
-    console.log('🔍 handleSelectBlockType - tipo:', tipo, 'unidadeId:', unidadeId)
     setModalAdicionarConteudo(false)
     setContentDrawerUnidadeId(unidadeId)
     setContentDrawerMode('add')
     setContentDrawerBlockData({ tipo })
-    console.log('🔍 Abrindo ContentDrawer com tipo:', tipo)
     setContentDrawerOpen(true)
   }
 
@@ -628,43 +566,6 @@ function EditorCurso() {
     setContentDrawerBlockData(null)
     setContentDrawerUnidadeId('')
     insertAtIndex.current = null
-  }
-
-  const handleUploadImageForDrawer = async (file: File): Promise<string> => {
-    if (!file) throw new Error('Arquivo não fornecido')
-
-    const allowedTypes = [
-      'image/jpeg',
-      'image/jpg',
-      'image/png',
-      'image/gif',
-      'image/webp',
-      'image/svg+xml',
-    ]
-    if (!allowedTypes.includes(file.type)) {
-      throw new Error('Tipo de arquivo inválido. Use JPG, PNG, GIF, WEBP ou SVG.')
-    }
-
-    const maxSize = 10 * 1024 * 1024
-    if (file.size > maxSize) {
-      throw new Error('Arquivo muito grande. Máximo: 10MB')
-    }
-
-    const formData = new FormData()
-    formData.append('file', file)
-
-    const response = await fetch('/api/upload-image', {
-      method: 'POST',
-      body: formData,
-    })
-
-    const data = await response.json()
-
-    if (!response.ok || !data.success) {
-      throw new Error(data.error || 'Erro ao fazer upload')
-    }
-
-    return data.url
   }
 
   const handleSalvarConteudo = () => {
@@ -1955,244 +1856,48 @@ function EditorCurso() {
                 Escolha o tipo de conteúdo que você quer incluir na unidade.
               </p>
             </DialogHeader>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mt-4">
-              {/* Título */}
-              <button
-                onClick={() => {
-                  if (insertAtIndex.current) {
-                    handleSelectBlockType('titulo', insertAtIndex.current.unidadeId)
-                  }
-                }}
-                className="flex flex-col items-start p-4 rounded-xl border-2 border-gray-200 dark:border-gray-700 hover:border-blue-500 dark:hover:border-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/20 transition-all group"
-              >
-                <div className="w-10 h-10 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center mb-3 group-hover:bg-blue-200 dark:group-hover:bg-blue-900/50 transition-colors">
-                  <Heading2 className="h-5 w-5 text-blue-600 dark:text-blue-400" />
-                </div>
-                <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100 mb-0.5">
-                  Título
-                </h3>
-                <p className="text-xs text-gray-500 dark:text-gray-400 text-left">
-                  Cabeçalho de seção
-                </p>
-              </button>
+            <div className="mt-4 space-y-6">
+              {CATEGORIAS_BLOCO.map((categoria) => {
+                const tipos = TIPOS_BLOCO.filter(
+                  (tipo) => CATALOGO_BLOCOS[tipo].categoria === categoria.id
+                )
+                if (tipos.length === 0) return null
 
-              {/* Texto */}
-              <button
-                onClick={() => {
-                  if (insertAtIndex.current) {
-                    handleSelectBlockType('paragrafo', insertAtIndex.current.unidadeId)
-                  }
-                }}
-                className="flex flex-col items-start p-4 rounded-xl border-2 border-gray-200 dark:border-gray-700 hover:border-blue-500 dark:hover:border-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/20 transition-all group"
-              >
-                <div className="w-10 h-10 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center mb-3 group-hover:bg-blue-200 dark:group-hover:bg-blue-900/50 transition-colors">
-                  <Type className="h-5 w-5 text-blue-600 dark:text-blue-400" />
-                </div>
-                <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100 mb-0.5">
-                  Texto
-                </h3>
-                <p className="text-xs text-gray-500 dark:text-gray-400 text-left">
-                  Parágrafo de conteúdo
-                </p>
-              </button>
-
-              {/* Imagem */}
-              <button
-                onClick={() => {
-                  if (insertAtIndex.current) {
-                    handleSelectBlockType('imagem', insertAtIndex.current.unidadeId)
-                  }
-                }}
-                className="flex flex-col items-start p-4 rounded-xl border-2 border-gray-200 dark:border-gray-700 hover:border-blue-500 dark:hover:border-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/20 transition-all group"
-              >
-                <div className="w-10 h-10 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center mb-3 group-hover:bg-blue-200 dark:group-hover:bg-blue-900/50 transition-colors">
-                  {/* eslint-disable-next-line jsx-a11y/alt-text */}
-                  <Image className="h-5 w-5 text-blue-600 dark:text-blue-400" />
-                </div>
-                <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100 mb-0.5">
-                  Imagem
-                </h3>
-                <p className="text-xs text-gray-500 dark:text-gray-400 text-left">
-                  Foto com legenda
-                </p>
-              </button>
-
-              {/* Vídeo */}
-              <button
-                onClick={() => {
-                  console.log('🎬 Clicou em Vídeo!')
-                  if (insertAtIndex.current) {
-                    handleSelectBlockType('video', insertAtIndex.current.unidadeId)
-                  }
-                }}
-                className="flex flex-col items-start p-4 rounded-xl border-2 border-gray-200 dark:border-gray-700 hover:border-blue-500 dark:hover:border-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/20 transition-all group"
-              >
-                <div className="w-10 h-10 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center mb-3 group-hover:bg-blue-200 dark:group-hover:bg-blue-900/50 transition-colors">
-                  <svg
-                    className="h-5 w-5 text-blue-600 dark:text-blue-400"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"
-                    />
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                    />
-                  </svg>
-                </div>
-                <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100 mb-0.5">
-                  Vídeo
-                </h3>
-                <p className="text-xs text-gray-500 dark:text-gray-400 text-left">
-                  Vídeo do YouTube
-                </p>
-              </button>
-
-              {/* Lista */}
-              <button
-                onClick={() => {
-                  if (insertAtIndex.current) {
-                    handleSelectBlockType('lista', insertAtIndex.current.unidadeId)
-                  }
-                }}
-                className="flex flex-col items-start p-4 rounded-xl border-2 border-gray-200 dark:border-gray-700 hover:border-blue-500 dark:hover:border-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/20 transition-all group"
-              >
-                <div className="w-10 h-10 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center mb-3 group-hover:bg-blue-200 dark:group-hover:bg-blue-900/50 transition-colors">
-                  <List className="h-5 w-5 text-blue-600 dark:text-blue-400" />
-                </div>
-                <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100 mb-0.5">
-                  Lista
-                </h3>
-                <p className="text-xs text-gray-500 dark:text-gray-400 text-left">
-                  Itens ou passos
-                </p>
-              </button>
-
-              {/* Objetivos de Aprendizagem */}
-              <button
-                onClick={() => {
-                  if (insertAtIndex.current) {
-                    handleSelectBlockType('objetivos-aprendizagem', insertAtIndex.current.unidadeId)
-                  }
-                }}
-                className="flex flex-col items-start p-4 rounded-xl border-2 border-gray-200 dark:border-gray-700 hover:border-blue-500 dark:hover:border-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/20 transition-all group"
-              >
-                <div className="w-10 h-10 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center mb-3 group-hover:bg-blue-200 dark:group-hover:bg-blue-900/50 transition-colors">
-                  <Target className="h-5 w-5 text-blue-600 dark:text-blue-400" />
-                </div>
-                <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100 mb-0.5">
-                  Objetivos
-                </h3>
-                <p className="text-xs text-gray-500 dark:text-gray-400 text-left">
-                  Objetivos de aprendizagem
-                </p>
-              </button>
-
-              {/* Info Box */}
-              <button
-                onClick={() => {
-                  if (insertAtIndex.current) {
-                    handleSelectBlockType('info-box', insertAtIndex.current.unidadeId)
-                  }
-                }}
-                className="flex flex-col items-start p-4 rounded-xl border-2 border-gray-200 dark:border-gray-700 hover:border-blue-500 dark:hover:border-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/20 transition-all group"
-              >
-                <div className="w-10 h-10 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center mb-3 group-hover:bg-blue-200 dark:group-hover:bg-blue-900/50 transition-colors">
-                  <AlertTriangle className="h-5 w-5 text-blue-600 dark:text-blue-400" />
-                </div>
-                <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100 mb-0.5">
-                  Info Box
-                </h3>
-                <p className="text-xs text-gray-500 dark:text-gray-400 text-left">
-                  Cards de informação
-                </p>
-              </button>
-
-              {/* Flashcards (FlipCard) */}
-              <button
-                onClick={() => {
-                  if (insertAtIndex.current) {
-                    handleSelectBlockType('flipcard', insertAtIndex.current.unidadeId)
-                  }
-                }}
-                className="flex flex-col items-start p-4 rounded-xl border-2 border-gray-200 dark:border-gray-700 hover:border-blue-500 dark:hover:border-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/20 transition-all group"
-              >
-                <div className="w-10 h-10 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center mb-3 group-hover:bg-blue-200 dark:group-hover:bg-blue-900/50 transition-colors">
-                  <RotateCcw className="h-5 w-5 text-blue-600 dark:text-blue-400" />
-                </div>
-                <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100 mb-0.5">
-                  Flashcards
-                </h3>
-                <p className="text-xs text-gray-500 dark:text-gray-400 text-left">
-                  Cartões de revisão
-                </p>
-              </button>
-
-              {/* Sanfona (Accordion) */}
-              <button
-                onClick={() => {
-                  if (insertAtIndex.current) {
-                    handleSelectBlockType('accordion', insertAtIndex.current.unidadeId)
-                  }
-                }}
-                className="flex flex-col items-start p-4 rounded-xl border-2 border-gray-200 dark:border-gray-700 hover:border-blue-500 dark:hover:border-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/20 transition-all group"
-              >
-                <div className="w-10 h-10 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center mb-3 group-hover:bg-blue-200 dark:group-hover:bg-blue-900/50 transition-colors">
-                  <ChevronDown className="h-5 w-5 text-blue-600 dark:text-blue-400" />
-                </div>
-                <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100 mb-0.5">
-                  Sanfona
-                </h3>
-                <p className="text-xs text-gray-500 dark:text-gray-400 text-left">
-                  Perguntas expansíveis
-                </p>
-              </button>
-
-              {/* Quiz */}
-              <button
-                onClick={() => {
-                  if (insertAtIndex.current) {
-                    handleSelectBlockType('quiz', insertAtIndex.current.unidadeId)
-                  }
-                }}
-                className="flex flex-col items-start p-4 rounded-xl border-2 border-gray-200 dark:border-gray-700 hover:border-blue-500 dark:hover:border-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/20 transition-all group"
-              >
-                <div className="w-10 h-10 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center mb-3 group-hover:bg-blue-200 dark:group-hover:bg-blue-900/50 transition-colors">
-                  <HelpCircle className="h-5 w-5 text-blue-600 dark:text-blue-400" />
-                </div>
-                <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100 mb-0.5">
-                  Quiz
-                </h3>
-                <p className="text-xs text-gray-500 dark:text-gray-400 text-left">
-                  Pergunta com resposta
-                </p>
-              </button>
-
-              {/* Subtítulo */}
-              <button
-                onClick={() => {
-                  if (insertAtIndex.current) {
-                    handleSelectBlockType('subtitulo', insertAtIndex.current.unidadeId)
-                  }
-                }}
-                className="flex flex-col items-start p-4 rounded-xl border-2 border-gray-200 dark:border-gray-700 hover:border-blue-500 dark:hover:border-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/20 transition-all group"
-              >
-                <div className="w-10 h-10 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center mb-3 group-hover:bg-blue-200 dark:group-hover:bg-blue-900/50 transition-colors">
-                  <Heading3 className="h-5 w-5 text-blue-600 dark:text-blue-400" />
-                </div>
-                <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100 mb-0.5">
-                  Subtítulo
-                </h3>
-                <p className="text-xs text-gray-500 dark:text-gray-400 text-left">Subcabeçalho</p>
-              </button>
+                return (
+                  <div key={categoria.id}>
+                    <h4 className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-2">
+                      {categoria.rotulo}
+                    </h4>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                      {tipos.map((tipo) => {
+                        const meta = CATALOGO_BLOCOS[tipo]
+                        const Icone = meta.icone
+                        return (
+                          <button
+                            key={tipo}
+                            onClick={() => {
+                              if (insertAtIndex.current) {
+                                handleSelectBlockType(tipo, insertAtIndex.current.unidadeId)
+                              }
+                            }}
+                            className="flex flex-col items-start p-4 rounded-xl border-2 border-gray-200 dark:border-gray-700 hover:border-blue-500 dark:hover:border-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/20 transition-all group"
+                          >
+                            <div className="w-10 h-10 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center mb-3 group-hover:bg-blue-200 dark:group-hover:bg-blue-900/50 transition-colors">
+                              <Icone className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                            </div>
+                            <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100 mb-0.5">
+                              {meta.rotulo}
+                            </h3>
+                            <p className="text-xs text-gray-500 dark:text-gray-400 text-left">
+                              {meta.descricao}
+                            </p>
+                          </button>
+                        )
+                      })}
+                    </div>
+                  </div>
+                )
+              })}
             </div>
           </DialogContent>
         </Dialog>
@@ -4583,7 +4288,6 @@ function EditorCurso() {
           blockData={contentDrawerBlockData}
           onSave={handleSaveContentFromDrawer}
           onCancel={handleCancelContentDrawer}
-          onUploadImage={handleUploadImageForDrawer}
         />
       </div>
     </PageTransition>

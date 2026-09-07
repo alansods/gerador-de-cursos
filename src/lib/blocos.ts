@@ -1,3 +1,23 @@
+import {
+  AlertTriangle,
+  ChevronDown,
+  Heading2,
+  Heading3,
+  HelpCircle,
+  Image as ImageIcon,
+  FileText,
+  GalleryHorizontal,
+  List,
+  Milestone,
+  RotateCcw,
+  Target,
+  Minus,
+  Music,
+  PanelTop,
+  Type,
+  Video,
+  type LucideIcon,
+} from 'lucide-react'
 import type {
   ConteudoUnidade,
   CursoGerado,
@@ -8,6 +28,15 @@ import type {
 
 export type TipoBloco = ConteudoUnidade['tipo']
 
+export type CategoriaBloco = 'texto' | 'midia' | 'interativo' | 'avaliativo'
+
+export const CATEGORIAS_BLOCO: { id: CategoriaBloco; rotulo: string }[] = [
+  { id: 'texto', rotulo: 'Texto e estrutura' },
+  { id: 'midia', rotulo: 'Mídia' },
+  { id: 'interativo', rotulo: 'Interativos' },
+  { id: 'avaliativo', rotulo: 'Avaliação' },
+]
+
 export interface MetaBloco {
   tipo: TipoBloco
   rotulo: string
@@ -15,12 +44,27 @@ export interface MetaBloco {
   marcador: string | null
   geravelPorIA: boolean
   exigeMidiaDoDocumento: boolean
+  /** Aceitação leniente de bloco vindo da IA: mantém o que for aproveitável. */
   validar: (bloco: ConteudoUnidade) => boolean
+  icone: LucideIcon
+  descricao: string
+  categoria: CategoriaBloco
+  padroes: () => Partial<ConteudoUnidade>
+  /** Exigência estrita do formulário do editor. Retorna o erro, ou null se válido. */
+  validarFormulario: (bloco: Partial<ConteudoUnidade>) => string | null
+  /**
+   * URLs de mídia que precisam ser baixadas e embutidas no pacote SCORM.
+   * Declarar aqui é o que impede um bloco novo de ficar apontando para URL remota.
+   */
+  extrairMidias?: (bloco: ConteudoUnidade) => (string | undefined)[]
 }
 
 const TIPOS_LISTA = ['ordenada', 'nao-ordenada', 'check'] as const
 const TIPOS_INFO_BOX = ['atencao', 'saiba_mais', 'info', 'curiosidade'] as const
 const TIPOS_FRENTE = ['imagem', 'imagem-titulo', 'titulo'] as const
+const ESTILOS_SEPARADOR = ['linha', 'espaco', 'linha-icone'] as const
+const ORIENTACOES_TIMELINE = ['vertical', 'horizontal'] as const
+const MODOS_CARROSSEL = ['carrossel', 'grade'] as const
 
 const OPCOES_POR_PERGUNTA = 5
 
@@ -33,6 +77,11 @@ export const CATALOGO_BLOCOS: Record<TipoBloco, MetaBloco> = {
     geravelPorIA: true,
     exigeMidiaDoDocumento: false,
     validar: (b) => temTexto(b.conteudo),
+    icone: Heading2,
+    descricao: 'Cabeçalho de seção',
+    categoria: 'texto',
+    padroes: () => ({ conteudo: '' }),
+    validarFormulario: (b) => (temTexto(b.conteudo) ? null : 'Preencha o conteúdo'),
   },
   subtitulo: {
     tipo: 'subtitulo',
@@ -42,6 +91,11 @@ export const CATALOGO_BLOCOS: Record<TipoBloco, MetaBloco> = {
     geravelPorIA: true,
     exigeMidiaDoDocumento: false,
     validar: (b) => temTexto(b.conteudo),
+    icone: Heading3,
+    descricao: 'Cabeçalho de subseção',
+    categoria: 'texto',
+    padroes: () => ({ conteudo: '' }),
+    validarFormulario: (b) => (temTexto(b.conteudo) ? null : 'Preencha o conteúdo'),
   },
   paragrafo: {
     tipo: 'paragrafo',
@@ -51,6 +105,11 @@ export const CATALOGO_BLOCOS: Record<TipoBloco, MetaBloco> = {
     geravelPorIA: true,
     exigeMidiaDoDocumento: false,
     validar: (b) => temTexto(b.conteudo),
+    icone: Type,
+    descricao: 'Parágrafo de conteúdo',
+    categoria: 'texto',
+    padroes: () => ({ conteudo: '', corTexto: '#000000', alinhamento: 'esquerda' }),
+    validarFormulario: (b) => (temTexto(b.conteudo) ? null : 'Preencha o conteúdo'),
   },
   lista: {
     tipo: 'lista',
@@ -60,6 +119,16 @@ export const CATALOGO_BLOCOS: Record<TipoBloco, MetaBloco> = {
     geravelPorIA: true,
     exigeMidiaDoDocumento: false,
     validar: (b) => !!b.itensLista?.some((item) => temTexto(item.texto)),
+    icone: List,
+    descricao: 'Itens ou passos',
+    categoria: 'texto',
+    padroes: () => ({ itensLista: [], tipoLista: 'nao-ordenada' }),
+    validarFormulario: (b) => {
+      if (!b.itensLista?.length) return 'Adicione pelo menos um item à lista'
+      if (b.itensLista.some((item) => !temTexto(item.texto)))
+        return 'Todos os itens devem ter texto'
+      return null
+    },
   },
   'objetivos-aprendizagem': {
     tipo: 'objetivos-aprendizagem',
@@ -69,6 +138,16 @@ export const CATALOGO_BLOCOS: Record<TipoBloco, MetaBloco> = {
     geravelPorIA: true,
     exigeMidiaDoDocumento: false,
     validar: (b) => !!b.itensObjetivos?.some((item) => temTexto(item.texto)),
+    icone: Target,
+    descricao: 'Objetivos de aprendizagem',
+    categoria: 'texto',
+    padroes: () => ({ itensObjetivos: [] }),
+    validarFormulario: (b) => {
+      if (!b.itensObjetivos?.length) return 'Adicione pelo menos um objetivo de aprendizagem'
+      if (b.itensObjetivos.some((item) => !temTexto(item.texto)))
+        return 'Todos os objetivos devem ter texto'
+      return null
+    },
   },
   'info-box': {
     tipo: 'info-box',
@@ -78,6 +157,11 @@ export const CATALOGO_BLOCOS: Record<TipoBloco, MetaBloco> = {
     geravelPorIA: true,
     exigeMidiaDoDocumento: false,
     validar: (b) => temTexto(b.conteudo),
+    icone: AlertTriangle,
+    descricao: 'Cards de informação',
+    categoria: 'texto',
+    padroes: () => ({ conteudo: '', tipoInfoBox: 'info', tituloInfoBox: '' }),
+    validarFormulario: (b) => (temTexto(b.conteudo) ? null : 'Preencha o conteúdo do destaque'),
   },
   accordion: {
     tipo: 'accordion',
@@ -87,6 +171,16 @@ export const CATALOGO_BLOCOS: Record<TipoBloco, MetaBloco> = {
     geravelPorIA: true,
     exigeMidiaDoDocumento: false,
     validar: (b) => !!b.items?.some((item) => temTexto(item.titulo) && temTexto(item.conteudo)),
+    icone: ChevronDown,
+    descricao: 'Perguntas expansíveis',
+    categoria: 'interativo',
+    padroes: () => ({ items: [] }),
+    validarFormulario: (b) => {
+      if (!b.items?.length) return 'Adicione pelo menos um item ao accordion'
+      if (b.items.some((item) => !temTexto(item.titulo) || !temTexto(item.conteudo)))
+        return 'Todos os itens devem ter título e conteúdo'
+      return null
+    },
   },
   flipcard: {
     tipo: 'flipcard',
@@ -97,6 +191,28 @@ export const CATALOGO_BLOCOS: Record<TipoBloco, MetaBloco> = {
     exigeMidiaDoDocumento: false,
     validar: (b) =>
       (temTexto(b.tituloFrente) || ehUrl(b.imagemFrente)) && temTexto(b.conteudoVerso),
+    icone: RotateCcw,
+    descricao: 'Cartões de revisão',
+    categoria: 'interativo',
+    padroes: () => ({
+      tipoFrente: 'titulo',
+      imagemFrente: '',
+      tituloFrente: '',
+      conteudoVerso: '',
+      alturaCard: '300px',
+    }),
+    validarFormulario: (b) => {
+      if (!b.tipoFrente) return 'Selecione o tipo de frente do flipcard'
+      const precisaImagem = b.tipoFrente === 'imagem' || b.tipoFrente === 'imagem-titulo'
+      const precisaTitulo = b.tipoFrente === 'titulo' || b.tipoFrente === 'imagem-titulo'
+      if (precisaImagem && !temTexto(b.imagemFrente))
+        return 'Adicione uma imagem para a frente do flipcard'
+      if (precisaTitulo && !temTexto(b.tituloFrente))
+        return 'Adicione um título para a frente do flipcard'
+      if (!temTexto(b.conteudoVerso)) return 'Adicione o conteúdo do verso do flipcard'
+      return null
+    },
+    extrairMidias: (b) => [b.imagemFrente],
   },
   quiz: {
     tipo: 'quiz',
@@ -106,6 +222,12 @@ export const CATALOGO_BLOCOS: Record<TipoBloco, MetaBloco> = {
     geravelPorIA: true,
     exigeMidiaDoDocumento: false,
     validar: (b) => !!b.quizData?.questions?.some(perguntaValida),
+    icone: HelpCircle,
+    descricao: 'Pergunta com resposta',
+    categoria: 'avaliativo',
+    padroes: () => ({ quizData: undefined }),
+    validarFormulario: (b) =>
+      b.quizData?.questions?.length ? null : 'O quiz deve ter pelo menos uma pergunta',
   },
   imagem: {
     tipo: 'imagem',
@@ -115,6 +237,24 @@ export const CATALOGO_BLOCOS: Record<TipoBloco, MetaBloco> = {
     geravelPorIA: true,
     exigeMidiaDoDocumento: true,
     validar: (b) => ehUrl(b.conteudo),
+    icone: ImageIcon,
+    descricao: 'Foto com legenda',
+    categoria: 'midia',
+    padroes: () => ({
+      conteudo: '',
+      tamanho: 'media',
+      legenda: '',
+      fonte: '',
+      alinhamento: 'esquerda',
+    }),
+    validarFormulario: (b) => {
+      if (!temTexto(b.conteudo)) return 'Adicione uma imagem'
+      if (!b.tamanho) return 'Selecione o tamanho da imagem'
+      if (!temTexto(b.legenda)) return 'Adicione uma legenda'
+      if (!temTexto(b.fonte)) return 'Adicione a fonte da imagem'
+      return null
+    },
+    extrairMidias: (b) => [b.conteudo],
   },
   video: {
     tipo: 'video',
@@ -124,7 +264,164 @@ export const CATALOGO_BLOCOS: Record<TipoBloco, MetaBloco> = {
     geravelPorIA: true,
     exigeMidiaDoDocumento: true,
     validar: (b) => ehUrl(b.videoUrl),
+    icone: Video,
+    descricao: 'Vídeo do YouTube',
+    categoria: 'midia',
+    padroes: () => ({ videoUrl: '', videoTitulo: '' }),
+    validarFormulario: (b) => {
+      if (!temTexto(b.videoUrl)) return 'Adicione o link do vídeo do YouTube'
+      if (!temTexto(b.videoTitulo)) return 'Adicione um título para o vídeo'
+      return null
+    },
   },
+  separador: {
+    tipo: 'separador',
+    rotulo: 'Separador',
+    rotuloPlural: 'separadores',
+    marcador: 'SEPARADOR',
+    geravelPorIA: false,
+    exigeMidiaDoDocumento: false,
+    validar: () => true,
+    icone: Minus,
+    descricao: 'Divisória entre seções',
+    categoria: 'texto',
+    padroes: () => ({ estiloSeparador: 'linha' }),
+    validarFormulario: () => null,
+  },
+  tabs: {
+    tipo: 'tabs',
+    rotulo: 'Abas',
+    rotuloPlural: 'blocos de abas',
+    marcador: 'TABS',
+    geravelPorIA: true,
+    exigeMidiaDoDocumento: false,
+    validar: (b) => !!b.itensTabs?.some((item) => temTexto(item.titulo) && temTexto(item.conteudo)),
+    icone: PanelTop,
+    descricao: 'Conteúdo em abas',
+    categoria: 'interativo',
+    padroes: () => ({ itensTabs: [] }),
+    validarFormulario: (b) => {
+      if (!b.itensTabs?.length) return 'Adicione pelo menos uma aba'
+      if (b.itensTabs.some((item) => !temTexto(item.titulo) || !temTexto(item.conteudo)))
+        return 'Todas as abas devem ter título e conteúdo'
+      return null
+    },
+  },
+  'linha-do-tempo': {
+    tipo: 'linha-do-tempo',
+    rotulo: 'Linha do tempo',
+    rotuloPlural: 'linhas do tempo',
+    marcador: 'TIMELINE',
+    geravelPorIA: true,
+    exigeMidiaDoDocumento: false,
+    validar: (b) => !!b.itensTimeline?.some((item) => temTexto(item.titulo)),
+    icone: Milestone,
+    descricao: 'Eventos em ordem cronológica',
+    categoria: 'interativo',
+    padroes: () => ({ itensTimeline: [], orientacaoTimeline: 'vertical' }),
+    validarFormulario: (b) => {
+      if (!b.itensTimeline?.length) return 'Adicione pelo menos um evento'
+      if (b.itensTimeline.some((item) => !temTexto(item.titulo)))
+        return 'Todos os eventos devem ter título'
+      return null
+    },
+  },
+  carrossel: {
+    tipo: 'carrossel',
+    rotulo: 'Carrossel',
+    rotuloPlural: 'carrosséis',
+    marcador: 'CARROSSEL',
+    geravelPorIA: true,
+    exigeMidiaDoDocumento: true,
+    validar: (b) => !!b.itensCarrossel?.some((item) => ehUrl(item.url)),
+    icone: GalleryHorizontal,
+    descricao: 'Galeria de imagens',
+    categoria: 'midia',
+    padroes: () => ({ itensCarrossel: [], modoCarrossel: 'carrossel' }),
+    validarFormulario: (b) => {
+      if (!b.itensCarrossel?.length) return 'Adicione pelo menos uma imagem'
+      if (b.itensCarrossel.some((item) => !temTexto(item.url)))
+        return 'Todas as imagens devem ter URL'
+      return null
+    },
+    extrairMidias: (b) => (b.itensCarrossel ?? []).map((i) => i.url),
+  },
+  audio: {
+    tipo: 'audio',
+    rotulo: 'Áudio',
+    rotuloPlural: 'áudios',
+    marcador: 'AUDIO',
+    geravelPorIA: true,
+    exigeMidiaDoDocumento: true,
+    validar: (b) => ehUrl(b.audioUrl),
+    icone: Music,
+    descricao: 'Narração ou podcast',
+    categoria: 'midia',
+    padroes: () => ({ audioUrl: '', audioTitulo: '', transcricao: '' }),
+    validarFormulario: (b) => {
+      if (!temTexto(b.audioUrl)) return 'Adicione o arquivo ou a URL do áudio'
+      if (!temTexto(b.audioTitulo)) return 'Adicione um título para o áudio'
+      return null
+    },
+    extrairMidias: (b) => [b.audioUrl],
+  },
+  pdf: {
+    tipo: 'pdf',
+    rotulo: 'PDF',
+    rotuloPlural: 'PDFs',
+    marcador: 'PDF',
+    geravelPorIA: true,
+    exigeMidiaDoDocumento: true,
+    validar: (b) => ehUrl(b.pdfUrl),
+    icone: FileText,
+    descricao: 'Documento para leitura',
+    categoria: 'midia',
+    padroes: () => ({ pdfUrl: '', pdfTitulo: '', permitirDownloadPdf: true }),
+    validarFormulario: (b) => {
+      if (!temTexto(b.pdfUrl)) return 'Adicione o arquivo ou a URL do PDF'
+      if (!temTexto(b.pdfTitulo)) return 'Adicione um título para o documento'
+      return null
+    },
+    extrairMidias: (b) => [b.pdfUrl],
+  },
+}
+
+function baseBloco(): Partial<ConteudoUnidade> {
+  return {
+    conteudo: '',
+    colunas: 12,
+    tamanho: 'media',
+    legenda: '',
+    fonte: '',
+    corTexto: '#000000',
+    alinhamento: 'esquerda',
+    items: [],
+    tipoFrente: 'titulo',
+    imagemFrente: '',
+    tituloFrente: '',
+    conteudoVerso: '',
+    alturaCard: '300px',
+    itensLista: [],
+    tipoLista: 'nao-ordenada',
+    itensObjetivos: [],
+    quizData: undefined,
+    tipoInfoBox: 'info',
+    tituloInfoBox: '',
+    videoUrl: '',
+    videoTitulo: '',
+  }
+}
+
+export type BlocoRascunho = Omit<ConteudoUnidade, 'id' | 'ordem'>
+
+export function extrairMidiasDoBloco(bloco: ConteudoUnidade): string[] {
+  const meta = CATALOGO_BLOCOS[bloco.tipo]
+  if (!meta?.extrairMidias) return []
+  return meta.extrairMidias(bloco).filter((url): url is string => ehUrl(url))
+}
+
+export function criarBlocoVazio(tipo: TipoBloco): BlocoRascunho {
+  return { ...baseBloco(), tipo, ...CATALOGO_BLOCOS[tipo].padroes() } as BlocoRascunho
 }
 
 export const TIPOS_BLOCO = Object.keys(CATALOGO_BLOCOS) as TipoBloco[]
@@ -259,6 +556,47 @@ function corrigirBloco(bloco: ConteudoUnidade): ConteudoUnidade {
       .map((item, indice) => ({ ...item, id: temTexto(item.id) ? item.id : `item-${indice + 1}` }))
   }
 
+  if (corrigido.tipo === 'separador') {
+    corrigido.estiloSeparador = ESTILOS_SEPARADOR.includes(corrigido.estiloSeparador as never)
+      ? corrigido.estiloSeparador
+      : 'linha'
+  }
+
+  if (corrigido.tipo === 'tabs') {
+    corrigido.itensTabs = (corrigido.itensTabs ?? [])
+      .filter((item) => temTexto(item?.titulo) && temTexto(item?.conteudo))
+      .map((item, indice) => ({ ...item, id: temTexto(item.id) ? item.id : `tab-${indice + 1}` }))
+  }
+
+  if (corrigido.tipo === 'linha-do-tempo') {
+    corrigido.itensTimeline = (corrigido.itensTimeline ?? [])
+      .filter((item) => temTexto(item?.titulo))
+      .map((item, indice) => ({
+        ...item,
+        id: temTexto(item.id) ? item.id : `evento-${indice + 1}`,
+        data: typeof item.data === 'string' ? item.data : '',
+        descricao: typeof item.descricao === 'string' ? item.descricao : '',
+      }))
+    corrigido.orientacaoTimeline = ORIENTACOES_TIMELINE.includes(
+      corrigido.orientacaoTimeline as never
+    )
+      ? corrigido.orientacaoTimeline
+      : 'vertical'
+  }
+
+  if (corrigido.tipo === 'carrossel') {
+    corrigido.itensCarrossel = (corrigido.itensCarrossel ?? [])
+      .filter((item) => ehUrl(item?.url))
+      .map((item, indice) => ({ ...item, id: temTexto(item.id) ? item.id : `img-${indice + 1}` }))
+    corrigido.modoCarrossel = MODOS_CARROSSEL.includes(corrigido.modoCarrossel as never)
+      ? corrigido.modoCarrossel
+      : 'carrossel'
+  }
+
+  if (corrigido.tipo === 'pdf') {
+    corrigido.permitirDownloadPdf = corrigido.permitirDownloadPdf !== false
+  }
+
   if (corrigido.tipo === 'quiz') {
     const questions = (corrigido.quizData?.questions ?? [])
       .map(corrigirPergunta)
@@ -320,6 +658,16 @@ function motivoInvalido(tipo: TipoBloco): string {
       return 'sem URL de imagem válida'
     case 'video':
       return 'sem URL de vídeo válida'
+    case 'tabs':
+      return 'sem abas com título e conteúdo'
+    case 'linha-do-tempo':
+      return 'sem eventos com título'
+    case 'carrossel':
+      return 'sem imagens com URL válida'
+    case 'audio':
+      return 'sem URL de áudio válida'
+    case 'pdf':
+      return 'sem URL de PDF válida'
     default:
       return 'sem conteúdo'
   }
