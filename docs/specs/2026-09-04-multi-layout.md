@@ -343,7 +343,7 @@ atendidos. As etapas 1–3 não devem mudar o comportamento visível — servem 
       (mesma paleta, luminosidade invertida — não um cinza genérico). ✅ Página "Dark
       mode" no canvas (home, aula, estado vazio e os 11 blocos), aprovada.
 - [x] Implementar `course/layouts/sidebar/` (`SidebarPlayer/SidebarHome/SidebarUnit/
-  SidebarNavbar` + `meta.ts`), reusando `BlockRenderer` (via `UnidadeConteudo`) para
+SidebarNavbar` + `meta.ts`), reusando `BlockRenderer` (via `UnidadeConteudo`) para
       o conteúdo, com a moldura (sidebar, hero, cards, cabeçalho/rodapé de unidade,
       estado vazio) em violeta/ciano e suporte a `dark:` nos dois temas.
 - [x] Registrar `sidebar` em `layouts/registry.ts` (já aparece no `LayoutSelector`,
