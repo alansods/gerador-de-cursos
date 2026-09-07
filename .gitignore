@@ -12,11 +12,18 @@
 
 # testing
 /coverage
+/test-results/
+/playwright-report/
+/playwright/.cache/
 
 # next.js
 /.next/
 /.next-scorm/
 /out/
+.swc/
+
+# player (Vite) — saída de `pnpm build:player`, regerada a cada build
+/player/dist/
 
 # SCORM build temporários
 /.scorm-build/
@@ -48,6 +55,10 @@
 # misc
 .DS_Store
 *.pem
+
+# editores
+.vscode/
+.idea/
 
 # debug
 npm-debug.log*
