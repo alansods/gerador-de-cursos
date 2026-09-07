@@ -22,8 +22,7 @@ const customJestConfig = {
   testPathIgnorePatterns: [
     '<rootDir>/.next/',
     '<rootDir>/node_modules/',
-    '<rootDir>/e2e/',
-    '<rootDir>/tests/', // specs do Playwright
+    '<rootDir>/e2e/', // specs do Playwright
   ],
   transformIgnorePatterns: [
     // pnpm aninha em .pnpm/<pkg>@<versao>/node_modules/<pkg>, entao o pacote

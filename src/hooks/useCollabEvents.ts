@@ -1,7 +1,7 @@
 'use client'
 
 import { useCallback, useEffect } from 'react'
-import { useEstadoColab } from '@/components/collab/CollabProvider'
+import { useEstadoColab } from '@/components/colaboracao/CollabProvider'
 import type { AcaoColab, AlvoColab } from '@/liveblocks.config'
 
 interface Opcoes {

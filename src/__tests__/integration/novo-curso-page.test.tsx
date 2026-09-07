@@ -2,7 +2,7 @@ import '@testing-library/jest-dom'
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import NovoCursoPage from '@/app/cursos/novo/page'
-import { criarCursoPorIA, extrairDocumento } from '@/app/cursos/novo/acoes'
+import { criarCursoPorIA, extrairDocumento } from '@/app/cursos/novo/actions'
 
 const mockPush = jest.fn()
 const mockBack = jest.fn()
@@ -16,7 +16,7 @@ jest.mock('sonner', () => ({
   toast: { error: jest.fn(), success: jest.fn(), info: jest.fn() },
 }))
 
-jest.mock('@/app/cursos/novo/acoes', () => ({
+jest.mock('@/app/cursos/novo/actions', () => ({
   extrairDocumento: jest.fn(),
   criarCursoPorIA: jest.fn(),
   baixarDocumentoExemplo: jest.fn(),

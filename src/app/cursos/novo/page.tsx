@@ -12,7 +12,7 @@ import { useNovoCursoWizard } from '@/components/course/novo/useNovoCursoWizard'
 import { useGeradorCurso } from '@/context/GeradorCursoContext'
 import { NOME_ARQUIVO_EXEMPLO } from '@/lib/documento-exemplo'
 import { detectarMarcadores } from '@/lib/marcadores'
-import { criarCursoPorIA, extrairDocumento, baixarDocumentoExemplo } from './acoes'
+import { criarCursoPorIA, extrairDocumento, baixarDocumentoExemplo } from './actions'
 
 export default function NovoCursoPage() {
   const router = useRouter()
