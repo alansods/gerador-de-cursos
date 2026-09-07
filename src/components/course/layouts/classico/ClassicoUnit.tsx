@@ -84,15 +84,15 @@ export function ClassicoUnit({ curso, unidadeId, onNavigate }: ClassicoUnitProps
         <UnidadeConteudo unidade={unidade} theme={classicoMeta.blockTheme} />
 
         {/* Navigation Buttons */}
-        <div className="flex items-center justify-between gap-4 mt-8 pt-8 border-t-[1px] border-[#e5e7eb] dark:border-gray-700">
+        <div className="flex items-center justify-between gap-2 sm:gap-4 mt-8 pt-8 border-t-[1px] border-[#e5e7eb] dark:border-gray-700">
           {/* Previous Button */}
           <Button
             disabled={!unidadeAnterior}
             onClick={() => unidadeAnterior && onNavigate(unidadeAnterior.id)}
             className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            <ChevronLeft className="h-4 w-4" />
-            Unidade Anterior
+            <ChevronLeft className="h-4 w-4 shrink-0" />
+            <span className="hidden sm:inline">Unidade&nbsp;</span>Anterior
           </Button>
 
           {/* Unit Counter */}
@@ -108,8 +108,8 @@ export function ClassicoUnit({ curso, unidadeId, onNavigate }: ClassicoUnitProps
             onClick={() => proximaUnidade && onNavigate(proximaUnidade.id)}
             className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Próxima Unidade
-            <ChevronRight className="h-4 w-4" />
+            Próxima<span className="hidden sm:inline">&nbsp;Unidade</span>
+            <ChevronRight className="h-4 w-4 shrink-0" />
           </Button>
         </div>
       </div>

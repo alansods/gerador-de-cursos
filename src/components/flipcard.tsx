@@ -25,16 +25,15 @@ export function FlipCard({
 
   // Tamanhos padrão - formato retangular (altura maior que largura)
   const altura = alturaCard || '450px'
-  const largura = larguraCard || '400px'
-  const maxWidth = larguraCard || '400px'
+  const larguraMaxima = larguraCard || '400px'
 
   return (
     <div
       className="flip-card-wrapper group"
       style={{
         height: altura,
-        width: largura,
-        maxWidth: maxWidth,
+        width: '100%',
+        maxWidth: larguraMaxima,
         minHeight: '300px',
         margin: '0 auto',
       }}

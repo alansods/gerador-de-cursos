@@ -58,25 +58,26 @@ export function SidebarUnit({ curso, unidadeId, onNavigate }: SidebarUnitProps) 
         </div>
       </div>
 
-      <div className="flex-1 px-14 py-8">
+      <div className="flex-1 px-4 lg:px-14 py-8">
         <div className="max-w-5xl mx-auto">
           <UnidadeConteudo unidade={unidade} theme={sidebarMeta.blockTheme} />
         </div>
       </div>
 
-      <div className="border-t border-[#e6e4f0] dark:border-[#2c2839] bg-white dark:bg-[#1a1725] px-14 py-4 flex items-center justify-between">
+      <div className="border-t border-[#e6e4f0] dark:border-[#2c2839] bg-white dark:bg-[#1a1725] px-4 lg:px-14 py-4 flex items-center justify-between gap-2 lg:gap-4">
         <Button
           variant="outline"
           disabled={!unidadeAnterior}
           onClick={() => unidadeAnterior && onNavigate(unidadeAnterior.id)}
           className="rounded-full border-[#e6e4f0] dark:border-[#2c2839] gap-2 disabled:opacity-40"
         >
-          <ChevronLeft className="h-4 w-4" />
-          Unidade anterior
+          <ChevronLeft className="h-4 w-4 shrink-0" />
+          <span className="hidden lg:inline">Unidade&nbsp;</span>anterior
         </Button>
 
-        <span className="text-xs font-bold text-gray-400 dark:text-gray-500">
-          Unidade {unidadeIndex + 1} de {curso.unidades.length}
+        <span className="text-xs font-bold text-gray-400 dark:text-gray-500 text-center">
+          <span className="hidden lg:inline">Unidade </span>
+          {unidadeIndex + 1} de {curso.unidades.length}
         </span>
 
         <Button
@@ -84,8 +85,8 @@ export function SidebarUnit({ curso, unidadeId, onNavigate }: SidebarUnitProps) 
           onClick={() => proximaUnidade && onNavigate(proximaUnidade.id)}
           className="rounded-full bg-violet-600 hover:bg-violet-700 text-white gap-2 disabled:opacity-40"
         >
-          Próxima unidade
-          <ChevronRight className="h-4 w-4" />
+          Próxima<span className="hidden lg:inline">&nbsp;unidade</span>
+          <ChevronRight className="h-4 w-4 shrink-0" />
         </Button>
       </div>
     </div>
