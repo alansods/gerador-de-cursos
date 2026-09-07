@@ -140,6 +140,30 @@ Cerca de 230 linhas a menos. A partir daí, um bloco novo custa: 1 entrada no
 catálogo + 1 componente + 1 linha no registry + 1 `case` no formulário do drawer —
 com o TypeScript cobrando os dois `Record`.
 
+### Duas cópias esquecidas na Fase 0-A (corrigidas depois)
+
+A refatoração não alcançou o `EditableCard` do editor, que tinha **mais duas** tabelas
+manuais por tipo. O sintoma só apareceu ao criar um bloco novo: card sem nome
+("CONTEÚDO") e sem preview.
+
+- **Rótulo** — cadeia de ternários com os 11 tipos antigos e fallback `'Conteúdo'`.
+  Agora lê `CATALOGO_BLOCOS[item.tipo].rotulo`.
+- **Preview** — outra cadeia, com 10 tipos, cujo `else` renderizava `item.conteudo`.
+  Nos blocos novos esse campo é vazio, daí o card em branco. Agora o fallback
+  renderiza o componente real via `blockRegistry`, então bloco futuro aparece certo
+  sem tocar no arquivo.
+
+Junto vieram dois erros de posicionamento, anteriores a este trabalho: o divisor "+"
+acima do primeiro bloco passava `-1`, e o `arrayMove` do dnd-kit trata destino
+negativo como contagem a partir do fim — o bloco ia para o final da unidade. E o slot
+vazio ao lado de um bloco de 6 colunas passava `row.endIndex`, inserindo _antes_ do
+bloco embora fique visualmente _depois_. O parâmetro chamava-se `afterIndex` mas era
+usado como posição de destino; renomeado para `posicaoDestino`.
+
+Travas adicionadas: todo tipo precisa de rótulo próprio e distinto de "Conteúdo"; todo
+tipo precisa de entrada no `blockRegistry`; e `insercao-blocos.test.ts` cobre as
+quatro posições de inserção.
+
 ### Checklist real de um bloco novo (revisado após a Fase 1)
 
 Cobrado pelo compilador:
@@ -679,13 +703,41 @@ camada de UI, não strings literais no catálogo. Definir isso na Fase 0-A, quan
 Três pontos exigem verificação manual, e nenhum deles é reproduzível no ambiente de
 desenvolvimento:
 
-1. **Upload real acima de 4,5 MB, em produção.** É exatamente o cenário que falhava
-   antes e que só se manifesta na Vercel.
+1. **Upload em produção.** O fluxo foi testado localmente e as recusas vêm do Blob, não
+   do browser (ver abaixo). Falta só a confirmação no ambiente real.
 2. **Exportação SCORM com áudio ou PDF**: descompactar o ZIP e confirmar que o arquivo
    foi embutido, e que nenhuma URL de `blob.vercel-storage.com` sobreviveu.
 3. **O `<object>` do PDF renderizando.** O Chrome headless não tem plugin de PDF, então
    o screenshot sempre mostra o fallback — o que prova o fallback, não o caminho
    principal.
+
+### Testando o upload localmente
+
+Funciona, desde que `BLOB_READ_WRITE_TOKEN` esteja no `.env` — o browser fala direto com
+o Blob, que é um serviço externo, então localhost não é obstáculo.
+
+**Não registre um `onUploadCompleted` sem necessidade.** Ele faz o Blob disparar um
+webhook para a URL da aplicação, que em desenvolvimento local é inalcançável. Como nada
+precisa acontecer no servidor depois do upload, a rota não o declara.
+
+Roteiro do teste, feito por script Node dentro do projeto (para resolver os imports do
+pacote): autenticar em `/api/auth/login` guardando o cookie, pedir um token em
+`/api/upload-file` com `type: 'blob.generate-client-token'`, e chamar `put()` de
+`@vercel/blob/client` com esse token. O arquivo de cookies do curl marca o `auth-token`
+com o prefixo `#HttpOnly_`, que precisa ser removido antes de montar o header.
+
+Resultado esperado, que prova a aplicação server-side dos limites:
+
+| Caso                       | Esperado                            |
+| -------------------------- | ----------------------------------- |
+| PNG pequeno como `imagem`  | aceito                              |
+| `text/plain` como `imagem` | `Content type mismatch`             |
+| `image/svg+xml`            | `Content type mismatch`             |
+| PNG de 9 MB (limite 8 MB)  | `File is too large … 8388608 bytes` |
+
+O caso dos 9 MB atravessando localhost é a evidência de que o corpo **não** passa pela
+função serverless — é o que contorna o teto de 4,5 MB da Vercel. Apague os blobs criados
+no teste com `del()` de `@vercel/blob`.
 
 ### Verificação visual sem navegador interativo
 

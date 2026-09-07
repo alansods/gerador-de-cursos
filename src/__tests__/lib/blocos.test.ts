@@ -42,6 +42,19 @@ describe('catálogo de blocos', () => {
     expect(new Set(marcadores).size).toBe(marcadores.length)
   })
 
+  it('tem rótulo próprio para todo tipo, sem cair em texto genérico', () => {
+    // O card do editor lê CATALOGO_BLOCOS[tipo].rotulo. Enquanto isso era uma cadeia
+    // de ternários com fallback 'Conteúdo', bloco novo aparecia sem nome.
+    for (const tipo of TIPOS_BLOCO) {
+      const rotulo = CATALOGO_BLOCOS[tipo].rotulo
+      expect(rotulo.trim()).not.toBe('')
+      expect(rotulo).not.toBe('Conteúdo')
+    }
+
+    const rotulos = TIPOS_BLOCO.map((tipo) => CATALOGO_BLOCOS[tipo].rotulo)
+    expect(new Set(rotulos).size).toBe(rotulos.length)
+  })
+
   it('declara ícone, descrição e categoria conhecida para todo tipo', () => {
     const categorias = CATEGORIAS_BLOCO.map((c) => c.id)
 

@@ -33,7 +33,9 @@ export async function POST(request: NextRequest) {
           tokenPayload: categoria,
         }
       },
-      onUploadCompleted: async () => {},
+      // Sem onUploadCompleted: nada precisa acontecer no servidor após o upload, e
+      // registrá-lo faria o Blob tentar um webhook para uma URL inalcançável em
+      // desenvolvimento local.
     })
 
     return NextResponse.json(resultado)

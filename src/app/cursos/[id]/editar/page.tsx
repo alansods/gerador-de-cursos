@@ -20,6 +20,7 @@ import { CollabAvatars } from '@/components/colaboracao/CollabAvatars'
 import { CollabCursors } from '@/components/colaboracao/CollabCursors'
 import { useCollabEvents } from '@/hooks/useCollabEvents'
 import { EditableCard } from '@/components/EditableCard'
+import { blockRegistry } from '@/components/course/blocks'
 import { TooltipButton } from '@/components/TooltipButton'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { Button } from '@/components/ui/button'
@@ -1304,7 +1305,7 @@ function EditorCurso() {
                                       })
 
                                       const insertDropdown = (
-                                        afterIndex: number,
+                                        posicaoDestino: number,
                                         colSpanClass: string,
                                         key: string
                                       ) => (
@@ -1323,10 +1324,13 @@ function EditorCurso() {
                                               onClick={(e) => {
                                                 e?.stopPropagation()
                                                 console.log(
-                                                  '🔵 CLIQUE no botão inserir - afterIndex:',
-                                                  afterIndex
+                                                  '🔵 CLIQUE no botão inserir - posição:',
+                                                  posicaoDestino
                                                 )
-                                                handleOpenAddContentDrawer(unidade.id, afterIndex)
+                                                handleOpenAddContentDrawer(
+                                                  unidade.id,
+                                                  posicaoDestino
+                                                )
                                               }}
                                               asButton={false}
                                               size="sm"
@@ -1338,20 +1342,26 @@ function EditorCurso() {
                                         </div>
                                       )
 
-                                      const emptySlot = (afterIndex: number, emptyCols: number) => {
+                                      const emptySlot = (
+                                        posicaoDestino: number,
+                                        emptyCols: number
+                                      ) => {
                                         const colClass =
                                           emptyCols === 6
                                             ? 'col-span-12 md:col-span-6'
                                             : 'col-span-12'
                                         return (
                                           <div
-                                            key={`empty-${afterIndex}`}
+                                            key={`empty-${posicaoDestino}`}
                                             className={`${colClass} group/empty`}
                                           >
                                             <button
                                               className="w-full h-full min-h-[60px] rounded-lg border-2 border-dashed border-transparent flex items-center justify-center text-gray-400 dark:text-gray-500 opacity-0 group-hover/empty:opacity-100 group-hover/empty:border-gray-300 dark:group-hover/empty:border-gray-600 hover:border-blue-400! dark:hover:border-blue-500! hover:text-blue-500! dark:hover:text-blue-400! hover:bg-blue-50! dark:hover:bg-blue-950/20! transition-all"
                                               onClick={() => {
-                                                handleOpenAddContentDrawer(unidade.id, afterIndex)
+                                                handleOpenAddContentDrawer(
+                                                  unidade.id,
+                                                  posicaoDestino
+                                                )
                                               }}
                                             >
                                               <Plus className="h-4 w-4" />
@@ -1363,7 +1373,7 @@ function EditorCurso() {
                                       return rows.map((row, rowIndex) => (
                                         <React.Fragment key={`row-${rowIndex}`}>
                                           {rowIndex === 0 &&
-                                            insertDropdown(-1, 'col-span-12', 'divider-first')}
+                                            insertDropdown(0, 'col-span-12', 'divider-first')}
                                           {rowIndex > 0 &&
                                             insertDropdown(
                                               row.startIndex,
@@ -1388,33 +1398,7 @@ function EditorCurso() {
                                                   {(dragHandle) => (
                                                     <EditableCard
                                                       flex
-                                                      label={
-                                                        item.tipo === 'titulo'
-                                                          ? 'Título'
-                                                          : item.tipo === 'subtitulo'
-                                                            ? 'Subtítulo'
-                                                            : item.tipo === 'paragrafo'
-                                                              ? 'Texto'
-                                                              : item.tipo === 'imagem'
-                                                                ? 'Imagem'
-                                                                : item.tipo === 'video'
-                                                                  ? 'Vídeo'
-                                                                  : item.tipo === 'accordion'
-                                                                    ? 'Accordion'
-                                                                    : item.tipo === 'flipcard'
-                                                                      ? 'FlipCard'
-                                                                      : item.tipo === 'lista'
-                                                                        ? 'Lista'
-                                                                        : item.tipo ===
-                                                                            'objetivos-aprendizagem'
-                                                                          ? 'Objetivos de Aprendizagem'
-                                                                          : item.tipo === 'quiz'
-                                                                            ? 'Quiz'
-                                                                            : item.tipo ===
-                                                                                'info-box'
-                                                                              ? 'Info Box'
-                                                                              : 'Conteúdo'
-                                                      }
+                                                      label={CATALOGO_BLOCOS[item.tipo].rotulo}
                                                       actions={
                                                         <>
                                                           {dragHandle}
@@ -1645,13 +1629,15 @@ function EditorCurso() {
                                                               />
                                                             </InfoBox>
                                                           ) : null
-                                                        ) : (
+                                                        ) : item.tipo === 'paragrafo' ? (
                                                           <div
                                                             className={`conteudo-paragrafo text-gray-700 dark:text-gray-300 ${item.alinhamento === 'centro' ? 'text-center' : item.alinhamento === 'direita' ? 'text-right' : item.alinhamento === 'justificado' ? 'text-justify' : 'text-left'}`}
                                                             dangerouslySetInnerHTML={{
                                                               __html: item.conteudo,
                                                             }}
                                                           />
+                                                        ) : (
+                                                          <PreviewDoBloco item={item} />
                                                         )}
                                                       </div>
                                                     </EditableCard>
@@ -1660,7 +1646,7 @@ function EditorCurso() {
                                               )
                                             })}
                                           {row.totalCols < 12 &&
-                                            emptySlot(row.endIndex, 12 - row.totalCols)}
+                                            emptySlot(row.endIndex + 1, 12 - row.totalCols)}
                                         </React.Fragment>
                                       ))
                                     })()}
@@ -4291,6 +4277,17 @@ function EditorCurso() {
         />
       </div>
     </PageTransition>
+  )
+}
+
+function PreviewDoBloco({ item }: { item: ConteudoUnidade }) {
+  const Bloco = blockRegistry[item.tipo]
+  if (!Bloco) return null
+
+  return (
+    <div className="pointer-events-none">
+      <Bloco item={item} />
+    </div>
   )
 }
 

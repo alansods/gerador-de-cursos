@@ -2,6 +2,7 @@ import '@testing-library/jest-dom'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { ContentBlockDrawer } from '@/components/ContentBlockDrawer'
+import { blockRegistry } from '@/components/course/blocks'
 import { CATALOGO_BLOCOS, TIPOS_BLOCO, criarBlocoVazio } from '@/lib/blocos'
 import type { ConteudoUnidade } from '@/types/gerador-curso'
 
@@ -35,6 +36,16 @@ function montar(tipo: ConteudoUnidade['tipo'], onSave = jest.fn()) {
 }
 
 beforeEach(() => erroToast.mockClear())
+
+describe('preview do bloco no editor', () => {
+  it('tem componente de render para todo tipo do catálogo', () => {
+    // O card do editor renderiza blockRegistry[item.tipo] no fallback. Sem entrada
+    // aqui, o bloco recém-criado aparecia como um card vazio.
+    for (const tipo of TIPOS_BLOCO) {
+      expect(blockRegistry[tipo]).toBeDefined()
+    }
+  })
+})
 
 describe('ContentBlockDrawer', () => {
   it('mostra o rótulo do catálogo no cabeçalho de cada tipo', () => {
