@@ -100,21 +100,21 @@ export default function HomePage() {
       title: 'Padrão SCORM',
       description:
         'Gere cursos compatíveis com SCORM 1.2 e 2004, garantindo interoperabilidade com qualquer LMS.',
-      iconBg: 'bg-[#F15A29]/10',
+      iconBg: 'bg-highlight/10',
       iconColor: '#F15A29',
     },
     {
       icon: Clock,
       title: 'Criação Rápida',
       description: 'Automatize a geração de pacotes SCORM e reduza o tempo de produção de cursos.',
-      iconBg: 'bg-[#F15A29]/10',
+      iconBg: 'bg-highlight/10',
       iconColor: '#F15A29',
     },
     {
       icon: Award,
       title: 'Qualidade Premium',
       description: 'Mantenha o padrão de excelência com templates e estruturas validadas.',
-      iconBg: 'bg-[#F15A29]/10',
+      iconBg: 'bg-highlight/10',
       iconColor: '#F15A29',
     },
   ]
@@ -209,7 +209,7 @@ export default function HomePage() {
       default:
         return {
           icon: FileCheck,
-          iconBg: 'bg-[#0047BB]/10',
+          iconBg: 'bg-primary/10',
           iconColor: '#0047BB',
         }
     }
@@ -259,9 +259,9 @@ export default function HomePage() {
           <div className="mb-12">
             {/* Badge */}
             <div className="mb-6">
-              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#0047BB]/10">
-                <GraduationCap className="w-4 h-4 text-[#0047BB]" />
-                <span className="text-sm text-[#0047BB]">Plataforma 2025</span>
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10">
+                <GraduationCap className="w-4 h-4 text-primary" />
+                <span className="text-sm text-primary">Plataforma 2025</span>
               </div>
             </div>
 
@@ -280,7 +280,7 @@ export default function HomePage() {
             <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
               <Button
                 onClick={() => router.push('/cursos/novo')}
-                className="bg-[#0047BB] hover:bg-[#0047BB]/90 text-white h-10 px-6 w-full sm:w-auto"
+                className="bg-primary hover:bg-primary/90 text-white h-10 px-6 w-full sm:w-auto"
               >
                 <Plus className="w-4 h-4 mr-2" />
                 Criar Novo Curso
@@ -341,7 +341,7 @@ export default function HomePage() {
           </div>
 
           {/* CTA Card */}
-          <Card className="mb-12 border border-[#0047BB]/20 bg-gradient-to-br from-[#0047BB]/5 to-[#F15A29]/5">
+          <Card className="mb-12 border border-primary/20 bg-gradient-to-br from-primary/5 to-highlight/5">
             <CardContent className="p-6 sm:p-8">
               <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 sm:gap-6">
                 <div className="flex-1">
@@ -356,7 +356,7 @@ export default function HomePage() {
                 <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 w-full md:w-auto">
                   <Button
                     onClick={() => router.push('/cursos/novo')}
-                    className="bg-[#F15A29] hover:bg-[#F15A29]/90 text-white h-10 px-6 w-full sm:w-auto"
+                    className="bg-highlight hover:bg-highlight/90 text-white h-10 px-6 w-full sm:w-auto"
                   >
                     <Plus className="w-4 h-4 mr-2" />
                     Criar Curso

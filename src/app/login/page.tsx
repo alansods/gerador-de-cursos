@@ -172,7 +172,7 @@ export default function LoginPage() {
                   </div>
                   <button
                     type="button"
-                    className="text-[13px] font-medium text-[#0047BB] hover:underline"
+                    className="text-[13px] font-medium text-primary hover:underline"
                     disabled={loading || loadingGuest}
                   >
                     {t('login.forgotPassword')}
@@ -182,7 +182,7 @@ export default function LoginPage() {
                 {/* Botão Entrar */}
                 <Button
                   type="submit"
-                  className="w-full h-[44px] bg-[#0047BB] hover:bg-[#003A99] text-white font-medium rounded-lg mt-5"
+                  className="w-full h-[44px] font-medium rounded-lg mt-5"
                   disabled={loading || loadingGuest}
                 >
                   {loading ? (
@@ -202,7 +202,7 @@ export default function LoginPage() {
               {/* Link para Cadastro */}
               <p className="switch-copy text-center mt-5 text-[13px] text-muted-foreground">
                 {t('login.noAccount')}{' '}
-                <Link href="/cadastro" className="text-[#0047BB] font-medium hover:underline">
+                <Link href="/cadastro" className="text-primary font-medium hover:underline">
                   {t('login.createAccount')}
                 </Link>
               </p>
@@ -251,11 +251,7 @@ export default function LoginPage() {
           flex-direction: column;
           padding: 40px 56px;
           overflow-y: auto;
-          background: var(--bg, #f5f7fa);
-        }
-
-        :global(.dark) .form-panel {
-          background: var(--neutral-950);
+          background: var(--background);
         }
 
         @media (max-width: 980px) {

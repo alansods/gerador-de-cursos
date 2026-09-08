@@ -73,7 +73,7 @@ export function BrandPanel() {
         }
 
         :global(.dark) .brand-panel {
-          background: var(--neutral-900);
+          background: var(--card);
         }
 
         .brand-panel::after {

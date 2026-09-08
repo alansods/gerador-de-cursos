@@ -92,84 +92,11 @@
   --highlight: #f15a29;
   --highlight-foreground: #ffffff;
 
-  /* Design Tokens - Redesign Login/Cadastro */
-  --brand-blue: #0047bb;
-  --brand-blue-ink: #003a99;
-  --brand-blue-soft: #e3f2fd;
-  --brand-orange: #f15a29;
-  --brand-orange-ink: #d94a1e;
-  --brand-orange-soft: #fdece3;
-  --brand-cyan: #00a9ce;
-  --brand-violet: #8b5cf6;
-  --brand-green: #00c853;
-  --brand-red: #ef4444;
-
-  --neutral-0: #ffffff;
-  --neutral-50: #f8fafc;
-  --neutral-100: #f5f7fa;
-  --neutral-150: #f1f5f9;
-  --neutral-200: #e3f2fd;
-  --neutral-300: #e2e8f0;
-  --neutral-400: #cbd5e1;
-  --neutral-500: #94a3b8;
-  --neutral-600: #64748b;
-  --neutral-700: #475569;
-  --neutral-800: #2d3748;
-  --neutral-900: #1a202c;
-  --neutral-950: #0f1419;
-
-  --fg1: var(--neutral-900);
-  --fg2: var(--neutral-600);
-  --fg3: var(--neutral-500);
-  --bg: var(--neutral-100);
-  --bg-elevated: var(--neutral-0);
-  --surface-card: var(--neutral-0);
-  --surface-muted: var(--neutral-150);
-  --surface-sidebar: var(--neutral-0);
-  --border-strong: var(--neutral-400);
-
-  --success: var(--brand-green);
-  --warning: #f59e0b;
-  --danger: var(--brand-red);
-  --info: var(--brand-blue);
-
-  --text-xs: 0.75rem;
-  --text-sm: 0.875rem;
+  /* Escala tipográfica — consumida pela camada base no fim deste arquivo. */
   --text-base: 1rem;
   --text-lg: 1.125rem;
   --text-xl: 1.25rem;
   --text-2xl: 1.5rem;
-  --text-3xl: 1.875rem;
-  --text-4xl: 2.25rem;
-
-  --lh-tight: 1.2;
-  --lh-snug: 1.35;
-  --lh-normal: 1.5;
-  --lh-relaxed: 1.65;
-
-  --space-1: 0.25rem;
-  --space-2: 0.5rem;
-  --space-3: 0.75rem;
-  --space-4: 1rem;
-  --space-5: 1.25rem;
-  --space-6: 1.5rem;
-  --space-8: 2rem;
-  --space-10: 2.5rem;
-  --space-12: 3rem;
-  --space-16: 4rem;
-  --space-20: 5rem;
-
-  --shadow-xs: 0 1px 2px 0 rgb(15 20 25 / 0.04);
-  --shadow-sm: 0 1px 2px 0 rgb(15 20 25 / 0.06), 0 1px 3px 0 rgb(15 20 25 / 0.04);
-  --shadow-md: 0 4px 6px -1px rgb(15 20 25 / 0.08), 0 2px 4px -2px rgb(15 20 25 / 0.05);
-  --shadow-lg: 0 10px 15px -3px rgb(15 20 25 / 0.1), 0 4px 6px -4px rgb(15 20 25 / 0.06);
-  --shadow-focus: 0 0 0 3px rgb(0 71 187 / 0.18);
-
-  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
-  --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
-  --dur-fast: 120ms;
-  --dur-med: 240ms;
-  --dur-slow: 360ms;
 }
 
 .dark {
@@ -209,19 +136,7 @@
   --sidebar-ring: #2563eb;
   --highlight: #ff6b3d;
   --highlight-foreground: #ffffff;
-
-  --neutral-900: #1a202c;
-  --neutral-950: #0f1419;
-  --bg: var(--neutral-950);
-  --bg-elevated: var(--neutral-900);
-  --surface-card: var(--neutral-900);
-  --surface-muted: var(--neutral-800);
-  --surface-sidebar: var(--neutral-900);
-  --fg1: #e3e8ef;
-  --fg2: #94a3b8;
-  --fg3: #64748b;
-  --border-strong: #475569;
-  --input-background: var(--neutral-900);
+  --input-background: #1a202c;
 }
 
 @layer base {

@@ -158,12 +158,23 @@ contém `infobox` **e** `data-block-theme` (ambos eram 0).
 - [x] `pnpm test` verde
 - [x] `pnpm build` completo sem erro
 - [x] CSS compilado do Next ainda contém `infobox` e `data-block-theme`
-- [ ] **Conferir o preview do editor visualmente** (só a compilação do CSS foi checada,
-      não a renderização)
+- [x] **Conferir o preview do editor visualmente**
 
 **Concluído quando:** build e testes verdes **e** uma unidade com info-box renderiza no
 `/cursos/[id]/preview` igual ao que renderiza no player.
-**Estado:** 274 testes / 21 suítes verdes, `pnpm build` OK. Falta a conferência visual.
+**Verificado:** curso sintético criado via API e aberto em `/cursos/[id]/preview` no dev
+server. Os valores computados batem **exatamente** com os do player:
+
+| Medida                   | Preview do editor       | Player exportado        |
+| ------------------------ | ----------------------- | ----------------------- |
+| `.infobox` display       | `grid`                  | `grid`                  |
+| `.infobox` padding       | `18px 20px`             | `18px 20px`             |
+| `.infobox` border-radius | `10px`                  | `10px`                  |
+| `.infobox` background    | `rgba(253,151,43,0.08)` | `rgba(253,151,43,0.08)` |
+| `--block-accent`         | `#2563eb`               | `#2563eb`               |
+
+Paridade provada numericamente, que era o objetivo da branch. O curso de teste foi
+removido do banco depois da verificação.
 
 ### T5 — Cobrir o modo escuro
 
@@ -185,13 +196,24 @@ escura do `infobox.css` está sendo aplicada), texto `#e3e8ef` sobre `#0f1419`. 
 
 ### T6 — Validar o risco do `IntersectionObserver` em LMS real
 
-- [ ] Exportar um SCORM com bloco info-box e subir num LMS (Moodle ou equivalente)
-- [ ] Confirmar que o `.infobox` sai de `opacity: 0` dentro do iframe
+- [x] Simular um LMS localmente: player em `<iframe>` com `window.API` (SCORM 1.2) no pai
+- [x] Confirmar que o `.infobox` sai de `opacity: 0` dentro do iframe
+- [x] Cobrir o caso real de risco — bloco abaixo da dobra, que só aparece com scroll
+- [ ] Confirmar num LMS real (Moodle ou equivalente)
 
-**Concluído quando:** o bloco fica visível no LMS sem depender de scroll manual.
-**Estado: não feito** — depende de ambiente de LMS. É o único ponto onde esta correção
-pode piorar o comportamento atual: hoje o bloco aparece sem estilo, mas **sempre**
-aparece; depois passa a depender do observer disparar dentro do iframe.
+**Concluído quando:** o bloco fica visível dentro do iframe, inclusive quando começa
+fora da viewport.
+**Verificado** numa simulação de LMS (iframe de 900x600 com `window.API` no pai):
+
+- `window.SCORM` conectou pelo `window.parent` — o wrapper acha a API normalmente.
+- Bloco dentro da viewport: `opacity: 1`, `.in-view` aplicada, nos dois info-box.
+- Bloco abaixo da dobra (`top: 1685px`, viewport 600px): começa em `opacity: 0` e passa
+  a `opacity: 1` com `.in-view` depois do scroll dentro do iframe. É o comportamento
+  pretendido, e o `IntersectionObserver` funciona no contexto do iframe.
+
+**Continua valendo confirmar num LMS real** antes de considerar o risco encerrado — a
+simulação não cobre iframes com `sandbox` restritivo nem LMS que redimensionam o frame
+por script.
 
 **Plano B, se falhar:** trocar o estado inicial para `opacity: 1` e tratar a animação de
 entrada como progressive enhancement (`.infobox` visível por padrão, `.in-view` só

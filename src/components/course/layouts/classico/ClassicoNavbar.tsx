@@ -45,25 +45,25 @@ export function ClassicoNavbar({
           </SheetTrigger>
           <SheetContent
             side="left"
-            className="w-[min(380px,90vw)] p-0 bg-white dark:bg-[#1a202c]"
+            className="w-[min(380px,90vw)] p-0 bg-card"
             hideClose
             style={{
               boxShadow: '0 20px 50px rgba(0,0,0,.18)',
             }}
           >
             {/* Header */}
-            <div className="px-5 pt-5 pb-4 border-b border-[var(--border)] flex flex-row items-start gap-3">
+            <div className="px-5 pt-5 pb-4 border-b border-border flex flex-row items-start gap-3">
               <div className="flex-1">
-                <SheetTitle className="text-[15px] font-medium text-[var(--fg1)] mb-0.5">
+                <SheetTitle className="text-[15px] font-medium text-foreground mb-0.5">
                   Conteúdo do curso
                 </SheetTitle>
-                <p className="text-xs text-[var(--fg2)] m-0">{curso.titulo}</p>
+                <p className="text-xs text-muted-foreground m-0">{curso.titulo}</p>
               </div>
               <Button
                 variant="ghost"
                 size="icon"
                 onClick={() => setOpen(false)}
-                className="w-8 h-8 rounded-md hover:bg-[var(--neutral-150)] text-[var(--fg2)] hover:text-[var(--fg1)]"
+                className="w-8 h-8 rounded-md hover:bg-muted text-muted-foreground hover:text-foreground"
                 aria-label="Fechar"
               >
                 <X className="h-4 w-4" />
@@ -78,20 +78,21 @@ export function ClassicoNavbar({
                 onClick={(e) => handleNavClick(e, null)}
                 className={`flex items-center gap-2.5 px-3 py-2.5 rounded-md text-[13.5px] leading-tight transition-all duration-150 ${
                   !currentUnidadeId
-                    ? 'bg-[var(--brand-blue-soft)] dark:bg-[#1e3a8a] text-[var(--brand-blue)] font-medium'
-                    : 'text-[var(--fg2)] hover:bg-[var(--neutral-150)] dark:hover:bg-[var(--surface-muted)] hover:text-[var(--fg1)]'
+                    ? 'bg-secondary text-secondary-foreground font-medium'
+                    : 'text-muted-foreground hover:bg-muted hover:text-foreground'
                 }`}
                 style={{ marginBottom: '6px' }}
               >
                 <Home
-                  className="w-4 h-4 shrink-0"
-                  style={{ color: !currentUnidadeId ? 'var(--brand-blue)' : 'var(--fg3)' }}
+                  className={`w-4 h-4 shrink-0 ${
+                    !currentUnidadeId ? 'text-secondary-foreground' : 'text-muted-foreground/70'
+                  }`}
                 />
                 <span>Página inicial</span>
               </a>
 
               {/* Units Section Header */}
-              <div className="px-2.5 pt-3.5 pb-2 text-[11px] uppercase tracking-wider text-[var(--fg3)] font-medium">
+              <div className="px-2.5 pt-3.5 pb-2 text-[11px] uppercase tracking-wider text-muted-foreground/70 font-medium">
                 Unidades
               </div>
 
@@ -106,13 +107,14 @@ export function ClassicoNavbar({
                     onClick={(e) => handleNavClick(e, u.id)}
                     className={`flex items-center gap-2.5 px-3 py-2.5 rounded-md text-[13.5px] leading-tight transition-all duration-150 ${
                       isActive
-                        ? 'bg-[var(--brand-blue-soft)] dark:bg-[#1e3a8a] text-[var(--brand-blue)] font-medium'
-                        : 'text-[var(--fg2)] hover:bg-[var(--neutral-150)] dark:hover:bg-[var(--surface-muted)] hover:text-[var(--fg1)]'
+                        ? 'bg-secondary text-secondary-foreground font-medium'
+                        : 'text-muted-foreground hover:bg-muted hover:text-foreground'
                     }`}
                   >
                     <BookOpen
-                      className="w-4 h-4 shrink-0"
-                      style={{ color: isActive ? 'var(--brand-blue)' : 'var(--fg3)' }}
+                      className={`w-4 h-4 shrink-0 ${
+                        isActive ? 'text-secondary-foreground' : 'text-muted-foreground/70'
+                      }`}
                     />
                     <span className="line-clamp-2">
                       {index + 1}. {u.titulo}

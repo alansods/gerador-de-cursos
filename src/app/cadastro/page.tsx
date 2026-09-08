@@ -136,7 +136,7 @@ export default function CadastroPage() {
                     className="text-[13px] font-medium text-foreground"
                   >
                     {t('signup.name')}
-                    <span className="text-[#F15A29] ml-0.5">*</span>
+                    <span className="text-highlight ml-0.5">*</span>
                   </Label>
                   <div className="input-wrap relative mt-1.5">
                     <User className="absolute left-3.5 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4 pointer-events-none" />
@@ -168,7 +168,7 @@ export default function CadastroPage() {
                     className="text-[13px] font-medium text-foreground"
                   >
                     {t('signup.email')}
-                    <span className="text-[#F15A29] ml-0.5">*</span>
+                    <span className="text-highlight ml-0.5">*</span>
                   </Label>
                   <div className="input-wrap relative mt-1.5">
                     <Mail className="absolute left-3.5 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4 pointer-events-none" />
@@ -201,7 +201,7 @@ export default function CadastroPage() {
                     className="text-[13px] font-medium text-foreground"
                   >
                     {t('signup.password')}
-                    <span className="text-[#F15A29] ml-0.5">*</span>
+                    <span className="text-highlight ml-0.5">*</span>
                   </Label>
                   <div className="input-wrap relative mt-1.5">
                     <Lock className="absolute left-3.5 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4 pointer-events-none" />
@@ -247,7 +247,7 @@ export default function CadastroPage() {
                     className="text-[13px] font-medium text-foreground"
                   >
                     {t('signup.confirmPassword')}
-                    <span className="text-[#F15A29] ml-0.5">*</span>
+                    <span className="text-highlight ml-0.5">*</span>
                   </Label>
                   <div className="input-wrap relative mt-1.5">
                     <Lock className="absolute left-3.5 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4 pointer-events-none" />
@@ -292,7 +292,7 @@ export default function CadastroPage() {
                 {/* Botão Criar Conta */}
                 <Button
                   type="submit"
-                  className="w-full h-[44px] bg-[#0047BB] hover:bg-[#003A99] text-white font-medium rounded-lg mt-5"
+                  className="w-full h-[44px] font-medium rounded-lg mt-5"
                   disabled={loading}
                 >
                   {loading ? (
@@ -312,7 +312,7 @@ export default function CadastroPage() {
               {/* Link para Login */}
               <p className="switch-copy text-center mt-5 text-[13px] text-muted-foreground">
                 {t('signup.hasAccount')}{' '}
-                <Link href="/login" className="text-[#0047BB] font-medium hover:underline">
+                <Link href="/login" className="text-primary font-medium hover:underline">
                   {t('signup.signInLink')}
                 </Link>
               </p>
@@ -333,11 +333,7 @@ export default function CadastroPage() {
           flex-direction: column;
           padding: 40px 56px;
           overflow-y: auto;
-          background: var(--bg, #f5f7fa);
-        }
-
-        :global(.dark) .form-panel {
-          background: var(--neutral-950);
+          background: var(--background);
         }
 
         @media (max-width: 980px) {
