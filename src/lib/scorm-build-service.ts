@@ -2,8 +2,8 @@ import { exec } from 'child_process'
 import * as fs from 'fs/promises'
 import * as path from 'path'
 import JSZip from 'jszip'
-import type { CursoGerado, ConteudoUnidade } from '@/types/gerador-curso'
-import { cardsFlipcard, extrairMidiasDoBloco } from './blocos'
+import type { CursoGerado } from '@/types/gerador-curso'
+import { extrairMidiasDoBloco, reescreverMidiasDoBloco } from './blocos'
 
 /**
  * Converte caminhos absolutos (/_next/..., /favicon.ico) para caminhos relativos
@@ -100,7 +100,8 @@ export async function downloadAndUpdateImages(
       const extension = path.extname(new URL(url).pathname) || '.jpg'
       const filename = `midia-${i + 1}-${urlHash}${extension}`
       const outputPath = path.join(publicDir, filename)
-      const publicPath = `/scorm-images/${cursoId}/${filename}`
+      // Relativo e sem o id do curso: é onde o generateSCORMFromPlayerDist grava no ZIP.
+      const publicPath = `images/${filename}`
 
       await downloadImage(url, outputPath)
       imageMap.set(url, publicPath)
@@ -119,34 +120,15 @@ export async function downloadAndUpdateImages(
   console.log('🔄 [SCORM Build] Atualizando referências de imagens no curso...')
   const cursoAtualizado = JSON.parse(JSON.stringify(curso)) as CursoGerado
 
+  // Dirigido pelo CATALOGO_BLOCOS: bloco novo com mídia declara reescreverMidias e passa
+  // a ser reescrito sem tocar neste arquivo.
   let updatedCount = 0
-  function updateConteudo(conteudo: ConteudoUnidade) {
-    // Atualizar imagem direta
-    if (conteudo.tipo === 'imagem' && conteudo.conteudo) {
-      const newPath = imageMap.get(conteudo.conteudo)
-      if (newPath) {
-        conteudo.conteudo = newPath
-        updatedCount++
-        console.log(`   🔄 [SCORM Build] Referência atualizada: ${conteudo.conteudo} -> ${newPath}`)
-      }
-    }
-
-    // Atualizar imagens dos cards de um flipcard
-    if (conteudo.tipo === 'flipcard') {
-      conteudo.itensFlipcard = cardsFlipcard(conteudo).map((card) => {
-        const newPath = card.imagemFrente ? imageMap.get(card.imagemFrente) : undefined
-        if (!newPath) return card
-        updatedCount++
-        console.log(
-          `   🔄 [SCORM Build] Referência de flipcard atualizada: ${card.imagemFrente} -> ${newPath}`
-        )
-        return { ...card, imagemFrente: newPath }
-      })
-    }
-  }
-
   cursoAtualizado.unidades?.forEach((unidade) => {
-    unidade.conteudo?.forEach(updateConteudo)
+    unidade.conteudo = unidade.conteudo?.map((bloco) => {
+      const reescrito = reescreverMidiasDoBloco(bloco, imageMap)
+      if (reescrito !== bloco) updatedCount++
+      return reescrito
+    })
   })
 
   console.log(`✅ [SCORM Build] ${updatedCount} referências de imagens atualizadas no curso`)

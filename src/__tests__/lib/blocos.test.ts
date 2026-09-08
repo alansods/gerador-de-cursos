@@ -5,6 +5,7 @@ import {
   cardsFlipcard,
   criarBlocoVazio,
   extrairMidiasDoBloco,
+  reescreverMidiasDoBloco,
   mesclarFlipcardsAdjacentes,
   normalizarCursoGerado,
 } from '@/lib/blocos'
@@ -841,5 +842,87 @@ describe('normalizarCursoGerado', () => {
 
     expect(curso.unidades).toEqual([])
     expect(resumo.blocos).toBe(0)
+  })
+})
+
+describe('reescreverMidiasDoBloco', () => {
+  it('troca a URL remota pelo caminho local em cada bloco de mídia', () => {
+    const mapa = new Map([
+      ['https://x.com/a.png', 'images/a.png'],
+      ['https://x.com/f.png', 'images/f.png'],
+      ['https://x.com/a.mp3', 'images/a.mp3'],
+      ['https://x.com/d.pdf', 'images/d.pdf'],
+      ['https://x.com/1.png', 'images/1.png'],
+      ['https://x.com/base.png', 'images/base.png'],
+    ])
+
+    const imagem = reescreverMidiasDoBloco(
+      { ...criarBlocoVazio('imagem'), conteudo: 'https://x.com/a.png' } as ConteudoUnidade,
+      mapa
+    )
+    expect(imagem.conteudo).toBe('images/a.png')
+
+    const flipcard = reescreverMidiasDoBloco(
+      {
+        ...criarBlocoVazio('flipcard'),
+        itensFlipcard: [
+          {
+            id: 'c-1',
+            tipoFrente: 'imagem',
+            imagemFrente: 'https://x.com/f.png',
+            conteudoVerso: 'v',
+          },
+        ],
+      } as ConteudoUnidade,
+      mapa
+    )
+    expect(flipcard.itensFlipcard?.[0].imagemFrente).toBe('images/f.png')
+
+    const audio = reescreverMidiasDoBloco(
+      { ...criarBlocoVazio('audio'), audioUrl: 'https://x.com/a.mp3' } as ConteudoUnidade,
+      mapa
+    )
+    expect(audio.audioUrl).toBe('images/a.mp3')
+
+    const pdf = reescreverMidiasDoBloco(
+      { ...criarBlocoVazio('pdf'), pdfUrl: 'https://x.com/d.pdf' } as ConteudoUnidade,
+      mapa
+    )
+    expect(pdf.pdfUrl).toBe('images/d.pdf')
+
+    const carrossel = reescreverMidiasDoBloco(
+      {
+        ...criarBlocoVazio('carrossel'),
+        itensCarrossel: [{ id: '1', url: 'https://x.com/1.png' }],
+      } as ConteudoUnidade,
+      mapa
+    )
+    expect(carrossel.itensCarrossel?.[0].url).toBe('images/1.png')
+
+    const interativa = reescreverMidiasDoBloco(
+      {
+        ...criarBlocoVazio('imagem-interativa'),
+        imagemBase: 'https://x.com/base.png',
+      } as ConteudoUnidade,
+      mapa
+    )
+    expect(interativa.imagemBase).toBe('images/base.png')
+  })
+
+  it('preserva a URL quando o download falhou e ela não está no mapa', () => {
+    const bloco = {
+      ...criarBlocoVazio('imagem'),
+      conteudo: 'https://x.com/z.png',
+    } as ConteudoUnidade
+    expect(reescreverMidiasDoBloco(bloco, new Map()).conteudo).toBe('https://x.com/z.png')
+  })
+
+  it('todo bloco que declara extrairMidias também sabe reescrever', () => {
+    // Sem a contraparte, o arquivo é embutido no ZIP mas o bloco continua apontando
+    // para a URL remota — foi exatamente o bug do `imagem-interativa` no LMS.
+    const semReescrita = TIPOS_BLOCO.filter(
+      (tipo) => CATALOGO_BLOCOS[tipo].extrairMidias && !CATALOGO_BLOCOS[tipo].reescreverMidias
+    )
+    expect(semReescrita).toEqual([])
   })
 })

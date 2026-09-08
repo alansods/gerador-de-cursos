@@ -62,6 +62,15 @@ export interface MetaBloco {
    * Declarar aqui é o que impede um bloco novo de ficar apontando para URL remota.
    */
   extrairMidias?: (bloco: ConteudoUnidade) => (string | undefined)[]
+  /**
+   * Contraparte de `extrairMidias`: troca cada URL remota pelo caminho local dentro do
+   * pacote. Sem isto o arquivo é embutido no ZIP mas o bloco continua apontando para a
+   * URL original, e o curso quebra em LMS sem internet.
+   */
+  reescreverMidias?: (
+    bloco: ConteudoUnidade,
+    mapear: (url: string | undefined) => string | undefined
+  ) => Partial<ConteudoUnidade>
   /** Oferece o seletor de largura (12 ou 6 colunas) no formulário do bloco. */
   larguraAjustavel?: boolean
 }
@@ -305,6 +314,12 @@ export const CATALOGO_BLOCOS: Record<TipoBloco, MetaBloco> = {
       return null
     },
     extrairMidias: (b) => cardsFlipcard(b).map((card) => card.imagemFrente),
+    reescreverMidias: (b, mapear) => ({
+      itensFlipcard: cardsFlipcard(b).map((card) => ({
+        ...card,
+        imagemFrente: mapear(card.imagemFrente) ?? card.imagemFrente,
+      })),
+    }),
   },
   quiz: {
     tipo: 'quiz',
@@ -347,6 +362,7 @@ export const CATALOGO_BLOCOS: Record<TipoBloco, MetaBloco> = {
       return null
     },
     extrairMidias: (b) => [b.conteudo],
+    reescreverMidias: (b, mapear) => ({ conteudo: mapear(b.conteudo) ?? b.conteudo }),
     larguraAjustavel: true,
   },
   video: {
@@ -438,6 +454,9 @@ export const CATALOGO_BLOCOS: Record<TipoBloco, MetaBloco> = {
       return null
     },
     extrairMidias: (b) => (b.itensCarrossel ?? []).map((i) => i.url),
+    reescreverMidias: (b, mapear) => ({
+      itensCarrossel: (b.itensCarrossel ?? []).map((i) => ({ ...i, url: mapear(i.url) ?? i.url })),
+    }),
   },
   audio: {
     tipo: 'audio',
@@ -457,6 +476,7 @@ export const CATALOGO_BLOCOS: Record<TipoBloco, MetaBloco> = {
       return null
     },
     extrairMidias: (b) => [b.audioUrl],
+    reescreverMidias: (b, mapear) => ({ audioUrl: mapear(b.audioUrl) ?? b.audioUrl }),
   },
   pdf: {
     tipo: 'pdf',
@@ -476,6 +496,7 @@ export const CATALOGO_BLOCOS: Record<TipoBloco, MetaBloco> = {
       return null
     },
     extrairMidias: (b) => [b.pdfUrl],
+    reescreverMidias: (b, mapear) => ({ pdfUrl: mapear(b.pdfUrl) ?? b.pdfUrl }),
   },
   'imagem-interativa': {
     tipo: 'imagem-interativa',
@@ -496,6 +517,7 @@ export const CATALOGO_BLOCOS: Record<TipoBloco, MetaBloco> = {
       return null
     },
     extrairMidias: (b) => [b.imagemBase],
+    reescreverMidias: (b, mapear) => ({ imagemBase: mapear(b.imagemBase) ?? b.imagemBase }),
   },
   associacao: {
     tipo: 'associacao',
@@ -569,6 +591,16 @@ export function extrairMidiasDoBloco(bloco: ConteudoUnidade): string[] {
   const meta = CATALOGO_BLOCOS[bloco.tipo]
   if (!meta?.extrairMidias) return []
   return meta.extrairMidias(bloco).filter((url): url is string => ehUrl(url))
+}
+
+export function reescreverMidiasDoBloco(
+  bloco: ConteudoUnidade,
+  mapa: Map<string, string>
+): ConteudoUnidade {
+  const meta = CATALOGO_BLOCOS[bloco.tipo]
+  if (!meta?.reescreverMidias) return bloco
+  const mapear = (url: string | undefined) => (url ? mapa.get(url) : undefined)
+  return { ...bloco, ...meta.reescreverMidias(bloco, mapear) }
 }
 
 export function criarBlocoVazio(tipo: TipoBloco): BlocoRascunho {
