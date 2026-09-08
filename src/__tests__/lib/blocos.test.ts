@@ -2,13 +2,15 @@ import {
   CATALOGO_BLOCOS,
   CATEGORIAS_BLOCO,
   TIPOS_BLOCO,
+  cardsFlipcard,
   criarBlocoVazio,
   extrairMidiasDoBloco,
+  mesclarFlipcardsAdjacentes,
   normalizarCursoGerado,
 } from '@/lib/blocos'
 import type { TipoBloco } from '@/lib/blocos'
 import { blockRegistry } from '@/components/course/blocks/registry'
-import type { ConteudoUnidade, CursoGerado } from '@/types/gerador-curso'
+import type { ConteudoUnidade, CursoGerado, FlipcardItem } from '@/types/gerador-curso'
 
 function cursoCom(conteudo: Partial<ConteudoUnidade>[]): CursoGerado {
   return {
@@ -89,7 +91,8 @@ describe('criarBlocoVazio', () => {
   it('aplica os padrões declarados no catálogo', () => {
     expect(criarBlocoVazio('lista').tipoLista).toBe('nao-ordenada')
     expect(criarBlocoVazio('info-box').tipoInfoBox).toBe('info')
-    expect(criarBlocoVazio('flipcard').tipoFrente).toBe('titulo')
+    expect(criarBlocoVazio('flipcard').alturaCard).toBe('300px')
+    expect(criarBlocoVazio('flipcard').itensFlipcard).toEqual([])
     expect(criarBlocoVazio('imagem').tamanho).toBe('media')
   })
 
@@ -130,22 +133,48 @@ describe('validarFormulario', () => {
     expect(meta.validarFormulario({ ...base, legenda: 'Legenda', fonte: 'SENAI' })).toBeNull()
   })
 
-  it('cobra imagem e título conforme o tipo de frente do flipcard', () => {
+  it('cobra imagem e título conforme o tipo de frente de cada card', () => {
     const meta = CATALOGO_BLOCOS.flipcard
-    const base = { ...criarBlocoVazio('flipcard'), conteudoVerso: 'verso' }
+    const card = (extra: Partial<FlipcardItem>): FlipcardItem => ({
+      id: 'c-1',
+      tipoFrente: 'titulo',
+      conteudoVerso: 'verso',
+      ...extra,
+    })
+    const bloco = (...itensFlipcard: FlipcardItem[]) => ({
+      ...criarBlocoVazio('flipcard'),
+      itensFlipcard,
+    })
 
-    expect(meta.validarFormulario({ ...base, tipoFrente: 'titulo' })).toBe(
-      'Adicione um título para a frente do flipcard'
+    expect(meta.validarFormulario(criarBlocoVazio('flipcard'))).toBe(
+      'Adicione ao menos um flipcard'
     )
-    expect(meta.validarFormulario({ ...base, tipoFrente: 'imagem' })).toBe(
-      'Adicione uma imagem para a frente do flipcard'
+    expect(meta.validarFormulario(bloco(card({ tipoFrente: 'titulo' })))).toBe(
+      'Card 1: adicione um título para a frente'
+    )
+    expect(meta.validarFormulario(bloco(card({ tipoFrente: 'imagem' })))).toBe(
+      'Card 1: adicione uma imagem para a frente'
     )
     expect(
-      meta.validarFormulario({ ...base, tipoFrente: 'imagem-titulo', imagemFrente: 'x' })
-    ).toBe('Adicione um título para a frente do flipcard')
+      meta.validarFormulario(bloco(card({ tipoFrente: 'imagem-titulo', imagemFrente: 'x' })))
+    ).toBe('Card 1: adicione um título para a frente')
     expect(
-      meta.validarFormulario({ ...base, tipoFrente: 'titulo', tituloFrente: 'Frente' })
-    ).toBeNull()
+      meta.validarFormulario(bloco(card({ tituloFrente: 'Frente' }), card({ id: 'c-2' })))
+    ).toBe('Card 2: adicione um título para a frente')
+    expect(meta.validarFormulario(bloco(card({ tituloFrente: 'Frente' })))).toBeNull()
+  })
+
+  it('exige o verso de cada card', () => {
+    const meta = CATALOGO_BLOCOS.flipcard
+
+    expect(
+      meta.validarFormulario({
+        ...criarBlocoVazio('flipcard'),
+        itensFlipcard: [
+          { id: 'c-1', tipoFrente: 'titulo', tituloFrente: 'Frente', conteudoVerso: '' },
+        ],
+      })
+    ).toBe('Card 1: adicione o conteúdo do verso')
   })
 
   it('é mais estrito que a aceitação de bloco vindo da IA', () => {
@@ -256,11 +285,156 @@ describe('blocos da fase 1', () => {
   })
 })
 
+describe('cardsFlipcard', () => {
+  it('converte o formato legado de card único', () => {
+    expect(
+      cardsFlipcard({
+        tipo: 'flipcard',
+        tipoFrente: 'imagem-titulo',
+        imagemFrente: 'https://x.com/a.png',
+        tituloFrente: 'Frente',
+        conteudoVerso: 'Verso',
+      })
+    ).toEqual([
+      {
+        id: 'flip-1',
+        tipoFrente: 'imagem-titulo',
+        imagemFrente: 'https://x.com/a.png',
+        tituloFrente: 'Frente',
+        conteudoVerso: 'Verso',
+      },
+    ])
+  })
+
+  it('ignora os campos legados quando já existe a lista de cards', () => {
+    const cards = cardsFlipcard({
+      tipo: 'flipcard',
+      tituloFrente: 'Antiga',
+      conteudoVerso: 'Antigo',
+      itensFlipcard: [
+        { id: 'c-1', tipoFrente: 'titulo', tituloFrente: 'Nova', conteudoVerso: 'Novo' },
+      ],
+    })
+
+    expect(cards).toHaveLength(1)
+    expect(cards[0].tituloFrente).toBe('Nova')
+  })
+
+  it('normaliza tipo de frente inválido e id ausente', () => {
+    const cards = cardsFlipcard({
+      tipo: 'flipcard',
+      itensFlipcard: [
+        { tipoFrente: 'inexistente', conteudoVerso: 'v' },
+      ] as unknown as FlipcardItem[],
+    })
+
+    expect(cards[0].tipoFrente).toBe('titulo')
+    expect(cards[0].id).toBe('flip-1')
+  })
+
+  it('devolve lista vazia para um bloco sem cards', () => {
+    expect(cardsFlipcard(criarBlocoVazio('flipcard'))).toEqual([])
+  })
+})
+
+describe('mesclarFlipcardsAdjacentes', () => {
+  const flipcardLegado = (id: string, titulo: string, ordem: number): ConteudoUnidade =>
+    ({
+      id,
+      tipo: 'flipcard',
+      conteudo: '',
+      ordem,
+      colunas: 6,
+      tipoFrente: 'titulo',
+      tituloFrente: titulo,
+      conteudoVerso: `Verso de ${titulo}`,
+    }) as ConteudoUnidade
+
+  it('junta flipcards vizinhos num bloco só, com ids de card únicos', () => {
+    const resultado = mesclarFlipcardsAdjacentes([
+      flipcardLegado('c-57', 'Flexbox', 0),
+      flipcardLegado('c-58', 'CSS Grid', 1),
+    ])
+
+    expect(resultado).toHaveLength(1)
+    expect(resultado[0].id).toBe('c-57')
+    expect(resultado[0].colunas).toBe(12)
+    expect(resultado[0].itensFlipcard?.map((c) => c.tituloFrente)).toEqual(['Flexbox', 'CSS Grid'])
+    expect(resultado[0].itensFlipcard?.map((c) => c.id)).toEqual(['flip-1', 'flip-2'])
+    expect(resultado[0].tituloFrente).toBeUndefined()
+  })
+
+  it('não junta flipcards separados por outro bloco', () => {
+    const resultado = mesclarFlipcardsAdjacentes([
+      flipcardLegado('c-1', 'A', 0),
+      { id: 'p-1', tipo: 'paragrafo', conteudo: 'Texto', ordem: 1 } as ConteudoUnidade,
+      flipcardLegado('c-2', 'B', 2),
+    ])
+
+    expect(resultado.map((b) => b.tipo)).toEqual(['flipcard', 'paragrafo', 'flipcard'])
+    expect(resultado.map((b) => b.ordem)).toEqual([0, 1, 2])
+  })
+
+  it('renumera a ordem depois de mesclar', () => {
+    const resultado = mesclarFlipcardsAdjacentes([
+      flipcardLegado('c-1', 'A', 0),
+      flipcardLegado('c-2', 'B', 1),
+      { id: 'p-1', tipo: 'paragrafo', conteudo: 'Texto', ordem: 2 } as ConteudoUnidade,
+    ])
+
+    expect(resultado.map((b) => b.ordem)).toEqual([0, 1])
+  })
+
+  it('preserva blocos que já estão no formato de grade', () => {
+    const bloco = {
+      id: 'f-1',
+      tipo: 'flipcard',
+      conteudo: '',
+      ordem: 0,
+      colunas: 12,
+      itensFlipcard: [
+        { id: 'flip-1', tipoFrente: 'titulo', tituloFrente: 'A', conteudoVerso: 'a' },
+        { id: 'flip-2', tipoFrente: 'titulo', tituloFrente: 'B', conteudoVerso: 'b' },
+      ],
+    } as ConteudoUnidade
+
+    expect(mesclarFlipcardsAdjacentes([bloco])[0].itensFlipcard).toHaveLength(2)
+  })
+
+  it('deixa o conteúdo sem flipcard intacto', () => {
+    const conteudo = [
+      { id: 'p-1', tipo: 'paragrafo', conteudo: 'A', ordem: 0 },
+      { id: 'p-2', tipo: 'paragrafo', conteudo: 'B', ordem: 1 },
+    ] as ConteudoUnidade[]
+
+    expect(mesclarFlipcardsAdjacentes(conteudo)).toEqual(conteudo)
+  })
+})
+
 describe('extrairMidiasDoBloco', () => {
   it('coleta a URL de cada bloco de mídia', () => {
     const casos: [ConteudoUnidade['tipo'], Partial<ConteudoUnidade>, string[]][] = [
       ['imagem', { conteudo: 'https://x.com/a.png' }, ['https://x.com/a.png']],
-      ['flipcard', { imagemFrente: 'https://x.com/f.png' }, ['https://x.com/f.png']],
+      [
+        'flipcard',
+        {
+          itensFlipcard: [
+            {
+              id: 'c-1',
+              tipoFrente: 'imagem',
+              imagemFrente: 'https://x.com/f.png',
+              conteudoVerso: 'v',
+            },
+            {
+              id: 'c-2',
+              tipoFrente: 'imagem',
+              imagemFrente: 'https://x.com/g.png',
+              conteudoVerso: 'v',
+            },
+          ],
+        },
+        ['https://x.com/f.png', 'https://x.com/g.png'],
+      ],
       ['audio', { audioUrl: 'https://x.com/a.mp3' }, ['https://x.com/a.mp3']],
       ['pdf', { pdfUrl: 'https://x.com/d.pdf' }, ['https://x.com/d.pdf']],
       [
@@ -551,6 +725,49 @@ describe('normalizarCursoGerado', () => {
     )
 
     expect(curso.unidades[0].conteudo).toHaveLength(0)
+  })
+
+  it('descarta apenas os cards inaproveitáveis de um flipcard', () => {
+    const { curso } = normalizarCursoGerado(
+      cursoCom([
+        {
+          tipo: 'flipcard',
+          conteudo: '',
+          itensFlipcard: [
+            { id: 'c-1', tipoFrente: 'titulo', tituloFrente: 'Frente', conteudoVerso: 'Verso' },
+            { id: 'c-2', tipoFrente: 'titulo', tituloFrente: 'Só frente', conteudoVerso: '' },
+          ],
+        },
+      ])
+    )
+
+    expect(curso.unidades[0].conteudo[0].itensFlipcard).toHaveLength(1)
+    expect(curso.unidades[0].conteudo[0].itensFlipcard?.[0].tituloFrente).toBe('Frente')
+  })
+
+  it('migra flipcard de card único para a lista de cards', () => {
+    const { curso } = normalizarCursoGerado(
+      cursoCom([
+        {
+          tipo: 'flipcard',
+          conteudo: '',
+          tipoFrente: 'titulo',
+          tituloFrente: 'Frente antiga',
+          conteudoVerso: 'Verso antigo',
+        },
+      ])
+    )
+
+    const bloco = curso.unidades[0].conteudo[0]
+
+    expect(bloco.itensFlipcard).toHaveLength(1)
+    expect(bloco.itensFlipcard?.[0]).toMatchObject({
+      tipoFrente: 'titulo',
+      tituloFrente: 'Frente antiga',
+      conteudoVerso: 'Verso antigo',
+    })
+    expect(bloco.tituloFrente).toBeUndefined()
+    expect(bloco.conteudoVerso).toBeUndefined()
   })
 
   it('converte lista em HTML para itensLista', () => {

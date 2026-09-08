@@ -3,7 +3,7 @@ import * as fs from 'fs/promises'
 import * as path from 'path'
 import JSZip from 'jszip'
 import type { CursoGerado, ConteudoUnidade } from '@/types/gerador-curso'
-import { extrairMidiasDoBloco } from './blocos'
+import { cardsFlipcard, extrairMidiasDoBloco } from './blocos'
 
 /**
  * Converte caminhos absolutos (/_next/..., /favicon.ico) para caminhos relativos
@@ -131,16 +131,17 @@ export async function downloadAndUpdateImages(
       }
     }
 
-    // Atualizar imagem em flipcard
-    if (conteudo.tipo === 'flipcard' && conteudo.imagemFrente) {
-      const newPath = imageMap.get(conteudo.imagemFrente)
-      if (newPath) {
-        conteudo.imagemFrente = newPath
+    // Atualizar imagens dos cards de um flipcard
+    if (conteudo.tipo === 'flipcard') {
+      conteudo.itensFlipcard = cardsFlipcard(conteudo).map((card) => {
+        const newPath = card.imagemFrente ? imageMap.get(card.imagemFrente) : undefined
+        if (!newPath) return card
         updatedCount++
         console.log(
-          `   🔄 [SCORM Build] Referência de flipcard atualizada: ${conteudo.imagemFrente} -> ${newPath}`
+          `   🔄 [SCORM Build] Referência de flipcard atualizada: ${card.imagemFrente} -> ${newPath}`
         )
-      }
+        return { ...card, imagemFrente: newPath }
+      })
     }
   }
 

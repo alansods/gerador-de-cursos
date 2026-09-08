@@ -10,7 +10,6 @@ interface FlipCardProps {
   tituloFrente?: string
   conteudoVerso: string
   alturaCard?: string
-  larguraCard?: string
 }
 
 export function FlipCard({
@@ -19,13 +18,10 @@ export function FlipCard({
   tituloFrente,
   conteudoVerso,
   alturaCard,
-  larguraCard,
 }: FlipCardProps) {
   const [isFlipped, setIsFlipped] = useState(false)
 
-  // Tamanhos padrão - formato retangular (altura maior que largura)
-  const altura = alturaCard || '450px'
-  const larguraMaxima = larguraCard || '400px'
+  const altura = alturaCard || '300px'
 
   return (
     <div
@@ -33,9 +29,6 @@ export function FlipCard({
       style={{
         height: altura,
         width: '100%',
-        maxWidth: larguraMaxima,
-        minHeight: '300px',
-        margin: '0 auto',
       }}
     >
       <div
@@ -97,8 +90,8 @@ export function FlipCard({
                 <RotateCcw className="h-5 w-5 text-(--block-accent,#2563eb) animate-pulse" />
               </div>
 
-              <div className="p-8 text-center w-full">
-                <h3 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">
+              <div className="p-6 text-center w-full">
+                <h3 className="text-xl lg:text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2 text-balance break-words">
                   {tituloFrente || 'Card'}
                 </h3>
                 <p className="text-sm text-gray-600 dark:text-gray-400 mt-4 flex items-center justify-center gap-2">

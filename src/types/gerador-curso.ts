@@ -34,6 +34,14 @@ export interface CarrosselItem {
   fonte?: string
 }
 
+export interface FlipcardItem {
+  id: string
+  tipoFrente: 'imagem' | 'imagem-titulo' | 'titulo'
+  imagemFrente?: string
+  tituloFrente?: string
+  conteudoVerso: string
+}
+
 export interface HotspotItem {
   id: string
   x: number
@@ -114,11 +122,13 @@ export interface ConteudoUnidade {
   // Propriedades específicas para accordion
   items?: AccordionItem[]
   // Propriedades específicas para flipcard
+  itensFlipcard?: FlipcardItem[]
+  alturaCard?: string // altura compartilhada por todos os cards da grade
+  // Campos legados de flipcard de card único — migrados para itensFlipcard em corrigirBloco()
   tipoFrente?: 'imagem' | 'imagem-titulo' | 'titulo'
   imagemFrente?: string
   tituloFrente?: string
   conteudoVerso?: string
-  alturaCard?: string // altura do card em pixels ou viewport units
   // Propriedades específicas para lista
   itensLista?: ListaItem[]
   tipoLista?: 'ordenada' | 'nao-ordenada' | 'check' // lista ordenada (numerada), não ordenada (bullets) ou com ícone de check

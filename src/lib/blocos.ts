@@ -25,6 +25,7 @@ import type {
   CategoriaItem,
   ConteudoUnidade,
   CursoGerado,
+  FlipcardItem,
   ListaItem,
   QuizQuestion,
   Unidade,
@@ -61,6 +62,8 @@ export interface MetaBloco {
    * Declarar aqui é o que impede um bloco novo de ficar apontando para URL remota.
    */
   extrairMidias?: (bloco: ConteudoUnidade) => (string | undefined)[]
+  /** Oferece o seletor de largura (12 ou 6 colunas) no formulário do bloco. */
+  larguraAjustavel?: boolean
 }
 
 const TIPOS_LISTA = ['ordenada', 'nao-ordenada', 'check'] as const
@@ -74,6 +77,96 @@ const MINIMO_PARES = 2
 const MINIMO_CATEGORIAS = 2
 
 const OPCOES_POR_PERGUNTA = 5
+
+/**
+ * Cards de um bloco flipcard, já normalizados. Converte o formato legado de card
+ * único (campos soltos no bloco) para a lista, de modo que todo consumidor —
+ * renderização, formulário, PDF e SCORM — leia sempre a mesma forma.
+ */
+export function cardsFlipcard(bloco: Partial<ConteudoUnidade>): FlipcardItem[] {
+  const brutos: Partial<FlipcardItem>[] = bloco.itensFlipcard?.length
+    ? bloco.itensFlipcard
+    : temTexto(bloco.conteudoVerso) || temTexto(bloco.tituloFrente) || temTexto(bloco.imagemFrente)
+      ? [
+          {
+            tipoFrente: bloco.tipoFrente,
+            imagemFrente: bloco.imagemFrente,
+            tituloFrente: bloco.tituloFrente,
+            conteudoVerso: bloco.conteudoVerso,
+          },
+        ]
+      : []
+
+  return brutos.map((card, indice) => ({
+    id: temTexto(card?.id) ? (card.id as string) : `flip-${indice + 1}`,
+    tipoFrente: TIPOS_FRENTE.includes(card?.tipoFrente as never)
+      ? (card.tipoFrente as FlipcardItem['tipoFrente'])
+      : 'titulo',
+    imagemFrente: card?.imagemFrente ?? '',
+    tituloFrente: card?.tituloFrente ?? '',
+    conteudoVerso: card?.conteudoVerso ?? '',
+  }))
+}
+
+function blocoDeFlipcards(base: Partial<ConteudoUnidade>, cards: FlipcardItem[]): ConteudoUnidade {
+  const bloco = { ...base } as ConteudoUnidade
+
+  delete bloco.tipoFrente
+  delete bloco.imagemFrente
+  delete bloco.tituloFrente
+  delete bloco.conteudoVerso
+
+  return {
+    ...bloco,
+    colunas: 12,
+    itensFlipcard: cards.map((card, indice) => ({ ...card, id: `flip-${indice + 1}` })),
+  }
+}
+
+/**
+ * Junta flipcards vizinhos num bloco só. Antes de a grade existir, cada card era um
+ * bloco próprio de meia largura; sem esta mesclagem eles continuariam com botão de
+ * editar separado, um drawer para cada.
+ *
+ * A ordem do array é a autoridade — quem chama ordena antes, se `ordem` for quem manda.
+ */
+export function mesclarFlipcardsAdjacentes(conteudo: ConteudoUnidade[]): ConteudoUnidade[] {
+  const mesclado: ConteudoUnidade[] = []
+
+  for (const bloco of conteudo) {
+    if (bloco.tipo !== 'flipcard') {
+      mesclado.push(bloco)
+      continue
+    }
+
+    const anterior = mesclado[mesclado.length - 1]
+
+    if (anterior?.tipo === 'flipcard') {
+      mesclado[mesclado.length - 1] = blocoDeFlipcards(anterior, [
+        ...cardsFlipcard(anterior),
+        ...cardsFlipcard(bloco),
+      ])
+      continue
+    }
+
+    mesclado.push(blocoDeFlipcards(bloco, cardsFlipcard(bloco)))
+  }
+
+  return mesclado.map((bloco, ordem) => (bloco.ordem === ordem ? bloco : { ...bloco, ordem }))
+}
+
+function cardFlipcardAproveitavel(card: FlipcardItem): boolean {
+  return (temTexto(card.tituloFrente) || ehUrl(card.imagemFrente)) && temTexto(card.conteudoVerso)
+}
+
+function validarCardFlipcard(card: FlipcardItem): string | null {
+  const precisaImagem = card.tipoFrente === 'imagem' || card.tipoFrente === 'imagem-titulo'
+  const precisaTitulo = card.tipoFrente === 'titulo' || card.tipoFrente === 'imagem-titulo'
+  if (precisaImagem && !temTexto(card.imagemFrente)) return 'adicione uma imagem para a frente'
+  if (precisaTitulo && !temTexto(card.tituloFrente)) return 'adicione um título para a frente'
+  if (!temTexto(card.conteudoVerso)) return 'adicione o conteúdo do verso'
+  return null
+}
 
 export const CATALOGO_BLOCOS: Record<TipoBloco, MetaBloco> = {
   titulo: {
@@ -117,6 +210,7 @@ export const CATALOGO_BLOCOS: Record<TipoBloco, MetaBloco> = {
     categoria: 'texto',
     padroes: () => ({ conteudo: '', corTexto: '#000000', alinhamento: 'esquerda' }),
     validarFormulario: (b) => (temTexto(b.conteudo) ? null : 'Preencha o conteúdo'),
+    larguraAjustavel: true,
   },
   lista: {
     tipo: 'lista',
@@ -196,30 +290,21 @@ export const CATALOGO_BLOCOS: Record<TipoBloco, MetaBloco> = {
     marcador: 'FLIPCARD',
     geravelPorIA: true,
     exigeMidiaDoDocumento: false,
-    validar: (b) =>
-      (temTexto(b.tituloFrente) || ehUrl(b.imagemFrente)) && temTexto(b.conteudoVerso),
+    validar: (b) => cardsFlipcard(b).some(cardFlipcardAproveitavel),
     icone: RotateCcw,
     descricao: 'Cartões de revisão',
     categoria: 'interativo',
-    padroes: () => ({
-      tipoFrente: 'titulo',
-      imagemFrente: '',
-      tituloFrente: '',
-      conteudoVerso: '',
-      alturaCard: '300px',
-    }),
+    padroes: () => ({ itensFlipcard: [], alturaCard: '300px' }),
     validarFormulario: (b) => {
-      if (!b.tipoFrente) return 'Selecione o tipo de frente do flipcard'
-      const precisaImagem = b.tipoFrente === 'imagem' || b.tipoFrente === 'imagem-titulo'
-      const precisaTitulo = b.tipoFrente === 'titulo' || b.tipoFrente === 'imagem-titulo'
-      if (precisaImagem && !temTexto(b.imagemFrente))
-        return 'Adicione uma imagem para a frente do flipcard'
-      if (precisaTitulo && !temTexto(b.tituloFrente))
-        return 'Adicione um título para a frente do flipcard'
-      if (!temTexto(b.conteudoVerso)) return 'Adicione o conteúdo do verso do flipcard'
+      const cards = cardsFlipcard(b)
+      if (cards.length === 0) return 'Adicione ao menos um flipcard'
+      for (const [indice, card] of cards.entries()) {
+        const erro = validarCardFlipcard(card)
+        if (erro) return `Card ${indice + 1}: ${erro}`
+      }
       return null
     },
-    extrairMidias: (b) => [b.imagemFrente],
+    extrairMidias: (b) => cardsFlipcard(b).map((card) => card.imagemFrente),
   },
   quiz: {
     tipo: 'quiz',
@@ -262,6 +347,7 @@ export const CATALOGO_BLOCOS: Record<TipoBloco, MetaBloco> = {
       return null
     },
     extrairMidias: (b) => [b.conteudo],
+    larguraAjustavel: true,
   },
   video: {
     tipo: 'video',
@@ -466,11 +552,6 @@ function baseBloco(): Partial<ConteudoUnidade> {
     corTexto: '#000000',
     alinhamento: 'esquerda',
     items: [],
-    tipoFrente: 'titulo',
-    imagemFrente: '',
-    tituloFrente: '',
-    conteudoVerso: '',
-    alturaCard: '300px',
     itensLista: [],
     tipoLista: 'nao-ordenada',
     itensObjetivos: [],
@@ -528,17 +609,18 @@ export function normalizarCursoGerado(curso: CursoGerado): {
       ? unidade.titulo
       : `Unidade ${indiceUnidade + 1}`
 
-    const conteudo = conteudoBruto
+    const aproveitados = conteudoBruto
       .map((bloco) => normalizarBloco(bloco, tituloUnidade, descartados))
       .filter((bloco): bloco is ConteudoUnidade => bloco !== null)
-      .map((bloco, indiceBloco) => {
-        porTipo[bloco.tipo] = (porTipo[bloco.tipo] ?? 0) + 1
-        return {
-          ...bloco,
-          id: temTexto(bloco.id) ? bloco.id : `bloco-${indiceUnidade + 1}-${indiceBloco + 1}`,
-          ordem: indiceBloco,
-        }
-      })
+
+    const conteudo = mesclarFlipcardsAdjacentes(aproveitados).map((bloco, indiceBloco) => {
+      porTipo[bloco.tipo] = (porTipo[bloco.tipo] ?? 0) + 1
+      return {
+        ...bloco,
+        id: temTexto(bloco.id) ? bloco.id : `bloco-${indiceUnidade + 1}-${indiceBloco + 1}`,
+        ordem: indiceBloco,
+      }
+    })
 
     return {
       ...unidade,
@@ -615,9 +697,11 @@ function corrigirBloco(bloco: ConteudoUnidade): ConteudoUnidade {
   }
 
   if (corrigido.tipo === 'flipcard') {
-    corrigido.tipoFrente = TIPOS_FRENTE.includes(corrigido.tipoFrente as never)
-      ? corrigido.tipoFrente
-      : 'titulo'
+    corrigido.itensFlipcard = cardsFlipcard(corrigido).filter(cardFlipcardAproveitavel)
+    delete corrigido.tipoFrente
+    delete corrigido.imagemFrente
+    delete corrigido.tituloFrente
+    delete corrigido.conteudoVerso
   }
 
   if (corrigido.tipo === 'accordion') {
@@ -741,7 +825,7 @@ function motivoInvalido(tipo: TipoBloco): string {
     case 'accordion':
       return 'sem itens com título e conteúdo'
     case 'flipcard':
-      return 'sem frente ou sem verso'
+      return 'sem cards válidos'
     case 'lista':
       return 'sem itens'
     case 'objetivos-aprendizagem':

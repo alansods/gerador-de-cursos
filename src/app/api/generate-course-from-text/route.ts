@@ -174,14 +174,18 @@ Cada Unidade:
   ]
 }
 
-### 8. flipcard
+### 8. flipcard — uma grade de cards; use de 2 a 4 cards por bloco
 {
   "titulo": "string",
   "tipo": "flipcard",
   "conteudo": "",
-  "tipoFrente": "titulo",
-  "tituloFrente": "Conceito ou pergunta na frente",
-  "conteudoVerso": "<p>Explicação no verso</p>"
+  "itensFlipcard": [
+    {
+      "tipoFrente": "titulo",
+      "tituloFrente": "Conceito ou pergunta na frente",
+      "conteudoVerso": "<p>Explicação no verso</p>"
+    }
+  ]
 }
 
 ### 9. quiz — OBRIGATÓRIO: exatamente 5 opções; apenas uma com "isCorrect": true
@@ -369,9 +373,12 @@ ${sharedStructure}
   - "Pergunta:" → quizData.questions[].pergunta
   - "Opção A/B/C/D/E:" → opcoes[] (identifique a correta pelo contexto)
   - "Resposta Correta:" → marque o isCorrect correspondente
-- Bloco FLIPCARD_INICIO...FLIPCARD_FIM → tipo "flipcard"
-  - "Frente:" ou "Título:" → tituloFrente
-  - "Verso:" → conteudoVerso (em HTML)
+- Bloco FLIPCARD_INICIO...FLIPCARD_FIM → tipo "flipcard" (UM único bloco com todos os cards)
+  - "Frente do Card N:" ou "Título do Card N:" → itensFlipcard[N-1].tituloFrente
+  - "Verso do Card N:" → itensFlipcard[N-1].conteudoVerso (em HTML)
+  - "Imagem do Card N:" → itensFlipcard[N-1].imagemFrente
+  - "Tipo de Frente do Card N:" → itensFlipcard[N-1].tipoFrente (titulo | imagem | imagem-titulo; use "titulo" se ausente)
+  - Se os rótulos vierem sem numeração ("Frente:" / "Verso:"), gere um único card
 - Bloco OBJETIVOS_INICIO...OBJETIVOS_FIM → tipo "objetivos-aprendizagem"
   - Cada linha "Objetivo:" → itensObjetivos[].texto
 - Bloco INFOBOX_INICIO...INFOBOX_FIM → tipo "info-box"
@@ -446,7 +453,7 @@ ${sharedStructure}
 - 3 ou mais tópicos relacionados com subconteúdo → accordion
 - 2 a 5 alternativas comparáveis do mesmo assunto (perfis, abordagens, papéis) → tabs
 - Fatos com data, evolução histórica, cronologia de etapas → linha-do-tempo
-- Termo técnico + definição, pergunta retórica + resposta → flipcard
+- 2 a 4 termos técnicos com definição, ou perguntas retóricas com resposta → UM bloco flipcard com um card para cada; NUNCA gere vários blocos flipcard seguidos
 - 4 ou mais pares "termo — definição" do mesmo assunto → associacao
 - Itens explicitamente agrupados em 2 ou mais conjuntos nomeados → categorizacao
 - "Atenção:", "Importante:", aviso de segurança → info-box (tipoInfoBox: "atencao")

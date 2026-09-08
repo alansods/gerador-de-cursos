@@ -119,6 +119,98 @@ describe('ContentBlockDrawer', () => {
     expect(erroToast).toHaveBeenCalledWith('Todos os eventos devem ter título')
   })
 
+  it('monta uma grade de flipcards num único bloco', async () => {
+    const usuario = userEvent.setup()
+    const onSave = montar('flipcard')
+
+    await usuario.click(screen.getByRole('button', { name: /adicionar/i }))
+    await usuario.type(screen.getByPlaceholderText('Digite o título...'), 'Flexbox')
+    await usuario.type(
+      screen.getByPlaceholderText('Digite o conteúdo do verso...'),
+      'Layout em uma dimensão'
+    )
+
+    await usuario.click(screen.getByRole('button', { name: /adicionar/i }))
+    await usuario.type(screen.getAllByPlaceholderText('Digite o título...')[1], 'CSS Grid')
+    await usuario.type(
+      screen.getAllByPlaceholderText('Digite o conteúdo do verso...')[1],
+      'Layout em duas dimensões'
+    )
+
+    await usuario.click(screen.getByRole('button', { name: /salvar/i }))
+
+    expect(erroToast).not.toHaveBeenCalled()
+    expect(onSave).toHaveBeenCalledWith(
+      expect.objectContaining({
+        tipo: 'flipcard',
+        itensFlipcard: [
+          expect.objectContaining({
+            tituloFrente: 'Flexbox',
+            conteudoVerso: 'Layout em uma dimensão',
+          }),
+          expect.objectContaining({
+            tituloFrente: 'CSS Grid',
+            conteudoVerso: 'Layout em duas dimensões',
+          }),
+        ],
+      })
+    )
+  })
+
+  it('abre um flipcard legado de card único já como lista', async () => {
+    const usuario = userEvent.setup()
+    const onSave = jest.fn()
+    render(
+      <ContentBlockDrawer
+        open
+        onOpenChange={jest.fn()}
+        mode="edit"
+        blockData={{
+          tipo: 'flipcard',
+          tipoFrente: 'titulo',
+          tituloFrente: 'Conceito antigo',
+          conteudoVerso: 'Definição antiga',
+        }}
+        onSave={onSave}
+        onCancel={jest.fn()}
+      />
+    )
+
+    expect(screen.getByDisplayValue('Conceito antigo')).toBeInTheDocument()
+
+    await usuario.click(screen.getByRole('button', { name: /salvar/i }))
+
+    expect(erroToast).not.toHaveBeenCalled()
+    expect(onSave).toHaveBeenCalledWith(
+      expect.objectContaining({
+        itensFlipcard: [
+          expect.objectContaining({
+            tituloFrente: 'Conceito antigo',
+            conteudoVerso: 'Definição antiga',
+          }),
+        ],
+      })
+    )
+  })
+
+  it('oferece o seletor de largura só nos blocos que o declaram', () => {
+    const { unmount } = render(
+      <ContentBlockDrawer
+        open
+        onOpenChange={jest.fn()}
+        mode="add"
+        blockData={{ tipo: 'paragrafo' }}
+        onSave={jest.fn()}
+        onCancel={jest.fn()}
+      />
+    )
+    expect(screen.getByRole('button', { name: 'Meia largura' })).toBeInTheDocument()
+    unmount()
+
+    montar('flipcard')
+    expect(screen.queryByRole('button', { name: 'Meia largura' })).not.toBeInTheDocument()
+  })
+
   it('remove item da lista sem afetar os demais', async () => {
     const usuario = userEvent.setup()
     const onSave = montar('carrossel')

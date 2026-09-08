@@ -20,7 +20,7 @@ import { CollabAvatars } from '@/components/colaboracao/CollabAvatars'
 import { CollabCursors } from '@/components/colaboracao/CollabCursors'
 import { useCollabEvents } from '@/hooks/useCollabEvents'
 import { EditableCard } from '@/components/EditableCard'
-import { blockRegistry } from '@/components/course/blocks'
+import { blockRegistry, larguraMaximaImagem } from '@/components/course/blocks'
 import { TooltipButton } from '@/components/TooltipButton'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { Button } from '@/components/ui/button'
@@ -86,7 +86,13 @@ import { InfoBox } from '@/components/InfoBox'
 import { BlockThemeProvider } from '@/components/course/blocks'
 import { resolveLayout } from '@/components/course/layouts'
 import { QuizData, QuizQuestion, Unidade, ConteudoUnidade } from '@/types/gerador-curso'
-import { CATALOGO_BLOCOS, CATEGORIAS_BLOCO, TIPOS_BLOCO, criarBlocoVazio } from '@/lib/blocos'
+import {
+  CATALOGO_BLOCOS,
+  CATEGORIAS_BLOCO,
+  TIPOS_BLOCO,
+  cardsFlipcard,
+  criarBlocoVazio,
+} from '@/lib/blocos'
 import { enviarArquivo } from '@/lib/upload-cliente'
 
 /** Rótulo curto do bloco para o toast do outro usuário */
@@ -1441,29 +1447,44 @@ function EditorCurso() {
                                                             {item.conteudo}
                                                           </h4>
                                                         ) : item.tipo === 'flipcard' ? (
-                                                          <div className="border border-[#e5e7eb] dark:border-gray-700 rounded-lg p-4 bg-linear-to-br from-(--block-accent,#2563eb)/8 to-(--block-accent,#2563eb)/15 text-center min-h-[72px] flex flex-col items-center justify-center gap-2">
-                                                            {item.imagemFrente && (
-                                                              <>
-                                                                {/* eslint-disable-next-line @next/next/no-img-element */}
-                                                                <img
-                                                                  src={item.imagemFrente}
-                                                                  alt=""
-                                                                  className="max-h-14 mx-auto object-contain rounded"
-                                                                  onError={(e) => {
-                                                                    e.currentTarget.style.display =
-                                                                      'none'
-                                                                  }}
-                                                                />
-                                                              </>
-                                                            )}
-                                                            {item.tituloFrente ? (
-                                                              <p className="font-semibold text-sm text-gray-800 dark:text-gray-200">
-                                                                {item.tituloFrente}
+                                                          <div className="grid grid-cols-2 gap-2">
+                                                            {cardsFlipcard(item).length === 0 ? (
+                                                              <p className="text-xs text-gray-400 italic col-span-2">
+                                                                Nenhum flipcard
                                                               </p>
                                                             ) : (
-                                                              <p className="text-xs text-gray-400 italic">
-                                                                Sem conteúdo na frente
-                                                              </p>
+                                                              cardsFlipcard(item).map((card) => (
+                                                                <div
+                                                                  key={card.id}
+                                                                  className="border border-[#e5e7eb] dark:border-gray-700 rounded-lg p-3 bg-linear-to-br from-(--block-accent,#2563eb)/8 to-(--block-accent,#2563eb)/15 text-center min-h-[72px] flex flex-col items-center justify-center gap-2"
+                                                                >
+                                                                  {card.imagemFrente && (
+                                                                    <>
+                                                                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                                                                      <img
+                                                                        src={card.imagemFrente}
+                                                                        alt=""
+                                                                        className="max-h-14 mx-auto object-contain rounded"
+                                                                        onError={(e) => {
+                                                                          e.currentTarget.style.display =
+                                                                            'none'
+                                                                        }}
+                                                                      />
+                                                                    </>
+                                                                  )}
+                                                                  {card.tituloFrente ? (
+                                                                    <p className="font-semibold text-sm text-gray-800 dark:text-gray-200">
+                                                                      {card.tituloFrente}
+                                                                    </p>
+                                                                  ) : (
+                                                                    !card.imagemFrente && (
+                                                                      <p className="text-xs text-gray-400 italic">
+                                                                        Sem conteúdo na frente
+                                                                      </p>
+                                                                    )
+                                                                  )}
+                                                                </div>
+                                                              ))
                                                             )}
                                                           </div>
                                                         ) : item.tipo === 'accordion' ? (
@@ -1497,7 +1518,7 @@ function EditorCurso() {
                                                             <img
                                                               src={item.conteudo}
                                                               alt={item.legenda || 'Imagem'}
-                                                              className={`h-auto object-contain border border-[#e5e7eb] dark:border-gray-700 rounded-md mx-auto ${item.tamanho === 'pequena' ? 'max-w-xs' : item.tamanho === 'media' ? 'max-w-md' : 'max-w-full'}`}
+                                                              className={`h-auto object-contain border border-[#e5e7eb] dark:border-gray-700 rounded-md mx-auto ${larguraMaximaImagem(item.tamanho)}`}
                                                               onError={(e) => {
                                                                 e.currentTarget.style.display =
                                                                   'none'

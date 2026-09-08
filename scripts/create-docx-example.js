@@ -314,71 +314,72 @@ const doc = new Document({
         }),
         new Paragraph({
           children: [
-            new TextRun({ text: 'Tipo de Frente: ', bold: true }),
+            new TextRun({ text: 'Tipo de Frente do Card 1: ', bold: true }),
             new TextRun('titulo'),
           ],
         }),
         new Paragraph({
           children: [
-            new TextRun({ text: 'Título da Frente: ', bold: true }),
-            new TextRun('Proporção Hidratação'),
+            new TextRun({ text: 'Frente do Card 1: ', bold: true }),
+            new TextRun('Proporção de hidratação'),
           ],
         }),
         new Paragraph({
           children: [
-            new TextRun({ text: 'Conteúdo do Verso: ', bold: true }),
-            new TextRun('A hidratação é o percentual de água em relação à farinha. Para pizza artesanal, recomenda-se 60-65% de hidratação. Isso significa: para 500g de farinha, use 300-325ml de água. Massas mais hidratadas (65%+) são mais fáceis de trabalhar e resultam em textura mais aerada, mas requerem mais prática para manusear. Massas menos hidratadas (60%) são mais fáceis de controlar, ideais para iniciantes.',
-          ),
+            new TextRun({ text: 'Verso do Card 1: ', bold: true }),
+            new TextRun('A hidratação é o percentual de água em relação à farinha. Para pizza artesanal, recomenda-se 60-65%: para 500g de farinha, use 300-325ml de água.'),
           ],
         }),
         new Paragraph({
           children: [
-            new TextRun({ text: 'FLIPCARD_FIM', bold: true }),
-          ],
-        }),
-        new Paragraph({ text: '' }),
-        new Paragraph({
-          text: '📝 OBSERVAÇÃO: A IA irá transformar o conteúdo entre FLIPCARD_INICIO e FLIPCARD_FIM em um card interativo. Tipos disponíveis: "titulo" (apenas título na frente), "imagem" (imagem na frente), "imagem-titulo" (imagem + título na frente).',
-        }),
-        new Paragraph({ text: '' }),
-        new Paragraph({
-          text: 'Exemplo de FlipCard com imagem e título:',
-        }),
-        new Paragraph({ text: '' }),
-        new Paragraph({
-          children: [
-            new TextRun({ text: 'FLIPCARD_INICIO', bold: true }),
+            new TextRun({ text: 'Tipo de Frente do Card 2: ', bold: true }),
+            new TextRun('titulo'),
           ],
         }),
         new Paragraph({
           children: [
-            new TextRun({ text: 'Tipo de Frente: ', bold: true }),
+            new TextRun({ text: 'Frente do Card 2: ', bold: true }),
+            new TextRun('Temperatura do forno'),
+          ],
+        }),
+        new Paragraph({
+          children: [
+            new TextRun({ text: 'Verso do Card 2: ', bold: true }),
+            new TextRun('Forno alto, entre 280°C e 300°C, com assamento curto de 8 a 12 minutos. Isso preserva a umidade dos ingredientes e cria a borda crocante.'),
+          ],
+        }),
+        new Paragraph({
+          children: [
+            new TextRun({ text: 'Tipo de Frente do Card 3: ', bold: true }),
             new TextRun('imagem-titulo'),
           ],
         }),
         new Paragraph({
           children: [
-            new TextRun({ text: 'Imagem da Frente: ', bold: true }),
+            new TextRun({ text: 'Imagem do Card 3: ', bold: true }),
             new TextRun('https://swiftbr.vteximg.com.br/arquivos/ids/208740-636-636/618283-pizza-artesanal-calabresa_inn.jpg?v=638870725352100000'),
           ],
         }),
         new Paragraph({
           children: [
-            new TextRun({ text: 'Título da Frente: ', bold: true }),
-            new TextRun('Pizza Artesanal Pronta'),
+            new TextRun({ text: 'Frente do Card 3: ', bold: true }),
+            new TextRun('Pizza artesanal pronta'),
           ],
         }),
         new Paragraph({
           children: [
-            new TextRun({ text: 'Conteúdo do Verso: ', bold: true }),
-            new TextRun('Uma pizza artesanal bem feita apresenta: borda alta e dourada (resultado da fermentação adequada), base crocante mas não dura, distribuição uniforme dos ingredientes, e queijo derretido sem queimar. O segredo está na temperatura alta do forno (280-300°C) e no tempo de assamento curto (8-12 minutos), que preserva a umidade dos ingredientes enquanto cria a textura crocante desejada.',
-          ),
+            new TextRun({ text: 'Verso do Card 3: ', bold: true }),
+            new TextRun('Borda alta e dourada, base crocante mas não dura, distribuição uniforme dos ingredientes e queijo derretido sem queimar.'),
           ],
         }),
         new Paragraph({
           children: [
             new TextRun({ text: 'FLIPCARD_FIM', bold: true }),
           ],
+        }),
+        new Paragraph({ text: '' }),
+        new Paragraph({
+          text: '📝 OBSERVAÇÃO: cada bloco FLIPCARD_INICIO/FLIPCARD_FIM vira uma grade de cards, com até 4 por linha. Numere os cards a partir de 1. Tipos de frente disponíveis: "titulo" (apenas título), "imagem" (apenas imagem), "imagem-titulo" (imagem com título no rodapé). Se o tipo for omitido, será usado "titulo".',
         }),
         new Paragraph({ text: '' }),
 

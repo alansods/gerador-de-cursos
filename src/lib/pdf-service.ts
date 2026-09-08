@@ -2,11 +2,13 @@ import jsPDF from 'jspdf'
 import type {
   ConteudoUnidade,
   AccordionItem,
+  FlipcardItem,
   ListaItem,
   QuizData,
   Unidade,
   CursoGerado,
 } from '@/types/gerador-curso'
+import { cardsFlipcard } from '@/lib/blocos'
 
 type Curso = CursoGerado
 
@@ -581,7 +583,7 @@ export async function generateCoursePDF(curso: Curso, filename?: string): Promis
         return renderAccordionBox(item.items || [], y)
 
       case 'flipcard':
-        return renderFlipcardBox(item, y)
+        return renderFlipcards(item, y)
 
       case 'lista':
         return renderList(item.itensLista || [], item.tipoLista, y)
@@ -816,9 +818,15 @@ export async function generateCoursePDF(curso: Curso, filename?: string): Promis
     })
   }
 
-  const renderFlipcardBox = (item: ConteudoUnidade, y: number): number => {
-    const frenteText = item.tituloFrente || ''
-    const versoText = item.conteudoVerso || ''
+  const renderFlipcards = (item: ConteudoUnidade, y: number): number => {
+    const cards = cardsFlipcard(item)
+    if (cards.length === 0) return y
+    return cards.reduce((yAtual, card) => renderFlipcardBox(card, yAtual), y)
+  }
+
+  const renderFlipcardBox = (card: FlipcardItem, y: number): number => {
+    const frenteText = card.tituloFrente || ''
+    const versoText = card.conteudoVerso || ''
     const shortEnough = frenteText.split(/\s+/).length < 40 && versoText.split(/\s+/).length < 40
 
     return renderBoxV2(y, (yPos) => {

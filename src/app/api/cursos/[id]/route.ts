@@ -5,6 +5,7 @@ import { permissoesDoCurso } from '@/lib/permissions'
 import { buscarColaboracao } from '@/lib/curso-acesso'
 import { ConteudoUnidade, CursoGerado, Unidade } from '@/types/gerador-curso'
 import { slugifyUnidades } from '@/lib/slug'
+import { mesclarFlipcardsAdjacentes } from '@/lib/blocos'
 
 /**
  * GET /api/cursos/[id]
@@ -38,13 +39,15 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       const unidadeId = unidade.id || `unidade-${Date.now()}-${index}`
       const conteudoOriginal =
         unidade.conteudo || (unidade as { aulas?: Partial<ConteudoUnidade>[] }).aulas || []
-      const conteudoNormalizado = conteudoOriginal.map(
-        (item: Partial<ConteudoUnidade>, itemIndex: number) => ({
-          ...item,
-          id: item.id || `conteudo-${Date.now()}-${index}-${itemIndex}`,
-          ordem: item.ordem ?? itemIndex,
-          tipo: item.tipo || 'paragrafo',
-        })
+      const conteudoNormalizado = mesclarFlipcardsAdjacentes(
+        conteudoOriginal
+          .map((item: Partial<ConteudoUnidade>, itemIndex: number) => ({
+            ...item,
+            id: item.id || `conteudo-${Date.now()}-${index}-${itemIndex}`,
+            ordem: item.ordem ?? itemIndex,
+            tipo: item.tipo || 'paragrafo',
+          }))
+          .sort((a, b) => a.ordem - b.ordem) as ConteudoUnidade[]
       )
 
       return {

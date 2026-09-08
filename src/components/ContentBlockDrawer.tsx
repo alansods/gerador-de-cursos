@@ -22,7 +22,7 @@ import {
   CategoriaItem,
   HotspotItem,
 } from '@/types/gerador-curso'
-import { CATALOGO_BLOCOS, criarBlocoVazio } from '@/lib/blocos'
+import { CATALOGO_BLOCOS, cardsFlipcard, criarBlocoVazio } from '@/lib/blocos'
 import { POLITICA_MIDIAS, type CategoriaMidia } from '@/lib/midias'
 import { enviarArquivo } from '@/lib/upload-cliente'
 import { RichTextEditor } from './RichTextEditor'
@@ -36,6 +36,28 @@ interface ContentBlockDrawerProps {
   onSave: (data: Omit<ConteudoUnidade, 'id' | 'ordem'>) => void
   onCancel: () => void
 }
+
+function prepararFormulario(blockData: Partial<ConteudoUnidade> | null): Partial<ConteudoUnidade> {
+  const formulario: Partial<ConteudoUnidade> = {
+    ...criarBlocoVazio(blockData?.tipo || 'paragrafo'),
+    ...blockData,
+  }
+
+  if (formulario.tipo === 'flipcard') {
+    formulario.itensFlipcard = cardsFlipcard(formulario)
+    delete formulario.tipoFrente
+    delete formulario.imagemFrente
+    delete formulario.tituloFrente
+    delete formulario.conteudoVerso
+  }
+
+  return formulario
+}
+
+const LARGURAS_BLOCO: { colunas: 6 | 12; rotulo: string }[] = [
+  { colunas: 12, rotulo: 'Largura total' },
+  { colunas: 6, rotulo: 'Meia largura' },
+]
 
 const extractYouTubeId = (url: string): string => {
   if (!url) return ''
@@ -69,6 +91,7 @@ function CampoArquivo({
   onUrl: (url: string) => void
 }) {
   const [enviando, setEnviando] = useState(false)
+  const entradaArquivo = React.useRef<HTMLInputElement>(null)
   const politica = POLITICA_MIDIAS[categoria]
 
   const aoSelecionar = async (arquivo: File) => {
@@ -97,7 +120,7 @@ function CampoArquivo({
           variant="outline"
           size="sm"
           disabled={enviando}
-          onClick={() => document.getElementById(`arquivo-${categoria}`)?.click()}
+          onClick={() => entradaArquivo.current?.click()}
         >
           {enviando ? (
             <Loader2 className="h-4 w-4 mr-2 animate-spin" />
@@ -107,7 +130,7 @@ function CampoArquivo({
           {enviando ? 'Enviando...' : 'Escolher arquivo'}
         </Button>
         <input
-          id={`arquivo-${categoria}`}
+          ref={entradaArquivo}
           type="file"
           accept={politica.extensoes}
           className="hidden"
@@ -135,8 +158,10 @@ interface CampoItem<T> {
   chave: keyof T & string
   rotulo: string
   obrigatorio?: boolean
-  multilinha?: boolean
   placeholder?: string
+  tipo?: 'texto' | 'multilinha' | 'select' | 'imagem'
+  opcoes?: { valor: string; rotulo: string }[]
+  visivelSe?: (item: T) => boolean
 }
 
 function EditorDeItens<T extends { id: string }>({
@@ -196,30 +221,57 @@ function EditorDeItens<T extends { id: string }>({
                 </Button>
               </div>
               <div className="space-y-3">
-                {campos.map((campo) => (
-                  <div key={campo.chave}>
-                    <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
-                      {campo.rotulo}
-                      {campo.obrigatorio && <span className="text-red-500"> *</span>}
-                    </label>
-                    {campo.multilinha ? (
-                      <Textarea
-                        value={String(item[campo.chave] ?? '')}
-                        onChange={(e) => atualizar(item.id, campo.chave, e.target.value)}
-                        placeholder={campo.placeholder}
-                        rows={3}
-                        className="text-sm"
-                      />
-                    ) : (
-                      <Input
-                        value={String(item[campo.chave] ?? '')}
-                        onChange={(e) => atualizar(item.id, campo.chave, e.target.value)}
-                        placeholder={campo.placeholder}
-                        className="text-sm"
-                      />
-                    )}
-                  </div>
-                ))}
+                {campos
+                  .filter((campo) => !campo.visivelSe || campo.visivelSe(item))
+                  .map((campo) => (
+                    <div key={campo.chave}>
+                      {campo.tipo !== 'imagem' && (
+                        <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
+                          {campo.rotulo}
+                          {campo.obrigatorio && <span className="text-red-500"> *</span>}
+                        </label>
+                      )}
+                      {campo.tipo === 'multilinha' ? (
+                        <Textarea
+                          value={String(item[campo.chave] ?? '')}
+                          onChange={(e) => atualizar(item.id, campo.chave, e.target.value)}
+                          placeholder={campo.placeholder}
+                          rows={3}
+                          className="text-sm"
+                        />
+                      ) : campo.tipo === 'select' ? (
+                        <Select
+                          value={String(item[campo.chave] ?? '')}
+                          onValueChange={(valor) => atualizar(item.id, campo.chave, valor)}
+                        >
+                          <SelectTrigger className="text-sm">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {(campo.opcoes ?? []).map((opcao) => (
+                              <SelectItem key={opcao.valor} value={opcao.valor}>
+                                {opcao.rotulo}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      ) : campo.tipo === 'imagem' ? (
+                        <CampoArquivo
+                          categoria="imagem"
+                          rotulo={campo.rotulo}
+                          url={String(item[campo.chave] ?? '')}
+                          onUrl={(url) => atualizar(item.id, campo.chave, url)}
+                        />
+                      ) : (
+                        <Input
+                          value={String(item[campo.chave] ?? '')}
+                          onChange={(e) => atualizar(item.id, campo.chave, e.target.value)}
+                          placeholder={campo.placeholder}
+                          className="text-sm"
+                        />
+                      )}
+                    </div>
+                  ))}
               </div>
             </Card>
           ))}
@@ -494,20 +546,14 @@ export function ContentBlockDrawer({
     blockData?.tipo || null
   )
 
-  const [formData, setFormData] = useState<Partial<ConteudoUnidade>>({
-    ...criarBlocoVazio(blockData?.tipo || 'paragrafo'),
-    ...blockData,
-  })
+  const [formData, setFormData] = useState<Partial<ConteudoUnidade>>(prepararFormulario(blockData))
   const [isUploadingImage, setIsUploadingImage] = useState(false)
   const [imagePreviewUrl, setImagePreviewUrl] = useState<string | null>(null)
 
   useEffect(() => {
     if (open) {
       setSelectedType(blockData?.tipo || null)
-      setFormData({
-        ...criarBlocoVazio(blockData?.tipo || 'paragrafo'),
-        ...blockData,
-      })
+      setFormData(prepararFormulario(blockData))
       if (blockData?.conteudo && blockData?.tipo === 'imagem') {
         setImagePreviewUrl(blockData.conteudo)
       }
@@ -541,16 +587,14 @@ export function ContentBlockDrawer({
     return true
   }
 
-  const handleUploadImage = async (file: File, forFlipcard: boolean = false) => {
+  const handleUploadImage = async (file: File) => {
     setIsUploadingImage(true)
     setImagePreviewUrl(null)
 
     try {
       const { url, aviso } = await enviarArquivo(file, 'imagem')
 
-      if (forFlipcard) setFormData({ ...formData, imagemFrente: url })
-      else setFormData({ ...formData, conteudo: url })
-
+      setFormData({ ...formData, conteudo: url })
       setImagePreviewUrl(url)
       if (aviso) toast.warning(aviso)
       else toast.success('Imagem enviada')
@@ -1149,99 +1193,68 @@ export function ContentBlockDrawer({
 
       case 'flipcard':
         return (
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                Tipo de Frente <span className="text-red-500">*</span>
-              </label>
-              <Select
-                value={formData.tipoFrente || 'titulo'}
-                onValueChange={(value) =>
-                  setFormData({
-                    ...formData,
-                    tipoFrente: value as 'imagem' | 'imagem-titulo' | 'titulo',
-                  })
-                }
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Selecione o tipo" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="imagem">Apenas Imagem</SelectItem>
-                  <SelectItem value="imagem-titulo">Imagem com Título no Rodapé</SelectItem>
-                  <SelectItem value="titulo">Apenas Título Centralizado</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            {(formData.tipoFrente === 'imagem' || formData.tipoFrente === 'imagem-titulo') && (
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Imagem da Frente <span className="text-red-500">*</span>
-                </label>
-                <label className="flex items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg cursor-pointer hover:border-blue-400 dark:hover:border-blue-500 transition-colors bg-gray-50 dark:bg-gray-800">
-                  {isUploadingImage ? (
-                    <div className="flex flex-col items-center gap-2">
-                      <Loader2 className="h-6 w-6 animate-spin text-blue-600 dark:text-blue-400" />
-                      <span className="text-sm text-gray-600 dark:text-gray-400">Enviando...</span>
-                    </div>
-                  ) : (
-                    <div className="flex flex-col items-center gap-2">
-                      <Upload className="h-6 w-6 text-gray-400 dark:text-gray-500" />
-                      <span className="text-sm text-gray-600 dark:text-gray-400">
-                        Clique para fazer upload
-                      </span>
-                    </div>
-                  )}
-                  <input
-                    type="file"
-                    accept="image/*"
-                    className="hidden"
-                    onChange={(e) => {
-                      const file = e.target.files?.[0]
-                      if (file) handleUploadImage(file, true)
-                    }}
-                    disabled={isUploadingImage}
-                  />
-                </label>
-              </div>
-            )}
-
-            {(formData.tipoFrente === 'titulo' || formData.tipoFrente === 'imagem-titulo') && (
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Título da Frente <span className="text-red-500">*</span>
-                </label>
-                <Input
-                  value={formData.tituloFrente || ''}
-                  onChange={(e) => setFormData({ ...formData, tituloFrente: e.target.value })}
-                  placeholder="Digite o título..."
-                />
-              </div>
-            )}
+          <div className="space-y-5">
+            <EditorDeItens
+              rotulo="Flipcards"
+              rotuloItem="Card"
+              vazio="Nenhum flipcard adicionado ainda."
+              itens={formData.itensFlipcard || []}
+              criarItem={() => ({
+                id: `flip-${Date.now()}`,
+                tipoFrente: 'titulo' as const,
+                imagemFrente: '',
+                tituloFrente: '',
+                conteudoVerso: '',
+              })}
+              onChange={(itensFlipcard) => setFormData({ ...formData, itensFlipcard })}
+              campos={[
+                {
+                  chave: 'tipoFrente',
+                  rotulo: 'Tipo de frente',
+                  obrigatorio: true,
+                  tipo: 'select',
+                  opcoes: [
+                    { valor: 'titulo', rotulo: 'Apenas título centralizado' },
+                    { valor: 'imagem', rotulo: 'Apenas imagem' },
+                    { valor: 'imagem-titulo', rotulo: 'Imagem com título no rodapé' },
+                  ],
+                },
+                {
+                  chave: 'imagemFrente',
+                  rotulo: 'Imagem da frente',
+                  obrigatorio: true,
+                  tipo: 'imagem',
+                  visivelSe: (card) => card.tipoFrente !== 'titulo',
+                },
+                {
+                  chave: 'tituloFrente',
+                  rotulo: 'Título da frente',
+                  obrigatorio: true,
+                  placeholder: 'Digite o título...',
+                  visivelSe: (card) => card.tipoFrente !== 'imagem',
+                },
+                {
+                  chave: 'conteudoVerso',
+                  rotulo: 'Conteúdo do verso',
+                  obrigatorio: true,
+                  tipo: 'multilinha',
+                  placeholder: 'Digite o conteúdo do verso...',
+                },
+              ]}
+            />
 
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Conteúdo do Verso <span className="text-red-500">*</span>
-              </label>
-              <Textarea
-                value={formData.conteudoVerso || ''}
-                onChange={(e) => setFormData({ ...formData, conteudoVerso: e.target.value })}
-                placeholder="Digite o conteúdo do verso..."
-                className="resize-none"
-                rows={6}
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Altura do Card
+                Altura dos cards
               </label>
               <Input
                 value={formData.alturaCard || '300px'}
                 onChange={(e) => setFormData({ ...formData, alturaCard: e.target.value })}
                 placeholder="Ex: 300px, 20vh"
               />
+              <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                Até 4 cards por linha; eles se ajustam para ocupar toda a largura.
+              </p>
             </div>
           </div>
         )
@@ -1293,7 +1306,7 @@ export function ContentBlockDrawer({
                 chave: 'conteudo',
                 rotulo: 'Conteúdo',
                 obrigatorio: true,
-                multilinha: true,
+                tipo: 'multilinha',
                 placeholder: 'Conteúdo da aba...',
               },
             ]}
@@ -1349,7 +1362,7 @@ export function ContentBlockDrawer({
                 {
                   chave: 'descricao',
                   rotulo: 'Descrição',
-                  multilinha: true,
+                  tipo: 'multilinha',
                   placeholder: 'Descrição do evento...',
                 },
               ]}
@@ -1564,7 +1577,31 @@ export function ContentBlockDrawer({
           </div>
         </SheetHeader>
 
-        <div className="flex-1 overflow-y-auto px-6 py-6">{renderForm()}</div>
+        <div className="flex-1 overflow-y-auto px-6 py-6 space-y-5">
+          {renderForm()}
+          {meta?.larguraAjustavel && (
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                Largura do bloco
+              </label>
+              <div className="grid grid-cols-2 gap-2">
+                {LARGURAS_BLOCO.map((largura) => (
+                  <Button
+                    key={largura.colunas}
+                    type="button"
+                    variant={(formData.colunas ?? 12) === largura.colunas ? 'default' : 'outline'}
+                    onClick={() => setFormData({ ...formData, colunas: largura.colunas })}
+                  >
+                    {largura.rotulo}
+                  </Button>
+                ))}
+              </div>
+              <p className="text-xs text-gray-500 dark:text-gray-400">
+                Em meia largura o bloco divide a linha com o bloco seguinte.
+              </p>
+            </div>
+          )}
+        </div>
 
         <SheetFooter className="border-t border-gray-200 dark:border-gray-700 px-6 py-4 flex justify-end gap-3">
           <Button variant="outline" onClick={handleCancel}>
