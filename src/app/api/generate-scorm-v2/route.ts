@@ -2,7 +2,7 @@ import { NextRequest, NextResponse, after } from 'next/server'
 import { CursoGerado } from '@/types/gerador-curso'
 import { requireAuth, createErrorResponse } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
-import { generateSCORMFromPlayerDist, generateSCORMPackage } from '@/lib/scorm-service'
+import { generateSCORMFromPlayerDist } from '@/lib/scorm-service'
 import { downloadAndUpdateImages, cleanupTempFiles } from '@/lib/scorm-build-service'
 
 // Geração in-memory é rápida (segundos), mas mantemos margem para download de imagens
@@ -132,17 +132,7 @@ async function executeBuildInBackground(jobId: string, curso: CursoGerado): Prom
       data: { progress: '📦 Gerando pacote SCORM...' },
     })
 
-    // Tenta usar o Vite player pré-buildado; cai no fallback SPA se dist/ não existir
-    let zipBuffer: Buffer
-    try {
-      zipBuffer = await generateSCORMFromPlayerDist(cursoFinal, curso.id)
-    } catch (playerErr) {
-      console.warn(
-        `   ⚠️ [Background Build] Vite player não disponível, usando fallback SPA:`,
-        playerErr instanceof Error ? playerErr.message : playerErr
-      )
-      zipBuffer = await generateSCORMPackage(cursoFinal, curso.id)
-    }
+    const zipBuffer = await generateSCORMFromPlayerDist(cursoFinal, curso.id)
 
     console.log(
       `✅ [Background Build] Job ${jobId}: Pacote gerado (${(zipBuffer.length / 1024).toFixed(2)} KB)`

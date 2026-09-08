@@ -186,8 +186,9 @@ Sem rede — esquecer não quebra o build:
 
 ## Fase 0-B — Remover o fallback SCORM degradado
 
-Prioridade baixa, independente das demais. Não corrige nada quebrado — é remoção de
-código morto que só pode produzir um pacote pior que o principal.
+**Status: implementada.** Prioridade baixa, independente das demais. Não corrigiu
+nada quebrado — foi remoção de código morto que só podia produzir um pacote pior que
+o principal.
 
 ### Hipótese levantada e descartada
 
@@ -237,15 +238,43 @@ O fallback continua sendo um problema de manutenção, ainda que não esteja ati
   mesmo tendo caído no caminho degradado. Se um dia o tracing falhar, o sintoma será
   silencioso.
 
-Mudanças propostas:
+### O que foi feito
 
-1. Apagar `generateSCORMPackage`, `generateIndexHtml` e `renderConteudo` de
-   `src/lib/scorm-service.ts`.
-2. Remover o `try/catch` de fallback da rota; deixar o erro propagar.
-3. Marcar o `SCORMJob` como **`failed`** com mensagem clara se `player/dist/` faltar,
-   em vez de entregar pacote degradado como sucesso.
+1. Apagados `generateSCORMPackage`, `generateIndexHtml` e `renderConteudo` de
+   `src/lib/scorm-service.ts`. Com eles saíram `generateScormWrapper` e `getXSDs`,
+   que só o fallback usava — o player Vite embute a própria API SCORM, e o
+   `generate-scorm-isolated.mjs` tem cópias próprias (`...Simple`), então nada mais
+   depende delas. O arquivo caiu de 887 para 146 linhas.
+2. Removido o `try/catch` de fallback da rota. O `catch` externo de
+   `executeBuildInBackground` já marca o job como `failed` e grava a mensagem, então
+   deixar o erro propagar bastou para transformar a falha silenciosa em visível: o
+   aluno passa a ver _"player/dist/index.html não encontrado. Execute
+   'pnpm build:player' antes de exportar."_ em vez de baixar um curso quebrado.
+3. `generateManifest` passou a exigir a lista de arquivos. O parâmetro era opcional e
+   caía num `ARQUIVOS_FALLBACK_SPA` que listava `scorm_api_wrapper.js` e os três XSD
+   — arquivos que o pacote do player nunca conteve. O manifesto podia, portanto,
+   declarar arquivos inexistentes.
 
-O ganho principal é o item 3: transformar uma falha silenciosa numa falha visível.
+O ganho principal é o item 2: transformar uma falha silenciosa numa falha visível.
+
+### Verificação
+
+- ZIP real gerado pela função remanescente e inspecionado: contém `index.html`,
+  `imsmanifest.xml` e os dois assets do player; o JSON do curso está injetado, o
+  atributo `crossorigin` foi removido, o manifesto lista exatamente 3 arquivos e
+  nenhum XSD fantasma. A string _"não renderizado no SCORM"_ não aparece — era a
+  assinatura do pacote degradado.
+- `src/__tests__/lib/scorm-service.test.ts` cobre a lista de arquivos do manifesto, o
+  escape do título e a mensagem de erro quando o `player/dist` não existe.
+
+### Achado não corrigido — XSD declarado mas ausente
+
+O `imsmanifest.xml` declara `xsi:schemaLocation` apontando para
+`imscp_rootv1p1p2.xsd` e `adlcp_rootv1p2.xsd` como arquivos relativos, mas o pacote
+gerado pelo player nunca os embutiu. É anterior a esta mudança e não é regressão — os
+cursos funcionam nos LMS em uso —, mas um validador estrito de SCORM pode reclamar.
+A correção seria de uma linha, reaproveitando o `getXSDs` que acabou de sair; ficou
+de fora por não ter sido pedida e por não haver evidência de que atrapalhe.
 
 ---
 
