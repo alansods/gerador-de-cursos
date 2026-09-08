@@ -1,5 +1,10 @@
-@import "tailwindcss";
-@import "tw-animate-css";
+@import 'tailwindcss';
+@import 'tw-animate-css';
+
+/* Compartilhados com o editor — o player reusa os componentes de src/ via alias do
+   Vite, então precisa do mesmo CSS que o globals.css carrega. */
+@import '../../src/styles/infobox.css';
+@import '../../src/styles/block-theme.css';
 
 /* Diz ao Tailwind v4 para escanear os componentes do editor (fora de player/) */
 @source "../../src";
@@ -60,14 +65,14 @@
   --card-foreground: #1a202c;
   --popover: #ffffff;
   --popover-foreground: #1a202c;
-  --primary: #0047BB;
+  --primary: #0047bb;
   --primary-foreground: #ffffff;
   --secondary: #e3f2fd;
-  --secondary-foreground: #0047BB;
+  --secondary-foreground: #0047bb;
   --muted: #f1f5f9;
   --muted-foreground: #64748b;
   --accent: #f8fafc;
-  --accent-foreground: #0047BB;
+  --accent-foreground: #0047bb;
   --destructive: #ef4444;
   --destructive-foreground: #ffffff;
   --border: #e2e8f0;
@@ -76,22 +81,22 @@
   --switch-background: #cbd5e1;
   --font-weight-medium: 500;
   --font-weight-normal: 400;
-  --ring: #0047BB;
-  --chart-1: #0047BB;
-  --chart-2: #00A9CE;
+  --ring: #0047bb;
+  --chart-1: #0047bb;
+  --chart-2: #00a9ce;
   --chart-3: #8b5cf6;
-  --chart-4: #00C853;
-  --chart-5: #F15A29;
+  --chart-4: #00c853;
+  --chart-5: #f15a29;
   --radius: 0.5rem;
   --sidebar: #ffffff;
   --sidebar-foreground: #1a202c;
-  --sidebar-primary: #0047BB;
+  --sidebar-primary: #0047bb;
   --sidebar-primary-foreground: #ffffff;
   --sidebar-accent: #f8fafc;
   --sidebar-accent-foreground: #1a202c;
   --sidebar-border: #e2e8f0;
-  --sidebar-ring: #0047BB;
-  --highlight: #F15A29;
+  --sidebar-ring: #0047bb;
+  --highlight: #f15a29;
   --highlight-foreground: #ffffff;
 }
 
@@ -118,10 +123,10 @@
   --font-weight-medium: 500;
   --font-weight-normal: 400;
   --chart-1: #2563eb;
-  --chart-2: #00A9CE;
+  --chart-2: #00a9ce;
   --chart-3: #8b5cf6;
-  --chart-4: #00C853;
-  --chart-5: #FF6B3D;
+  --chart-4: #00c853;
+  --chart-5: #ff6b3d;
   --sidebar: #1a202c;
   --sidebar-foreground: #e3e8ef;
   --sidebar-primary: #2563eb;
@@ -130,7 +135,7 @@
   --sidebar-accent-foreground: #e3e8ef;
   --sidebar-border: #2d3748;
   --sidebar-ring: #2563eb;
-  --highlight: #FF6B3D;
+  --highlight: #ff6b3d;
   --highlight-foreground: #ffffff;
 }
 
@@ -144,7 +149,7 @@
   }
 
   button,
-  [role="button"],
+  [role='button'],
   a {
     cursor: pointer;
   }

@@ -1,0 +1,17 @@
+/* Tema de acento dos blocos de conteúdo (quiz, flipcard, info-box, objetivos, lista),
+   definido pelo BlockThemeProvider por layout — resolve para a variante clara ou
+   escura conforme a classe .dark no documento.
+
+   Compartilhado entre o editor (globals.css) e o player SCORM (player/src/styles.css):
+   sem esta regra, --block-accent não resolve e o infobox.css, que a usa sem fallback,
+   perde a cor. */
+[data-block-theme] {
+  --block-accent: var(--block-accent-light);
+  --block-accent-soft: var(--block-accent-soft-light);
+  --block-accent-ink: var(--block-accent-ink-light);
+}
+.dark [data-block-theme] {
+  --block-accent: var(--block-accent-dark);
+  --block-accent-soft: var(--block-accent-soft-dark);
+  --block-accent-ink: var(--block-accent-ink-dark);
+}
