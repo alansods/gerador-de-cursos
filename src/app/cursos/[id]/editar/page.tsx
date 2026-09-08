@@ -28,6 +28,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { toast } from 'sonner'
 import {
   Dialog,
@@ -1863,18 +1864,21 @@ function EditorCurso() {
                 Escolha o tipo de conteúdo que você quer incluir na unidade.
               </p>
             </DialogHeader>
-            <div className="mt-4 space-y-6">
+            <Tabs defaultValue={CATEGORIAS_BLOCO[0].id} className="mt-4">
+              <TabsList className="w-full">
+                {CATEGORIAS_BLOCO.map((categoria) => (
+                  <TabsTrigger key={categoria.id} value={categoria.id}>
+                    {categoria.rotulo}
+                  </TabsTrigger>
+                ))}
+              </TabsList>
               {CATEGORIAS_BLOCO.map((categoria) => {
                 const tipos = TIPOS_BLOCO.filter(
                   (tipo) => CATALOGO_BLOCOS[tipo].categoria === categoria.id
                 )
-                if (tipos.length === 0) return null
 
                 return (
-                  <div key={categoria.id}>
-                    <h4 className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-2">
-                      {categoria.rotulo}
-                    </h4>
+                  <TabsContent key={categoria.id} value={categoria.id}>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                       {tipos.map((tipo) => {
                         const meta = CATALOGO_BLOCOS[tipo]
@@ -1902,10 +1906,10 @@ function EditorCurso() {
                         )
                       })}
                     </div>
-                  </div>
+                  </TabsContent>
                 )
               })}
-            </div>
+            </Tabs>
           </DialogContent>
         </Dialog>
 
