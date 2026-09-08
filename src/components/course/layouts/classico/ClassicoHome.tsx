@@ -14,8 +14,8 @@ export function ClassicoHome({ curso, onNavigate }: ClassicoHomeProps) {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pt-16">
       {/* Hero Section - Dark Background */}
-      <div className="bg-gradient-to-br from-blue-950 via-blue-900 to-blue-800 dark:from-gray-950 dark:via-gray-900 dark:to-gray-800 text-white py-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="bg-gradient-to-br from-blue-950 via-blue-900 to-blue-800 dark:from-gray-950 dark:via-gray-900 dark:to-gray-800 text-white pt-7 lg:pt-16 pb-16">
+        <div className="max-w-7xl mx-auto px-7 lg:px-14">
           {/* Category Badge */}
           <div className="mb-4">
             <Badge className="bg-white/20 text-white border-white/30 hover:bg-white/30">
@@ -44,7 +44,7 @@ export function ClassicoHome({ curso, onNavigate }: ClassicoHomeProps) {
       </div>
 
       {/* Units Section */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <div className="max-w-7xl mx-auto px-7 lg:px-14 py-12">
         <h2 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-8 text-center">
           Unidades do Curso
         </h2>

@@ -46,7 +46,7 @@ export function SidebarUnit({ curso, unidadeId, onNavigate }: SidebarUnitProps) 
 
   return (
     <div className="flex-1 flex flex-col">
-      <div className="px-14 pt-9 pb-5 border-b border-[#e6e4f0] dark:border-[#2c2839]">
+      <div className="px-7 lg:px-14 pt-9 pb-5 border-b border-[#e6e4f0] dark:border-[#2c2839]">
         <div className="max-w-5xl mx-auto">
           <div className="flex items-center gap-2 text-xs font-extrabold tracking-wider uppercase text-violet-600 dark:text-violet-400 mb-2.5">
             <span className="w-[5px] h-[5px] rounded-full bg-violet-600 dark:bg-violet-400" />
@@ -58,13 +58,13 @@ export function SidebarUnit({ curso, unidadeId, onNavigate }: SidebarUnitProps) 
         </div>
       </div>
 
-      <div className="flex-1 px-4 lg:px-14 py-8">
+      <div className="flex-1 px-7 lg:px-14 py-8">
         <div className="max-w-5xl mx-auto">
           <UnidadeConteudo unidade={unidade} theme={sidebarMeta.blockTheme} />
         </div>
       </div>
 
-      <div className="border-t border-[#e6e4f0] dark:border-[#2c2839] bg-white dark:bg-[#1a1725] px-4 lg:px-14 py-4 flex items-center justify-between gap-2 lg:gap-4">
+      <div className="border-t border-[#e6e4f0] dark:border-[#2c2839] bg-white dark:bg-[#1a1725] px-7 lg:px-14 py-4 flex items-center justify-between gap-2 lg:gap-4">
         <Button
           variant="outline"
           disabled={!unidadeAnterior}

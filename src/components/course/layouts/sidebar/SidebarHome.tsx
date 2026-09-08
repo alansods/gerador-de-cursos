@@ -11,7 +11,7 @@ interface SidebarHomeProps {
 export function SidebarHome({ curso, onNavigate }: SidebarHomeProps) {
   return (
     <div className="flex-1">
-      <section className="px-14 pt-14 pb-10 border-b border-[#e6e4f0] dark:border-[#2c2839] bg-gradient-to-br from-violet-50 dark:from-violet-950/20 to-transparent">
+      <section className="px-7 lg:px-14 pt-7 lg:pt-14 pb-10 border-b border-[#e6e4f0] dark:border-[#2c2839] bg-gradient-to-br from-violet-50 dark:from-violet-950/20 to-transparent">
         <Badge className="mb-4 bg-white dark:bg-[#1a1725] border border-violet-200 dark:border-violet-900 text-violet-600 dark:text-violet-400 hover:bg-white dark:hover:bg-[#1a1725]">
           {curso.categoria}
         </Badge>
@@ -37,7 +37,7 @@ export function SidebarHome({ curso, onNavigate }: SidebarHomeProps) {
         </div>
       </section>
 
-      <section className="px-14 py-9">
+      <section className="px-7 lg:px-14 py-9">
         <h2 className="text-xl font-extrabold text-gray-900 dark:text-gray-50 mb-5">
           Unidades do curso
         </h2>

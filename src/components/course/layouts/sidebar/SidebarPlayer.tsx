@@ -12,7 +12,7 @@ interface SidebarPlayerProps {
 }
 
 export function SidebarPlayer({ curso }: SidebarPlayerProps) {
-  const { unidadeAtual, navegar, registrarQuiz } = useProgressoScorm(curso)
+  const { unidadeAtual, navegar, registrarQuiz, progresso } = useProgressoScorm(curso)
 
   const handleNavigate = (unitId: string | null) => {
     navegar(unitId)
@@ -26,9 +26,10 @@ export function SidebarPlayer({ curso }: SidebarPlayerProps) {
           curso={curso}
           currentUnidadeId={unidadeAtual || undefined}
           onNavigate={handleNavigate}
+          progresso={progresso}
         />
 
-        <div className="flex-1 min-w-0 pt-14 md:pt-0">
+        <div className="flex-1 min-w-0 pt-16 md:pt-0">
           {unidadeAtual ? (
             <SidebarUnit curso={curso} unidadeId={unidadeAtual} onNavigate={handleNavigate} />
           ) : (

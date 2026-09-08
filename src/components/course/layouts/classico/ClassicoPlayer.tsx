@@ -12,7 +12,7 @@ interface ClassicoPlayerProps {
 }
 
 export function ClassicoPlayer({ curso }: ClassicoPlayerProps) {
-  const { unidadeAtual, navegar, registrarQuiz } = useProgressoScorm(curso)
+  const { unidadeAtual, navegar, registrarQuiz, progresso } = useProgressoScorm(curso)
 
   const handleNavigate = (unitId: string | null) => {
     navegar(unitId)
@@ -27,6 +27,7 @@ export function ClassicoPlayer({ curso }: ClassicoPlayerProps) {
           currentUnidadeId={unidadeAtual || undefined}
           showMenu={true}
           onNavigate={handleNavigate}
+          progresso={progresso}
         />
 
         {unidadeAtual ? (

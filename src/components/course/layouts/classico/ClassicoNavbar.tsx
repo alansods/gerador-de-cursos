@@ -2,11 +2,11 @@
 
 import React from 'react'
 import { Button } from '@/components/ui/button'
-import { Menu, Home, BookOpen, X, User, LogOut, Moon, Sun } from 'lucide-react'
+import { Menu, Home, BookOpen, X, Moon, Sun } from 'lucide-react'
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from '@/components/ui/sheet'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import type { CursoGerado } from '@/types/gerador-curso'
-import { useLMS } from '@/hooks/useLMS'
+import type { ResumoProgresso } from '@/lib/scorm-progress'
 import { useTheme } from '@/hooks/useTheme'
 
 interface ClassicoNavbarProps {
@@ -14,6 +14,7 @@ interface ClassicoNavbarProps {
   currentUnidadeId?: string
   showMenu?: boolean
   onNavigate: (unitId: string | null) => void
+  progresso: ResumoProgresso
 }
 
 export function ClassicoNavbar({
@@ -21,8 +22,8 @@ export function ClassicoNavbar({
   currentUnidadeId,
   showMenu = true,
   onNavigate,
+  progresso,
 }: ClassicoNavbarProps) {
-  const { learnerName, isConnected } = useLMS()
   const { isDarkMode, toggleDarkMode } = useTheme()
   const [open, setOpen] = React.useState(false)
 
@@ -32,6 +33,27 @@ export function ClassicoNavbar({
     onNavigate(unitId)
     setOpen(false) // Close menu after navigation
   }
+
+  const progressoCompleto = progresso.percentual >= 100
+  const progressoTextColor = progressoCompleto
+    ? 'text-green-600 dark:text-green-400'
+    : 'text-blue-600 dark:text-blue-400'
+  const progressoBarColor = progressoCompleto ? 'bg-green-600' : 'bg-blue-600'
+
+  const progressBar = (
+    <div className="flex flex-col gap-1">
+      <div className="flex items-center justify-between text-xs">
+        <span className="text-gray-500 dark:text-gray-400">Progresso</span>
+        <span className={`font-semibold ${progressoTextColor}`}>{progresso.percentual}%</span>
+      </div>
+      <div className="h-1.5 w-full overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700">
+        <div
+          className={`h-full rounded-full transition-all duration-500 ${progressoBarColor}`}
+          style={{ width: `${progresso.percentual}%` }}
+        />
+      </div>
+    </div>
+  )
 
   return (
     <nav className="fixed top-0 left-0 right-0 bg-white dark:bg-gray-800 border-b border-[#e5e7eb] dark:border-gray-700 z-50 h-16 flex items-center px-4">
@@ -52,22 +74,25 @@ export function ClassicoNavbar({
             }}
           >
             {/* Header */}
-            <div className="px-5 pt-5 pb-4 border-b border-border flex flex-row items-start gap-3">
-              <div className="flex-1">
-                <SheetTitle className="text-[15px] font-medium text-foreground mb-0.5">
-                  Conteúdo do curso
-                </SheetTitle>
-                <p className="text-xs text-muted-foreground m-0">{curso.titulo}</p>
+            <div className="px-5 pt-5 pb-4 border-b border-border">
+              <div className="flex flex-row items-start gap-3">
+                <div className="flex-1">
+                  <SheetTitle className="text-[15px] font-semibold text-foreground line-clamp-2">
+                    {curso.titulo}
+                  </SheetTitle>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setOpen(false)}
+                  className="w-8 h-8 rounded-md hover:bg-muted text-muted-foreground hover:text-foreground"
+                  aria-label="Fechar"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
               </div>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setOpen(false)}
-                className="w-8 h-8 rounded-md hover:bg-muted text-muted-foreground hover:text-foreground"
-                aria-label="Fechar"
-              >
-                <X className="h-4 w-4" />
-              </Button>
+
+              <div className="mt-3.5">{progressBar}</div>
             </div>
 
             {/* Menu Body */}
@@ -127,20 +152,19 @@ export function ClassicoNavbar({
         </Sheet>
       )}
 
-      {/* Course Title in Navbar */}
-      <div className="ml-4 flex-1">
+      {/* Course Title in Navbar (desktop only) */}
+      <div className="hidden sm:block ml-4 flex-1">
         <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 line-clamp-1">
           {curso.titulo}
         </h2>
       </div>
 
-      {/* User Info, Dark Mode Toggle and Logout */}
+      <div className="flex-1 sm:hidden" />
+
+      {/* Progress and Dark Mode Toggle */}
       <TooltipProvider delayDuration={200}>
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2 text-gray-700 dark:text-gray-300">
-            <User className="h-5 w-5" />
-            <span className="text-sm font-medium">{learnerName}</span>
-          </div>
+        <div className="flex items-center gap-4">
+          <div className="hidden sm:block w-60">{progressBar}</div>
 
           {/* Dark Mode Toggle */}
           <Tooltip>
@@ -156,42 +180,6 @@ export function ClassicoNavbar({
               </Button>
             </TooltipTrigger>
             <TooltipContent>{isDarkMode ? 'Modo Claro' : 'Modo Escuro'}</TooltipContent>
-          </Tooltip>
-
-          {/* Logout Button */}
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => {
-                  if (
-                    isConnected &&
-                    typeof window !== 'undefined' &&
-                    'SCORM' in window &&
-                    typeof (window as { SCORM?: { terminate: () => void } }).SCORM?.terminate ===
-                      'function'
-                  ) {
-                    try {
-                      ;(window as { SCORM: { terminate: () => void } }).SCORM.terminate()
-                    } catch (error) {
-                      console.error('[LMS] Erro ao sair:', error)
-                    }
-                  }
-                  // Close window or redirect
-                  if (window.parent !== window) {
-                    window.close()
-                  } else {
-                    window.close()
-                  }
-                }}
-                className="text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/30"
-              >
-                <LogOut className="h-5 w-5" />
-                <span className="sr-only">Sair</span>
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>Sair</TooltipContent>
           </Tooltip>
         </div>
       </TooltipProvider>

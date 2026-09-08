@@ -43,14 +43,14 @@ export function ClassicoUnit({ curso, unidadeId, onNavigate }: ClassicoUnitProps
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pt-16">
       {/* Hero Banner - full width, fora do container */}
       <div
+        className="px-7 lg:px-14 pt-7 lg:pt-10 pb-10"
         style={{
           background: 'linear-gradient(135deg, #172554 0%, #1e3a8a 50%, #1e40af 100%)',
           color: 'white',
-          padding: '2.5rem 2rem',
         }}
       >
         <div className="max-w-7xl mx-auto flex items-center justify-between gap-6">
-          <h1 style={{ fontSize: '2rem', fontWeight: 700, lineHeight: 1.2, margin: 0 }}>
+          <h1 className="text-xl sm:text-2xl lg:text-[2rem] font-bold leading-tight m-0">
             {titulo}
           </h1>
           <div
@@ -73,13 +73,16 @@ export function ClassicoUnit({ curso, unidadeId, onNavigate }: ClassicoUnitProps
             >
               Unidade
             </span>
-            <span style={{ fontSize: '4rem', fontWeight: 900, lineHeight: 1 }}>
+            <span
+              className="text-4xl sm:text-5xl lg:text-[4rem]"
+              style={{ fontWeight: 900, lineHeight: 1 }}
+            >
               {String(unidadeIndex + 1).padStart(2, '0')}
             </span>
           </div>
         </div>
       </div>
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-5xl mx-auto px-7 lg:px-14 py-8">
         {/* Unit Content */}
         <UnidadeConteudo unidade={unidade} theme={classicoMeta.blockTheme} />
 
