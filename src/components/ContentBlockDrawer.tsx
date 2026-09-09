@@ -14,7 +14,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { HelpCircle, Upload, Loader2, Plus, Trash2 } from 'lucide-react'
+import {
+  HelpCircle,
+  Upload,
+  Loader2,
+  Plus,
+  Trash2,
+  GalleryHorizontal,
+  LayoutGrid,
+} from 'lucide-react'
 import Image from 'next/image'
 import {
   ConteudoUnidade,
@@ -61,6 +69,15 @@ const LARGURAS_BLOCO: { colunas: 6 | 12; rotulo: string }[] = [
   { colunas: 6, rotulo: 'Meia largura' },
 ]
 
+const MODOS_EXIBICAO_CARROSSEL: {
+  valor: NonNullable<ConteudoUnidade['modoCarrossel']>
+  rotulo: string
+  icone: typeof GalleryHorizontal
+}[] = [
+  { valor: 'carrossel', rotulo: 'Carrossel', icone: GalleryHorizontal },
+  { valor: 'grade', rotulo: 'Grade', icone: LayoutGrid },
+]
+
 function CampoArquivo({
   categoria,
   rotulo,
@@ -73,8 +90,13 @@ function CampoArquivo({
   onUrl: (url: string) => void
 }) {
   const [enviando, setEnviando] = useState(false)
+  const [previewQuebrado, setPreviewQuebrado] = useState(false)
   const entradaArquivo = React.useRef<HTMLInputElement>(null)
   const politica = POLITICA_MIDIAS[categoria]
+
+  useEffect(() => {
+    setPreviewQuebrado(false)
+  }, [url])
 
   const aoSelecionar = async (arquivo: File) => {
     setEnviando(true)
@@ -132,6 +154,15 @@ function CampoArquivo({
         placeholder="ou cole a URL aqui..."
         className="text-sm"
       />
+
+      {categoria === 'imagem' && url && !previewQuebrado && (
+        <img
+          src={url}
+          alt=""
+          onError={() => setPreviewQuebrado(true)}
+          className="max-h-40 w-auto rounded-md border border-border object-contain"
+        />
+      )}
 
       <p className="text-xs text-muted-foreground">{politica.dicaTamanho}</p>
     </FormField>
@@ -1395,23 +1426,25 @@ export function ContentBlockDrawer({
         return (
           <div className="space-y-5">
             <FormField label="Exibição">
-              <Select
-                value={formData.modoCarrossel || 'carrossel'}
-                onValueChange={(value) =>
-                  setFormData({
-                    ...formData,
-                    modoCarrossel: value as ConteudoUnidade['modoCarrossel'],
-                  })
-                }
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="carrossel">Carrossel</SelectItem>
-                  <SelectItem value="grade">Grade</SelectItem>
-                </SelectContent>
-              </Select>
+              <div className="grid grid-cols-2 gap-2">
+                {MODOS_EXIBICAO_CARROSSEL.map((modo) => {
+                  const ativo = (formData.modoCarrossel || 'carrossel') === modo.valor
+                  const Icone = modo.icone
+
+                  return (
+                    <Button
+                      key={modo.valor}
+                      type="button"
+                      variant={ativo ? 'default' : 'outline'}
+                      onClick={() => setFormData({ ...formData, modoCarrossel: modo.valor })}
+                      className="h-auto flex-col gap-1.5 py-3"
+                    >
+                      <Icone className="h-5 w-5" />
+                      {modo.rotulo}
+                    </Button>
+                  )
+                })}
+              </div>
             </FormField>
 
             <EditorDeItens
@@ -1424,12 +1457,22 @@ export function ContentBlockDrawer({
               campos={[
                 {
                   chave: 'url',
-                  rotulo: 'URL da imagem',
+                  rotulo: 'Imagem',
                   obrigatorio: true,
-                  placeholder: 'https://...',
+                  tipo: 'imagem',
                 },
-                { chave: 'legenda', rotulo: 'Legenda', placeholder: 'Legenda da imagem...' },
-                { chave: 'fonte', rotulo: 'Fonte', placeholder: 'Fonte da imagem...' },
+                {
+                  chave: 'legenda',
+                  rotulo: 'Legenda',
+                  obrigatorio: true,
+                  placeholder: 'Legenda da imagem...',
+                },
+                {
+                  chave: 'fonte',
+                  rotulo: 'Fonte',
+                  obrigatorio: true,
+                  placeholder: 'Fonte da imagem...',
+                },
               ]}
             />
           </div>

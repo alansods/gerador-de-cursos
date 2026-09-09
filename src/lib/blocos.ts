@@ -242,7 +242,7 @@ export const CATALOGO_BLOCOS: Record<TipoBloco, MetaBloco> = {
   },
   'objetivos-aprendizagem': {
     tipo: 'objetivos-aprendizagem',
-    rotulo: 'Objetivos de aprendizagem',
+    rotulo: 'Objetivos',
     rotuloPlural: 'blocos de objetivos',
     marcador: 'OBJETIVOS',
     geravelPorIA: true,
@@ -451,6 +451,10 @@ export const CATALOGO_BLOCOS: Record<TipoBloco, MetaBloco> = {
       if (!b.itensCarrossel?.length) return 'Adicione pelo menos uma imagem'
       if (b.itensCarrossel.some((item) => !temTexto(item.url)))
         return 'Todas as imagens devem ter URL'
+      if (b.itensCarrossel.some((item) => !temTexto(item.legenda)))
+        return 'Todas as imagens devem ter legenda'
+      if (b.itensCarrossel.some((item) => !temTexto(item.fonte)))
+        return 'Todas as imagens devem ter fonte'
       return null
     },
     extrairMidias: (b) => (b.itensCarrossel ?? []).map((i) => i.url),

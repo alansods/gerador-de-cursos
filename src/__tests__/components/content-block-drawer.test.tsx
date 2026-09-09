@@ -216,12 +216,22 @@ describe('ContentBlockDrawer', () => {
     const onSave = montar('carrossel')
 
     await usuario.click(screen.getByRole('button', { name: /adicionar/i }))
-    await usuario.type(screen.getByPlaceholderText('https://...'), 'https://exemplo.com/a.png')
+    await usuario.type(
+      screen.getByPlaceholderText('ou cole a URL aqui...'),
+      'https://exemplo.com/a.png'
+    )
     await usuario.click(screen.getByRole('button', { name: /adicionar/i }))
 
-    const urls = screen.getAllByPlaceholderText('https://...')
+    const urls = screen.getAllByPlaceholderText('ou cole a URL aqui...')
     expect(urls).toHaveLength(2)
     await usuario.type(urls[1], 'https://exemplo.com/b.png')
+
+    const legendas = screen.getAllByPlaceholderText('Legenda da imagem...')
+    const fontes = screen.getAllByPlaceholderText('Fonte da imagem...')
+    await usuario.type(legendas[0], 'Legenda A')
+    await usuario.type(fontes[0], 'Fonte A')
+    await usuario.type(legendas[1], 'Legenda B')
+    await usuario.type(fontes[1], 'Fonte B')
 
     const remover = screen.getAllByRole('button', { name: '' })
     await usuario.click(remover[remover.length - 1])
@@ -230,7 +240,13 @@ describe('ContentBlockDrawer', () => {
 
     expect(onSave).toHaveBeenCalledWith(
       expect.objectContaining({
-        itensCarrossel: [expect.objectContaining({ url: 'https://exemplo.com/a.png' })],
+        itensCarrossel: [
+          expect.objectContaining({
+            url: 'https://exemplo.com/a.png',
+            legenda: 'Legenda A',
+            fonte: 'Fonte A',
+          }),
+        ],
       })
     )
   })

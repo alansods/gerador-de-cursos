@@ -52,11 +52,26 @@ export function CarrosselBlock({ item }: { item: ConteudoUnidade }) {
       }}
     >
       <div className="relative rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 p-4">
-        <img
-          src={imagem.url}
-          alt={imagem.legenda || `Imagem ${atual + 1} de ${itens.length}`}
-          className="mx-auto h-auto max-h-96 max-w-full object-contain rounded-lg"
-        />
+        <div className="overflow-hidden">
+          <div
+            className="flex items-center transition-transform duration-500 ease-out motion-reduce:transition-none"
+            style={{ transform: `translateX(-${atual * 100}%)` }}
+          >
+            {itens.map((slide, idx) => (
+              <div
+                key={slide.id || idx}
+                aria-hidden={idx !== atual}
+                className="w-full shrink-0 grow-0 basis-full"
+              >
+                <img
+                  src={slide.url}
+                  alt={slide.legenda || `Imagem ${idx + 1} de ${itens.length}`}
+                  className="mx-auto h-auto max-h-96 max-w-full object-contain rounded-lg"
+                />
+              </div>
+            ))}
+          </div>
+        </div>
 
         {itens.length > 1 && (
           <>
