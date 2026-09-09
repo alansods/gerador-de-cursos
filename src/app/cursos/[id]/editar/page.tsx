@@ -4273,6 +4273,7 @@ function EditorCurso() {
             categoria: state.cursoAtual.categoria || undefined,
             cargaHoraria: state.cursoAtual.cargaHoraria,
             layout: state.cursoAtual.layout,
+            bannerVideoUrl: state.cursoAtual.bannerVideoUrl,
           }}
           unidades={state.cursoAtual.unidades || []}
           onSave={async (courseData, unidades) => {
@@ -4283,6 +4284,7 @@ function EditorCurso() {
                 categoria: courseData.categoria || '',
                 cargaHoraria: courseData.cargaHoraria,
                 layout: courseData.layout,
+                bannerVideoUrl: courseData.bannerVideoUrl ?? '',
               })
               await reordenarUnidades(unidades as Unidade[])
             }

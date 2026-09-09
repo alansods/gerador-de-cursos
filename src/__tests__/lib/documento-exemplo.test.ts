@@ -1,6 +1,7 @@
 import { BLOCOS_COM_MARCADOR } from '@/lib/blocos'
 import { TEXTO_DOCUMENTO_EXEMPLO } from '@/lib/documento-exemplo'
 import { detectarMarcadores } from '@/lib/marcadores'
+import { ehUrlYouTubeValida } from '@/lib/youtube'
 
 describe('documento de exemplo', () => {
   const deteccao = detectarMarcadores(TEXTO_DOCUMENTO_EXEMPLO)
@@ -36,6 +37,15 @@ describe('documento de exemplo', () => {
     expect(TEXTO_DOCUMENTO_EXEMPLO).toContain('CARGA HORÁRIA:')
     expect(TEXTO_DOCUMENTO_EXEMPLO).toContain('MODALIDADE:')
     expect(TEXTO_DOCUMENTO_EXEMPLO).toContain('CATEGORIA:')
+  })
+
+  it('traz o vídeo introdutório do banner com link do YouTube válido', () => {
+    const linha = TEXTO_DOCUMENTO_EXEMPLO.split('\n').find((l) =>
+      l.startsWith('VÍDEO INTRODUTÓRIO:')
+    )
+
+    expect(linha).toBeDefined()
+    expect(ehUrlYouTubeValida(linha!.replace('VÍDEO INTRODUTÓRIO:', '').trim())).toBe(true)
   })
 
   it('tem quiz com cinco opções e resposta correta indicada', () => {

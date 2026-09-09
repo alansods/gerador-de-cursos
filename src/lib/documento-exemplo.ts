@@ -6,6 +6,7 @@ export const LINHAS_DOCUMENTO_EXEMPLO: string[] = [
   'CARGA HORÁRIA: 8 horas',
   'MODALIDADE: Online',
   'CATEGORIA: Gestão',
+  'VÍDEO INTRODUTÓRIO: https://www.youtube.com/watch?v=z3eKi8GKdBg',
   '',
 
   'UNIDADE 1: Legislação e Normas Regulamentadoras',

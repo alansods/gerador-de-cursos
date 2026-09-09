@@ -69,6 +69,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       modalidade: curso.modalidade,
       categoria: curso.categoria,
       layout: curso.layout,
+      bannerVideoUrl: curso.bannerVideoUrl ?? undefined,
       unidades: unidadesNormalizadas,
       status: curso.status,
       version: curso.version,

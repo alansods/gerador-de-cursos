@@ -25,6 +25,7 @@ import {
 import { CATALOGO_BLOCOS, cardsFlipcard, criarBlocoVazio } from '@/lib/blocos'
 import { POLITICA_MIDIAS, type CategoriaMidia } from '@/lib/midias'
 import { enviarArquivo } from '@/lib/upload-cliente'
+import { extractYouTubeId } from '@/lib/youtube'
 import { RichTextEditor } from './RichTextEditor'
 import { toast } from 'sonner'
 
@@ -58,26 +59,6 @@ const LARGURAS_BLOCO: { colunas: 6 | 12; rotulo: string }[] = [
   { colunas: 12, rotulo: 'Largura total' },
   { colunas: 6, rotulo: 'Meia largura' },
 ]
-
-const extractYouTubeId = (url: string): string => {
-  if (!url) return ''
-
-  const patterns = [
-    /(?:https?:\/\/)?(?:www\.)?youtube\.com\/watch\?v=([^&]+)/,
-    /(?:https?:\/\/)?(?:www\.)?youtu\.be\/([^?]+)/,
-    /(?:https?:\/\/)?(?:www\.)?youtube\.com\/embed\/([^?]+)/,
-    /(?:https?:\/\/)?(?:www\.)?youtube\.com\/v\/([^?]+)/,
-  ]
-
-  for (const pattern of patterns) {
-    const match = url.match(pattern)
-    if (match && match[1]) {
-      return match[1]
-    }
-  }
-
-  return ''
-}
 
 function CampoArquivo({
   categoria,

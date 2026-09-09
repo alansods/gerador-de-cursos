@@ -187,6 +187,7 @@ export interface CursoGerado {
   modalidade: string
   categoria: string
   layout?: string
+  bannerVideoUrl?: string
   status?: StatusCurso
   version?: number
   ownerId?: string

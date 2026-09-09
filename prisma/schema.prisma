@@ -65,6 +65,7 @@ model Curso {
   modalidade       String
   categoria        String
   layout           String      @default("classico")
+  bannerVideoUrl   String?     @map("banner_video_url")
   unidades         Json        @default("[]")
   status           StatusCurso @default(EM_ANDAMENTO)
   version          Int         @default(0)

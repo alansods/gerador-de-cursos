@@ -138,6 +138,7 @@ export async function GET(req: NextRequest) {
         modalidade: curso.modalidade,
         categoria: curso.categoria,
         layout: curso.layout,
+        bannerVideoUrl: curso.bannerVideoUrl ?? undefined,
         unidades: unidadesNormalizadas,
         status: curso.status,
         version: curso.version,
@@ -184,7 +185,16 @@ export async function POST(req: NextRequest) {
     assertCan(authResult.user, 'curso:criar')
 
     const body = await req.json()
-    const { titulo, descricao, cargaHoraria, modalidade, categoria, layout, unidades } = body
+    const {
+      titulo,
+      descricao,
+      cargaHoraria,
+      modalidade,
+      categoria,
+      layout,
+      bannerVideoUrl,
+      unidades,
+    } = body
 
     // Validar campos obrigatórios
     if (!titulo || !descricao || !cargaHoraria || !modalidade || !categoria) {
@@ -227,6 +237,7 @@ export async function POST(req: NextRequest) {
         modalidade,
         categoria,
         layout: layout || 'classico',
+        bannerVideoUrl: bannerVideoUrl || null,
         unidades: unidadesNormalizadas,
         ownerId: authResult.user.id,
       },
@@ -252,6 +263,7 @@ export async function POST(req: NextRequest) {
       modalidade: curso.modalidade,
       categoria: curso.categoria,
       layout: curso.layout,
+      bannerVideoUrl: curso.bannerVideoUrl ?? undefined,
       unidades: (curso.unidades as unknown as Unidade[]) || [],
       status: curso.status,
       version: curso.version,
@@ -292,6 +304,7 @@ export async function PUT(req: NextRequest) {
       modalidade,
       categoria,
       layout,
+      bannerVideoUrl,
       unidades,
       version,
     } = body
@@ -372,6 +385,7 @@ export async function PUT(req: NextRequest) {
         ...(modalidade && { modalidade }),
         ...(categoria && { categoria }),
         ...(layout && { layout }),
+        ...(bannerVideoUrl !== undefined && { bannerVideoUrl: bannerVideoUrl || null }),
         ...(unidadesNormalizadas !== undefined && { unidades: unidadesNormalizadas }),
         // Editar invalida a revisão: um curso aprovado cujo conteúdo mudou não
         // foi aprovado nesta versão, e o revisor registrado nunca a viu.
@@ -405,6 +419,7 @@ export async function PUT(req: NextRequest) {
       modalidade: curso.modalidade,
       categoria: curso.categoria,
       layout: curso.layout,
+      bannerVideoUrl: curso.bannerVideoUrl ?? undefined,
       unidades: (curso.unidades as unknown as Unidade[]) || [],
       status: curso.status,
       version: curso.version,

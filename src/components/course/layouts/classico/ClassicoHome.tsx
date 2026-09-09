@@ -3,6 +3,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Clock, GraduationCap, Layers, ArrowRight } from 'lucide-react'
+import { extractYouTubeId } from '@/lib/youtube'
 import type { CursoGerado } from '@/types/gerador-curso'
 
 interface ClassicoHomeProps {
@@ -11,26 +12,69 @@ interface ClassicoHomeProps {
 }
 
 export function ClassicoHome({ curso, onNavigate }: ClassicoHomeProps) {
+  const bannerVideoId = curso.bannerVideoUrl ? extractYouTubeId(curso.bannerVideoUrl) : ''
+
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pt-16">
       {/* Hero Section - Dark Background */}
       <div className="bg-gradient-to-br from-blue-950 via-blue-900 to-blue-800 dark:from-gray-950 dark:via-gray-900 dark:to-gray-800 text-white pt-7 lg:pt-16 pb-16">
-        <div className="max-w-7xl mx-auto px-7 lg:px-14">
+        <div
+          className={
+            bannerVideoId
+              ? 'max-w-7xl mx-auto px-7 lg:px-14 grid lg:grid-cols-2 lg:gap-x-12 lg:items-center'
+              : 'max-w-7xl mx-auto px-7 lg:px-14'
+          }
+        >
           {/* Category Badge */}
-          <div className="mb-4">
+          <div className={bannerVideoId ? 'mb-4 lg:col-start-1 lg:row-start-1' : 'mb-4'}>
             <Badge className="bg-white/20 text-white border-white/30 hover:bg-white/30">
               {curso.categoria}
             </Badge>
           </div>
 
           {/* Course Title */}
-          <h1 className="text-3xl md:text-5xl font-bold mb-4">{curso.titulo}</h1>
+          <h1
+            className={
+              bannerVideoId
+                ? 'text-3xl md:text-5xl font-bold mb-4 lg:col-start-1 lg:row-start-2'
+                : 'text-3xl md:text-5xl font-bold mb-4'
+            }
+          >
+            {curso.titulo}
+          </h1>
+
+          {/* Banner Video — no mobile fica entre o título e a descrição */}
+          {bannerVideoId && (
+            <div className="aspect-video w-full rounded-xl overflow-hidden shadow-2xl bg-black/30 mb-8 lg:mb-0 lg:col-start-2 lg:row-start-1 lg:row-span-4 lg:self-center">
+              <iframe
+                src={`https://www.youtube.com/embed/${bannerVideoId}`}
+                title={curso.titulo}
+                className="w-full h-full"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+              />
+            </div>
+          )}
 
           {/* Course Description */}
-          <p className="text-lg md:text-xl text-blue-100 mb-8 max-w-3xl">{curso.descricao}</p>
+          <p
+            className={
+              bannerVideoId
+                ? 'text-lg md:text-xl text-blue-100 mb-8 lg:col-start-1 lg:row-start-3'
+                : 'text-lg md:text-xl text-blue-100 mb-8 max-w-3xl'
+            }
+          >
+            {curso.descricao}
+          </p>
 
           {/* Course Metadata */}
-          <div className="flex flex-wrap gap-6">
+          <div
+            className={
+              bannerVideoId
+                ? 'flex flex-wrap gap-6 lg:col-start-1 lg:row-start-4'
+                : 'flex flex-wrap gap-6'
+            }
+          >
             <div className="flex items-center gap-2">
               <Clock className="w-5 h-5 text-blue-300" />
               <span className="text-blue-100">{curso.cargaHoraria}</span>

@@ -107,8 +107,14 @@ function buildPrompt(text: string, mode: ModoLeitura = 'auto'): string {
   "categoria": "string",
   "cargaHoraria": "X horas",
   "modalidade": "Online",
+  "bannerVideoUrl": "string (opcional)",
   "unidades": [ <array de Unidade> ]
 }
+
+- "bannerVideoUrl" é o vídeo de apresentação do curso, exibido no banner da página
+  inicial — NÃO é um bloco de unidade, fica na raiz do JSON. Preencha apenas com o link
+  que vier após "VÍDEO INTRODUTÓRIO:" no cabeçalho do texto. Sem esse rótulo, omita o
+  campo: nunca invente uma URL nem reaproveite o link de um bloco de vídeo.
 
 Cada Unidade:
 {

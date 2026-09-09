@@ -16,6 +16,7 @@ import { Settings } from 'lucide-react'
 import { LayoutSelector } from '@/components/course/LayoutSelector'
 import { DEFAULT_LAYOUT_ID } from '@/components/course/layouts'
 import { CATEGORIAS_CURSO } from '@/lib/constants'
+import { ehUrlYouTubeValida } from '@/lib/youtube'
 
 import { GerenciarColaboradores } from '@/components/colaboracao/GerenciarColaboradores'
 
@@ -32,6 +33,7 @@ interface CourseData {
   categoria?: string
   cargaHoraria: string
   layout?: string
+  bannerVideoUrl?: string
 }
 
 interface CourseSettingsDrawerProps {
@@ -61,8 +63,12 @@ export function CourseSettingsDrawer({
     setLocalUnidades(unidades)
   }, [courseData, unidades])
 
+  const bannerVideoUrl = localCourseData.bannerVideoUrl?.trim() || ''
+  const bannerVideoInvalido = bannerVideoUrl !== '' && !ehUrlYouTubeValida(bannerVideoUrl)
+
   const handleSave = () => {
-    onSave(localCourseData, localUnidades)
+    if (bannerVideoInvalido) return
+    onSave({ ...localCourseData, bannerVideoUrl }, localUnidades)
     onOpenChange(false)
   }
 
@@ -108,6 +114,27 @@ export function CourseSettingsDrawer({
                 placeholder="Digite o nome do curso"
                 className="w-full"
               />
+            </div>
+
+            <div className="space-y-2">
+              <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300">
+                Vídeo introdutório
+                <span className="text-xs font-normal text-gray-500 dark:text-gray-400">
+                  opcional
+                </span>
+              </label>
+              <Input
+                value={localCourseData.bannerVideoUrl ?? ''}
+                onChange={(e) =>
+                  setLocalCourseData({ ...localCourseData, bannerVideoUrl: e.target.value })
+                }
+                placeholder="https://www.youtube.com/watch?v=..."
+                aria-invalid={bannerVideoInvalido}
+                className="w-full"
+              />
+              {bannerVideoInvalido && (
+                <p className="text-sm text-red-600 dark:text-red-400">Link do YouTube inválido</p>
+              )}
             </div>
 
             <div className="space-y-2">
@@ -187,7 +214,9 @@ export function CourseSettingsDrawer({
           <Button variant="outline" onClick={handleCancel}>
             Cancelar
           </Button>
-          <Button onClick={handleSave}>Salvar</Button>
+          <Button onClick={handleSave} disabled={bannerVideoInvalido}>
+            Salvar
+          </Button>
         </SheetFooter>
       </SheetContent>
     </Sheet>
