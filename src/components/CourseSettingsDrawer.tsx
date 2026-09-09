@@ -16,7 +16,7 @@ import { Settings } from 'lucide-react'
 import { LayoutSelector } from '@/components/course/LayoutSelector'
 import { DEFAULT_LAYOUT_ID } from '@/components/course/layouts'
 import { CATEGORIAS_CURSO } from '@/lib/constants'
-import { ehUrlYouTubeValida } from '@/lib/youtube'
+import { ehUrlYouTubeValida, extractYouTubeId } from '@/lib/youtube'
 
 import { GerenciarColaboradores } from '@/components/colaboracao/GerenciarColaboradores'
 
@@ -65,6 +65,7 @@ export function CourseSettingsDrawer({
 
   const bannerVideoUrl = localCourseData.bannerVideoUrl?.trim() || ''
   const bannerVideoInvalido = bannerVideoUrl !== '' && !ehUrlYouTubeValida(bannerVideoUrl)
+  const bannerVideoId = bannerVideoInvalido ? '' : extractYouTubeId(bannerVideoUrl)
 
   const handleSave = () => {
     if (bannerVideoInvalido) return
@@ -134,6 +135,17 @@ export function CourseSettingsDrawer({
               />
               {bannerVideoInvalido && (
                 <p className="text-sm text-red-600 dark:text-red-400">Link do YouTube inválido</p>
+              )}
+              {bannerVideoId && (
+                <div className="aspect-video w-full overflow-hidden rounded-lg bg-gray-100 dark:bg-gray-800">
+                  <iframe
+                    src={`https://www.youtube.com/embed/${bannerVideoId}`}
+                    title="Pré-visualização do vídeo introdutório"
+                    className="h-full w-full"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                  />
+                </div>
               )}
             </div>
 

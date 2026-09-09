@@ -73,6 +73,32 @@ describe('campo de vídeo do banner', () => {
     expect(onSave).not.toHaveBeenCalled()
   })
 
+  it('mostra a pré-visualização quando o link é válido', async () => {
+    abrirDrawer()
+    expect(document.querySelector('iframe')).toBeNull()
+
+    await userEvent.type(
+      screen.getByPlaceholderText('https://www.youtube.com/watch?v=...'),
+      'https://www.youtube.com/watch?v=dQw4w9WgXcQ&list=PLPli'
+    )
+
+    expect(document.querySelector('iframe')).toHaveAttribute(
+      'src',
+      'https://www.youtube.com/embed/dQw4w9WgXcQ'
+    )
+  })
+
+  it('não mostra pré-visualização de link inválido', async () => {
+    abrirDrawer()
+
+    await userEvent.type(
+      screen.getByPlaceholderText('https://www.youtube.com/watch?v=...'),
+      'https://vimeo.com/123456'
+    )
+
+    expect(document.querySelector('iframe')).toBeNull()
+  })
+
   it('permite limpar o campo para remover o vídeo', async () => {
     const onSave = abrirDrawer('https://youtu.be/dQw4w9WgXcQ')
 
