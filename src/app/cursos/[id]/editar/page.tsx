@@ -1320,9 +1320,9 @@ function EditorCurso() {
                                           key={key}
                                           className={`group/div relative ${colSpanClass}`}
                                         >
-                                          <div className="relative flex items-center justify-center">
+                                          <div className="relative flex items-center justify-center py-2 md:py-0">
                                             {/* Linha horizontal */}
-                                            <div className="absolute inset-x-0 h-0.5 rounded-full bg-blue-600 dark:bg-blue-500 opacity-0 group-hover/div:opacity-35 transition-opacity duration-150"></div>
+                                            <div className="absolute inset-x-0 h-0.5 rounded-full bg-blue-600 dark:bg-blue-500 opacity-20 md:opacity-0 md:group-hover/div:opacity-35 transition-opacity duration-150"></div>
 
                                             {/* Botão circular */}
                                             <TooltipButton
@@ -1343,7 +1343,7 @@ function EditorCurso() {
                                               size="sm"
                                               tooltipSide="top"
                                               tooltipClassName="text-xs"
-                                              className="relative z-10 flex items-center justify-center w-[26px] h-[26px] rounded-full bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white shadow-lg opacity-0 scale-50 group-hover/div:opacity-100 group-hover/div:scale-100 transition-[opacity,scale] duration-150 ease-out"
+                                              className="relative z-10 flex items-center justify-center w-[20px] h-[20px] md:w-[26px] md:h-[26px] rounded-full bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white shadow-lg opacity-100 scale-100 md:opacity-0 md:scale-50 md:group-hover/div:opacity-100 md:group-hover/div:scale-100 transition-[opacity,scale] duration-150 ease-out"
                                             />
                                           </div>
                                         </div>
@@ -1363,7 +1363,7 @@ function EditorCurso() {
                                             className={`${colClass} group/empty`}
                                           >
                                             <button
-                                              className="w-full h-full min-h-[60px] rounded-lg border-2 border-dashed border-transparent flex items-center justify-center text-gray-400 dark:text-gray-500 opacity-0 group-hover/empty:opacity-100 group-hover/empty:border-gray-300 dark:group-hover/empty:border-gray-600 hover:border-blue-400! dark:hover:border-blue-500! hover:text-blue-500! dark:hover:text-blue-400! hover:bg-blue-50! dark:hover:bg-blue-950/20! transition-all"
+                                              className="w-full h-full min-h-[60px] rounded-lg border-2 border-dashed flex items-center justify-center text-gray-400 dark:text-gray-500 opacity-100 border-gray-300 dark:border-gray-600 md:opacity-0 md:border-transparent md:group-hover/empty:opacity-100 md:group-hover/empty:border-gray-300 dark:md:group-hover/empty:border-gray-600 hover:border-blue-400! dark:hover:border-blue-500! hover:text-blue-500! dark:hover:text-blue-400! hover:bg-blue-50! dark:hover:bg-blue-950/20! transition-all"
                                               onClick={() => {
                                                 handleOpenAddContentDrawer(
                                                   unidade.id,
@@ -1865,9 +1865,13 @@ function EditorCurso() {
               </p>
             </DialogHeader>
             <Tabs defaultValue={CATEGORIAS_BLOCO[0].id} className="mt-4">
-              <TabsList className="w-full">
+              <TabsList className="w-full max-w-full justify-start overflow-x-auto">
                 {CATEGORIAS_BLOCO.map((categoria) => (
-                  <TabsTrigger key={categoria.id} value={categoria.id}>
+                  <TabsTrigger
+                    key={categoria.id}
+                    value={categoria.id}
+                    className="flex-none whitespace-nowrap"
+                  >
                     {categoria.rotulo}
                   </TabsTrigger>
                 ))}
