@@ -1,14 +1,15 @@
 import React from 'react'
 import { Badge } from '@/components/ui/badge'
-import { Clock, GraduationCap, Layers, ArrowRight } from 'lucide-react'
+import { Clock, GraduationCap, Layers, ArrowRight, Check } from 'lucide-react'
 import type { CursoGerado } from '@/types/gerador-curso'
 
 interface SidebarHomeProps {
   curso: CursoGerado
   onNavigate: (unitId: string) => void
+  concluidas?: boolean[]
 }
 
-export function SidebarHome({ curso, onNavigate }: SidebarHomeProps) {
+export function SidebarHome({ curso, onNavigate, concluidas }: SidebarHomeProps) {
   return (
     <div className="flex-1">
       <section className="px-7 lg:px-14 pt-7 lg:pt-14 pb-10 border-b border-[#e6e4f0] dark:border-[#2c2839] bg-gradient-to-br from-violet-50 dark:from-violet-950/20 to-transparent">
@@ -48,28 +49,56 @@ export function SidebarHome({ curso, onNavigate }: SidebarHomeProps) {
           </p>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {curso.unidades.map((unidade, index) => (
-              <button
-                key={unidade.id}
-                type="button"
-                onClick={() => onNavigate(unidade.id)}
-                className="flex flex-col gap-3.5 text-left rounded-[18px] border border-[#e6e4f0] dark:border-[#2c2839] bg-white dark:bg-[#1a1725] p-5 shadow-[0_1px_2px_rgba(28,24,48,.04),0_8px_24px_-12px_rgba(28,24,48,.10)] hover:border-violet-300 dark:hover:border-violet-700 transition-colors"
-              >
-                <div className="flex items-center justify-center w-[38px] h-[38px] rounded-[10px] bg-violet-50 dark:bg-violet-950/40 text-violet-600 dark:text-violet-400 text-sm font-extrabold">
-                  {index + 1}
-                </div>
-                <h3 className="text-base font-bold text-gray-900 dark:text-gray-50 leading-snug">
-                  {unidade.titulo}
-                </h3>
-                <p className="text-[13px] text-gray-500 dark:text-gray-400 leading-relaxed flex-1">
-                  {unidade.descricao}
-                </p>
-                <span className="flex items-center gap-1.5 text-[13px] font-bold text-violet-600 dark:text-violet-400">
-                  Iniciar unidade
-                  <ArrowRight className="w-[15px] h-[15px]" />
-                </span>
-              </button>
-            ))}
+            {curso.unidades.map((unidade, index) => {
+              const concluida = concluidas?.[index] ?? false
+
+              return (
+                <button
+                  key={unidade.id}
+                  type="button"
+                  onClick={() => onNavigate(unidade.id)}
+                  className={`flex flex-col gap-3.5 text-left rounded-[18px] border border-[#e6e4f0] dark:border-[#2c2839] bg-white dark:bg-[#1a1725] p-5 shadow-[0_1px_2px_rgba(28,24,48,.04),0_8px_24px_-12px_rgba(28,24,48,.10)] transition-colors ${
+                    concluida
+                      ? 'hover:border-green-300 dark:hover:border-green-700'
+                      : 'hover:border-violet-300 dark:hover:border-violet-700'
+                  }`}
+                >
+                  <div className="flex items-center gap-2">
+                    <div
+                      className={`flex items-center justify-center w-[38px] h-[38px] rounded-[10px] text-sm font-extrabold ${
+                        concluida
+                          ? 'bg-green-50 dark:bg-green-950/40 text-green-600 dark:text-green-400'
+                          : 'bg-violet-50 dark:bg-violet-950/40 text-violet-600 dark:text-violet-400'
+                      }`}
+                    >
+                      {index + 1}
+                    </div>
+                    {concluida && (
+                      <span className="inline-flex items-center gap-1 rounded-full bg-green-50 dark:bg-green-950/40 px-2 py-0.5 text-[11px] font-bold text-green-600 dark:text-green-400">
+                        <Check className="w-3 h-3" strokeWidth={3} />
+                        Concluída
+                      </span>
+                    )}
+                  </div>
+                  <h3 className="text-base font-bold text-gray-900 dark:text-gray-50 leading-snug">
+                    {unidade.titulo}
+                  </h3>
+                  <p className="text-[13px] text-gray-500 dark:text-gray-400 leading-relaxed flex-1">
+                    {unidade.descricao}
+                  </p>
+                  <span
+                    className={`flex items-center gap-1.5 text-[13px] font-bold ${
+                      concluida
+                        ? 'text-green-600 dark:text-green-400'
+                        : 'text-violet-600 dark:text-violet-400'
+                    }`}
+                  >
+                    {concluida ? 'Revisar unidade' : 'Iniciar unidade'}
+                    <ArrowRight className="w-[15px] h-[15px]" />
+                  </span>
+                </button>
+              )
+            })}
           </div>
         )}
       </section>

@@ -4,7 +4,7 @@ import React from 'react'
 import { Button } from '@/components/ui/button'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from '@/components/ui/sheet'
-import { Home, User, Moon, Sun, Menu } from 'lucide-react'
+import { Home, User, Moon, Sun, Menu, Check } from 'lucide-react'
 import type { CursoGerado } from '@/types/gerador-curso'
 import type { ResumoProgresso } from '@/lib/scorm-progress'
 import { useLMS } from '@/hooks/useLMS'
@@ -15,6 +15,7 @@ interface SidebarNavbarProps {
   currentUnidadeId?: string
   onNavigate: (unitId: string | null) => void
   progresso: ResumoProgresso
+  concluidas?: boolean[]
 }
 
 export function SidebarNavbar({
@@ -22,6 +23,7 @@ export function SidebarNavbar({
   currentUnidadeId,
   onNavigate,
   progresso,
+  concluidas,
 }: SidebarNavbarProps) {
   const { learnerName } = useLMS()
   const { isDarkMode, toggleDarkMode } = useTheme()
@@ -90,25 +92,31 @@ export function SidebarNavbar({
       <nav className="flex flex-col gap-0.5">
         {curso.unidades.map((unidade, index) => {
           const isActive = unidade.id === currentUnidadeId
+          const concluida = concluidas?.[index] ?? false
+
+          const estiloItem = isActive
+            ? 'bg-violet-50 dark:bg-violet-950/40 text-violet-600 dark:text-violet-400'
+            : concluida
+              ? 'text-green-700 dark:text-green-400 hover:bg-gray-50 dark:hover:bg-white/5'
+              : 'text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/5'
+
+          const estiloMarcador = isActive
+            ? 'bg-violet-600 text-white'
+            : concluida
+              ? 'bg-green-50 dark:bg-green-950/40 text-green-600 dark:text-green-400'
+              : 'bg-gray-100 dark:bg-white/10 text-gray-400 dark:text-gray-400'
+
           return (
             <button
               key={unidade.id}
               type="button"
               onClick={() => handleNavigate(unidade.id)}
-              className={`flex items-center gap-2.5 px-2.5 py-2.5 rounded-lg text-sm font-semibold text-left transition-colors ${
-                isActive
-                  ? 'bg-violet-50 dark:bg-violet-950/40 text-violet-600 dark:text-violet-400'
-                  : 'text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/5'
-              }`}
+              className={`flex items-center gap-2.5 px-2.5 py-2.5 rounded-lg text-sm font-semibold text-left transition-colors ${estiloItem}`}
             >
               <span
-                className={`flex items-center justify-center w-[22px] h-[22px] rounded-full text-[11px] font-extrabold shrink-0 ${
-                  isActive
-                    ? 'bg-violet-600 text-white'
-                    : 'bg-gray-100 dark:bg-white/10 text-gray-400 dark:text-gray-400'
-                }`}
+                className={`flex items-center justify-center w-[22px] h-[22px] rounded-full text-[11px] font-extrabold shrink-0 ${estiloMarcador}`}
               >
-                {index + 1}
+                {concluida && !isActive ? <Check className="w-3 h-3" strokeWidth={3} /> : index + 1}
               </span>
               <span className="line-clamp-2">{unidade.titulo}</span>
             </button>

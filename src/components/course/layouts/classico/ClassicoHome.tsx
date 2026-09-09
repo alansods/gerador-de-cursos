@@ -2,16 +2,17 @@ import React from 'react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Clock, GraduationCap, Layers, ArrowRight } from 'lucide-react'
+import { Clock, GraduationCap, BookOpen, ArrowRight, Check } from 'lucide-react'
 import { extractYouTubeId } from '@/lib/youtube'
 import type { CursoGerado } from '@/types/gerador-curso'
 
 interface ClassicoHomeProps {
   curso: CursoGerado
   onNavigate: (unitId: string) => void
+  concluidas?: boolean[]
 }
 
-export function ClassicoHome({ curso, onNavigate }: ClassicoHomeProps) {
+export function ClassicoHome({ curso, onNavigate, concluidas }: ClassicoHomeProps) {
   const bannerVideoId = curso.bannerVideoUrl ? extractYouTubeId(curso.bannerVideoUrl) : ''
 
   return (
@@ -101,57 +102,87 @@ export function ClassicoHome({ curso, onNavigate }: ClassicoHomeProps) {
               </CardContent>
             </Card>
           ) : (
-            curso.unidades.map((unidade, unidadeIndex) => (
-              <div
-                key={unidade.id}
-                onClick={() => onNavigate(unidade.id)}
-                className="block cursor-pointer"
-              >
-                <Card className="overflow-hidden bg-white dark:bg-gray-800 hover:border-orange-600 transition-all duration-200 cursor-pointer">
-                  <CardContent className="p-6">
-                    <div className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-5">
-                      {/* Icon Circle */}
-                      <div className="shrink-0">
-                        <div className="flex items-center justify-center w-12 h-12 rounded-full bg-orange-600">
-                          <Layers className="w-6 h-6 text-white" />
+            curso.unidades.map((unidade, unidadeIndex) => {
+              const concluida = concluidas?.[unidadeIndex] ?? false
+
+              return (
+                <div
+                  key={unidade.id}
+                  onClick={() => onNavigate(unidade.id)}
+                  className="block cursor-pointer"
+                >
+                  <Card
+                    className={`overflow-hidden bg-white dark:bg-gray-800 transition-all duration-200 cursor-pointer ${
+                      concluida ? 'hover:border-green-600' : 'hover:border-orange-600'
+                    }`}
+                  >
+                    <CardContent className="p-6">
+                      <div className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-5">
+                        {/* Icon Circle */}
+                        <div className="shrink-0">
+                          <div
+                            className={`flex items-center justify-center w-12 h-12 rounded-full ${
+                              concluida ? 'bg-green-600' : 'bg-orange-600'
+                            }`}
+                          >
+                            {concluida ? (
+                              <Check className="w-6 h-6 text-white" strokeWidth={3} />
+                            ) : (
+                              <BookOpen className="w-6 h-6 text-white" />
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Content */}
+                        <div className="flex-1 text-center sm:text-left">
+                          {/* Unit Label */}
+                          <div className="flex items-center justify-center sm:justify-start gap-2">
+                            <span
+                              className={`text-xs font-bold uppercase tracking-wide ${
+                                concluida ? 'text-green-600' : 'text-orange-600'
+                              }`}
+                            >
+                              UNIDADE {String(unidadeIndex + 1).padStart(2, '0')}
+                            </span>
+                            {concluida && (
+                              <span className="inline-flex items-center gap-1 rounded-full bg-green-100 px-2 py-0.5 text-[11px] font-semibold text-green-700 dark:bg-green-900/40 dark:text-green-400">
+                                <Check className="w-3 h-3" strokeWidth={3} />
+                                Concluída
+                              </span>
+                            )}
+                          </div>
+
+                          {/* Unit Title */}
+                          <h3 className="text-xl md:text-2xl font-bold text-gray-900 dark:text-gray-100 leading-tight">
+                            {unidade.titulo}
+                          </h3>
+
+                          {/* Unit Description */}
+                          <p className="text-gray-600 dark:text-gray-400 text-base leading-relaxed my-2">
+                            {unidade.descricao}
+                          </p>
+                        </div>
+
+                        {/* Access Icon */}
+                        <div className="shrink-0">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className={`h-10 w-10 pointer-events-none dark:hover:bg-gray-700 ${
+                              concluida
+                                ? 'text-green-600 hover:text-green-700 hover:bg-green-50'
+                                : 'text-orange-600 hover:text-orange-700 hover:bg-orange-50'
+                            }`}
+                          >
+                            <ArrowRight className="w-6 h-6" />
+                          </Button>
                         </div>
                       </div>
-
-                      {/* Content */}
-                      <div className="flex-1 text-center sm:text-left">
-                        {/* Unit Label */}
-                        <div>
-                          <span className="text-xs font-bold text-orange-600 uppercase tracking-wide">
-                            UNIDADE {String(unidadeIndex + 1).padStart(2, '0')}
-                          </span>
-                        </div>
-
-                        {/* Unit Title */}
-                        <h3 className="text-xl md:text-2xl font-bold text-gray-900 dark:text-gray-100 leading-tight">
-                          {unidade.titulo}
-                        </h3>
-
-                        {/* Unit Description */}
-                        <p className="text-gray-600 dark:text-gray-400 text-base leading-relaxed my-2">
-                          {unidade.descricao}
-                        </p>
-                      </div>
-
-                      {/* Access Icon */}
-                      <div className="shrink-0">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="text-orange-600 hover:text-orange-700 hover:bg-orange-50 dark:hover:bg-gray-700 h-10 w-10 pointer-events-none"
-                        >
-                          <ArrowRight className="w-6 h-6" />
-                        </Button>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-            ))
+                    </CardContent>
+                  </Card>
+                </div>
+              )
+            })
           )}
         </div>
       </div>

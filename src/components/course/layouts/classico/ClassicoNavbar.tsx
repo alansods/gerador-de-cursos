@@ -2,7 +2,7 @@
 
 import React from 'react'
 import { Button } from '@/components/ui/button'
-import { Menu, Home, BookOpen, X, Moon, Sun } from 'lucide-react'
+import { Menu, Home, BookOpen, X, Moon, Sun, Check } from 'lucide-react'
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from '@/components/ui/sheet'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import type { CursoGerado } from '@/types/gerador-curso'
@@ -15,6 +15,7 @@ interface ClassicoNavbarProps {
   showMenu?: boolean
   onNavigate: (unitId: string | null) => void
   progresso: ResumoProgresso
+  concluidas?: boolean[]
 }
 
 export function ClassicoNavbar({
@@ -23,6 +24,7 @@ export function ClassicoNavbar({
   showMenu = true,
   onNavigate,
   progresso,
+  concluidas,
 }: ClassicoNavbarProps) {
   const { isDarkMode, toggleDarkMode } = useTheme()
   const [open, setOpen] = React.useState(false)
@@ -124,23 +126,33 @@ export function ClassicoNavbar({
               {/* Units List */}
               {(curso.unidades || []).map((u, index) => {
                 const isActive = currentUnidadeId ? u.id === currentUnidadeId : false
+                const concluida = concluidas?.[index] ?? false
+
+                const estiloItem = isActive
+                  ? 'bg-secondary text-secondary-foreground font-medium'
+                  : concluida
+                    ? 'text-green-700 dark:text-green-400 hover:bg-muted'
+                    : 'text-muted-foreground hover:bg-muted hover:text-foreground'
 
                 return (
                   <a
                     key={u.id}
                     href="#"
                     onClick={(e) => handleNavClick(e, u.id)}
-                    className={`flex items-center gap-2.5 px-3 py-2.5 rounded-md text-[13.5px] leading-tight transition-all duration-150 ${
-                      isActive
-                        ? 'bg-secondary text-secondary-foreground font-medium'
-                        : 'text-muted-foreground hover:bg-muted hover:text-foreground'
-                    }`}
+                    className={`flex items-center gap-2.5 px-3 py-2.5 rounded-md text-[13.5px] leading-tight transition-all duration-150 ${estiloItem}`}
                   >
-                    <BookOpen
-                      className={`w-4 h-4 shrink-0 ${
-                        isActive ? 'text-secondary-foreground' : 'text-muted-foreground/70'
-                      }`}
-                    />
+                    {concluida && !isActive ? (
+                      <Check
+                        className="w-4 h-4 shrink-0 text-green-600 dark:text-green-400"
+                        strokeWidth={3}
+                      />
+                    ) : (
+                      <BookOpen
+                        className={`w-4 h-4 shrink-0 ${
+                          isActive ? 'text-secondary-foreground' : 'text-muted-foreground/70'
+                        }`}
+                      />
+                    )}
                     <span className="line-clamp-2">
                       {index + 1}. {u.titulo}
                     </span>
