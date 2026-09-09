@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
+import { FormField } from '@/components/ui/form-field'
 import { toast } from 'sonner'
 import { ThemeToggle } from '@/components/ThemeToggle'
 import { LanguageToggle } from '@/components/LanguageToggle'
@@ -130,15 +130,18 @@ export default function CadastroPage() {
 
               <form onSubmit={handleSubmit} className="space-y-4">
                 {/* Campo Nome */}
-                <div className="field">
-                  <Label
-                    htmlFor="cadastro-nome"
-                    className="text-[13px] font-medium text-foreground"
-                  >
-                    {t('signup.name')}
-                    <span className="text-highlight ml-0.5">*</span>
-                  </Label>
-                  <div className="input-wrap relative mt-1.5">
+                <FormField
+                  label={
+                    <>
+                      {t('signup.name')}
+                      <span className="text-highlight ml-0.5">*</span>
+                    </>
+                  }
+                  htmlFor="cadastro-nome"
+                  erro={errors.nome}
+                  mostrarErro={!!errors.nome}
+                >
+                  <div className="relative">
                     <User className="absolute left-3.5 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4 pointer-events-none" />
                     <Input
                       id="cadastro-nome"
@@ -158,19 +161,21 @@ export default function CadastroPage() {
                       autoComplete="name"
                     />
                   </div>
-                  {errors.nome && <p className="text-xs text-red-500 mt-1.5">{errors.nome}</p>}
-                </div>
+                </FormField>
 
                 {/* Campo E-mail */}
-                <div className="field">
-                  <Label
-                    htmlFor="cadastro-email"
-                    className="text-[13px] font-medium text-foreground"
-                  >
-                    {t('signup.email')}
-                    <span className="text-highlight ml-0.5">*</span>
-                  </Label>
-                  <div className="input-wrap relative mt-1.5">
+                <FormField
+                  label={
+                    <>
+                      {t('signup.email')}
+                      <span className="text-highlight ml-0.5">*</span>
+                    </>
+                  }
+                  htmlFor="cadastro-email"
+                  erro={errors.email}
+                  mostrarErro={!!errors.email}
+                >
+                  <div className="relative">
                     <Mail className="absolute left-3.5 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4 pointer-events-none" />
                     <Input
                       id="cadastro-email"
@@ -190,20 +195,21 @@ export default function CadastroPage() {
                       autoComplete="email"
                     />
                   </div>
-
-                  {errors.email && <p className="text-xs text-red-500 mt-1.5">{errors.email}</p>}
-                </div>
+                </FormField>
 
                 {/* Campo Senha com Strength Meter */}
-                <div className="field">
-                  <Label
-                    htmlFor="cadastro-senha"
-                    className="text-[13px] font-medium text-foreground"
-                  >
-                    {t('signup.password')}
-                    <span className="text-highlight ml-0.5">*</span>
-                  </Label>
-                  <div className="input-wrap relative mt-1.5">
+                <FormField
+                  label={
+                    <>
+                      {t('signup.password')}
+                      <span className="text-highlight ml-0.5">*</span>
+                    </>
+                  }
+                  htmlFor="cadastro-senha"
+                  erro={errors.senha}
+                  mostrarErro={!!errors.senha}
+                >
+                  <div className="relative">
                     <Lock className="absolute left-3.5 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4 pointer-events-none" />
                     <Input
                       id="cadastro-senha"
@@ -234,22 +240,22 @@ export default function CadastroPage() {
                       {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                     </Button>
                   </div>
-                  {errors.senha && <p className="text-xs text-red-500 mt-1.5">{errors.senha}</p>}
-
-                  {/* Password Strength Meter */}
                   <PasswordStrengthMeter password={senha} onChange={setPasswordScore} />
-                </div>
+                </FormField>
 
                 {/* Campo Confirmar Senha */}
-                <div className="field">
-                  <Label
-                    htmlFor="cadastro-confirmar-senha"
-                    className="text-[13px] font-medium text-foreground"
-                  >
-                    {t('signup.confirmPassword')}
-                    <span className="text-highlight ml-0.5">*</span>
-                  </Label>
-                  <div className="input-wrap relative mt-1.5">
+                <FormField
+                  label={
+                    <>
+                      {t('signup.confirmPassword')}
+                      <span className="text-highlight ml-0.5">*</span>
+                    </>
+                  }
+                  htmlFor="cadastro-confirmar-senha"
+                  erro={errors.confirmarSenha}
+                  mostrarErro={!!errors.confirmarSenha}
+                >
+                  <div className="relative">
                     <Lock className="absolute left-3.5 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4 pointer-events-none" />
                     <Input
                       id="cadastro-confirmar-senha"
@@ -284,10 +290,7 @@ export default function CadastroPage() {
                       )}
                     </Button>
                   </div>
-                  {errors.confirmarSenha && (
-                    <p className="text-xs text-red-500 mt-1.5">{errors.confirmarSenha}</p>
-                  )}
-                </div>
+                </FormField>
 
                 {/* Botão Criar Conta */}
                 <Button

@@ -35,6 +35,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { FormField } from '@/components/ui/form-field'
 import { toast } from 'sonner'
 import type { CursoGerado } from '@/types/gerador-curso'
 import type { StatusCurso } from '@/lib/permissions'
@@ -282,59 +283,62 @@ export default function CursosPage() {
               {/* Filtros em linha */}
               <div className="flex flex-col sm:flex-row gap-4">
                 {/* Filtro por Categoria */}
-                <div className="flex flex-col gap-1 flex-1">
-                  <span className="text-xs text-muted-foreground pl-1">Categoria</span>
-                  <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Categoria" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {CATEGORIES.map((category) => (
-                        <SelectItem key={category} value={category}>
-                          {category}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+                <FormField label="Categoria" compacto className="flex-1">
+                  {(props) => (
+                    <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                      <SelectTrigger id={props.id} className="w-full">
+                        <SelectValue placeholder="Categoria" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {CATEGORIES.map((category) => (
+                          <SelectItem key={category} value={category}>
+                            {category}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                </FormField>
 
                 {/* Filtro por Modalidade */}
-                <div className="flex flex-col gap-1 flex-1">
-                  <span className="text-xs text-muted-foreground pl-1">Modalidade</span>
-                  <Select value={selectedFormat} onValueChange={setSelectedFormat}>
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Modalidade" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {MODALIDADES.map((modalidade) => (
-                        <SelectItem key={modalidade} value={modalidade}>
-                          {modalidade}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+                <FormField label="Modalidade" compacto className="flex-1">
+                  {(props) => (
+                    <Select value={selectedFormat} onValueChange={setSelectedFormat}>
+                      <SelectTrigger id={props.id} className="w-full">
+                        <SelectValue placeholder="Modalidade" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {MODALIDADES.map((modalidade) => (
+                          <SelectItem key={modalidade} value={modalidade}>
+                            {modalidade}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                </FormField>
 
                 {/* Filtro por Status */}
-                <div className="flex flex-col gap-1 flex-1">
-                  <span className="text-xs text-muted-foreground pl-1">Status</span>
-                  <Select
-                    value={selectedStatus}
-                    onValueChange={(value) => setSelectedStatus(value as StatusCurso | 'todos')}
-                  >
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Status" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="todos">Todos os status</SelectItem>
-                      {STATUS_CURSO.map((status) => (
-                        <SelectItem key={status} value={status}>
-                          {STATUS_CURSO_LABELS[status]}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+                <FormField label="Status" compacto className="flex-1">
+                  {(props) => (
+                    <Select
+                      value={selectedStatus}
+                      onValueChange={(value) => setSelectedStatus(value as StatusCurso | 'todos')}
+                    >
+                      <SelectTrigger id={props.id} className="w-full">
+                        <SelectValue placeholder="Status" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="todos">Todos os status</SelectItem>
+                        {STATUS_CURSO.map((status) => (
+                          <SelectItem key={status} value={status}>
+                            {STATUS_CURSO_LABELS[status]}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                </FormField>
 
                 {/* Botão Limpar Filtros */}
                 {hasActiveFilters && (

@@ -15,6 +15,7 @@ import {
 import { Settings } from 'lucide-react'
 import { LayoutSelector } from '@/components/course/LayoutSelector'
 import { DEFAULT_LAYOUT_ID } from '@/components/course/layouts'
+import { FormField } from '@/components/ui/form-field'
 import { CATEGORIAS_CURSO } from '@/lib/constants'
 import { ehUrlYouTubeValida, extractYouTubeId } from '@/lib/youtube'
 
@@ -105,111 +106,108 @@ export function CourseSettingsDrawer({
 
         <div className="flex-1 overflow-y-auto px-6 py-6 space-y-6">
           <div className="space-y-6">
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                Nome do curso
-              </label>
-              <Input
-                value={localCourseData.titulo}
-                onChange={(e) => setLocalCourseData({ ...localCourseData, titulo: e.target.value })}
-                placeholder="Digite o nome do curso"
-                className="w-full"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300">
-                Vídeo introdutório
-                <span className="text-xs font-normal text-gray-500 dark:text-gray-400">
-                  opcional
-                </span>
-              </label>
-              <Input
-                value={localCourseData.bannerVideoUrl ?? ''}
-                onChange={(e) =>
-                  setLocalCourseData({ ...localCourseData, bannerVideoUrl: e.target.value })
-                }
-                placeholder="https://www.youtube.com/watch?v=..."
-                aria-invalid={bannerVideoInvalido}
-                className="w-full"
-              />
-              {bannerVideoInvalido && (
-                <p className="text-sm text-red-600 dark:text-red-400">Link do YouTube inválido</p>
+            <FormField label="Nome do curso">
+              {(props) => (
+                <Input
+                  {...props}
+                  value={localCourseData.titulo}
+                  onChange={(e) =>
+                    setLocalCourseData({ ...localCourseData, titulo: e.target.value })
+                  }
+                  placeholder="Digite o nome do curso"
+                  className="w-full"
+                />
               )}
-              {bannerVideoId && (
-                <div className="aspect-video w-full overflow-hidden rounded-lg bg-gray-100 dark:bg-gray-800">
-                  <iframe
-                    src={`https://www.youtube.com/embed/${bannerVideoId}`}
-                    title="Pré-visualização do vídeo introdutório"
-                    className="h-full w-full"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                    allowFullScreen
-                  />
-                </div>
+            </FormField>
+
+            <FormField
+              label="Vídeo introdutório"
+              opcional
+              erro="Link do YouTube inválido"
+              mostrarErro={bannerVideoInvalido}
+            >
+              {(props) => (
+                <Input
+                  {...props}
+                  value={localCourseData.bannerVideoUrl ?? ''}
+                  onChange={(e) =>
+                    setLocalCourseData({ ...localCourseData, bannerVideoUrl: e.target.value })
+                  }
+                  placeholder="https://www.youtube.com/watch?v=..."
+                  className="w-full"
+                />
               )}
-            </div>
+            </FormField>
 
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                Descrição curta
-              </label>
-              <Textarea
-                value={localCourseData.descricao}
-                onChange={(e) =>
-                  setLocalCourseData({ ...localCourseData, descricao: e.target.value })
-                }
-                placeholder="Digite uma breve descrição"
-                rows={4}
-                className="resize-none"
-              />
-            </div>
+            {bannerVideoId && (
+              <div className="-mt-4 aspect-video w-full overflow-hidden rounded-lg bg-muted">
+                <iframe
+                  src={`https://www.youtube.com/embed/${bannerVideoId}`}
+                  title="Pré-visualização do vídeo introdutório"
+                  className="h-full w-full"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                />
+              </div>
+            )}
 
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                Categoria
-              </label>
-              <Select
-                value={localCourseData.categoria}
-                onValueChange={(value) =>
-                  setLocalCourseData({ ...localCourseData, categoria: value })
-                }
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Selecione uma categoria" />
-                </SelectTrigger>
-                <SelectContent>
-                  {CATEGORIAS_CURSO.map((categoria) => (
-                    <SelectItem key={categoria} value={categoria}>
-                      {categoria}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+            <FormField label="Descrição curta">
+              {(props) => (
+                <Textarea
+                  {...props}
+                  value={localCourseData.descricao}
+                  onChange={(e) =>
+                    setLocalCourseData({ ...localCourseData, descricao: e.target.value })
+                  }
+                  placeholder="Digite uma breve descrição"
+                  rows={4}
+                  className="resize-none"
+                />
+              )}
+            </FormField>
 
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                Carga horária
-              </label>
-              <Input
-                value={localCourseData.cargaHoraria}
-                onChange={(e) =>
-                  setLocalCourseData({ ...localCourseData, cargaHoraria: e.target.value })
-                }
-                placeholder="Ex: 20 horas"
-                className="w-full"
-              />
-            </div>
+            <FormField label="Categoria">
+              {(props) => (
+                <Select
+                  value={localCourseData.categoria}
+                  onValueChange={(value) =>
+                    setLocalCourseData({ ...localCourseData, categoria: value })
+                  }
+                >
+                  <SelectTrigger id={props.id} className="w-full">
+                    <SelectValue placeholder="Selecione uma categoria" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {CATEGORIAS_CURSO.map((categoria) => (
+                      <SelectItem key={categoria} value={categoria}>
+                        {categoria}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+            </FormField>
 
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                Layout do curso
-              </label>
+            <FormField label="Carga horária">
+              {(props) => (
+                <Input
+                  {...props}
+                  value={localCourseData.cargaHoraria}
+                  onChange={(e) =>
+                    setLocalCourseData({ ...localCourseData, cargaHoraria: e.target.value })
+                  }
+                  placeholder="Ex: 20 horas"
+                  className="w-full"
+                />
+              )}
+            </FormField>
+
+            <FormField label="Layout do curso">
               <LayoutSelector
                 value={localCourseData.layout || DEFAULT_LAYOUT_ID}
                 onChange={(layout) => setLocalCourseData({ ...localCourseData, layout })}
               />
-            </div>
+            </FormField>
 
             {cursoId && podeGerenciarColaboradores && (
               <div className="border-t border-gray-200 dark:border-gray-700 pt-6">

@@ -6,7 +6,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { CATEGORIAS_CURSO, MODALIDADES_CURSO, VALIDATION_RULES } from '@/lib/constants'
 import { cn } from '@/lib/utils'
 import type { CampoCursoManual, DadosCursoManual } from '@/lib/validacao-curso'
-import { CampoComErro } from './CampoComErro'
+import { FormField } from '@/components/ui/form-field'
 import { useGrupoRadio } from './useGrupoRadio'
 
 const LIMITE_DESCRICAO = VALIDATION_RULES.NOVO_CURSO.DESCRICAO_MAX
@@ -45,7 +45,7 @@ export function StepInformacoes({
 
   return (
     <div ref={container} className="flex max-w-3xl flex-col gap-6">
-      <CampoComErro label="Título do curso" erro={erros.titulo} mostrarErro={mostrarErro('titulo')}>
+      <FormField label="Título do curso" erro={erros.titulo} mostrarErro={mostrarErro('titulo')}>
         {(props) => (
           <Input
             {...props}
@@ -57,9 +57,9 @@ export function StepInformacoes({
             className={cn('h-11', mostrarErro('titulo') && 'border-destructive')}
           />
         )}
-      </CampoComErro>
+      </FormField>
 
-      <CampoComErro label="Categoria" erro={erros.categoria} mostrarErro={mostrarErro('categoria')}>
+      <FormField label="Categoria" erro={erros.categoria} mostrarErro={mostrarErro('categoria')}>
         {(props) => (
           <div
             id={props.id}
@@ -95,9 +95,9 @@ export function StepInformacoes({
             })}
           </div>
         )}
-      </CampoComErro>
+      </FormField>
 
-      <CampoComErro
+      <FormField
         label="Descrição"
         erro={erros.descricao}
         mostrarErro={mostrarErro('descricao')}
@@ -115,10 +115,10 @@ export function StepInformacoes({
             className={cn(mostrarErro('descricao') && 'border-destructive')}
           />
         )}
-      </CampoComErro>
+      </FormField>
 
       <div className="grid gap-6 sm:grid-cols-2">
-        <CampoComErro
+        <FormField
           label="Carga horária"
           erro={erros.cargaHoraria}
           mostrarErro={mostrarErro('cargaHoraria')}
@@ -140,9 +140,9 @@ export function StepInformacoes({
               </span>
             </div>
           )}
-        </CampoComErro>
+        </FormField>
 
-        <CampoComErro
+        <FormField
           label="Modalidade"
           erro={erros.modalidade}
           mostrarErro={mostrarErro('modalidade')}
@@ -180,7 +180,7 @@ export function StepInformacoes({
               })}
             </div>
           )}
-        </CampoComErro>
+        </FormField>
       </div>
     </div>
   )

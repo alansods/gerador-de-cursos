@@ -11,7 +11,7 @@ import { SearchInput } from '@/components/SearchInput'
 import { PageHeader } from '@/components/PageHeader'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
+import { FormField } from '@/components/ui/form-field'
 import {
   Dialog,
   DialogContent,
@@ -502,54 +502,58 @@ export default function UsuariosPage() {
             </DialogHeader>
             <form onSubmit={handleCreate}>
               <div className="space-y-4 py-4">
-                <div className="space-y-2">
-                  <Label htmlFor="nome">Nome Completo</Label>
-                  <Input
-                    id="nome"
-                    value={formData.nome}
-                    onChange={(e) => setFormData({ ...formData, nome: e.target.value })}
-                    placeholder="Digite o nome completo"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="role">Papel de acesso</Label>
-                  <Select
-                    value={formData.role}
-                    onValueChange={(value) =>
-                      setFormData({ ...formData, role: value as RoleUsuario })
-                    }
-                  >
-                    <SelectTrigger id="role">
-                      <SelectValue placeholder="Selecione o papel" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {ROLES.map((role) => (
-                        <SelectItem key={role} value={role}>
-                          {ROLE_LABELS[role]}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="email">E-mail</Label>
-                  <Input
-                    id="email"
-                    value={formData.email}
-                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                    placeholder="Digite o nome de usuário"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="senha">Senha</Label>
-                  <Input
-                    id="senha"
-                    type="password"
-                    value={formData.senha}
-                    onChange={(e) => setFormData({ ...formData, senha: e.target.value })}
-                    placeholder="Mínimo 6 caracteres"
-                  />
-                </div>
+                <FormField label="Nome Completo">
+                  {(props) => (
+                    <Input
+                      {...props}
+                      value={formData.nome}
+                      onChange={(e) => setFormData({ ...formData, nome: e.target.value })}
+                      placeholder="Digite o nome completo"
+                    />
+                  )}
+                </FormField>
+                <FormField label="Papel de acesso">
+                  {(props) => (
+                    <Select
+                      value={formData.role}
+                      onValueChange={(value) =>
+                        setFormData({ ...formData, role: value as RoleUsuario })
+                      }
+                    >
+                      <SelectTrigger id={props.id}>
+                        <SelectValue placeholder="Selecione o papel" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {ROLES.map((role) => (
+                          <SelectItem key={role} value={role}>
+                            {ROLE_LABELS[role]}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                </FormField>
+                <FormField label="E-mail">
+                  {(props) => (
+                    <Input
+                      {...props}
+                      value={formData.email}
+                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                      placeholder="Digite o nome de usuário"
+                    />
+                  )}
+                </FormField>
+                <FormField label="Senha">
+                  {(props) => (
+                    <Input
+                      {...props}
+                      type="password"
+                      value={formData.senha}
+                      onChange={(e) => setFormData({ ...formData, senha: e.target.value })}
+                      placeholder="Mínimo 6 caracteres"
+                    />
+                  )}
+                </FormField>
               </div>
               <DialogFooter className="mt-4">
                 <Button
@@ -586,52 +590,56 @@ export default function UsuariosPage() {
             </DialogHeader>
             <form onSubmit={handleUpdate}>
               <div className="space-y-4 py-4">
-                <div className="space-y-2">
-                  <Label htmlFor="edit-nome">Nome Completo</Label>
-                  <Input
-                    id="edit-nome"
-                    value={formData.nome}
-                    onChange={(e) => setFormData({ ...formData, nome: e.target.value })}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="edit-role">Papel de acesso</Label>
-                  <Select
-                    value={formData.role}
-                    onValueChange={(value) =>
-                      setFormData({ ...formData, role: value as RoleUsuario })
-                    }
-                  >
-                    <SelectTrigger id="edit-role">
-                      <SelectValue placeholder="Selecione o papel" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {ROLES.map((role) => (
-                        <SelectItem key={role} value={role}>
-                          {ROLE_LABELS[role]}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="edit-email">E-mail</Label>
-                  <Input
-                    id="edit-email"
-                    value={formData.email}
-                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="edit-senha">Nova Senha (opcional)</Label>
-                  <Input
-                    id="edit-senha"
-                    type="password"
-                    value={formData.senha}
-                    onChange={(e) => setFormData({ ...formData, senha: e.target.value })}
-                    placeholder="Deixe em branco para manter a senha atual"
-                  />
-                </div>
+                <FormField label="Nome Completo">
+                  {(props) => (
+                    <Input
+                      {...props}
+                      value={formData.nome}
+                      onChange={(e) => setFormData({ ...formData, nome: e.target.value })}
+                    />
+                  )}
+                </FormField>
+                <FormField label="Papel de acesso">
+                  {(props) => (
+                    <Select
+                      value={formData.role}
+                      onValueChange={(value) =>
+                        setFormData({ ...formData, role: value as RoleUsuario })
+                      }
+                    >
+                      <SelectTrigger id={props.id}>
+                        <SelectValue placeholder="Selecione o papel" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {ROLES.map((role) => (
+                          <SelectItem key={role} value={role}>
+                            {ROLE_LABELS[role]}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                </FormField>
+                <FormField label="E-mail">
+                  {(props) => (
+                    <Input
+                      {...props}
+                      value={formData.email}
+                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                    />
+                  )}
+                </FormField>
+                <FormField label="Nova Senha (opcional)">
+                  {(props) => (
+                    <Input
+                      {...props}
+                      type="password"
+                      value={formData.senha}
+                      onChange={(e) => setFormData({ ...formData, senha: e.target.value })}
+                      placeholder="Deixe em branco para manter a senha atual"
+                    />
+                  )}
+                </FormField>
               </div>
               <DialogFooter>
                 <Button

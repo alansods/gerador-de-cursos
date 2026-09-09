@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
+import { FormField } from '@/components/ui/form-field'
 import { Checkbox } from '@/components/ui/checkbox'
 import { useAuth } from '@/context/AuthContext'
 import { ThemeToggle } from '@/components/ThemeToggle'
@@ -87,11 +87,13 @@ export default function LoginPage() {
 
               <form onSubmit={handleSubmit} className="space-y-4">
                 {/* Campo Usuário */}
-                <div className="field">
-                  <Label htmlFor="login-email" className="text-[13px] font-medium text-foreground">
-                    {t('login.username')}
-                  </Label>
-                  <div className="input-wrap relative mt-1.5">
+                <FormField
+                  label={t('login.username')}
+                  htmlFor="login-email"
+                  erro={errors.email}
+                  mostrarErro={!!errors.email}
+                >
+                  <div className="relative">
                     <User className="absolute left-3.5 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4 pointer-events-none" />
                     <Input
                       id="login-email"
@@ -111,15 +113,16 @@ export default function LoginPage() {
                       autoComplete="username"
                     />
                   </div>
-                  {errors.email && <p className="text-xs text-red-500 mt-1.5">{errors.email}</p>}
-                </div>
+                </FormField>
 
                 {/* Campo Senha */}
-                <div className="field">
-                  <Label htmlFor="login-senha" className="text-[13px] font-medium text-foreground">
-                    {t('login.password')}
-                  </Label>
-                  <div className="input-wrap relative mt-1.5">
+                <FormField
+                  label={t('login.password')}
+                  htmlFor="login-senha"
+                  erro={errors.senha}
+                  mostrarErro={!!errors.senha}
+                >
+                  <div className="relative">
                     <Lock className="absolute left-3.5 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4 pointer-events-none" />
                     <Input
                       id="login-senha"
@@ -150,8 +153,7 @@ export default function LoginPage() {
                       {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                     </Button>
                   </div>
-                  {errors.senha && <p className="text-xs text-red-500 mt-1.5">{errors.senha}</p>}
-                </div>
+                </FormField>
 
                 {/* Lembrar de mim + Esqueceu senha */}
                 <div className="check-row flex items-center justify-between py-1">

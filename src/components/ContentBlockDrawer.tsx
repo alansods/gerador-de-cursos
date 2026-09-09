@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react'
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter } from '@/components/ui/sheet'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { FormField } from '@/components/ui/form-field'
 import { Card } from '@/components/ui/card'
 import { Textarea } from '@/components/ui/textarea'
 import {
@@ -90,11 +91,13 @@ function CampoArquivo({
   }
 
   return (
-    <div className="space-y-2">
-      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-        {rotulo} <span className="text-red-500">*</span>
-      </label>
-
+    <FormField
+      label={
+        <>
+          {rotulo} <span className="text-destructive">*</span>
+        </>
+      }
+    >
       <div className="flex items-center gap-2">
         <Button
           type="button"
@@ -130,8 +133,8 @@ function CampoArquivo({
         className="text-sm"
       />
 
-      <p className="text-xs text-gray-500 dark:text-gray-400">{politica.dicaTamanho}</p>
-    </div>
+      <p className="text-xs text-muted-foreground">{politica.dicaTamanho}</p>
+    </FormField>
   )
 }
 
@@ -143,6 +146,24 @@ interface CampoItem<T> {
   tipo?: 'texto' | 'multilinha' | 'select' | 'imagem'
   opcoes?: { valor: string; rotulo: string }[]
   visivelSe?: (item: T) => boolean
+}
+
+function ItemField<T>({ campo, children }: { campo: CampoItem<T>; children: React.ReactNode }) {
+  if (campo.tipo === 'imagem') return <>{children}</>
+
+  return (
+    <FormField
+      compacto
+      label={
+        <>
+          {campo.rotulo}
+          {campo.obrigatorio && <span className="text-destructive"> *</span>}
+        </>
+      }
+    >
+      {children}
+    </FormField>
+  )
 }
 
 function EditorDeItens<T extends { id: string }>({
@@ -168,9 +189,9 @@ function EditorDeItens<T extends { id: string }>({
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-          {rotulo} <span className="text-red-500">*</span>
-        </label>
+        <span className="text-sm font-medium text-foreground">
+          {rotulo} <span className="text-destructive">*</span>
+        </span>
         <Button
           type="button"
           variant="outline"
@@ -205,13 +226,7 @@ function EditorDeItens<T extends { id: string }>({
                 {campos
                   .filter((campo) => !campo.visivelSe || campo.visivelSe(item))
                   .map((campo) => (
-                    <div key={campo.chave}>
-                      {campo.tipo !== 'imagem' && (
-                        <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
-                          {campo.rotulo}
-                          {campo.obrigatorio && <span className="text-red-500"> *</span>}
-                        </label>
-                      )}
+                    <ItemField key={campo.chave} campo={campo}>
                       {campo.tipo === 'multilinha' ? (
                         <Textarea
                           value={String(item[campo.chave] ?? '')}
@@ -251,7 +266,7 @@ function EditorDeItens<T extends { id: string }>({
                           className="text-sm"
                         />
                       )}
-                    </div>
+                    </ItemField>
                   ))}
               </div>
             </Card>
@@ -277,9 +292,9 @@ function EditorDeCategorias({
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-          Categorias <span className="text-red-500">*</span>
-        </label>
+        <span className="text-sm font-medium text-foreground">
+          Categorias <span className="text-destructive">*</span>
+        </span>
         <Button
           type="button"
           variant="outline"
@@ -400,9 +415,9 @@ function EditorDeHotspots({
     <div className="space-y-4">
       <div>
         <div className="mb-2 flex items-center justify-between">
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-            Pontos <span className="text-red-500">*</span>
-          </label>
+          <span className="text-sm font-medium text-foreground">
+            Pontos <span className="text-destructive">*</span>
+          </span>
           <Button
             type="button"
             variant="outline"
@@ -469,13 +484,12 @@ function EditorDeHotspots({
               <div className="space-y-3">
                 <div className="grid grid-cols-2 gap-3">
                   {(['x', 'y'] as const).map((eixo) => (
-                    <div key={eixo}>
-                      <label
-                        htmlFor={`${hotspot.id}-${eixo}`}
-                        className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1"
-                      >
-                        {eixo === 'x' ? 'Horizontal (%)' : 'Vertical (%)'}
-                      </label>
+                    <FormField
+                      key={eixo}
+                      compacto
+                      label={eixo === 'x' ? 'Horizontal (%)' : 'Vertical (%)'}
+                      htmlFor={`${hotspot.id}-${eixo}`}
+                    >
                       <Input
                         id={`${hotspot.id}-${eixo}`}
                         type="number"
@@ -489,7 +503,7 @@ function EditorDeHotspots({
                         }
                         className="text-sm"
                       />
-                    </div>
+                    </FormField>
                   ))}
                 </div>
 
@@ -680,44 +694,53 @@ export function ContentBlockDrawer({
       case 'subtitulo':
         return (
           <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Conteúdo <span className="text-red-500">*</span>
-              </label>
+            <FormField
+              label={
+                <>
+                  Conteúdo <span className="text-red-500">*</span>
+                </>
+              }
+            >
               <Input
                 value={formData.conteudo || ''}
                 onChange={(e) => setFormData({ ...formData, conteudo: e.target.value })}
                 placeholder={`Digite o ${selectedType === 'titulo' ? 'título' : 'subtítulo'}...`}
                 autoFocus
               />
-            </div>
+            </FormField>
           </div>
         )
 
       case 'paragrafo':
         return (
           <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Conteúdo <span className="text-red-500">*</span>
-              </label>
+            <FormField
+              label={
+                <>
+                  Conteúdo <span className="text-red-500">*</span>
+                </>
+              }
+            >
               <RichTextEditor
                 value={formData.conteudo || ''}
                 onChange={(value) => setFormData({ ...formData, conteudo: value })}
                 placeholder="Digite o texto..."
                 autoFocus
               />
-            </div>
+            </FormField>
           </div>
         )
 
       case 'imagem':
         return (
           <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Imagem <span className="text-red-500">*</span>
-              </label>
+            <FormField
+              label={
+                <>
+                  Imagem <span className="text-red-500">*</span>
+                </>
+              }
+            >
               <div className="space-y-3">
                 <div>
                   <label className="flex items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg cursor-pointer hover:border-blue-400 dark:hover:border-blue-500 transition-colors bg-gray-50 dark:bg-gray-800">
@@ -794,12 +817,15 @@ export function ContentBlockDrawer({
                   </div>
                 )}
               </div>
-            </div>
+            </FormField>
 
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                Tamanho da Imagem <span className="text-red-500">*</span>
-              </label>
+            <FormField
+              label={
+                <>
+                  Tamanho da Imagem <span className="text-red-500">*</span>
+                </>
+              }
+            >
               <Select
                 value={formData.tamanho || ''}
                 onValueChange={(value) =>
@@ -818,51 +844,63 @@ export function ContentBlockDrawer({
                   <SelectItem value="grande">Grande (100%)</SelectItem>
                 </SelectContent>
               </Select>
-            </div>
+            </FormField>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Legenda <span className="text-red-500">*</span>
-              </label>
+            <FormField
+              label={
+                <>
+                  Legenda <span className="text-red-500">*</span>
+                </>
+              }
+            >
               <Input
                 value={formData.legenda || ''}
                 onChange={(e) => setFormData({ ...formData, legenda: e.target.value })}
                 placeholder="Digite a legenda da imagem..."
               />
-            </div>
+            </FormField>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Fonte <span className="text-red-500">*</span>
-              </label>
+            <FormField
+              label={
+                <>
+                  Fonte <span className="text-red-500">*</span>
+                </>
+              }
+            >
               <Input
                 value={formData.fonte || ''}
                 onChange={(e) => setFormData({ ...formData, fonte: e.target.value })}
                 placeholder="Digite a fonte da imagem..."
               />
-            </div>
+            </FormField>
           </div>
         )
 
       case 'video':
         return (
           <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Título do Vídeo <span className="text-red-500">*</span>
-              </label>
+            <FormField
+              label={
+                <>
+                  Título do Vídeo <span className="text-red-500">*</span>
+                </>
+              }
+            >
               <Input
                 value={formData.videoTitulo || ''}
                 onChange={(e) => setFormData({ ...formData, videoTitulo: e.target.value })}
                 placeholder="Digite o título do vídeo..."
                 autoFocus
               />
-            </div>
+            </FormField>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Link do YouTube <span className="text-red-500">*</span>
-              </label>
+            <FormField
+              label={
+                <>
+                  Link do YouTube <span className="text-red-500">*</span>
+                </>
+              }
+            >
               <Input
                 value={formData.videoUrl || ''}
                 onChange={(e) => setFormData({ ...formData, videoUrl: e.target.value })}
@@ -871,13 +909,10 @@ export function ContentBlockDrawer({
               <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
                 Exemplo: https://www.youtube.com/watch?v=VIDEO_ID ou https://youtu.be/VIDEO_ID
               </p>
-            </div>
+            </FormField>
 
             {formData.videoUrl && (
-              <div className="mt-4">
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Pré-visualização
-                </label>
+              <FormField label="Pré-visualização" className="mt-4">
                 <div className="aspect-video w-full rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-800">
                   <iframe
                     src={`https://www.youtube.com/embed/${extractYouTubeId(formData.videoUrl)}`}
@@ -887,7 +922,7 @@ export function ContentBlockDrawer({
                     allowFullScreen
                   />
                 </div>
-              </div>
+              </FormField>
             )}
           </div>
         )
@@ -896,9 +931,9 @@ export function ContentBlockDrawer({
         return (
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                Itens do Accordion <span className="text-red-500">*</span>
-              </label>
+              <span className="text-sm font-medium text-foreground">
+                Itens do Accordion <span className="text-destructive">*</span>
+              </span>
               <Button
                 type="button"
                 variant="outline"
@@ -930,10 +965,14 @@ export function ContentBlockDrawer({
                       </Button>
                     </div>
                     <div className="space-y-3">
-                      <div>
-                        <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
-                          Título <span className="text-red-500">*</span>
-                        </label>
+                      <FormField
+                        label={
+                          <>
+                            Título <span className="text-red-500">*</span>
+                          </>
+                        }
+                        compacto
+                      >
                         <Input
                           value={item.titulo}
                           onChange={(e) =>
@@ -942,11 +981,15 @@ export function ContentBlockDrawer({
                           placeholder="Título do item..."
                           className="text-sm"
                         />
-                      </div>
-                      <div>
-                        <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
-                          Conteúdo <span className="text-red-500">*</span>
-                        </label>
+                      </FormField>
+                      <FormField
+                        label={
+                          <>
+                            Conteúdo <span className="text-red-500">*</span>
+                          </>
+                        }
+                        compacto
+                      >
                         <Textarea
                           value={item.conteudo}
                           onChange={(e) =>
@@ -956,7 +999,7 @@ export function ContentBlockDrawer({
                           className="resize-none text-sm"
                           rows={3}
                         />
-                      </div>
+                      </FormField>
                     </div>
                   </Card>
                 ))}
@@ -973,10 +1016,13 @@ export function ContentBlockDrawer({
       case 'lista':
         return (
           <div className="space-y-4">
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                Tipo de Lista <span className="text-red-500">*</span>
-              </label>
+            <FormField
+              label={
+                <>
+                  Tipo de Lista <span className="text-red-500">*</span>
+                </>
+              }
+            >
               <Select
                 value={formData.tipoLista || 'nao-ordenada'}
                 onValueChange={(value) =>
@@ -995,12 +1041,12 @@ export function ContentBlockDrawer({
                   <SelectItem value="check">Com Check</SelectItem>
                 </SelectContent>
               </Select>
-            </div>
+            </FormField>
 
             <div className="flex items-center justify-between">
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                Itens da Lista <span className="text-red-500">*</span>
-              </label>
+              <span className="text-sm font-medium text-foreground">
+                Itens da Lista <span className="text-destructive">*</span>
+              </span>
               <Button
                 type="button"
                 variant="outline"
@@ -1051,9 +1097,9 @@ export function ContentBlockDrawer({
         return (
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                Objetivos de Aprendizagem <span className="text-red-500">*</span>
-              </label>
+              <span className="text-sm font-medium text-foreground">
+                Objetivos de Aprendizagem <span className="text-destructive">*</span>
+              </span>
               <Button
                 type="button"
                 variant="outline"
@@ -1105,10 +1151,13 @@ export function ContentBlockDrawer({
       case 'info-box':
         return (
           <div className="space-y-4">
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                Tipo de Info Box <span className="text-red-500">*</span>
-              </label>
+            <FormField
+              label={
+                <>
+                  Tipo de Info Box <span className="text-red-500">*</span>
+                </>
+              }
+            >
               <Select
                 value={formData.tipoInfoBox || 'info'}
                 onValueChange={(value) =>
@@ -1128,23 +1177,23 @@ export function ContentBlockDrawer({
                   <SelectItem value="curiosidade">Curiosidade</SelectItem>
                 </SelectContent>
               </Select>
-            </div>
+            </FormField>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Título (opcional)
-              </label>
+            <FormField label="Título (opcional)">
               <Input
                 value={formData.tituloInfoBox || ''}
                 onChange={(e) => setFormData({ ...formData, tituloInfoBox: e.target.value })}
                 placeholder="Digite o título..."
               />
-            </div>
+            </FormField>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Conteúdo <span className="text-red-500">*</span>
-              </label>
+            <FormField
+              label={
+                <>
+                  Conteúdo <span className="text-red-500">*</span>
+                </>
+              }
+            >
               <Textarea
                 value={formData.conteudo || ''}
                 onChange={(e) => setFormData({ ...formData, conteudo: e.target.value })}
@@ -1152,7 +1201,7 @@ export function ContentBlockDrawer({
                 className="resize-none"
                 rows={6}
               />
-            </div>
+            </FormField>
           </div>
         )
 
@@ -1224,10 +1273,7 @@ export function ContentBlockDrawer({
               ]}
             />
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Altura dos cards
-              </label>
+            <FormField label="Altura dos cards">
               <Input
                 value={formData.alturaCard || '300px'}
                 onChange={(e) => setFormData({ ...formData, alturaCard: e.target.value })}
@@ -1236,16 +1282,13 @@ export function ContentBlockDrawer({
               <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
                 Até 4 cards por linha; eles se ajustam para ocupar toda a largura.
               </p>
-            </div>
+            </FormField>
           </div>
         )
 
       case 'separador':
         return (
-          <div className="space-y-2">
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-              Estilo
-            </label>
+          <FormField label="Estilo">
             <Select
               value={formData.estiloSeparador || 'linha'}
               onValueChange={(value) =>
@@ -1264,7 +1307,7 @@ export function ContentBlockDrawer({
                 <SelectItem value="espaco">Apenas espaço</SelectItem>
               </SelectContent>
             </Select>
-          </div>
+          </FormField>
         )
 
       case 'tabs':
@@ -1297,10 +1340,7 @@ export function ContentBlockDrawer({
       case 'linha-do-tempo':
         return (
           <div className="space-y-5">
-            <div className="space-y-2">
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                Orientação
-              </label>
+            <FormField label="Orientação">
               <Select
                 value={formData.orientacaoTimeline || 'vertical'}
                 onValueChange={(value) =>
@@ -1318,7 +1358,7 @@ export function ContentBlockDrawer({
                   <SelectItem value="horizontal">Horizontal</SelectItem>
                 </SelectContent>
               </Select>
-            </div>
+            </FormField>
 
             <EditorDeItens
               rotulo="Eventos"
@@ -1354,10 +1394,7 @@ export function ContentBlockDrawer({
       case 'carrossel':
         return (
           <div className="space-y-5">
-            <div className="space-y-2">
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                Exibição
-              </label>
+            <FormField label="Exibição">
               <Select
                 value={formData.modoCarrossel || 'carrossel'}
                 onValueChange={(value) =>
@@ -1375,7 +1412,7 @@ export function ContentBlockDrawer({
                   <SelectItem value="grade">Grade</SelectItem>
                 </SelectContent>
               </Select>
-            </div>
+            </FormField>
 
             <EditorDeItens
               rotulo="Imagens"
@@ -1408,28 +1445,28 @@ export function ContentBlockDrawer({
               onUrl={(audioUrl) => setFormData({ ...formData, audioUrl })}
             />
 
-            <div className="space-y-2">
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                Título <span className="text-red-500">*</span>
-              </label>
+            <FormField
+              label={
+                <>
+                  Título <span className="text-red-500">*</span>
+                </>
+              }
+            >
               <Input
                 value={formData.audioTitulo || ''}
                 onChange={(e) => setFormData({ ...formData, audioTitulo: e.target.value })}
                 placeholder="Título do áudio..."
               />
-            </div>
+            </FormField>
 
-            <div className="space-y-2">
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                Transcrição
-              </label>
+            <FormField label="Transcrição">
               <Textarea
                 value={formData.transcricao || ''}
                 onChange={(e) => setFormData({ ...formData, transcricao: e.target.value })}
                 placeholder="Transcrição do áudio (recomendada para acessibilidade)..."
                 rows={5}
               />
-            </div>
+            </FormField>
           </div>
         )
 
@@ -1443,16 +1480,19 @@ export function ContentBlockDrawer({
               onUrl={(pdfUrl) => setFormData({ ...formData, pdfUrl })}
             />
 
-            <div className="space-y-2">
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                Título <span className="text-red-500">*</span>
-              </label>
+            <FormField
+              label={
+                <>
+                  Título <span className="text-red-500">*</span>
+                </>
+              }
+            >
               <Input
                 value={formData.pdfTitulo || ''}
                 onChange={(e) => setFormData({ ...formData, pdfTitulo: e.target.value })}
                 placeholder="Título do documento..."
               />
-            </div>
+            </FormField>
 
             <label className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
               <input
@@ -1484,16 +1524,13 @@ export function ContentBlockDrawer({
               onChange={(hotspots) => setFormData({ ...formData, hotspots })}
             />
 
-            <div className="space-y-2">
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                Legenda
-              </label>
+            <FormField label="Legenda">
               <Input
                 value={formData.legenda || ''}
                 onChange={(e) => setFormData({ ...formData, legenda: e.target.value })}
                 placeholder="Legenda da imagem..."
               />
-            </div>
+            </FormField>
           </div>
         )
 
@@ -1561,10 +1598,7 @@ export function ContentBlockDrawer({
         <div className="flex-1 overflow-y-auto px-6 py-6 space-y-5">
           {renderForm()}
           {meta?.larguraAjustavel && (
-            <div className="space-y-2">
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                Largura do bloco
-              </label>
+            <FormField label="Largura do bloco">
               <div className="grid grid-cols-2 gap-2">
                 {LARGURAS_BLOCO.map((largura) => (
                   <Button
@@ -1580,7 +1614,7 @@ export function ContentBlockDrawer({
               <p className="text-xs text-gray-500 dark:text-gray-400">
                 Em meia largura o bloco divide a linha com o bloco seguinte.
               </p>
-            </div>
+            </FormField>
           )}
         </div>
 

@@ -1,30 +1,31 @@
-'use client';
+'use client'
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react'
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { FileText, Download, Loader2, ArrowLeft } from 'lucide-react';
-import { toast } from 'sonner';
+} from '@/components/ui/dialog'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { FormField } from '@/components/ui/form-field'
+import { FileText, Download, Loader2, ArrowLeft } from 'lucide-react'
+import { toast } from 'sonner'
 
 interface ExportModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  onExportPDF: (filename: string) => Promise<void> | void;
-  onExportSCORM?: (filename: string) => Promise<void> | void;
-  courseName: string;
-  courseId?: string; // ID do curso para SCORM
-  isGeneratingPDF?: boolean;
-  isGeneratingSCORM?: boolean;
+  isOpen: boolean
+  onClose: () => void
+  onExportPDF: (filename: string) => Promise<void> | void
+  onExportSCORM?: (filename: string) => Promise<void> | void
+  courseName: string
+  courseId?: string // ID do curso para SCORM
+  isGeneratingPDF?: boolean
+  isGeneratingSCORM?: boolean
 }
 
-type ExportType = 'pdf' | 'scorm' | null;
+type ExportType = 'pdf' | 'scorm' | null
 
 export function ExportModal({
   isOpen,
@@ -35,19 +36,19 @@ export function ExportModal({
   isGeneratingPDF = false,
   isGeneratingSCORM = false,
 }: ExportModalProps) {
-  const [selectedType, setSelectedType] = useState<ExportType>(null);
-  const [filename, setFilename] = useState('');
+  const [selectedType, setSelectedType] = useState<ExportType>(null)
+  const [filename, setFilename] = useState('')
 
   // Resetar estado quando o modal fechar
   useEffect(() => {
     if (!isOpen) {
       // Use setTimeout to avoid synchronous setState in effect
       setTimeout(() => {
-        setSelectedType(null);
-        setFilename('');
-      }, 0);
+        setSelectedType(null)
+        setFilename('')
+      }, 0)
     }
-  }, [isOpen]);
+  }, [isOpen])
 
   // Definir nome padrão quando selecionar um tipo
   useEffect(() => {
@@ -59,86 +60,83 @@ export function ExportModal({
         .replace(/[^a-z0-9\s-]/g, '') // Remove caracteres especiais
         .replace(/\s+/g, '-') // Substitui espaços por hífens
         .replace(/-+/g, '-') // Remove hífens duplicados
-        .trim();
-      
-      const extension = selectedType === 'pdf' ? '.pdf' : '.zip';
-      const prefix = selectedType === 'scorm' ? 'scorm-' : '';
-      const newFilename = prefix + sanitizedName + extension;
+        .trim()
+
+      const extension = selectedType === 'pdf' ? '.pdf' : '.zip'
+      const prefix = selectedType === 'scorm' ? 'scorm-' : ''
+      const newFilename = prefix + sanitizedName + extension
       // Use setTimeout to avoid synchronous setState in effect
       setTimeout(() => {
-        setFilename(newFilename);
-      }, 0);
+        setFilename(newFilename)
+      }, 0)
     }
-  }, [selectedType, courseName]);
+  }, [selectedType, courseName])
 
   const handleExport = async () => {
-    console.log('🔄 [ExportModal] handleExport chamado');
-    console.log('📝 [ExportModal] Filename:', filename);
-    console.log('📋 [ExportModal] Selected type:', selectedType);
-    
+    console.log('🔄 [ExportModal] handleExport chamado')
+    console.log('📝 [ExportModal] Filename:', filename)
+    console.log('📋 [ExportModal] Selected type:', selectedType)
+
     if (!filename.trim()) {
-      console.warn('⚠️ [ExportModal] Filename vazio, abortando');
-      return;
+      console.warn('⚠️ [ExportModal] Filename vazio, abortando')
+      return
     }
 
-    let finalFilename = filename;
+    let finalFilename = filename
 
     // Para SCORM, garantir que sempre tenha o prefixo "scorm-"
     if (selectedType === 'scorm' && !finalFilename.startsWith('scorm-')) {
-      finalFilename = 'scorm-' + finalFilename;
+      finalFilename = 'scorm-' + finalFilename
     }
 
-    console.log('📝 [ExportModal] Final filename:', finalFilename);
+    console.log('📝 [ExportModal] Final filename:', finalFilename)
 
     try {
       if (selectedType === 'pdf') {
-        console.log('📄 [ExportModal] Exportando PDF...');
-        await onExportPDF(finalFilename);
+        console.log('📄 [ExportModal] Exportando PDF...')
+        await onExportPDF(finalFilename)
       } else if (selectedType === 'scorm' && onExportSCORM) {
-        console.log('📦 [ExportModal] Exportando SCORM...');
-        console.log('📦 [ExportModal] onExportSCORM existe:', !!onExportSCORM);
-        await onExportSCORM(finalFilename);
-        console.log('✅ [ExportModal] onExportSCORM concluído');
+        console.log('📦 [ExportModal] Exportando SCORM...')
+        console.log('📦 [ExportModal] onExportSCORM existe:', !!onExportSCORM)
+        await onExportSCORM(finalFilename)
+        console.log('✅ [ExportModal] onExportSCORM concluído')
       } else if (selectedType === 'scorm') {
         // SCORM desabilitado temporariamente
-        console.error('❌ [ExportModal] SCORM desabilitado - onExportSCORM não fornecido');
-        toast.error('Exportação SCORM temporariamente indisponível');
-        return;
+        console.error('❌ [ExportModal] SCORM desabilitado - onExportSCORM não fornecido')
+        toast.error('Exportação SCORM temporariamente indisponível')
+        return
       }
-      
+
       // Fechar modal e resetar apenas após sucesso
-      onClose();
-      setSelectedType(null);
-      setFilename('');
+      onClose()
+      setSelectedType(null)
+      setFilename('')
     } catch (error) {
       // Erro já foi tratado no hook, apenas manter o modal aberto
-      console.error('Erro ao exportar:', error);
+      console.error('Erro ao exportar:', error)
     }
-  };
+  }
 
   const handleBack = () => {
-    setSelectedType(null);
-    setFilename('');
-  };
+    setSelectedType(null)
+    setFilename('')
+  }
   // Não permitir fechar o modal durante o loading
   const handleClose = () => {
     if (!isGeneratingPDF && !isGeneratingSCORM) {
-      onClose();
+      onClose()
     }
-  };
+  }
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>
-            {selectedType ? 'Nome do Arquivo' : 'Exportar Curso'}
-          </DialogTitle>
+          <DialogTitle>{selectedType ? 'Nome do Arquivo' : 'Exportar Curso'}</DialogTitle>
           <DialogDescription>
-            {selectedType 
+            {selectedType
               ? 'Escolha o nome do arquivo para download'
-              : 'Escolha o formato de exportação do curso'
-            }
+              : 'Escolha o formato de exportação do curso'}
           </DialogDescription>
         </DialogHeader>
 
@@ -159,7 +157,9 @@ export function ExportModal({
                 )}
               </div>
               <div className="flex-1 text-left">
-                <h3 className="font-semibold text-gray-900 dark:text-gray-100">Exportar como PDF</h3>
+                <h3 className="font-semibold text-gray-900 dark:text-gray-100">
+                  Exportar como PDF
+                </h3>
                 <p className="text-sm text-gray-600 dark:text-gray-400">
                   {isGeneratingPDF ? 'Gerando PDF...' : 'Documento para impressão e visualização'}
                 </p>
@@ -193,9 +193,13 @@ export function ExportModal({
                 )}
               </div>
               <div className="flex-1 text-left">
-                <h3 className="font-semibold text-gray-900 dark:text-gray-100">Exportar como SCORM</h3>
+                <h3 className="font-semibold text-gray-900 dark:text-gray-100">
+                  Exportar como SCORM
+                </h3>
                 <p className="text-sm text-gray-600 dark:text-gray-400">
-                  {isGeneratingSCORM ? 'Gerando SCORM...' : 'Pacote para LMS (Moodle, Canvas, etc.)'}
+                  {isGeneratingSCORM
+                    ? 'Gerando SCORM...'
+                    : 'Pacote para LMS (Moodle, Canvas, etc.)'}
                 </p>
               </div>
               <svg
@@ -228,30 +232,35 @@ export function ExportModal({
                 <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
                   {selectedType === 'pdf' ? 'PDF' : 'SCORM'}
                 </p>
-                <p className="text-xs text-gray-600 dark:text-gray-400 truncate">
-                  {courseName}
-                </p>
+                <p className="text-xs text-gray-600 dark:text-gray-400 truncate">{courseName}</p>
               </div>
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Nome do arquivo <span className="text-red-500 dark:text-red-400">*</span>
-              </label>
-              <Input
-                value={filename}
-                onChange={(e) => setFilename(e.target.value)}
-                placeholder={`${selectedType === 'scorm' ? 'scorm-' : ''}nome-do-arquivo${selectedType === 'pdf' ? '.pdf' : '.zip'}`}
-                className="w-full"
-                autoFocus
-              />
-              <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                {selectedType === 'scorm'
-                  ? 'Arquivos SCORM sempre iniciam com "scorm-"'
-                  : 'O arquivo será baixado com este nome'
-                }
-              </p>
-            </div>
+            <FormField
+              label={
+                <>
+                  Nome do arquivo <span className="text-destructive">*</span>
+                </>
+              }
+            >
+              {(props) => (
+                <>
+                  <Input
+                    {...props}
+                    value={filename}
+                    onChange={(e) => setFilename(e.target.value)}
+                    placeholder={`${selectedType === 'scorm' ? 'scorm-' : ''}nome-do-arquivo${selectedType === 'pdf' ? '.pdf' : '.zip'}`}
+                    className="w-full"
+                    autoFocus
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    {selectedType === 'scorm'
+                      ? 'Arquivos SCORM sempre iniciam com "scorm-"'
+                      : 'O arquivo será baixado com este nome'}
+                  </p>
+                </>
+              )}
+            </FormField>
           </div>
         )}
 
@@ -259,20 +268,25 @@ export function ExportModal({
         <div className="flex justify-between">
           {selectedType ? (
             <>
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 onClick={handleBack}
                 disabled={isGeneratingPDF || isGeneratingSCORM}
               >
                 <ArrowLeft className="w-4 h-4 mr-2" />
                 Voltar
               </Button>
-              <Button 
+              <Button
                 onClick={handleExport}
                 disabled={!filename.trim() || isGeneratingPDF || isGeneratingSCORM}
-                className={selectedType === 'pdf' ? 'bg-green-600 hover:bg-green-700' : 'bg-purple-600 hover:bg-purple-700'}
+                className={
+                  selectedType === 'pdf'
+                    ? 'bg-green-600 hover:bg-green-700'
+                    : 'bg-purple-600 hover:bg-purple-700'
+                }
               >
-                {(selectedType === 'pdf' && isGeneratingPDF) || (selectedType === 'scorm' && isGeneratingSCORM) ? (
+                {(selectedType === 'pdf' && isGeneratingPDF) ||
+                (selectedType === 'scorm' && isGeneratingSCORM) ? (
                   <>
                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                     {selectedType === 'scorm' ? 'Gerando SCORM...' : 'Gerando PDF...'}
@@ -286,9 +300,9 @@ export function ExportModal({
               </Button>
             </>
           ) : (
-            <Button 
-              variant="outline" 
-              onClick={handleClose} 
+            <Button
+              variant="outline"
+              onClick={handleClose}
               className="ml-auto"
               disabled={isGeneratingPDF || isGeneratingSCORM}
             >
@@ -298,6 +312,5 @@ export function ExportModal({
         </div>
       </DialogContent>
     </Dialog>
-  );
+  )
 }
-

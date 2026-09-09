@@ -26,6 +26,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
+import { FormField } from '@/components/ui/form-field'
 import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
@@ -1928,20 +1929,26 @@ function EditorCurso() {
               <DialogDescription>Atualize as informações do curso</DialogDescription>
             </DialogHeader>
             <div className="space-y-4 py-4">
-              <div>
-                <label className="text-sm font-medium text-gray-700 mb-2 block">
-                  Título do Curso <span className="text-red-500">*</span>
-                </label>
+              <FormField
+                label={
+                  <>
+                    Título do Curso <span className="text-red-500">*</span>
+                  </>
+                }
+              >
                 <Input
                   value={tituloEditado}
                   onChange={(e) => setTituloEditado(e.target.value)}
                   placeholder="Título do curso"
                 />
-              </div>
-              <div>
-                <label className="text-sm font-medium text-gray-700 mb-2 block">
-                  Descrição do Curso <span className="text-red-500">*</span>
-                </label>
+              </FormField>
+              <FormField
+                label={
+                  <>
+                    Descrição do Curso <span className="text-red-500">*</span>
+                  </>
+                }
+              >
                 <Textarea
                   value={descricaoEditada}
                   onChange={(e) => setDescricaoEditada(e.target.value)}
@@ -1949,38 +1956,47 @@ function EditorCurso() {
                   className="resize-none"
                   rows={6}
                 />
-              </div>
+              </FormField>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div>
-                  <label className="text-sm font-medium text-gray-700 mb-2 block">
-                    Carga Horária <span className="text-red-500">*</span>
-                  </label>
+                <FormField
+                  label={
+                    <>
+                      Carga Horária <span className="text-red-500">*</span>
+                    </>
+                  }
+                >
                   <Input
                     value={cargaHorariaEditada}
                     onChange={(e) => setCargaHorariaEditada(e.target.value)}
                     placeholder="Ex: 40 horas"
                   />
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-gray-700 mb-2 block">
-                    Modalidade <span className="text-red-500">*</span>
-                  </label>
+                </FormField>
+                <FormField
+                  label={
+                    <>
+                      Modalidade <span className="text-red-500">*</span>
+                    </>
+                  }
+                >
                   <Input
                     value={modalidadeEditada}
                     onChange={(e) => setModalidadeEditada(e.target.value)}
                     placeholder="Ex: EAD, Presencial"
                   />
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-gray-700 mb-2 block">
-                    Categoria <span className="text-red-500">*</span>
-                  </label>
+                </FormField>
+                <FormField
+                  label={
+                    <>
+                      Categoria <span className="text-red-500">*</span>
+                    </>
+                  }
+                >
                   <Input
                     value={categoriaEditada}
                     onChange={(e) => setCategoriaEditada(e.target.value)}
                     placeholder="Ex: Programação, Design, Marketing"
                   />
-                </div>
+                </FormField>
               </div>
             </div>
             <DialogFooter>
@@ -2067,10 +2083,13 @@ function EditorCurso() {
               {conteudoTemp.tipo === 'imagem' ? (
                 <div className="space-y-4">
                   {/* Upload ou URL */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      Imagem <span className="text-red-500">*</span>
-                    </label>
+                  <FormField
+                    label={
+                      <>
+                        Imagem <span className="text-red-500">*</span>
+                      </>
+                    }
+                  >
                     <div className="space-y-3">
                       {/* Upload de Arquivo */}
                       <div>
@@ -2156,12 +2175,15 @@ function EditorCurso() {
                         </div>
                       )}
                     </div>
-                  </div>
+                  </FormField>
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      Tamanho da Imagem <span className="text-red-500">*</span>
-                    </label>
+                  <FormField
+                    label={
+                      <>
+                        Tamanho da Imagem <span className="text-red-500">*</span>
+                      </>
+                    }
+                  >
                     <select
                       value={conteudoTemp.tamanho || ''}
                       onChange={(e) =>
@@ -2177,12 +2199,15 @@ function EditorCurso() {
                       <option value="media">Média (50%)</option>
                       <option value="grande">Grande (100%)</option>
                     </select>
-                  </div>
+                  </FormField>
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      Legenda <span className="text-red-500">*</span>
-                    </label>
+                  <FormField
+                    label={
+                      <>
+                        Legenda <span className="text-red-500">*</span>
+                      </>
+                    }
+                  >
                     <Input
                       value={conteudoTemp.legenda || ''}
                       onChange={(e) =>
@@ -2193,12 +2218,15 @@ function EditorCurso() {
                       }
                       placeholder="Digite a legenda da imagem..."
                     />
-                  </div>
+                  </FormField>
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      Fonte <span className="text-red-500">*</span>
-                    </label>
+                  <FormField
+                    label={
+                      <>
+                        Fonte <span className="text-red-500">*</span>
+                      </>
+                    }
+                  >
                     <Input
                       value={conteudoTemp.fonte || ''}
                       onChange={(e) =>
@@ -2209,14 +2237,14 @@ function EditorCurso() {
                       }
                       placeholder="Digite a fonte da imagem..."
                     />
-                  </div>
+                  </FormField>
                 </div>
               ) : conteudoTemp.tipo === 'accordion' ? (
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
-                    <label className="block text-sm font-medium text-gray-700">
-                      Itens do Accordion <span className="text-red-500">*</span>
-                    </label>
+                    <span className="text-sm font-medium text-foreground">
+                      Itens do Accordion <span className="text-destructive">*</span>
+                    </span>
                     <Button
                       type="button"
                       variant="outline"
@@ -2248,10 +2276,14 @@ function EditorCurso() {
                             </Button>
                           </div>
                           <div className="space-y-3">
-                            <div>
-                              <label className="block text-xs font-medium text-gray-600 mb-1">
-                                Título <span className="text-red-500">*</span>
-                              </label>
+                            <FormField
+                              label={
+                                <>
+                                  Título <span className="text-red-500">*</span>
+                                </>
+                              }
+                              compacto
+                            >
                               <Input
                                 value={item.titulo}
                                 onChange={(e) =>
@@ -2260,11 +2292,15 @@ function EditorCurso() {
                                 placeholder="Título do item..."
                                 className="text-sm"
                               />
-                            </div>
-                            <div>
-                              <label className="block text-xs font-medium text-gray-600 mb-1">
-                                Conteúdo <span className="text-red-500">*</span>
-                              </label>
+                            </FormField>
+                            <FormField
+                              label={
+                                <>
+                                  Conteúdo <span className="text-red-500">*</span>
+                                </>
+                              }
+                              compacto
+                            >
                               <textarea
                                 value={item.conteudo}
                                 onChange={(e) =>
@@ -2274,7 +2310,7 @@ function EditorCurso() {
                                 className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none text-sm"
                                 rows={3}
                               />
-                            </div>
+                            </FormField>
                           </div>
                         </Card>
                       ))}
@@ -2291,10 +2327,13 @@ function EditorCurso() {
               ) : conteudoTemp.tipo === 'flipcard' ? (
                 <div className="space-y-4">
                   {/* Tipo de Frente */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Tipo de Frente <span className="text-red-500">*</span>
-                    </label>
+                  <FormField
+                    label={
+                      <>
+                        Tipo de Frente <span className="text-red-500">*</span>
+                      </>
+                    }
+                  >
                     <select
                       value={conteudoTemp.tipoFrente || 'titulo'}
                       onChange={(e) =>
@@ -2309,15 +2348,18 @@ function EditorCurso() {
                       <option value="imagem-titulo">Imagem com Título no Rodapé</option>
                       <option value="titulo">Apenas Título Centralizado</option>
                     </select>
-                  </div>
+                  </FormField>
 
                   {/* Imagem (se necessário) */}
                   {(conteudoTemp.tipoFrente === 'imagem' ||
                     conteudoTemp.tipoFrente === 'imagem-titulo') && (
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Imagem da Frente <span className="text-red-500">*</span>
-                      </label>
+                    <FormField
+                      label={
+                        <>
+                          Imagem da Frente <span className="text-red-500">*</span>
+                        </>
+                      }
+                    >
                       <div className="space-y-3">
                         {/* Upload de Arquivo */}
                         <div>
@@ -2391,16 +2433,19 @@ function EditorCurso() {
                           </div>
                         )}
                       </div>
-                    </div>
+                    </FormField>
                   )}
 
                   {/* Título (se necessário) */}
                   {(conteudoTemp.tipoFrente === 'imagem-titulo' ||
                     conteudoTemp.tipoFrente === 'titulo') && (
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Título da Frente <span className="text-red-500">*</span>
-                      </label>
+                    <FormField
+                      label={
+                        <>
+                          Título da Frente <span className="text-red-500">*</span>
+                        </>
+                      }
+                    >
                       <Input
                         value={conteudoTemp.tituloFrente || ''}
                         onChange={(e) =>
@@ -2411,14 +2456,17 @@ function EditorCurso() {
                         }
                         placeholder="Digite o título da frente do card..."
                       />
-                    </div>
+                    </FormField>
                   )}
 
                   {/* Conteúdo do Verso */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Conteúdo do Verso <span className="text-red-500">*</span>
-                    </label>
+                  <FormField
+                    label={
+                      <>
+                        Conteúdo do Verso <span className="text-red-500">*</span>
+                      </>
+                    }
+                  >
                     <textarea
                       value={conteudoTemp.conteudoVerso || ''}
                       onChange={(e) =>
@@ -2431,13 +2479,10 @@ function EditorCurso() {
                       className="w-full p-3 border border-gray-300 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       rows={8}
                     />
-                  </div>
+                  </FormField>
 
                   {/* Altura do Card */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Altura do Card (opcional)
-                    </label>
+                  <FormField label="Altura do Card (opcional)">
                     <Input
                       value={conteudoTemp.alturaCard || '300px'}
                       onChange={(e) =>
@@ -2452,15 +2497,18 @@ function EditorCurso() {
                       Use valores como &quot;300px&quot;, &quot;400px&quot; ou &quot;50vh&quot;
                       (viewport height)
                     </p>
-                  </div>
+                  </FormField>
                 </div>
               ) : conteudoTemp.tipo === 'lista' ? (
                 <div className="space-y-4">
                   {/* Tipo de Lista */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Tipo de Lista <span className="text-red-500">*</span>
-                    </label>
+                  <FormField
+                    label={
+                      <>
+                        Tipo de Lista <span className="text-red-500">*</span>
+                      </>
+                    }
+                  >
                     <select
                       value={conteudoTemp.tipoLista || 'nao-ordenada'}
                       onChange={(e) =>
@@ -2475,13 +2523,13 @@ function EditorCurso() {
                       <option value="ordenada">Ordenada (Numerada)</option>
                       <option value="check">Com Ícone de Check</option>
                     </select>
-                  </div>
+                  </FormField>
 
                   {/* Itens da Lista */}
                   <div className="flex items-center justify-between">
-                    <label className="block text-sm font-medium text-gray-700">
-                      Itens da Lista <span className="text-red-500">*</span>
-                    </label>
+                    <span className="text-sm font-medium text-foreground">
+                      Itens da Lista <span className="text-destructive">*</span>
+                    </span>
                     <Button
                       type="button"
                       variant="outline"
@@ -2512,17 +2560,21 @@ function EditorCurso() {
                               <Trash2 className="h-4 w-4" />
                             </Button>
                           </div>
-                          <div>
-                            <label className="block text-xs font-medium text-gray-600 mb-1">
-                              Texto do Item <span className="text-red-500">*</span>
-                            </label>
+                          <FormField
+                            label={
+                              <>
+                                Texto do Item <span className="text-red-500">*</span>
+                              </>
+                            }
+                            compacto
+                          >
                             <Input
                               value={item.texto}
                               onChange={(e) => handleAtualizarItemLista(item.id, e.target.value)}
                               placeholder="Digite o texto do item..."
                               className="text-sm"
                             />
-                          </div>
+                          </FormField>
                         </Card>
                       ))}
                     </div>
@@ -2539,9 +2591,9 @@ function EditorCurso() {
                 <div className="space-y-6">
                   {/* Botão Adicionar Pergunta */}
                   <div className="flex items-center justify-between">
-                    <label className="block text-sm font-medium text-gray-700">
-                      Perguntas do Quiz <span className="text-red-500">*</span>
-                    </label>
+                    <span className="text-sm font-medium text-foreground">
+                      Perguntas do Quiz <span className="text-destructive">*</span>
+                    </span>
                     <Button
                       type="button"
                       variant="outline"
@@ -2589,10 +2641,13 @@ function EditorCurso() {
 
                           <div className="space-y-6">
                             {/* Texto da Pergunta */}
-                            <div>
-                              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                Pergunta <span className="text-red-500">*</span>
-                              </label>
+                            <FormField
+                              label={
+                                <>
+                                  Pergunta <span className="text-red-500">*</span>
+                                </>
+                              }
+                            >
                               <textarea
                                 value={question.pergunta}
                                 onChange={(e) =>
@@ -2606,16 +2661,19 @@ function EditorCurso() {
                                 className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-400"
                                 rows={3}
                               />
-                            </div>
+                            </FormField>
 
                             {/* Dica (opcional) */}
-                            <div>
-                              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                Dica{' '}
-                                <span className="text-gray-400 dark:text-gray-500 text-xs">
-                                  (opcional)
-                                </span>
-                              </label>
+                            <FormField
+                              label={
+                                <>
+                                  Dica{' '}
+                                  <span className="text-gray-400 dark:text-gray-500 text-xs">
+                                    (opcional)
+                                  </span>
+                                </>
+                              }
+                            >
                               <textarea
                                 value={question.dica || ''}
                                 onChange={(e) =>
@@ -2625,16 +2683,19 @@ function EditorCurso() {
                                 className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-400"
                                 rows={2}
                               />
-                            </div>
+                            </FormField>
 
                             {/* Opções de Resposta */}
-                            <div>
-                              <label className="block text-sm font-medium text-gray-700 mb-3">
-                                Opções de Resposta <span className="text-red-500">*</span>
-                                <span className="text-xs text-gray-500 font-normal ml-2">
-                                  (Marque exatamente uma resposta correta)
-                                </span>
-                              </label>
+                            <FormField
+                              label={
+                                <>
+                                  Opções de Resposta <span className="text-red-500">*</span>
+                                  <span className="text-xs text-gray-500 font-normal ml-2">
+                                    (Marque exatamente uma resposta correta)
+                                  </span>
+                                </>
+                              }
+                            >
                               <div className="space-y-4">
                                 {question.opcoes.map((opcao, index) => (
                                   <Card
@@ -2662,10 +2723,14 @@ function EditorCurso() {
                                       {/* Conteúdo da Opção */}
                                       <div className="flex-1 space-y-3">
                                         {/* Texto da Opção */}
-                                        <div>
-                                          <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
-                                            Texto da Opção <span className="text-red-500">*</span>
-                                          </label>
+                                        <FormField
+                                          label={
+                                            <>
+                                              Texto da Opção <span className="text-red-500">*</span>
+                                            </>
+                                          }
+                                          compacto
+                                        >
                                           <Input
                                             value={opcao.texto}
                                             onChange={(e) =>
@@ -2679,13 +2744,17 @@ function EditorCurso() {
                                             placeholder={`Digite o texto da opção ${String.fromCharCode(65 + index)}...`}
                                             className="text-sm"
                                           />
-                                        </div>
+                                        </FormField>
 
                                         {/* Feedback da Opção */}
-                                        <div>
-                                          <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
-                                            Feedback <span className="text-red-500">*</span>
-                                          </label>
+                                        <FormField
+                                          label={
+                                            <>
+                                              Feedback <span className="text-red-500">*</span>
+                                            </>
+                                          }
+                                          compacto
+                                        >
                                           <textarea
                                             value={opcao.feedback}
                                             onChange={(e) =>
@@ -2700,7 +2769,7 @@ function EditorCurso() {
                                             className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-400"
                                             rows={2}
                                           />
-                                        </div>
+                                        </FormField>
 
                                         {/* Radio para Marcar como Correta */}
                                         <div className="flex items-center gap-2">
@@ -2726,7 +2795,7 @@ function EditorCurso() {
                                   </Card>
                                 ))}
                               </div>
-                            </div>
+                            </FormField>
                           </div>
                         </Card>
                       ))}
@@ -2743,10 +2812,13 @@ function EditorCurso() {
               ) : conteudoTemp.tipo === 'info-box' ? (
                 <div className="space-y-4">
                   {/* Tipo do Info Box */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Tipo do Info Box <span className="text-red-500">*</span>
-                    </label>
+                  <FormField
+                    label={
+                      <>
+                        Tipo do Info Box <span className="text-red-500">*</span>
+                      </>
+                    }
+                  >
                     <select
                       value={conteudoTemp.tipoInfoBox || 'info'}
                       onChange={(e) =>
@@ -2766,13 +2838,16 @@ function EditorCurso() {
                       <option value="info">Informação</option>
                       <option value="curiosidade">Curiosidade</option>
                     </select>
-                  </div>
+                  </FormField>
 
                   {/* Título do Info Box */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Título <span className="text-gray-400 text-xs">(opcional)</span>
-                    </label>
+                  <FormField
+                    label={
+                      <>
+                        Título <span className="text-gray-400 text-xs">(opcional)</span>
+                      </>
+                    }
+                  >
                     <Input
                       value={conteudoTemp.tituloInfoBox || ''}
                       onChange={(e) =>
@@ -2786,13 +2861,16 @@ function EditorCurso() {
                     <p className="text-xs text-gray-500 mt-1">
                       Se deixar em branco, será usado o tipo como título
                     </p>
-                  </div>
+                  </FormField>
 
                   {/* Texto do Corpo */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Texto do Corpo <span className="text-red-500">*</span>
-                    </label>
+                  <FormField
+                    label={
+                      <>
+                        Texto do Corpo <span className="text-red-500">*</span>
+                      </>
+                    }
+                  >
                     <textarea
                       value={conteudoTemp.conteudo}
                       onChange={(e) =>
@@ -2805,19 +2883,22 @@ function EditorCurso() {
                       className="w-full p-3 border border-gray-300 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       rows={8}
                     />
-                  </div>
+                  </FormField>
                 </div>
               ) : (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Conteúdo <span className="text-red-500">*</span>
-                  </label>
+                <FormField
+                  label={
+                    <>
+                      Conteúdo <span className="text-red-500">*</span>
+                    </>
+                  }
+                >
                   {conteudoTemp.tipo === 'paragrafo' ? (
                     <div className="space-y-3">
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        <span className="text-sm font-medium text-foreground">
                           Largura da coluna
-                        </label>
+                        </span>
                         <div className="flex gap-2">
                           <button
                             type="button"
@@ -2864,7 +2945,7 @@ function EditorCurso() {
                       }...`}
                     />
                   )}
-                </div>
+                </FormField>
               )}
             </div>
             <DialogFooter>
@@ -2946,22 +3027,28 @@ function EditorCurso() {
               <DialogDescription>Crie uma nova unidade para o curso</DialogDescription>
             </DialogHeader>
             <div className="space-y-4 py-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Título da Unidade <span className="text-red-500">*</span>
-                </label>
+              <FormField
+                label={
+                  <>
+                    Título da Unidade <span className="text-red-500">*</span>
+                  </>
+                }
+              >
                 <Input
                   value={novaUnidade}
                   onChange={(e) => setNovaUnidade(e.target.value)}
                   placeholder="Título da unidade"
                   onKeyDown={(e) => e.key === 'Enter' && handleAdicionarUnidade()}
                 />
-              </div>
+              </FormField>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Descrição da Unidade <span className="text-red-500">*</span>
-                </label>
+              <FormField
+                label={
+                  <>
+                    Descrição da Unidade <span className="text-red-500">*</span>
+                  </>
+                }
+              >
                 <Textarea
                   value={novaUnidadeDescricao}
                   onChange={(e) => setNovaUnidadeDescricao(e.target.value)}
@@ -2970,7 +3057,7 @@ function EditorCurso() {
                   rows={4}
                   required
                 />
-              </div>
+              </FormField>
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={closeAdicionarUnidadeModal}>
@@ -3003,22 +3090,28 @@ function EditorCurso() {
               </SheetTitle>
             </SheetHeader>
             <div className="space-y-4 py-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Título da Unidade <span className="text-red-500">*</span>
-                </label>
+              <FormField
+                label={
+                  <>
+                    Título da Unidade <span className="text-red-500">*</span>
+                  </>
+                }
+              >
                 <Input
                   value={tituloUnidadeEditando}
                   onChange={(e) => setTituloUnidadeEditando(e.target.value)}
                   placeholder="Digite o título da unidade..."
                   onKeyDown={(e) => e.key === 'Enter' && handleSalvarEdicaoUnidade()}
                 />
-              </div>
+              </FormField>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Descrição da Unidade <span className="text-red-500">*</span>
-                </label>
+              <FormField
+                label={
+                  <>
+                    Descrição da Unidade <span className="text-red-500">*</span>
+                  </>
+                }
+              >
                 <Textarea
                   value={descricaoUnidadeEditando}
                   onChange={(e) => setDescricaoUnidadeEditando(e.target.value)}
@@ -3027,7 +3120,7 @@ function EditorCurso() {
                   rows={8}
                   required
                 />
-              </div>
+              </FormField>
             </div>
             <SheetFooter>
               <Button variant="outline" onClick={closeEditarUnidadeModal}>
@@ -3145,9 +3238,9 @@ function EditorCurso() {
                   <div className="space-y-6">
                     {/* Botão Adicionar Pergunta */}
                     <div className="flex items-center justify-between">
-                      <label className="block text-sm font-medium text-gray-700">
-                        Perguntas do Quiz <span className="text-red-500">*</span>
-                      </label>
+                      <span className="text-sm font-medium text-foreground">
+                        Perguntas do Quiz <span className="text-destructive">*</span>
+                      </span>
                       <Button
                         type="button"
                         variant="outline"
@@ -3254,10 +3347,13 @@ function EditorCurso() {
 
                             <div className="space-y-6">
                               {/* Texto da Pergunta */}
-                              <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">
-                                  Pergunta <span className="text-red-500">*</span>
-                                </label>
+                              <FormField
+                                label={
+                                  <>
+                                    Pergunta <span className="text-red-500">*</span>
+                                  </>
+                                }
+                              >
                                 <textarea
                                   value={question.pergunta}
                                   onChange={(e) => {
@@ -3281,13 +3377,16 @@ function EditorCurso() {
                                   className="w-full p-3 border border-gray-300 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                   rows={3}
                                 />
-                              </div>
+                              </FormField>
 
                               {/* Dica (opcional) */}
-                              <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">
-                                  Dica <span className="text-gray-400 text-xs">(opcional)</span>
-                                </label>
+                              <FormField
+                                label={
+                                  <>
+                                    Dica <span className="text-gray-400 text-xs">(opcional)</span>
+                                  </>
+                                }
+                              >
                                 <textarea
                                   value={question.dica || ''}
                                   onChange={(e) => {
@@ -3309,16 +3408,19 @@ function EditorCurso() {
                                   className="w-full p-3 border border-gray-300 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                   rows={2}
                                 />
-                              </div>
+                              </FormField>
 
                               {/* Opções de Resposta */}
-                              <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-3">
-                                  Opções de Resposta <span className="text-red-500">*</span>
-                                  <span className="text-xs text-gray-500 font-normal ml-2">
-                                    (Marque exatamente uma resposta correta)
-                                  </span>
-                                </label>
+                              <FormField
+                                label={
+                                  <>
+                                    Opções de Resposta <span className="text-red-500">*</span>
+                                    <span className="text-xs text-gray-500 font-normal ml-2">
+                                      (Marque exatamente uma resposta correta)
+                                    </span>
+                                  </>
+                                }
+                              >
                                 <div className="space-y-4">
                                   {question.opcoes.map((opcao, index) => (
                                     <Card
@@ -3346,10 +3448,15 @@ function EditorCurso() {
                                         {/* Conteúdo da Opção */}
                                         <div className="flex-1 space-y-3">
                                           {/* Texto da Opção */}
-                                          <div>
-                                            <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
-                                              Texto da Opção <span className="text-red-500">*</span>
-                                            </label>
+                                          <FormField
+                                            label={
+                                              <>
+                                                Texto da Opção{' '}
+                                                <span className="text-red-500">*</span>
+                                              </>
+                                            }
+                                            compacto
+                                          >
                                             <Input
                                               value={opcao.texto}
                                               onChange={(e) => {
@@ -3379,13 +3486,17 @@ function EditorCurso() {
                                               placeholder={`Digite o texto da opção ${String.fromCharCode(65 + index)}...`}
                                               className="text-sm"
                                             />
-                                          </div>
+                                          </FormField>
 
                                           {/* Feedback da Opção */}
-                                          <div>
-                                            <label className="block text-xs font-medium text-gray-600 mb-1">
-                                              Feedback <span className="text-red-500">*</span>
-                                            </label>
+                                          <FormField
+                                            label={
+                                              <>
+                                                Feedback <span className="text-red-500">*</span>
+                                              </>
+                                            }
+                                            compacto
+                                          >
                                             <textarea
                                               value={opcao.feedback}
                                               onChange={(e) => {
@@ -3416,7 +3527,7 @@ function EditorCurso() {
                                               className="w-full p-2 border border-gray-300 rounded-md resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
                                               rows={2}
                                             />
-                                          </div>
+                                          </FormField>
 
                                           {/* Radio para Marcar como Correta */}
                                           <div className="flex items-center gap-2">
@@ -3462,7 +3573,7 @@ function EditorCurso() {
                                     </Card>
                                   ))}
                                 </div>
-                              </div>
+                              </FormField>
                             </div>
                           </Card>
                         ))}
@@ -3479,10 +3590,13 @@ function EditorCurso() {
                 ) : editandoConteudo?.tipo === 'imagem' ? (
                   <div className="space-y-4">
                     {/* Upload ou URL */}
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        Imagem <span className="text-red-500">*</span>
-                      </label>
+                    <FormField
+                      label={
+                        <>
+                          Imagem <span className="text-red-500">*</span>
+                        </>
+                      }
+                    >
                       <div className="space-y-3">
                         {/* Upload de Arquivo */}
                         <div>
@@ -3568,12 +3682,15 @@ function EditorCurso() {
                           </div>
                         )}
                       </div>
-                    </div>
+                    </FormField>
 
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Tamanho da Imagem <span className="text-red-500">*</span>
-                      </label>
+                    <FormField
+                      label={
+                        <>
+                          Tamanho da Imagem <span className="text-red-500">*</span>
+                        </>
+                      }
+                    >
                       <select
                         value={editandoConteudo.tamanho || ''}
                         onChange={(e) =>
@@ -3589,12 +3706,15 @@ function EditorCurso() {
                         <option value="media">Média (50%)</option>
                         <option value="grande">Grande (100%)</option>
                       </select>
-                    </div>
+                    </FormField>
 
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        Legenda <span className="text-red-500">*</span>
-                      </label>
+                    <FormField
+                      label={
+                        <>
+                          Legenda <span className="text-red-500">*</span>
+                        </>
+                      }
+                    >
                       <Input
                         value={editandoConteudo.legenda || ''}
                         onChange={(e) =>
@@ -3605,12 +3725,15 @@ function EditorCurso() {
                         }
                         placeholder="Digite a legenda da imagem..."
                       />
-                    </div>
+                    </FormField>
 
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        Fonte <span className="text-red-500">*</span>
-                      </label>
+                    <FormField
+                      label={
+                        <>
+                          Fonte <span className="text-red-500">*</span>
+                        </>
+                      }
+                    >
                       <Input
                         value={editandoConteudo.fonte || ''}
                         onChange={(e) =>
@@ -3621,14 +3744,14 @@ function EditorCurso() {
                         }
                         placeholder="Digite a fonte da imagem..."
                       />
-                    </div>
+                    </FormField>
                   </div>
                 ) : editandoConteudo?.tipo === 'accordion' ? (
                   <div className="space-y-4">
                     <div className="flex items-center justify-between">
-                      <label className="block text-sm font-medium text-gray-700">
-                        Itens do Accordion <span className="text-red-500">*</span>
-                      </label>
+                      <span className="text-sm font-medium text-foreground">
+                        Itens do Accordion <span className="text-destructive">*</span>
+                      </span>
                       <Button
                         type="button"
                         variant="outline"
@@ -3683,10 +3806,14 @@ function EditorCurso() {
                               </Button>
                             </div>
                             <div className="space-y-3">
-                              <div>
-                                <label className="block text-xs font-medium text-gray-600 mb-1">
-                                  Título <span className="text-red-500">*</span>
-                                </label>
+                              <FormField
+                                label={
+                                  <>
+                                    Título <span className="text-red-500">*</span>
+                                  </>
+                                }
+                                compacto
+                              >
                                 <Input
                                   value={item.titulo}
                                   onChange={(e) => {
@@ -3703,11 +3830,15 @@ function EditorCurso() {
                                   placeholder="Título do item..."
                                   className="text-sm"
                                 />
-                              </div>
-                              <div>
-                                <label className="block text-xs font-medium text-gray-600 mb-1">
-                                  Conteúdo <span className="text-red-500">*</span>
-                                </label>
+                              </FormField>
+                              <FormField
+                                label={
+                                  <>
+                                    Conteúdo <span className="text-red-500">*</span>
+                                  </>
+                                }
+                                compacto
+                              >
                                 <textarea
                                   value={item.conteudo}
                                   onChange={(e) => {
@@ -3727,7 +3858,7 @@ function EditorCurso() {
                                   className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none text-sm"
                                   rows={3}
                                 />
-                              </div>
+                              </FormField>
                             </div>
                           </Card>
                         ))}
@@ -3744,10 +3875,13 @@ function EditorCurso() {
                 ) : editandoConteudo?.tipo === 'flipcard' ? (
                   <div className="space-y-4">
                     {/* Tipo de Frente */}
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Tipo de Frente <span className="text-red-500">*</span>
-                      </label>
+                    <FormField
+                      label={
+                        <>
+                          Tipo de Frente <span className="text-red-500">*</span>
+                        </>
+                      }
+                    >
                       <select
                         value={editandoConteudo.tipoFrente || 'titulo'}
                         onChange={(e) =>
@@ -3763,15 +3897,18 @@ function EditorCurso() {
                         <option value="imagem-titulo">Imagem com Título no Rodapé</option>
                         <option value="titulo">Apenas Título Centralizado</option>
                       </select>
-                    </div>
+                    </FormField>
 
                     {/* Imagem (se necessário) */}
                     {(editandoConteudo.tipoFrente === 'imagem' ||
                       editandoConteudo.tipoFrente === 'imagem-titulo') && (
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Imagem da Frente <span className="text-red-500">*</span>
-                        </label>
+                      <FormField
+                        label={
+                          <>
+                            Imagem da Frente <span className="text-red-500">*</span>
+                          </>
+                        }
+                      >
                         <div className="space-y-3">
                           {/* Upload de Arquivo */}
                           <div>
@@ -3846,16 +3983,19 @@ function EditorCurso() {
                             </div>
                           )}
                         </div>
-                      </div>
+                      </FormField>
                     )}
 
                     {/* Título (se necessário) */}
                     {(editandoConteudo.tipoFrente === 'imagem-titulo' ||
                       editandoConteudo.tipoFrente === 'titulo') && (
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Título da Frente <span className="text-red-500">*</span>
-                        </label>
+                      <FormField
+                        label={
+                          <>
+                            Título da Frente <span className="text-red-500">*</span>
+                          </>
+                        }
+                      >
                         <Input
                           value={editandoConteudo.tituloFrente || ''}
                           onChange={(e) =>
@@ -3867,14 +4007,17 @@ function EditorCurso() {
                           }
                           placeholder="Digite o título da frente do card..."
                         />
-                      </div>
+                      </FormField>
                     )}
 
                     {/* Conteúdo do Verso */}
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Conteúdo do Verso <span className="text-red-500">*</span>
-                      </label>
+                    <FormField
+                      label={
+                        <>
+                          Conteúdo do Verso <span className="text-red-500">*</span>
+                        </>
+                      }
+                    >
                       <textarea
                         value={editandoConteudo.conteudoVerso || ''}
                         onChange={(e) =>
@@ -3888,13 +4031,10 @@ function EditorCurso() {
                         className="w-full p-3 border border-gray-300 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                         rows={8}
                       />
-                    </div>
+                    </FormField>
 
                     {/* Altura do Card */}
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Altura do Card (opcional)
-                      </label>
+                    <FormField label="Altura do Card (opcional)">
                       <Input
                         value={editandoConteudo.alturaCard || '300px'}
                         onChange={(e) =>
@@ -3910,15 +4050,18 @@ function EditorCurso() {
                         Use valores como &quot;300px&quot;, &quot;400px&quot; ou &quot;50vh&quot;
                         (viewport height)
                       </p>
-                    </div>
+                    </FormField>
                   </div>
                 ) : editandoConteudo?.tipo === 'lista' ? (
                   <div className="space-y-4">
                     {/* Tipo de Lista */}
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Tipo de Lista <span className="text-red-500">*</span>
-                      </label>
+                    <FormField
+                      label={
+                        <>
+                          Tipo de Lista <span className="text-red-500">*</span>
+                        </>
+                      }
+                    >
                       <select
                         value={editandoConteudo.tipoLista || 'nao-ordenada'}
                         onChange={(e) =>
@@ -3934,13 +4077,13 @@ function EditorCurso() {
                         <option value="ordenada">Ordenada (Numerada)</option>
                         <option value="check">Com Ícone de Check</option>
                       </select>
-                    </div>
+                    </FormField>
 
                     {/* Itens da Lista */}
                     <div className="flex items-center justify-between">
-                      <label className="block text-sm font-medium text-gray-700">
-                        Itens da Lista <span className="text-red-500">*</span>
-                      </label>
+                      <span className="text-sm font-medium text-foreground">
+                        Itens da Lista <span className="text-destructive">*</span>
+                      </span>
                       <Button
                         type="button"
                         variant="outline"
@@ -3994,10 +4137,14 @@ function EditorCurso() {
                                 <Trash2 className="h-4 w-4" />
                               </Button>
                             </div>
-                            <div>
-                              <label className="block text-xs font-medium text-gray-600 mb-1">
-                                Texto do Item <span className="text-red-500">*</span>
-                              </label>
+                            <FormField
+                              label={
+                                <>
+                                  Texto do Item <span className="text-red-500">*</span>
+                                </>
+                              }
+                              compacto
+                            >
                               <Input
                                 value={item.texto}
                                 onChange={(e) => {
@@ -4014,7 +4161,7 @@ function EditorCurso() {
                                 placeholder="Digite o texto do item..."
                                 className="text-sm"
                               />
-                            </div>
+                            </FormField>
                           </Card>
                         ))}
                       </div>
@@ -4030,10 +4177,13 @@ function EditorCurso() {
                 ) : editandoConteudo?.tipo === 'info-box' ? (
                   <div className="space-y-4">
                     {/* Tipo do Info Box */}
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Tipo do Info Box <span className="text-red-500">*</span>
-                      </label>
+                    <FormField
+                      label={
+                        <>
+                          Tipo do Info Box <span className="text-red-500">*</span>
+                        </>
+                      }
+                    >
                       <select
                         value={editandoConteudo.tipoInfoBox || 'info'}
                         onChange={(e) =>
@@ -4054,13 +4204,16 @@ function EditorCurso() {
                         <option value="info">Informação</option>
                         <option value="curiosidade">Curiosidade</option>
                       </select>
-                    </div>
+                    </FormField>
 
                     {/* Título do Info Box */}
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Título <span className="text-gray-400 text-xs">(opcional)</span>
-                      </label>
+                    <FormField
+                      label={
+                        <>
+                          Título <span className="text-gray-400 text-xs">(opcional)</span>
+                        </>
+                      }
+                    >
                       <Input
                         value={editandoConteudo.tituloInfoBox || ''}
                         onChange={(e) =>
@@ -4075,13 +4228,16 @@ function EditorCurso() {
                       <p className="text-xs text-gray-500 mt-1">
                         Se deixar em branco, será usado o tipo como título
                       </p>
-                    </div>
+                    </FormField>
 
                     {/* Texto do Corpo */}
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Texto do Corpo <span className="text-red-500">*</span>
-                      </label>
+                    <FormField
+                      label={
+                        <>
+                          Texto do Corpo <span className="text-red-500">*</span>
+                        </>
+                      }
+                    >
                       <textarea
                         value={editandoConteudo.conteudo || ''}
                         onChange={(e) =>
@@ -4095,13 +4251,16 @@ function EditorCurso() {
                         className="w-full p-3 border border-gray-300 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                         rows={8}
                       />
-                    </div>
+                    </FormField>
                   </div>
                 ) : (
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Conteúdo <span className="text-red-500">*</span>
-                    </label>
+                  <FormField
+                    label={
+                      <>
+                        Conteúdo <span className="text-red-500">*</span>
+                      </>
+                    }
+                  >
                     {editandoConteudo?.tipo === 'paragrafo' ? (
                       <RichTextEditor
                         key={editandoConteudo.conteudoId}
@@ -4127,7 +4286,7 @@ function EditorCurso() {
                         }...`}
                       />
                     )}
-                  </div>
+                  </FormField>
                 )}
               </div>
               <DialogFooter>
