@@ -16,9 +16,10 @@ const SENHA_REVISOR = process.env.E2E_SENHA_REVISOR
 
 async function entrar(page: Page, email: string, senha: string) {
   await page.goto('/login')
-  await page.getByLabel(/E-?mail|Usuário/i).fill(email)
+  await page.getByLabel('E-mail').fill(email)
   await page.getByLabel('Senha').fill(senha)
-  await page.getByRole('button', { name: 'Entrar' }).click()
+  // exato: a tela também tem "Entrar como Convidado"
+  await page.getByRole('button', { name: 'Entrar', exact: true }).click()
   await page.waitForURL(/\/(home|cursos)/)
 }
 
@@ -55,11 +56,15 @@ test.describe('E2E - Novo Curso', () => {
 
     await page.getByRole('button', { name: /Criar curso/ }).click()
 
+    // O wizard não navega mais sozinho: termina numa tela de sucesso com
+    // "Abrir no editor" e "Criar outro curso".
     await expect(page.getByRole('heading', { name: 'Curso criado' })).toBeVisible({
       timeout: 15000,
     })
-    await page.waitForURL('/cursos', { timeout: 15000 })
-    await expect(page.getByText(titulo)).toBeVisible()
+    await expect(page.getByRole('button', { name: 'Abrir no editor' })).toBeVisible()
+
+    await page.goto('/cursos')
+    await expect(page.getByText(titulo)).toBeVisible({ timeout: 15000 })
   })
 
   test('não avança com campos inválidos e destaca o que falta', async ({ page }) => {

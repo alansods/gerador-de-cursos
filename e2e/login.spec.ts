@@ -1,11 +1,52 @@
 /**
  * Testes E2E - Login
  *
- * Testa o fluxo completo de login no navegador real
- * Verifica requisições de rede para detectar duplicações
+ * Testa o fluxo completo de login no navegador real.
+ * O login é por e-mail (a coluna `usuario` virou `email`) e a tela ganhou o
+ * botão "Entrar como Convidado" — por isso "Entrar" precisa ser exato.
  */
 
-import { test, expect } from '@playwright/test'
+import { test, expect, type Page } from '@playwright/test'
+
+const USUARIO = {
+  id: '1',
+  email: 'admin@senai.br',
+  nome: 'Admin',
+  role: 'ADMIN',
+}
+
+const botaoEntrar = (page: Page) => page.getByRole('button', { name: 'Entrar', exact: true })
+
+/**
+ * O AuthGuard redireciona quem já tem sessão para /home, então a sessão só pode
+ * existir depois do login: até lá `/api/auth/me` responde 401, como no servidor
+ * real sem cookie.
+ */
+async function mockarSessaoApenasDepoisDoLogin(page: Page, aoLogar: () => void = () => {}) {
+  let autenticado = false
+
+  await page.route('**/api/auth/me', async (route) => {
+    if (!autenticado) {
+      await route.fulfill({
+        status: 401,
+        contentType: 'application/json',
+        body: JSON.stringify({ success: false, error: 'Não autenticado' }),
+      })
+      return
+    }
+
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ success: true, authenticated: true, user: USUARIO }),
+    })
+  })
+
+  return () => {
+    autenticado = true
+    aoLogar()
+  }
+}
 
 test.describe('E2E - Login Flow', () => {
   test.beforeEach(async ({ page }) => {
@@ -15,10 +56,11 @@ test.describe('E2E - Login Flow', () => {
 
   test('deve renderizar a página de login', async ({ page }) => {
     // Assert
-    await expect(page.getByText('Bem-vindo de volta')).toBeVisible()
-    await expect(page.getByLabel('Usuário')).toBeVisible()
+    await expect(page.getByText('Bem-vindo', { exact: true })).toBeVisible()
+    await expect(page.getByLabel('E-mail')).toBeVisible()
     await expect(page.getByLabel('Senha')).toBeVisible()
-    await expect(page.getByRole('button', { name: 'Entrar' })).toBeVisible()
+    await expect(botaoEntrar(page)).toBeVisible()
+    await expect(page.getByRole('button', { name: 'Entrar como Convidado' })).toBeVisible()
   })
 
   test('deve fazer login com sucesso e verificar requisições', async ({ page }) => {
@@ -32,56 +74,58 @@ test.describe('E2E - Login Flow', () => {
       }
     })
 
+    // Mock da resposta /api/auth/me (chamada pelo AuthGuard).
+    // Sem `authenticated: true` o AuthGuard trata como sessão inexistente.
+    const marcarLogado = await mockarSessaoApenasDepoisDoLogin(page)
+
     // Mock da resposta de login
     await page.route('**/api/auth/login', async (route) => {
+      marcarLogado()
       await route.fulfill({
         status: 200,
         contentType: 'application/json',
-        body: JSON.stringify({
-          success: true,
-          user: {
-            id: '1',
-            usuario: 'testuser',
-            nome: 'Test User',
-            cargo: 'Desenvolvedor',
-          },
-        }),
-      })
-    })
-
-    // Mock da resposta /api/auth/me (chamada pelo AuthGuard)
-    await page.route('**/api/auth/me', async (route) => {
-      await route.fulfill({
-        status: 200,
-        contentType: 'application/json',
-        body: JSON.stringify({
-          success: true,
-          user: {
-            id: '1',
-            usuario: 'testuser',
-            nome: 'Test User',
-            cargo: 'Desenvolvedor',
-          },
-        }),
+        body: JSON.stringify({ success: true, user: USUARIO }),
       })
     })
 
     // Act - Fazer login
-    await page.getByLabel('Usuário').fill('testuser')
+    await page.getByLabel('E-mail').fill(USUARIO.email)
     await page.getByLabel('Senha').fill('senha123')
-    await page.getByRole('button', { name: 'Entrar' }).click()
+    await botaoEntrar(page).click()
 
     // Assert - Verificar redirecionamento
     await expect(page).toHaveURL('/home')
 
     // CRÍTICO: Verificar que não houve requisições duplicadas
-    const loginRequests = apiRequests.filter((url) =>
-      url.includes('/api/auth/login')
-    )
+    const loginRequests = apiRequests.filter((url) => url.includes('/api/auth/login'))
     expect(loginRequests).toHaveLength(1)
+  })
 
-    // Verificar que o toast de sucesso apareceu
-    await expect(page.getByText('Login realizado com sucesso!')).toBeVisible()
+  test('deve entrar como convidado sem preencher o formulário', async ({ page }) => {
+    // Arrange
+    const corpos: unknown[] = []
+
+    const marcarLogado = await mockarSessaoApenasDepoisDoLogin(page)
+
+    await page.route('**/api/auth/login', async (route) => {
+      corpos.push(route.request().postDataJSON())
+      marcarLogado()
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          success: true,
+          user: { ...USUARIO, email: 'convidado@senai.br', role: 'CONVIDADO' },
+        }),
+      })
+    })
+
+    // Act
+    await page.getByRole('button', { name: 'Entrar como Convidado' }).click()
+
+    // Assert - o próprio AuthContext envia as credenciais do convidado
+    await expect(page).toHaveURL('/home')
+    expect(corpos).toEqual([{ email: 'convidado@senai.br', senha: 'convidado' }])
   })
 
   test('deve mostrar erro com credenciais inválidas', async ({ page }) => {
@@ -98,9 +142,9 @@ test.describe('E2E - Login Flow', () => {
     })
 
     // Act
-    await page.getByLabel('Usuário').fill('wronguser')
+    await page.getByLabel('E-mail').fill('errado@senai.br')
     await page.getByLabel('Senha').fill('wrongpass')
-    await page.getByRole('button', { name: 'Entrar' }).click()
+    await botaoEntrar(page).click()
 
     // Assert
     await expect(page.getByText('Credenciais inválidas')).toBeVisible()
@@ -109,56 +153,58 @@ test.describe('E2E - Login Flow', () => {
 
   test('deve validar campos obrigatórios', async ({ page }) => {
     // Act - Tentar submeter sem preencher
-    await page.getByRole('button', { name: 'Entrar' }).click()
+    await botaoEntrar(page).click()
 
     // Assert
-    await expect(page.getByText('Usuário é obrigatório')).toBeVisible()
+    await expect(page.getByText('E-mail é obrigatório')).toBeVisible()
     await expect(page.getByText('Senha é obrigatória')).toBeVisible()
   })
 
   test('deve mostrar/ocultar senha', async ({ page }) => {
-    // Arrange
+    // Arrange - o botão do olho é o único dentro do campo de senha
     const senhaInput = page.getByLabel('Senha')
+    const alternarSenha = page.locator('#login-senha').locator('..').getByRole('button')
 
     // Assert - inicialmente oculta
     await expect(senhaInput).toHaveAttribute('type', 'password')
 
     // Act - mostrar senha
-    await page.locator('button[type="button"]').last().click()
+    await alternarSenha.click()
 
     // Assert - agora visível
     await expect(senhaInput).toHaveAttribute('type', 'text')
 
     // Act - ocultar novamente
-    await page.locator('button[type="button"]').last().click()
+    await alternarSenha.click()
 
     // Assert - oculta novamente
     await expect(senhaInput).toHaveAttribute('type', 'password')
   })
 
-  test('deve desabilitar formulário durante o loading', async ({ page }) => {
+  test('mostra o carregamento global enquanto autentica', async ({ page }) => {
     // Arrange - Simular requisição lenta
+    const marcarLogado = await mockarSessaoApenasDepoisDoLogin(page)
+
     await page.route('**/api/auth/login', async (route) => {
-      await new Promise((resolve) => setTimeout(resolve, 1000))
+      await new Promise((resolve) => setTimeout(resolve, 2000))
+      marcarLogado()
       await route.fulfill({
         status: 200,
         contentType: 'application/json',
-        body: JSON.stringify({
-          success: true,
-          user: { id: '1', usuario: 'test', nome: 'Test', cargo: 'Dev' },
-        }),
+        body: JSON.stringify({ success: true, user: USUARIO }),
       })
     })
 
     // Act
-    await page.getByLabel('Usuário').fill('testuser')
+    await page.getByLabel('E-mail').fill(USUARIO.email)
     await page.getByLabel('Senha').fill('senha123')
-    await page.getByRole('button', { name: 'Entrar' }).click()
+    await botaoEntrar(page).click()
 
-    // Assert - verificar loading
-    await expect(page.getByText('Entrando...')).toBeVisible()
-    await expect(page.getByLabel('Usuário')).toBeDisabled()
-    await expect(page.getByLabel('Senha')).toBeDisabled()
-    await expect(page.getByRole('button', { name: 'Entrando...' })).toBeDisabled()
+    // Assert - `login()` liga o loading do AuthContext, e o AuthGuard troca a tela
+    // inteira pelo spinner. O "Entrando..." do botão nunca chega a ser visto.
+    await expect(page.getByText('Verificando autenticação...')).toBeVisible()
+    await expect(page.getByLabel('E-mail')).toBeHidden()
+
+    await expect(page).toHaveURL('/home')
   })
 })
