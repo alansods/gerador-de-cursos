@@ -1,6 +1,6 @@
 # Spec — Adoção do TanStack Query
 
-Status: **Etapa 1 concluída**; Etapas 2 a 6 pendentes.
+Status: **Etapas 1 e 2 concluídas**; Etapas 3 a 6 pendentes.
 
 ---
 
@@ -126,19 +126,19 @@ Instalar e montar o provider, sem migrar nenhuma tela.
 
 ---
 
-### Etapa 2 — Listagem de cursos (mata P1 e P2)
+### Etapa 2 — Listagem de cursos (mata P1 e P2) ✅
 
 A etapa de maior valor. Faça-a antes de qualquer outra tela.
 
-- [ ] Criar `src/hooks/queries/useCursosQuery.ts` com `useInfiniteQuery`, `queryFn` chamando a Server
+- [x] Criar `src/hooks/queries/useCursosQuery.ts` com `useInfiniteQuery`, `queryFn` chamando a Server
       Action `buscarCursos`, `initialPageParam: undefined`,
       `getNextPageParam: (ultima) => ultima.nextCursor ?? undefined`
-- [ ] Migrar `src/app/cursos/page.tsx` para consumir `data.pages.flatMap(p => p.cursos)`
-- [ ] Trocar o `deletarCurso` do Context por `useMutation` + `invalidateQueries` na chave da lista
-- [ ] Remover o `useGeradorCurso()` de `src/app/cursos/page.tsx:85` — a página
+- [x] Migrar `src/app/cursos/page.tsx` para consumir `data.pages.flatMap(p => p.cursos)`
+- [x] Trocar o `deletarCurso` do Context por `useMutation` + `invalidateQueries` na chave da lista
+- [x] Remover o `useGeradorCurso()` de `src/app/cursos/page.tsx:85` — a página
       passa a não depender mais do Context
-- [ ] Deletar `src/hooks/useInfiniteScroll.ts`
-- [ ] Atualizar `src/__tests__/integration/cursos-page.test.tsx` (hoje mocka `buscarCursos` e usa
+- [x] Deletar `src/hooks/useInfiniteScroll.ts`
+- [x] Atualizar `src/__tests__/integration/cursos-page.test.tsx` (hoje mocka `buscarCursos` e usa
       `<GeradorCursoProvider>` como wrapper — passa a precisar de um wrapper `QueryClientProvider`
       com `retry: false`)
 
@@ -147,9 +147,18 @@ A etapa de maior valor. Faça-a antes de qualquer outra tela.
 - Scroll infinito carrega páginas de 6 e para no fim, como hoje.
 - Filtros (busca, categoria, modalidade, status) alteram a `queryKey` e refazem a busca do zero.
 - Deletar um curso remove o card **sem** `refresh()` manual.
-- Sair de `/cursos`, entrar num curso e voltar em menos de 60s **não** dispara request (confirmar na
-  aba Network e no Devtools).
+- Sair de `/cursos`, entrar num curso e voltar em menos de 60s **não** dispara request.
 - `grep -rn "useInfiniteScroll" src/` retorna vazio.
+
+Coberto por teste automatizado em vez de conferência manual:
+`src/__tests__/integration/cursos-page.test.tsx` ganhou o caso "reaproveita o cache ao voltar para a
+listagem dentro do staleTime" (dois monts com o mesmo `QueryClient`, uma única chamada à Server
+Action — falharia com o `useInfiniteScroll` antigo, que refetchava a cada mount);
+`src/__tests__/hooks/useCursosQuery.test.tsx` cobre a invalidação do delete, cujo modo de falha é
+silencioso quando a chave da mutation não casa com a da listagem.
+
+Pendência assumida: a paginação de múltiplas páginas (`getNextPageParam` encadeando cursores) não
+tem teste automatizado — os fixtures usam uma página só. Verificar manualmente na listagem.
 
 ---
 
@@ -199,7 +208,7 @@ Independente da Etapa 3; pode ser feita antes dela se a 3 travar.
       **função** — retorna `false` quando `status` for `completed` ou `failed`, parando o polling
       sozinho
 - [ ] `src/hooks/useSolicitacoesPendentes.ts`: `refetchInterval:
-    INTERVALO_POLLING_SOLICITACOES`, com `enabled: isAuthenticated && podeResponder` substituindo o
+  INTERVALO_POLLING_SOLICITACOES`, com `enabled: isAuthenticated && podeResponder` substituindo o
       early-return manual do `useEffect`
 - [ ] Ações de job (cancelar, reprocessar, deletar) viram `useMutation` + `invalidateQueries`
 

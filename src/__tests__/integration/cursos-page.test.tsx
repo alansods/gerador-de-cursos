@@ -12,8 +12,8 @@ import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import CursosPage from '@/app/(app)/cursos/page'
 import { buscarCursos } from '@/app/(app)/cursos/actions'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { AuthProvider } from '@/context/AuthContext'
-import { GeradorCursoProvider } from '@/context/GeradorCursoContext'
 
 const mockFetch = jest.fn()
 global.fetch = mockFetch
@@ -81,13 +81,16 @@ const respostaBusca = {
   total: cursosMock.length,
 }
 
-const renderCursosPage = () =>
+const criarQueryClient = (staleTime = 0) =>
+  new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: 0, staleTime } } })
+
+const renderCursosPage = (queryClient = criarQueryClient()) =>
   render(
-    <AuthProvider>
-      <GeradorCursoProvider>
+    <QueryClientProvider client={queryClient}>
+      <AuthProvider>
         <CursosPage />
-      </GeradorCursoProvider>
-    </AuthProvider>
+      </AuthProvider>
+    </QueryClientProvider>
   )
 
 const aguardarCarregamento = () =>
@@ -196,7 +199,23 @@ describe('Integration - Cursos Page', () => {
     jest.useRealTimers()
   })
 
-  it('NÃO deve fazer requisições quando GeradorCursoContext monta', async () => {
+  it('reaproveita o cache ao voltar para a listagem dentro do staleTime', async () => {
+    // mesmo QueryClient nos dois monts = o que acontece ao sair da pagina e voltar
+    const queryClient = criarQueryClient(60_000)
+
+    const { unmount } = renderCursosPage(queryClient)
+    await aguardarCarregamento()
+    expect(mockBuscarCursos).toHaveBeenCalledTimes(1)
+
+    unmount()
+
+    renderCursosPage(queryClient)
+    await aguardarCarregamento()
+
+    expect(mockBuscarCursos).toHaveBeenCalledTimes(1)
+  })
+
+  it('busca a lista só pela Server Action, sem tocar em /api/cursos', async () => {
     renderCursosPage()
     await aguardarCarregamento()
 

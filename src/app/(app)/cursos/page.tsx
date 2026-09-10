@@ -3,11 +3,10 @@
 // Esta página não deve ser exportada estaticamente (usa context e API)
 export const dynamic = 'error'
 
-import { useGeradorCurso } from '@/context/GeradorCursoContext'
 import { usePreview } from '@/hooks/usePreview'
 import { usePDF } from '@/hooks/usePDF'
 import { useSCORM } from '@/hooks/useSCORM'
-import { useInfiniteScroll } from '@/hooks/useInfiniteScroll'
+import { useCursosQuery, useDeletarCursoMutation } from '@/hooks/queries/useCursosQuery'
 import { ExportModal } from '@/components/ExportModal'
 import { PageTransition } from '@/components/PageTransition'
 import { InfiniteScrollTrigger } from '@/components/InfiniteScrollTrigger'
@@ -82,7 +81,7 @@ const isNewCourse = (createdAt?: Date | string) => {
 }
 
 export default function CursosPage() {
-  const { state, deletarCurso, selecionarCurso } = useGeradorCurso()
+  const deletarCurso = useDeletarCursoMutation()
   const { openPreview } = usePreview()
   const { generatePDF, isGenerating: isGeneratingPDF } = usePDF()
   const { generateSCORM, isGeneratingSCORM } = useSCORM()
@@ -102,16 +101,15 @@ export default function CursosPage() {
   // Debounce do searchTerm para evitar múltiplas requisições
   const debouncedSearchTerm = useDebounce(searchTerm, 500)
 
-  // Infinite scroll hook
   const {
     cursos: cursosPaginados,
     isLoading: loadingCourses,
     isLoadingMore,
     hasMore,
     total: totalCourses,
-    loadMore,
-    refresh,
-  } = useInfiniteScroll({
+    error: erroAoCarregar,
+    carregarMais,
+  } = useCursosQuery({
     limit: 6,
     search: debouncedSearchTerm,
     category: selectedCategory !== 'Todas Categorias' ? selectedCategory : undefined,
@@ -158,10 +156,7 @@ export default function CursosPage() {
   }
 
   const handleCriarCurso = () => router.push('/cursos/novo')
-  const handleEditarCurso = (id: string) => {
-    selecionarCurso(id)
-    router.push(`/cursos/${id}/editar`)
-  }
+  const handleEditarCurso = (id: string) => router.push(`/cursos/${id}/editar`)
   const handlePreviewCurso = (id: string) => {
     // Buscar o curso nos cursos paginados atuais
     const curso = cursosPaginados.find((c) => c.id === id)
@@ -191,18 +186,7 @@ export default function CursosPage() {
     }
   }
 
-  if (state.loading) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center">
-          <Loader2 className="h-12 w-12 animate-spin text-primary mx-auto mb-4" />
-          <p className="text-muted-foreground">Carregando cursos...</p>
-        </div>
-      </div>
-    )
-  }
-
-  const showError = state.error && state.cursos.length === 0
+  const showError = erroAoCarregar !== null && cursosPaginados.length === 0
 
   return (
     <PageTransition>
@@ -226,7 +210,7 @@ export default function CursosPage() {
                   <h3 className="text-base font-semibold text-foreground mb-2">
                     🔧 Configuração do Banco de Dados Necessária
                   </h3>
-                  <p className="text-sm text-muted-foreground mb-3">{state.error}</p>
+                  <p className="text-sm text-muted-foreground mb-3">{erroAoCarregar?.message}</p>
                   <div className="bg-card rounded border border-border p-4 mb-3">
                     <p className="text-xs font-semibold text-foreground mb-2">
                       📋 Passos para configurar:
@@ -537,7 +521,7 @@ export default function CursosPage() {
 
               {/* Infinite Scroll Trigger */}
               <InfiniteScrollTrigger
-                onLoadMore={loadMore}
+                onLoadMore={carregarMais}
                 isLoading={isLoadingMore}
                 hasMore={hasMore}
               />
@@ -568,10 +552,7 @@ export default function CursosPage() {
                   try {
                     if (showDeleteConfirm) {
                       setIsDeletingCurso(true)
-                      await deletarCurso(showDeleteConfirm)
-
-                      // Atualizar lista (refetch completo para garantir consistência)
-                      await refresh()
+                      await deletarCurso.mutateAsync(showDeleteConfirm)
 
                       toast.success('Curso excluído com sucesso')
                     }
