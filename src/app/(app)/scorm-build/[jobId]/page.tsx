@@ -1,67 +1,21 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Loader2, Download, AlertCircle, CheckCircle2, XCircle } from 'lucide-react'
 import { toast } from 'sonner'
-
-interface JobStatus {
-  id: string
-  cursoId: string
-  cursoTitulo: string
-  status: 'pending' | 'building' | 'completed' | 'failed'
-  progress?: string
-  error?: string
-  createdAt: string
-  completedAt?: string
-}
+import { useCancelarJobMutation, useScormJobStatusQuery } from '@/hooks/queries/useScormJobsQuery'
 
 export default function SCORMBuildPage() {
   const params = useParams()
   const router = useRouter()
   const jobId = params.jobId as string
 
-  const [jobStatus, setJobStatus] = useState<JobStatus | null>(null)
-  const [loading, setLoading] = useState(true)
   const [downloading, setDownloading] = useState(false)
-
-  // Polling do status do job
-  useEffect(() => {
-    if (!jobId) return
-
-    const fetchStatus = async () => {
-      try {
-        const response = await fetch(`/api/scorm-status/${jobId}`)
-
-        if (!response.ok) {
-          throw new Error('Erro ao buscar status')
-        }
-
-        const data: JobStatus = await response.json()
-        setJobStatus(data)
-        setLoading(false)
-      } catch (error) {
-        console.error('Erro ao buscar status:', error)
-        setLoading(false)
-      }
-    }
-
-    // Buscar imediatamente
-    fetchStatus()
-
-    // Polling a cada 2 segundos enquanto não completado ou falhou
-    const interval = setInterval(() => {
-      if (jobStatus?.status === 'completed' || jobStatus?.status === 'failed') {
-        clearInterval(interval)
-        return
-      }
-      fetchStatus()
-    }, 2000)
-
-    return () => clearInterval(interval)
-  }, [jobId, jobStatus?.status])
+  const { jobStatus, isLoading: loading } = useScormJobStatusQuery(jobId)
+  const cancelar = useCancelarJobMutation()
 
   // Download do arquivo
   const handleDownload = async () => {
@@ -93,22 +47,11 @@ export default function SCORMBuildPage() {
     if (!confirm('Deseja realmente cancelar este build?')) return
 
     try {
-      const response = await fetch(`/api/scorm-jobs/${jobId}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'cancel' }),
-      })
-
-      if (response.ok) {
-        toast.success('Build cancelado')
-        router.push('/scorm-jobs')
-      } else {
-        const error = await response.json()
-        toast.error(error.error || 'Erro ao cancelar build')
-      }
+      await cancelar.mutateAsync(jobId)
+      toast.success('Build cancelado')
+      router.push('/scorm-jobs')
     } catch (error) {
-      console.error('Erro ao cancelar:', error)
-      toast.error('Erro ao cancelar build')
+      toast.error(error instanceof Error ? error.message : 'Erro ao cancelar build')
     }
   }
 

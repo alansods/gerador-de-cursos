@@ -1,7 +1,8 @@
 'use client'
 
-import { useCallback, useEffect, useState } from 'react'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '@/context/AuthContext'
+import { chaves } from '@/lib/query-keys'
 
 export const INTERVALO_POLLING_SOLICITACOES = 60_000
 
@@ -20,31 +21,32 @@ export interface SolicitacaoPendente {
  */
 export function useSolicitacoesPendentes() {
   const { isAuthenticated, role } = useAuth()
-  const [solicitacoes, setSolicitacoes] = useState<SolicitacaoPendente[]>([])
+  const queryClient = useQueryClient()
 
   const podeResponder = role === 'ADMIN' || role === 'GESTOR' || role === 'CONTEUDISTA'
 
-  const buscar = useCallback(async () => {
-    try {
+  const query = useQuery({
+    queryKey: chaves.solicitacoes.pendentes(),
+    queryFn: async (): Promise<SolicitacaoPendente[]> => {
       const response = await fetch('/api/solicitacoes/pendentes')
-      if (!response.ok) return
+      if (!response.ok) throw new Error('Erro ao buscar solicitações')
+
       const data = await response.json()
-      if (data.success) setSolicitacoes(data.solicitacoes)
-    } catch {
-      // silencioso: um indicador não deve incomodar quando a rede falha
-    }
-  }, [])
+      return data.success ? data.solicitacoes : []
+    },
+    enabled: isAuthenticated && podeResponder,
+    refetchInterval: INTERVALO_POLLING_SOLICITACOES,
+    refetchIntervalInBackground: false,
+    // um indicador não deve incomodar quando a rede falha
+    retry: false,
+  })
 
-  useEffect(() => {
-    if (!isAuthenticated || !podeResponder) {
-      setSolicitacoes([])
-      return
-    }
+  const solicitacoes = query.data ?? []
 
-    buscar()
-    const timer = setInterval(buscar, INTERVALO_POLLING_SOLICITACOES)
-    return () => clearInterval(timer)
-  }, [isAuthenticated, podeResponder, buscar])
-
-  return { solicitacoes, total: solicitacoes.length, recarregar: buscar, podeResponder }
+  return {
+    solicitacoes,
+    total: solicitacoes.length,
+    recarregar: () => queryClient.invalidateQueries({ queryKey: chaves.solicitacoes.pendentes() }),
+    podeResponder,
+  }
 }

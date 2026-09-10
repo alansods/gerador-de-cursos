@@ -1,6 +1,5 @@
 'use client'
 
-import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -17,64 +16,31 @@ import {
   RefreshCw,
 } from 'lucide-react'
 import { toast } from 'sonner'
-
-interface SCORMJob {
-  id: string
-  cursoId: string
-  cursoTitulo: string
-  status: 'pending' | 'building' | 'completed' | 'failed'
-  progress?: string
-  error?: string
-  createdAt: string
-  completedAt?: string
-}
+import {
+  useCancelarJobMutation,
+  useDeletarJobMutation,
+  useReiniciarBuildMutation,
+  useScormJobsQuery,
+} from '@/hooks/queries/useScormJobsQuery'
 
 export default function SCORMJobsPage() {
   const router = useRouter()
-  const [jobs, setJobs] = useState<SCORMJob[]>([])
-  const [loading, setLoading] = useState(true)
+  const { jobs, isLoading: loading } = useScormJobsQuery()
+  const cancelar = useCancelarJobMutation()
+  const deletar = useDeletarJobMutation()
+  const reiniciar = useReiniciarBuildMutation()
 
-  useEffect(() => {
-    fetchJobs()
-    // Atualizar a cada 5 segundos
-    const interval = setInterval(fetchJobs, 5000)
-    return () => clearInterval(interval)
-  }, [])
-
-  const fetchJobs = async () => {
-    try {
-      const response = await fetch('/api/scorm-jobs')
-      if (response.ok) {
-        const data = await response.json()
-        setJobs(data.jobs || [])
-      }
-    } catch (error) {
-      console.error('Erro ao buscar jobs:', error)
-    } finally {
-      setLoading(false)
-    }
-  }
+  const avisarErro = (error: unknown, padrao: string) =>
+    toast.error(error instanceof Error ? error.message : padrao)
 
   const cancelJob = async (jobId: string) => {
     if (!confirm('Deseja realmente cancelar este build?')) return
 
     try {
-      const response = await fetch(`/api/scorm-jobs/${jobId}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'cancel' }),
-      })
-
-      if (response.ok) {
-        toast.success('Build cancelado com sucesso')
-        fetchJobs()
-      } else {
-        const error = await response.json()
-        toast.error(error.error || 'Erro ao cancelar build')
-      }
+      await cancelar.mutateAsync(jobId)
+      toast.success('Build cancelado com sucesso')
     } catch (error) {
-      console.error('Erro ao cancelar job:', error)
-      toast.error('Erro ao cancelar build')
+      avisarErro(error, 'Erro ao cancelar build')
     }
   }
 
@@ -82,20 +48,10 @@ export default function SCORMJobsPage() {
     if (!confirm('Deseja realmente apagar este item? Esta ação não pode ser desfeita.')) return
 
     try {
-      const response = await fetch(`/api/scorm-jobs/${jobId}`, {
-        method: 'DELETE',
-      })
-
-      if (response.ok) {
-        toast.success('Item apagado com sucesso')
-        fetchJobs()
-      } else {
-        const error = await response.json()
-        toast.error(error.error || 'Erro ao apagar item')
-      }
+      await deletar.mutateAsync(jobId)
+      toast.success('Item apagado com sucesso')
     } catch (error) {
-      console.error('Erro ao apagar job:', error)
-      toast.error('Erro ao apagar item')
+      avisarErro(error, 'Erro ao apagar item')
     }
   }
 
@@ -103,34 +59,11 @@ export default function SCORMJobsPage() {
     if (!confirm(`Deseja reiniciar o build para "${cursoTitulo}"?`)) return
 
     try {
-      // Buscar dados completos do curso
-      const cursoResponse = await fetch(`/api/cursos/${cursoId}`)
-      if (!cursoResponse.ok) {
-        throw new Error('Curso não encontrado')
-      }
-
-      const curso = await cursoResponse.json()
-
-      // Iniciar novo build
-      const buildResponse = await fetch('/api/generate-scorm-v2', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ curso }),
-      })
-
-      if (!buildResponse.ok) {
-        const error = await buildResponse.json()
-        throw new Error(error.error || 'Erro ao iniciar build')
-      }
-
-      const { jobId } = await buildResponse.json()
+      const jobId = await reiniciar.mutateAsync(cursoId)
       toast.success('Build reiniciado!')
-
-      // Redirecionar para página de progresso
       router.push(`/scorm-build/${jobId}`)
     } catch (error) {
-      console.error('Erro ao reiniciar build:', error)
-      toast.error(error instanceof Error ? error.message : 'Erro ao reiniciar build')
+      avisarErro(error, 'Erro ao reiniciar build')
     }
   }
 

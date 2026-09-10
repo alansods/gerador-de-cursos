@@ -1,6 +1,6 @@
 # Spec — Adoção do TanStack Query
 
-Status: **Etapas 1 e 2 concluídas**; Etapas 3 a 6 pendentes.
+Status: **Etapas 1, 2 e 4 concluídas**; Etapas 3, 5 e 6 pendentes.
 
 ---
 
@@ -200,26 +200,35 @@ A etapa mais delicada: toca o editor.
 
 ---
 
-### Etapa 4 — Polling (mata P3)
+### Etapa 4 — Polling (mata P3) ✅
 
 Independente da Etapa 3; pode ser feita antes dela se a 3 travar.
 
-- [ ] `src/app/scorm-jobs/page.tsx`: trocar `setInterval(fetchJobs, 5000)` por
+- [x] `src/app/scorm-jobs/page.tsx`: trocar `setInterval(fetchJobs, 5000)` por
       `refetchInterval: 5000` + `refetchIntervalInBackground: false`
-- [ ] `src/app/scorm-build/[jobId]/page.tsx`: `refetchInterval` como
+- [x] `src/app/scorm-build/[jobId]/page.tsx`: `refetchInterval` como
       **função** — retorna `false` quando `status` for `completed` ou `failed`, parando o polling
       sozinho
-- [ ] `src/hooks/useSolicitacoesPendentes.ts`: `refetchInterval:
+- [x] `src/hooks/useSolicitacoesPendentes.ts`: `refetchInterval:
 INTERVALO_POLLING_SOLICITACOES`, com `enabled: isAuthenticated && podeResponder` substituindo o
       early-return manual do `useEffect`
-- [ ] Ações de job (cancelar, reprocessar, deletar) viram `useMutation` + `invalidateQueries`
+- [x] Ações de job (cancelar, reprocessar, deletar) viram `useMutation` + `invalidateQueries`
 
 **Requisitos de conclusão:**
 
-- `grep -rn "setInterval" src/app src/hooks` retorna vazio (ou só ocorrências não relacionadas a
-  fetch).
-- Com a aba em background, a aba Network **para** de registrar requests de `/api/scorm-jobs`.
-- Um job que conclui **para** de ser consultado — verificar que o request para após `completed`.
+- `grep -rn "setInterval" src/app src/hooks` deixa apenas `home/page.tsx` — que é escopo da Etapa 5
+  e já checa `document.hidden` antes de buscar.
+- Com a aba em background, a aba Network **para** de registrar requests de `/api/scorm-jobs`
+  (`refetchIntervalInBackground: false`).
+- Um job que conclui **para** de ser consultado.
+
+Coberto em `src/__tests__/hooks/useScormJobsQuery.test.tsx`: um caso prova que o polling roda
+enquanto o job está `building`, outro que ele não dispara mais nada depois de `completed`. Os dois
+se protegem — sem o primeiro, o segundo passaria mesmo com o polling quebrado.
+
+Bug corrigido de passagem: o efeito antigo de `scorm-build/[jobId]` dependia de `jobStatus?.status`,
+então recriava o intervalo a cada mudança de status e só parava **uma tick depois** de o job
+concluir. Com `refetchInterval` como função a decisão é avaliada antes de cada disparo.
 
 ---
 
