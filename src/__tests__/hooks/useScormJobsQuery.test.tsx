@@ -9,6 +9,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import {
   INTERVALO_POLLING_JOB,
   useScormJobStatusQuery,
+  useScormJobsQuery,
   type SCORMJob,
 } from '@/hooks/queries/useScormJobsQuery'
 
@@ -81,5 +82,30 @@ describe('useScormJobStatusQuery', () => {
     renderHook(() => useScormJobStatusQuery(''), { wrapper: criarWrapper() })
 
     expect(mockFetch).not.toHaveBeenCalled()
+  })
+})
+
+describe('useScormJobsQuery', () => {
+  beforeEach(() => {
+    jest.clearAllMocks()
+  })
+
+  it('pede a página solicitada e devolve a paginação da API', async () => {
+    mockFetch.mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        jobs: [{ id: 'job-1', cursoId: 'c1', cursoTitulo: 'Curso', status: 'completed' }],
+        pagination: { page: 2, limit: 10, total: 24, totalPages: 3 },
+      }),
+    })
+
+    const { result } = renderHook(() => useScormJobsQuery({ page: 2, limit: 10 }), {
+      wrapper: criarWrapper(),
+    })
+
+    await waitFor(() => expect(result.current.jobs).toHaveLength(1))
+
+    expect(mockFetch).toHaveBeenCalledWith('/api/scorm-jobs?page=2&limit=10')
+    expect(result.current.pagination).toEqual({ page: 2, limit: 10, total: 24, totalPages: 3 })
   })
 })

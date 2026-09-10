@@ -1,7 +1,7 @@
 'use client'
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { chaves } from '@/lib/query-keys'
+import { chaves, type FiltrosDeScormJobs } from '@/lib/query-keys'
 
 export interface SCORMJob {
   id: string
@@ -14,27 +14,51 @@ export interface SCORMJob {
   completedAt?: string
 }
 
+export interface PaginacaoDeJobs {
+  page: number
+  limit: number
+  total: number
+  totalPages: number
+}
+
+interface RespostaDeJobs {
+  jobs: SCORMJob[]
+  pagination: PaginacaoDeJobs
+}
+
 export const INTERVALO_POLLING_LISTA = 5_000
 export const INTERVALO_POLLING_JOB = 2_000
 
 const jobTerminou = (status?: SCORMJob['status']) => status === 'completed' || status === 'failed'
 
-export function useScormJobsQuery() {
+export function useScormJobsQuery(filtros: FiltrosDeScormJobs) {
   const query = useQuery({
-    queryKey: chaves.scormJobs.lista(),
-    queryFn: async (): Promise<SCORMJob[]> => {
-      const response = await fetch('/api/scorm-jobs')
+    queryKey: chaves.scormJobs.lista(filtros),
+    queryFn: async (): Promise<RespostaDeJobs> => {
+      const params = new URLSearchParams({
+        page: String(filtros.page),
+        limit: String(filtros.limit),
+      })
+
+      const response = await fetch(`/api/scorm-jobs?${params}`)
       if (!response.ok) throw new Error('Erro ao buscar jobs')
 
       const data = await response.json()
-      return data.jobs ?? []
+      return { jobs: data.jobs ?? [], pagination: data.pagination }
     },
     refetchInterval: INTERVALO_POLLING_LISTA,
     refetchIntervalInBackground: false,
+    placeholderData: (anterior) => anterior,
   })
 
   return {
-    jobs: query.data ?? [],
+    jobs: query.data?.jobs ?? [],
+    pagination: query.data?.pagination ?? {
+      page: filtros.page,
+      limit: filtros.limit,
+      total: 0,
+      totalPages: 0,
+    },
     isLoading: query.isPending,
   }
 }
