@@ -1,141 +1,167 @@
-'use client';
+'use client'
 
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { Card } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Loader2, Download, AlertCircle, CheckCircle2, Clock, Eye, Trash2, XCircle, RefreshCw } from 'lucide-react';
-import { toast } from 'sonner';
+import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { Card } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
+import {
+  Loader2,
+  Download,
+  AlertCircle,
+  CheckCircle2,
+  Clock,
+  Eye,
+  Trash2,
+  XCircle,
+  RefreshCw,
+} from 'lucide-react'
+import { toast } from 'sonner'
 
 interface SCORMJob {
-  id: string;
-  cursoId: string;
-  cursoTitulo: string;
-  status: 'pending' | 'building' | 'completed' | 'failed';
-  progress?: string;
-  error?: string;
-  createdAt: string;
-  completedAt?: string;
+  id: string
+  cursoId: string
+  cursoTitulo: string
+  status: 'pending' | 'building' | 'completed' | 'failed'
+  progress?: string
+  error?: string
+  createdAt: string
+  completedAt?: string
 }
 
 export default function SCORMJobsPage() {
-  const router = useRouter();
-  const [jobs, setJobs] = useState<SCORMJob[]>([]);
-  const [loading, setLoading] = useState(true);
+  const router = useRouter()
+  const [jobs, setJobs] = useState<SCORMJob[]>([])
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    fetchJobs();
+    fetchJobs()
     // Atualizar a cada 5 segundos
-    const interval = setInterval(fetchJobs, 5000);
-    return () => clearInterval(interval);
-  }, []);
+    const interval = setInterval(fetchJobs, 5000)
+    return () => clearInterval(interval)
+  }, [])
 
   const fetchJobs = async () => {
     try {
-      const response = await fetch('/api/scorm-jobs');
+      const response = await fetch('/api/scorm-jobs')
       if (response.ok) {
-        const data = await response.json();
-        setJobs(data.jobs || []);
+        const data = await response.json()
+        setJobs(data.jobs || [])
       }
     } catch (error) {
-      console.error('Erro ao buscar jobs:', error);
+      console.error('Erro ao buscar jobs:', error)
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
   const cancelJob = async (jobId: string) => {
-    if (!confirm('Deseja realmente cancelar este build?')) return;
+    if (!confirm('Deseja realmente cancelar este build?')) return
 
     try {
       const response = await fetch(`/api/scorm-jobs/${jobId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'cancel' }),
-      });
+      })
 
       if (response.ok) {
-        toast.success('Build cancelado com sucesso');
-        fetchJobs();
+        toast.success('Build cancelado com sucesso')
+        fetchJobs()
       } else {
-        const error = await response.json();
-        toast.error(error.error || 'Erro ao cancelar build');
+        const error = await response.json()
+        toast.error(error.error || 'Erro ao cancelar build')
       }
     } catch (error) {
-      console.error('Erro ao cancelar job:', error);
-      toast.error('Erro ao cancelar build');
+      console.error('Erro ao cancelar job:', error)
+      toast.error('Erro ao cancelar build')
     }
-  };
+  }
 
   const deleteJob = async (jobId: string) => {
-    if (!confirm('Deseja realmente apagar este item? Esta ação não pode ser desfeita.')) return;
+    if (!confirm('Deseja realmente apagar este item? Esta ação não pode ser desfeita.')) return
 
     try {
       const response = await fetch(`/api/scorm-jobs/${jobId}`, {
         method: 'DELETE',
-      });
+      })
 
       if (response.ok) {
-        toast.success('Item apagado com sucesso');
-        fetchJobs();
+        toast.success('Item apagado com sucesso')
+        fetchJobs()
       } else {
-        const error = await response.json();
-        toast.error(error.error || 'Erro ao apagar item');
+        const error = await response.json()
+        toast.error(error.error || 'Erro ao apagar item')
       }
     } catch (error) {
-      console.error('Erro ao apagar job:', error);
-      toast.error('Erro ao apagar item');
+      console.error('Erro ao apagar job:', error)
+      toast.error('Erro ao apagar item')
     }
-  };
+  }
 
   const restartJob = async (cursoId: string, cursoTitulo: string) => {
-    if (!confirm(`Deseja reiniciar o build para "${cursoTitulo}"?`)) return;
+    if (!confirm(`Deseja reiniciar o build para "${cursoTitulo}"?`)) return
 
     try {
       // Buscar dados completos do curso
-      const cursoResponse = await fetch(`/api/cursos/${cursoId}`);
+      const cursoResponse = await fetch(`/api/cursos/${cursoId}`)
       if (!cursoResponse.ok) {
-        throw new Error('Curso não encontrado');
+        throw new Error('Curso não encontrado')
       }
 
-      const curso = await cursoResponse.json();
+      const curso = await cursoResponse.json()
 
       // Iniciar novo build
       const buildResponse = await fetch('/api/generate-scorm-v2', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ curso }),
-      });
+      })
 
       if (!buildResponse.ok) {
-        const error = await buildResponse.json();
-        throw new Error(error.error || 'Erro ao iniciar build');
+        const error = await buildResponse.json()
+        throw new Error(error.error || 'Erro ao iniciar build')
       }
 
-      const { jobId } = await buildResponse.json();
-      toast.success('Build reiniciado!');
+      const { jobId } = await buildResponse.json()
+      toast.success('Build reiniciado!')
 
       // Redirecionar para página de progresso
-      router.push(`/scorm-build/${jobId}`);
+      router.push(`/scorm-build/${jobId}`)
     } catch (error) {
-      console.error('Erro ao reiniciar build:', error);
-      toast.error(error instanceof Error ? error.message : 'Erro ao reiniciar build');
+      console.error('Erro ao reiniciar build:', error)
+      toast.error(error instanceof Error ? error.message : 'Erro ao reiniciar build')
     }
-  };
+  }
 
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'completed':
-        return <Badge className="bg-green-500"><CheckCircle2 className="w-3 h-3 mr-1" /> Concluído</Badge>;
+        return (
+          <Badge className="bg-green-500">
+            <CheckCircle2 className="w-3 h-3 mr-1" /> Concluído
+          </Badge>
+        )
       case 'failed':
-        return <Badge variant="destructive"><AlertCircle className="w-3 h-3 mr-1" /> Falhou</Badge>;
+        return (
+          <Badge variant="destructive">
+            <AlertCircle className="w-3 h-3 mr-1" /> Falhou
+          </Badge>
+        )
       case 'building':
-        return <Badge className="bg-blue-500"><Loader2 className="w-3 h-3 mr-1 animate-spin" /> Processando</Badge>;
+        return (
+          <Badge className="bg-blue-500">
+            <Loader2 className="w-3 h-3 mr-1 animate-spin" /> Processando
+          </Badge>
+        )
       default:
-        return <Badge variant="secondary"><Clock className="w-3 h-3 mr-1" /> Pendente</Badge>;
+        return (
+          <Badge variant="secondary">
+            <Clock className="w-3 h-3 mr-1" /> Pendente
+          </Badge>
+        )
     }
-  };
+  }
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleString('pt-BR', {
@@ -144,46 +170,40 @@ export default function SCORMJobsPage() {
       year: 'numeric',
       hour: '2-digit',
       minute: '2-digit',
-    });
-  };
+    })
+  }
 
   const getDuration = (start: string, end?: string) => {
-    const startDate = new Date(start);
-    const endDate = end ? new Date(end) : new Date();
-    const diff = Math.floor((endDate.getTime() - startDate.getTime()) / 1000);
+    const startDate = new Date(start)
+    const endDate = end ? new Date(end) : new Date()
+    const diff = Math.floor((endDate.getTime() - startDate.getTime()) / 1000)
 
-    if (diff < 60) return `${diff}s`;
-    if (diff < 3600) return `${Math.floor(diff / 60)}min ${diff % 60}s`;
-    return `${Math.floor(diff / 3600)}h ${Math.floor((diff % 3600) / 60)}min`;
-  };
+    if (diff < 60) return `${diff}s`
+    if (diff < 3600) return `${Math.floor(diff / 60)}min ${diff % 60}s`
+    return `${Math.floor(diff / 3600)}h ${Math.floor((diff % 3600) / 60)}min`
+  }
 
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-orange-500" />
       </div>
-    );
+    )
   }
 
   return (
     <div className="container mx-auto p-6">
       <div className="mb-6">
         <h1 className="text-3xl font-bold mb-2">Histórico de Builds SCORM</h1>
-        <p className="text-gray-600">
-          Acompanhe todos os builds de pacotes SCORM gerados
-        </p>
+        <p className="text-gray-600">Acompanhe todos os builds de pacotes SCORM gerados</p>
       </div>
 
       {jobs.length === 0 ? (
         <Card className="p-12 text-center">
           <AlertCircle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
           <h3 className="text-lg font-semibold mb-2">Nenhum build encontrado</h3>
-          <p className="text-gray-600 mb-4">
-            Você ainda não gerou nenhum pacote SCORM.
-          </p>
-          <Button onClick={() => router.push('/cursos')}>
-            Ir para Cursos
-          </Button>
+          <p className="text-gray-600 mb-4">Você ainda não gerou nenhum pacote SCORM.</p>
+          <Button onClick={() => router.push('/cursos')}>Ir para Cursos</Button>
         </Card>
       ) : (
         <div className="space-y-4">
@@ -202,11 +222,13 @@ export default function SCORMJobsPage() {
                     </p>
                     {job.completedAt && (
                       <p>
-                        <span className="font-medium">Concluído:</span> {formatDate(job.completedAt)}
+                        <span className="font-medium">Concluído:</span>{' '}
+                        {formatDate(job.completedAt)}
                       </p>
                     )}
                     <p>
-                      <span className="font-medium">Duração:</span> {getDuration(job.createdAt, job.completedAt)}
+                      <span className="font-medium">Duração:</span>{' '}
+                      {getDuration(job.createdAt, job.completedAt)}
                     </p>
                     {job.progress && job.status === 'building' && (
                       <p className="text-blue-600">
@@ -259,14 +281,14 @@ export default function SCORMJobsPage() {
                   {job.status === 'completed' && (
                     <Button
                       onClick={async () => {
-                        const response = await fetch(`/api/scorm-download/${job.id}`);
-                        const blob = await response.blob();
-                        const url = URL.createObjectURL(blob);
-                        const a = document.createElement('a');
-                        a.href = url;
-                        a.download = `scorm-${job.cursoTitulo}.zip`;
-                        a.click();
-                        URL.revokeObjectURL(url);
+                        const response = await fetch(`/api/scorm-download/${job.id}`)
+                        const blob = await response.blob()
+                        const url = URL.createObjectURL(blob)
+                        const a = document.createElement('a')
+                        a.href = url
+                        a.download = `scorm-${job.cursoTitulo}.zip`
+                        a.click()
+                        URL.revokeObjectURL(url)
                       }}
                       size="sm"
                       className="bg-green-600 hover:bg-green-700"
@@ -317,5 +339,5 @@ export default function SCORMJobsPage() {
         </div>
       )}
     </div>
-  );
+  )
 }

@@ -14,15 +14,31 @@ import { ROTAS_PROTEGIDAS, regraDaRota, casaPrefixo } from '@/lib/rotas-protegid
 
 const raizApp = path.join(process.cwd(), 'src', 'app')
 
+// Route groups — `(app)` e afins — não aparecem na URL, então o prefixo da rota
+// pode morar na raiz de `app/` ou dentro de qualquer um deles.
+const raizesDeRota = [
+  raizApp,
+  ...fs
+    .readdirSync(raizApp, { withFileTypes: true })
+    .filter((e) => e.isDirectory() && e.name.startsWith('('))
+    .map((e) => path.join(raizApp, e.name)),
+]
+
+function acharLayout(prefixo: string) {
+  return raizesDeRota
+    .map((raiz) => path.join(raiz, prefixo, 'layout.tsx'))
+    .find((caminho) => fs.existsSync(caminho))
+}
+
 describe('Rotas protegidas', () => {
   it('toda rota de página protegida tem layout.tsx chamando exigirPermissao com a ação certa', () => {
     for (const { prefixos, acao } of ROTAS_PROTEGIDAS) {
       for (const prefixo of prefixos.filter((p) => !p.startsWith('/api'))) {
-        const layout = path.join(raizApp, prefixo, 'layout.tsx')
+        const layout = acharLayout(prefixo)
 
-        expect({ prefixo, existe: fs.existsSync(layout) }).toEqual({ prefixo, existe: true })
+        expect({ prefixo, existe: layout !== undefined }).toEqual({ prefixo, existe: true })
 
-        const conteudo = fs.readFileSync(layout, 'utf-8')
+        const conteudo = fs.readFileSync(layout!, 'utf-8')
         expect(conteudo).toContain('exigirPermissao')
         expect(conteudo).toContain(`'${acao}'`)
       }

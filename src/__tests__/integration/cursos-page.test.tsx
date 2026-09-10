@@ -10,8 +10,8 @@
 
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import CursosPage from '@/app/cursos/page'
-import { buscarCursos } from '@/app/cursos/actions'
+import CursosPage from '@/app/(app)/cursos/page'
+import { buscarCursos } from '@/app/(app)/cursos/actions'
 import { AuthProvider } from '@/context/AuthContext'
 import { GeradorCursoProvider } from '@/context/GeradorCursoContext'
 
@@ -31,7 +31,7 @@ jest.mock('next/navigation', () => ({
 }))
 
 // Server Action: nao deve ser carregada no ambiente jsdom (puxa next/server)
-jest.mock('@/app/cursos/actions', () => ({
+jest.mock('@/app/(app)/cursos/actions', () => ({
   buscarCursos: jest.fn(),
 }))
 

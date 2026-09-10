@@ -1,8 +1,6 @@
 import type { Metadata } from 'next'
 import { Geist, Geist_Mono } from 'next/font/google'
 import './globals.css'
-import { GeradorCursoProvider } from '@/context/GeradorCursoContext'
-import { AuthProviderWrapper } from '@/components/AuthProviderWrapper'
 import { ThemeProvider } from '@/components/ThemeProvider'
 import { I18nProvider } from '@/i18n/provider'
 import { Toaster } from 'sonner'
@@ -53,9 +51,7 @@ export default async function RootLayout({
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <I18nProvider locale={locale} messages={messages}>
           <ThemeProvider>
-            <AuthProviderWrapper>
-              <GeradorCursoProvider>{children}</GeradorCursoProvider>
-            </AuthProviderWrapper>
+            {children}
             <Toaster position="bottom-right" richColors closeButton />
           </ThemeProvider>
         </I18nProvider>

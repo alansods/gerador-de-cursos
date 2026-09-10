@@ -11,7 +11,7 @@
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { NextIntlClientProvider } from 'next-intl'
-import LoginPage from '@/app/login/page'
+import LoginPage from '@/app/(app)/login/page'
 import { AuthProvider } from '@/context/AuthContext'
 import authMessages from '@/i18n/locales/pt-BR/auth.json'
 import commonMessages from '@/i18n/locales/pt-BR/common.json'

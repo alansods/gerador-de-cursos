@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { buscarCursos, type BuscarCursosParams } from '@/app/cursos/actions'
+import { buscarCursos, type BuscarCursosParams } from '@/app/(app)/cursos/actions'
 import type { CursoGerado } from '@/types/gerador-curso'
 import type { StatusCurso } from '@/lib/permissions'
 
