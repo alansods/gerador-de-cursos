@@ -1,6 +1,9 @@
 'use client'
 
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { PageHeader } from '@/components/PageHeader'
+import { PageTransition } from '@/components/PageTransition'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -14,6 +17,7 @@ import {
   Trash2,
   XCircle,
   RefreshCw,
+  Package,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import {
@@ -23,9 +27,26 @@ import {
   useScormJobsQuery,
 } from '@/hooks/queries/useScormJobsQuery'
 
+const JOBS_POR_PAGINA = 10
+
 export default function SCORMJobsPage() {
   const router = useRouter()
-  const { jobs, isLoading: loading } = useScormJobsQuery()
+  const [page, setPage] = useState(1)
+  const {
+    jobs,
+    pagination,
+    isLoading: loading,
+  } = useScormJobsQuery({
+    page,
+    limit: JOBS_POR_PAGINA,
+  })
+
+  // apagar o último job da página deixa a página corrente sem existir
+  useEffect(() => {
+    if (pagination.totalPages > 0 && page > pagination.totalPages) {
+      setPage(pagination.totalPages)
+    }
+  }, [page, pagination.totalPages])
   const cancelar = useCancelarJobMutation()
   const deletar = useDeletarJobMutation()
   const reiniciar = useReiniciarBuildMutation()
@@ -118,75 +139,92 @@ export default function SCORMJobsPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-orange-500" />
-      </div>
+      <PageTransition>
+        <div className="min-h-screen flex items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-orange-500" />
+        </div>
+      </PageTransition>
     )
   }
 
   return (
-    <div className="container mx-auto p-6">
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold mb-2">Histórico de Builds SCORM</h1>
-        <p className="text-gray-600">Acompanhe todos os builds de pacotes SCORM gerados</p>
-      </div>
+    <PageTransition>
+      <div className="container mx-auto px-4 sm:px-6 py-6">
+        <PageHeader
+          icon={Package}
+          title="Histórico de Builds SCORM"
+          description="Acompanhe todos os builds de pacotes SCORM gerados"
+        />
 
-      {jobs.length === 0 ? (
-        <Card className="p-12 text-center">
-          <AlertCircle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-          <h3 className="text-lg font-semibold mb-2">Nenhum build encontrado</h3>
-          <p className="text-gray-600 mb-4">Você ainda não gerou nenhum pacote SCORM.</p>
-          <Button onClick={() => router.push('/cursos')}>Ir para Cursos</Button>
-        </Card>
-      ) : (
-        <div className="space-y-4">
-          {jobs.map((job) => (
-            <Card key={job.id} className="p-6">
-              <div className="flex items-start justify-between">
-                <div className="flex-1">
-                  <div className="flex items-center gap-3 mb-2">
-                    <h3 className="text-lg font-semibold">{job.cursoTitulo}</h3>
-                    {getStatusBadge(job.status)}
-                  </div>
+        {jobs.length === 0 ? (
+          <Card className="p-12 text-center">
+            <AlertCircle className="h-12 w-12 text-muted-foreground/50 mx-auto mb-4" />
+            <h3 className="text-lg font-semibold mb-2">Nenhum build encontrado</h3>
+            <p className="text-muted-foreground mb-4">Você ainda não gerou nenhum pacote SCORM.</p>
+            <Button onClick={() => router.push('/cursos')}>Ir para Cursos</Button>
+          </Card>
+        ) : (
+          <div className="space-y-4">
+            {jobs.map((job) => (
+              <Card key={job.id} className="p-6">
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-3 mb-2">
+                      <h3 className="text-lg font-semibold">{job.cursoTitulo}</h3>
+                      {getStatusBadge(job.status)}
+                    </div>
 
-                  <div className="text-sm text-gray-600 space-y-1">
-                    <p>
-                      <span className="font-medium">Iniciado:</span> {formatDate(job.createdAt)}
-                    </p>
-                    {job.completedAt && (
+                    <div className="text-sm text-muted-foreground space-y-1">
                       <p>
-                        <span className="font-medium">Concluído:</span>{' '}
-                        {formatDate(job.completedAt)}
+                        <span className="font-medium">Iniciado:</span> {formatDate(job.createdAt)}
                       </p>
-                    )}
-                    <p>
-                      <span className="font-medium">Duração:</span>{' '}
-                      {getDuration(job.createdAt, job.completedAt)}
-                    </p>
-                    {job.progress && job.status === 'building' && (
-                      <p className="text-blue-600">
-                        <span className="font-medium">Progresso:</span> {job.progress}
+                      {job.completedAt && (
+                        <p>
+                          <span className="font-medium">Concluído:</span>{' '}
+                          {formatDate(job.completedAt)}
+                        </p>
+                      )}
+                      <p>
+                        <span className="font-medium">Duração:</span>{' '}
+                        {getDuration(job.createdAt, job.completedAt)}
                       </p>
-                    )}
-                    {job.error && (
-                      <p className="text-red-600">
-                        <span className="font-medium">Erro:</span> {job.error}
-                      </p>
-                    )}
+                      {job.progress && job.status === 'building' && (
+                        <p className="text-blue-600">
+                          <span className="font-medium">Progresso:</span> {job.progress}
+                        </p>
+                      )}
+                      {job.error && (
+                        <p className="text-red-600">
+                          <span className="font-medium">Erro:</span> {job.error}
+                        </p>
+                      )}
+                    </div>
                   </div>
-                </div>
 
-                <div className="flex gap-2">
-                  {job.status === 'building' && (
-                    <>
-                      <Button
-                        onClick={() => router.push(`/scorm-build/${job.id}`)}
-                        variant="outline"
-                        size="sm"
-                      >
-                        <Eye className="w-4 h-4 mr-2" />
-                        Ver Progresso
-                      </Button>
+                  <div className="flex gap-2">
+                    {job.status === 'building' && (
+                      <>
+                        <Button
+                          onClick={() => router.push(`/scorm-build/${job.id}`)}
+                          variant="outline"
+                          size="sm"
+                        >
+                          <Eye className="w-4 h-4 mr-2" />
+                          Ver Progresso
+                        </Button>
+                        <Button
+                          onClick={() => cancelJob(job.id)}
+                          variant="outline"
+                          size="sm"
+                          className="text-orange-600 hover:text-orange-700 hover:bg-orange-50"
+                        >
+                          <XCircle className="w-4 h-4 mr-2" />
+                          Cancelar
+                        </Button>
+                      </>
+                    )}
+
+                    {job.status === 'pending' && (
                       <Button
                         onClick={() => cancelJob(job.id)}
                         variant="outline"
@@ -196,52 +234,52 @@ export default function SCORMJobsPage() {
                         <XCircle className="w-4 h-4 mr-2" />
                         Cancelar
                       </Button>
-                    </>
-                  )}
+                    )}
 
-                  {job.status === 'pending' && (
-                    <Button
-                      onClick={() => cancelJob(job.id)}
-                      variant="outline"
-                      size="sm"
-                      className="text-orange-600 hover:text-orange-700 hover:bg-orange-50"
-                    >
-                      <XCircle className="w-4 h-4 mr-2" />
-                      Cancelar
-                    </Button>
-                  )}
-
-                  {job.status === 'completed' && (
-                    <Button
-                      onClick={async () => {
-                        const response = await fetch(`/api/scorm-download/${job.id}`)
-                        const blob = await response.blob()
-                        const url = URL.createObjectURL(blob)
-                        const a = document.createElement('a')
-                        a.href = url
-                        a.download = `scorm-${job.cursoTitulo}.zip`
-                        a.click()
-                        URL.revokeObjectURL(url)
-                      }}
-                      size="sm"
-                      className="bg-green-600 hover:bg-green-700"
-                    >
-                      <Download className="w-4 h-4 mr-2" />
-                      Baixar
-                    </Button>
-                  )}
-
-                  {job.status === 'failed' && (
-                    <>
+                    {job.status === 'completed' && (
                       <Button
-                        onClick={() => restartJob(job.cursoId, job.cursoTitulo)}
-                        variant="outline"
+                        onClick={async () => {
+                          const response = await fetch(`/api/scorm-download/${job.id}`)
+                          const blob = await response.blob()
+                          const url = URL.createObjectURL(blob)
+                          const a = document.createElement('a')
+                          a.href = url
+                          a.download = `scorm-${job.cursoTitulo}.zip`
+                          a.click()
+                          URL.revokeObjectURL(url)
+                        }}
                         size="sm"
-                        className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                        className="bg-green-600 hover:bg-green-700"
                       >
-                        <RefreshCw className="w-4 h-4 mr-2" />
-                        Reiniciar
+                        <Download className="w-4 h-4 mr-2" />
+                        Baixar
                       </Button>
+                    )}
+
+                    {job.status === 'failed' && (
+                      <>
+                        <Button
+                          onClick={() => restartJob(job.cursoId, job.cursoTitulo)}
+                          variant="outline"
+                          size="sm"
+                          className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                        >
+                          <RefreshCw className="w-4 h-4 mr-2" />
+                          Reiniciar
+                        </Button>
+                        <Button
+                          onClick={() => deleteJob(job.id)}
+                          variant="outline"
+                          size="sm"
+                          className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                        >
+                          <Trash2 className="w-4 h-4 mr-2" />
+                          Apagar
+                        </Button>
+                      </>
+                    )}
+
+                    {job.status === 'completed' && (
                       <Button
                         onClick={() => deleteJob(job.id)}
                         variant="outline"
@@ -251,26 +289,42 @@ export default function SCORMJobsPage() {
                         <Trash2 className="w-4 h-4 mr-2" />
                         Apagar
                       </Button>
-                    </>
-                  )}
-
-                  {job.status === 'completed' && (
-                    <Button
-                      onClick={() => deleteJob(job.id)}
-                      variant="outline"
-                      size="sm"
-                      className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                    >
-                      <Trash2 className="w-4 h-4 mr-2" />
-                      Apagar
-                    </Button>
-                  )}
+                    )}
+                  </div>
                 </div>
+              </Card>
+            ))}
+          </div>
+        )}
+        {pagination.totalPages > 1 && (
+          <div className="mt-6 flex flex-col sm:flex-row items-center justify-between gap-3 border-t border-border pt-4">
+            <div className="text-sm text-muted-foreground">
+              Mostrando {jobs.length} de {pagination.total} builds
+            </div>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setPage((atual) => atual - 1)}
+                disabled={pagination.page === 1}
+              >
+                Anterior
+              </Button>
+              <div className="px-3 py-1 bg-primary text-primary-foreground rounded-md flex items-center text-sm">
+                {pagination.page}
               </div>
-            </Card>
-          ))}
-        </div>
-      )}
-    </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setPage((atual) => atual + 1)}
+                disabled={pagination.page === pagination.totalPages}
+              >
+                Próxima
+              </Button>
+            </div>
+          </div>
+        )}
+      </div>
+    </PageTransition>
   )
 }

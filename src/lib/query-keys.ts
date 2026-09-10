@@ -11,6 +11,11 @@ export interface FiltrosDeUsuarios {
   role?: string
 }
 
+export interface FiltrosDeScormJobs {
+  page: number
+  limit: number
+}
+
 export const chaves = {
   cursos: {
     todos: ['cursos'] as const,
@@ -24,7 +29,7 @@ export const chaves = {
   },
   scormJobs: {
     todos: ['scorm-jobs'] as const,
-    lista: () => ['scorm-jobs', 'lista'] as const,
+    lista: (filtros: FiltrosDeScormJobs) => ['scorm-jobs', 'lista', filtros] as const,
     detalhe: (jobId: string) => ['scorm-jobs', 'detalhe', jobId] as const,
   },
   solicitacoes: {

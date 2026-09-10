@@ -88,7 +88,7 @@ const abrirLms = async (page: Page) => {
 
 const proximaUnidade = async (page: Page) => {
   await sco(page)
-    .getByRole('button', { name: /Pr.xima Unidade/i })
+    .getByRole('button', { name: /Pr[oó]xima/i })
     .first()
     .click()
   await page.waitForTimeout(1900)
@@ -138,7 +138,7 @@ test('rastreia progresso, retoma a sessão e conclui o curso no LMS', async ({ p
   estado = await cmi(page)
   expect(estado.cmi['cmi.suspend_data']).toContain('|110|')
   expect(estado.cmi['cmi.core.lesson_location']).toBe('unidade-b')
-  await expect(sco(page).getByRole('button', { name: /Pr.xima Unidade/i })).toBeVisible()
+  await expect(sco(page).getByRole('button', { name: /Pr[oó]xima/i })).toBeVisible()
 
   await proximaUnidade(page)
 

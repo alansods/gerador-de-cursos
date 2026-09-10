@@ -1,356 +1,199 @@
 /**
  * Testes E2E - Página de Cursos
  *
- * Testa o fluxo completo de gerenciamento de cursos
- * Verifica requisições de rede para detectar duplicações
+ * A lista não passa mais por `GET /api/cursos`: quem busca é a Server Action
+ * `buscarCursos` (cursor pagination + infinite scroll), consumida pelo
+ * TanStack Query. Por isso a contagem de requisições olha os POSTs com o
+ * header `next-action` em vez de URLs de API.
+ *
+ * Exige ambiente completo: servidor de dev, banco acessível e as credenciais
+ * de E2E_EMAIL / E2E_SENHA (padrão: conteudista do seed).
  */
 
-import { test, expect, Page } from '@playwright/test'
+import { test, expect, type Page } from '@playwright/test'
 
-// Helper para fazer login antes dos testes
-async function login(page: Page) {
+const EMAIL = process.env.E2E_EMAIL ?? 'alan.conteudista@senai.br'
+const SENHA = process.env.E2E_SENHA ?? '123456'
+
+const CURSOS_POR_PAGINA = 6
+const DEBOUNCE_DA_BUSCA = 500
+
+async function entrar(page: Page) {
   await page.goto('/login')
+  await page.getByLabel('E-mail').fill(EMAIL)
+  await page.getByLabel('Senha').fill(SENHA)
+  // exato: a tela também tem "Entrar como Convidado"
+  await page.getByRole('button', { name: 'Entrar', exact: true }).click()
+  await page.waitForURL(/\/home/)
+}
 
-  await page.route('**/api/auth/login', async (route) => {
-    await route.fulfill({
-      status: 200,
-      contentType: 'application/json',
-      body: JSON.stringify({
-        success: true,
-        user: {
-          id: '1',
-          usuario: 'testuser',
-          nome: 'Test User',
-          cargo: 'Desenvolvedor',
-        },
-      }),
-      headers: {
-        'Set-Cookie': 'token=test-token; Path=/; HttpOnly',
-      },
-    })
+/**
+ * Conta as chamadas de Server Action da página. Uma busca de cursos é um POST
+ * para a própria rota com o header `next-action`.
+ */
+function contarAcoes(page: Page) {
+  const chamadas: string[] = []
+
+  page.on('request', (request) => {
+    if (request.headers()['next-action']) {
+      chamadas.push(`${request.method()} ${new URL(request.url()).pathname}`)
+    }
   })
 
-  await page.getByLabel('Usuário').fill('testuser')
-  await page.getByLabel('Senha').fill('senha123')
-  await page.getByRole('button', { name: 'Entrar' }).click()
+  return {
+    get quantidade() {
+      return chamadas.length
+    },
+  }
+}
 
-  await page.waitForURL('/home')
+const linhas = (page: Page) => page.locator('tbody tr')
+
+async function criarCurso(page: Page, titulo: string) {
+  const resposta = await page.request.post('/api/cursos', {
+    data: {
+      titulo,
+      descricao: 'Curso criado pelo teste E2E da listagem de cursos.',
+      cargaHoraria: '40',
+      modalidade: 'Online',
+      categoria: 'Tecnologia',
+      unidades: [],
+    },
+  })
+
+  expect(resposta.ok()).toBeTruthy()
 }
 
 test.describe('E2E - Cursos Page', () => {
   test.beforeEach(async ({ page }) => {
     // Fazer login antes de cada teste
-    await login(page)
+    await entrar(page)
   })
 
   test('deve carregar cursos apenas UMA VEZ ao acessar a página', async ({ page }) => {
-    // Arrange - Monitorar requisições de rede
-    const apiRequests: string[] = []
+    // Arrange
+    const acoes = contarAcoes(page)
 
-    page.on('request', (request) => {
-      const url = request.url()
-      if (url.includes('/api/cursos')) {
-        apiRequests.push(url)
-      }
-    })
-
-    // Mock da resposta de cursos
-    await page.route('**/api/cursos*', async (route) => {
-      await route.fulfill({
-        status: 200,
-        contentType: 'application/json',
-        body: JSON.stringify({
-          success: true,
-          cursos: [
-            {
-              id: '1',
-              titulo: 'JavaScript Básico',
-              descricao: 'Aprenda JavaScript do zero',
-              cargaHoraria: '40h',
-              modalidade: 'Online',
-              categoria: 'Tecnologia',
-              unidades: [{ id: '1', titulo: 'Unidade 1' }],
-            },
-            {
-              id: '2',
-              titulo: 'React Avançado',
-              descricao: 'Domine React',
-              cargaHoraria: '60h',
-              modalidade: 'Online',
-              categoria: 'Tecnologia',
-              unidades: [{ id: '1', titulo: 'Unidade 1' }],
-            },
-          ],
-          pagination: {
-            page: 1,
-            limit: 6,
-            total: 2,
-            totalPages: 1,
-          },
-        }),
-      })
-    })
-
-    // Act - Navegar para página de cursos
+    // Act
     await page.goto('/cursos')
+    await expect(linhas(page).first()).toBeVisible()
 
-    // Assert - Verificar que os cursos foram carregados
-    await expect(page.getByText('JavaScript Básico')).toBeVisible()
-    await expect(page.getByText('React Avançado')).toBeVisible()
-
-    // CRÍTICO: Verificar que foi feita apenas UMA requisição
-    await page.waitForTimeout(1000) // Aguardar possíveis requisições duplicadas
-    expect(apiRequests).toHaveLength(1)
-
-    console.log('✓ Apenas 1 requisição feita ao carregar cursos')
+    // Assert - uma única busca, sem a duplicação que o GeradorCursoContext causava
+    await page.waitForTimeout(1000)
+    expect(acoes.quantidade).toBe(1)
   })
 
   test('deve fazer debounce na busca (não fazer requisição a cada tecla)', async ({ page }) => {
     // Arrange
-    const apiRequests: string[] = []
-
-    page.on('request', (request) => {
-      const url = request.url()
-      if (url.includes('/api/cursos') && url.includes('search=')) {
-        apiRequests.push(url)
-      }
-    })
-
-    await page.route('**/api/cursos*', async (route) => {
-      await route.fulfill({
-        status: 200,
-        contentType: 'application/json',
-        body: JSON.stringify({
-          success: true,
-          cursos: [],
-          pagination: { page: 1, limit: 6, total: 0, totalPages: 0 },
-        }),
-      })
-    })
-
     await page.goto('/cursos')
+    await expect(linhas(page).first()).toBeVisible()
+
+    const acoes = contarAcoes(page)
 
     // Act - Digitar no campo de busca
-    const searchInput = page.getByPlaceholder('Buscar cursos...')
-    await searchInput.fill('JavaScript')
+    await page.getByPlaceholder('Título, descrição ou categoria...').fill('JavaScript')
 
     // Aguardar o debounce (500ms)
-    await page.waitForTimeout(600)
+    await page.waitForTimeout(DEBOUNCE_DA_BUSCA + 800)
 
-    // Assert - Deve ter feito apenas UMA requisição após o debounce
-    // Não deve ter feito 10 requisições (uma para cada letra)
-    expect(apiRequests.length).toBeLessThanOrEqual(1)
-
-    console.log(`✓ Debounce funcionando: ${apiRequests.length} requisição(ões) ao invés de 10`)
+    // Assert - uma requisição depois do debounce, não uma por letra
+    expect(acoes.quantidade).toBeLessThanOrEqual(1)
   })
 
-  test('deve aplicar filtros sem requisições duplicadas', async ({ page }) => {
+  test('deve aplicar filtro de categoria com uma única busca', async ({ page }) => {
     // Arrange
-    const apiRequests: string[] = []
-
-    page.on('request', (request) => {
-      const url = request.url()
-      if (url.includes('/api/cursos')) {
-        apiRequests.push(url)
-      }
-    })
-
-    await page.route('**/api/cursos*', async (route) => {
-      await route.fulfill({
-        status: 200,
-        contentType: 'application/json',
-        body: JSON.stringify({
-          success: true,
-          cursos: [],
-          pagination: { page: 1, limit: 6, total: 0, totalPages: 0 },
-        }),
-      })
-    })
-
     await page.goto('/cursos')
+    await expect(linhas(page).first()).toBeVisible()
 
-    // Limpar contador após carregamento inicial
-    apiRequests.length = 0
+    const acoes = contarAcoes(page)
 
     // Act - Selecionar categoria
-    await page.getByRole('combobox').first().click()
+    await page.getByLabel('Categoria').click()
     await page.getByRole('option', { name: 'Tecnologia' }).click()
 
-    await page.waitForTimeout(1000)
-
-    // Assert - Apenas uma requisição ao mudar filtro
-    expect(apiRequests).toHaveLength(1)
-    expect(apiRequests[0]).toContain('category=Tecnologia')
-
-    console.log('✓ Filtro aplicado com apenas 1 requisição')
-  })
-
-  test('deve navegar entre páginas sem requisições duplicadas', async ({ page }) => {
-    // Arrange
-    const apiRequests: string[] = []
-
-    page.on('request', (request) => {
-      const url = request.url()
-      if (url.includes('/api/cursos')) {
-        apiRequests.push(url)
-      }
-    })
-
-    // Mock página 1
-    await page.route('**/api/cursos?page=1*', async (route) => {
-      await route.fulfill({
-        status: 200,
-        contentType: 'application/json',
-        body: JSON.stringify({
-          success: true,
-          cursos: [
-            {
-              id: '1',
-              titulo: 'Curso Página 1',
-              descricao: 'Descrição',
-              cargaHoraria: '40h',
-              modalidade: 'Online',
-              categoria: 'Tecnologia',
-              unidades: [],
-            },
-          ],
-          pagination: { page: 1, limit: 6, total: 12, totalPages: 2 },
-        }),
-      })
-    })
-
-    // Mock página 2
-    await page.route('**/api/cursos?page=2*', async (route) => {
-      await route.fulfill({
-        status: 200,
-        contentType: 'application/json',
-        body: JSON.stringify({
-          success: true,
-          cursos: [
-            {
-              id: '2',
-              titulo: 'Curso Página 2',
-              descricao: 'Descrição',
-              cargaHoraria: '40h',
-              modalidade: 'Online',
-              categoria: 'Tecnologia',
-              unidades: [],
-            },
-          ],
-          pagination: { page: 2, limit: 6, total: 12, totalPages: 2 },
-        }),
-      })
-    })
-
-    await page.goto('/cursos')
-
-    await expect(page.getByText('Curso Página 1')).toBeVisible()
-
-    apiRequests.length = 0
-
-    // Act - Ir para página 2
-    await page.getByRole('link', { name: /próxima/i }).click()
-
+    await expect(page.getByRole('button', { name: /Limpar Filtros/i })).toBeVisible()
     await page.waitForTimeout(1000)
 
     // Assert
-    await expect(page.getByText('Curso Página 2')).toBeVisible()
-
-    // CRÍTICO: Apenas uma requisição ao mudar de página
-    expect(apiRequests).toHaveLength(1)
-    expect(apiRequests[0]).toContain('page=2')
-
-    console.log('✓ Navegação de página com apenas 1 requisição')
+    expect(acoes.quantidade).toBe(1)
   })
 
-  test('deve verificar que GeradorCursoContext NÃO faz requisição duplicada', async ({ page }) => {
-    // Este é um teste crítico para verificar o bug corrigido
-    // GeradorCursoContext não deve mais carregar cursos automaticamente
-
+  test('deve mostrar o estado vazio quando a busca não casa com nada', async ({ page }) => {
     // Arrange
-    let cursosRequestCount = 0
-
-    page.on('request', (request) => {
-      const url = request.url()
-      if (url.includes('/api/cursos') && !url.includes('[id]')) {
-        cursosRequestCount++
-      }
-    })
-
-    await page.route('**/api/cursos*', async (route) => {
-      await route.fulfill({
-        status: 200,
-        contentType: 'application/json',
-        body: JSON.stringify({
-          success: true,
-          cursos: [
-            {
-              id: '1',
-              titulo: 'Teste',
-              descricao: 'Desc',
-              cargaHoraria: '40h',
-              modalidade: 'Online',
-              categoria: 'Tecnologia',
-              unidades: [],
-            },
-          ],
-          pagination: { page: 1, limit: 6, total: 1, totalPages: 1 },
-        }),
-      })
-    })
+    await page.goto('/cursos')
+    await expect(linhas(page).first()).toBeVisible()
 
     // Act
-    await page.goto('/cursos')
-    await page.waitForTimeout(2000) // Aguardar tempo suficiente para detectar duplicações
+    await page
+      .getByPlaceholder('Título, descrição ou categoria...')
+      .fill('curso-que-nao-existe-zzz')
 
     // Assert
-    // CRÍTICO: Deve ter feito apenas UMA requisição
-    // Se o contexto também carregasse, seriam 2 requisições
-    expect(cursosRequestCount).toBe(1)
-
-    console.log('✓ GeradorCursoContext não faz requisição duplicada')
+    await expect(page.getByRole('heading', { name: 'Nenhum curso encontrado' })).toBeVisible()
+    await expect(page.getByText('Tente ajustar os filtros de busca')).toBeVisible()
   })
 
   test('deve limpar filtros corretamente', async ({ page }) => {
     // Arrange
-    const apiRequests: string[] = []
-
-    page.on('request', (request) => {
-      const url = request.url()
-      if (url.includes('/api/cursos')) {
-        apiRequests.push(url)
-      }
-    })
-
-    await page.route('**/api/cursos*', async (route) => {
-      await route.fulfill({
-        status: 200,
-        contentType: 'application/json',
-        body: JSON.stringify({
-          success: true,
-          cursos: [],
-          pagination: { page: 1, limit: 6, total: 0, totalPages: 0 },
-        }),
-      })
-    })
-
     await page.goto('/cursos')
+    await expect(linhas(page).first()).toBeVisible()
+    const totalInicial = await linhas(page).count()
 
-    // Aplicar busca
-    await page.getByPlaceholder('Buscar cursos...').fill('React')
-    await page.waitForTimeout(600)
+    await page
+      .getByPlaceholder('Título, descrição ou categoria...')
+      .fill('curso-que-nao-existe-zzz')
+    await expect(page.getByRole('heading', { name: 'Nenhum curso encontrado' })).toBeVisible()
 
-    apiRequests.length = 0
+    const acoes = contarAcoes(page)
 
     // Act - Limpar filtros
-    await page.getByRole('button', { name: /limpar filtros/i }).click()
+    await page.getByRole('button', { name: /Limpar Filtros/i }).click()
+
+    // Assert - volta à listagem sem filtro. A chave sem filtro ainda está no
+    // cache do TanStack Query (staleTime de 60s), então o normal é nem haver
+    // requisição — o que não pode acontecer é buscar mais de uma vez.
+    await expect(linhas(page).first()).toBeVisible()
+    await expect(linhas(page)).toHaveCount(totalInicial)
+    await expect(page.getByRole('button', { name: /Limpar Filtros/i })).toBeHidden()
 
     await page.waitForTimeout(1000)
+    expect(acoes.quantidade).toBeLessThanOrEqual(1)
+  })
+
+  test('deve encontrar um curso recém-criado pela busca', async ({ page }) => {
+    // Arrange
+    const titulo = `Curso Busca E2E ${Date.now()}`
+    await criarCurso(page, titulo)
+
+    await page.goto('/cursos')
+    await expect(linhas(page).first()).toBeVisible()
+
+    // Act
+    await page.getByPlaceholder('Título, descrição ou categoria...').fill(titulo)
 
     // Assert
-    expect(apiRequests).toHaveLength(1)
-    expect(apiRequests[0]).not.toContain('search=')
+    await expect(linhas(page)).toHaveCount(1)
+    await expect(page.getByRole('cell', { name: titulo })).toBeVisible()
+  })
 
-    console.log('✓ Filtros limpos com apenas 1 requisição')
+  test('carrega a página seguinte pelo infinite scroll', async ({ page }) => {
+    // Arrange - garantir mais cursos do que cabe numa página
+    await page.goto('/cursos')
+    await expect(linhas(page).first()).toBeVisible()
+
+    const primeiraPagina = await linhas(page).count()
+    test.skip(
+      primeiraPagina < CURSOS_POR_PAGINA,
+      `o banco tem só ${primeiraPagina} curso(s): sem segunda página para carregar`
+    )
+
+    const acoes = contarAcoes(page)
+
+    // Act - o gatilho carrega ao entrar em viewport
+    await linhas(page).last().scrollIntoViewIfNeeded()
+
+    // Assert - mais linhas na tela, sem recarregar a primeira página
+    await expect(linhas(page)).not.toHaveCount(primeiraPagina, { timeout: 15000 })
+    expect(acoes.quantidade).toBe(1)
   })
 })
