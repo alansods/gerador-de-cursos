@@ -1,6 +1,5 @@
 'use client'
 
-import { useState } from 'react'
 import { Bell, Check, X, Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
 import {
@@ -11,6 +10,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { useAuth } from '@/context/AuthContext'
 import { useSolicitacoesPendentes } from '@/hooks/useSolicitacoesPendentes'
+import { useResponderSolicitacaoMutation } from '@/hooks/queries/useSolicitacoesMutations'
 
 interface Props {
   /** Na Sidebar expandida o gatilho vira um item de menu com rótulo e contador
@@ -20,29 +20,16 @@ interface Props {
 
 export function SinoSolicitacoes({ expandido = false }: Props) {
   const { isAuthenticated } = useAuth()
-  const { solicitacoes, recarregar, podeResponder } = useSolicitacoesPendentes()
-  const [respondendo, setRespondendo] = useState<string | null>(null)
+  const { solicitacoes, podeResponder } = useSolicitacoesPendentes()
+  const responderSolicitacao = useResponderSolicitacaoMutation()
+  const respondendo = responderSolicitacao.isPending ? responderSolicitacao.variables.id : null
 
   const responder = async (id: string, acao: 'aprovar' | 'negar') => {
-    setRespondendo(id)
     try {
-      const response = await fetch(`/api/solicitacoes/${id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ acao }),
-      })
-      const data = await response.json()
-
-      if (data.success) {
-        await recarregar()
-        toast.success(acao === 'aprovar' ? 'Acesso concedido' : 'Solicitação negada')
-      } else {
-        toast.error(data.error || 'Erro ao responder solicitação')
-      }
-    } catch {
-      toast.error('Erro ao conectar com o servidor')
-    } finally {
-      setRespondendo(null)
+      await responderSolicitacao.mutateAsync({ id, acao })
+      toast.success(acao === 'aprovar' ? 'Acesso concedido' : 'Solicitação negada')
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Erro ao conectar com o servidor')
     }
   }
 

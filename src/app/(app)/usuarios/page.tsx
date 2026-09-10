@@ -3,7 +3,14 @@
 // Esta página não deve ser exportada estaticamente (usa API)
 export const dynamic = 'error'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect } from 'react'
+import {
+  useAtualizarUsuarioMutation,
+  useCriarUsuarioMutation,
+  useDeletarUsuarioMutation,
+  useUsuariosQuery,
+  type User,
+} from '@/hooks/queries/useUsuariosQuery'
 import { PageTransition } from '@/components/PageTransition'
 import { Users, Plus, Pencil, Trash2, X, Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
@@ -46,81 +53,54 @@ function ehUsuarioRecente(createdAt: string) {
   return new Date(createdAt).getTime() >= limite
 }
 
-interface User {
-  id: string
-  nome: string
-  role: RoleUsuario
-  email: string
-  createdAt: string
-  updatedAt: string
-}
-interface PaginationInfo {
-  page: number
-  limit: number
-  total: number
-  totalPages: number
-}
 export default function UsuariosPage() {
-  const [users, setUsers] = useState<User[]>([])
-  const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
   const [startDate, setStartDate] = useState('')
   const [endDate, setEndDate] = useState('')
   const [selectedRole, setSelectedRole] = useState(TODOS_OS_PAPEIS)
-  const [pagination, setPagination] = useState<PaginationInfo>({
-    page: 1,
-    limit: 10,
-    total: 0,
-    totalPages: 0,
-  })
+  const [page, setPage] = useState(1)
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [showEditModal, setShowEditModal] = useState(false)
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [selectedUser, setSelectedUser] = useState<User | null>(null)
-  const [isCreating, setIsCreating] = useState(false)
-  const [isUpdating, setIsUpdating] = useState(false)
-  const [isDeleting, setIsDeleting] = useState(false)
-  // Form states
   const [formData, setFormData] = useState({
     nome: '',
     role: 'CONTEUDISTA' as RoleUsuario,
     email: '',
     senha: '',
   })
-  // Fetch users
-  const fetchUsers = useCallback(
-    async (page = 1, search = '', start = '', end = '', role = TODOS_OS_PAPEIS) => {
-      try {
-        setLoading(true)
-        const params = new URLSearchParams({
-          page: page.toString(),
-          limit: pagination.limit.toString(),
-          search,
-        })
-        if (start) params.append('startDate', start)
-        if (end) params.append('endDate', end)
-        if (role !== TODOS_OS_PAPEIS) params.append('role', role)
-        const response = await fetch(`/api/users?${params}`)
-        const data = await response.json()
-        if (data.success) {
-          setUsers(data.users)
-          setPagination(data.pagination)
-        } else {
-          toast.error(data.error || 'Erro ao carregar usuários')
-        }
-      } catch (error) {
-        console.error('Erro ao buscar usuários:', error)
-        toast.error('Erro ao conectar com o servidor')
-      } finally {
-        setLoading(false)
-      }
-    },
-    [pagination.limit]
-  )
 
+  const {
+    users,
+    pagination,
+    isLoading: loading,
+  } = useUsuariosQuery({
+    page,
+    limit: 10,
+    search: searchTerm,
+    startDate: startDate || undefined,
+    endDate: endDate || undefined,
+    role: selectedRole !== TODOS_OS_PAPEIS ? selectedRole : undefined,
+  })
+
+  const criarUsuario = useCriarUsuarioMutation()
+  const atualizarUsuario = useAtualizarUsuarioMutation()
+  const deletarUsuario = useDeletarUsuarioMutation()
+
+  const isCreating = criarUsuario.isPending
+  const isUpdating = atualizarUsuario.isPending
+  const isDeleting = deletarUsuario.isPending
+
+  // filtrar volta para a primeira página: a atual pode nem existir no novo recorte
   useEffect(() => {
-    fetchUsers(1, searchTerm, startDate, endDate, selectedRole)
-  }, [searchTerm, startDate, endDate, selectedRole, fetchUsers])
+    setPage(1)
+  }, [searchTerm, startDate, endDate, selectedRole])
+
+  const limparFormulario = () =>
+    setFormData({ nome: '', role: 'CONTEUDISTA', email: '', senha: '' })
+
+  const avisarErro = (error: unknown, padrao: string) =>
+    toast.error(error instanceof Error ? error.message : padrao)
 
   // Check if there are active filters
   const hasActiveFilters =
@@ -145,26 +125,13 @@ export default function UsuariosPage() {
       toast.error('Senha deve ter no mínimo 6 caracteres')
       return
     }
-    setIsCreating(true)
     try {
-      const response = await fetch('/api/users', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
-      })
-      const data = await response.json()
-      if (data.success) {
-        toast.success('Usuário criado com sucesso!')
-        setFormData({ nome: '', role: 'CONTEUDISTA', email: '', senha: '' })
-        fetchUsers(pagination.page, searchTerm, startDate, endDate, selectedRole)
-      } else {
-        toast.error(data.error || 'Erro ao criar usuário')
-      }
+      await criarUsuario.mutateAsync(formData)
+      toast.success('Usuário criado com sucesso!')
+      limparFormulario()
     } catch (error) {
-      console.error('Erro ao criar usuário:', error)
-      toast.error('Erro ao conectar com o servidor')
+      avisarErro(error, 'Erro ao criar usuário')
     } finally {
-      setIsCreating(false)
       setShowCreateModal(false)
     }
   }
@@ -180,29 +147,13 @@ export default function UsuariosPage() {
       toast.error('Senha deve ter no mínimo 6 caracteres')
       return
     }
-    setIsUpdating(true)
     try {
-      const response = await fetch('/api/users', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          id: selectedUser.id,
-          ...formData,
-        }),
-      })
-      const data = await response.json()
-      if (data.success) {
-        toast.success('Usuário atualizado com sucesso!')
-        setFormData({ nome: '', role: 'CONTEUDISTA', email: '', senha: '' })
-        fetchUsers(pagination.page, searchTerm, startDate, endDate, selectedRole)
-      } else {
-        toast.error(data.error || 'Erro ao atualizar usuário')
-      }
+      await atualizarUsuario.mutateAsync({ id: selectedUser.id, ...formData })
+      toast.success('Usuário atualizado com sucesso!')
+      limparFormulario()
     } catch (error) {
-      console.error('Erro ao atualizar usuário:', error)
-      toast.error('Erro ao conectar com o servidor')
+      avisarErro(error, 'Erro ao atualizar usuário')
     } finally {
-      setIsUpdating(false)
       setShowEditModal(false)
       setSelectedUser(null)
     }
@@ -210,23 +161,12 @@ export default function UsuariosPage() {
   // Delete user
   const handleDelete = async () => {
     if (!selectedUser) return
-    setIsDeleting(true)
     try {
-      const response = await fetch(`/api/users?id=${selectedUser.id}`, {
-        method: 'DELETE',
-      })
-      const data = await response.json()
-      if (data.success) {
-        toast.success('Usuário deletado com sucesso!')
-        fetchUsers(pagination.page, searchTerm, startDate, endDate, selectedRole)
-      } else {
-        toast.error(data.error || 'Erro ao deletar usuário')
-      }
+      await deletarUsuario.mutateAsync(selectedUser.id)
+      toast.success('Usuário deletado com sucesso!')
     } catch (error) {
-      console.error('Erro ao deletar usuário:', error)
-      toast.error('Erro ao conectar com o servidor')
+      avisarErro(error, 'Erro ao deletar usuário')
     } finally {
-      setIsDeleting(false)
       setShowDeleteModal(false)
       setSelectedUser(null)
     }
@@ -452,15 +392,7 @@ export default function UsuariosPage() {
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() =>
-                          fetchUsers(
-                            pagination.page - 1,
-                            searchTerm,
-                            startDate,
-                            endDate,
-                            selectedRole
-                          )
-                        }
+                        onClick={() => setPage((atual) => atual - 1)}
                         disabled={pagination.page === 1}
                       >
                         Anterior
@@ -471,15 +403,7 @@ export default function UsuariosPage() {
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() =>
-                          fetchUsers(
-                            pagination.page + 1,
-                            searchTerm,
-                            startDate,
-                            endDate,
-                            selectedRole
-                          )
-                        }
+                        onClick={() => setPage((atual) => atual + 1)}
                         disabled={pagination.page === pagination.totalPages}
                       >
                         Próxima

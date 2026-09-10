@@ -1,6 +1,6 @@
 # Spec — Adoção do TanStack Query
 
-Status: **Etapas 1, 2 e 4 concluídas**; Etapas 3, 5 e 6 pendentes.
+Status: **Etapas 1, 2, 4 e 5 concluídas**; Etapas 3 e 6 pendentes.
 
 ---
 
@@ -232,17 +232,17 @@ concluir. Com `refetchInterval` como função a decisão é avaliada antes de ca
 
 ---
 
-### Etapa 5 — Telas restantes (mata P5)
+### Etapa 5 — Telas restantes (mata P5) ✅
 
 Mecânica, baixo risco, pode ser fatiada em vários commits.
 
-- [ ] `src/app/usuarios/page.tsx` — lista paginada (`page`/`limit=10` na
+- [x] `src/app/usuarios/page.tsx` — lista paginada (`page`/`limit=10` na
       queryKey) + mutations de criar/editar/deletar
-- [ ] `src/app/home/page.tsx` — `/api/activities?limit=5`
-- [ ] `src/components/colaboracao/GerenciarColaboradores.tsx` — as duas
+- [x] `src/app/home/page.tsx` — `/api/activities?limit=5`
+- [x] `src/components/colaboracao/GerenciarColaboradores.tsx` — as duas
       queries paralelas (colaboradores + solicitações) + mutations de revogar/responder
-- [ ] `src/components/revisao/PainelRevisao.tsx` — comentários + mudança de status
-- [ ] `src/components/colaboracao/SinoSolicitacoes.tsx` — responder solicitação
+- [x] `src/components/revisao/PainelRevisao.tsx` — comentários + mudança de status
+- [x] `src/components/colaboracao/SinoSolicitacoes.tsx` — responder solicitação
       invalida `solicitacoes.pendentes()`
 
 **Fora de escopo, deliberadamente:** `AuthContext` (login/logout são router-bound e a sessão deveria

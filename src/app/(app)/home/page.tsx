@@ -28,71 +28,11 @@ import {
   MessageSquare,
 } from 'lucide-react'
 import { PageTransition } from '@/components/PageTransition'
-import { useEffect, useState } from 'react'
-
-interface Activity {
-  id: string
-  tipo: string
-  titulo: string
-  descricao: string | null
-  createdAt: string
-  user?: {
-    id: string
-    nome: string
-    email: string
-  } | null
-}
+import { useAtividadesQuery } from '@/hooks/queries/useAtividadesQuery'
 
 export default function HomePage() {
   const router = useRouter()
-  const [activities, setActivities] = useState<Activity[]>([])
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    fetchActivities()
-
-    // Recarregar atividades quando a página se tornar visível
-    const handleVisibilityChange = () => {
-      if (!document.hidden) {
-        fetchActivities()
-      }
-    }
-
-    document.addEventListener('visibilitychange', handleVisibilityChange)
-
-    // Também recarregar a cada 30 segundos enquanto a página está ativa
-    const interval = setInterval(() => {
-      if (!document.hidden) {
-        fetchActivities()
-      }
-    }, 30000)
-
-    return () => {
-      document.removeEventListener('visibilitychange', handleVisibilityChange)
-      clearInterval(interval)
-    }
-  }, [])
-
-  const fetchActivities = async () => {
-    try {
-      const response = await fetch('/api/activities?limit=5', {
-        cache: 'no-store',
-        headers: {
-          'Cache-Control': 'no-cache',
-          Pragma: 'no-cache',
-        },
-      })
-      const data = await response.json()
-
-      if (data.success) {
-        setActivities(data.activities)
-      }
-    } catch (error) {
-      console.error('Erro ao buscar atividades:', error)
-    } finally {
-      setLoading(false)
-    }
-  }
+  const { activities, isLoading: loading } = useAtividadesQuery(5)
 
   const features = [
     {

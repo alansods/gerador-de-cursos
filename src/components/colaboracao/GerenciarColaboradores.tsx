@@ -1,25 +1,11 @@
 'use client'
 
-import { useCallback, useEffect, useState } from 'react'
 import { Users, Trash2, Loader2, Check, X, UserPlus } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
-import { ROLE_LABELS, type RoleUsuario } from '@/lib/permissions'
-
-interface Colaborador {
-  id: string
-  createdAt: string
-  user: { id: string; nome: string; email: string; role: RoleUsuario }
-  concedidoPor: { id: string; nome: string } | null
-}
-
-interface Solicitacao {
-  id: string
-  status: 'PENDENTE' | 'APROVADA' | 'NEGADA' | 'REVOGADA'
-  mensagem: string | null
-  createdAt: string
-  solicitante: { id: string; nome: string; email: string }
-}
+import { ROLE_LABELS } from '@/lib/permissions'
+import { useAcessosDoCurso, useRevogarAcessoMutation } from '@/hooks/queries/useColaboradoresQuery'
+import { useResponderSolicitacaoMutation } from '@/hooks/queries/useSolicitacoesMutations'
 
 interface Props {
   cursoId: string
@@ -27,83 +13,32 @@ interface Props {
 }
 
 export function GerenciarColaboradores({ cursoId, podeGerenciar }: Props) {
-  const [colaboradores, setColaboradores] = useState<Colaborador[]>([])
-  const [pendentes, setPendentes] = useState<Solicitacao[]>([])
-  const [carregando, setCarregando] = useState(true)
-  const [revogando, setRevogando] = useState<string | null>(null)
-  const [respondendo, setRespondendo] = useState<string | null>(null)
+  const { colaboradores, pendentes, carregando } = useAcessosDoCurso(cursoId, podeGerenciar)
+  const responderSolicitacao = useResponderSolicitacaoMutation(cursoId)
+  const revogarAcesso = useRevogarAcessoMutation(cursoId)
 
-  const carregar = useCallback(async () => {
-    try {
-      setCarregando(true)
-      const [resColab, resSolic] = await Promise.all([
-        fetch(`/api/cursos/${cursoId}/colaboradores`),
-        fetch(`/api/cursos/${cursoId}/solicitacoes`),
-      ])
-      const dadosColab = await resColab.json()
-      if (dadosColab.success) setColaboradores(dadosColab.colaboradores)
+  const respondendo = responderSolicitacao.isPending ? responderSolicitacao.variables.id : null
+  const revogando = revogarAcesso.isPending ? revogarAcesso.variables : null
 
-      const dadosSolic = await resSolic.json()
-      if (dadosSolic.success) {
-        setPendentes(
-          (dadosSolic.solicitacoes as Solicitacao[]).filter((s) => s.status === 'PENDENTE')
-        )
-      }
-    } catch (error) {
-      console.error('Erro ao carregar acessos do curso:', error)
-    } finally {
-      setCarregando(false)
-    }
-  }, [cursoId])
+  const avisarErro = (error: unknown) =>
+    toast.error(error instanceof Error ? error.message : 'Erro ao conectar com o servidor')
 
   const responder = async (id: string, acao: 'aprovar' | 'negar') => {
-    setRespondendo(id)
     try {
-      const response = await fetch(`/api/solicitacoes/${id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ acao }),
-      })
-      const data = await response.json()
-
-      if (data.success) {
-        toast.success(acao === 'aprovar' ? 'Acesso concedido' : 'Solicitação negada')
-        // Recarrega os dois: aprovar move a pessoa de pendente para colaborador
-        await carregar()
-      } else {
-        toast.error(data.error || 'Erro ao responder solicitação')
-      }
-    } catch {
-      toast.error('Erro ao conectar com o servidor')
-    } finally {
-      setRespondendo(null)
+      // aprovar move a pessoa de pendente para colaborador: a mutation invalida os dois
+      await responderSolicitacao.mutateAsync({ id, acao })
+      toast.success(acao === 'aprovar' ? 'Acesso concedido' : 'Solicitação negada')
+    } catch (error) {
+      avisarErro(error)
     }
   }
 
-  useEffect(() => {
-    if (podeGerenciar) {
-      carregar()
-    }
-  }, [podeGerenciar, carregar])
-
   const revogar = async (userId: string, nome: string) => {
-    setRevogando(userId)
     try {
-      const response = await fetch(`/api/cursos/${cursoId}/colaboradores?userId=${userId}`, {
-        method: 'DELETE',
-      })
-      const data = await response.json()
-
-      if (data.success) {
-        setColaboradores((atuais) => atuais.filter((c) => c.user.id !== userId))
-        toast.success(`Acesso de ${nome} revogado`)
-      } else {
-        toast.error(data.error || 'Erro ao revogar acesso')
-      }
-    } catch {
-      toast.error('Erro ao conectar com o servidor')
-    } finally {
-      setRevogando(null)
+      await revogarAcesso.mutateAsync(userId)
+      toast.success(`Acesso de ${nome} revogado`)
+    } catch (error) {
+      avisarErro(error)
     }
   }
 
@@ -189,7 +124,7 @@ export function GerenciarColaboradores({ cursoId, podeGerenciar }: Props) {
                 <div className="min-w-0">
                   <p className="truncate text-sm font-medium">{colaborador.user.nome}</p>
                   <p className="truncate text-xs text-muted-foreground">
-                    {ROLE_LABELS[colaborador.user.role as RoleUsuario]} · concedido por{' '}
+                    {ROLE_LABELS[colaborador.user.role]} · concedido por{' '}
                     {colaborador.concedidoPor?.nome ?? '—'}
                   </p>
                 </div>

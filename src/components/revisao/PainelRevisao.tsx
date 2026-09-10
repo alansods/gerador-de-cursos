@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { toast } from 'sonner'
 import { MessageSquare, Send, Check, X, Trash2, Loader2, ClipboardCheck } from 'lucide-react'
@@ -18,14 +18,12 @@ import { Textarea } from '@/components/ui/textarea'
 import { STATUS_CURSO_CLASSES, STATUS_CURSO_LABELS } from '@/lib/status-curso'
 import type { CursoGerado } from '@/types/gerador-curso'
 import type { StatusCurso } from '@/lib/permissions'
-
-interface Comentario {
-  id: string
-  texto: string
-  createdAt: string
-  autor: { id: string; nome: string; email: string; role: string }
-  podeExcluir: boolean
-}
+import {
+  useAlterarStatusMutation,
+  useComentariosQuery,
+  useComentarMutation,
+  useExcluirComentarioMutation,
+} from '@/hooks/queries/useRevisaoQuery'
 
 interface Props {
   curso: CursoGerado
@@ -35,11 +33,15 @@ interface Props {
 export function PainelRevisao({ curso, onStatusAlterado }: Props) {
   const searchParams = useSearchParams()
   const [aberto, setAberto] = useState(searchParams.get('revisao') === '1')
-  const [comentarios, setComentarios] = useState<Comentario[]>([])
-  const [carregando, setCarregando] = useState(false)
   const [texto, setTexto] = useState('')
-  const [enviando, setEnviando] = useState(false)
   const [status, setStatus] = useState<StatusCurso>(curso.status ?? 'EM_ANDAMENTO')
+
+  const { comentarios, carregando } = useComentariosQuery(curso.id, aberto)
+  const comentar = useComentarMutation(curso.id)
+  const excluir = useExcluirComentarioMutation(curso.id)
+  const alterar = useAlterarStatusMutation(curso.id)
+
+  const enviando = comentar.isPending || alterar.isPending
 
   const permissoes = curso.permissoes
   const podeComentar = permissoes?.podeComentar ?? false
@@ -50,67 +52,26 @@ export function PainelRevisao({ curso, onStatusAlterado }: Props) {
     setStatus(curso.status ?? 'EM_ANDAMENTO')
   }, [curso.status])
 
-  const carregarComentarios = useCallback(async () => {
-    try {
-      setCarregando(true)
-      const response = await fetch(`/api/cursos/${curso.id}/comentarios`)
-      const data = await response.json()
-      if (data.success) {
-        setComentarios(data.comentarios)
-      }
-    } catch (error) {
-      console.error('Erro ao carregar comentários:', error)
-    } finally {
-      setCarregando(false)
-    }
-  }, [curso.id])
-
-  useEffect(() => {
-    if (aberto) {
-      carregarComentarios()
-    }
-  }, [aberto, carregarComentarios])
+  const avisarErro = (error: unknown) =>
+    toast.error(error instanceof Error ? error.message : 'Erro ao conectar com o servidor')
 
   const enviarComentario = async () => {
     const conteudo = texto.trim()
     if (!conteudo) return
 
-    setEnviando(true)
     try {
-      const response = await fetch(`/api/cursos/${curso.id}/comentarios`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ texto: conteudo }),
-      })
-      const data = await response.json()
-
-      if (data.success) {
-        setComentarios((atuais) => [...atuais, data.comentario])
-        setTexto('')
-      } else {
-        toast.error(data.error || 'Erro ao comentar')
-      }
-    } catch {
-      toast.error('Erro ao conectar com o servidor')
-    } finally {
-      setEnviando(false)
+      await comentar.mutateAsync(conteudo)
+      setTexto('')
+    } catch (error) {
+      avisarErro(error)
     }
   }
 
   const excluirComentario = async (id: string) => {
     try {
-      const response = await fetch(`/api/cursos/${curso.id}/comentarios?comentarioId=${id}`, {
-        method: 'DELETE',
-      })
-      const data = await response.json()
-
-      if (data.success) {
-        setComentarios((atuais) => atuais.filter((c) => c.id !== id))
-      } else {
-        toast.error(data.error || 'Erro ao excluir comentário')
-      }
-    } catch {
-      toast.error('Erro ao conectar com o servidor')
+      await excluir.mutateAsync(id)
+    } catch (error) {
+      avisarErro(error)
     }
   }
 
@@ -122,28 +83,14 @@ export function PainelRevisao({ curso, onStatusAlterado }: Props) {
       return
     }
 
-    setEnviando(true)
     try {
-      const response = await fetch(`/api/cursos/${curso.id}/status`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: novoStatus, comentario: comentario || undefined }),
-      })
-      const data = await response.json()
-
-      if (data.success) {
-        setStatus(novoStatus)
-        setTexto('')
-        onStatusAlterado?.(novoStatus)
-        await carregarComentarios()
-        toast.success(`Curso marcado como "${STATUS_CURSO_LABELS[novoStatus]}"`)
-      } else {
-        toast.error(data.error || 'Erro ao alterar o status')
-      }
-    } catch {
-      toast.error('Erro ao conectar com o servidor')
-    } finally {
-      setEnviando(false)
+      await alterar.mutateAsync({ status: novoStatus, comentario: comentario || undefined })
+      setStatus(novoStatus)
+      setTexto('')
+      onStatusAlterado?.(novoStatus)
+      toast.success(`Curso marcado como "${STATUS_CURSO_LABELS[novoStatus]}"`)
+    } catch (error) {
+      avisarErro(error)
     }
   }
 
