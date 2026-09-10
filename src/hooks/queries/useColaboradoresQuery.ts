@@ -39,6 +39,7 @@ export function useAcessosDoCurso(cursoId: string, habilitado: boolean) {
             'Erro ao carregar colaboradores'
           ),
         enabled: habilitado,
+        staleTime: 0,
       },
       {
         queryKey: chaves.solicitacoes.doCurso(cursoId),
@@ -49,6 +50,8 @@ export function useAcessosDoCurso(cursoId: string, habilitado: boolean) {
             'Erro ao carregar solicitações'
           ),
         enabled: habilitado,
+        // quem abre a gestão de acessos precisa do estado corrente, não do cache
+        staleTime: 0,
       },
     ],
   })

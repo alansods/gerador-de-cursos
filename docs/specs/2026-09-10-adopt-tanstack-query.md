@@ -1,6 +1,6 @@
 # Spec — Adoção do TanStack Query
 
-Status: **Etapas 1 a 5 concluídas**; Etapa 6 pendente.
+Status: **concluída** — todas as etapas implementadas.
 
 ---
 
@@ -275,12 +275,12 @@ ir para Server Component + cookie, não para query), `useSCORM` (POST one-shot, 
 
 ---
 
-### Etapa 6 — Fechamento
+### Etapa 6 — Fechamento ✅
 
-- [ ] Revisar `staleTime` por chave (a lista de cursos tolera 60s; solicitações pendentes, não)
-- [ ] Escrever a spec definitiva em `docs/specs/2026-09-10-adopt-tanstack-query.md` com o que
+- [x] Revisar `staleTime` por chave (a lista de cursos tolera 60s; solicitações pendentes, não)
+- [x] Escrever a spec definitiva em `docs/specs/2026-09-10-adopt-tanstack-query.md` com o que
       **de fato** foi implementado e as decisões tomadas no caminho
-- [ ] Atualizar a seção de Stack do `CLAUDE.md` incluindo TanStack Query
+- [x] Atualizar a seção de Stack do `CLAUDE.md` incluindo TanStack Query
 
 **Requisitos de conclusão:**
 

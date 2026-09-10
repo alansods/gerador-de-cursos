@@ -27,7 +27,9 @@ export function useAtividadesQuery(limite: number) {
       if (!data.success) throw new Error(data.error || 'Erro ao buscar atividades')
       return data.activities
     },
-    // o feed é volátil: revalida ao voltar para a aba, além do intervalo
+    // o feed é volátil: revalida ao voltar para a aba, além do intervalo.
+    // sem zerar o staleTime o foco não dispararia nada dentro da janela padrão
+    staleTime: 0,
     refetchOnWindowFocus: true,
     refetchInterval: INTERVALO_POLLING_ATIVIDADES,
     refetchIntervalInBackground: false,

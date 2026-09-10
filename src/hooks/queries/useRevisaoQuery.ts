@@ -23,6 +23,8 @@ export function useComentariosQuery(cursoId: string, habilitado: boolean) {
       return data.comentarios
     },
     enabled: habilitado,
+    // abrir o painel tem que mostrar o que já foi comentado, não o cache
+    staleTime: 0,
   })
 
   return {
