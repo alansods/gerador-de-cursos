@@ -39,6 +39,41 @@ describe('useCursosQuery', () => {
     mockFetch.mockResolvedValue({ ok: true, json: async () => ({ success: true }) })
   })
 
+  it('encadeia o cursor da página seguinte e concatena as linhas', async () => {
+    const pagina1 = {
+      cursos: [{ id: 'a', titulo: 'Curso A' }],
+      nextCursor: 'a',
+      hasMore: true,
+      total: 2,
+    }
+    const pagina2 = {
+      cursos: [{ id: 'b', titulo: 'Curso B' }],
+      nextCursor: null,
+      hasMore: false,
+      total: 2,
+    }
+    mockBuscarCursos.mockResolvedValueOnce(pagina1 as never).mockResolvedValueOnce(pagina2 as never)
+
+    const { result } = renderHook(() => useCursosQuery(FILTROS), { wrapper: criarWrapper() })
+
+    await waitFor(() => expect(result.current.isLoading).toBe(false))
+    expect(mockBuscarCursos).toHaveBeenNthCalledWith(
+      1,
+      expect.objectContaining({ cursor: undefined })
+    )
+    expect(result.current.cursos).toHaveLength(1)
+    expect(result.current.hasMore).toBe(true)
+
+    await act(async () => {
+      await result.current.carregarMais()
+    })
+
+    // o cursor da 2a chamada vem do nextCursor da 1a pagina
+    expect(mockBuscarCursos).toHaveBeenNthCalledWith(2, expect.objectContaining({ cursor: 'a' }))
+    await waitFor(() => expect(result.current.cursos.map((c) => c.id)).toEqual(['a', 'b']))
+    expect(result.current.hasMore).toBe(false)
+  })
+
   it('deletar um curso invalida a listagem em cache', async () => {
     const wrapper = criarWrapper()
 

@@ -157,8 +157,10 @@ Action — falharia com o `useInfiniteScroll` antigo, que refetchava a cada moun
 `src/__tests__/hooks/useCursosQuery.test.tsx` cobre a invalidação do delete, cujo modo de falha é
 silencioso quando a chave da mutation não casa com a da listagem.
 
-Pendência assumida: a paginação de múltiplas páginas (`getNextPageParam` encadeando cursores) não
-tem teste automatizado — os fixtures usam uma página só. Verificar manualmente na listagem.
+A paginação de múltiplas páginas (`getNextPageParam` encadeando cursores) também é coberta:
+duas páginas mockadas, a segunda chamada precisa levar o `nextCursor` da primeira e as linhas
+precisam concatenar na ordem. O teste roda no nível do hook porque o `InfiniteScrollTrigger`
+depende de `IntersectionObserver`, que o jsdom não implementa.
 
 ---
 
@@ -208,7 +210,7 @@ Independente da Etapa 3; pode ser feita antes dela se a 3 travar.
       **função** — retorna `false` quando `status` for `completed` ou `failed`, parando o polling
       sozinho
 - [ ] `src/hooks/useSolicitacoesPendentes.ts`: `refetchInterval:
-  INTERVALO_POLLING_SOLICITACOES`, com `enabled: isAuthenticated && podeResponder` substituindo o
+INTERVALO_POLLING_SOLICITACOES`, com `enabled: isAuthenticated && podeResponder` substituindo o
       early-return manual do `useEffect`
 - [ ] Ações de job (cancelar, reprocessar, deletar) viram `useMutation` + `invalidateQueries`
 
