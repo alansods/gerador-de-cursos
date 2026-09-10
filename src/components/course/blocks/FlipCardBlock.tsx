@@ -24,9 +24,10 @@ export function FlipCardBlock({ item }: { item: ConteudoUnidade }) {
 
   return (
     <div className={`mb-4 grid gap-4 ${colunas}`}>
-      {cards.map((card) => (
+      {cards.map((card, indice) => (
         <FlipCard
           key={card.id}
+          indice={indice + 1}
           tipoFrente={card.tipoFrente}
           imagemFrente={card.imagemFrente}
           tituloFrente={card.tituloFrente}

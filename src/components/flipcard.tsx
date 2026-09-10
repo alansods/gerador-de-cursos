@@ -1,7 +1,6 @@
 'use client'
 
 import { useState } from 'react'
-import { Card } from '@/components/ui/card'
 import { RotateCcw } from 'lucide-react'
 
 interface FlipCardProps {
@@ -10,6 +9,7 @@ interface FlipCardProps {
   tituloFrente?: string
   conteudoVerso: string
   alturaCard?: string
+  indice?: number
 }
 
 export function FlipCard({
@@ -18,193 +18,313 @@ export function FlipCard({
   tituloFrente,
   conteudoVerso,
   alturaCard,
+  indice,
 }: FlipCardProps) {
-  const [isFlipped, setIsFlipped] = useState(false)
+  const [virado, setVirado] = useState(false)
 
   const altura = alturaCard || '300px'
+  const numero = typeof indice === 'number' ? String(indice).padStart(2, '0') : null
+  const comImagem = tipoFrente === 'imagem' || tipoFrente === 'imagem-titulo'
+  const titulo = tituloFrente || (comImagem ? '' : 'Card')
 
   return (
-    <div
-      className="flip-card-wrapper group"
-      style={{
-        height: altura,
-        width: '100%',
-      }}
-    >
-      <div
-        className={`flip-card ${isFlipped ? 'flipped' : ''}`}
-        onClick={() => setIsFlipped(!isFlipped)}
-        style={{ cursor: 'pointer' }}
-      >
-        {/* Frente do card */}
-        <div className="flip-card-front">
-          {tipoFrente === 'imagem-titulo' ? (
-            <Card className="h-full w-full flex flex-col items-center justify-center overflow-hidden bg-white dark:bg-gray-50 border border-gray-200 dark:border-gray-300 shadow-sm hover:shadow-md transition-shadow duration-300 relative group rounded-xl">
-              {/* Ícone de clique */}
-              <div className="absolute top-3 right-3 z-10 bg-gray-100/80 dark:bg-gray-200/80 rounded-full p-1.5 opacity-60 group-hover:opacity-80 transition-opacity">
-                <RotateCcw className="h-4 w-4 text-gray-600 dark:text-gray-700" />
-              </div>
-
-              <div className="relative h-full w-full">
+    <div className="fc" style={{ height: altura }}>
+      <div className={`fc-inner ${virado ? 'fc-virado' : ''}`}>
+        <div className="fc-face fc-frente">
+          {comImagem ? (
+            <>
+              <div className="fc-band" style={tipoFrente === 'imagem' ? { flex: 1 } : undefined}>
                 {imagemFrente && (
                   <img
                     src={imagemFrente}
-                    alt={tituloFrente || 'Card'}
-                    className="w-full h-full object-cover rounded-xl"
+                    alt={tituloFrente || 'Capa do card'}
                     onError={(e) => {
                       e.currentTarget.style.display = 'none'
                     }}
                   />
                 )}
-                {tituloFrente && (
-                  <div className="absolute bottom-0 left-0 right-0 bg-white dark:bg-white border-t border-gray-200 dark:border-gray-300 px-6 py-4 rounded-b-xl">
-                    <p className="text-base font-bold text-gray-900 dark:text-gray-800 text-center">
-                      {tituloFrente}
-                    </p>
+              </div>
+              <div className="fc-body">
+                {(numero || titulo) && (
+                  <div className="fc-linha">
+                    {numero && <span className="fc-num">{numero}</span>}
+                    {titulo && <span className="fc-title">{titulo}</span>}
                   </div>
                 )}
+                <span className="fc-cta">
+                  <RotateCcw className="fc-icone" />
+                  Ver definição
+                </span>
               </div>
-            </Card>
-          ) : tipoFrente === 'imagem' ? (
-            <Card className="h-full w-full flex items-center justify-center overflow-hidden bg-gradient-to-br from-(--block-accent,#2563eb)/8 via-(--block-accent,#2563eb)/15 to-(--block-accent,#2563eb)/5 dark:from-gray-800 dark:via-gray-900 dark:to-gray-800 border-2 border-(--block-accent,#2563eb)/25 dark:border-gray-700 shadow-lg hover:shadow-xl transition-shadow duration-300 relative group rounded-xl">
-              {/* Ícone de clique */}
-              <div className="absolute top-4 right-4 z-10 bg-white/90 dark:bg-gray-800/90 rounded-full p-2 shadow-md opacity-70 group-hover:opacity-100 transition-opacity">
-                <RotateCcw className="h-5 w-5 text-(--block-accent,#2563eb) animate-pulse" />
-              </div>
-
-              {imagemFrente && (
-                <img
-                  src={imagemFrente}
-                  alt="Card"
-                  className="w-full h-full object-cover"
-                  onError={(e) => {
-                    e.currentTarget.style.display = 'none'
-                  }}
-                />
-              )}
-            </Card>
+            </>
           ) : (
-            <Card className="h-full w-full flex items-center justify-center overflow-hidden bg-gradient-to-br from-(--block-accent,#2563eb)/8 via-(--block-accent,#2563eb)/15 to-(--block-accent,#2563eb)/5 dark:from-gray-800 dark:via-gray-900 dark:to-gray-800 border-2 border-(--block-accent,#2563eb)/25 dark:border-gray-700 shadow-lg hover:shadow-xl transition-shadow duration-300 relative group rounded-xl">
-              {/* Ícone de clique */}
-              <div className="absolute top-4 right-4 z-10 bg-white/90 dark:bg-gray-800/90 rounded-full p-2 shadow-md opacity-70 group-hover:opacity-100 transition-opacity">
-                <RotateCcw className="h-5 w-5 text-(--block-accent,#2563eb) animate-pulse" />
+            <div className="fc-body fc-body-titulo">
+              {numero && <span className="fc-num fc-num-grande">{numero}</span>}
+              <div>
+                <div className="fc-title fc-title-grande">{titulo}</div>
+                <div className="fc-regua" />
+                <span className="fc-cta">
+                  <RotateCcw className="fc-icone" />
+                  Ver definição
+                </span>
               </div>
-
-              <div className="p-6 text-center w-full">
-                <h3 className="text-xl lg:text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2 text-balance break-words">
-                  {tituloFrente || 'Card'}
-                </h3>
-                <p className="text-sm text-gray-600 dark:text-gray-400 mt-4 flex items-center justify-center gap-2">
-                  <RotateCcw className="h-4 w-4" />
-                  Clique para ver mais
-                </p>
-              </div>
-            </Card>
+            </div>
           )}
         </div>
 
-        {/* Verso do card */}
-        <div className="flip-card-back">
-          <Card className="h-full w-full flex flex-col bg-(--block-accent-soft,#eff6ff) border border-(--block-accent,#2563eb)/20 overflow-hidden shadow-sm relative rounded-xl">
-            {/* Ícone de clique no verso também */}
-            <div className="absolute top-3 right-3 z-10 bg-gray-100/80 dark:bg-gray-200/80 rounded-full p-1.5 opacity-60 hover:opacity-80 transition-opacity">
-              <RotateCcw className="h-4 w-4 text-gray-600 dark:text-gray-700" />
-            </div>
-
-            {/* Conteúdo do verso */}
-            <div className="flex-1 overflow-y-auto overflow-x-hidden px-6 pt-14 pb-20">
-              <div
-                className="text-(--block-accent-ink,#1e3a8a) leading-relaxed text-base"
-                style={{
-                  wordWrap: 'break-word',
-                  overflowWrap: 'break-word',
-                }}
-                dangerouslySetInnerHTML={{ __html: conteudoVerso }}
-              />
-            </div>
-
-            {/* Footer com título */}
-            {tituloFrente && (
-              <div className="absolute bottom-0 left-0 right-0 bg-(--block-accent-soft,#eff6ff) border-t border-(--block-accent,#2563eb)/25 px-6 py-4">
-                <p className="text-base font-bold text-(--block-accent-ink,#1e3a8a) text-center">
-                  {tituloFrente}
-                </p>
+        <div className="fc-face fc-back">
+          <div className="fc-scroll">
+            {(numero || tituloFrente) && (
+              <div className="fc-linha fc-linha-verso">
+                {numero && <span className="fc-num">{numero}</span>}
+                {tituloFrente && <span className="fc-title-verso">{tituloFrente}</span>}
               </div>
             )}
-          </Card>
+            <div className="fc-text" dangerouslySetInnerHTML={{ __html: conteudoVerso }} />
+          </div>
+          <button type="button" className="fc-close" onClick={() => setVirado(false)}>
+            <RotateCcw className="fc-icone" />
+            Voltar
+          </button>
         </div>
       </div>
 
+      {!virado && (
+        <button
+          type="button"
+          className="fc-hit"
+          aria-label={`Virar card${tituloFrente ? `: ${tituloFrente}` : ''}`}
+          onClick={() => setVirado(true)}
+        />
+      )}
+
       <style jsx global>{`
-        .flip-card-wrapper {
-          perspective: 1200px;
+        .fc {
+          position: relative;
           width: 100%;
-          transition:
-            transform 0.3s ease,
-            box-shadow 0.3s ease;
+          perspective: 1200px;
+          transition: transform 0.2s ease;
         }
 
-        .flip-card-wrapper:hover {
-          transform: translateY(-8px);
-          box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+        .fc:hover {
+          transform: translateY(-2px);
         }
 
-        .flip-card {
+        .fc-inner {
           position: relative;
           width: 100%;
           height: 100%;
           transform-style: preserve-3d;
-          transition: transform 0.7s cubic-bezier(0.4, 0, 0.2, 1);
+          transition: transform 0.65s cubic-bezier(0.4, 0, 0.2, 1);
+          border-radius: 8px;
         }
 
-        .flip-card.flipped {
+        .fc-virado {
           transform: rotateY(180deg);
         }
 
-        .flip-card-front,
-        .flip-card-back {
+        .fc-face {
           position: absolute;
-          width: 100%;
-          height: 100%;
+          inset: 0;
+          display: flex;
+          flex-direction: column;
           backface-visibility: hidden;
           -webkit-backface-visibility: hidden;
-          border-radius: 0.75rem;
+          border-radius: 8px;
+          overflow: hidden;
+          background: #ffffff;
+          border: 1px solid #dbe3ec;
+          transition: border-color 0.2s ease;
         }
 
-        .flip-card-back {
+        .fc:hover .fc-face {
+          border-color: #b9cdea;
+        }
+
+        .fc-back {
           transform: rotateY(180deg);
+          border-left: 3px solid var(--block-accent, #2563eb);
         }
 
-        .flip-card-back::-webkit-scrollbar {
-          width: 10px;
+        .fc:hover .fc-back {
+          border-left-color: var(--block-accent, #2563eb);
         }
 
-        .flip-card-back::-webkit-scrollbar-track {
-          background: #f1f5f9;
-          border-radius: 5px;
+        .fc-hit {
+          position: absolute;
+          inset: 0;
+          z-index: 3;
+          cursor: pointer;
+          border-radius: 8px;
+          background: transparent;
+          border: 0;
+          padding: 0;
         }
 
-        .flip-card-back::-webkit-scrollbar-thumb {
+        .fc-hit:focus-visible {
+          outline: 2px solid var(--block-accent, #2563eb);
+          outline-offset: 3px;
+        }
+
+        .fc-band {
+          height: 150px;
+          flex-shrink: 0;
+          border-bottom: 1px solid #dbe3ec;
+          background: var(--block-accent-soft, #eef4ff);
+        }
+
+        .fc-band img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          display: block;
+        }
+
+        .fc-body {
+          flex: 1;
+          min-height: 0;
+          padding: 16px 20px;
+          display: flex;
+          flex-direction: column;
+          justify-content: space-between;
+        }
+
+        .fc-body-titulo {
+          padding: 22px 20px;
+        }
+
+        .fc-linha {
+          display: flex;
+          align-items: baseline;
+          gap: 10px;
+        }
+
+        .fc-linha-verso {
+          margin-bottom: 10px;
+        }
+
+        .fc-num {
+          font-variant-numeric: tabular-nums;
+          font-size: 12px;
+          font-weight: 600;
+          color: #94a3b8;
+        }
+
+        .fc-num-grande {
+          font-size: 40px;
+          line-height: 1;
+          letter-spacing: -0.03em;
+          color: #e2e8f0;
+        }
+
+        .fc-title {
+          font-size: 17px;
+          font-weight: 600;
+          letter-spacing: -0.01em;
+          color: #1a202c;
+          text-wrap: pretty;
+        }
+
+        .fc-title-grande {
+          font-size: 22px;
+          line-height: 1.22;
+          letter-spacing: -0.015em;
+        }
+
+        .fc-title-verso {
+          font-size: 14px;
+          font-weight: 600;
+          color: #1a202c;
+        }
+
+        .fc-regua {
+          width: 28px;
+          height: 2px;
+          margin: 14px 0;
+          background: var(--block-accent, #2563eb);
+        }
+
+        .fc-cta,
+        .fc-close {
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          font-size: 12px;
+          font-weight: 500;
+          color: var(--block-accent, #2563eb);
+        }
+
+        .fc-close {
+          position: absolute;
+          bottom: 16px;
+          left: 20px;
+          z-index: 4;
+          cursor: pointer;
+          background: transparent;
+          border: 0;
+          padding: 0;
+        }
+
+        .fc-icone {
+          width: 14px;
+          height: 14px;
+        }
+
+        .fc-scroll {
+          flex: 1;
+          min-height: 0;
+          overflow-y: auto;
+          padding: 18px 20px 50px;
+        }
+
+        .fc-text {
+          font-size: 13.5px;
+          line-height: 1.62;
+          color: #475569;
+          overflow-wrap: break-word;
+        }
+
+        .fc-scroll::-webkit-scrollbar {
+          width: 6px;
+        }
+
+        .fc-scroll::-webkit-scrollbar-thumb {
           background: #cbd5e1;
-          border-radius: 5px;
+          border-radius: 999px;
         }
 
-        .flip-card-back::-webkit-scrollbar-thumb:hover {
-          background: #94a3b8;
+        .dark .fc-face {
+          background: #1e293b;
+          border-color: #334155;
         }
 
-        @media (prefers-color-scheme: dark) {
-          .flip-card-back::-webkit-scrollbar-track {
-            background: #1e293b;
-          }
+        .dark .fc:hover .fc-face {
+          border-color: #475569;
+        }
 
-          .flip-card-back::-webkit-scrollbar-thumb {
-            background: #475569;
-          }
+        .dark .fc-band {
+          border-bottom-color: #334155;
+        }
 
-          .flip-card-back::-webkit-scrollbar-thumb:hover {
-            background: #64748b;
-          }
+        .dark .fc-title,
+        .dark .fc-title-verso {
+          color: #f1f5f9;
+        }
+
+        .dark .fc-text {
+          color: #cbd5e1;
+        }
+
+        .dark .fc-num {
+          color: #64748b;
+        }
+
+        .dark .fc-num-grande {
+          color: #334155;
+        }
+
+        .dark .fc-scroll::-webkit-scrollbar-thumb {
+          background: #475569;
         }
       `}</style>
     </div>

@@ -219,7 +219,10 @@ export interface GeradorCursoContextType {
   editarUnidade: (id: string, unidade: Partial<Unidade>) => Promise<void>
   deletarUnidade: (id: string) => Promise<void>
   reordenarUnidades: (unidades: Unidade[]) => Promise<void>
-  adicionarConteudo: (unidadeId: string, conteudo: Omit<ConteudoUnidade, 'id' | 'ordem'>) => void
+  adicionarConteudo: (
+    unidadeId: string,
+    conteudo: Omit<ConteudoUnidade, 'id' | 'ordem'>
+  ) => Promise<void>
   editarConteudo: (
     unidadeId: string,
     conteudoId: string,

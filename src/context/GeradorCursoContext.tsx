@@ -314,7 +314,7 @@ export function GeradorCursoProvider({ children }: { children: React.ReactNode }
   // Gerenciamento de conteúdos
   const adicionarConteudo = useCallback(
     (unidadeId: string, conteudo: Omit<ConteudoUnidade, 'id' | 'ordem'>) => {
-      if (!state.cursoAtual) return
+      if (!state.cursoAtual) return Promise.resolve()
 
       const unidadesAtualizadas = state.cursoAtual.unidades?.map((unidade) => {
         if (unidade.id === unidadeId) {
@@ -331,7 +331,7 @@ export function GeradorCursoProvider({ children }: { children: React.ReactNode }
         return unidade
       })
 
-      editarCurso(state.cursoAtual.id, { unidades: unidadesAtualizadas })
+      return editarCurso(state.cursoAtual.id, { unidades: unidadesAtualizadas })
     },
     [state.cursoAtual, editarCurso]
   )

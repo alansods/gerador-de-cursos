@@ -98,6 +98,8 @@ import {
 import { enviarArquivo } from '@/lib/upload-cliente'
 
 /** Rótulo curto do bloco para o toast do outro usuário */
+const ID_BLOCO_PENDENTE = '__bloco-pendente__'
+
 function tituloDoBloco(bloco: { titulo?: string; conteudo?: string; tipo?: string }) {
   return bloco.titulo?.trim() || bloco.conteudo?.trim().slice(0, 40) || bloco.tipo
 }
@@ -185,6 +187,12 @@ function EditorCurso() {
   const [imagePreviewUrl, setImagePreviewUrl] = useState<string | null>(null)
   const [isFetchingCurso, setIsFetchingCurso] = useState(false)
   const insertAtIndex = useRef<{ unidadeId: string; index: number } | null>(null)
+  const [blocoPendente, setBlocoPendente] = useState<{
+    unidadeId: string
+    index: number
+    tipo: ConteudoUnidade['tipo']
+    colunas?: number
+  } | null>(null)
   const pendingInsert = useRef<{ unidadeId: string; targetIndex: number } | null>(null)
   const [isSavingConteudo, setIsSavingConteudo] = useState(false)
   const [isDeletingConteudo, setIsDeletingConteudo] = useState(false)
@@ -549,7 +557,18 @@ function EditorCurso() {
         const conteudoLength = unidade?.conteudo?.length || 0
         console.log('🔍 Tamanho atual do conteúdo:', conteudoLength)
 
-        adicionarConteudo(unidadeId, data)
+        setBlocoPendente({
+          unidadeId,
+          index: Math.min(index, conteudoLength),
+          tipo: data.tipo,
+          colunas: data.colunas,
+        })
+
+        try {
+          await adicionarConteudo(unidadeId, data)
+        } finally {
+          setBlocoPendente(null)
+        }
 
         if (index < conteudoLength) {
           console.log('🔍 Precisa reordenar - index:', index, '< conteudoLength:', conteudoLength)
@@ -1260,9 +1279,27 @@ function EditorCurso() {
                                 >
                                   <div className="grid grid-cols-12 gap-1">
                                     {(() => {
-                                      const conteudos = (unidade.conteudo || []).sort(
+                                      const conteudosSalvos = (unidade.conteudo || []).sort(
                                         (a, b) => a.ordem - b.ordem
                                       )
+
+                                      const esqueleto =
+                                        blocoPendente?.unidadeId === unidade.id
+                                          ? ({
+                                              id: ID_BLOCO_PENDENTE,
+                                              tipo: blocoPendente.tipo,
+                                              ordem: blocoPendente.index,
+                                              colunas: blocoPendente.colunas,
+                                            } as ConteudoUnidade)
+                                          : null
+
+                                      const conteudos = esqueleto
+                                        ? [
+                                            ...conteudosSalvos.slice(0, blocoPendente!.index),
+                                            esqueleto,
+                                            ...conteudosSalvos.slice(blocoPendente!.index),
+                                          ]
+                                        : conteudosSalvos
 
                                       console.log(
                                         `🔍 Unidade ${unidade.titulo} - Total de conteúdos:`,
@@ -1391,6 +1428,28 @@ function EditorCurso() {
                                           {conteudos
                                             .slice(row.startIndex, row.endIndex + 1)
                                             .map((item, itemIndex) => {
+                                              if (item.id === ID_BLOCO_PENDENTE) {
+                                                return (
+                                                  <div
+                                                    key={ID_BLOCO_PENDENTE}
+                                                    className={`col-span-12 ${
+                                                      item.colunas === 6
+                                                        ? 'md:col-span-6'
+                                                        : 'md:col-span-12'
+                                                    }`}
+                                                  >
+                                                    <div className="flex min-h-[120px] flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-blue-300 dark:border-blue-700 bg-blue-50/50 dark:bg-blue-950/20 p-6 text-blue-600 dark:text-blue-400">
+                                                      <Loader2 className="h-5 w-5 animate-spin" />
+                                                      <span className="text-sm font-medium">
+                                                        Adicionando{' '}
+                                                        {CATALOGO_BLOCOS[item.tipo].rotulo}
+                                                        ...
+                                                      </span>
+                                                    </div>
+                                                  </div>
+                                                )
+                                              }
+
                                               console.log(
                                                 `🔍 Renderizando conteúdo [${row.startIndex + itemIndex}]:`,
                                                 item.tipo,
