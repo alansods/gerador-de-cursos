@@ -1,47 +1,33 @@
 'use client'
 
-// Esta página não deve ser exportada estaticamente (usa context e hooks client-side)
+// Esta página não deve ser exportada estaticamente (usa hooks client-side)
 // O Next.js deve ignorar esta página durante build estático
 export const dynamic = 'error'
 
 import { useEffect } from 'react'
 import { useParams, useRouter, usePathname } from 'next/navigation'
-import { useGeradorCurso } from '@/context/GeradorCursoContext'
 import { PageTransition } from '@/components/PageTransition'
 import { Loader2 } from 'lucide-react'
 import { CoursePlayer } from '@/components/course/CoursePlayer'
 import { PainelRevisao } from '@/components/revisao/PainelRevisao'
+import { useCursoQuery } from '@/hooks/queries/useCursoQuery'
 
 export default function PreviewCursoPage() {
   const params = useParams()
   const router = useRouter()
-  const { state, selecionarCurso } = useGeradorCurso()
 
   const pathname = usePathname()
   // Extrai o segmento do curso diretamente do pathname (sempre confiável)
   const cursoUrlSegment = pathname.split('/')[2]
   const cursoId = (params?.id as string | undefined) || cursoUrlSegment
 
-  // Selecionar o curso ao carregar a página
-  // SEMPRE força refresh para garantir dados atualizados
-  useEffect(() => {
-    if (cursoId) {
-      selecionarCurso(cursoId, true) // forceRefresh = true
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [cursoId]) // Remove selecionarCurso das deps para evitar loop infinito
-
-  // Usar cursoAtual do state (que é selecionado) ou buscar na lista
-  const curso = state.cursoAtual || state.cursos.find((c) => c.id === cursoId || c.slug === cursoId)
+  const { curso, isLoading, error } = useCursoQuery(cursoId, { sempreRevalidar: true })
 
   useEffect(() => {
-    if (!state.loading && !curso && state.cursos.length > 0) {
-      router.push('/cursos')
-    }
-  }, [curso, router, state.loading, state.cursos.length])
+    if (error) router.push('/cursos')
+  }, [error, router])
 
-  // Loading state
-  if (state.loading || (!curso && state.cursos.length === 0)) {
+  if (isLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
@@ -52,7 +38,6 @@ export default function PreviewCursoPage() {
     )
   }
 
-  // Curso não encontrado (após loading)
   if (!curso) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -66,7 +51,9 @@ export default function PreviewCursoPage() {
   return (
     <PageTransition>
       <CoursePlayer curso={curso} />
-      <PainelRevisao curso={curso} onStatusAlterado={() => selecionarCurso(cursoId, true)} />
+      {/* a mutation de status invalida a chave do curso, então o painel não
+          precisa mais pedir o recarregamento */}
+      <PainelRevisao curso={curso} />
     </PageTransition>
   )
 }

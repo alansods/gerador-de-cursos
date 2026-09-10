@@ -18,6 +18,8 @@ import {
   useLostConnectionListener,
 } from '@liveblocks/react'
 import { toast } from 'sonner'
+import { useQueryClient } from '@tanstack/react-query'
+import { chaves } from '@/lib/query-keys'
 import { COLAB_HABILITADO, SALA_DO_CURSO } from '@/lib/collab-config'
 import { mensagem } from './mensagens'
 import type { EventoColab } from '@/liveblocks.config'
@@ -32,7 +34,6 @@ interface EstadoColab {
    *  Os hooks de sala do Liveblocks lançam se não houver RoomProvider acima,
    *  então nada fora dele pode chamá-los — nem para depois checar `ativo`. */
   broadcastRef: RefObject<Broadcast | null>
-  mudancaRemotaRef: RefObject<(() => void) | null>
 }
 
 const refVazia = { current: null }
@@ -41,18 +42,15 @@ const ColabContext = createContext<EstadoColab>({
   ativo: false,
   salaCheia: false,
   broadcastRef: refVazia,
-  mudancaRemotaRef: refVazia,
 })
 
 export const useEstadoColab = () => useContext(ColabContext)
 
 /** Concentra os hooks de sala num único ponto, montado apenas com a
  *  colaboração ativa, e publica o broadcast para o editor via ref. */
-function PonteDeEventos({
-  broadcastRef,
-  mudancaRemotaRef,
-}: Pick<EstadoColab, 'broadcastRef' | 'mudancaRemotaRef'>) {
+function PonteDeEventos({ broadcastRef }: Pick<EstadoColab, 'broadcastRef'>) {
   const broadcast = useBroadcastEvent()
+  const queryClient = useQueryClient()
 
   useEffect(() => {
     broadcastRef.current = broadcast
@@ -64,7 +62,9 @@ function PonteDeEventos({
   useEventListener(({ event }) => {
     if (event.tipo !== 'conteudo') return
     toast.info(mensagem(event))
-    mudancaRemotaRef.current?.()
+    // invalidar em vez de avisar o editor por ref: o cache sabe qual curso está
+    // aberto, e o callback antigo capturava um id que podia estar velho
+    queryClient.invalidateQueries({ queryKey: chaves.cursos.todos })
   })
 
   useLostConnectionListener((evento) => {
@@ -116,7 +116,6 @@ export function CollabProvider({ cursoId, children }: Props) {
   // dois clientes em formatos diferentes cairiam em salas distintas
   const [cursoIdCanonico, setCursoIdCanonico] = useState<string | null>(null)
   const broadcastRef = useRef<Broadcast | null>(null)
-  const mudancaRemotaRef = useRef<(() => void) | null>(null)
 
   // Só monta o RoomProvider depois que o endpoint de auth confirmar que dá:
   // assim uma cota estourada ou chave ausente nunca chega a montar a camada
@@ -180,23 +179,21 @@ export function CollabProvider({ cursoId, children }: Props) {
 
   if (!ativo) {
     return (
-      <ColabContext.Provider value={{ ativo: false, salaCheia, broadcastRef, mudancaRemotaRef }}>
+      <ColabContext.Provider value={{ ativo: false, salaCheia, broadcastRef }}>
         {children}
       </ColabContext.Provider>
     )
   }
 
   return (
-    <ColabContext.Provider
-      value={{ ativo: true, salaCheia: false, broadcastRef, mudancaRemotaRef }}
-    >
+    <ColabContext.Provider value={{ ativo: true, salaCheia: false, broadcastRef }}>
       <LiveblocksProvider authEndpoint="/api/liveblocks-auth" badgeLocation="bottom-left">
         <MonitorDeErros onFalha={desligarPorErro} />
         <RoomProvider
           id={SALA_DO_CURSO(cursoIdCanonico ?? cursoId)}
           initialPresence={{ cursor: null, unidadeAtiva: null }}
         >
-          <PonteDeEventos broadcastRef={broadcastRef} mudancaRemotaRef={mudancaRemotaRef} />
+          <PonteDeEventos broadcastRef={broadcastRef} />
           {children}
         </RoomProvider>
       </LiveblocksProvider>

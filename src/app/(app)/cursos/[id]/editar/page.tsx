@@ -126,12 +126,7 @@ function EditorCurso() {
   const router = useRouter()
   const params = useParams()
   const containerColabRef = useRef<HTMLDivElement | null>(null)
-  const cursoIdAtual = state.cursoAtual?.id
-  const { avisar } = useCollabEvents({
-    onMudancaRemota: () => {
-      if (cursoIdAtual) selecionarCurso(cursoIdAtual, true)
-    },
-  })
+  const { avisar } = useCollabEvents()
   const nomeAutor = user?.nome ?? 'Alguém'
 
   const [novaUnidade, setNovaUnidade] = useState('')
@@ -223,21 +218,18 @@ function EditorCurso() {
 
   // Selecionar o curso ao carregar a página (busca do servidor se necessário)
   useEffect(() => {
-    if (cursoId && !state.loading) {
-      // Verificar se o curso não está selecionado ainda
-      if (
-        !state.cursoAtual ||
-        (state.cursoAtual.id !== cursoId && state.cursoAtual.slug !== cursoId)
-      ) {
-        setIsFetchingCurso(true)
-        selecionarCurso(cursoId) // Busca do servidor se não estiver no cache
-      } else {
-        // Curso já está selecionado
-        setIsFetchingCurso(false)
-      }
+    if (!cursoId || state.loading) return
+
+    const jaSelecionado = state.cursoAtual?.id === cursoId || state.cursoAtual?.slug === cursoId
+
+    if (jaSelecionado) {
+      setIsFetchingCurso(false)
+      return
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [cursoId, state.loading, state.cursoAtual?.id]) // Remove selecionarCurso para evitar loop infinito
+
+    setIsFetchingCurso(true)
+    selecionarCurso(cursoId)
+  }, [cursoId, state.loading, state.cursoAtual?.id, state.cursoAtual?.slug, selecionarCurso])
 
   // Atualizar isFetchingCurso quando o curso for carregado
   useEffect(() => {

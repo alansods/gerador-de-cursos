@@ -14,6 +14,7 @@ export interface FiltrosDeUsuarios {
 export const chaves = {
   cursos: {
     todos: ['cursos'] as const,
+    listas: ['cursos', 'lista'] as const,
     lista: (filtros: FiltrosDeCursos) => ['cursos', 'lista', filtros] as const,
     detalhe: (id: string) => ['cursos', 'detalhe', id] as const,
   },

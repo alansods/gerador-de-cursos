@@ -200,11 +200,9 @@ export interface CursoGerado {
 }
 
 export interface GeradorCursoState {
-  cursos: CursoGerado[]
   cursoAtual: CursoGerado | null
   modoEdicao: boolean
   loading: boolean
-  error: string | null
 }
 
 export interface GeradorCursoContextType {
@@ -230,6 +228,4 @@ export interface GeradorCursoContextType {
   ) => void
   deletarConteudo: (unidadeId: string, conteudoId: string) => void
   reordenarConteudo: (unidadeId: string, conteudo: ConteudoUnidade[]) => void
-  salvarCurso: () => void
-  carregarCursos: () => void
 }

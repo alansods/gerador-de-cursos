@@ -1,6 +1,6 @@
 # Spec — Adoção do TanStack Query
 
-Status: **Etapas 1, 2, 4 e 5 concluídas**; Etapas 3 e 6 pendentes.
+Status: **Etapas 1 a 5 concluídas**; Etapa 6 pendente.
 
 ---
 
@@ -164,27 +164,27 @@ depende de `IntersectionObserver`, que o jsdom não implementa.
 
 ---
 
-### Etapa 3 — Curso individual e mutations (mata P4 e P7)
+### Etapa 3 — Curso individual e mutations (mata P4 e P7) ✅
 
 A etapa mais delicada: toca o editor.
 
-- [ ] `useCursoQuery(id)` — `useQuery` sobre `GET /api/cursos/{id}`, substituindo o
+- [x] `useCursoQuery(id)` — `useQuery` sobre `GET /api/cursos/{id}`, substituindo o
       `selecionarCurso`
-- [ ] `useEditarCursoMutation` — move a lógica de `version`/409 de
+- [x] `useEditarCursoMutation` — move a lógica de `version`/409 de
       `src/context/GeradorCursoContext.tsx:165-186` para
       `mutationFn` + `onError` (toast de conflito) + `onSettled: invalidateQueries(['curso', id])`
-- [ ] `useCriarCursoMutation` — invalida a lista da Etapa 2
-- [ ] Migrar `src/app/cursos/[id]/editar/page.tsx` e
+- [x] `useCriarCursoMutation` — invalida a lista da Etapa 2
+- [x] Migrar `src/app/cursos/[id]/editar/page.tsx` e
       `src/app/cursos/[id]/preview/page.tsx` para a query.
       **Os dois `eslint-disable exhaustive-deps` com o comentário `// evitar loop infinito`
       (`src/app/cursos/[id]/preview/page.tsx:32`,
       `src/app/cursos/[id]/editar/page.tsx:240`) devem ser removidos** — a causa
       (`selecionarCurso` dependendo de `[state.cursos]`) deixa de existir.
-- [ ] Trocar o `onMudancaRemota` do Liveblocks por `invalidateQueries` direto, eliminando o
+- [x] Trocar o `onMudancaRemota` do Liveblocks por `invalidateQueries` direto, eliminando o
       `mudancaRemotaRef` de `src/components/colaboracao/CollabProvider.tsx`.
       **Manter o `broadcastRef`** — ele existe porque `useBroadcastEvent()` lança fora do
       `RoomProvider`, e isso não muda.
-- [ ] Encolher `GeradorCursoContext`: remover `cursos`, `loading`, `error`, `stateRef`, o reducer de
+- [x] Encolher `GeradorCursoContext`: remover `cursos`, `loading`, `error`, `stateRef`, o reducer de
       rede, e os stubs mortos `salvarCurso`/`carregarCursos` (só fazem `console.log`). O que
       sobreviver ganha `useMemo` no `value`.
 
@@ -195,8 +195,25 @@ A etapa mais delicada: toca o editor.
 - Editar um bloco → salvar → recarregar a página: alteração persiste.
 - Conflito 409 reproduzido em duas abas mostra o toast e recarrega a versão do servidor, como hoje.
 - Com dois navegadores na mesma sala Liveblocks, editar em um atualiza o outro.
-- **Risco declarado:** se esta etapa passar de ~1 sessão sem convergir, pare e reverta. Ela é
-  destacável do resto — as Etapas 2, 4 e 5 têm valor sozinhas.
+  **Como foi feita, e por que não como estava escrito.** O plano previa migrar `editar/page.tsx`
+  para a query. Em vez disso, o `GeradorCursoContext` foi reescrito **por dentro** sobre o cache,
+  mantendo sua superfície pública (`state.cursoAtual`, `state.loading` e os 12 métodos). O editor de
+  4552 linhas ficou praticamente intocado — só o efeito de carga mudou, para recuperar as deps.
+
+O que destravou o loop: `selecionarCurso` virou `setState` de um identificador, e o dado passou a
+vir de `useCursoQuery(cursoSelecionado)`. A função não depende mais de `state.cursos`, então tem
+identidade estável e pode entrar nas deps do efeito que a chama.
+
+Consequências: `state.cursos` deixou de existir (só o preview a usava, como fallback, e ele agora
+consome `useCursoQuery` direto), assim como `state.error` e os stubs mortos `salvarCurso` /
+`carregarCursos`. `GeradorCursoState` e `GeradorCursoContextType` encolheram junto.
+
+Três invariantes novos, cobertos em `src/__tests__/hooks/gerador-curso-context.test.tsx` porque
+falham em silêncio: (1) sem curso selecionado `loading` é `false` — a query fica ociosa e
+`query.isPending` é `true` nesse estado, e como o editor só dispara a carga quando `!state.loading`,
+deixar passar travaria a tela para sempre; (2) `selecionarCurso` mantém identidade estável depois
+de o curso carregar; (3) o 409 recarrega a versão do servidor e propaga o erro, e o PUT leva a
+versão conhecida.
 
 ---
 
