@@ -602,10 +602,29 @@ describe('extrairMidiasDoBloco', () => {
     expect(
       extrairMidiasDoBloco(semCampo('video-interativo', 'https://youtu.be/abc12345678'))
     ).toEqual([])
-    expect(extrairMidiasDoBloco(semCampo('video', 'https://b.com/aula.mp4'))).toEqual([
-      'https://b.com/aula.mp4',
-    ])
+    // No bloco `video` sem o campo, o padrão legado é YouTube: antes de `fonteVideo`
+    // existir o formulário só aceitava link do YouTube, então não há .mp4 legado ali.
     expect(extrairMidiasDoBloco(semCampo('video', 'https://youtu.be/abc12345678'))).toEqual([])
+    expect(extrairMidiasDoBloco(semCampo('video', 'https://b.com/aula.mp4'))).toEqual([])
+
+    // Com o campo declarado, o arquivo é embutido normalmente.
+    const declarado = {
+      ...criarBlocoVazio('video'),
+      fonteVideo: 'arquivo',
+      videoUrl: 'https://b.com/aula.mp4',
+    } as ConteudoUnidade
+    expect(extrairMidiasDoBloco(declarado)).toEqual(['https://b.com/aula.mp4'])
+  })
+
+  it('a URL do YouTube vence o campo declarado como arquivo', () => {
+    // Link do YouTube dentro de um <video> nunca toca; a URL é o fato.
+    const bloco = {
+      ...criarBlocoVazio('video-interativo'),
+      fonteVideo: 'arquivo',
+      videoUrl: 'https://youtu.be/abc12345678',
+    } as ConteudoUnidade
+
+    expect(extrairMidiasDoBloco(bloco)).toEqual([])
   })
 
   it('embute o vídeo do bloco interativo', () => {

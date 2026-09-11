@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button'
 import { useRegistrarQuiz } from '@/components/course/ProgressoScormContext'
 import { ControlesVideo } from './ControlesVideo'
 import { useReprodutorVideo } from '@/hooks/useReprodutorVideo'
-import { alternativasDaPergunta } from '@/lib/blocos'
+import { alternativasDaPergunta, fonteDoVideo } from '@/lib/blocos'
 import { formatarTempo, segundosDeTempo } from '@/lib/tempo-video'
 import { ConteudoUnidade, LetraAlternativa, PerguntaVideo } from '@/types/gerador-curso'
 
@@ -40,7 +40,7 @@ export function VideoInterativoBlock({
   }, [item.perguntasVideo])
 
   const proximoPendente = marcos.find((marco) => !respondidas[marco.id])
-  const deYouTube = item.fonteVideo === 'youtube'
+  const deYouTube = fonteDoVideo(item) === 'youtube'
 
   const { estado, comandos, videoRef, montagemYouTubeRef } = useReprodutorVideo({
     fonte: deYouTube ? 'youtube' : 'arquivo',

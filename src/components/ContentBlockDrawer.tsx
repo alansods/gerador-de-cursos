@@ -31,7 +31,7 @@ import {
   CategoriaItem,
   HotspotItem,
 } from '@/types/gerador-curso'
-import { CATALOGO_BLOCOS, cardsFlipcard, criarBlocoVazio } from '@/lib/blocos'
+import { CATALOGO_BLOCOS, cardsFlipcard, criarBlocoVazio, fonteDoVideo } from '@/lib/blocos'
 import { POLITICA_MIDIAS, type CategoriaMidia } from '@/lib/midias'
 import { enviarArquivo } from '@/lib/upload-cliente'
 import { extractYouTubeId } from '@/lib/youtube'
@@ -51,6 +51,14 @@ function prepararFormulario(blockData: Partial<ConteudoUnidade> | null): Partial
   const formulario: Partial<ConteudoUnidade> = {
     ...criarBlocoVazio(blockData?.tipo || 'paragrafo'),
     ...blockData,
+  }
+
+  // Bloco salvo antes de `fonteVideo` existir abriria com o seletor na fonte errada.
+  if (formulario.tipo === 'video' || formulario.tipo === 'video-interativo') {
+    formulario.fonteVideo = fonteDoVideo(
+      formulario,
+      formulario.tipo === 'video' ? 'youtube' : 'arquivo'
+    )
   }
 
   if (formulario.tipo === 'flipcard') {

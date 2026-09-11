@@ -333,3 +333,37 @@ describe('ContentBlockDrawer', () => {
     )
   })
 })
+
+describe('fonte do vídeo interativo ao salvar', () => {
+  it('entrega fonteVideo youtube no objeto salvo', async () => {
+    const usuario = userEvent.setup()
+    const onSave = montar('video-interativo')
+
+    await usuario.type(screen.getByPlaceholderText('Digite o título do vídeo...'), 'Aula')
+
+    await usuario.click(screen.getByRole('combobox'))
+    await usuario.click(screen.getByRole('option', { name: 'Link do YouTube' }))
+
+    await usuario.type(
+      screen.getByPlaceholderText('Cole o link do vídeo do YouTube...'),
+      'https://www.youtube.com/watch?v=dQw4w9WgXcQ'
+    )
+
+    await usuario.click(screen.getByRole('button', { name: /adicionar/i }))
+    await usuario.type(screen.getByPlaceholderText('mm:ss — ex.: 02:30'), '00:05')
+    await usuario.type(screen.getByPlaceholderText('O que o aluno precisa responder...'), 'P?')
+    await usuario.type(screen.getByPlaceholderText('A...'), 'A')
+    await usuario.type(screen.getByPlaceholderText('B...'), 'B')
+
+    await usuario.click(screen.getByRole('button', { name: /salvar/i }))
+
+    expect(erroToast).not.toHaveBeenCalled()
+    expect(onSave).toHaveBeenCalledWith(
+      expect.objectContaining({
+        tipo: 'video-interativo',
+        fonteVideo: 'youtube',
+        videoUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+      })
+    )
+  })
+})

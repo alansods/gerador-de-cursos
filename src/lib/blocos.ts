@@ -112,12 +112,23 @@ export function alternativasDaPergunta(
 }
 
 /**
- * Fonte do vídeo quando o campo não veio confiável. Deduzir da URL cobre tanto curso
- * salvo antes de `fonteVideo` existir quanto bloco gerado pela IA que omitiu o campo.
+ * Fonte efetiva do vídeo, usada na renderização e no empacotamento.
+ *
+ * A URL vence o campo declarado: link do YouTube dentro de um `<video>` nunca toca,
+ * então quando a URL é inequivocamente do YouTube não há outra leitura possível.
+ * O campo decide o resto, e `padraoLegado` cobre o bloco salvo antes de `fonteVideo`
+ * existir — que no `video` era sempre YouTube e no `video-interativo` sempre arquivo.
+ *
+ * Precisa ser consultada onde o bloco é lido, e não só em `corrigirBloco()`: curso
+ * vindo do banco não passa por normalização nenhuma.
  */
-function fonteDeducida(bloco: Partial<ConteudoUnidade>): 'youtube' | 'arquivo' {
+export function fonteDoVideo(
+  bloco: Partial<ConteudoUnidade>,
+  padraoLegado: 'youtube' | 'arquivo' = 'arquivo'
+): 'youtube' | 'arquivo' {
+  if (ehUrlYouTubeValida(bloco.videoUrl ?? '')) return 'youtube'
   if (bloco.fonteVideo === 'arquivo' || bloco.fonteVideo === 'youtube') return bloco.fonteVideo
-  return ehUrlYouTubeValida(bloco.videoUrl ?? '') ? 'youtube' : 'arquivo'
+  return padraoLegado
 }
 
 function perguntaVideoAproveitavel(pergunta?: Partial<PerguntaVideo>): boolean {
@@ -430,9 +441,11 @@ export const CATALOGO_BLOCOS: Record<TipoBloco, MetaBloco> = {
       return null
     },
     // Só o vídeo enviado vira arquivo no ZIP; o do YouTube é página de streaming.
-    extrairMidias: (b) => (fonteDeducida(b) === 'arquivo' ? [b.videoUrl] : []),
+    extrairMidias: (b) => (fonteDoVideo(b, 'youtube') === 'arquivo' ? [b.videoUrl] : []),
     reescreverMidias: (b, mapear) =>
-      fonteDeducida(b) === 'arquivo' ? { videoUrl: mapear(b.videoUrl) ?? b.videoUrl } : {},
+      fonteDoVideo(b, 'youtube') === 'arquivo'
+        ? { videoUrl: mapear(b.videoUrl) ?? b.videoUrl }
+        : {},
   },
   'video-interativo': {
     tipo: 'video-interativo',
@@ -484,9 +497,9 @@ export const CATALOGO_BLOCOS: Record<TipoBloco, MetaBloco> = {
 
       return null
     },
-    extrairMidias: (b) => (fonteDeducida(b) === 'arquivo' ? [b.videoUrl] : []),
+    extrairMidias: (b) => (fonteDoVideo(b) === 'arquivo' ? [b.videoUrl] : []),
     reescreverMidias: (b, mapear) =>
-      fonteDeducida(b) === 'arquivo' ? { videoUrl: mapear(b.videoUrl) ?? b.videoUrl } : {},
+      fonteDoVideo(b) === 'arquivo' ? { videoUrl: mapear(b.videoUrl) ?? b.videoUrl } : {},
   },
   separador: {
     tipo: 'separador',
@@ -916,11 +929,11 @@ function corrigirBloco(bloco: ConteudoUnidade): ConteudoUnidade {
   }
 
   if (corrigido.tipo === 'video') {
-    corrigido.fonteVideo = fonteDeducida(corrigido)
+    corrigido.fonteVideo = fonteDoVideo(corrigido, 'youtube')
   }
 
   if (corrigido.tipo === 'video-interativo') {
-    corrigido.fonteVideo = fonteDeducida(corrigido)
+    corrigido.fonteVideo = fonteDoVideo(corrigido)
     corrigido.perguntasVideo = (corrigido.perguntasVideo ?? [])
       .filter(perguntaVideoAproveitavel)
       .map((pergunta, indice) => ({
