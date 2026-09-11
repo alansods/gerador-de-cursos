@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAuth, createErrorResponse, createSuccessResponse } from '@/lib/auth'
 import { GoogleGenerativeAI } from '@google/generative-ai'
-import { CursoGerado } from '@/types/gerador-curso'
-import { normalizarCursoGerado, type ResumoGeracao } from '@/lib/blocos'
-import { detectarMarcadores, type ModoLeitura } from '@/lib/marcadores'
+import { Course } from '@/types/course'
+import { normalizeCourse, type GenerationSummary } from '@/lib/blocks'
+import { detectMarkers, type ReadMode } from '@/lib/markers'
 
 export const maxDuration = 60
 
@@ -27,13 +27,13 @@ export async function POST(req: NextRequest) {
 
   try {
     const body = await req.json()
-    const { text, mode } = body as { text: string; mode?: ModoLeitura }
+    const { text, mode } = body as { text: string; mode?: ReadMode }
 
     if (!text || typeof text !== 'string' || text.trim().length === 0) {
       return createErrorResponse('Texto não fornecido ou inválido', 400)
     }
 
-    const modoLeitura: ModoLeitura = mode ?? detectarMarcadores(text).modo
+    const readMode: ReadMode = mode ?? detectMarkers(text).mode
 
     // Verificar se há API key configurada
     const geminiApiKey = process.env.GEMINI_API_KEY
@@ -47,29 +47,29 @@ export async function POST(req: NextRequest) {
     }
 
     // Usar Google Gemini se disponível, senão OpenAI
-    let course: CursoGerado
+    let course: Course
     let tokenUsage: TokenUsage | undefined
 
     if (geminiApiKey) {
-      const result = await generateWithGemini(text, geminiApiKey, modoLeitura)
+      const result = await generateWithGemini(text, geminiApiKey, readMode)
       course = result.course
       tokenUsage = result.tokenUsage
     } else if (openaiApiKey) {
-      const result = await generateWithOpenAI(text, openaiApiKey, modoLeitura)
+      const result = await generateWithOpenAI(text, openaiApiKey, readMode)
       course = result.course
       tokenUsage = result.tokenUsage
     } else {
       throw new Error('Nenhuma API de IA disponível')
     }
 
-    const { curso: cursoNormalizado, resumo } = normalizarCursoGerado(course)
-    registrarDescartes(resumo)
+    const { course: normalizedCourse, summary } = normalizeCourse(course)
+    recordDiscards(summary)
 
     return createSuccessResponse({
-      course: cursoNormalizado,
+      course: normalizedCourse,
       tokenUsage,
-      resumo,
-      modo: modoLeitura,
+      resumo: summary,
+      modo: readMode,
     })
   } catch (error) {
     console.error('Erro ao gerar curso:', error)
@@ -81,12 +81,12 @@ export async function POST(req: NextRequest) {
   }
 }
 
-function registrarDescartes(resumo: ResumoGeracao) {
-  if (resumo.descartados.length === 0) return
+function recordDiscards(summary: GenerationSummary) {
+  if (summary.discarded.length === 0) return
 
   console.warn(
-    `⚠️ ${resumo.descartados.length} bloco(s) descartado(s) na normalização:`,
-    resumo.descartados.map((d) => `${d.unidade} · ${d.tipo}: ${d.motivo}`).join(' | ')
+    `⚠️ ${summary.discarded.length} bloco(s) descartado(s) na normalização:`,
+    summary.discarded.map((d) => `${d.unit} · ${d.type}: ${d.reason}`).join(' | ')
   )
 }
 
@@ -95,7 +95,7 @@ function registrarDescartes(resumo: ResumoGeracao) {
  * Inclui instruções para reconhecer os marcadores de recursos e gerar
  * o JSON correto para cada um dos tipos de bloco suportados.
  */
-function buildPrompt(text: string, mode: ModoLeitura = 'auto'): string {
+function buildPrompt(text: string, mode: ReadMode = 'auto'): string {
   const truncated =
     text.substring(0, 150000) + (text.length > 150000 ? '\n\n[... texto truncado ...]' : '')
 
@@ -518,8 +518,8 @@ ${truncated}`
 async function generateWithGemini(
   text: string,
   apiKey: string,
-  mode: ModoLeitura = 'auto'
-): Promise<{ course: CursoGerado; tokenUsage: TokenUsage }> {
+  mode: ReadMode = 'auto'
+): Promise<{ course: Course; tokenUsage: TokenUsage }> {
   const genAI = new GoogleGenerativeAI(apiKey)
 
   const prompt = buildPrompt(text, mode)
@@ -550,7 +550,7 @@ async function generateWithGemini(
         jsonText = jsonText.replace(/^```\n?/, '').replace(/\n?```$/, '')
       }
 
-      const courseData = JSON.parse(jsonText) as CursoGerado
+      const courseData = JSON.parse(jsonText) as Course
 
       // Validar estrutura básica
       if (!courseData.titulo || !courseData.descricao) {
@@ -604,8 +604,8 @@ async function generateWithGemini(
 async function generateWithOpenAI(
   text: string,
   apiKey: string,
-  mode: ModoLeitura = 'auto'
-): Promise<{ course: CursoGerado; tokenUsage: TokenUsage }> {
+  mode: ReadMode = 'auto'
+): Promise<{ course: Course; tokenUsage: TokenUsage }> {
   const { default: OpenAI } = await import('openai')
   const openai = new OpenAI({ apiKey })
 
@@ -645,7 +645,7 @@ async function generateWithOpenAI(
       jsonText = jsonText.replace(/^```\n?/, '').replace(/\n?```$/, '')
     }
 
-    const courseData = JSON.parse(jsonText) as CursoGerado
+    const courseData = JSON.parse(jsonText) as Course
 
     // Validar estrutura básica
     if (!courseData.titulo || !courseData.descricao) {

@@ -4,22 +4,22 @@ import bcrypt from 'bcryptjs'
 import { Prisma } from '@prisma/client'
 import { logActivity } from '@/lib/activity-logger'
 import { requireAuth, createErrorResponse } from '@/lib/auth'
-import { can, ROLES, type RoleUsuario } from '@/lib/permissions'
+import { can, ROLES, type UserRole } from '@/lib/permissions'
 import type { JWTPayload } from '@/lib/auth'
 
-function normalizarRole(role: unknown): RoleUsuario {
-  return typeof role === 'string' && ROLES.includes(role as RoleUsuario)
-    ? (role as RoleUsuario)
+function normalizeRole(role: unknown): UserRole {
+  return typeof role === 'string' && ROLES.includes(role as UserRole)
+    ? (role as UserRole)
     : 'CONTEUDISTA'
 }
 
-function negarSeNaoPodeGerenciar(user: JWTPayload) {
+function denyUnlessCanManage(user: JWTPayload) {
   if (can(user, 'usuario:gerenciar')) return null
   return createErrorResponse('Você não tem permissão para gerenciar usuários', 403)
 }
 
 // GET: Listar usuários com paginação e filtros
-const EMAIL_VALIDO = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+const VALID_EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
 export async function GET(request: NextRequest) {
   const authResult = await requireAuth(request)
@@ -28,8 +28,8 @@ export async function GET(request: NextRequest) {
     return authResult
   }
 
-  const semPermissao = negarSeNaoPodeGerenciar(authResult.user)
-  if (semPermissao) return semPermissao
+  const withoutPermission = denyUnlessCanManage(authResult.user)
+  if (withoutPermission) return withoutPermission
 
   try {
     const searchParams = request.nextUrl.searchParams
@@ -45,8 +45,8 @@ export async function GET(request: NextRequest) {
     // Construir filtro
     const where: Prisma.UserWhereInput = {}
 
-    if (role && ROLES.includes(role as RoleUsuario)) {
-      where.role = role as RoleUsuario
+    if (role && ROLES.includes(role as UserRole)) {
+      where.role = role as UserRole
     }
 
     if (search) {
@@ -114,42 +114,42 @@ export async function POST(request: NextRequest) {
     return authResult
   }
 
-  const semPermissao = negarSeNaoPodeGerenciar(authResult.user)
-  if (semPermissao) return semPermissao
+  const withoutPermission = denyUnlessCanManage(authResult.user)
+  if (withoutPermission) return withoutPermission
 
   try {
     const body = await request.json()
-    const { nome, email, senha, role } = body
+    const { nome: name, email, senha: password, role } = body
 
-    if (!nome || !email || !senha) {
+    if (!name || !email || !password) {
       return NextResponse.json(
         { success: false, error: 'Todos os campos são obrigatórios' },
         { status: 400 }
       )
     }
 
-    const emailNormalizado = String(email).trim().toLowerCase()
+    const normalizedEmail = String(email).trim().toLowerCase()
 
-    if (!EMAIL_VALIDO.test(emailNormalizado)) {
+    if (!VALID_EMAIL.test(normalizedEmail)) {
       return NextResponse.json({ success: false, error: 'E-mail inválido' }, { status: 400 })
     }
 
     const existingUser = await prisma.user.findUnique({
-      where: { email: emailNormalizado },
+      where: { email: normalizedEmail },
     })
 
     if (existingUser) {
       return NextResponse.json({ success: false, error: 'E-mail já cadastrado' }, { status: 409 })
     }
 
-    const hashedPassword = await bcrypt.hash(senha, 10)
+    const hashedPassword = await bcrypt.hash(password, 10)
 
     const user = await prisma.user.create({
       data: {
-        nome,
-        email: emailNormalizado,
+        nome: name,
+        email: normalizedEmail,
         senha: hashedPassword,
-        role: normalizarRole(role),
+        role: normalizeRole(role),
       },
       select: {
         id: true,
@@ -164,7 +164,7 @@ export async function POST(request: NextRequest) {
     await logActivity({
       tipo: 'usuario_criado',
       titulo: 'Novo usuário criado',
-      descricao: nome,
+      descricao: name,
       entityId: user.id,
       entityType: 'usuario',
       userId: authResult.user.id,
@@ -188,12 +188,12 @@ export async function PUT(request: NextRequest) {
     return authResult
   }
 
-  const semPermissao = negarSeNaoPodeGerenciar(authResult.user)
-  if (semPermissao) return semPermissao
+  const withoutPermission = denyUnlessCanManage(authResult.user)
+  if (withoutPermission) return withoutPermission
 
   try {
     const body = await request.json()
-    const { id, nome, email, senha, role } = body
+    const { id, nome: name, email, senha: password, role } = body
 
     if (!id) {
       return NextResponse.json(
@@ -203,25 +203,25 @@ export async function PUT(request: NextRequest) {
     }
 
     const updateData: Prisma.UserUpdateInput = {
-      nome,
+      nome: name,
     }
 
     if (email !== undefined) {
-      const emailNormalizado = String(email).trim().toLowerCase()
+      const normalizedEmail = String(email).trim().toLowerCase()
 
-      if (!EMAIL_VALIDO.test(emailNormalizado)) {
+      if (!VALID_EMAIL.test(normalizedEmail)) {
         return NextResponse.json({ success: false, error: 'E-mail inválido' }, { status: 400 })
       }
 
-      updateData.email = emailNormalizado
+      updateData.email = normalizedEmail
     }
 
     if (role !== undefined) {
-      updateData.role = normalizarRole(role)
+      updateData.role = normalizeRole(role)
     }
 
-    if (senha) {
-      updateData.senha = await bcrypt.hash(senha, 10)
+    if (password) {
+      updateData.senha = await bcrypt.hash(password, 10)
     }
 
     const user = await prisma.user.update({
@@ -270,8 +270,8 @@ export async function DELETE(request: NextRequest) {
     return authResult
   }
 
-  const semPermissao = negarSeNaoPodeGerenciar(authResult.user)
-  if (semPermissao) return semPermissao
+  const withoutPermission = denyUnlessCanManage(authResult.user)
+  if (withoutPermission) return withoutPermission
 
   try {
     const searchParams = request.nextUrl.searchParams
@@ -285,7 +285,7 @@ export async function DELETE(request: NextRequest) {
     }
 
     // Buscar usuário antes de deletar para obter o nome
-    const usuarioExistente = await prisma.user.findUnique({
+    const existingUser = await prisma.user.findUnique({
       where: { id },
       select: { nome: true },
     })
@@ -298,7 +298,7 @@ export async function DELETE(request: NextRequest) {
     await logActivity({
       tipo: 'usuario_deletado',
       titulo: 'Usuário deletado',
-      descricao: usuarioExistente?.nome || 'Usuário',
+      descricao: existingUser?.nome || 'Usuário',
       entityId: id,
       entityType: 'usuario',
       userId: authResult.user.id,

@@ -14,20 +14,20 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   try {
     const { id } = await params
 
-    const curso = await prisma.curso.findUnique({
+    const course = await prisma.curso.findUnique({
       where: { id },
       select: { id: true, ownerId: true },
     })
 
-    if (!curso) {
+    if (!course) {
       return createErrorResponse('Curso não encontrado', 404)
     }
 
-    if (!can(authResult.user, 'colaborador:gerenciar', { curso })) {
+    if (!can(authResult.user, 'colaborador:gerenciar', { course })) {
       return createErrorResponse('Você não pode ver os colaboradores deste curso', 403)
     }
 
-    const colaboradores = await prisma.cursoColaborador.findMany({
+    const collaborators = await prisma.cursoColaborador.findMany({
       where: { cursoId: id },
       orderBy: { createdAt: 'asc' },
       include: {
@@ -36,7 +36,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       },
     })
 
-    return createSuccessResponse({ colaboradores })
+    return createSuccessResponse({ colaboradores: collaborators })
   } catch (error) {
     console.error('Erro ao listar colaboradores:', error)
     return createErrorResponse('Erro ao listar colaboradores', 500, error)
@@ -59,25 +59,25 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
       return createErrorResponse('ID do usuário é obrigatório', 400)
     }
 
-    const curso = await prisma.curso.findUnique({
+    const course = await prisma.curso.findUnique({
       where: { id },
       select: { id: true, titulo: true, ownerId: true },
     })
 
-    if (!curso) {
+    if (!course) {
       return createErrorResponse('Curso não encontrado', 404)
     }
 
-    if (!can(authResult.user, 'colaborador:gerenciar', { curso })) {
+    if (!can(authResult.user, 'colaborador:gerenciar', { course })) {
       return createErrorResponse('Você não pode revogar acessos deste curso', 403)
     }
 
-    const colaborador = await prisma.cursoColaborador.findUnique({
+    const collaborator = await prisma.cursoColaborador.findUnique({
       where: { cursoId_userId: { cursoId: id, userId } },
       include: { user: { select: { nome: true } } },
     })
 
-    if (!colaborador) {
+    if (!collaborator) {
       return createErrorResponse('Colaborador não encontrado', 404)
     }
 
@@ -96,7 +96,7 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
     await logActivity({
       tipo: 'acesso_revogado',
       titulo: 'Acesso revogado',
-      descricao: `${colaborador.user.nome} em "${curso.titulo}"`,
+      descricao: `${collaborator.user.nome} em "${course.titulo}"`,
       entityId: id,
       entityType: 'curso',
       userId: authResult.user.id,

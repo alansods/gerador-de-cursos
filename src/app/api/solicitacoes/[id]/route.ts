@@ -18,13 +18,13 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   try {
     const { id } = await params
     const body = await req.json()
-    const acao = body.acao as 'aprovar' | 'negar'
+    const action = body.acao as 'aprovar' | 'negar'
 
-    if (acao !== 'aprovar' && acao !== 'negar') {
+    if (action !== 'aprovar' && action !== 'negar') {
       return createErrorResponse('Ação inválida: use "aprovar" ou "negar"', 400)
     }
 
-    const solicitacao = await prisma.cursoAccessRequest.findUnique({
+    const accessRequest = await prisma.cursoAccessRequest.findUnique({
       where: { id },
       include: {
         curso: { select: { id: true, titulo: true, ownerId: true } },
@@ -32,41 +32,41 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       },
     })
 
-    if (!solicitacao) {
+    if (!accessRequest) {
       return createErrorResponse('Solicitação não encontrada', 404)
     }
 
-    if (!can(authResult.user, 'colaborador:gerenciar', { curso: solicitacao.curso })) {
+    if (!can(authResult.user, 'colaborador:gerenciar', { course: accessRequest.curso })) {
       return createErrorResponse('Você não pode responder a esta solicitação', 403)
     }
 
-    if (solicitacao.status !== 'PENDENTE') {
+    if (accessRequest.status !== 'PENDENTE') {
       return createErrorResponse('Esta solicitação já foi respondida', 422)
     }
 
-    const aprovada = acao === 'aprovar'
+    const approved = action === 'aprovar'
 
     await prisma.$transaction([
       prisma.cursoAccessRequest.update({
         where: { id },
         data: {
-          status: aprovada ? 'APROVADA' : 'NEGADA',
+          status: approved ? 'APROVADA' : 'NEGADA',
           respondidoPorId: authResult.user.id,
           respondidoEm: new Date(),
         },
       }),
-      ...(aprovada
+      ...(approved
         ? [
             prisma.cursoColaborador.upsert({
               where: {
                 cursoId_userId: {
-                  cursoId: solicitacao.cursoId,
-                  userId: solicitacao.solicitanteId,
+                  cursoId: accessRequest.cursoId,
+                  userId: accessRequest.solicitanteId,
                 },
               },
               create: {
-                cursoId: solicitacao.cursoId,
-                userId: solicitacao.solicitanteId,
+                cursoId: accessRequest.cursoId,
+                userId: accessRequest.solicitanteId,
                 concedidoPorId: authResult.user.id,
               },
               update: { concedidoPorId: authResult.user.id },
@@ -76,15 +76,15 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     ])
 
     await logActivity({
-      tipo: aprovada ? 'acesso_aprovado' : 'acesso_negado',
-      titulo: aprovada ? 'Acesso concedido' : 'Acesso negado',
-      descricao: `${solicitacao.solicitante.nome} em "${solicitacao.curso.titulo}"`,
-      entityId: solicitacao.cursoId,
+      tipo: approved ? 'acesso_aprovado' : 'acesso_negado',
+      titulo: approved ? 'Acesso concedido' : 'Acesso negado',
+      descricao: `${accessRequest.solicitante.nome} em "${accessRequest.curso.titulo}"`,
+      entityId: accessRequest.cursoId,
       entityType: 'curso',
       userId: authResult.user.id,
     })
 
-    return createSuccessResponse({ id, status: aprovada ? 'APROVADA' : 'NEGADA' })
+    return createSuccessResponse({ id, status: approved ? 'APROVADA' : 'NEGADA' })
   } catch (error) {
     console.error('Erro ao responder solicitação:', error)
     return createErrorResponse('Erro ao responder solicitação', 500, error)

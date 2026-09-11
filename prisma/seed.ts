@@ -25,7 +25,7 @@ const prisma = new PrismaClient({
   log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
 })
 
-const unidadesExemplo = [
+const sampleUnits = [
   {
     id: 'unit-1',
     titulo: 'Fundamentos do Next.js',
@@ -231,7 +231,7 @@ const unidadesExemplo = [
   },
 ]
 
-const cursosExemplo = [
+const sampleCourses = [
   {
     titulo: 'Fundamentos de Python para Análise de Dados',
     descricao:
@@ -239,7 +239,7 @@ const cursosExemplo = [
     cargaHoraria: '32 horas',
     modalidade: 'Online',
     categoria: 'Tecnologia',
-    unidades: unidadesExemplo,
+    unidades: sampleUnits,
   },
   {
     titulo: 'Liderança e Gestão de Equipes',
@@ -248,7 +248,7 @@ const cursosExemplo = [
     cargaHoraria: '24 horas',
     modalidade: 'Híbrido',
     categoria: 'Gestão',
-    unidades: unidadesExemplo,
+    unidades: sampleUnits,
   },
   {
     titulo: 'Design Thinking na Prática',
@@ -257,7 +257,7 @@ const cursosExemplo = [
     cargaHoraria: '16 horas',
     modalidade: 'Presencial',
     categoria: 'Inovação',
-    unidades: unidadesExemplo,
+    unidades: sampleUnits,
   },
   {
     titulo: 'Marketing Digital e Growth',
@@ -266,7 +266,7 @@ const cursosExemplo = [
     cargaHoraria: '28 horas',
     modalidade: 'Online',
     categoria: 'Marketing',
-    unidades: unidadesExemplo,
+    unidades: sampleUnits,
   },
   {
     titulo: 'Desenvolvimento Web Full Stack',
@@ -275,7 +275,7 @@ const cursosExemplo = [
     cargaHoraria: '80 horas',
     modalidade: 'Online',
     categoria: 'Tecnologia',
-    unidades: unidadesExemplo,
+    unidades: sampleUnits,
   },
   {
     titulo: 'Excel Avançado para Negócios',
@@ -284,7 +284,7 @@ const cursosExemplo = [
     cargaHoraria: '20 horas',
     modalidade: 'Híbrido',
     categoria: 'Produtividade',
-    unidades: unidadesExemplo,
+    unidades: sampleUnits,
   },
   {
     titulo: 'Comunicação e Oratória',
@@ -293,7 +293,7 @@ const cursosExemplo = [
     cargaHoraria: '12 horas',
     modalidade: 'Presencial',
     categoria: 'Soft Skills',
-    unidades: unidadesExemplo,
+    unidades: sampleUnits,
   },
   {
     titulo: 'UX/UI Design Moderno',
@@ -302,7 +302,7 @@ const cursosExemplo = [
     cargaHoraria: '36 horas',
     modalidade: 'Online',
     categoria: 'Design',
-    unidades: unidadesExemplo,
+    unidades: sampleUnits,
   },
   {
     titulo: 'Finanças Pessoais e Investimentos',
@@ -311,7 +311,7 @@ const cursosExemplo = [
     cargaHoraria: '16 horas',
     modalidade: 'Online',
     categoria: 'Finanças',
-    unidades: unidadesExemplo,
+    unidades: sampleUnits,
   },
   {
     titulo: 'DevOps e Cloud Computing',
@@ -320,7 +320,7 @@ const cursosExemplo = [
     cargaHoraria: '40 horas',
     modalidade: 'Online',
     categoria: 'Tecnologia',
-    unidades: unidadesExemplo,
+    unidades: sampleUnits,
   },
 ]
 
@@ -357,38 +357,38 @@ async function main() {
   // ========================================
 
   console.log('👤 Criando usuário administrador...')
-  const senhaHashAdmin = await bcrypt.hash('Admin@Senai2025!', 10)
+  const adminPasswordHash = await bcrypt.hash('Admin@Senai2025!', 10)
 
-  const usuarioAdmin = await prisma.user.create({
+  const adminUser = await prisma.user.create({
     data: {
       nome: 'Administrador',
       role: 'ADMIN',
       email: 'admin@senai.br',
-      senha: senhaHashAdmin,
+      senha: adminPasswordHash,
     },
   })
 
   console.log('✅ Usuário admin criado')
   console.log('   Usuário: admin')
   console.log('   Senha: Admin@Senai2025!')
-  console.log(`   ID: ${usuarioAdmin.id}\n`)
+  console.log(`   ID: ${adminUser.id}\n`)
 
   console.log('👤 Criando usuário convidado...')
-  const senhaHashConvidado = await bcrypt.hash('convidado', 10)
+  const guestPasswordHash = await bcrypt.hash('convidado', 10)
 
-  const usuarioConvidado = await prisma.user.create({
+  const guestUser = await prisma.user.create({
     data: {
       nome: 'Usuário Convidado',
       role: 'CONVIDADO',
       email: 'convidado@senai.br',
-      senha: senhaHashConvidado,
+      senha: guestPasswordHash,
     },
   })
 
   console.log('✅ Usuário convidado criado')
   console.log('   Usuário: convidado')
   console.log('   Senha: convidado')
-  console.log(`   ID: ${usuarioConvidado.id}\n`)
+  console.log(`   ID: ${guestUser.id}\n`)
 
   // ========================================
   // CRIAR CURSOS
@@ -396,26 +396,26 @@ async function main() {
 
   console.log('✨ Criando cursos de exemplo...\n')
 
-  let cursosCriados = 0
+  let createdCourses = 0
 
-  for (const cursoData of cursosExemplo) {
+  for (const courseData of sampleCourses) {
     try {
-      const curso = await prisma.curso.create({
-        data: { ...cursoData, ownerId: usuarioAdmin.id },
+      const course = await prisma.curso.create({
+        data: { ...courseData, ownerId: adminUser.id },
       })
-      cursosCriados++
-      console.log(`✅ Curso criado: ${curso.titulo}`)
+      createdCourses++
+      console.log(`✅ Curso criado: ${course.titulo}`)
     } catch (error) {
-      console.error(`❌ Erro ao criar curso ${cursoData.titulo}:`, error)
+      console.error(`❌ Erro ao criar curso ${courseData.titulo}:`, error)
     }
   }
 
-  console.log(`\n✅ ${cursosCriados} cursos criados`)
+  console.log(`\n✅ ${createdCourses} cursos criados`)
 
   // Mostrar estatísticas
-  const totalCursos = await prisma.curso.count()
+  const totalCourses = await prisma.curso.count()
   const totalUsers = await prisma.user.count()
-  console.log(`\n📊 Total de cursos no banco: ${totalCursos}`)
+  console.log(`\n📊 Total de cursos no banco: ${totalCourses}`)
   console.log(`📊 Total de usuários no banco: ${totalUsers}`)
 
   console.log('\n🎉 Seed concluído com sucesso!\n')

@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requireAuth, createErrorResponse, createSuccessResponse } from '@/lib/auth'
-import { can, type StatusCurso } from '@/lib/permissions'
-import { STATUS_CURSO, STATUS_CURSO_LABELS, transicaoValida } from '@/lib/status-curso'
-import { buscarCursoComColaboracao } from '@/lib/curso-acesso'
+import { can, type CourseStatus } from '@/lib/permissions'
+import { COURSE_STATUS, COURSE_STATUS_LABELS, isValidTransition } from '@/lib/course-status'
+import { fetchCourseWithCollaboration } from '@/lib/course-access'
 import { logActivity, type ActivityType } from '@/lib/activity-logger'
 
-const ATIVIDADE_POR_STATUS: Partial<Record<StatusCurso, ActivityType>> = {
+const ACTIVITY_BY_STATUS: Partial<Record<CourseStatus, ActivityType>> = {
   EM_REVISAO: 'curso_enviado_revisao',
   APROVADO: 'curso_aprovado',
   REPROVADO: 'curso_reprovado',
@@ -22,66 +22,66 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   try {
     const { id } = await params
     const body = await req.json()
-    const novoStatus = body.status as StatusCurso
-    const comentario = typeof body.comentario === 'string' ? body.comentario.trim() : ''
+    const newStatus = body.status as CourseStatus
+    const comment = typeof body.comentario === 'string' ? body.comentario.trim() : ''
 
-    if (!STATUS_CURSO.includes(novoStatus)) {
+    if (!COURSE_STATUS.includes(newStatus)) {
       return createErrorResponse('Status inválido', 400)
     }
 
-    const { curso, colaboracao } = await buscarCursoComColaboracao(id, authResult.user.id)
+    const { course, collaboration } = await fetchCourseWithCollaboration(id, authResult.user.id)
 
-    if (!curso) {
+    if (!course) {
       return createErrorResponse('Curso não encontrado', 404)
     }
 
-    if (!transicaoValida(curso.status, novoStatus)) {
+    if (!isValidTransition(course.status, newStatus)) {
       return createErrorResponse(
-        `Não é possível mudar de "${STATUS_CURSO_LABELS[curso.status]}" para "${STATUS_CURSO_LABELS[novoStatus]}"`,
+        `Não é possível mudar de "${COURSE_STATUS_LABELS[course.status]}" para "${COURSE_STATUS_LABELS[newStatus]}"`,
         422
       )
     }
 
     // Enviar para revisão é de quem edita; aprovar e reprovar são do revisor
-    const acao = novoStatus === 'EM_REVISAO' ? 'curso:enviarRevisao' : 'curso:aprovar'
-    const ctx = novoStatus === 'EM_REVISAO' ? { curso, colaboracao } : {}
+    const action = newStatus === 'EM_REVISAO' ? 'curso:enviarRevisao' : 'curso:aprovar'
+    const ctx = newStatus === 'EM_REVISAO' ? { course, collaboration } : {}
 
-    if (!can(authResult.user, acao, ctx)) {
+    if (!can(authResult.user, action, ctx)) {
       return createErrorResponse('Você não tem permissão para alterar o status deste curso', 403)
     }
 
-    if (novoStatus === 'REPROVADO' && !comentario) {
+    if (newStatus === 'REPROVADO' && !comment) {
       return createErrorResponse('Um comentário é obrigatório ao reprovar um curso', 400)
     }
 
-    const revisou = novoStatus === 'APROVADO' || novoStatus === 'REPROVADO'
+    const reviewed = newStatus === 'APROVADO' || newStatus === 'REPROVADO'
 
-    const [cursoAtualizado] = await prisma.$transaction([
+    const [updatedCourse] = await prisma.$transaction([
       prisma.curso.update({
         where: { id },
         data: {
-          status: novoStatus,
-          ...(revisou
+          status: newStatus,
+          ...(reviewed
             ? { revisadoPorId: authResult.user.id, revisadoEm: new Date() }
             : { revisadoPorId: null, revisadoEm: null }),
         },
         include: { owner: { select: { id: true, nome: true } } },
       }),
-      ...(comentario
+      ...(comment
         ? [
             prisma.cursoComentario.create({
-              data: { cursoId: id, autorId: authResult.user.id, texto: comentario },
+              data: { cursoId: id, autorId: authResult.user.id, texto: comment },
             }),
           ]
         : []),
     ])
 
-    const tipo = ATIVIDADE_POR_STATUS[novoStatus]
-    if (tipo) {
+    const type = ACTIVITY_BY_STATUS[newStatus]
+    if (type) {
       await logActivity({
-        tipo,
-        titulo: `Curso ${STATUS_CURSO_LABELS[novoStatus].toLowerCase()}`,
-        descricao: curso.titulo,
+        tipo: type,
+        titulo: `Curso ${COURSE_STATUS_LABELS[newStatus].toLowerCase()}`,
+        descricao: course.titulo,
         entityId: id,
         entityType: 'curso',
         userId: authResult.user.id,
@@ -90,10 +90,10 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 
     return createSuccessResponse({
       curso: {
-        id: cursoAtualizado.id,
-        status: cursoAtualizado.status,
-        revisadoPorId: cursoAtualizado.revisadoPorId,
-        revisadoEm: cursoAtualizado.revisadoEm,
+        id: updatedCourse.id,
+        status: updatedCourse.status,
+        revisadoPorId: updatedCourse.revisadoPorId,
+        revisadoEm: updatedCourse.revisadoEm,
       },
     })
   } catch (error) {

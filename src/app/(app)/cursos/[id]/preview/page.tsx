@@ -9,19 +9,19 @@ import { useParams, useRouter, usePathname } from 'next/navigation'
 import { PageTransition } from '@/components/PageTransition'
 import { Loader2 } from 'lucide-react'
 import { CoursePlayer } from '@/components/course/CoursePlayer'
-import { PainelRevisao } from '@/components/revisao/PainelRevisao'
-import { useCursoQuery } from '@/hooks/queries/useCursoQuery'
+import { ReviewPanel } from '@/components/review/ReviewPanel'
+import { useCourseQuery } from '@/hooks/queries/useCourseQuery'
 
-export default function PreviewCursoPage() {
+export default function PreviewCoursePage() {
   const params = useParams()
   const router = useRouter()
 
   const pathname = usePathname()
   // Extrai o segmento do curso diretamente do pathname (sempre confiável)
-  const cursoUrlSegment = pathname.split('/')[2]
-  const cursoId = (params?.id as string | undefined) || cursoUrlSegment
+  const courseUrlSegment = pathname.split('/')[2]
+  const courseId = (params?.id as string | undefined) || courseUrlSegment
 
-  const { curso, isLoading, error } = useCursoQuery(cursoId, { sempreRevalidar: true })
+  const { course, isLoading, error } = useCourseQuery(courseId, { alwaysRevalidate: true })
 
   useEffect(() => {
     if (error) router.push('/cursos')
@@ -38,7 +38,7 @@ export default function PreviewCursoPage() {
     )
   }
 
-  if (!curso) {
+  if (!course) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
@@ -50,10 +50,10 @@ export default function PreviewCursoPage() {
 
   return (
     <PageTransition>
-      <CoursePlayer curso={curso} />
+      <CoursePlayer course={course} />
       {/* a mutation de status invalida a chave do curso, então o painel não
           precisa mais pedir o recarregamento */}
-      <PainelRevisao curso={curso} />
+      <ReviewPanel course={course} />
     </PageTransition>
   )
 }

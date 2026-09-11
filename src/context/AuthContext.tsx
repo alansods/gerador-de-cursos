@@ -3,25 +3,25 @@
 import { createContext, useContext, useState, ReactNode, useEffect, useRef } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import { toast } from 'sonner'
-import { can, ROLES, type Acao, type ContextoPermissao, type RoleUsuario } from '@/lib/permissions'
+import { can, ROLES, type Action, type PermissionContext, type UserRole } from '@/lib/permissions'
 
 interface User {
   id: string
   nome: string
   email: string
-  role?: RoleUsuario
+  role?: UserRole
 }
 
 interface AuthContextType {
   user: User | null
   loading: boolean
   isAuthenticated: boolean
-  role: RoleUsuario | null
-  can: (acao: Acao, ctx?: ContextoPermissao) => boolean
+  role: UserRole | null
+  can: (action: Action, ctx?: PermissionContext) => boolean
   isAdmin: boolean
-  podeGerenciarUsuarios: boolean
-  podeCriarCurso: boolean
-  login: (email: string, senha: string) => Promise<boolean>
+  canManageUsers: boolean
+  canCreateCourse: boolean
+  login: (email: string, password: string) => Promise<boolean>
   loginAsGuest: () => Promise<void>
   logout: () => Promise<void>
   setUser: (user: User | null) => void
@@ -41,7 +41,7 @@ export function AuthProvider({ children, initialUser }: AuthProviderProps) {
   const pathname = usePathname()
   const checkSessionRef = useRef(false) // Prevenir verificações duplicadas
 
-  const login = async (email: string, senha: string): Promise<boolean> => {
+  const login = async (email: string, password: string): Promise<boolean> => {
     setLoading(true)
     try {
       const response = await fetch('/api/auth/login', {
@@ -49,7 +49,7 @@ export function AuthProvider({ children, initialUser }: AuthProviderProps) {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ email, senha }),
+        body: JSON.stringify({ email, senha: password }),
       })
 
       const data = await response.json()
@@ -198,11 +198,12 @@ export function AuthProvider({ children, initialUser }: AuthProviderProps) {
   // Sem papel reconhecido o usuário fica sem permissão alguma (falha fechada).
   // `/api/auth/me` sempre devolve o papel lido do banco, então isso só acontece
   // se a sessão ainda não carregou.
-  const role: RoleUsuario | null = user?.role && ROLES.includes(user.role) ? user.role : null
+  const role: UserRole | null = user?.role && ROLES.includes(user.role) ? user.role : null
 
-  const usuarioPermissoes = user && role ? { id: user.id, role } : null
+  const permissionUser = user && role ? { id: user.id, role } : null
 
-  const checarPermissao = (acao: Acao, ctx?: ContextoPermissao) => can(usuarioPermissoes, acao, ctx)
+  const checkPermission = (action: Action, ctx?: PermissionContext) =>
+    can(permissionUser, action, ctx)
 
   return (
     <AuthContext.Provider
@@ -211,10 +212,10 @@ export function AuthProvider({ children, initialUser }: AuthProviderProps) {
         loading,
         isAuthenticated,
         role,
-        can: checarPermissao,
+        can: checkPermission,
         isAdmin: role === 'ADMIN',
-        podeGerenciarUsuarios: checarPermissao('usuario:gerenciar'),
-        podeCriarCurso: checarPermissao('curso:criar'),
+        canManageUsers: checkPermission('usuario:gerenciar'),
+        canCreateCourse: checkPermission('curso:criar'),
         login,
         loginAsGuest,
         logout,

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { handleUpload, type HandleUploadBody } from '@vercel/blob/client'
 import { requireAuth } from '@/lib/auth'
-import { POLITICA_MIDIAS, ehCategoriaMidia } from '@/lib/midias'
+import { MEDIA_POLICY, isMediaCategory } from '@/lib/media'
 
 export async function POST(request: NextRequest) {
   const body = (await request.json()) as HandleUploadBody
@@ -14,23 +14,23 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const resultado = await handleUpload({
+    const result = await handleUpload({
       request,
       body,
       onBeforeGenerateToken: async (_pathname: string, clientPayload: string | null) => {
-        const categoria = clientPayload ?? ''
+        const category = clientPayload ?? ''
 
-        if (!ehCategoriaMidia(categoria)) {
+        if (!isMediaCategory(category)) {
           throw new Error('Categoria de mídia inválida')
         }
 
-        const politica = POLITICA_MIDIAS[categoria]
+        const policy = MEDIA_POLICY[category]
 
         return {
-          allowedContentTypes: politica.tiposPermitidos,
-          maximumSizeInBytes: politica.limiteRigidoBytes,
+          allowedContentTypes: policy.allowedTypes,
+          maximumSizeInBytes: policy.hardLimitBytes,
           addRandomSuffix: true,
-          tokenPayload: categoria,
+          tokenPayload: category,
         }
       },
       // Sem onUploadCompleted: nada precisa acontecer no servidor após o upload, e
@@ -38,9 +38,9 @@ export async function POST(request: NextRequest) {
       // desenvolvimento local.
     })
 
-    return NextResponse.json(resultado)
+    return NextResponse.json(result)
   } catch (error) {
-    const mensagem = error instanceof Error ? error.message : 'Erro ao preparar o upload'
-    return NextResponse.json({ success: false, error: mensagem }, { status: 400 })
+    const message = error instanceof Error ? error.message : 'Erro ao preparar o upload'
+    return NextResponse.json({ success: false, error: message }, { status: 400 })
   }
 }

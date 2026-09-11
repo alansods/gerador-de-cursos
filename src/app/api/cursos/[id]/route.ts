@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requireAuth, createErrorResponse, createSuccessResponse } from '@/lib/auth'
-import { permissoesDoCurso } from '@/lib/permissions'
-import { buscarColaboracao } from '@/lib/curso-acesso'
-import { ConteudoUnidade, CursoGerado, Unidade } from '@/types/gerador-curso'
-import { slugifyUnidades } from '@/lib/slug'
-import { mesclarFlipcardsAdjacentes } from '@/lib/blocos'
+import { getCoursePermissions } from '@/lib/permissions'
+import { fetchCollaboration } from '@/lib/course-access'
+import { Block, Course, Unit } from '@/types/course'
+import { slugifyUnits } from '@/lib/slug'
+import { mergeAdjacentFlipcards } from '@/lib/blocks'
 
 /**
  * GET /api/cursos/[id]
@@ -22,65 +22,64 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     const { id } = await params
 
     // Tenta encontrar por ID primeiro; se não achar, tenta por slug
-    const curso = await prisma.curso.findFirst({
+    const course = await prisma.curso.findFirst({
       where: { OR: [{ id }, { slug: id }] },
       include: { owner: { select: { id: true, nome: true } } },
     })
 
-    if (!curso) {
+    if (!course) {
       return createErrorResponse('Curso não encontrado', 404)
     }
 
-    const colaboracao = await buscarColaboracao(curso.id, authResult.user.id)
+    const collaboration = await fetchCollaboration(course.id, authResult.user.id)
 
     // Normalizar unidades: garantir IDs, slugs e estrutura correta
-    const unidadesOriginais = (curso.unidades as Partial<Unidade>[]) || []
-    const unidadesMapped = unidadesOriginais.map((unidade: Partial<Unidade>, index: number) => {
-      const unidadeId = unidade.id || `unidade-${Date.now()}-${index}`
-      const conteudoOriginal =
-        unidade.conteudo || (unidade as { aulas?: Partial<ConteudoUnidade>[] }).aulas || []
-      const conteudoNormalizado = mesclarFlipcardsAdjacentes(
-        conteudoOriginal
-          .map((item: Partial<ConteudoUnidade>, itemIndex: number) => ({
+    const originalUnits = (course.unidades as Partial<Unit>[]) || []
+    const mappedUnits = originalUnits.map((unit: Partial<Unit>, index: number) => {
+      const unitId = unit.id || `unidade-${Date.now()}-${index}`
+      const originalContent = unit.conteudo || (unit as { aulas?: Partial<Block>[] }).aulas || []
+      const normalizedContent = mergeAdjacentFlipcards(
+        originalContent
+          .map((item: Partial<Block>, itemIndex: number) => ({
             ...item,
             id: item.id || `conteudo-${Date.now()}-${index}-${itemIndex}`,
             ordem: item.ordem ?? itemIndex,
             tipo: item.tipo || 'paragrafo',
           }))
-          .sort((a, b) => a.ordem - b.ordem) as ConteudoUnidade[]
+          .sort((a, b) => a.ordem - b.ordem) as Block[]
       )
 
       return {
-        ...unidade,
-        id: unidadeId,
-        ordem: unidade.ordem ?? index,
-        conteudo: conteudoNormalizado,
+        ...unit,
+        id: unitId,
+        ordem: unit.ordem ?? index,
+        conteudo: normalizedContent,
       }
     })
-    const unidadesNormalizadas = slugifyUnidades(unidadesMapped)
+    const normalizedUnits = slugifyUnits(mappedUnits)
 
     // Converter para formato CursoGerado
-    const cursoFormatado: CursoGerado = {
-      id: curso.id,
-      slug: curso.slug ?? undefined,
-      titulo: curso.titulo,
-      descricao: curso.descricao,
-      cargaHoraria: curso.cargaHoraria,
-      modalidade: curso.modalidade,
-      categoria: curso.categoria,
-      layout: curso.layout,
-      bannerVideoUrl: curso.bannerVideoUrl ?? undefined,
-      unidades: unidadesNormalizadas,
-      status: curso.status,
-      version: curso.version,
-      ownerId: curso.ownerId ?? undefined,
-      ownerNome: curso.owner?.nome ?? undefined,
-      permissoes: permissoesDoCurso(authResult.user, curso, colaboracao),
-      dataCriacao: curso.dataCriacao,
-      dataModificacao: curso.dataModificacao,
+    const formattedCourse: Course = {
+      id: course.id,
+      slug: course.slug ?? undefined,
+      titulo: course.titulo,
+      descricao: course.descricao,
+      cargaHoraria: course.cargaHoraria,
+      modalidade: course.modalidade,
+      categoria: course.categoria,
+      layout: course.layout,
+      bannerVideoUrl: course.bannerVideoUrl ?? undefined,
+      unidades: normalizedUnits,
+      status: course.status,
+      version: course.version,
+      ownerId: course.ownerId ?? undefined,
+      ownerNome: course.owner?.nome ?? undefined,
+      permissoes: getCoursePermissions(authResult.user, course, collaboration),
+      dataCriacao: course.dataCriacao,
+      dataModificacao: course.dataModificacao,
     }
 
-    return createSuccessResponse({ curso: cursoFormatado })
+    return createSuccessResponse({ curso: formattedCourse })
   } catch (error) {
     console.error('Erro ao buscar curso:', error)
     return createErrorResponse('Erro ao buscar curso', 500, error)

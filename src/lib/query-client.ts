@@ -1,14 +1,14 @@
 import { QueryClient } from '@tanstack/react-query'
 
-export const STALE_TIME_PADRAO = 60_000
-export const GC_TIME_PADRAO = 5 * 60_000
+export const DEFAULT_STALE_TIME = 60_000
+export const DEFAULT_GC_TIME = 5 * 60_000
 
-function criarQueryClient() {
+function createQueryClient() {
   return new QueryClient({
     defaultOptions: {
       queries: {
-        staleTime: STALE_TIME_PADRAO,
-        gcTime: GC_TIME_PADRAO,
+        staleTime: DEFAULT_STALE_TIME,
+        gcTime: DEFAULT_GC_TIME,
         refetchOnWindowFocus: false,
         retry: 1,
       },
@@ -16,11 +16,11 @@ function criarQueryClient() {
   })
 }
 
-let queryClientDoBrowser: QueryClient | undefined
+let browserQueryClient: QueryClient | undefined
 
 export function getQueryClient() {
-  if (typeof window === 'undefined') return criarQueryClient()
+  if (typeof window === 'undefined') return createQueryClient()
 
-  queryClientDoBrowser ??= criarQueryClient()
-  return queryClientDoBrowser
+  browserQueryClient ??= createQueryClient()
+  return browserQueryClient
 }

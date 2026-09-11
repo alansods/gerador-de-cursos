@@ -24,7 +24,7 @@ export const ACCEPTED_FILE_TYPES = {
 } as const
 
 // Categorias e modalidades de curso (mesma lista usada nos filtros e na criação)
-export const CATEGORIAS_CURSO = [
+export const COURSE_CATEGORIES = [
   'Gastronomia',
   'Tecnologia',
   'Marketing',
@@ -34,9 +34,9 @@ export const CATEGORIAS_CURSO = [
   'Idiomas',
 ] as const
 
-export const MODALIDADES_CURSO = ['Presencial', 'Online', 'Híbrido'] as const
+export const COURSE_MODALITIES = ['Presencial', 'Online', 'Híbrido'] as const
 
-export const MODALIDADE_PADRAO = 'Online'
+export const DEFAULT_MODALITY = 'Online'
 
 // Rotas públicas (sem autenticação)
 export const PUBLIC_ROUTES = ['/login', '/cadastro', '/'] as const
@@ -53,11 +53,11 @@ export const VALIDATION_RULES = {
     MIN_TITLE_LENGTH: 3,
     MIN_DESCRIPTION_LENGTH: 10,
   },
-  NOVO_CURSO: {
-    TITULO_MIN: 5,
-    TITULO_MAX: 120,
-    DESCRICAO_MIN: 30,
-    DESCRICAO_MAX: 600,
+  NEW_COURSE: {
+    TITLE_MIN: 5,
+    TITLE_MAX: 120,
+    DESCRIPTION_MIN: 30,
+    DESCRIPTION_MAX: 600,
     CARGA_MIN: 1,
     CARGA_MAX: 999,
   },

@@ -16,12 +16,12 @@ import { useTranslations } from 'next-intl'
 
 export const dynamic = 'error'
 
-export default function CadastroPage() {
+export default function SignupPage() {
   const t = useTranslations('auth')
-  const [nome, setNome] = useState('')
+  const [name, setName] = useState('')
   const [email, setEmail] = useState('')
-  const [senha, setSenha] = useState('')
-  const [confirmarSenha, setConfirmarSenha] = useState('')
+  const [password, setPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [loading, setLoading] = useState(false)
@@ -37,9 +37,9 @@ export default function CadastroPage() {
   const validate = () => {
     const newErrors: typeof errors = {}
 
-    if (!nome.trim()) {
+    if (!name.trim()) {
       newErrors.nome = t('validation.nameRequired')
-    } else if (nome.trim().length < 2) {
+    } else if (name.trim().length < 2) {
       newErrors.nome = t('validation.nameRequired')
     }
 
@@ -49,15 +49,15 @@ export default function CadastroPage() {
       newErrors.email = t('validation.emailInvalid')
     }
 
-    if (!senha) {
+    if (!password) {
       newErrors.senha = t('validation.passwordRequired')
-    } else if (senha.length < 8) {
+    } else if (password.length < 8) {
       newErrors.senha = t('validation.passwordMinLength')
     }
 
-    if (!confirmarSenha) {
+    if (!confirmPassword) {
       newErrors.confirmarSenha = t('validation.confirmPasswordRequired')
-    } else if (senha !== confirmarSenha) {
+    } else if (password !== confirmPassword) {
       newErrors.confirmarSenha = t('validation.passwordsNotMatch')
     }
 
@@ -74,8 +74,8 @@ export default function CadastroPage() {
 
     setLoading(true)
     try {
-      const nomeCompleto = nome.trim()
-      const usuario = email ? email.split('@')[0] : nome.trim().toLowerCase()
+      const fullName = name.trim()
+      const user = email ? email.split('@')[0] : name.trim().toLowerCase()
 
       const response = await fetch('/api/auth/cadastro', {
         method: 'POST',
@@ -83,9 +83,9 @@ export default function CadastroPage() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          nome: nomeCompleto,
-          usuario,
-          senha,
+          nome: fullName,
+          usuario: user,
+          senha: password,
         }),
       })
 
@@ -138,17 +138,17 @@ export default function CadastroPage() {
                     </>
                   }
                   htmlFor="cadastro-nome"
-                  erro={errors.nome}
-                  mostrarErro={!!errors.nome}
+                  error={errors.nome}
+                  showError={!!errors.nome}
                 >
                   <div className="relative">
                     <User className="absolute left-3.5 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4 pointer-events-none" />
                     <Input
                       id="cadastro-nome"
                       type="text"
-                      value={nome}
+                      value={name}
                       onChange={(e) => {
-                        setNome(e.target.value)
+                        setName(e.target.value)
                         if (errors.nome) {
                           setErrors({ ...errors, nome: undefined })
                         }
@@ -172,8 +172,8 @@ export default function CadastroPage() {
                     </>
                   }
                   htmlFor="cadastro-email"
-                  erro={errors.email}
-                  mostrarErro={!!errors.email}
+                  error={errors.email}
+                  showError={!!errors.email}
                 >
                   <div className="relative">
                     <Mail className="absolute left-3.5 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4 pointer-events-none" />
@@ -206,17 +206,17 @@ export default function CadastroPage() {
                     </>
                   }
                   htmlFor="cadastro-senha"
-                  erro={errors.senha}
-                  mostrarErro={!!errors.senha}
+                  error={errors.senha}
+                  showError={!!errors.senha}
                 >
                   <div className="relative">
                     <Lock className="absolute left-3.5 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4 pointer-events-none" />
                     <Input
                       id="cadastro-senha"
                       type={showPassword ? 'text' : 'password'}
-                      value={senha}
+                      value={password}
                       onChange={(e) => {
-                        setSenha(e.target.value)
+                        setPassword(e.target.value)
                         if (errors.senha) {
                           setErrors({ ...errors, senha: undefined })
                         }
@@ -240,7 +240,7 @@ export default function CadastroPage() {
                       {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                     </Button>
                   </div>
-                  <PasswordStrengthMeter password={senha} onChange={setPasswordScore} />
+                  <PasswordStrengthMeter password={password} onChange={setPasswordScore} />
                 </FormField>
 
                 {/* Campo Confirmar Senha */}
@@ -252,17 +252,17 @@ export default function CadastroPage() {
                     </>
                   }
                   htmlFor="cadastro-confirmar-senha"
-                  erro={errors.confirmarSenha}
-                  mostrarErro={!!errors.confirmarSenha}
+                  error={errors.confirmarSenha}
+                  showError={!!errors.confirmarSenha}
                 >
                   <div className="relative">
                     <Lock className="absolute left-3.5 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4 pointer-events-none" />
                     <Input
                       id="cadastro-confirmar-senha"
                       type={showConfirmPassword ? 'text' : 'password'}
-                      value={confirmarSenha}
+                      value={confirmPassword}
                       onChange={(e) => {
-                        setConfirmarSenha(e.target.value)
+                        setConfirmPassword(e.target.value)
                         if (errors.confirmarSenha) {
                           setErrors({ ...errors, confirmarSenha: undefined })
                         }

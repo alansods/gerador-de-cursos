@@ -4,8 +4,8 @@ import { ReactNode, useState, useEffect, useRef } from 'react'
 import { Info, TriangleAlert, Lightbulb, ChevronDown } from 'lucide-react'
 
 interface InfoBoxProps {
-  tipo: 'atencao' | 'saiba_mais' | 'info' | 'curiosidade'
-  titulo?: string
+  type: 'atencao' | 'saiba_mais' | 'info' | 'curiosidade'
+  title?: string
   children: ReactNode
   className?: string
 }
@@ -31,15 +31,15 @@ const tagMap = {
   curiosidade: 'Curiosidade',
 }
 
-export function InfoBox({ tipo, titulo, children, className = '' }: InfoBoxProps) {
+export function InfoBox({ type, title, children, className = '' }: InfoBoxProps) {
   const [isOpen, setIsOpen] = useState(false)
   const [hasAppeared, setHasAppeared] = useState(false)
   const infoboxRef = useRef<HTMLDivElement>(null)
 
-  const variant = variantMap[tipo]
-  const Icon = iconMap[tipo]
-  const tag = tagMap[tipo]
-  const isCollapsible = Boolean(titulo)
+  const variant = variantMap[type]
+  const Icon = iconMap[type]
+  const tag = tagMap[type]
+  const isCollapsible = Boolean(title)
 
   useEffect(() => {
     if (!infoboxRef.current) return
@@ -98,7 +98,7 @@ export function InfoBox({ tipo, titulo, children, className = '' }: InfoBoxProps
         {isCollapsible ? (
           <>
             <div className="infobox-head">
-              <h4>{titulo}</h4>
+              <h4>{title}</h4>
               <span className="infobox-chev">
                 <ChevronDown />
               </span>

@@ -1,49 +1,49 @@
 import fs from 'fs'
 import path from 'path'
 
-const RAIZ = path.join(process.cwd(), 'src')
-const DIRETORIOS = ['app', 'components']
+const ROOT = path.join(process.cwd(), 'src')
+const DIRECTORIES = ['app', 'components']
 
-function arquivosTsx(dir: string): string[] {
-  const entradas = fs.readdirSync(dir, { withFileTypes: true })
-  return entradas.flatMap((entrada) => {
-    const completo = path.join(dir, entrada.name)
-    if (entrada.isDirectory()) return arquivosTsx(completo)
-    return entrada.name.endsWith('.tsx') ? [completo] : []
+function tsxFiles(dir: string): string[] {
+  const entries = fs.readdirSync(dir, { withFileTypes: true })
+  return entries.flatMap((input) => {
+    const complete = path.join(dir, input.name)
+    if (input.isDirectory()) return tsxFiles(complete)
+    return input.name.endsWith('.tsx') ? [complete] : []
   })
 }
 
-const arquivos = DIRETORIOS.flatMap((d) => arquivosTsx(path.join(RAIZ, d)))
+const files = DIRECTORIES.flatMap((d) => tsxFiles(path.join(ROOT, d)))
 
-function ocorrencias(regex: RegExp, filtro: (linha: string) => boolean) {
-  const achados: string[] = []
-  for (const arquivo of arquivos) {
-    const linhas = fs.readFileSync(arquivo, 'utf8').split('\n')
-    linhas.forEach((linha, i) => {
-      if (regex.test(linha) && filtro(linha)) {
-        achados.push(`${path.relative(process.cwd(), arquivo)}:${i + 1} → ${linha.trim()}`)
+function occurrences(regex: RegExp, filter: (line: string) => boolean) {
+  const findings: string[] = []
+  for (const file of files) {
+    const lines = fs.readFileSync(file, 'utf8').split('\n')
+    lines.forEach((line, i) => {
+      if (regex.test(line) && filter(line)) {
+        findings.push(`${path.relative(process.cwd(), file)}:${i + 1} → ${line.trim()}`)
       }
     })
   }
-  return achados
+  return findings
 }
 
 describe('espaçamento entre label e campo', () => {
   it('nenhum <label> de campo define margem própria', () => {
-    const achados = ocorrencias(/<label\b/, (linha) => /\bmb-[0-9.]/.test(linha))
-    expect(achados).toEqual([])
+    const findings = occurrences(/<label\b/, (line) => /\bmb-[0-9.]/.test(line))
+    expect(findings).toEqual([])
   })
 
   it('nenhum <label> de campo usa cor hardcoded em vez de token semântico', () => {
-    const achados = ocorrencias(
+    const findings = occurrences(
       /<label\b/,
-      (linha) => /font-medium/.test(linha) && /text-gray-/.test(linha)
+      (line) => /font-medium/.test(line) && /text-gray-/.test(line)
     )
-    expect(achados).toEqual([])
+    expect(findings).toEqual([])
   })
 
   it('FormField mantém o gap de 8px entre label e campo', () => {
-    const fonte = fs.readFileSync(path.join(RAIZ, 'components/ui/form-field.tsx'), 'utf8')
-    expect(fonte).toContain("'flex flex-col gap-2'")
+    const source = fs.readFileSync(path.join(ROOT, 'components/ui/form-field.tsx'), 'utf8')
+    expect(source).toContain("'flex flex-col gap-2'")
   })
 })

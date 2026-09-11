@@ -6,7 +6,7 @@ export const dynamic = 'error'
 import { usePreview } from '@/hooks/usePreview'
 import { usePDF } from '@/hooks/usePDF'
 import { useSCORM } from '@/hooks/useSCORM'
-import { useCursosQuery, useDeletarCursoMutation } from '@/hooks/queries/useCursosQuery'
+import { useCoursesQuery, useDeleteCourseMutation } from '@/hooks/queries/useCoursesQuery'
 import { ExportModal } from '@/components/ExportModal'
 import { PageTransition } from '@/components/PageTransition'
 import { InfiniteScrollTrigger } from '@/components/InfiniteScrollTrigger'
@@ -36,9 +36,9 @@ import {
 } from '@/components/ui/select'
 import { FormField } from '@/components/ui/form-field'
 import { toast } from 'sonner'
-import type { CursoGerado } from '@/types/gerador-curso'
-import type { StatusCurso } from '@/lib/permissions'
-import { STATUS_CURSO, STATUS_CURSO_LABELS, STATUS_CURSO_CLASSES } from '@/lib/status-curso'
+import type { Course } from '@/types/course'
+import type { CourseStatus } from '@/lib/permissions'
+import { COURSE_STATUS, COURSE_STATUS_LABELS, COURSE_STATUS_CLASSES } from '@/lib/course-status'
 import {
   Dialog,
   DialogContent,
@@ -68,11 +68,11 @@ import { useRouter } from 'next/navigation'
 import { useDebounce } from '@/hooks/useDebounce'
 import { SearchInput } from '@/components/SearchInput'
 import { PageHeader } from '@/components/PageHeader'
-import { CATEGORIAS_CURSO, MODALIDADES_CURSO } from '@/lib/constants'
+import { COURSE_CATEGORIES, COURSE_MODALITIES } from '@/lib/constants'
 
-const CATEGORIES = ['Todas Categorias', ...CATEGORIAS_CURSO]
+const CATEGORIES = ['Todas Categorias', ...COURSE_CATEGORIES]
 
-const MODALIDADES = ['Todas Modalidades', ...MODALIDADES_CURSO]
+const MODALITIES = ['Todas Modalidades', ...COURSE_MODALITIES]
 
 const isNewCourse = (createdAt?: Date | string) => {
   if (!createdAt) return false
@@ -80,36 +80,36 @@ const isNewCourse = (createdAt?: Date | string) => {
   return diffInHours < 24
 }
 
-export default function CursosPage() {
-  const deletarCurso = useDeletarCursoMutation()
+export default function CoursesPage() {
+  const deleteCourse = useDeleteCourseMutation()
   const { openPreview } = usePreview()
   const { generatePDF, isGenerating: isGeneratingPDF } = usePDF()
   const { generateSCORM, isGeneratingSCORM } = useSCORM()
   const router = useRouter()
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(null)
-  const [isDeletingCurso, setIsDeletingCurso] = useState(false)
+  const [isDeletingCourse, setIsDeletingCourse] = useState(false)
   const [exportModalOpen, setExportModalOpen] = useState(false)
-  const [selectedCursoForExport, setSelectedCursoForExport] = useState<CursoGerado | null>(null)
-  const [acessosSolicitados, setAcessosSolicitados] = useState<Set<string>>(new Set())
+  const [selectedCourseForExport, setSelectedCourseForExport] = useState<Course | null>(null)
+  const [requestedAccesses, setRequestedAccesses] = useState<Set<string>>(new Set())
 
   // Estados de busca e filtros
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedCategory, setSelectedCategory] = useState<string>('Todas Categorias')
   const [selectedFormat, setSelectedFormat] = useState<string>('Todas Modalidades')
-  const [selectedStatus, setSelectedStatus] = useState<StatusCurso | 'todos'>('todos')
+  const [selectedStatus, setSelectedStatus] = useState<CourseStatus | 'todos'>('todos')
 
   // Debounce do searchTerm para evitar múltiplas requisições
   const debouncedSearchTerm = useDebounce(searchTerm, 500)
 
   const {
-    cursos: cursosPaginados,
+    courses: fetchedCourses,
     isLoading: loadingCourses,
     isLoadingMore,
     hasMore,
     total: totalCourses,
-    error: erroAoCarregar,
-    carregarMais,
-  } = useCursosQuery({
+    error: loadError,
+    loadMore,
+  } = useCoursesQuery({
     limit: 6,
     search: debouncedSearchTerm,
     category: selectedCategory !== 'Todas Categorias' ? selectedCategory : undefined,
@@ -118,7 +118,7 @@ export default function CursosPage() {
   })
 
   // Cursos exibidos
-  const paginatedCourses = cursosPaginados
+  const paginatedCourses = fetchedCourses
 
   // Verificar se há filtros ativos
   const hasActiveFilters =
@@ -135,9 +135,9 @@ export default function CursosPage() {
     setSelectedStatus('todos')
   }
 
-  const handleSolicitarAcesso = async (cursoId: string, titulo: string) => {
+  const handleRequestAccess = async (courseId: string, title: string) => {
     try {
-      const response = await fetch(`/api/cursos/${cursoId}/solicitacoes`, {
+      const response = await fetch(`/api/cursos/${courseId}/solicitacoes`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({}),
@@ -145,8 +145,8 @@ export default function CursosPage() {
       const data = await response.json()
 
       if (data.success) {
-        setAcessosSolicitados((prev) => new Set(prev).add(cursoId))
-        toast.success(`Acesso solicitado. O dono de "${titulo}" precisa aprovar.`)
+        setRequestedAccesses((prev) => new Set(prev).add(courseId))
+        toast.success(`Acesso solicitado. O dono de "${title}" precisa aprovar.`)
       } else {
         toast.error(data.error || 'Erro ao solicitar acesso')
       }
@@ -155,30 +155,30 @@ export default function CursosPage() {
     }
   }
 
-  const handleCriarCurso = () => router.push('/cursos/novo')
-  const handleEditarCurso = (id: string) => router.push(`/cursos/${id}/editar`)
-  const handlePreviewCurso = (id: string) => {
+  const handleCreateCourse = () => router.push('/cursos/novo')
+  const handleEditCourse = (id: string) => router.push(`/cursos/${id}/editar`)
+  const handlePreviewCourse = (id: string) => {
     // Buscar o curso nos cursos paginados atuais
-    const curso = cursosPaginados.find((c) => c.id === id)
-    if (curso) {
-      openPreview(curso)
+    const course = fetchedCourses.find((c) => c.id === id)
+    if (course) {
+      openPreview(course)
     } else {
       // Fallback: abrir preview diretamente
       window.open(`/cursos/${id}/preview`, '_blank')
     }
   }
-  const handleRevisarCurso = (curso: CursoGerado) => {
-    router.push(`/cursos/${curso.slug || curso.id}/preview?revisao=1`)
+  const handleReviewCourse = (course: Course) => {
+    router.push(`/cursos/${course.slug || course.id}/preview?revisao=1`)
   }
 
-  const handleOpenExportModal = (curso: CursoGerado) => {
-    setSelectedCursoForExport(curso)
+  const handleOpenExportModal = (course: Course) => {
+    setSelectedCourseForExport(course)
     setExportModalOpen(true)
   }
   const handleExportPDF = async (filename: string) => {
-    if (selectedCursoForExport) {
+    if (selectedCourseForExport) {
       try {
-        await generatePDF(selectedCursoForExport, filename)
+        await generatePDF(selectedCourseForExport, filename)
         setExportModalOpen(false)
       } catch (error) {
         console.error('Erro ao gerar PDF:', error)
@@ -186,7 +186,7 @@ export default function CursosPage() {
     }
   }
 
-  const showError = erroAoCarregar !== null && cursosPaginados.length === 0
+  const showError = loadError !== null && fetchedCourses.length === 0
 
   return (
     <PageTransition>
@@ -199,7 +199,7 @@ export default function CursosPage() {
             title="Gerenciar Cursos"
             description="Crie e gerencie seus cursos online"
             actionLabel="Novo Curso"
-            onAction={handleCriarCurso}
+            onAction={handleCreateCourse}
           />
 
           {showError && (
@@ -210,7 +210,7 @@ export default function CursosPage() {
                   <h3 className="text-base font-semibold text-foreground mb-2">
                     🔧 Configuração do Banco de Dados Necessária
                   </h3>
-                  <p className="text-sm text-muted-foreground mb-3">{erroAoCarregar?.message}</p>
+                  <p className="text-sm text-muted-foreground mb-3">{loadError?.message}</p>
                   <div className="bg-card rounded border border-border p-4 mb-3">
                     <p className="text-xs font-semibold text-foreground mb-2">
                       📋 Passos para configurar:
@@ -267,7 +267,7 @@ export default function CursosPage() {
               {/* Filtros em linha */}
               <div className="flex flex-col sm:flex-row gap-4">
                 {/* Filtro por Categoria */}
-                <FormField label="Categoria" compacto className="flex-1">
+                <FormField label="Categoria" compact className="flex-1">
                   {(props) => (
                     <Select value={selectedCategory} onValueChange={setSelectedCategory}>
                       <SelectTrigger id={props.id} className="w-full">
@@ -285,16 +285,16 @@ export default function CursosPage() {
                 </FormField>
 
                 {/* Filtro por Modalidade */}
-                <FormField label="Modalidade" compacto className="flex-1">
+                <FormField label="Modalidade" compact className="flex-1">
                   {(props) => (
                     <Select value={selectedFormat} onValueChange={setSelectedFormat}>
                       <SelectTrigger id={props.id} className="w-full">
                         <SelectValue placeholder="Modalidade" />
                       </SelectTrigger>
                       <SelectContent>
-                        {MODALIDADES.map((modalidade) => (
-                          <SelectItem key={modalidade} value={modalidade}>
-                            {modalidade}
+                        {MODALITIES.map((modality) => (
+                          <SelectItem key={modality} value={modality}>
+                            {modality}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -303,20 +303,20 @@ export default function CursosPage() {
                 </FormField>
 
                 {/* Filtro por Status */}
-                <FormField label="Status" compacto className="flex-1">
+                <FormField label="Status" compact className="flex-1">
                   {(props) => (
                     <Select
                       value={selectedStatus}
-                      onValueChange={(value) => setSelectedStatus(value as StatusCurso | 'todos')}
+                      onValueChange={(value) => setSelectedStatus(value as CourseStatus | 'todos')}
                     >
                       <SelectTrigger id={props.id} className="w-full">
                         <SelectValue placeholder="Status" />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="todos">Todos os status</SelectItem>
-                        {STATUS_CURSO.map((status) => (
+                        {COURSE_STATUS.map((status) => (
                           <SelectItem key={status} value={status}>
-                            {STATUS_CURSO_LABELS[status]}
+                            {COURSE_STATUS_LABELS[status]}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -374,7 +374,7 @@ export default function CursosPage() {
               </p>
               {!hasActiveFilters && (
                 <Button
-                  onClick={handleCriarCurso}
+                  onClick={handleCreateCourse}
                   className="bg-primary hover:bg-primary/90 text-primary-foreground"
                 >
                   <Plus className="h-5 w-5 mr-2" />
@@ -397,21 +397,21 @@ export default function CursosPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {paginatedCourses.map((curso) => {
-                    const permissoes = curso.permissoes
-                    const podeRevisar =
-                      permissoes?.podeComentar ||
-                      permissoes?.podeAprovar ||
-                      permissoes?.podeEnviarRevisao
-                    const acessoSolicitado =
-                      acessosSolicitados.has(curso.id) || (curso.solicitacaoPendente ?? false)
+                  {paginatedCourses.map((course) => {
+                    const permissions = course.permissoes
+                    const canReview =
+                      permissions?.podeComentar ||
+                      permissions?.podeAprovar ||
+                      permissions?.podeEnviarRevisao
+                    const accessRequested =
+                      requestedAccesses.has(course.id) || (course.solicitacaoPendente ?? false)
 
                     return (
-                      <TableRow key={curso.id}>
+                      <TableRow key={course.id}>
                         <TableCell>
                           <div className="flex items-center gap-2">
-                            <span className="font-medium text-foreground">{curso.titulo}</span>
-                            {isNewCourse(curso.dataCriacao) && (
+                            <span className="font-medium text-foreground">{course.titulo}</span>
+                            {isNewCourse(course.dataCriacao) && (
                               <Badge
                                 variant="secondary"
                                 className="bg-linear-to-r from-emerald-500 to-green-500 text-white border-0 gap-1"
@@ -422,24 +422,24 @@ export default function CursosPage() {
                             )}
                           </div>
                         </TableCell>
-                        <TableCell className="text-muted-foreground">{curso.categoria}</TableCell>
+                        <TableCell className="text-muted-foreground">{course.categoria}</TableCell>
                         <TableCell>
-                          {curso.status && (
+                          {course.status && (
                             <Badge
                               variant="secondary"
-                              className={`border-0 ${STATUS_CURSO_CLASSES[curso.status]}`}
+                              className={`border-0 ${COURSE_STATUS_CLASSES[course.status]}`}
                             >
-                              {STATUS_CURSO_LABELS[curso.status]}
+                              {COURSE_STATUS_LABELS[course.status]}
                             </Badge>
                           )}
                         </TableCell>
                         <TableCell className="text-muted-foreground">
-                          {curso.ownerNome || '—'}
+                          {course.ownerNome || '—'}
                         </TableCell>
                         <TableCell className="text-muted-foreground whitespace-nowrap">
-                          {curso.cargaHoraria}
+                          {course.cargaHoraria}
                         </TableCell>
-                        <TableCell className="text-muted-foreground">{curso.modalidade}</TableCell>
+                        <TableCell className="text-muted-foreground">{course.modalidade}</TableCell>
                         <TableCell className="text-right">
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
@@ -453,38 +453,38 @@ export default function CursosPage() {
                               </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end" className="w-52">
-                              <DropdownMenuItem onClick={() => handlePreviewCurso(curso.id)}>
+                              <DropdownMenuItem onClick={() => handlePreviewCourse(course.id)}>
                                 <Eye className="h-4 w-4" />
                                 Preview
                               </DropdownMenuItem>
 
-                              {podeRevisar && (
-                                <DropdownMenuItem onClick={() => handleRevisarCurso(curso)}>
+                              {canReview && (
+                                <DropdownMenuItem onClick={() => handleReviewCourse(course)}>
                                   <ClipboardCheck className="h-4 w-4" />
                                   Revisar
                                 </DropdownMenuItem>
                               )}
 
-                              {permissoes?.podeEditar && (
+                              {permissions?.podeEditar && (
                                 <DropdownMenuItem
-                                  onClick={() => handleEditarCurso(curso.slug || curso.id)}
+                                  onClick={() => handleEditCourse(course.slug || course.id)}
                                 >
                                   <Pencil className="h-4 w-4" />
                                   Editar
                                 </DropdownMenuItem>
                               )}
 
-                              <DropdownMenuItem onClick={() => handleOpenExportModal(curso)}>
+                              <DropdownMenuItem onClick={() => handleOpenExportModal(course)}>
                                 <Download className="h-4 w-4" />
                                 Exportar
                               </DropdownMenuItem>
 
-                              {permissoes?.podeSolicitarAcesso && (
+                              {permissions?.podeSolicitarAcesso && (
                                 <DropdownMenuItem
-                                  disabled={acessoSolicitado}
-                                  onClick={() => handleSolicitarAcesso(curso.id, curso.titulo)}
+                                  disabled={accessRequested}
+                                  onClick={() => handleRequestAccess(course.id, course.titulo)}
                                 >
-                                  {acessoSolicitado ? (
+                                  {accessRequested ? (
                                     <>
                                       <Clock3 className="h-4 w-4" />
                                       Aguardando acesso
@@ -498,12 +498,12 @@ export default function CursosPage() {
                                 </DropdownMenuItem>
                               )}
 
-                              {permissoes?.podeExcluir && (
+                              {permissions?.podeExcluir && (
                                 <>
                                   <DropdownMenuSeparator />
                                   <DropdownMenuItem
                                     className="text-destructive focus:text-destructive"
-                                    onClick={() => setShowDeleteConfirm(curso.id)}
+                                    onClick={() => setShowDeleteConfirm(course.id)}
                                   >
                                     <Trash2 className="h-4 w-4" />
                                     Excluir
@@ -521,7 +521,7 @@ export default function CursosPage() {
 
               {/* Infinite Scroll Trigger */}
               <InfiniteScrollTrigger
-                onLoadMore={carregarMais}
+                onLoadMore={loadMore}
                 isLoading={isLoadingMore}
                 hasMore={hasMore}
               />
@@ -543,7 +543,7 @@ export default function CursosPage() {
                 variant="outline"
                 onClick={() => setShowDeleteConfirm(null)}
                 className="w-full sm:w-auto"
-                disabled={isDeletingCurso}
+                disabled={isDeletingCourse}
               >
                 Cancelar
               </Button>
@@ -551,8 +551,8 @@ export default function CursosPage() {
                 onClick={async () => {
                   try {
                     if (showDeleteConfirm) {
-                      setIsDeletingCurso(true)
-                      await deletarCurso.mutateAsync(showDeleteConfirm)
+                      setIsDeletingCourse(true)
+                      await deleteCourse.mutateAsync(showDeleteConfirm)
 
                       toast.success('Curso excluído com sucesso')
                     }
@@ -562,15 +562,15 @@ export default function CursosPage() {
                       error instanceof Error ? error.message : 'Erro ao excluir curso'
                     toast.error(errorMessage)
                   } finally {
-                    setIsDeletingCurso(false)
+                    setIsDeletingCourse(false)
                     setShowDeleteConfirm(null)
                   }
                 }}
                 className="w-full sm:w-auto bg-destructive hover:bg-destructive/90 text-destructive-foreground gap-2"
-                disabled={isDeletingCurso}
+                disabled={isDeletingCourse}
               >
-                {isDeletingCurso && <Loader2 className="h-4 w-4 animate-spin" />}
-                {isDeletingCurso ? 'Excluindo...' : 'Excluir'}
+                {isDeletingCourse && <Loader2 className="h-4 w-4 animate-spin" />}
+                {isDeletingCourse ? 'Excluindo...' : 'Excluir'}
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -582,17 +582,17 @@ export default function CursosPage() {
           onClose={() => setExportModalOpen(false)}
           onExportPDF={handleExportPDF}
           onExportSCORM={async (filename) => {
-            if (selectedCursoForExport) {
+            if (selectedCourseForExport) {
               try {
-                await generateSCORM(selectedCursoForExport, filename)
+                await generateSCORM(selectedCourseForExport, filename)
                 setExportModalOpen(false)
               } catch (error) {
                 console.error('Erro ao gerar SCORM:', error)
               }
             }
           }}
-          courseName={selectedCursoForExport?.titulo || 'Curso'}
-          courseId={selectedCursoForExport?.id}
+          courseName={selectedCourseForExport?.titulo || 'Curso'}
+          courseId={selectedCourseForExport?.id}
           isGeneratingPDF={isGeneratingPDF}
           isGeneratingSCORM={isGeneratingSCORM}
         />

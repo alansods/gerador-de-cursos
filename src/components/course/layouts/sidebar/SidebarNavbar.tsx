@@ -5,25 +5,25 @@ import { Button } from '@/components/ui/button'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from '@/components/ui/sheet'
 import { Home, User, Moon, Sun, Menu, Check } from 'lucide-react'
-import type { CursoGerado } from '@/types/gerador-curso'
-import type { ResumoProgresso } from '@/lib/scorm-progress'
+import type { Course } from '@/types/course'
+import type { ProgressSummary } from '@/lib/scorm-progress'
 import { useLMS } from '@/hooks/useLMS'
 import { useTheme } from '@/hooks/useTheme'
 
 interface SidebarNavbarProps {
-  curso: CursoGerado
-  currentUnidadeId?: string
+  course: Course
+  currentUnitId?: string
   onNavigate: (unitId: string | null) => void
-  progresso: ResumoProgresso
-  concluidas?: boolean[]
+  progress: ProgressSummary
+  completedUnits?: boolean[]
 }
 
 export function SidebarNavbar({
-  curso,
-  currentUnidadeId,
+  course,
+  currentUnitId,
   onNavigate,
-  progresso,
-  concluidas,
+  progress,
+  completedUnits,
 }: SidebarNavbarProps) {
   const { learnerName } = useLMS()
   const { isDarkMode, toggleDarkMode } = useTheme()
@@ -38,10 +38,10 @@ export function SidebarNavbar({
     <>
       <div className="px-2 pb-5">
         <h2 className="text-sm font-extrabold tracking-tight text-gray-900 dark:text-gray-50 line-clamp-2">
-          {curso.titulo}
+          {course.titulo}
         </h2>
         <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-          Curso · {curso.unidades.length} unidade{curso.unidades.length === 1 ? '' : 's'}
+          Curso · {course.unidades.length} unidade{course.unidades.length === 1 ? '' : 's'}
         </p>
 
         <div className="mt-3.5 flex flex-col gap-1">
@@ -49,20 +49,20 @@ export function SidebarNavbar({
             <span className="text-gray-500 dark:text-gray-400">Progresso</span>
             <span
               className={`font-semibold ${
-                progresso.percentual >= 100
+                progress.percentage >= 100
                   ? 'text-green-600 dark:text-green-400'
                   : 'text-violet-600 dark:text-violet-400'
               }`}
             >
-              {progresso.percentual}%
+              {progress.percentage}%
             </span>
           </div>
           <div className="h-1.5 w-full overflow-hidden rounded-full bg-gray-100 dark:bg-white/10">
             <div
               className={`h-full rounded-full transition-all duration-500 ${
-                progresso.percentual >= 100 ? 'bg-green-600' : 'bg-violet-600'
+                progress.percentage >= 100 ? 'bg-green-600' : 'bg-violet-600'
               }`}
-              style={{ width: `${progresso.percentual}%` }}
+              style={{ width: `${progress.percentage}%` }}
             />
           </div>
         </div>
@@ -76,7 +76,7 @@ export function SidebarNavbar({
           type="button"
           onClick={() => handleNavigate(null)}
           className={`flex items-center gap-2.5 px-2.5 py-2.5 rounded-lg text-sm font-semibold text-left transition-colors ${
-            !currentUnidadeId
+            !currentUnitId
               ? 'bg-violet-50 dark:bg-violet-950/40 text-violet-600 dark:text-violet-400'
               : 'text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/5'
           }`}
@@ -90,35 +90,35 @@ export function SidebarNavbar({
         Unidades
       </p>
       <nav className="flex flex-col gap-0.5">
-        {curso.unidades.map((unidade, index) => {
-          const isActive = unidade.id === currentUnidadeId
-          const concluida = concluidas?.[index] ?? false
+        {course.unidades.map((unit, index) => {
+          const isActive = unit.id === currentUnitId
+          const completed = completedUnits?.[index] ?? false
 
-          const estiloItem = isActive
+          const itemStyle = isActive
             ? 'bg-violet-50 dark:bg-violet-950/40 text-violet-600 dark:text-violet-400'
-            : concluida
+            : completed
               ? 'text-green-700 dark:text-green-400 hover:bg-gray-50 dark:hover:bg-white/5'
               : 'text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/5'
 
-          const estiloMarcador = isActive
+          const markerStyle = isActive
             ? 'bg-violet-600 text-white'
-            : concluida
+            : completed
               ? 'bg-green-50 dark:bg-green-950/40 text-green-600 dark:text-green-400'
               : 'bg-gray-100 dark:bg-white/10 text-gray-400 dark:text-gray-400'
 
           return (
             <button
-              key={unidade.id}
+              key={unit.id}
               type="button"
-              onClick={() => handleNavigate(unidade.id)}
-              className={`flex items-center gap-2.5 px-2.5 py-2.5 rounded-lg text-sm font-semibold text-left transition-colors ${estiloItem}`}
+              onClick={() => handleNavigate(unit.id)}
+              className={`flex items-center gap-2.5 px-2.5 py-2.5 rounded-lg text-sm font-semibold text-left transition-colors ${itemStyle}`}
             >
               <span
-                className={`flex items-center justify-center w-[22px] h-[22px] rounded-full text-[11px] font-extrabold shrink-0 ${estiloMarcador}`}
+                className={`flex items-center justify-center w-[22px] h-[22px] rounded-full text-[11px] font-extrabold shrink-0 ${markerStyle}`}
               >
-                {concluida && !isActive ? <Check className="w-3 h-3" strokeWidth={3} /> : index + 1}
+                {completed && !isActive ? <Check className="w-3 h-3" strokeWidth={3} /> : index + 1}
               </span>
-              <span className="line-clamp-2">{unidade.titulo}</span>
+              <span className="line-clamp-2">{unit.titulo}</span>
             </button>
           )
         })}

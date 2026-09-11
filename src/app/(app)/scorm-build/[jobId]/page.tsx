@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Loader2, Download, AlertCircle, CheckCircle2, XCircle } from 'lucide-react'
 import { toast } from 'sonner'
-import { useCancelarJobMutation, useScormJobStatusQuery } from '@/hooks/queries/useScormJobsQuery'
+import { useCancelJobMutation, useScormJobStatusQuery } from '@/hooks/queries/useScormJobsQuery'
 
 export default function SCORMBuildPage() {
   const params = useParams()
@@ -15,7 +15,7 @@ export default function SCORMBuildPage() {
 
   const [downloading, setDownloading] = useState(false)
   const { jobStatus, isLoading: loading } = useScormJobStatusQuery(jobId)
-  const cancelar = useCancelarJobMutation()
+  const cancel = useCancelJobMutation()
 
   // Download do arquivo
   const handleDownload = async () => {
@@ -47,7 +47,7 @@ export default function SCORMBuildPage() {
     if (!confirm('Deseja realmente cancelar este build?')) return
 
     try {
-      await cancelar.mutateAsync(jobId)
+      await cancel.mutateAsync(jobId)
       toast.success('Build cancelado')
       router.push('/scorm-jobs')
     } catch (error) {

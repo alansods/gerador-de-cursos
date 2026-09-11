@@ -7,110 +7,110 @@ import { useRouter } from 'next/navigation'
 import { ArrowLeft } from 'lucide-react'
 import { toast } from 'sonner'
 import { PageTransition } from '@/components/PageTransition'
-import { NovoCursoWizard } from '@/components/course/novo/NovoCursoWizard'
-import { useNovoCursoWizard } from '@/components/course/novo/useNovoCursoWizard'
-import { useGeradorCurso } from '@/context/GeradorCursoContext'
-import { NOME_ARQUIVO_EXEMPLO } from '@/lib/documento-exemplo'
-import { detectarMarcadores } from '@/lib/marcadores'
-import { criarCursoPorIA, extrairDocumento, baixarDocumentoExemplo } from './actions'
+import { NewCourseWizard } from '@/components/course/new/NewCourseWizard'
+import { useNewCourseWizard } from '@/components/course/new/useNewCourseWizard'
+import { useCourseEditor } from '@/context/CourseEditorContext'
+import { SAMPLE_FILE_NAME } from '@/lib/sample-document'
+import { detectMarkers } from '@/lib/markers'
+import { createCourseWithAi, extractDocument, downloadSampleDocument } from './actions'
 
-export default function NovoCursoPage() {
+export default function NewCoursePage() {
   const router = useRouter()
-  const { criarCurso } = useGeradorCurso()
-  const wizard = useNovoCursoWizard()
-  const [extraindo, setExtraindo] = useState(false)
-  const [cursoCriadoId, setCursoCriadoId] = useState('')
+  const { createCourse } = useCourseEditor()
+  const wizard = useNewCourseWizard()
+  const [extracting, setExtracting] = useState(false)
+  const [createdCourseId, setCreatedCourseId] = useState('')
 
-  const { arquivo, setMarcadores, setTextoExtraido, setErroDocumento } = wizard
+  const { file, setMarkers, setExtractedText, setDocumentError } = wizard
 
   useEffect(() => {
-    if (!arquivo) return
+    if (!file) return
 
-    let cancelado = false
-    setExtraindo(true)
+    let cancelled = false
+    setExtracting(true)
 
-    extrairDocumento(arquivo)
-      .then(({ text, marcadores }) => {
-        if (cancelado) return
-        setTextoExtraido(text)
-        setMarcadores(marcadores ?? detectarMarcadores(text))
+    extractDocument(file)
+      .then(({ text, markers }) => {
+        if (cancelled) return
+        setExtractedText(text)
+        setMarkers(markers ?? detectMarkers(text))
       })
-      .catch((erro: Error) => {
-        if (cancelado) return
-        setErroDocumento(erro.message)
+      .catch((error: Error) => {
+        if (cancelled) return
+        setDocumentError(error.message)
       })
       .finally(() => {
-        if (!cancelado) setExtraindo(false)
+        if (!cancelled) setExtracting(false)
       })
 
     return () => {
-      cancelado = true
+      cancelled = true
     }
-  }, [arquivo, setMarcadores, setTextoExtraido, setErroDocumento])
+  }, [file, setMarkers, setExtractedText, setDocumentError])
 
-  const concluir = useCallback(async () => {
-    if (!wizard.avancar()) return
+  const finish = useCallback(async () => {
+    if (!wizard.advance()) return
 
-    wizard.setErroGeracao('')
-    wizard.setFase('criando')
-    wizard.setProgresso(12)
-    wizard.setTarefaAtual(0)
+    wizard.setGenerationError('')
+    wizard.setPhase('criando')
+    wizard.setProgress(12)
+    wizard.setCurrentTask(0)
 
     try {
-      const id = wizard.ehIa ? await gerarPorIA() : await salvarManual()
+      const id = wizard.isAi ? await generateWithAi() : await saveManual()
 
-      setCursoCriadoId(id)
-      wizard.setProgresso(100)
-      wizard.setFase('concluido')
-      wizard.limparRascunho()
+      setCreatedCourseId(id)
+      wizard.setProgress(100)
+      wizard.setPhase('concluido')
+      wizard.clearDraft()
       toast.success('Curso criado')
-    } catch (erro) {
-      const mensagem = erro instanceof Error ? erro.message : 'Erro ao criar curso'
-      wizard.setFase('form')
-      wizard.setProgresso(0)
-      wizard.setTarefaAtual(0)
-      wizard.setErroGeracao(mensagem)
-      wizard.irPara(2)
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Erro ao criar curso'
+      wizard.setPhase('form')
+      wizard.setProgress(0)
+      wizard.setCurrentTask(0)
+      wizard.setGenerationError(message)
+      wizard.goTo(2)
       toast.error('Erro ao criar curso')
     }
 
-    async function salvarManual() {
-      wizard.setTarefaAtual(1)
-      wizard.setProgresso(55)
-      const id = await criarCurso(wizard.dadosParaSalvar())
-      wizard.setTarefaAtual(2)
-      wizard.setProgresso(85)
+    async function saveManual() {
+      wizard.setCurrentTask(1)
+      wizard.setProgress(55)
+      const id = await createCourse(wizard.dataToSave())
+      wizard.setCurrentTask(2)
+      wizard.setProgress(85)
       return id
     }
 
-    async function gerarPorIA() {
-      let texto = wizard.textoExtraido
+    async function generateWithAi() {
+      let text = wizard.extractedText
 
-      if (!texto && wizard.arquivo) {
-        const extraido = await extrairDocumento(wizard.arquivo)
-        texto = extraido.text
+      if (!text && wizard.file) {
+        const extracted = await extractDocument(wizard.file)
+        text = extracted.text
       }
 
-      if (!texto) throw new Error('Não foi possível ler o documento enviado')
+      if (!text) throw new Error('Não foi possível ler o documento enviado')
 
-      wizard.setTarefaAtual(1)
-      wizard.setProgresso(45)
+      wizard.setCurrentTask(1)
+      wizard.setProgress(45)
 
-      const { course, resumo } = await criarCursoPorIA(texto)
+      const { course, summary } = await createCourseWithAi(text)
 
-      wizard.setResumo(resumo)
-      wizard.setTarefaAtual(2)
-      wizard.setProgresso(80)
+      wizard.setSummary(summary)
+      wizard.setCurrentTask(2)
+      wizard.setProgress(80)
 
-      return criarCurso({ ...course, layout: wizard.estado.layout })
+      return createCourse({ ...course, layout: wizard.state.layout })
     }
-  }, [criarCurso, router, wizard])
+  }, [createCourse, router, wizard])
 
-  const baixarExemplo = useCallback(async () => {
+  const downloadSample = useCallback(async () => {
     try {
-      await baixarDocumentoExemplo()
+      await downloadSampleDocument()
     } catch {
-      toast.error(`Erro ao baixar ${NOME_ARQUIVO_EXEMPLO}`)
+      toast.error(`Erro ao baixar ${SAMPLE_FILE_NAME}`)
     }
   }, [])
 
@@ -135,15 +135,15 @@ export default function NovoCursoPage() {
             </div>
           </div>
 
-          <NovoCursoWizard
+          <NewCourseWizard
             wizard={wizard}
-            extraindo={extraindo}
-            tituloCursoCriado={wizard.estado.dados.titulo || 'Seu curso'}
-            onCancelar={() => router.push('/cursos')}
-            onConcluir={concluir}
-            onBaixarExemplo={baixarExemplo}
-            onAbrirEditor={() =>
-              router.push(cursoCriadoId ? `/cursos/${cursoCriadoId}/editar` : '/cursos')
+            extracting={extracting}
+            createdCourseTitle={wizard.state.dados.titulo || 'Seu curso'}
+            onCancel={() => router.push('/cursos')}
+            onFinish={finish}
+            onDownloadSample={downloadSample}
+            onOpenEditor={() =>
+              router.push(createdCourseId ? `/cursos/${createdCourseId}/editar` : '/cursos')
             }
           />
         </div>

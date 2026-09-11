@@ -1,15 +1,15 @@
 import { FlipCard } from '@/components/flipcard'
-import { cardsFlipcard } from '@/lib/blocos'
-import { ConteudoUnidade } from '@/types/gerador-curso'
+import { cardsFlipcard } from '@/lib/blocks'
+import { Block } from '@/types/course'
 
-const COLUNAS_DA_GRADE: Record<number, string> = {
+const GRID_COLUMNS: Record<number, string> = {
   1: 'grid-cols-1',
   2: 'grid-cols-1 sm:grid-cols-2',
   3: 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3',
   4: 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4',
 }
 
-export function FlipCardBlock({ item }: { item: ConteudoUnidade }) {
+export function FlipCardBlock({ item }: { item: Block }) {
   const cards = cardsFlipcard(item)
 
   if (cards.length === 0) {
@@ -20,19 +20,19 @@ export function FlipCardBlock({ item }: { item: ConteudoUnidade }) {
     )
   }
 
-  const colunas = COLUNAS_DA_GRADE[Math.min(cards.length, 4)]
+  const columns = GRID_COLUMNS[Math.min(cards.length, 4)]
 
   return (
-    <div className={`mb-4 grid gap-4 ${colunas}`}>
-      {cards.map((card, indice) => (
+    <div className={`mb-4 grid gap-4 ${columns}`}>
+      {cards.map((card, index) => (
         <FlipCard
           key={card.id}
-          indice={indice + 1}
-          tipoFrente={card.tipoFrente}
-          imagemFrente={card.imagemFrente}
-          tituloFrente={card.tituloFrente}
-          conteudoVerso={card.conteudoVerso}
-          alturaCard={item.alturaCard}
+          index={index + 1}
+          frontType={card.tipoFrente}
+          frontImage={card.imagemFrente}
+          frontTitle={card.tituloFrente}
+          backContent={card.conteudoVerso}
+          cardHeight={item.alturaCard}
         />
       ))}
     </div>

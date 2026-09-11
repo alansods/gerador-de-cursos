@@ -7,10 +7,10 @@ import { JWT_SECRET } from '@/lib/auth'
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { email, senha } = body
+    const { email, senha: password } = body
 
     // Validação
-    if (!email || !senha) {
+    if (!email || !password) {
       return NextResponse.json(
         { success: false, error: 'E-mail e senha são obrigatórios' },
         { status: 400 }
@@ -28,7 +28,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Verificar senha
-    const isPasswordValid = await bcrypt.compare(senha, user.senha)
+    const isPasswordValid = await bcrypt.compare(password, user.senha)
 
     if (!isPasswordValid) {
       return NextResponse.json({ success: false, error: 'Credenciais inválidas' }, { status: 401 })

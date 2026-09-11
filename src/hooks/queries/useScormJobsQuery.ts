@@ -1,7 +1,7 @@
 'use client'
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { chaves, type FiltrosDeScormJobs } from '@/lib/query-keys'
+import { queryKeys, type ScormJobFilters } from '@/lib/query-keys'
 
 export interface SCORMJob {
   id: string
@@ -14,30 +14,30 @@ export interface SCORMJob {
   completedAt?: string
 }
 
-export interface PaginacaoDeJobs {
+export interface JobPagination {
   page: number
   limit: number
   total: number
   totalPages: number
 }
 
-interface RespostaDeJobs {
+interface JobsResponse {
   jobs: SCORMJob[]
-  pagination: PaginacaoDeJobs
+  pagination: JobPagination
 }
 
-export const INTERVALO_POLLING_LISTA = 5_000
-export const INTERVALO_POLLING_JOB = 2_000
+export const LIST_POLLING_INTERVAL = 5_000
+export const JOB_POLLING_INTERVAL = 2_000
 
-const jobTerminou = (status?: SCORMJob['status']) => status === 'completed' || status === 'failed'
+const jobFinished = (status?: SCORMJob['status']) => status === 'completed' || status === 'failed'
 
-export function useScormJobsQuery(filtros: FiltrosDeScormJobs) {
+export function useScormJobsQuery(filters: ScormJobFilters) {
   const query = useQuery({
-    queryKey: chaves.scormJobs.lista(filtros),
-    queryFn: async (): Promise<RespostaDeJobs> => {
+    queryKey: queryKeys.scormJobs.list(filters),
+    queryFn: async (): Promise<JobsResponse> => {
       const params = new URLSearchParams({
-        page: String(filtros.page),
-        limit: String(filtros.limit),
+        page: String(filters.page),
+        limit: String(filters.limit),
       })
 
       const response = await fetch(`/api/scorm-jobs?${params}`)
@@ -46,16 +46,16 @@ export function useScormJobsQuery(filtros: FiltrosDeScormJobs) {
       const data = await response.json()
       return { jobs: data.jobs ?? [], pagination: data.pagination }
     },
-    refetchInterval: INTERVALO_POLLING_LISTA,
+    refetchInterval: LIST_POLLING_INTERVAL,
     refetchIntervalInBackground: false,
-    placeholderData: (anterior) => anterior,
+    placeholderData: (previous) => previous,
   })
 
   return {
     jobs: query.data?.jobs ?? [],
     pagination: query.data?.pagination ?? {
-      page: filtros.page,
-      limit: filtros.limit,
+      page: filters.page,
+      limit: filters.limit,
       total: 0,
       totalPages: 0,
     },
@@ -65,7 +65,7 @@ export function useScormJobsQuery(filtros: FiltrosDeScormJobs) {
 
 export function useScormJobStatusQuery(jobId: string) {
   const query = useQuery({
-    queryKey: chaves.scormJobs.detalhe(jobId),
+    queryKey: queryKeys.scormJobs.detail(jobId),
     queryFn: async (): Promise<SCORMJob> => {
       const response = await fetch(`/api/scorm-status/${jobId}`)
       if (!response.ok) throw new Error('Erro ao buscar status')
@@ -75,7 +75,7 @@ export function useScormJobStatusQuery(jobId: string) {
     enabled: Boolean(jobId),
     // um job terminado não muda mais: o polling se desliga sozinho
     refetchInterval: ({ state }) =>
-      jobTerminou(state.data?.status) ? false : INTERVALO_POLLING_JOB,
+      jobFinished(state.data?.status) ? false : JOB_POLLING_INTERVAL,
     refetchIntervalInBackground: false,
   })
 
@@ -85,14 +85,14 @@ export function useScormJobStatusQuery(jobId: string) {
   }
 }
 
-function useInvalidarJobs() {
+function useInvalidateJobs() {
   const queryClient = useQueryClient()
 
-  return () => queryClient.invalidateQueries({ queryKey: chaves.scormJobs.todos })
+  return () => queryClient.invalidateQueries({ queryKey: queryKeys.scormJobs.all })
 }
 
-export function useCancelarJobMutation() {
-  const invalidarJobs = useInvalidarJobs()
+export function useCancelJobMutation() {
+  const invalidateJobs = useInvalidateJobs()
 
   return useMutation({
     mutationFn: async (jobId: string) => {
@@ -103,47 +103,47 @@ export function useCancelarJobMutation() {
       })
 
       if (!response.ok) {
-        const erro = await response.json()
-        throw new Error(erro.error || 'Erro ao cancelar build')
+        const error = await response.json()
+        throw new Error(error.error || 'Erro ao cancelar build')
       }
     },
-    onSuccess: invalidarJobs,
+    onSuccess: invalidateJobs,
   })
 }
 
-export function useDeletarJobMutation() {
-  const invalidarJobs = useInvalidarJobs()
+export function useDeleteJobMutation() {
+  const invalidateJobs = useInvalidateJobs()
 
   return useMutation({
     mutationFn: async (jobId: string) => {
       const response = await fetch(`/api/scorm-jobs/${jobId}`, { method: 'DELETE' })
 
       if (!response.ok) {
-        const erro = await response.json()
-        throw new Error(erro.error || 'Erro ao apagar item')
+        const error = await response.json()
+        throw new Error(error.error || 'Erro ao apagar item')
       }
     },
-    onSuccess: invalidarJobs,
+    onSuccess: invalidateJobs,
   })
 }
 
-export function useReiniciarBuildMutation() {
+export function useRestartBuildMutation() {
   return useMutation({
-    mutationFn: async (cursoId: string): Promise<string> => {
-      const cursoResponse = await fetch(`/api/cursos/${cursoId}`)
-      if (!cursoResponse.ok) throw new Error('Curso não encontrado')
+    mutationFn: async (courseId: string): Promise<string> => {
+      const courseResponse = await fetch(`/api/cursos/${courseId}`)
+      if (!courseResponse.ok) throw new Error('Curso não encontrado')
 
-      const curso = await cursoResponse.json()
+      const course = await courseResponse.json()
 
       const buildResponse = await fetch('/api/generate-scorm-v2', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ curso }),
+        body: JSON.stringify({ curso: course }),
       })
 
       if (!buildResponse.ok) {
-        const erro = await buildResponse.json()
-        throw new Error(erro.error || 'Erro ao iniciar build')
+        const error = await buildResponse.json()
+        throw new Error(error.error || 'Erro ao iniciar build')
       }
 
       const { jobId } = await buildResponse.json()

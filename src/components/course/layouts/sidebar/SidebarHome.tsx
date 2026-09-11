@@ -1,39 +1,39 @@
 import React from 'react'
 import { Badge } from '@/components/ui/badge'
 import { Clock, GraduationCap, Layers, ArrowRight, Check } from 'lucide-react'
-import type { CursoGerado } from '@/types/gerador-curso'
+import type { Course } from '@/types/course'
 
 interface SidebarHomeProps {
-  curso: CursoGerado
+  course: Course
   onNavigate: (unitId: string) => void
-  concluidas?: boolean[]
+  completedUnits?: boolean[]
 }
 
-export function SidebarHome({ curso, onNavigate, concluidas }: SidebarHomeProps) {
+export function SidebarHome({ course, onNavigate, completedUnits }: SidebarHomeProps) {
   return (
     <div className="flex-1">
       <section className="px-7 lg:px-14 pt-7 lg:pt-14 pb-10 border-b border-[#e6e4f0] dark:border-[#2c2839] bg-gradient-to-br from-violet-50 dark:from-violet-950/20 to-transparent">
         <Badge className="mb-4 bg-white dark:bg-[#1a1725] border border-violet-200 dark:border-violet-900 text-violet-600 dark:text-violet-400 hover:bg-white dark:hover:bg-[#1a1725]">
-          {curso.categoria}
+          {course.categoria}
         </Badge>
         <h1 className="text-4xl font-extrabold tracking-tight text-gray-900 dark:text-gray-50 max-w-2xl mb-3">
-          {curso.titulo}
+          {course.titulo}
         </h1>
         <p className="text-base text-gray-600 dark:text-gray-300 max-w-xl leading-relaxed mb-6">
-          {curso.descricao}
+          {course.descricao}
         </p>
         <div className="flex flex-wrap gap-7">
           <div className="flex items-center gap-2 text-sm font-bold text-gray-900 dark:text-gray-100">
             <Clock className="w-[17px] h-[17px] text-violet-600 dark:text-violet-400" />
-            {curso.cargaHoraria}
+            {course.cargaHoraria}
           </div>
           <div className="flex items-center gap-2 text-sm font-bold text-gray-900 dark:text-gray-100">
             <GraduationCap className="w-[17px] h-[17px] text-violet-600 dark:text-violet-400" />
-            {curso.modalidade}
+            {course.modalidade}
           </div>
           <div className="flex items-center gap-2 text-sm font-bold text-gray-900 dark:text-gray-100">
             <Layers className="w-[17px] h-[17px] text-violet-600 dark:text-violet-400" />
-            {curso.unidades.length} unidade{curso.unidades.length === 1 ? '' : 's'}
+            {course.unidades.length} unidade{course.unidades.length === 1 ? '' : 's'}
           </div>
         </div>
       </section>
@@ -43,22 +43,22 @@ export function SidebarHome({ curso, onNavigate, concluidas }: SidebarHomeProps)
           Unidades do curso
         </h2>
 
-        {curso.unidades.length === 0 ? (
+        {course.unidades.length === 0 ? (
           <p className="text-sm text-gray-500 dark:text-gray-400 py-8 text-center">
             Nenhuma unidade criada ainda.
           </p>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {curso.unidades.map((unidade, index) => {
-              const concluida = concluidas?.[index] ?? false
+            {course.unidades.map((unit, index) => {
+              const completed = completedUnits?.[index] ?? false
 
               return (
                 <button
-                  key={unidade.id}
+                  key={unit.id}
                   type="button"
-                  onClick={() => onNavigate(unidade.id)}
+                  onClick={() => onNavigate(unit.id)}
                   className={`flex flex-col gap-3.5 text-left rounded-[18px] border border-[#e6e4f0] dark:border-[#2c2839] bg-white dark:bg-[#1a1725] p-5 shadow-[0_1px_2px_rgba(28,24,48,.04),0_8px_24px_-12px_rgba(28,24,48,.10)] transition-colors ${
-                    concluida
+                    completed
                       ? 'hover:border-green-300 dark:hover:border-green-700'
                       : 'hover:border-violet-300 dark:hover:border-violet-700'
                   }`}
@@ -66,14 +66,14 @@ export function SidebarHome({ curso, onNavigate, concluidas }: SidebarHomeProps)
                   <div className="flex items-center gap-2">
                     <div
                       className={`flex items-center justify-center w-[38px] h-[38px] rounded-[10px] text-sm font-extrabold ${
-                        concluida
+                        completed
                           ? 'bg-green-50 dark:bg-green-950/40 text-green-600 dark:text-green-400'
                           : 'bg-violet-50 dark:bg-violet-950/40 text-violet-600 dark:text-violet-400'
                       }`}
                     >
                       {index + 1}
                     </div>
-                    {concluida && (
+                    {completed && (
                       <span className="inline-flex items-center gap-1 rounded-full bg-green-50 dark:bg-green-950/40 px-2 py-0.5 text-[11px] font-bold text-green-600 dark:text-green-400">
                         <Check className="w-3 h-3" strokeWidth={3} />
                         Concluída
@@ -81,19 +81,19 @@ export function SidebarHome({ curso, onNavigate, concluidas }: SidebarHomeProps)
                     )}
                   </div>
                   <h3 className="text-base font-bold text-gray-900 dark:text-gray-50 leading-snug">
-                    {unidade.titulo}
+                    {unit.titulo}
                   </h3>
                   <p className="text-[13px] text-gray-500 dark:text-gray-400 leading-relaxed flex-1">
-                    {unidade.descricao}
+                    {unit.descricao}
                   </p>
                   <span
                     className={`flex items-center gap-1.5 text-[13px] font-bold ${
-                      concluida
+                      completed
                         ? 'text-green-600 dark:text-green-400'
                         : 'text-violet-600 dark:text-violet-400'
                     }`}
                   >
-                    {concluida ? 'Revisar unidade' : 'Iniciar unidade'}
+                    {completed ? 'Revisar unidade' : 'Iniciar unidade'}
                     <ArrowRight className="w-[15px] h-[15px]" />
                   </span>
                 </button>

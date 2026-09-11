@@ -4,9 +4,9 @@ import { requireAuth, createErrorResponse, createSuccessResponse } from '@/lib/a
 import { can } from '@/lib/permissions'
 import { logActivity } from '@/lib/activity-logger'
 
-const TAMANHO_MAXIMO = 2000
+const MAX_SIZE = 2000
 
-const autorSelecionado = { select: { id: true, nome: true, email: true, role: true } }
+const selectedAuthor = { select: { id: true, nome: true, email: true, role: true } }
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const authResult = await requireAuth(req)
@@ -18,14 +18,14 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   try {
     const { id } = await params
 
-    const comentarios = await prisma.cursoComentario.findMany({
+    const comments = await prisma.cursoComentario.findMany({
       where: { cursoId: id },
       orderBy: { createdAt: 'asc' },
-      include: { autor: autorSelecionado },
+      include: { autor: selectedAuthor },
     })
 
     return createSuccessResponse({
-      comentarios: comentarios.map((c) => ({
+      comentarios: comments.map((c) => ({
         id: c.id,
         texto: c.texto,
         createdAt: c.createdAt,
@@ -54,34 +54,31 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     }
 
     const body = await req.json()
-    const texto = typeof body.texto === 'string' ? body.texto.trim() : ''
+    const text = typeof body.texto === 'string' ? body.texto.trim() : ''
 
-    if (!texto) {
+    if (!text) {
       return createErrorResponse('O comentário não pode ficar vazio', 400)
     }
 
-    if (texto.length > TAMANHO_MAXIMO) {
-      return createErrorResponse(
-        `O comentário deve ter no máximo ${TAMANHO_MAXIMO} caracteres`,
-        400
-      )
+    if (text.length > MAX_SIZE) {
+      return createErrorResponse(`O comentário deve ter no máximo ${MAX_SIZE} caracteres`, 400)
     }
 
-    const curso = await prisma.curso.findUnique({ where: { id }, select: { titulo: true } })
+    const course = await prisma.curso.findUnique({ where: { id }, select: { titulo: true } })
 
-    if (!curso) {
+    if (!course) {
       return createErrorResponse('Curso não encontrado', 404)
     }
 
-    const comentario = await prisma.cursoComentario.create({
-      data: { cursoId: id, autorId: authResult.user.id, texto },
-      include: { autor: autorSelecionado },
+    const comment = await prisma.cursoComentario.create({
+      data: { cursoId: id, autorId: authResult.user.id, texto: text },
+      include: { autor: selectedAuthor },
     })
 
     await logActivity({
       tipo: 'curso_comentado',
       titulo: 'Comentário em curso',
-      descricao: curso.titulo,
+      descricao: course.titulo,
       entityId: id,
       entityType: 'curso',
       userId: authResult.user.id,
@@ -90,10 +87,10 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     return createSuccessResponse(
       {
         comentario: {
-          id: comentario.id,
-          texto: comentario.texto,
-          createdAt: comentario.createdAt,
-          autor: comentario.autor,
+          id: comment.id,
+          texto: comment.texto,
+          createdAt: comment.createdAt,
+          autor: comment.autor,
           podeExcluir: true,
         },
       },
@@ -114,29 +111,29 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
 
   try {
     const { id } = await params
-    const comentarioId = new URL(req.url).searchParams.get('comentarioId')
+    const commentId = new URL(req.url).searchParams.get('comentarioId')
 
-    if (!comentarioId) {
+    if (!commentId) {
       return createErrorResponse('ID do comentário é obrigatório', 400)
     }
 
-    const comentario = await prisma.cursoComentario.findUnique({
-      where: { id: comentarioId },
+    const comment = await prisma.cursoComentario.findUnique({
+      where: { id: commentId },
       select: { autorId: true, cursoId: true },
     })
 
-    if (!comentario || comentario.cursoId !== id) {
+    if (!comment || comment.cursoId !== id) {
       return createErrorResponse('Comentário não encontrado', 404)
     }
 
-    const ehAutor = comentario.autorId === authResult.user.id
-    if (!ehAutor && authResult.user.role !== 'ADMIN') {
+    const isAuthor = comment.autorId === authResult.user.id
+    if (!isAuthor && authResult.user.role !== 'ADMIN') {
       return createErrorResponse('Você só pode excluir os seus próprios comentários', 403)
     }
 
-    await prisma.cursoComentario.delete({ where: { id: comentarioId } })
+    await prisma.cursoComentario.delete({ where: { id: commentId } })
 
-    return createSuccessResponse({ id: comentarioId })
+    return createSuccessResponse({ id: commentId })
   } catch (error) {
     console.error('Erro ao excluir comentário:', error)
     return createErrorResponse('Erro ao excluir comentário', 500, error)

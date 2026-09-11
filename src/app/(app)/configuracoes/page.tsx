@@ -6,7 +6,7 @@ export const dynamic = 'error'
 import { PageTransition } from '@/components/PageTransition'
 import { Construction, Settings } from 'lucide-react'
 
-export default function ConfiguracoesPage() {
+export default function SettingsPage() {
   return (
     <PageTransition>
       <div className="min-h-screen bg-background flex items-center justify-center">

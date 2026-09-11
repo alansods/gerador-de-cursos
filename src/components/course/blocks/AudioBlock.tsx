@@ -2,22 +2,22 @@
 
 import { useRef, useState } from 'react'
 import { Music } from 'lucide-react'
-import { ConteudoUnidade } from '@/types/gerador-curso'
+import { Block } from '@/types/course'
 
-const VELOCIDADES = [1, 1.25, 1.5, 2]
+const SPEEDS = [1, 1.25, 1.5, 2]
 
-export function AudioBlock({ item }: { item: ConteudoUnidade }) {
+export function AudioBlock({ item }: { item: Block }) {
   const audioRef = useRef<HTMLAudioElement>(null)
-  const [velocidade, setVelocidade] = useState(1)
+  const [speed, setSpeed] = useState(1)
 
   if (!item.audioUrl) {
     return <div className="text-gray-500 dark:text-gray-400 text-sm italic mb-4">Áudio vazio</div>
   }
 
-  const trocarVelocidade = () => {
-    const proxima = VELOCIDADES[(VELOCIDADES.indexOf(velocidade) + 1) % VELOCIDADES.length]
-    setVelocidade(proxima)
-    if (audioRef.current) audioRef.current.playbackRate = proxima
+  const changeSpeed = () => {
+    const next = SPEEDS[(SPEEDS.indexOf(speed) + 1) % SPEEDS.length]
+    setSpeed(next)
+    if (audioRef.current) audioRef.current.playbackRate = next
   }
 
   return (
@@ -31,11 +31,11 @@ export function AudioBlock({ item }: { item: ConteudoUnidade }) {
         </p>
         <button
           type="button"
-          onClick={trocarVelocidade}
-          aria-label={`Velocidade de reprodução: ${velocidade}x`}
+          onClick={changeSpeed}
+          aria-label={`Velocidade de reprodução: ${speed}x`}
           className="shrink-0 rounded-md border border-gray-300 dark:border-gray-600 px-2 py-1 text-xs font-semibold tabular-nums text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
         >
-          {velocidade}x
+          {speed}x
         </button>
       </div>
 

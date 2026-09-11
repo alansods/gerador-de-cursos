@@ -1,15 +1,15 @@
-import { ConteudoUnidade } from '@/types/gerador-curso'
+import { Block } from '@/types/course'
 import { blockRegistry } from './registry'
-import { ParagrafoBlock } from './ParagrafoBlock'
+import { ParagraphBlock } from './ParagraphBlock'
 import { BlockThemeProvider, type BlockTheme } from './BlockThemeProvider'
 
 interface BlockRendererProps {
-  conteudo: ConteudoUnidade[]
+  block: Block[]
   theme?: BlockTheme
 }
 
-export function BlockRenderer({ conteudo, theme }: BlockRendererProps) {
-  if (conteudo.length === 0) {
+export function BlockRenderer({ block: content, theme }: BlockRendererProps) {
+  if (content.length === 0) {
     return (
       <div className="text-center py-12 text-gray-500 dark:text-gray-400">
         <p>Nenhum conteúdo adicionado.</p>
@@ -20,14 +20,14 @@ export function BlockRenderer({ conteudo, theme }: BlockRendererProps) {
   return (
     <BlockThemeProvider theme={theme}>
       <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
-        {conteudo.map((item, index) => {
-          const Block = blockRegistry[item.tipo] || ParagrafoBlock
+        {content.map((item, index) => {
+          const BlockComponent = blockRegistry[item.tipo] || ParagraphBlock
           return (
             <div
               key={item.id}
               className={`${item.colunas === 6 ? 'md:col-span-6' : 'md:col-span-12'}`}
             >
-              <Block item={item} blocoIndex={index} />
+              <BlockComponent item={item} blockIndex={index} />
             </div>
           )
         })}

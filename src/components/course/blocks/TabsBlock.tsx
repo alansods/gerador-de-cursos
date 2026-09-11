@@ -1,23 +1,23 @@
 'use client'
 
 import { Tabs } from 'radix-ui'
-import { ConteudoUnidade } from '@/types/gerador-curso'
+import { Block } from '@/types/course'
 
-export function TabsBlock({ item }: { item: ConteudoUnidade }) {
-  const itens = item.itensTabs ?? []
+export function TabsBlock({ item }: { item: Block }) {
+  const items = item.itensTabs ?? []
 
-  if (itens.length === 0) {
+  if (items.length === 0) {
     return <div className="text-gray-500 dark:text-gray-400 text-sm italic mb-4">Abas vazias</div>
   }
 
   return (
     <div className="mb-4">
-      <Tabs.Root defaultValue={itens[0].id || 'tab-0'} className="w-full">
+      <Tabs.Root defaultValue={items[0].id || 'tab-0'} className="w-full">
         <Tabs.List
           className="flex gap-1 overflow-x-auto border-b border-gray-200 dark:border-gray-700"
           aria-label="Conteúdo em abas"
         >
-          {itens.map((tab, idx) => (
+          {items.map((tab, idx) => (
             <Tabs.Trigger
               key={tab.id || idx}
               value={tab.id || `tab-${idx}`}
@@ -28,7 +28,7 @@ export function TabsBlock({ item }: { item: ConteudoUnidade }) {
           ))}
         </Tabs.List>
 
-        {itens.map((tab, idx) => (
+        {items.map((tab, idx) => (
           <Tabs.Content
             key={tab.id || idx}
             value={tab.id || `tab-${idx}`}

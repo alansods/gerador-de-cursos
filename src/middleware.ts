@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { jwtVerify } from 'jose'
-import { can, mapCargoParaRole, ROLES, type RoleUsuario } from '@/lib/permissions'
-import { casaPrefixo, regraDaRota } from '@/lib/rotas-protegidas'
+import { can, mapJobTitleToRole, ROLES, type UserRole } from '@/lib/permissions'
+import { matchesPrefix, routeRule } from '@/lib/protected-routes'
 
 const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET)
 
-const ROTAS_PUBLICAS = [
+const PUBLIC_PATHS = [
   '/login',
   '/cadastro',
   '/landingpage',
@@ -14,22 +14,22 @@ const ROTAS_PUBLICAS = [
   '/scorm-preview',
 ]
 
-interface SessaoMiddleware {
+interface MiddlewareSession {
   id: string
-  role: RoleUsuario
+  role: UserRole
 }
 
-async function lerSessao(req: NextRequest): Promise<SessaoMiddleware | null> {
+async function readSession(req: NextRequest): Promise<MiddlewareSession | null> {
   const token = req.cookies.get('auth-token')?.value
   if (!token) return null
 
   try {
     const { payload } = await jwtVerify(token, JWT_SECRET)
-    const roleDoToken = payload.role
+    const tokenRole = payload.role
     const role =
-      typeof roleDoToken === 'string' && ROLES.includes(roleDoToken as RoleUsuario)
-        ? (roleDoToken as RoleUsuario)
-        : mapCargoParaRole(payload.cargo as string | undefined)
+      typeof tokenRole === 'string' && ROLES.includes(tokenRole as UserRole)
+        ? (tokenRole as UserRole)
+        : mapJobTitleToRole(payload.cargo as string | undefined)
 
     return { id: payload.id as string, role }
   } catch {
@@ -39,22 +39,22 @@ async function lerSessao(req: NextRequest): Promise<SessaoMiddleware | null> {
 
 export default async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl
-  const ehApi = pathname.startsWith('/api')
+  const isApi = pathname.startsWith('/api')
 
-  const ehPublica = ROTAS_PUBLICAS.some((rota) => casaPrefixo(pathname, rota))
-  const regra = regraDaRota(pathname)
+  const isPublic = PUBLIC_PATHS.some((route) => matchesPrefix(pathname, route))
+  const rule = routeRule(pathname)
 
-  if (!ehPublica && regra) {
-    const sessao = await lerSessao(req)
+  if (!isPublic && rule) {
+    const session = await readSession(req)
 
-    if (!sessao) {
-      return ehApi
+    if (!session) {
+      return isApi
         ? NextResponse.json({ success: false, error: 'Não autenticado' }, { status: 401 })
         : NextResponse.redirect(new URL('/login', req.url))
     }
 
-    if (!can(sessao, regra.acao)) {
-      return ehApi
+    if (!can(session, rule.action)) {
+      return isApi
         ? NextResponse.json(
             { success: false, error: 'Você não tem permissão para acessar este recurso' },
             { status: 403 }

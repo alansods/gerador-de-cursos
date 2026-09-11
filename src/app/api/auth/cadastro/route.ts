@@ -5,10 +5,10 @@ import { prisma } from '@/lib/prisma'
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { nome, email, senha } = body
+    const { nome: name, email, senha: password } = body
 
     // Validação
-    if (!nome || !email || !senha) {
+    if (!name || !email || !password) {
       return NextResponse.json(
         { success: false, error: 'Nome, e-mail e senha são obrigatórios' },
         { status: 400 }
@@ -17,14 +17,14 @@ export async function POST(request: NextRequest) {
 
     // O e-mail é o login: normalizar evita que Maria@x.com e maria@x.com
     // virem duas contas distintas
-    const emailNormalizado = String(email).trim().toLowerCase()
+    const normalizedEmail = String(email).trim().toLowerCase()
 
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailNormalizado)) {
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)) {
       return NextResponse.json({ success: false, error: 'E-mail inválido' }, { status: 400 })
     }
 
     const existingUser = await prisma.user.findUnique({
-      where: { email: emailNormalizado },
+      where: { email: normalizedEmail },
     })
 
     if (existingUser) {
@@ -32,13 +32,13 @@ export async function POST(request: NextRequest) {
     }
 
     // Hash da senha
-    const hashedPassword = await bcrypt.hash(senha, 10)
+    const hashedPassword = await bcrypt.hash(password, 10)
 
     // Criar usuário
     const user = await prisma.user.create({
       data: {
-        nome: nome.trim(),
-        email: emailNormalizado,
+        nome: name.trim(),
+        email: normalizedEmail,
         senha: hashedPassword,
         role: 'CONTEUDISTA',
       },

@@ -1,16 +1,16 @@
-export type RoleUsuario = 'ADMIN' | 'GESTOR' | 'CONTEUDISTA' | 'REVISOR' | 'CONVIDADO'
+export type UserRole = 'ADMIN' | 'GESTOR' | 'CONTEUDISTA' | 'REVISOR' | 'CONVIDADO'
 
 /**
  * Colaboração concedida num curso. Não há graus: constar como colaborador
  * significa acesso total ao curso. `null` quando não há colaboração.
  */
-export type Colaboracao = { concedida: true } | null
+export type Collaboration = { granted: true } | null
 
-export type StatusCurso = 'EM_ANDAMENTO' | 'EM_REVISAO' | 'APROVADO' | 'REPROVADO'
+export type CourseStatus = 'EM_ANDAMENTO' | 'EM_REVISAO' | 'APROVADO' | 'REPROVADO'
 
-export const ROLES: RoleUsuario[] = ['ADMIN', 'GESTOR', 'CONTEUDISTA', 'REVISOR', 'CONVIDADO']
+export const ROLES: UserRole[] = ['ADMIN', 'GESTOR', 'CONTEUDISTA', 'REVISOR', 'CONVIDADO']
 
-export const ROLE_LABELS: Record<RoleUsuario, string> = {
+export const ROLE_LABELS: Record<UserRole, string> = {
   ADMIN: 'Administrador',
   GESTOR: 'Gestor',
   CONTEUDISTA: 'Conteudista',
@@ -18,7 +18,7 @@ export const ROLE_LABELS: Record<RoleUsuario, string> = {
   CONVIDADO: 'Convidado',
 }
 
-export type Acao =
+export type Action =
   | 'curso:criar'
   | 'curso:editar'
   | 'curso:excluir'
@@ -29,20 +29,20 @@ export type Acao =
   | 'usuario:gerenciar'
   | 'colaborador:gerenciar'
 
-export interface UsuarioPermissoes {
+export interface PermissionUser {
   id: string
-  role: RoleUsuario
+  role: UserRole
 }
 
-export interface CursoPermissoes {
+export interface PermissionCourse {
   id: string
   ownerId?: string | null
-  status?: StatusCurso
+  status?: CourseStatus
 }
 
-export interface ContextoPermissao {
-  curso?: CursoPermissoes | null
-  colaboracao?: Colaboracao
+export interface PermissionContext {
+  course?: PermissionCourse | null
+  collaboration?: Collaboration
 }
 
 export class ForbiddenError extends Error {
@@ -54,47 +54,47 @@ export class ForbiddenError extends Error {
   }
 }
 
-export function mapCargoParaRole(cargo?: string | null): RoleUsuario {
+export function mapJobTitleToRole(cargo?: string | null): UserRole {
   if (cargo === 'Administrador') return 'ADMIN'
   if (cargo === 'Convidado') return 'CONVIDADO'
   return 'CONTEUDISTA'
 }
 
-function isDono(user: UsuarioPermissoes, curso?: CursoPermissoes | null) {
-  return Boolean(curso?.ownerId && curso.ownerId === user.id)
+function isOwner(user: PermissionUser, course?: PermissionCourse | null) {
+  return Boolean(course?.ownerId && course.ownerId === user.id)
 }
 
-export function podeEditarCurso(
-  user: UsuarioPermissoes | null | undefined,
-  curso?: CursoPermissoes | null,
-  colaboracao?: Colaboracao
+export function canEditCourse(
+  user: PermissionUser | null | undefined,
+  course?: PermissionCourse | null,
+  collaboration?: Collaboration
 ): boolean {
   if (!user) return false
   if (user.role === 'ADMIN' || user.role === 'GESTOR' || user.role === 'CONVIDADO') return true
   if (user.role !== 'CONTEUDISTA') return false
-  if (isDono(user, curso)) return true
-  return Boolean(colaboracao)
+  if (isOwner(user, course)) return true
+  return Boolean(collaboration)
 }
 
-export function podeExcluirCurso(
-  user: UsuarioPermissoes | null | undefined,
-  curso?: CursoPermissoes | null
+export function canDeleteCourse(
+  user: PermissionUser | null | undefined,
+  course?: PermissionCourse | null
 ): boolean {
   if (!user) return false
   if (user.role === 'ADMIN' || user.role === 'GESTOR') return true
-  return user.role === 'CONTEUDISTA' && isDono(user, curso)
+  return user.role === 'CONTEUDISTA' && isOwner(user, course)
 }
 
 export function can(
-  user: UsuarioPermissoes | null | undefined,
-  acao: Acao,
-  ctx: ContextoPermissao = {}
+  user: PermissionUser | null | undefined,
+  action: Action,
+  ctx: PermissionContext = {}
 ): boolean {
   if (!user) return false
 
-  const { curso, colaboracao } = ctx
+  const { course, collaboration } = ctx
 
-  switch (acao) {
+  switch (action) {
     case 'usuario:gerenciar':
       return user.role === 'ADMIN'
 
@@ -107,25 +107,25 @@ export function can(
       )
 
     case 'curso:editar':
-      return podeEditarCurso(user, curso, colaboracao)
+      return canEditCourse(user, course, collaboration)
 
     case 'curso:excluir':
-      return podeExcluirCurso(user, curso)
+      return canDeleteCourse(user, course)
 
     case 'curso:comentar':
       return user.role !== 'CONVIDADO'
 
     case 'curso:enviarRevisao':
-      return podeEditarCurso(user, curso, colaboracao)
+      return canEditCourse(user, course, collaboration)
 
     case 'curso:aprovar':
       return user.role === 'ADMIN' || user.role === 'GESTOR' || user.role === 'REVISOR'
 
     case 'curso:solicitarAcesso':
-      return user.role === 'CONTEUDISTA' && !isDono(user, curso) && !colaboracao
+      return user.role === 'CONTEUDISTA' && !isOwner(user, course) && !collaboration
 
     case 'colaborador:gerenciar':
-      return user.role === 'ADMIN' || user.role === 'GESTOR' || isDono(user, curso)
+      return user.role === 'ADMIN' || user.role === 'GESTOR' || isOwner(user, course)
 
     default:
       return false
@@ -133,21 +133,21 @@ export function can(
 }
 
 export function assertCan(
-  user: UsuarioPermissoes | null | undefined,
-  acao: Acao,
-  ctx: ContextoPermissao = {}
+  user: PermissionUser | null | undefined,
+  action: Action,
+  ctx: PermissionContext = {}
 ): void {
-  if (!can(user, acao, ctx)) {
+  if (!can(user, action, ctx)) {
     throw new ForbiddenError()
   }
 }
 
-export function permissoesDoCurso(
-  user: UsuarioPermissoes | null | undefined,
-  curso?: CursoPermissoes | null,
-  colaboracao?: Colaboracao
+export function getCoursePermissions(
+  user: PermissionUser | null | undefined,
+  course?: PermissionCourse | null,
+  collaboration?: Collaboration
 ) {
-  const ctx = { curso, colaboracao }
+  const ctx = { course, collaboration }
   return {
     podeEditar: can(user, 'curso:editar', ctx),
     podeExcluir: can(user, 'curso:excluir', ctx),
@@ -156,8 +156,8 @@ export function permissoesDoCurso(
     podeAprovar: can(user, 'curso:aprovar', ctx),
     podeSolicitarAcesso: can(user, 'curso:solicitarAcesso', ctx),
     podeGerenciarColaboradores: can(user, 'colaborador:gerenciar', ctx),
-    ehDono: Boolean(user && isDono(user, curso)),
+    ehDono: Boolean(user && isOwner(user, course)),
   }
 }
 
-export type PermissoesCurso = ReturnType<typeof permissoesDoCurso>
+export type CoursePermissions = ReturnType<typeof getCoursePermissions>

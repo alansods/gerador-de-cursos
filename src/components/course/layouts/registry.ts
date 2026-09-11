@@ -1,13 +1,13 @@
 import { LayoutDefinition } from './types'
-import { ClassicoPlayer } from './classico/ClassicoPlayer'
-import { classicoMeta } from './classico/meta'
+import { ClassicPlayer } from './classic/ClassicPlayer'
+import { classicMeta } from './classic/meta'
 import { SidebarPlayer } from './sidebar/SidebarPlayer'
 import { sidebarMeta } from './sidebar/meta'
 
 export const DEFAULT_LAYOUT_ID = 'classico'
 
 export const layoutRegistry: Record<string, LayoutDefinition> = {
-  classico: { Player: ClassicoPlayer, meta: classicoMeta },
+  classico: { Player: ClassicPlayer, meta: classicMeta },
   sidebar: { Player: SidebarPlayer, meta: sidebarMeta },
 }
 

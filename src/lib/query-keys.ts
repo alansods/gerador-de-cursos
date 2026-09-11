@@ -1,8 +1,8 @@
-import type { BuscarCursosParams } from '@/app/(app)/cursos/actions'
+import type { FetchCoursesParams } from '@/app/(app)/cursos/actions'
 
-export type FiltrosDeCursos = Omit<BuscarCursosParams, 'cursor'>
+export type CourseFilters = Omit<FetchCoursesParams, 'cursor'>
 
-export interface FiltrosDeUsuarios {
+export interface UserFilters {
   page: number
   limit: number
   search?: string
@@ -11,34 +11,34 @@ export interface FiltrosDeUsuarios {
   role?: string
 }
 
-export interface FiltrosDeScormJobs {
+export interface ScormJobFilters {
   page: number
   limit: number
 }
 
-export const chaves = {
-  cursos: {
-    todos: ['cursos'] as const,
-    listas: ['cursos', 'lista'] as const,
-    lista: (filtros: FiltrosDeCursos) => ['cursos', 'lista', filtros] as const,
-    detalhe: (id: string) => ['cursos', 'detalhe', id] as const,
+export const queryKeys = {
+  courses: {
+    all: ['courses'] as const,
+    lists: ['courses', 'list'] as const,
+    list: (filters: CourseFilters) => ['courses', 'list', filters] as const,
+    detail: (id: string) => ['courses', 'detail', id] as const,
   },
-  usuarios: {
-    todos: ['usuarios'] as const,
-    lista: (filtros: FiltrosDeUsuarios) => ['usuarios', 'lista', filtros] as const,
+  users: {
+    all: ['users'] as const,
+    list: (filters: UserFilters) => ['users', 'list', filters] as const,
   },
   scormJobs: {
-    todos: ['scorm-jobs'] as const,
-    lista: (filtros: FiltrosDeScormJobs) => ['scorm-jobs', 'lista', filtros] as const,
-    detalhe: (jobId: string) => ['scorm-jobs', 'detalhe', jobId] as const,
+    all: ['scorm-jobs'] as const,
+    list: (filters: ScormJobFilters) => ['scorm-jobs', 'list', filters] as const,
+    detail: (jobId: string) => ['scorm-jobs', 'detail', jobId] as const,
   },
-  solicitacoes: {
-    pendentes: () => ['solicitacoes', 'pendentes'] as const,
-    doCurso: (cursoId: string) => ['solicitacoes', 'curso', cursoId] as const,
+  accessRequests: {
+    pending: () => ['access-requests', 'pending'] as const,
+    ofCourse: (courseId: string) => ['access-requests', 'course', courseId] as const,
   },
-  atividades: {
-    recentes: (limite: number) => ['atividades', 'recentes', limite] as const,
+  activities: {
+    recent: (limit: number) => ['activities', 'recent', limit] as const,
   },
-  colaboradores: (cursoId: string) => ['colaboradores', cursoId] as const,
-  comentarios: (cursoId: string) => ['comentarios', cursoId] as const,
+  collaborators: (courseId: string) => ['collaborators', courseId] as const,
+  comments: (courseId: string) => ['comments', courseId] as const,
 } as const

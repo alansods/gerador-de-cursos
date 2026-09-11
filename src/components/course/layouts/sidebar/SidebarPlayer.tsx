@@ -1,43 +1,53 @@
 'use client'
 import React from 'react'
-import type { CursoGerado } from '@/types/gerador-curso'
-import { useProgressoScorm } from '@/hooks/useProgressoScorm'
-import { ProgressoScormProvider } from '@/components/course/ProgressoScormContext'
+import type { Course } from '@/types/course'
+import { useScormProgress } from '@/hooks/useScormProgress'
+import { ScormProgressProvider } from '@/components/course/ScormProgressContext'
 import { SidebarNavbar } from './SidebarNavbar'
 import { SidebarHome } from './SidebarHome'
 import { SidebarUnit } from './SidebarUnit'
 
 interface SidebarPlayerProps {
-  curso: CursoGerado
+  course: Course
 }
 
-export function SidebarPlayer({ curso }: SidebarPlayerProps) {
-  const { unidadeAtual, navegar, registrarQuiz, progresso, estado } = useProgressoScorm(curso)
+export function SidebarPlayer({ course }: SidebarPlayerProps) {
+  const {
+    currentUnit,
+    navigate,
+    recordQuiz: registrarQuiz,
+    progress,
+    state,
+  } = useScormProgress(course)
 
   const handleNavigate = (unitId: string | null) => {
-    navegar(unitId)
+    navigate(unitId)
     window.scrollTo(0, 0)
   }
 
   return (
-    <ProgressoScormProvider valor={{ unidadeId: unidadeAtual, registrarQuiz }}>
+    <ScormProgressProvider valor={{ unitId: currentUnit, registrarQuiz }}>
       <div className="min-h-screen flex bg-[#f7f7fb] dark:bg-[#121018]">
         <SidebarNavbar
-          curso={curso}
-          currentUnidadeId={unidadeAtual || undefined}
+          course={course}
+          currentUnitId={currentUnit || undefined}
           onNavigate={handleNavigate}
-          progresso={progresso}
-          concluidas={estado.visitadas}
+          progress={progress}
+          completedUnits={state.visitadas}
         />
 
         <div className="flex-1 min-w-0 pt-16 md:pt-0">
-          {unidadeAtual ? (
-            <SidebarUnit curso={curso} unidadeId={unidadeAtual} onNavigate={handleNavigate} />
+          {currentUnit ? (
+            <SidebarUnit course={course} unitId={currentUnit} onNavigate={handleNavigate} />
           ) : (
-            <SidebarHome curso={curso} onNavigate={handleNavigate} concluidas={estado.visitadas} />
+            <SidebarHome
+              course={course}
+              onNavigate={handleNavigate}
+              completedUnits={state.visitadas}
+            />
           )}
         </div>
       </div>
-    </ProgressoScormProvider>
+    </ScormProgressProvider>
   )
 }

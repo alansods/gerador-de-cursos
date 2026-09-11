@@ -16,12 +16,12 @@ import {
   X,
   Package,
 } from 'lucide-react'
-import { ROLE_LABELS, type Acao } from '@/lib/permissions'
+import { ROLE_LABELS, type Action } from '@/lib/permissions'
 import { Button } from './ui/button'
 import { useTheme } from '@/hooks/useTheme'
 import { useAuth } from '@/context/AuthContext'
 import { usePathname } from 'next/navigation'
-import { SinoSolicitacoes } from '@/components/colaboracao/SinoSolicitacoes'
+import { AccessRequestBell } from '@/components/collaboration/AccessRequestBell'
 import Link from 'next/link'
 
 const navItems: Array<{
@@ -29,7 +29,7 @@ const navItems: Array<{
   label: string
   href: string
   active: boolean
-  acao?: Acao
+  action?: Action
 }> = [
   { icon: Home, label: 'Início', href: '/home', active: false },
   { icon: BookOpen, label: 'Cursos', href: '/cursos', active: true },
@@ -39,7 +39,7 @@ const navItems: Array<{
     label: 'Usuários',
     href: '/usuarios',
     active: false,
-    acao: 'usuario:gerenciar',
+    action: 'usuario:gerenciar',
   },
   {
     icon: Settings,
@@ -56,7 +56,7 @@ export function Sidebar() {
   const { isDarkMode, toggleDarkMode } = useTheme()
   const { user, logout, can, role } = useAuth()
   const pathname = usePathname()
-  const itensVisiveis = navItems.filter((item) => !item.acao || can(item.acao))
+  const visibleItems = navItems.filter((item) => !item.action || can(item.action))
 
   const isExpanded = isPinned || isHovered
 
@@ -151,7 +151,7 @@ export function Sidebar() {
         {/* Navigation */}
         <nav className="flex-1 p-4 pt-6">
           <div className="space-y-3">
-            {itensVisiveis.map((item) => {
+            {visibleItems.map((item) => {
               const Icon = item.icon
               const isActive =
                 pathname === item.href ||
@@ -177,7 +177,7 @@ export function Sidebar() {
             })}
 
             <div className={isExpanded ? '' : 'flex justify-center'}>
-              <SinoSolicitacoes expandido={isExpanded} />
+              <AccessRequestBell expanded={isExpanded} />
             </div>
           </div>
         </nav>

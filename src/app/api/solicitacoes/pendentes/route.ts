@@ -17,14 +17,14 @@ export async function GET(req: NextRequest) {
 
   try {
     const { role, id: userId } = authResult.user
-    const gerenciaTudo = role === 'ADMIN' || role === 'GESTOR'
+    const managesAll = role === 'ADMIN' || role === 'GESTOR'
 
     const where: Prisma.CursoAccessRequestWhereInput = {
       status: 'PENDENTE',
-      ...(gerenciaTudo ? {} : { curso: { ownerId: userId } }),
+      ...(managesAll ? {} : { curso: { ownerId: userId } }),
     }
 
-    const solicitacoes = await prisma.cursoAccessRequest.findMany({
+    const accessRequests = await prisma.cursoAccessRequest.findMany({
       where,
       orderBy: { createdAt: 'desc' },
       take: 20,
@@ -34,7 +34,7 @@ export async function GET(req: NextRequest) {
       },
     })
 
-    return createSuccessResponse({ solicitacoes, total: solicitacoes.length })
+    return createSuccessResponse({ solicitacoes: accessRequests, total: accessRequests.length })
   } catch (error) {
     console.error('Erro ao buscar solicitações pendentes:', error)
     return createErrorResponse('Erro ao buscar solicitações pendentes', 500, error)

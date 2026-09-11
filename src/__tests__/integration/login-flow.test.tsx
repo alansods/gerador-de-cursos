@@ -37,12 +37,12 @@ jest.mock('sonner', () => ({
   toast: { error: jest.fn(), success: jest.fn(), info: jest.fn() },
 }))
 
-const semSessao = {
+const withoutSession = {
   ok: true,
   json: async () => ({ success: true, authenticated: false, user: null }),
 }
 
-const respostaLoginOk = {
+const loginOkResponse = {
   ok: true,
   json: async () => ({
     success: true,
@@ -56,14 +56,14 @@ const respostaLoginOk = {
   }),
 }
 
-const chamadasDeLogin = () =>
+const loginCalls = () =>
   mockFetch.mock.calls.filter((call) => String(call[0]).includes('/api/auth/login'))
 
-const rotearFetch = (respostaLogin: unknown) => {
+const routeFetch = (loginResponse: unknown) => {
   mockFetch.mockImplementation((url: string) =>
     String(url).includes('/api/auth/login')
-      ? Promise.resolve(respostaLogin)
-      : Promise.resolve(semSessao)
+      ? Promise.resolve(loginResponse)
+      : Promise.resolve(withoutSession)
   )
 }
 
@@ -76,22 +76,22 @@ const renderLoginPage = () =>
     </NextIntlClientProvider>
   )
 
-const campoUsuario = () => screen.getByLabelText('E-mail')
-const campoSenha = () => screen.getByLabelText('Senha') as HTMLInputElement
-const botaoEntrar = () => screen.getByRole('button', { name: /^entrar$/i })
+const userField = () => screen.getByLabelText('E-mail')
+const passwordField = () => screen.getByLabelText('Senha') as HTMLInputElement
+const loginButton = () => screen.getByRole('button', { name: /^entrar$/i })
 
 describe('Integration - Login Flow', () => {
   beforeEach(() => {
     jest.clearAllMocks()
-    rotearFetch(respostaLoginOk)
+    routeFetch(loginOkResponse)
   })
 
   it('deve renderizar o formulário de login', async () => {
     renderLoginPage()
 
-    expect(campoUsuario()).toBeInTheDocument()
-    expect(campoSenha()).toBeInTheDocument()
-    expect(botaoEntrar()).toBeInTheDocument()
+    expect(userField()).toBeInTheDocument()
+    expect(passwordField()).toBeInTheDocument()
+    expect(loginButton()).toBeInTheDocument()
 
     await waitFor(() => expect(mockFetch).toHaveBeenCalled())
   })
@@ -101,16 +101,16 @@ describe('Integration - Login Flow', () => {
 
     renderLoginPage()
 
-    await user.type(campoUsuario(), 'testuser@senai.br')
-    await user.type(campoSenha(), 'senha123')
-    await user.click(botaoEntrar())
+    await user.type(userField(), 'testuser@senai.br')
+    await user.type(passwordField(), 'senha123')
+    await user.click(loginButton())
 
     await waitFor(() => {
       expect(mockPush).toHaveBeenCalledWith('/home')
     })
 
-    expect(chamadasDeLogin()).toHaveLength(1)
-    expect(chamadasDeLogin()[0][1]).toEqual(
+    expect(loginCalls()).toHaveLength(1)
+    expect(loginCalls()[0][1]).toEqual(
       expect.objectContaining({
         method: 'POST',
         body: JSON.stringify({ email: 'testuser@senai.br', senha: 'senha123' }),
@@ -121,23 +121,23 @@ describe('Integration - Login Flow', () => {
   it('deve mostrar erro com credenciais inválidas', async () => {
     const user = userEvent.setup()
 
-    rotearFetch({
+    routeFetch({
       ok: false,
       json: async () => ({ success: false, error: 'Credenciais inválidas' }),
     })
 
     renderLoginPage()
 
-    await user.type(campoUsuario(), 'wronguser')
-    await user.type(campoSenha(), 'wrongpass')
-    await user.click(botaoEntrar())
+    await user.type(userField(), 'wronguser')
+    await user.type(passwordField(), 'wrongpass')
+    await user.click(loginButton())
 
     await waitFor(() => {
-      expect(chamadasDeLogin()).toHaveLength(1)
+      expect(loginCalls()).toHaveLength(1)
     })
 
     expect(mockPush).not.toHaveBeenCalled()
-    expect(chamadasDeLogin()).toHaveLength(1)
+    expect(loginCalls()).toHaveLength(1)
   })
 
   it('deve validar campos obrigatórios', async () => {
@@ -145,14 +145,14 @@ describe('Integration - Login Flow', () => {
 
     renderLoginPage()
 
-    await user.click(botaoEntrar())
+    await user.click(loginButton())
 
     await waitFor(() => {
       expect(screen.getByText('E-mail é obrigatório')).toBeInTheDocument()
       expect(screen.getByText('Senha é obrigatória')).toBeInTheDocument()
     })
 
-    expect(chamadasDeLogin()).toHaveLength(0)
+    expect(loginCalls()).toHaveLength(0)
   })
 
   it('deve mostrar/ocultar senha ao clicar no ícone', async () => {
@@ -160,17 +160,17 @@ describe('Integration - Login Flow', () => {
 
     renderLoginPage()
 
-    const senhaInput = campoSenha()
-    expect(senhaInput.type).toBe('password')
+    const passwordInput = passwordField()
+    expect(passwordInput.type).toBe('password')
 
-    const toggleButton = senhaInput.parentElement!.querySelector('button')!
+    const toggleButton = passwordInput.parentElement!.querySelector('button')!
     await user.click(toggleButton)
 
-    await waitFor(() => expect(senhaInput.type).toBe('text'))
+    await waitFor(() => expect(passwordInput.type).toBe('text'))
 
     await user.click(toggleButton)
 
-    await waitFor(() => expect(senhaInput.type).toBe('password'))
+    await waitFor(() => expect(passwordInput.type).toBe('password'))
   })
 
   it('deve desabilitar o formulário durante o login', async () => {
@@ -178,28 +178,28 @@ describe('Integration - Login Flow', () => {
 
     mockFetch.mockImplementation((url: string) =>
       String(url).includes('/api/auth/login')
-        ? new Promise((resolve) => setTimeout(() => resolve(respostaLoginOk), 100))
-        : Promise.resolve(semSessao)
+        ? new Promise((resolve) => setTimeout(() => resolve(loginOkResponse), 100))
+        : Promise.resolve(withoutSession)
     )
 
     renderLoginPage()
 
-    const usuarioInput = campoUsuario()
-    const senhaInput = campoSenha()
-    const submitButton = botaoEntrar()
+    const userInput = userField()
+    const passwordInput = passwordField()
+    const submitButton = loginButton()
 
-    await user.type(usuarioInput, 'testuser@senai.br')
-    await user.type(senhaInput, 'senha123')
+    await user.type(userInput, 'testuser@senai.br')
+    await user.type(passwordInput, 'senha123')
     await user.click(submitButton)
 
-    expect(usuarioInput).toBeDisabled()
-    expect(senhaInput).toBeDisabled()
+    expect(userInput).toBeDisabled()
+    expect(passwordInput).toBeDisabled()
     expect(screen.getByRole('button', { name: /entrando/i })).toBeDisabled()
 
     await waitFor(() => {
       expect(mockPush).toHaveBeenCalled()
     })
 
-    expect(chamadasDeLogin()).toHaveLength(1)
+    expect(loginCalls()).toHaveLength(1)
   })
 })

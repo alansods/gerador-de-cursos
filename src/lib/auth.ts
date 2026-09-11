@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { jwtVerify } from 'jose'
 import { prisma } from '@/lib/prisma'
-import { mapCargoParaRole, ROLES, type RoleUsuario } from '@/lib/permissions'
+import { mapJobTitleToRole, ROLES, type UserRole } from '@/lib/permissions'
 
 // Validar que JWT_SECRET está definido
 if (!process.env.JWT_SECRET) {
@@ -16,7 +16,7 @@ export interface JWTPayload {
   id: string
   email: string
   nome: string
-  role: RoleUsuario
+  role: UserRole
 }
 
 /**
@@ -25,11 +25,11 @@ export interface JWTPayload {
  * válidos por até 24h depois do deploy, então o papel ainda é derivado do `cargo`
  * que veio dentro do próprio token enquanto eles expiram.
  */
-export function resolverRole(role: unknown, cargo?: string | null): RoleUsuario {
-  if (typeof role === 'string' && ROLES.includes(role as RoleUsuario)) {
-    return role as RoleUsuario
+export function resolverRole(role: unknown, cargo?: string | null): UserRole {
+  if (typeof role === 'string' && ROLES.includes(role as UserRole)) {
+    return role as UserRole
   }
-  return mapCargoParaRole(cargo)
+  return mapJobTitleToRole(cargo)
 }
 
 /**
@@ -74,16 +74,16 @@ export async function requireAuth(req: NextRequest): Promise<{ user: JWTPayload 
     return NextResponse.json({ success: false, error: message }, { status: 401 })
   }
 
-  const atual = await prisma.user.findUnique({
+  const current = await prisma.user.findUnique({
     where: { id: user.id },
     select: { nome: true, role: true },
   })
 
-  if (!atual) {
+  if (!current) {
     return NextResponse.json({ success: false, error: 'Usuário não encontrado' }, { status: 401 })
   }
 
-  return { user: { ...user, nome: atual.nome, role: atual.role } }
+  return { user: { ...user, nome: current.nome, role: current.role } }
 }
 
 /**
@@ -91,7 +91,7 @@ export async function requireAuth(req: NextRequest): Promise<{ user: JWTPayload 
  */
 export async function requireRole(
   req: NextRequest,
-  roles: RoleUsuario[]
+  roles: UserRole[]
 ): Promise<{ user: JWTPayload } | NextResponse> {
   const authResult = await requireAuth(req)
   if (authResult instanceof NextResponse) return authResult

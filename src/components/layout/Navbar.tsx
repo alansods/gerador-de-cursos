@@ -8,7 +8,7 @@ import { ROLE_LABELS } from '@/lib/permissions'
 import Link from 'next/link'
 import { useTheme } from '@/hooks/useTheme'
 import { LanguageToggle } from '@/components/LanguageToggle'
-import { SinoSolicitacoes } from '@/components/colaboracao/SinoSolicitacoes'
+import { AccessRequestBell } from '@/components/collaboration/AccessRequestBell'
 
 interface NavbarProps {
   onBack?: () => void
@@ -130,7 +130,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               {isDarkMode ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
             </Button>
             <LanguageToggle />
-            <SinoSolicitacoes />
+            <AccessRequestBell />
             {showUserInfo && user && (
               <div className="flex items-center space-x-2 sm:space-x-3 sm:ml-4 sm:pl-4 sm:border-l border-border">
                 <div className="flex items-center space-x-2 text-sm">

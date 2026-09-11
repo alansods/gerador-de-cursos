@@ -5,12 +5,12 @@ export const dynamic = 'error'
 
 import { useState, useEffect } from 'react'
 import {
-  useAtualizarUsuarioMutation,
-  useCriarUsuarioMutation,
-  useDeletarUsuarioMutation,
-  useUsuariosQuery,
+  useUpdateUserMutation,
+  useCreateUserMutation,
+  useDeleteUserMutation,
+  useUsersQuery,
   type User,
-} from '@/hooks/queries/useUsuariosQuery'
+} from '@/hooks/queries/useUsersQuery'
 import { PageTransition } from '@/components/PageTransition'
 import { Users, Plus, Pencil, Trash2, X, Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
@@ -43,21 +43,21 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { ROLES, ROLE_LABELS, type RoleUsuario } from '@/lib/permissions'
+import { ROLES, ROLE_LABELS, type UserRole } from '@/lib/permissions'
 
-const TODOS_OS_PAPEIS = 'Todos os papéis'
-const DIAS_PARA_USUARIO_RECENTE = 7
+const ALL_ROLES = 'Todos os papéis'
+const RECENT_USER_DAYS = 7
 
-function ehUsuarioRecente(createdAt: string) {
-  const limite = Date.now() - DIAS_PARA_USUARIO_RECENTE * 24 * 60 * 60 * 1000
-  return new Date(createdAt).getTime() >= limite
+function isRecentUser(createdAt: string) {
+  const limit = Date.now() - RECENT_USER_DAYS * 24 * 60 * 60 * 1000
+  return new Date(createdAt).getTime() >= limit
 }
 
-export default function UsuariosPage() {
+export default function UsersPage() {
   const [searchTerm, setSearchTerm] = useState('')
   const [startDate, setStartDate] = useState('')
   const [endDate, setEndDate] = useState('')
-  const [selectedRole, setSelectedRole] = useState(TODOS_OS_PAPEIS)
+  const [selectedRole, setSelectedRole] = useState(ALL_ROLES)
   const [page, setPage] = useState(1)
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [showEditModal, setShowEditModal] = useState(false)
@@ -65,7 +65,7 @@ export default function UsuariosPage() {
   const [selectedUser, setSelectedUser] = useState<User | null>(null)
   const [formData, setFormData] = useState({
     nome: '',
-    role: 'CONTEUDISTA' as RoleUsuario,
+    role: 'CONTEUDISTA' as UserRole,
     email: '',
     senha: '',
   })
@@ -74,44 +74,43 @@ export default function UsuariosPage() {
     users,
     pagination,
     isLoading: loading,
-  } = useUsuariosQuery({
+  } = useUsersQuery({
     page,
     limit: 10,
     search: searchTerm,
     startDate: startDate || undefined,
     endDate: endDate || undefined,
-    role: selectedRole !== TODOS_OS_PAPEIS ? selectedRole : undefined,
+    role: selectedRole !== ALL_ROLES ? selectedRole : undefined,
   })
 
-  const criarUsuario = useCriarUsuarioMutation()
-  const atualizarUsuario = useAtualizarUsuarioMutation()
-  const deletarUsuario = useDeletarUsuarioMutation()
+  const createUser = useCreateUserMutation()
+  const updateUser = useUpdateUserMutation()
+  const deleteUser = useDeleteUserMutation()
 
-  const isCreating = criarUsuario.isPending
-  const isUpdating = atualizarUsuario.isPending
-  const isDeleting = deletarUsuario.isPending
+  const isCreating = createUser.isPending
+  const isUpdating = updateUser.isPending
+  const isDeleting = deleteUser.isPending
 
   // filtrar volta para a primeira página: a atual pode nem existir no novo recorte
   useEffect(() => {
     setPage(1)
   }, [searchTerm, startDate, endDate, selectedRole])
 
-  const limparFormulario = () =>
-    setFormData({ nome: '', role: 'CONTEUDISTA', email: '', senha: '' })
+  const clearForm = () => setFormData({ nome: '', role: 'CONTEUDISTA', email: '', senha: '' })
 
-  const avisarErro = (error: unknown, padrao: string) =>
-    toast.error(error instanceof Error ? error.message : padrao)
+  const reportError = (error: unknown, fallback: string) =>
+    toast.error(error instanceof Error ? error.message : fallback)
 
   // Check if there are active filters
   const hasActiveFilters =
-    searchTerm !== '' || startDate !== '' || endDate !== '' || selectedRole !== TODOS_OS_PAPEIS
+    searchTerm !== '' || startDate !== '' || endDate !== '' || selectedRole !== ALL_ROLES
 
   // Clear all filters
   const clearFilters = () => {
     setSearchTerm('')
     setStartDate('')
     setEndDate('')
-    setSelectedRole(TODOS_OS_PAPEIS)
+    setSelectedRole(ALL_ROLES)
   }
 
   // Create user
@@ -126,11 +125,11 @@ export default function UsuariosPage() {
       return
     }
     try {
-      await criarUsuario.mutateAsync(formData)
+      await createUser.mutateAsync(formData)
       toast.success('Usuário criado com sucesso!')
-      limparFormulario()
+      clearForm()
     } catch (error) {
-      avisarErro(error, 'Erro ao criar usuário')
+      reportError(error, 'Erro ao criar usuário')
     } finally {
       setShowCreateModal(false)
     }
@@ -148,11 +147,11 @@ export default function UsuariosPage() {
       return
     }
     try {
-      await atualizarUsuario.mutateAsync({ id: selectedUser.id, ...formData })
+      await updateUser.mutateAsync({ id: selectedUser.id, ...formData })
       toast.success('Usuário atualizado com sucesso!')
-      limparFormulario()
+      clearForm()
     } catch (error) {
-      avisarErro(error, 'Erro ao atualizar usuário')
+      reportError(error, 'Erro ao atualizar usuário')
     } finally {
       setShowEditModal(false)
       setSelectedUser(null)
@@ -162,10 +161,10 @@ export default function UsuariosPage() {
   const handleDelete = async () => {
     if (!selectedUser) return
     try {
-      await deletarUsuario.mutateAsync(selectedUser.id)
+      await deleteUser.mutateAsync(selectedUser.id)
       toast.success('Usuário deletado com sucesso!')
     } catch (error) {
-      avisarErro(error, 'Erro ao deletar usuário')
+      reportError(error, 'Erro ao deletar usuário')
     } finally {
       setShowDeleteModal(false)
       setSelectedUser(null)
@@ -241,10 +240,10 @@ export default function UsuariosPage() {
                 <span className="text-xs text-muted-foreground pl-1">Papel</span>
                 <Select value={selectedRole} onValueChange={setSelectedRole}>
                   <SelectTrigger className="w-full">
-                    <SelectValue placeholder={TODOS_OS_PAPEIS} />
+                    <SelectValue placeholder={ALL_ROLES} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value={TODOS_OS_PAPEIS}>{TODOS_OS_PAPEIS}</SelectItem>
+                    <SelectItem value={ALL_ROLES}>{ALL_ROLES}</SelectItem>
                     {ROLES.map((role) => (
                       <SelectItem key={role} value={role}>
                         {ROLE_LABELS[role]}
@@ -301,7 +300,7 @@ export default function UsuariosPage() {
                           <TableCell className="font-medium">
                             <div className="flex flex-wrap items-center gap-1.5">
                               <span>{user.nome}</span>
-                              {ehUsuarioRecente(user.createdAt) && (
+                              {isRecentUser(user.createdAt) && (
                                 <Badge className="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300">
                                   Novo
                                 </Badge>
@@ -347,7 +346,7 @@ export default function UsuariosPage() {
                         <div className="flex-1 min-w-0">
                           <div className="flex flex-wrap items-center gap-1.5">
                             <h3 className="font-medium text-foreground truncate">{user.nome}</h3>
-                            {ehUsuarioRecente(user.createdAt) && (
+                            {isRecentUser(user.createdAt) && (
                               <Badge className="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300">
                                 Novo
                               </Badge>
@@ -392,7 +391,7 @@ export default function UsuariosPage() {
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => setPage((atual) => atual - 1)}
+                        onClick={() => setPage((current) => current - 1)}
                         disabled={pagination.page === 1}
                       >
                         Anterior
@@ -403,7 +402,7 @@ export default function UsuariosPage() {
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => setPage((atual) => atual + 1)}
+                        onClick={() => setPage((current) => current + 1)}
                         disabled={pagination.page === pagination.totalPages}
                       >
                         Próxima
@@ -441,7 +440,7 @@ export default function UsuariosPage() {
                     <Select
                       value={formData.role}
                       onValueChange={(value) =>
-                        setFormData({ ...formData, role: value as RoleUsuario })
+                        setFormData({ ...formData, role: value as UserRole })
                       }
                     >
                       <SelectTrigger id={props.id}>
@@ -528,7 +527,7 @@ export default function UsuariosPage() {
                     <Select
                       value={formData.role}
                       onValueChange={(value) =>
-                        setFormData({ ...formData, role: value as RoleUsuario })
+                        setFormData({ ...formData, role: value as UserRole })
                       }
                     >
                       <SelectTrigger id={props.id}>

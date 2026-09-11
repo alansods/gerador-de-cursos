@@ -12,13 +12,13 @@ export interface FormFieldRenderProps {
 
 interface FormFieldProps {
   label: ReactNode
-  opcional?: boolean
-  descricao?: ReactNode
-  erro?: string
-  mostrarErro?: boolean
-  contador?: string
-  contadorExcedido?: boolean
-  compacto?: boolean
+  optional?: boolean
+  description?: ReactNode
+  error?: string
+  showError?: boolean
+  counter?: string
+  counterExceeded?: boolean
+  compact?: boolean
   htmlFor?: string
   className?: string
   children: ReactNode | ((props: FormFieldRenderProps) => ReactNode)
@@ -26,24 +26,24 @@ interface FormFieldProps {
 
 export function FormField({
   label,
-  opcional = false,
-  descricao,
-  erro,
-  mostrarErro = false,
-  contador,
-  contadorExcedido = false,
-  compacto = false,
+  optional = false,
+  description,
+  error,
+  showError = false,
+  counter,
+  counterExceeded = false,
+  compact = false,
   htmlFor,
   className,
   children,
 }: FormFieldProps) {
   const id = useId()
-  const idErro = `${id}-erro`
-  const idDescricao = `${id}-descricao`
-  const invalido = mostrarErro && !!erro
-  const idDoCampo = htmlFor ?? (typeof children === 'function' ? id : undefined)
+  const errorId = `${id}-erro`
+  const descriptionId = `${id}-descricao`
+  const invalid = showError && !!error
+  const fieldId = htmlFor ?? (typeof children === 'function' ? id : undefined)
 
-  const descrito = [descricao ? idDescricao : null, invalido ? idErro : null]
+  const described = [description ? descriptionId : null, invalid ? errorId : null]
     .filter(Boolean)
     .join(' ')
 
@@ -51,45 +51,45 @@ export function FormField({
     <div className={cn('flex flex-col gap-2', className)}>
       <div className="flex items-baseline justify-between gap-3">
         <label
-          htmlFor={idDoCampo}
+          htmlFor={fieldId}
           className={cn(
             'flex items-center gap-2 font-medium text-foreground',
-            compacto ? 'text-xs' : 'text-sm'
+            compact ? 'text-xs' : 'text-sm'
           )}
         >
           {label}
-          {opcional && <span className="text-xs font-normal text-muted-foreground">opcional</span>}
+          {optional && <span className="text-xs font-normal text-muted-foreground">opcional</span>}
         </label>
-        {contador && (
+        {counter && (
           <span
             className={cn(
               'text-xs tabular-nums',
-              contadorExcedido ? 'font-semibold text-destructive' : 'text-muted-foreground'
+              counterExceeded ? 'font-semibold text-destructive' : 'text-muted-foreground'
             )}
           >
-            {contador}
+            {counter}
           </span>
         )}
       </div>
 
-      {descricao && (
-        <p id={idDescricao} className="text-xs text-muted-foreground">
-          {descricao}
+      {description && (
+        <p id={descriptionId} className="text-xs text-muted-foreground">
+          {description}
         </p>
       )}
 
       {typeof children === 'function'
         ? children({
             id,
-            'aria-invalid': invalido,
-            'aria-describedby': descrito || undefined,
+            'aria-invalid': invalid,
+            'aria-describedby': described || undefined,
           })
         : children}
 
-      {invalido && (
-        <p id={idErro} role="alert" className="flex items-center gap-1.5 text-xs text-destructive">
+      {invalid && (
+        <p id={errorId} role="alert" className="flex items-center gap-1.5 text-xs text-destructive">
           <AlertCircle className="h-3.5 w-3.5 shrink-0" aria-hidden />
-          {erro}
+          {error}
         </p>
       )}
     </div>

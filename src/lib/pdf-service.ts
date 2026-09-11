@@ -1,16 +1,16 @@
 import jsPDF from 'jspdf'
 import type {
-  ConteudoUnidade,
+  Block,
   AccordionItem,
   FlipcardItem,
-  ListaItem,
+  ListItem,
   QuizData,
-  Unidade,
-  CursoGerado,
-} from '@/types/gerador-curso'
-import { cardsFlipcard } from '@/lib/blocos'
+  Unit,
+  Course,
+} from '@/types/course'
+import { cardsFlipcard } from '@/lib/blocks'
 
-type Curso = CursoGerado
+type CourseSummary = Course
 
 // ========================================================================
 // 🎨 CENTRAL DE DESIGN (THEME v2 — layout "apostila")
@@ -87,12 +87,12 @@ async function loadImage(url: string): Promise<LoadedImage | null> {
 }
 
 /** Varre o curso e pré-carrega todas as imagens de blocos "imagem" em paralelo. */
-async function preloadImages(curso: Curso): Promise<Map<string, LoadedImage | null>> {
+async function preloadImages(course: CourseSummary): Promise<Map<string, LoadedImage | null>> {
   const map = new Map<string, LoadedImage | null>()
   const tasks: Promise<void>[] = []
 
-  for (const unidade of curso.unidades || []) {
-    for (const item of unidade.conteudo || []) {
+  for (const unit of course.unidades || []) {
+    for (const item of unit.conteudo || []) {
       if (item.tipo === 'imagem' && item.conteudo) {
         tasks.push(
           loadImage(item.conteudo).then((img) => {
@@ -148,11 +148,11 @@ function drawHexGrid(
 }
 
 interface TocEntry {
-  titulo: string
+  title: string
   page: number
 }
 
-interface GabaritoEntry {
+interface AnswerKeyEntry {
   question: string
   answer: string
 }
@@ -160,7 +160,7 @@ interface GabaritoEntry {
 /**
  * Função principal para gerar o PDF
  */
-export async function generateCoursePDF(curso: Curso, filename?: string): Promise<void> {
+export async function generateCoursePDF(course: CourseSummary, filename?: string): Promise<void> {
   const doc = new jsPDF({
     orientation: 'portrait',
     unit: 'mm',
@@ -183,9 +183,9 @@ export async function generateCoursePDF(curso: Curso, filename?: string): Promis
   doc.addFont('OpenSans-Light.ttf', 'OpenSans', 'light')
 
   // Pré-carrega imagens dos blocos "imagem" antes de montar o documento
-  const loadedImages = await preloadImages(curso)
+  const loadedImages = await preloadImages(course)
   let figureCounter = 0
-  let quizGabarito: GabaritoEntry[] = []
+  let quizAnswerKey: AnswerKeyEntry[] = []
   /** Quando true, os helpers de renderização apenas calculam posições/alturas,
    *  sem desenhar tinta real nem quebrar páginas — usado pela passada de
    *  medição do renderBoxV2 para evitar duplicar conteúdo no PDF final. */
@@ -349,18 +349,18 @@ export async function generateCoursePDF(curso: Curso, filename?: string): Promis
     drawHexGrid(doc, PAGE_WIDTH - 85, -15, 9, 6, 9)
 
     let y = 110
-    const titulo = curso.titulo || 'Curso'
-    const titleSize = titulo.length > 40 ? 26 : 32
-    y = renderText(titulo, y, {
+    const title = course.titulo || 'Curso'
+    const titleSize = title.length > 40 ? 26 : 32
+    y = renderText(title, y, {
       fontSize: titleSize,
       fontStyle: 'bold',
       color: THEME.colors.white,
       maxWidth: CONTENT_WIDTH,
     })
 
-    if (curso.descricao) {
+    if (course.descricao) {
       y = addSpace(y, 6)
-      renderText(curso.descricao, y, {
+      renderText(course.descricao, y, {
         fontSize: 13,
         fontStyle: 'light',
         color: THEME.colors.white,
@@ -373,7 +373,7 @@ export async function generateCoursePDF(curso: Curso, filename?: string): Promis
     doc.setLineWidth(0.5)
     doc.line(MARGIN, footerY, PAGE_WIDTH - MARGIN, footerY)
 
-    const metaParts = [curso.categoria, curso.cargaHoraria, curso.modalidade].filter(Boolean)
+    const metaParts = [course.categoria, course.cargaHoraria, course.modalidade].filter(Boolean)
     renderText(metaParts.join('   ·   '), footerY + 6, {
       fontSize: 10,
       color: THEME.colors.accent,
@@ -387,7 +387,7 @@ export async function generateCoursePDF(curso: Curso, filename?: string): Promis
   const renderTitlePage = () => {
     doc.addPage()
     const y = PAGE_HEIGHT / 2 - 20
-    renderText(curso.titulo || 'Curso', y, {
+    renderText(course.titulo || 'Curso', y, {
       fontSize: THEME.fonts.h1,
       fontStyle: 'light',
       color: THEME.colors.primary,
@@ -407,12 +407,12 @@ export async function generateCoursePDF(curso: Curso, filename?: string): Promis
     y = addSpace(y, 8)
 
     const infos = [
-      { label: 'Categoria', value: curso.categoria },
-      { label: 'Carga Horária', value: curso.cargaHoraria },
-      { label: 'Modalidade', value: curso.modalidade },
+      { label: 'Categoria', value: course.categoria },
+      { label: 'Carga Horária', value: course.cargaHoraria },
+      { label: 'Modalidade', value: course.modalidade },
       {
         label: 'Data de Criação',
-        value: curso.dataCriacao ? new Date(curso.dataCriacao).toLocaleDateString('pt-BR') : '',
+        value: course.dataCriacao ? new Date(course.dataCriacao).toLocaleDateString('pt-BR') : '',
       },
     ].filter((info) => info.value)
 
@@ -430,10 +430,10 @@ export async function generateCoursePDF(curso: Curso, filename?: string): Promis
   // ========================================================================
   let tocPageNumber = 0
 
-  const reserveTocPage = (unidadesCount: number) => {
+  const reserveTocPage = (unitsCount: number) => {
     doc.addPage()
     tocPageNumber = doc.getNumberOfPages()
-    const reservedPages = unidadesCount > 20 ? 2 : 1
+    const reservedPages = unitsCount > 20 ? 2 : 1
     for (let i = 1; i < reservedPages; i++) {
       doc.addPage()
     }
@@ -478,9 +478,9 @@ export async function generateCoursePDF(curso: Curso, filename?: string): Promis
 
       doc.setTextColor(THEME.colors.primary)
       const maxTitleWidth = dotsEndX - titleX - 5
-      const titulo = doc.splitTextToSize(entry.titulo, maxTitleWidth)[0]
-      doc.text(titulo, titleX, y, { baseline: 'top' })
-      const titleWidth = doc.getTextWidth(titulo)
+      const title = doc.splitTextToSize(entry.title, maxTitleWidth)[0]
+      doc.text(title, titleX, y, { baseline: 'top' })
+      const titleWidth = doc.getTextWidth(title)
 
       const dotsStartX = titleX + titleWidth + 2
       const dotWidth = doc.getTextWidth('.')
@@ -513,7 +513,7 @@ export async function generateCoursePDF(curso: Curso, filename?: string): Promis
   // ========================================================================
   // ABERTURA DE UNIDADE
   // ========================================================================
-  const renderUnitOpener = (unidade: Unidade, index: number): number => {
+  const renderUnitOpener = (unit: Unit, index: number): number => {
     doc.addPage()
     const openerPage = doc.getNumberOfPages()
 
@@ -533,7 +533,7 @@ export async function generateCoursePDF(curso: Curso, filename?: string): Promis
     })
     y = addSpace(y, 4)
 
-    y = renderText(unidade.titulo, y, {
+    y = renderText(unit.titulo, y, {
       fontSize: THEME.fonts.h1,
       fontStyle: 'bold',
       color: THEME.colors.white,
@@ -541,8 +541,8 @@ export async function generateCoursePDF(curso: Curso, filename?: string): Promis
     })
     y = addSpace(y, 10)
 
-    if (unidade.descricao) {
-      renderText(unidade.descricao, y, {
+    if (unit.descricao) {
+      renderText(unit.descricao, y, {
         fontSize: 12,
         fontStyle: 'light',
         color: THEME.colors.white,
@@ -560,7 +560,7 @@ export async function generateCoursePDF(curso: Curso, filename?: string): Promis
   // ========================================================================
   // ROTEADOR DE BLOCOS DE CONTEÚDO
   // ========================================================================
-  const renderContentItem = (item: ConteudoUnidade, y: number): number => {
+  const renderContentItem = (item: Block, y: number): number => {
     switch (item.tipo) {
       case 'titulo':
         return renderText(item.conteudo, y, {
@@ -654,7 +654,7 @@ export async function generateCoursePDF(curso: Curso, filename?: string): Promis
           y,
           (yPos) => {
             let boxY = yPos
-            ;(item.itensObjetivos || []).forEach((objetivo, idx) => {
+            ;(item.itensObjetivos || []).forEach((objective, idx) => {
               boxY = checkPageBreak(boxY, 8)
               renderText(String(idx + 1).padStart(2, '0'), boxY, {
                 fontSize: THEME.fonts.bodySize,
@@ -662,7 +662,7 @@ export async function generateCoursePDF(curso: Curso, filename?: string): Promis
                 color: THEME.colors.accent,
                 x: MARGIN + THEME.layout.boxPadding,
               })
-              boxY = renderText(objetivo.texto, boxY, {
+              boxY = renderText(objective.texto, boxY, {
                 fontSize: THEME.fonts.bodySize,
                 color: THEME.colors.text,
                 x: MARGIN + THEME.layout.boxPadding + 12,
@@ -699,7 +699,7 @@ export async function generateCoursePDF(curso: Curso, filename?: string): Promis
   // BLOCOS ESPECÍFICOS
   // ========================================================================
 
-  const renderImageBox = (item: ConteudoUnidade, y: number): number => {
+  const renderImageBox = (item: Block, y: number): number => {
     const loaded = loadedImages.get(item.id)
 
     if (!loaded) {
@@ -758,7 +758,7 @@ export async function generateCoursePDF(curso: Curso, filename?: string): Promis
     return newY
   }
 
-  const renderList = (items: ListaItem[], type: string = 'nao-ordenada', y: number): number => {
+  const renderList = (items: ListItem[], type: string = 'nao-ordenada', y: number): number => {
     let currentY = y
     const indent = 8
 
@@ -818,16 +818,16 @@ export async function generateCoursePDF(curso: Curso, filename?: string): Promis
     })
   }
 
-  const renderFlipcards = (item: ConteudoUnidade, y: number): number => {
+  const renderFlipcards = (item: Block, y: number): number => {
     const cards = cardsFlipcard(item)
     if (cards.length === 0) return y
-    return cards.reduce((yAtual, card) => renderFlipcardBox(card, yAtual), y)
+    return cards.reduce((currentY, card) => renderFlipcardBox(card, currentY), y)
   }
 
   const renderFlipcardBox = (card: FlipcardItem, y: number): number => {
-    const frenteText = card.tituloFrente || ''
-    const versoText = card.conteudoVerso || ''
-    const shortEnough = frenteText.split(/\s+/).length < 40 && versoText.split(/\s+/).length < 40
+    const frontText = card.tituloFrente || ''
+    const backText = card.conteudoVerso || ''
+    const shortEnough = frontText.split(/\s+/).length < 40 && backText.split(/\s+/).length < 40
 
     return renderBoxV2(y, (yPos) => {
       const padding = THEME.layout.boxPadding
@@ -844,7 +844,7 @@ export async function generateCoursePDF(curso: Curso, filename?: string): Promis
           color: THEME.colors.accent,
           x: leftX,
         })
-        leftY = renderText(frenteText, leftY, {
+        leftY = renderText(frontText, leftY, {
           fontSize: THEME.fonts.bodySize,
           color: THEME.colors.text,
           x: leftX,
@@ -858,7 +858,7 @@ export async function generateCoursePDF(curso: Curso, filename?: string): Promis
           color: THEME.colors.accent,
           x: rightX,
         })
-        rightY = renderText(versoText, rightY, {
+        rightY = renderText(backText, rightY, {
           fontSize: THEME.fonts.bodySize,
           color: THEME.colors.text,
           x: rightX,
@@ -876,7 +876,7 @@ export async function generateCoursePDF(curso: Curso, filename?: string): Promis
         color: THEME.colors.accent,
         x: MARGIN + padding,
       })
-      boxY = renderText(frenteText, boxY, {
+      boxY = renderText(frontText, boxY, {
         fontSize: THEME.fonts.bodySize,
         color: THEME.colors.text,
         x: MARGIN + padding,
@@ -890,7 +890,7 @@ export async function generateCoursePDF(curso: Curso, filename?: string): Promis
         color: THEME.colors.accent,
         x: MARGIN + padding,
       })
-      boxY = renderText(versoText, boxY, {
+      boxY = renderText(backText, boxY, {
         fontSize: THEME.fonts.bodySize,
         color: THEME.colors.text,
         x: MARGIN + padding,
@@ -916,7 +916,7 @@ export async function generateCoursePDF(curso: Curso, filename?: string): Promis
           })
           boxY = addSpace(boxY, 2)
 
-          question.opcoes.forEach((opcao, oIdx) => {
+          question.opcoes.forEach((option, oIdx) => {
             const letter = String.fromCharCode(65 + oIdx)
             boxY = checkPageBreak(boxY, 8)
             renderText(`${letter})`, boxY, {
@@ -925,7 +925,7 @@ export async function generateCoursePDF(curso: Curso, filename?: string): Promis
               color: THEME.colors.accent,
               x: MARGIN + 4,
             })
-            boxY = renderText(opcao.texto, boxY, {
+            boxY = renderText(option.texto, boxY, {
               fontSize: THEME.fonts.bodySize,
               color: THEME.colors.text,
               x: MARGIN + 12,
@@ -944,7 +944,7 @@ export async function generateCoursePDF(curso: Curso, filename?: string): Promis
 
           if (!measuring) {
             const correctIdx = question.opcoes.findIndex((o) => o.isCorrect)
-            quizGabarito.push({
+            quizAnswerKey.push({
               question: `Questão ${qIdx + 1}`,
               answer: correctIdx >= 0 ? String.fromCharCode(65 + correctIdx) : '-',
             })
@@ -959,7 +959,7 @@ export async function generateCoursePDF(curso: Curso, filename?: string): Promis
     )
   }
 
-  const renderGabarito = (items: GabaritoEntry[], y: number): number => {
+  const renderAnswerKey = (items: AnswerKeyEntry[], y: number): number => {
     let newY = addSeparator(y)
     newY = renderText('Gabarito', newY, {
       fontSize: THEME.fonts.h3,
@@ -980,24 +980,24 @@ export async function generateCoursePDF(curso: Curso, filename?: string): Promis
   // INÍCIO DA EXECUÇÃO
   // ========================================================================
 
-  const unidades = curso.unidades || []
+  const units = course.unidades || []
 
   renderCoverPage()
   renderTitlePage()
   renderCreditsPage()
-  reserveTocPage(unidades.length)
+  reserveTocPage(units.length)
 
   const tocEntries: TocEntry[] = []
 
-  unidades.forEach((unidade, index) => {
-    quizGabarito = []
-    const openerPage = renderUnitOpener(unidade, index)
-    tocEntries.push({ titulo: unidade.titulo, page: openerPage })
+  units.forEach((unit, index) => {
+    quizAnswerKey = []
+    const openerPage = renderUnitOpener(unit, index)
+    tocEntries.push({ title: unit.titulo, page: openerPage })
 
     doc.addPage()
     let y: number = CONTENT_TOP
 
-    ;(unidade.conteudo || [])
+    ;(unit.conteudo || [])
       .slice()
       .sort((a, b) => a.ordem - b.ordem)
       .forEach((item) => {
@@ -1005,8 +1005,8 @@ export async function generateCoursePDF(curso: Curso, filename?: string): Promis
         y = addSpace(y, 5)
       })
 
-    if (quizGabarito.length > 0) {
-      renderGabarito(quizGabarito, y)
+    if (quizAnswerKey.length > 0) {
+      renderAnswerKey(quizAnswerKey, y)
     }
   })
 
@@ -1028,7 +1028,7 @@ export async function generateCoursePDF(curso: Curso, filename?: string): Promis
   if (filename) {
     fileName = filename.endsWith('.pdf') ? filename : `${filename}.pdf`
   } else {
-    fileName = `${(curso.titulo || 'curso').replace(/[^a-z0-9]/gi, '_')}.pdf`
+    fileName = `${(course.titulo || 'curso').replace(/[^a-z0-9]/gi, '_')}.pdf`
   }
   doc.save(fileName)
 }

@@ -18,6 +18,6 @@ export function extractYouTubeId(url: string): string {
   return ''
 }
 
-export function ehUrlYouTubeValida(url: string): boolean {
+export function isValidYouTubeUrl(url: string): boolean {
   return extractYouTubeId(url) !== ''
 }

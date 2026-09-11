@@ -1,8 +1,8 @@
 import type { ReactNode } from 'react'
-import { exigirPermissao } from '@/lib/page-guard'
+import { requirePermission } from '@/lib/page-guard'
 
-export default async function NovoCursoLayout({ children }: { children: ReactNode }) {
-  await exigirPermissao('curso:criar')
+export default async function NewCourseLayout({ children }: { children: ReactNode }) {
+  await requirePermission('curso:criar')
 
   return <>{children}</>
 }

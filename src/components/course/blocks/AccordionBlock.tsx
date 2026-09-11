@@ -4,9 +4,9 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from '@/components/ui/accordion'
-import { ConteudoUnidade } from '@/types/gerador-curso'
+import { Block } from '@/types/course'
 
-export function AccordionBlock({ item }: { item: ConteudoUnidade }) {
+export function AccordionBlock({ item }: { item: Block }) {
   return (
     <div className="mb-4">
       {item.items && item.items.length > 0 ? (

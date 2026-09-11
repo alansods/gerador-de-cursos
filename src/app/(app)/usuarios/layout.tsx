@@ -1,8 +1,8 @@
 import type { ReactNode } from 'react'
-import { exigirPermissao } from '@/lib/page-guard'
+import { requirePermission } from '@/lib/page-guard'
 
-export default async function UsuariosLayout({ children }: { children: ReactNode }) {
-  await exigirPermissao('usuario:gerenciar')
+export default async function UsersLayout({ children }: { children: ReactNode }) {
+  await requirePermission('usuario:gerenciar')
 
   return <>{children}</>
 }

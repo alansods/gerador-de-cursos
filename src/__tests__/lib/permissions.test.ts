@@ -1,18 +1,18 @@
 import {
   can,
   assertCan,
-  podeEditarCurso,
-  podeExcluirCurso,
-  permissoesDoCurso,
-  mapCargoParaRole,
+  canEditCourse,
+  canDeleteCourse,
+  getCoursePermissions,
+  mapJobTitleToRole,
   ForbiddenError,
-  type RoleUsuario,
-  type Acao,
+  type UserRole,
+  type Action,
 } from '@/lib/permissions'
 
-const usuario = (role: RoleUsuario, id = 'u1') => ({ id, role })
+const user = (role: UserRole, id = 'u1') => ({ id, role })
 
-const cursoDe = (ownerId: string | null) => ({ id: 'c1', ownerId })
+const courseOf = (ownerId: string | null) => ({ id: 'c1', ownerId })
 
 describe('mapCargoParaRole', () => {
   it.each([
@@ -21,13 +21,13 @@ describe('mapCargoParaRole', () => {
     ['Analista', 'CONTEUDISTA'],
     [null, 'CONTEUDISTA'],
     [undefined, 'CONTEUDISTA'],
-  ])('mapeia %s para %s', (cargo, esperado) => {
-    expect(mapCargoParaRole(cargo as string | null)).toBe(esperado)
+  ])('mapeia %s para %s', (cargo, expected) => {
+    expect(mapJobTitleToRole(cargo as string | null)).toBe(expected)
   })
 })
 
 describe('can - ações globais', () => {
-  const matriz: Array<[Acao, Record<RoleUsuario, boolean>]> = [
+  const matrix: Array<[Action, Record<UserRole, boolean>]> = [
     [
       'usuario:gerenciar',
       {
@@ -70,9 +70,9 @@ describe('can - ações globais', () => {
     ],
   ]
 
-  it.each(matriz)('%s respeita a matriz de papéis', (acao, esperado) => {
-    ;(Object.keys(esperado) as RoleUsuario[]).forEach((role) => {
-      expect(can(usuario(role), acao)).toBe(esperado[role])
+  it.each(matrix)('%s respeita a matriz de papéis', (action, expected) => {
+    ;(Object.keys(expected) as UserRole[]).forEach((role) => {
+      expect(can(user(role), action)).toBe(expected[role])
     })
   })
 
@@ -84,74 +84,72 @@ describe('can - ações globais', () => {
 
 describe('podeEditarCurso', () => {
   it('ADMIN e GESTOR editam qualquer curso', () => {
-    expect(podeEditarCurso(usuario('ADMIN'), cursoDe('outro'))).toBe(true)
-    expect(podeEditarCurso(usuario('GESTOR'), cursoDe('outro'))).toBe(true)
+    expect(canEditCourse(user('ADMIN'), courseOf('outro'))).toBe(true)
+    expect(canEditCourse(user('GESTOR'), courseOf('outro'))).toBe(true)
   })
 
   it('CONTEUDISTA edita apenas o próprio curso', () => {
-    expect(podeEditarCurso(usuario('CONTEUDISTA'), cursoDe('u1'))).toBe(true)
-    expect(podeEditarCurso(usuario('CONTEUDISTA'), cursoDe('outro'))).toBe(false)
+    expect(canEditCourse(user('CONTEUDISTA'), courseOf('u1'))).toBe(true)
+    expect(canEditCourse(user('CONTEUDISTA'), courseOf('outro'))).toBe(false)
   })
 
   it('CONTEUDISTA edita curso alheio quando tem colaboração concedida', () => {
-    expect(podeEditarCurso(usuario('CONTEUDISTA'), cursoDe('outro'), { concedida: true })).toBe(
-      true
-    )
+    expect(canEditCourse(user('CONTEUDISTA'), courseOf('outro'), { granted: true })).toBe(true)
   })
 
   it('CONTEUDISTA sem colaboração não edita curso alheio', () => {
-    expect(podeEditarCurso(usuario('CONTEUDISTA'), cursoDe('outro'), null)).toBe(false)
+    expect(canEditCourse(user('CONTEUDISTA'), courseOf('outro'), null)).toBe(false)
   })
 
   it('REVISOR nunca edita, mesmo com colaboração concedida', () => {
-    expect(podeEditarCurso(usuario('REVISOR'), cursoDe('outro'), { concedida: true })).toBe(false)
+    expect(canEditCourse(user('REVISOR'), courseOf('outro'), { granted: true })).toBe(false)
   })
 
   it('CONVIDADO edita qualquer curso, como ADMIN e GESTOR', () => {
-    expect(podeEditarCurso(usuario('CONVIDADO'), cursoDe('outro'))).toBe(true)
+    expect(canEditCourse(user('CONVIDADO'), courseOf('outro'))).toBe(true)
   })
 
   it('curso órfão (sem dono) só é editável por ADMIN e GESTOR', () => {
-    expect(podeEditarCurso(usuario('ADMIN'), cursoDe(null))).toBe(true)
-    expect(podeEditarCurso(usuario('CONTEUDISTA'), cursoDe(null))).toBe(false)
+    expect(canEditCourse(user('ADMIN'), courseOf(null))).toBe(true)
+    expect(canEditCourse(user('CONTEUDISTA'), courseOf(null))).toBe(false)
   })
 })
 
 describe('podeExcluirCurso', () => {
   it('CONTEUDISTA exclui só o próprio, mesmo sendo colaborador EDITOR', () => {
-    expect(podeExcluirCurso(usuario('CONTEUDISTA'), cursoDe('u1'))).toBe(true)
-    expect(podeExcluirCurso(usuario('CONTEUDISTA'), cursoDe('outro'))).toBe(false)
+    expect(canDeleteCourse(user('CONTEUDISTA'), courseOf('u1'))).toBe(true)
+    expect(canDeleteCourse(user('CONTEUDISTA'), courseOf('outro'))).toBe(false)
     expect(
-      can(usuario('CONTEUDISTA'), 'curso:excluir', {
-        curso: cursoDe('outro'),
-        colaboracao: { concedida: true },
+      can(user('CONTEUDISTA'), 'curso:excluir', {
+        course: courseOf('outro'),
+        collaboration: { granted: true },
       })
     ).toBe(false)
   })
 
   it('REVISOR e CONVIDADO não excluem', () => {
-    expect(podeExcluirCurso(usuario('REVISOR'), cursoDe('u1'))).toBe(false)
-    expect(podeExcluirCurso(usuario('CONVIDADO'), cursoDe('u1'))).toBe(false)
+    expect(canDeleteCourse(user('REVISOR'), courseOf('u1'))).toBe(false)
+    expect(canDeleteCourse(user('CONVIDADO'), courseOf('u1'))).toBe(false)
   })
 })
 
 describe('curso:solicitarAcesso', () => {
   it('só CONTEUDISTA e apenas em curso alheio', () => {
-    const curso = cursoDe('outro')
-    expect(can(usuario('CONTEUDISTA'), 'curso:solicitarAcesso', { curso })).toBe(true)
+    const course = courseOf('outro')
+    expect(can(user('CONTEUDISTA'), 'curso:solicitarAcesso', { course })).toBe(true)
     expect(
-      can(usuario('CONTEUDISTA'), 'curso:solicitarAcesso', {
-        curso: cursoDe('u1'),
+      can(user('CONTEUDISTA'), 'curso:solicitarAcesso', {
+        course: courseOf('u1'),
       })
     ).toBe(false)
-    expect(can(usuario('REVISOR'), 'curso:solicitarAcesso', { curso })).toBe(false)
+    expect(can(user('REVISOR'), 'curso:solicitarAcesso', { course })).toBe(false)
   })
 
   it('não solicita acesso a curso onde já é colaborador', () => {
     expect(
-      can(usuario('CONTEUDISTA'), 'curso:solicitarAcesso', {
-        curso: cursoDe('outro'),
-        colaboracao: { concedida: true },
+      can(user('CONTEUDISTA'), 'curso:solicitarAcesso', {
+        course: courseOf('outro'),
+        collaboration: { granted: true },
       })
     ).toBe(false)
   })
@@ -160,18 +158,18 @@ describe('curso:solicitarAcesso', () => {
 describe('colaborador:gerenciar', () => {
   it('dono, ADMIN e GESTOR gerenciam colaboradores', () => {
     expect(
-      can(usuario('CONTEUDISTA'), 'colaborador:gerenciar', {
-        curso: cursoDe('u1'),
+      can(user('CONTEUDISTA'), 'colaborador:gerenciar', {
+        course: courseOf('u1'),
       })
     ).toBe(true)
     expect(
-      can(usuario('CONTEUDISTA'), 'colaborador:gerenciar', {
-        curso: cursoDe('outro'),
+      can(user('CONTEUDISTA'), 'colaborador:gerenciar', {
+        course: courseOf('outro'),
       })
     ).toBe(false)
     expect(
-      can(usuario('GESTOR'), 'colaborador:gerenciar', {
-        curso: cursoDe('outro'),
+      can(user('GESTOR'), 'colaborador:gerenciar', {
+        course: courseOf('outro'),
       })
     ).toBe(true)
   })
@@ -179,25 +177,25 @@ describe('colaborador:gerenciar', () => {
 
 describe('assertCan', () => {
   it('lança ForbiddenError quando negado', () => {
-    expect(() => assertCan(usuario('REVISOR'), 'curso:criar')).toThrow(ForbiddenError)
-    expect(() => assertCan(usuario('ADMIN'), 'curso:criar')).not.toThrow()
-    expect(() => assertCan(usuario('CONVIDADO'), 'curso:criar')).not.toThrow()
+    expect(() => assertCan(user('REVISOR'), 'curso:criar')).toThrow(ForbiddenError)
+    expect(() => assertCan(user('ADMIN'), 'curso:criar')).not.toThrow()
+    expect(() => assertCan(user('CONVIDADO'), 'curso:criar')).not.toThrow()
   })
 
   it('ForbiddenError carrega status 403', () => {
     try {
-      assertCan(usuario('REVISOR'), 'usuario:gerenciar')
+      assertCan(user('REVISOR'), 'usuario:gerenciar')
       throw new Error('deveria ter lançado')
-    } catch (erro) {
-      expect(erro).toBeInstanceOf(ForbiddenError)
-      expect((erro as ForbiddenError).status).toBe(403)
+    } catch (error) {
+      expect(error).toBeInstanceOf(ForbiddenError)
+      expect((error as ForbiddenError).status).toBe(403)
     }
   })
 })
 
 describe('permissoesDoCurso', () => {
   it('resume as permissões do dono conteudista', () => {
-    expect(permissoesDoCurso(usuario('CONTEUDISTA'), cursoDe('u1'))).toEqual({
+    expect(getCoursePermissions(user('CONTEUDISTA'), courseOf('u1'))).toEqual({
       podeEditar: true,
       podeExcluir: true,
       podeComentar: true,
@@ -210,7 +208,7 @@ describe('permissoesDoCurso', () => {
   })
 
   it('resume as permissões do revisor em curso alheio', () => {
-    expect(permissoesDoCurso(usuario('REVISOR'), cursoDe('outro'))).toEqual({
+    expect(getCoursePermissions(user('REVISOR'), courseOf('outro'))).toEqual({
       podeEditar: false,
       podeExcluir: false,
       podeComentar: true,

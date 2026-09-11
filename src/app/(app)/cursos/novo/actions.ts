@@ -1,91 +1,91 @@
-import type { ResumoGeracao } from '@/lib/blocos'
-import { NOME_ARQUIVO_EXEMPLO } from '@/lib/documento-exemplo'
-import type { DeteccaoMarcadores } from '@/lib/marcadores'
-import type { CursoGerado } from '@/types/gerador-curso'
+import type { GenerationSummary } from '@/lib/blocks'
+import { SAMPLE_FILE_NAME } from '@/lib/sample-document'
+import type { MarkerDetection } from '@/lib/markers'
+import type { Course } from '@/types/course'
 
-const TIMEOUT_GERACAO = 55_000
+const GENERATION_TIMEOUT = 55_000
 
-interface RespostaExtracao {
+interface ExtractionResponse {
   text: string
-  marcadores?: DeteccaoMarcadores
+  markers?: MarkerDetection
 }
 
-interface RespostaGeracao {
-  course: CursoGerado
-  resumo: ResumoGeracao
+interface GenerationResponse {
+  course: Course
+  summary: GenerationSummary
 }
 
-export async function extrairDocumento(arquivo: File): Promise<RespostaExtracao> {
-  const corpo = new FormData()
-  corpo.append('file', arquivo)
+export async function extractDocument(file: File): Promise<ExtractionResponse> {
+  const body = new FormData()
+  body.append('file', file)
 
-  const resposta = await fetch('/api/extract-document', { method: 'POST', body: corpo })
-  const dados = await lerJson<RespostaExtracao>(resposta, 'Erro ao extrair texto do documento')
+  const response = await fetch('/api/extract-document', { method: 'POST', body })
+  const data = await lerJson<ExtractionResponse>(response, 'Erro ao extrair texto do documento')
 
-  if (!dados.text) throw new Error('Não foi possível extrair texto do documento')
+  if (!data.text) throw new Error('Não foi possível extrair texto do documento')
 
-  return dados
+  return data
 }
 
-export async function criarCursoPorIA(texto: string): Promise<RespostaGeracao> {
-  const controlador = new AbortController()
-  const limite = setTimeout(() => controlador.abort(), TIMEOUT_GERACAO)
+export async function createCourseWithAi(text: string): Promise<GenerationResponse> {
+  const controller = new AbortController()
+  const limit = setTimeout(() => controller.abort(), GENERATION_TIMEOUT)
 
   try {
-    const resposta = await fetch('/api/generate-course-from-text', {
+    const response = await fetch('/api/generate-course-from-text', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ text: texto }),
-      signal: controlador.signal,
+      body: JSON.stringify({ text }),
+      signal: controller.signal,
     })
 
-    const dados = await lerJson<Partial<RespostaGeracao>>(resposta, 'Erro ao gerar curso com IA')
+    const data = await lerJson<Partial<GenerationResponse>>(response, 'Erro ao gerar curso com IA')
 
-    if (!dados.course) throw new Error('A IA não retornou um curso válido')
+    if (!data.course) throw new Error('A IA não retornou um curso válido')
 
-    return dados as RespostaGeracao
-  } catch (erro) {
-    if (erro instanceof DOMException && erro.name === 'AbortError') {
+    return data as GenerationResponse
+  } catch (error) {
+    if (error instanceof DOMException && error.name === 'AbortError') {
       throw new Error(
         'O documento é grande demais para uma geração única. Divida o conteúdo em partes menores e tente novamente.'
       )
     }
-    throw erro
+    throw error
   } finally {
-    clearTimeout(limite)
+    clearTimeout(limit)
   }
 }
 
-export async function baixarDocumentoExemplo(): Promise<void> {
-  const resposta = await fetch('/api/sample-document')
-  if (!resposta.ok) throw new Error('Erro ao baixar o documento de exemplo')
+export async function downloadSampleDocument(): Promise<void> {
+  const response = await fetch('/api/sample-document')
+  if (!response.ok) throw new Error('Erro ao baixar o documento de exemplo')
 
-  const blob = await resposta.blob()
+  const blob = await response.blob()
   const url = URL.createObjectURL(blob)
   const link = document.createElement('a')
 
   link.href = url
-  link.download = NOME_ARQUIVO_EXEMPLO
+  link.download = SAMPLE_FILE_NAME
   document.body.appendChild(link)
   link.click()
   document.body.removeChild(link)
   URL.revokeObjectURL(url)
 }
 
-async function lerJson<T>(resposta: Response, mensagemPadrao: string): Promise<T> {
-  const tipo = resposta.headers.get('content-type')
+async function lerJson<T>(response: Response, defaultMessage: string): Promise<T> {
+  const type = response.headers.get('content-type')
 
-  if (!tipo?.includes('application/json')) {
-    const corpo = await resposta.text()
-    console.error('Resposta não-JSON da API:', corpo.substring(0, 200))
-    throw new Error(mensagemPadrao)
+  if (!type?.includes('application/json')) {
+    const body = await response.text()
+    console.error('Resposta não-JSON da API:', body.substring(0, 200))
+    throw new Error(defaultMessage)
   }
 
-  const dados = await resposta.json()
+  const data = await response.json()
 
-  if (!resposta.ok) {
-    throw new Error(dados.message || dados.error || mensagemPadrao)
+  if (!response.ok) {
+    throw new Error(data.message || data.error || defaultMessage)
   }
 
-  return dados as T
+  return data as T
 }

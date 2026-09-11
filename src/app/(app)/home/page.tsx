@@ -28,11 +28,11 @@ import {
   MessageSquare,
 } from 'lucide-react'
 import { PageTransition } from '@/components/PageTransition'
-import { useAtividadesQuery } from '@/hooks/queries/useAtividadesQuery'
+import { useActivitiesQuery } from '@/hooks/queries/useActivitiesQuery'
 
 export default function HomePage() {
   const router = useRouter()
-  const { activities, isLoading: loading } = useAtividadesQuery(5)
+  const { activities, isLoading: loading } = useActivitiesQuery(5)
 
   const features = [
     {
@@ -60,8 +60,8 @@ export default function HomePage() {
   ]
 
   // Mapear tipo de atividade para ícone e cor
-  const getActivityIconAndColor = (tipo: string) => {
-    switch (tipo) {
+  const getActivityIconAndColor = (type: string) => {
+    switch (type) {
       case 'curso_criado':
         return {
           icon: CheckCircle2,

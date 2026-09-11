@@ -1,15 +1,15 @@
-import type { RoleUsuario } from '@/lib/permissions'
+import type { UserRole } from '@/lib/permissions'
 
-export type AlvoColab = 'bloco' | 'unidade'
+export type CollabTarget = 'bloco' | 'unidade'
 
-export type AcaoColab = 'adicionou' | 'editou' | 'excluiu' | 'reordenou'
+export type CollabAction = 'adicionou' | 'editou' | 'excluiu' | 'reordenou'
 
 /** `type` e não `interface`: o Liveblocks exige compatibilidade com JsonObject,
  *  que uma interface não satisfaz por não ter index signature implícita. */
-export type EventoColab = {
+export type CollabEvent = {
   tipo: 'conteudo'
-  alvo: AlvoColab
-  acao: AcaoColab
+  alvo: CollabTarget
+  acao: CollabAction
   /** Título do bloco ou da unidade, para o toast do outro lado.
    *  `null` em vez de opcional: o Liveblocks exige JSON válido no RoomEvent. */
   nome: string | null
@@ -30,11 +30,11 @@ declare global {
       info: {
         nome: string
         cor: string
-        role: RoleUsuario
+        role: UserRole
       }
     }
 
-    RoomEvent: EventoColab
+    RoomEvent: CollabEvent
   }
 }
 

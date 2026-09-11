@@ -2,21 +2,21 @@
 
 import { prisma } from '@/lib/prisma'
 import { getServerUser } from '@/lib/auth-server'
-import { permissoesDoCurso, type StatusCurso } from '@/lib/permissions'
-import type { CursoGerado } from '@/types/gerador-curso'
+import { getCoursePermissions, type CourseStatus } from '@/lib/permissions'
+import type { Course } from '@/types/course'
 
-export interface BuscarCursosParams {
+export interface FetchCoursesParams {
   cursor?: string // ID do último curso da página anterior
   limit?: number
   search?: string
   category?: string
   modality?: string
-  status?: StatusCurso
-  escopo?: 'meus' | 'todos'
+  status?: CourseStatus
+  scope?: 'meus' | 'todos'
 }
 
-export interface BuscarCursosResult {
-  cursos: CursoGerado[]
+export interface FetchCoursesResult {
+  courses: Course[]
   nextCursor: string | null
   hasMore: boolean
   total: number
@@ -25,20 +25,20 @@ export interface BuscarCursosResult {
 /**
  * Server Action para buscar cursos com cursor pagination (infinite scroll)
  */
-export async function buscarCursos({
+export async function fetchCourses({
   cursor,
   limit = 6,
   search,
   category,
   modality,
   status,
-  escopo = 'todos',
-}: BuscarCursosParams): Promise<BuscarCursosResult> {
+  scope = 'todos',
+}: FetchCoursesParams): Promise<FetchCoursesResult> {
   try {
     const user = await getServerUser()
 
     if (!user) {
-      return { cursos: [], nextCursor: null, hasMore: false, total: 0 }
+      return { courses: [], nextCursor: null, hasMore: false, total: 0 }
     }
 
     // Construir filtros dinâmicos
@@ -50,11 +50,11 @@ export async function buscarCursos({
       }>
       categoria?: string
       modalidade?: string
-      status?: StatusCurso
+      status?: CourseStatus
       ownerId?: string
     } = {}
 
-    if (escopo === 'meus') {
+    if (scope === 'meus') {
       where.ownerId = user.id
     }
 
@@ -86,7 +86,7 @@ export async function buscarCursos({
     const total = await prisma.curso.count({ where })
 
     // Buscar cursos com cursor pagination
-    const cursos = await prisma.curso.findMany({
+    const courses = await prisma.curso.findMany({
       where,
       include: { owner: { select: { id: true, nome: true } } },
       take: limit + 1, // Pegar 1 a mais para saber se há próxima página
@@ -103,53 +103,57 @@ export async function buscarCursos({
     })
 
     // Verificar se há mais cursos
-    const hasMore = cursos.length > limit
-    const cursosRetornados = hasMore ? cursos.slice(0, limit) : cursos
-    const nextCursor = hasMore ? cursosRetornados[cursosRetornados.length - 1].id : null
+    const hasMore = courses.length > limit
+    const returnedCourses = hasMore ? courses.slice(0, limit) : courses
+    const nextCursor = hasMore ? returnedCourses[returnedCourses.length - 1].id : null
 
-    const cursoIds = cursosRetornados.map((c) => c.id)
+    const courseIds = returnedCourses.map((c) => c.id)
 
     // Colaborações do usuário nos cursos listados, numa consulta só, para que
     // um colaborador apareça com permissão de edição na listagem
-    const colaboracoes = await prisma.cursoColaborador.findMany({
-      where: { userId: user.id, cursoId: { in: cursoIds } },
+    const collaborations = await prisma.cursoColaborador.findMany({
+      where: { userId: user.id, cursoId: { in: courseIds } },
       select: { cursoId: true },
     })
-    const colaboracaoPorCurso = new Map(
-      colaboracoes.map((c) => [c.cursoId, { concedida: true as const }])
+    const collaborationByCourse = new Map(
+      collaborations.map((c) => [c.cursoId, { granted: true as const }])
     )
 
     // Solicitações de acesso pendentes do usuário, para exibir "Aguardando acesso"
-    const solicitacoesPendentes = await prisma.cursoAccessRequest.findMany({
-      where: { solicitanteId: user.id, cursoId: { in: cursoIds }, status: 'PENDENTE' },
+    const pendingAccessRequests = await prisma.cursoAccessRequest.findMany({
+      where: { solicitanteId: user.id, cursoId: { in: courseIds }, status: 'PENDENTE' },
       select: { cursoId: true },
     })
-    const solicitacaoPendentePorCurso = new Set(solicitacoesPendentes.map((s) => s.cursoId))
+    const pendingRequestByCourse = new Set(pendingAccessRequests.map((s) => s.cursoId))
 
     // Transformar para o formato CursoGerado
-    const cursosFormatados: CursoGerado[] = cursosRetornados.map(
-      (curso): CursoGerado => ({
-        id: curso.id,
-        slug: curso.slug || curso.id,
-        titulo: curso.titulo,
-        descricao: curso.descricao,
-        categoria: curso.categoria,
-        modalidade: curso.modalidade,
-        cargaHoraria: curso.cargaHoraria,
-        unidades: curso.unidades as unknown as CursoGerado['unidades'],
-        status: curso.status,
-        version: curso.version,
-        ownerId: curso.ownerId ?? undefined,
-        ownerNome: curso.owner?.nome ?? undefined,
-        permissoes: permissoesDoCurso(user, curso, colaboracaoPorCurso.get(curso.id) ?? null),
-        solicitacaoPendente: solicitacaoPendentePorCurso.has(curso.id),
-        dataCriacao: curso.dataCriacao,
-        dataModificacao: curso.dataModificacao,
+    const formattedCourses: Course[] = returnedCourses.map(
+      (course): Course => ({
+        id: course.id,
+        slug: course.slug || course.id,
+        titulo: course.titulo,
+        descricao: course.descricao,
+        categoria: course.categoria,
+        modalidade: course.modalidade,
+        cargaHoraria: course.cargaHoraria,
+        unidades: course.unidades as unknown as Course['unidades'],
+        status: course.status,
+        version: course.version,
+        ownerId: course.ownerId ?? undefined,
+        ownerNome: course.owner?.nome ?? undefined,
+        permissoes: getCoursePermissions(
+          user,
+          course,
+          collaborationByCourse.get(course.id) ?? null
+        ),
+        solicitacaoPendente: pendingRequestByCourse.has(course.id),
+        dataCriacao: course.dataCriacao,
+        dataModificacao: course.dataModificacao,
       })
     )
 
     return {
-      cursos: cursosFormatados,
+      courses: formattedCourses,
       nextCursor,
       hasMore,
       total,

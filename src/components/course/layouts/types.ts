@@ -1,15 +1,15 @@
 import { ComponentType } from 'react'
-import type { CursoGerado } from '@/types/gerador-curso'
+import type { Course } from '@/types/course'
 import type { BlockTheme } from '../blocks/BlockThemeProvider'
 
 export interface LayoutPlayerProps {
-  curso: CursoGerado
+  course: Course
 }
 
 export interface LayoutMeta {
   id: string
-  nome: string
-  descricao: string
+  name: string
+  description: string
   thumbnail?: string
   /** Cores de acento aplicadas aos blocos (quiz, flipcard, info-box, objetivos, lista)
    *  quando este layout está ativo — no player e no preview do editor. */

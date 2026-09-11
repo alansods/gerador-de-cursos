@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import mammoth from 'mammoth'
 import { requireAuth, createErrorResponse, createSuccessResponse } from '@/lib/auth'
-import { detectarMarcadores } from '@/lib/marcadores'
+import { detectMarkers } from '@/lib/markers'
 
 /**
  * POST /api/extract-document
@@ -66,7 +66,7 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    return createSuccessResponse({ text, marcadores: detectarMarcadores(text) })
+    return createSuccessResponse({ text, marcadores: detectMarkers(text) })
   } catch (error) {
     console.error('Erro ao extrair documento:', error)
     return createErrorResponse('Erro ao processar documento', 500, error)

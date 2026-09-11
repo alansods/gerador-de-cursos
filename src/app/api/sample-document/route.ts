@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { Document, Packer, Paragraph, TextRun, HeadingLevel } from 'docx'
-import { LINHAS_DOCUMENTO_EXEMPLO, NOME_ARQUIVO_EXEMPLO } from '@/lib/documento-exemplo'
+import { SAMPLE_DOCUMENT_LINES, SAMPLE_FILE_NAME } from '@/lib/sample-document'
 
 /**
  * GET /api/sample-document
@@ -11,7 +11,7 @@ export async function GET() {
   const doc = new Document({
     sections: [
       {
-        children: LINHAS_DOCUMENTO_EXEMPLO.map(montarParagrafo),
+        children: SAMPLE_DOCUMENT_LINES.map(buildParagraph),
       },
     ],
   })
@@ -22,27 +22,27 @@ export async function GET() {
     status: 200,
     headers: {
       'Content-Type': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-      'Content-Disposition': `attachment; filename="${NOME_ARQUIVO_EXEMPLO}"`,
+      'Content-Disposition': `attachment; filename="${SAMPLE_FILE_NAME}"`,
     },
   })
 }
 
-function montarParagrafo(linha: string): Paragraph {
-  if (linha.startsWith('CURSO:')) {
-    return new Paragraph({ text: linha, heading: HeadingLevel.HEADING_1 })
+function buildParagraph(line: string): Paragraph {
+  if (line.startsWith('CURSO:')) {
+    return new Paragraph({ text: line, heading: HeadingLevel.HEADING_1 })
   }
 
-  if (linha.startsWith('UNIDADE')) {
-    return new Paragraph({ text: linha, heading: HeadingLevel.HEADING_2 })
+  if (line.startsWith('UNIDADE')) {
+    return new Paragraph({ text: line, heading: HeadingLevel.HEADING_2 })
   }
 
-  if (ehMarcador(linha)) {
-    return new Paragraph({ children: [new TextRun({ text: linha, bold: true })] })
+  if (isMarker(line)) {
+    return new Paragraph({ children: [new TextRun({ text: line, bold: true })] })
   }
 
-  return new Paragraph({ text: linha })
+  return new Paragraph({ text: line })
 }
 
-function ehMarcador(linha: string): boolean {
-  return /_(INICIO|FIM)$/.test(linha.trim())
+function isMarker(line: string): boolean {
+  return /_(INICIO|FIM)$/.test(line.trim())
 }

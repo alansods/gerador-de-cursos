@@ -1,13 +1,13 @@
 import React from 'react'
-import type { CursoGerado } from '@/types/gerador-curso'
+import type { Course } from '@/types/course'
 import { CoursePlayer } from '@/components/course/CoursePlayer'
 
 interface AppProps {
-  curso: CursoGerado | null
+  course: Course | null
 }
 
-export default function App({ curso }: AppProps) {
-  if (!curso) {
+export default function App({ course }: AppProps) {
+  if (!course) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center p-8 max-w-md">
@@ -35,5 +35,5 @@ export default function App({ curso }: AppProps) {
     )
   }
 
-  return <CoursePlayer curso={curso} />
+  return <CoursePlayer course={course} />
 }

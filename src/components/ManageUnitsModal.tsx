@@ -9,63 +9,63 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
-import { UnidadesList } from './UnidadesList'
-import { useGeradorCurso } from '@/context/GeradorCursoContext'
-import { Unidade } from '@/types/gerador-curso'
+import { UnitsList } from './UnitsList'
+import { useCourseEditor } from '@/context/CourseEditorContext'
+import { Unit } from '@/types/course'
 
 interface ManageUnitsModalProps {
   open: boolean
   onOpenChange: (open: boolean) => void
-  unidades: Unidade[]
+  units: Unit[]
 }
 
-export function ManageUnitsModal({ open, onOpenChange, unidades }: ManageUnitsModalProps) {
-  const { adicionarUnidade, editarUnidade, deletarUnidade, reordenarUnidades } = useGeradorCurso()
+export function ManageUnitsModal({ open, onOpenChange, units }: ManageUnitsModalProps) {
+  const { addUnit, updateUnit, deleteUnit, reorderUnits } = useCourseEditor()
 
-  const [localUnidades, setLocalUnidades] = useState<Unidade[]>(unidades)
+  const [localUnits, setLocalUnits] = useState<Unit[]>(units)
   const [editingId, setEditingId] = useState<string | null>(null)
-  const [pendente, setPendente] = useState(false)
+  const [pending, setPending] = useState(false)
 
   useEffect(() => {
     if (open) {
-      setLocalUnidades(unidades)
+      setLocalUnits(units)
       setEditingId(null)
     }
-  }, [open, unidades])
+  }, [open, units])
 
-  const handleReorder = (newOrder: Unidade[]) => {
-    setLocalUnidades(newOrder)
+  const handleReorder = (newOrder: Unit[]) => {
+    setLocalUnits(newOrder)
   }
 
   const handleAdd = async () => {
-    const novaUnidade = {
-      titulo: `Nova Unidade ${localUnidades.length + 1}`,
+    const newUnit = {
+      titulo: `Nova Unidade ${localUnits.length + 1}`,
       descricao: 'Descrição da unidade',
       conteudo: [],
     }
-    setPendente(true)
+    setPending(true)
     try {
-      await adicionarUnidade(novaUnidade)
+      await addUnit(newUnit)
     } finally {
-      setPendente(false)
+      setPending(false)
     }
   }
 
-  const handleEdit = async (id: string, novoTitulo: string) => {
-    const unidade = localUnidades.find((u) => u.id === id)
-    if (!unidade) return
+  const handleEdit = async (id: string, newTitle: string) => {
+    const unit = localUnits.find((u) => u.id === id)
+    if (!unit) return
 
-    setPendente(true)
+    setPending(true)
     try {
-      await editarUnidade(id, { titulo: novoTitulo })
-      setLocalUnidades((prev) => prev.map((u) => (u.id === id ? { ...u, titulo: novoTitulo } : u)))
+      await updateUnit(id, { titulo: newTitle })
+      setLocalUnits((prev) => prev.map((u) => (u.id === id ? { ...u, titulo: newTitle } : u)))
     } finally {
-      setPendente(false)
+      setPending(false)
     }
   }
 
   const handleDelete = async (id: string) => {
-    if (localUnidades.length <= 1) {
+    if (localUnits.length <= 1) {
       alert('Não é possível deletar a última unidade do curso.')
       return
     }
@@ -74,26 +74,26 @@ export function ManageUnitsModal({ open, onOpenChange, unidades }: ManageUnitsMo
       return
     }
 
-    setPendente(true)
+    setPending(true)
     try {
-      await deletarUnidade(id)
+      await deleteUnit(id)
     } finally {
-      setPendente(false)
+      setPending(false)
     }
   }
 
   const handleSave = async () => {
-    setPendente(true)
+    setPending(true)
     try {
-      await reordenarUnidades(localUnidades)
+      await reorderUnits(localUnits)
       onOpenChange(false)
     } finally {
-      setPendente(false)
+      setPending(false)
     }
   }
 
   const handleCancel = () => {
-    setLocalUnidades(unidades)
+    setLocalUnits(units)
     setEditingId(null)
     onOpenChange(false)
   }
@@ -106,8 +106,8 @@ export function ManageUnitsModal({ open, onOpenChange, unidades }: ManageUnitsMo
         </DialogHeader>
 
         <div className="flex-1 overflow-y-auto py-4">
-          <UnidadesList
-            unidades={localUnidades}
+          <UnitsList
+            units={localUnits}
             onReorder={handleReorder}
             onAdd={handleAdd}
             onEdit={handleEdit}
@@ -115,15 +115,15 @@ export function ManageUnitsModal({ open, onOpenChange, unidades }: ManageUnitsMo
             editingId={editingId || undefined}
             onStartEdit={setEditingId}
             onCancelEdit={() => setEditingId(null)}
-            disabled={pendente}
+            disabled={pending}
           />
         </div>
 
         <DialogFooter className="flex gap-2">
-          <Button variant="outline" onClick={handleCancel} disabled={pendente}>
+          <Button variant="outline" onClick={handleCancel} disabled={pending}>
             Cancelar
           </Button>
-          <Button onClick={handleSave} disabled={pendente}>
+          <Button onClick={handleSave} disabled={pending}>
             Salvar
           </Button>
         </DialogFooter>

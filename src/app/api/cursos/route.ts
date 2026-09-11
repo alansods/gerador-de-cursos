@@ -1,31 +1,31 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requireAuth, createErrorResponse, createSuccessResponse } from '@/lib/auth'
-import { assertCan, ForbiddenError, permissoesDoCurso } from '@/lib/permissions'
-import { buscarColaboracao } from '@/lib/curso-acesso'
-import { CursoGerado, Unidade } from '@/types/gerador-curso'
+import { assertCan, ForbiddenError, getCoursePermissions } from '@/lib/permissions'
+import { fetchCollaboration } from '@/lib/course-access'
+import { Course, Unit } from '@/types/course'
 import { logActivity } from '@/lib/activity-logger'
-import { generateUniqueSlug, slugifyUnidades } from '@/lib/slug'
+import { generateUniqueSlug, slugifyUnits } from '@/lib/slug'
 import { Prisma } from '@prisma/client'
-import type { StatusCurso } from '@/lib/permissions'
+import type { CourseStatus } from '@/lib/permissions'
 
 /** Status cuja revisão deixa de valer assim que o conteúdo muda. */
-const REVISAO_INVALIDADA_AO_EDITAR: StatusCurso[] = ['APROVADO', 'REPROVADO']
+const REVIEW_INVALIDATED_ON_EDIT: CourseStatus[] = ['APROVADO', 'REPROVADO']
 
-type UnidadeConteudo = {
+type UnitContent = {
   id?: string
   ordem?: number
   tipo?: string
   [key: string]: unknown
 }
 
-type UnidadeInput = {
+type UnitInput = {
   id?: string
   ordem?: number
   titulo?: string
   descricao?: string
-  conteudo?: UnidadeConteudo[]
-  aulas?: UnidadeConteudo[]
+  conteudo?: UnitContent[]
+  aulas?: UnitContent[]
   [key: string]: unknown
 }
 
@@ -47,12 +47,12 @@ export async function GET(req: NextRequest) {
     const search = searchParams.get('search') || ''
     const category = searchParams.get('category') || ''
     const modality = searchParams.get('modality') || ''
-    const escopo = searchParams.get('escopo') || 'todos'
+    const scope = searchParams.get('escopo') || 'todos'
 
     // Construir filtros
     const where: Prisma.CursoWhereInput = {}
 
-    if (escopo === 'meus') {
+    if (scope === 'meus') {
       where.ownerId = authResult.user.id
     }
 
@@ -75,7 +75,7 @@ export async function GET(req: NextRequest) {
     const total = await prisma.curso.count({ where })
 
     // Buscar cursos com paginação
-    const cursos = await prisma.curso.findMany({
+    const courses = await prisma.curso.findMany({
       where,
       skip: (page - 1) * limit,
       take: limit,
@@ -85,78 +85,76 @@ export async function GET(req: NextRequest) {
 
     // Colaborações do usuário nos cursos listados, numa consulta só, para que
     // um colaborador não apareça sem permissão de edição na listagem
-    const colaboracoes = await prisma.cursoColaborador.findMany({
-      where: { userId: authResult.user.id, cursoId: { in: cursos.map((c) => c.id) } },
+    const collaborations = await prisma.cursoColaborador.findMany({
+      where: { userId: authResult.user.id, cursoId: { in: courses.map((c) => c.id) } },
       select: { cursoId: true },
     })
-    const colaboracaoPorCurso = new Map(
-      colaboracoes.map((c) => [c.cursoId, { concedida: true as const }])
+    const collaborationByCourse = new Map(
+      collaborations.map((c) => [c.cursoId, { granted: true as const }])
     )
 
     // Solicitações de acesso pendentes do usuário, para exibir "Aguardando acesso"
-    const solicitacoesPendentes = await prisma.cursoAccessRequest.findMany({
+    const pendingAccessRequests = await prisma.cursoAccessRequest.findMany({
       where: {
         solicitanteId: authResult.user.id,
-        cursoId: { in: cursos.map((c) => c.id) },
+        cursoId: { in: courses.map((c) => c.id) },
         status: 'PENDENTE',
       },
       select: { cursoId: true },
     })
-    const solicitacaoPendentePorCurso = new Set(solicitacoesPendentes.map((s) => s.cursoId))
+    const pendingRequestByCourse = new Set(pendingAccessRequests.map((s) => s.cursoId))
 
     // Converter para formato CursoGerado com normalização de unidades
-    const cursosFormatados: CursoGerado[] = cursos.map((curso) => {
+    const formattedCourses: Course[] = courses.map((course) => {
       // Normalizar unidades: garantir IDs, slugs e estrutura correta
-      const unidadesOriginais = (curso.unidades as UnidadeInput[]) || []
-      const unidadesMapped = unidadesOriginais.map((unidade: UnidadeInput, index: number) => {
-        const unidadeId = unidade.id || `unidade-${curso.id}-${index}`
-        const conteudoOriginal = unidade.conteudo || unidade.aulas || []
-        const conteudoNormalizado = conteudoOriginal.map(
-          (item: UnidadeConteudo, itemIndex: number) => ({
-            ...item,
-            id: item.id || `conteudo-${curso.id}-${index}-${itemIndex}`,
-            ordem: item.ordem ?? itemIndex,
-            tipo: item.tipo || 'paragrafo',
-          })
-        )
+      const originalUnits = (course.unidades as UnitInput[]) || []
+      const mappedUnits = originalUnits.map((unit: UnitInput, index: number) => {
+        const unitId = unit.id || `unidade-${course.id}-${index}`
+        const originalContent = unit.conteudo || unit.aulas || []
+        const normalizedContent = originalContent.map((item: UnitContent, itemIndex: number) => ({
+          ...item,
+          id: item.id || `conteudo-${course.id}-${index}-${itemIndex}`,
+          ordem: item.ordem ?? itemIndex,
+          tipo: item.tipo || 'paragrafo',
+        }))
 
         return {
-          ...unidade,
-          id: unidadeId,
-          ordem: unidade.ordem ?? index,
-          conteudo: conteudoNormalizado,
+          ...unit,
+          id: unitId,
+          ordem: unit.ordem ?? index,
+          conteudo: normalizedContent,
         }
       })
-      const unidadesNormalizadas = slugifyUnidades(unidadesMapped)
+      const normalizedUnits = slugifyUnits(mappedUnits)
 
       return {
-        id: curso.id,
-        slug: curso.slug ?? undefined,
-        titulo: curso.titulo,
-        descricao: curso.descricao,
-        cargaHoraria: curso.cargaHoraria,
-        modalidade: curso.modalidade,
-        categoria: curso.categoria,
-        layout: curso.layout,
-        bannerVideoUrl: curso.bannerVideoUrl ?? undefined,
-        unidades: unidadesNormalizadas,
-        status: curso.status,
-        version: curso.version,
-        ownerId: curso.ownerId ?? undefined,
-        ownerNome: curso.owner?.nome ?? undefined,
-        permissoes: permissoesDoCurso(
+        id: course.id,
+        slug: course.slug ?? undefined,
+        titulo: course.titulo,
+        descricao: course.descricao,
+        cargaHoraria: course.cargaHoraria,
+        modalidade: course.modalidade,
+        categoria: course.categoria,
+        layout: course.layout,
+        bannerVideoUrl: course.bannerVideoUrl ?? undefined,
+        unidades: normalizedUnits,
+        status: course.status,
+        version: course.version,
+        ownerId: course.ownerId ?? undefined,
+        ownerNome: course.owner?.nome ?? undefined,
+        permissoes: getCoursePermissions(
           authResult.user,
-          curso,
-          colaboracaoPorCurso.get(curso.id) ?? null
+          course,
+          collaborationByCourse.get(course.id) ?? null
         ),
-        solicitacaoPendente: solicitacaoPendentePorCurso.has(curso.id),
-        dataCriacao: curso.dataCriacao,
-        dataModificacao: curso.dataModificacao,
+        solicitacaoPendente: pendingRequestByCourse.has(course.id),
+        dataCriacao: course.dataCriacao,
+        dataModificacao: course.dataModificacao,
       }
     })
 
     return createSuccessResponse({
-      cursos: cursosFormatados,
+      cursos: formattedCourses,
       pagination: {
         page,
         limit,
@@ -186,59 +184,57 @@ export async function POST(req: NextRequest) {
 
     const body = await req.json()
     const {
-      titulo,
-      descricao,
-      cargaHoraria,
-      modalidade,
-      categoria,
+      titulo: title,
+      descricao: description,
+      cargaHoraria: workload,
+      modalidade: modality,
+      categoria: category,
       layout,
       bannerVideoUrl,
-      unidades,
+      unidades: units,
     } = body
 
     // Validar campos obrigatórios
-    if (!titulo || !descricao || !cargaHoraria || !modalidade || !categoria) {
+    if (!title || !description || !workload || !modality || !category) {
       return createErrorResponse('Missing required fields', 400)
     }
 
     // Normalizar unidades: garantir IDs, slugs e estrutura correta
-    const unidadesMapped = (unidades || []).map((unidade: UnidadeInput, index: number) => {
-      const unidadeId = unidade.id || `unidade-${Date.now()}-${index}`
-      const conteudoOriginal = unidade.conteudo || unidade.aulas || []
-      const conteudoNormalizado = conteudoOriginal.map(
-        (item: UnidadeConteudo, itemIndex: number) => ({
-          ...item,
-          id: item.id || `conteudo-${Date.now()}-${index}-${itemIndex}`,
-          ordem: item.ordem ?? itemIndex,
-          tipo: item.tipo || 'paragrafo',
-        })
-      )
+    const mappedUnits = (units || []).map((unit: UnitInput, index: number) => {
+      const unitId = unit.id || `unidade-${Date.now()}-${index}`
+      const originalContent = unit.conteudo || unit.aulas || []
+      const normalizedContent = originalContent.map((item: UnitContent, itemIndex: number) => ({
+        ...item,
+        id: item.id || `conteudo-${Date.now()}-${index}-${itemIndex}`,
+        ordem: item.ordem ?? itemIndex,
+        tipo: item.tipo || 'paragrafo',
+      }))
 
       return {
-        ...unidade,
-        id: unidadeId,
-        ordem: unidade.ordem ?? index,
-        conteudo: conteudoNormalizado,
+        ...unit,
+        id: unitId,
+        ordem: unit.ordem ?? index,
+        conteudo: normalizedContent,
         aulas: undefined,
       }
     })
-    const unidadesNormalizadas = slugifyUnidades(unidadesMapped)
+    const normalizedUnits = slugifyUnits(mappedUnits)
 
     // Gerar slug único a partir do título
-    const slug = await generateUniqueSlug(titulo)
+    const slug = await generateUniqueSlug(title)
 
     // Criar curso
-    const curso = await prisma.curso.create({
+    const course = await prisma.curso.create({
       data: {
-        titulo,
+        titulo: title,
         slug,
-        descricao,
-        cargaHoraria,
-        modalidade,
-        categoria,
+        descricao: description,
+        cargaHoraria: workload,
+        modalidade: modality,
+        categoria: category,
         layout: layout || 'classico',
         bannerVideoUrl: bannerVideoUrl || null,
-        unidades: unidadesNormalizadas,
+        unidades: normalizedUnits as unknown as Prisma.InputJsonValue,
         ownerId: authResult.user.id,
       },
     })
@@ -247,33 +243,33 @@ export async function POST(req: NextRequest) {
     await logActivity({
       tipo: 'curso_criado',
       titulo: 'Novo curso criado',
-      descricao: titulo,
-      entityId: curso.id,
+      descricao: title,
+      entityId: course.id,
       entityType: 'curso',
       userId: authResult.user.id,
     })
 
     // Converter para formato CursoGerado
-    const cursoFormatado: CursoGerado = {
-      id: curso.id,
-      slug: curso.slug ?? undefined,
-      titulo: curso.titulo,
-      descricao: curso.descricao,
-      cargaHoraria: curso.cargaHoraria,
-      modalidade: curso.modalidade,
-      categoria: curso.categoria,
-      layout: curso.layout,
-      bannerVideoUrl: curso.bannerVideoUrl ?? undefined,
-      unidades: (curso.unidades as unknown as Unidade[]) || [],
-      status: curso.status,
-      version: curso.version,
-      ownerId: curso.ownerId ?? undefined,
-      permissoes: permissoesDoCurso(authResult.user, curso),
-      dataCriacao: curso.dataCriacao,
-      dataModificacao: curso.dataModificacao,
+    const formattedCourse: Course = {
+      id: course.id,
+      slug: course.slug ?? undefined,
+      titulo: course.titulo,
+      descricao: course.descricao,
+      cargaHoraria: course.cargaHoraria,
+      modalidade: course.modalidade,
+      categoria: course.categoria,
+      layout: course.layout,
+      bannerVideoUrl: course.bannerVideoUrl ?? undefined,
+      unidades: (course.unidades as unknown as Unit[]) || [],
+      status: course.status,
+      version: course.version,
+      ownerId: course.ownerId ?? undefined,
+      permissoes: getCoursePermissions(authResult.user, course),
+      dataCriacao: course.dataCriacao,
+      dataModificacao: course.dataModificacao,
     }
 
-    return createSuccessResponse({ curso: cursoFormatado }, 201)
+    return createSuccessResponse({ curso: formattedCourse }, 201)
   } catch (error) {
     if (error instanceof ForbiddenError) {
       return createErrorResponse(error.message, 403)
@@ -298,14 +294,14 @@ export async function PUT(req: NextRequest) {
     const body = await req.json()
     const {
       id,
-      titulo,
-      descricao,
-      cargaHoraria,
-      modalidade,
-      categoria,
+      titulo: title,
+      descricao: description,
+      cargaHoraria: workload,
+      modalidade: modality,
+      categoria: category,
       layout,
       bannerVideoUrl,
-      unidades,
+      unidades: units,
       version,
     } = body
 
@@ -314,83 +310,81 @@ export async function PUT(req: NextRequest) {
     }
 
     // Verificar se o curso existe
-    const cursoExistente = await prisma.curso.findUnique({
+    const existingCourse = await prisma.curso.findUnique({
       where: { id },
     })
 
-    if (!cursoExistente) {
+    if (!existingCourse) {
       return createErrorResponse('Curso não encontrado', 404)
     }
 
-    const colaboracao = await buscarColaboracao(id, authResult.user.id)
+    const collaboration = await fetchCollaboration(id, authResult.user.id)
 
-    assertCan(authResult.user, 'curso:editar', { curso: cursoExistente, colaboracao })
+    assertCan(authResult.user, 'curso:editar', { course: existingCourse, collaboration })
 
     // Guarda de concorrência: rejeita escrita baseada numa versão desatualizada
-    if (typeof version === 'number' && version !== cursoExistente.version) {
+    if (typeof version === 'number' && version !== existingCourse.version) {
       return NextResponse.json(
         {
           success: false,
           error:
             'O curso foi alterado por outra pessoa. Recarregue para ver a versão mais recente.',
           conflito: true,
-          versaoAtual: cursoExistente.version,
+          versaoAtual: existingCourse.version,
         },
         { status: 409 }
       )
     }
 
     // Normalizar unidades se fornecidas
-    let unidadesNormalizadas = undefined
-    if (unidades !== undefined) {
-      const unidadesMapped = unidades.map((unidade: UnidadeInput, index: number) => {
-        const unidadeId = unidade.id || `unidade-${Date.now()}-${index}`
-        const conteudoOriginal = unidade.conteudo || unidade.aulas || []
-        const conteudoNormalizado = conteudoOriginal.map(
-          (item: UnidadeConteudo, itemIndex: number) => ({
-            ...item,
-            id: item.id || `conteudo-${Date.now()}-${index}-${itemIndex}`,
-            ordem: item.ordem ?? itemIndex,
-            tipo: item.tipo || 'paragrafo',
-          })
-        )
+    let normalizedUnits = undefined
+    if (units !== undefined) {
+      const mappedUnits = units.map((unit: UnitInput, index: number) => {
+        const unitId = unit.id || `unidade-${Date.now()}-${index}`
+        const originalContent = unit.conteudo || unit.aulas || []
+        const normalizedContent = originalContent.map((item: UnitContent, itemIndex: number) => ({
+          ...item,
+          id: item.id || `conteudo-${Date.now()}-${index}-${itemIndex}`,
+          ordem: item.ordem ?? itemIndex,
+          tipo: item.tipo || 'paragrafo',
+        }))
 
         return {
-          ...unidade,
-          id: unidadeId,
-          ordem: unidade.ordem ?? index,
-          conteudo: conteudoNormalizado,
+          ...unit,
+          id: unitId,
+          ordem: unit.ordem ?? index,
+          conteudo: normalizedContent,
           aulas: undefined,
         }
       })
-      unidadesNormalizadas = slugifyUnidades(unidadesMapped)
+      normalizedUnits = slugifyUnits(mappedUnits)
     }
 
     // Regenerar slug se o título mudou
     let newSlug: string | undefined = undefined
-    if (titulo && titulo !== cursoExistente.titulo) {
-      newSlug = await generateUniqueSlug(titulo, id)
-    } else if (!cursoExistente.slug && (titulo || cursoExistente.titulo)) {
-      newSlug = await generateUniqueSlug(titulo || cursoExistente.titulo, id)
+    if (title && title !== existingCourse.titulo) {
+      newSlug = await generateUniqueSlug(title, id)
+    } else if (!existingCourse.slug && (title || existingCourse.titulo)) {
+      newSlug = await generateUniqueSlug(title || existingCourse.titulo, id)
     }
 
     // Atualizar curso
-    const curso = await prisma.curso.update({
+    const course = await prisma.curso.update({
       where: { id },
       data: {
-        ...(titulo && { titulo }),
+        ...(title && { titulo: title }),
         ...(newSlug && { slug: newSlug }),
-        ...(descricao && { descricao }),
-        ...(cargaHoraria && { cargaHoraria }),
-        ...(modalidade && { modalidade }),
-        ...(categoria && { categoria }),
+        ...(description && { descricao: description }),
+        ...(workload && { cargaHoraria: workload }),
+        ...(modality && { modalidade: modality }),
+        ...(category && { categoria: category }),
         ...(layout && { layout }),
         ...(bannerVideoUrl !== undefined && { bannerVideoUrl: bannerVideoUrl || null }),
-        ...(unidadesNormalizadas !== undefined && { unidades: unidadesNormalizadas }),
+        ...(normalizedUnits !== undefined && { unidades: normalizedUnits }),
         // Editar invalida a revisão: um curso aprovado cujo conteúdo mudou não
         // foi aprovado nesta versão, e o revisor registrado nunca a viu.
         // Vale para APROVADO e REPROVADO — os dois voltam a rascunho.
-        ...(REVISAO_INVALIDADA_AO_EDITAR.includes(cursoExistente.status) && {
+        ...(REVIEW_INVALIDATED_ON_EDIT.includes(existingCourse.status) && {
           status: 'EM_ANDAMENTO' as const,
           revisadoPorId: null,
           revisadoEm: null,
@@ -403,33 +397,33 @@ export async function PUT(req: NextRequest) {
     await logActivity({
       tipo: 'curso_editado',
       titulo: 'Curso editado',
-      descricao: curso.titulo,
-      entityId: curso.id,
+      descricao: course.titulo,
+      entityId: course.id,
       entityType: 'curso',
       userId: authResult.user.id,
     })
 
     // Converter para formato CursoGerado
-    const cursoFormatado: CursoGerado = {
-      id: curso.id,
-      slug: curso.slug ?? undefined,
-      titulo: curso.titulo,
-      descricao: curso.descricao,
-      cargaHoraria: curso.cargaHoraria,
-      modalidade: curso.modalidade,
-      categoria: curso.categoria,
-      layout: curso.layout,
-      bannerVideoUrl: curso.bannerVideoUrl ?? undefined,
-      unidades: (curso.unidades as unknown as Unidade[]) || [],
-      status: curso.status,
-      version: curso.version,
-      ownerId: curso.ownerId ?? undefined,
-      permissoes: permissoesDoCurso(authResult.user, curso, colaboracao),
-      dataCriacao: curso.dataCriacao,
-      dataModificacao: curso.dataModificacao,
+    const formattedCourse: Course = {
+      id: course.id,
+      slug: course.slug ?? undefined,
+      titulo: course.titulo,
+      descricao: course.descricao,
+      cargaHoraria: course.cargaHoraria,
+      modalidade: course.modalidade,
+      categoria: course.categoria,
+      layout: course.layout,
+      bannerVideoUrl: course.bannerVideoUrl ?? undefined,
+      unidades: (course.unidades as unknown as Unit[]) || [],
+      status: course.status,
+      version: course.version,
+      ownerId: course.ownerId ?? undefined,
+      permissoes: getCoursePermissions(authResult.user, course, collaboration),
+      dataCriacao: course.dataCriacao,
+      dataModificacao: course.dataModificacao,
     }
 
-    return createSuccessResponse({ curso: cursoFormatado })
+    return createSuccessResponse({ curso: formattedCourse })
   } catch (error) {
     if (error instanceof ForbiddenError) {
       return createErrorResponse(error.message, 403)
@@ -459,15 +453,15 @@ export async function DELETE(req: NextRequest) {
     }
 
     // Verificar se o curso existe
-    const cursoExistente = await prisma.curso.findUnique({
+    const existingCourse = await prisma.curso.findUnique({
       where: { id },
     })
 
-    if (!cursoExistente) {
+    if (!existingCourse) {
       return createErrorResponse('Curso não encontrado', 404)
     }
 
-    assertCan(authResult.user, 'curso:excluir', { curso: cursoExistente })
+    assertCan(authResult.user, 'curso:excluir', { course: existingCourse })
 
     // Deletar curso
     await prisma.curso.delete({
@@ -478,7 +472,7 @@ export async function DELETE(req: NextRequest) {
     await logActivity({
       tipo: 'curso_deletado',
       titulo: 'Curso deletado',
-      descricao: cursoExistente.titulo,
+      descricao: existingCourse.titulo,
       entityId: id,
       entityType: 'curso',
       userId: authResult.user.id,

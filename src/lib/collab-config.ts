@@ -8,15 +8,15 @@
  * REVISITAR quando o app virar comercial: subir este número aumenta o consumo
  * de minutos proporcionalmente ao número de pessoas conectadas.
  */
-export const MAX_COLAB_SIMULTANEOS = 2
+export const MAX_CONCURRENT_COLLABORATORS = 2
 
 /** Kill switch manual: com a flag desligada, o editor se comporta como antes. */
-export const COLAB_HABILITADO = process.env.NEXT_PUBLIC_COLLAB_ENABLED === 'true'
+export const COLLAB_ENABLED = process.env.NEXT_PUBLIC_COLLAB_ENABLED === 'true'
 
-export const SALA_DO_CURSO = (cursoId: string) => `curso:${cursoId}`
+export const COURSE_ROOM = (courseId: string) => `curso:${courseId}`
 
 /** Cores estáveis por usuário, para o cursor e o avatar não trocarem de cor */
-const CORES_COLAB = [
+const COLLAB_COLORS = [
   '#0047BB',
   '#F15A29',
   '#10b981',
@@ -27,10 +27,10 @@ const CORES_COLAB = [
   '#84cc16',
 ]
 
-export function corDoUsuario(userId: string): string {
+export function userColor(userId: string): string {
   let soma = 0
   for (let i = 0; i < userId.length; i++) {
-    soma = (soma + userId.charCodeAt(i)) % CORES_COLAB.length
+    soma = (soma + userId.charCodeAt(i)) % COLLAB_COLORS.length
   }
-  return CORES_COLAB[soma]
+  return COLLAB_COLORS[soma]
 }
