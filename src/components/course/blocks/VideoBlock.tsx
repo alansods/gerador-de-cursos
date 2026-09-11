@@ -1,4 +1,5 @@
 import { extractYouTubeId } from '@/lib/youtube'
+import { fonteDoVideo } from '@/lib/blocos'
 import { ConteudoUnidade } from '@/types/gerador-curso'
 
 export function VideoBlock({ item }: { item: ConteudoUnidade }) {
@@ -10,7 +11,7 @@ export function VideoBlock({ item }: { item: ConteudoUnidade }) {
             {item.videoTitulo}
           </h4>
           <div className="aspect-video w-full rounded-lg overflow-hidden shadow-lg bg-gray-100 dark:bg-gray-800">
-            {item.fonteVideo === 'arquivo' ? (
+            {fonteDoVideo(item, 'youtube') === 'arquivo' ? (
               // Sem autoplay: navegadores bloqueiam mídia automática dentro do iframe do LMS
               <video controls preload="metadata" className="w-full h-full" src={item.videoUrl}>
                 Seu navegador não reproduz vídeo.

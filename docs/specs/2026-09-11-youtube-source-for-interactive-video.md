@@ -45,7 +45,7 @@ fontes. A refatoração faz parte do escopo — ver Requisitos.
 
 | Ponto                          | Decisão                                                                              | Por quê                                                                                                                                                                                    |
 | ------------------------------ | ------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Campo da fonte                 | Reusar `fonteVideo: 'youtube' \| 'arquivo'`, que já existe no tipo                   | O bloco `video` simples já usa; um campo novo duplicaria conceito e formulário                                                                                                             |
+| Campo da fonte                 | `fonteVideo` existe no dado, mas **não** é escolhido pelo autor: é derivado da URL   | O bloco `video` simples já usa; um campo novo duplicaria conceito e formulário                                                                                                             |
 | `fonteVideo` ausente           | **Deduzir da URL**: `ehUrlYouTubeValida(videoUrl)` → `'youtube'`, senão `'arquivo'`  | Vale para os dois blocos, sem assimetria. Cobre bloco salvo antes do campo existir e, sobretudo, bloco gerado pela IA que omitiu o campo — este último não é legado, é caminho permanente  |
 | Abstração entre as duas fontes | Um hook `useReprodutorVideo` devolvendo estado + comandos uniformes                  | Espalhar `if (fonte === 'youtube')` por bloco e controles duplicaria a lógica de marcos, que é a parte delicada                                                                            |
 | Detecção dos marcos            | `timeupdate` para arquivo (como hoje), polling de 200 ms **só** para YouTube         | Polling uniforme obrigaria todos os testes atuais a usar timer falso, destruindo a rede de proteção que esta spec exige. O caminho validado não muda; o caminho novo é que ganha o polling |
@@ -97,10 +97,17 @@ fontes. A refatoração faz parte do escopo — ver Requisitos.
 
 ### Autoria
 
-12. O `case 'video-interativo'` do drawer ganha o mesmo `Select` de fonte do `case 'video'`;
-    trocar a fonte limpa `videoUrl`.
-13. Na fonte `youtube`, o drawer exibe um aviso de que o vídeo **não** será embutido no pacote e
-    exigirá internet no LMS.
+12. O drawer **não** tem seletor de fonte. Os dois blocos de vídeo têm um único controle:
+    botão de enviar arquivo mais um campo de URL, que aceita tanto a URL do arquivo quanto o
+    link do YouTube. A fonte é derivada do que estiver na URL.
+
+    Revisto depois do primeiro uso: com o `Select`, o autor colava o link do YouTube no campo
+    de URL do controle de upload — que estava ali o tempo todo — e o bloco continuava marcado
+    como arquivo. Dois campos de URL para a mesma coisa, e um seletor que só existia para
+    desambiguar o que a própria URL já diz.
+
+13. Assim que a URL colada é reconhecida como link do YouTube, o drawer exibe o aviso de que o
+    vídeo **não** será embutido no pacote e exigirá internet no LMS.
 14. A pré-visualização do drawer respeita a fonte.
 
 ### Geração por IA
@@ -135,41 +142,48 @@ fontes. A refatoração faz parte do escopo — ver Requisitos.
 
 ### Dados e catálogo
 
-- [ ] `fonteVideo` aceito no `video-interativo`, com `corrigirBloco()` deduzindo a fonte da URL
+- [x] `fonteVideo` aceito no `video-interativo`, com `corrigirBloco()` deduzindo a fonte da URL
       via `ehUrlYouTubeValida` — a mesma dedução aplicada também ao bloco `video`
       ([blocos.ts](../../src/lib/blocos.ts))
-- [ ] `validarFormulario` com mensagem por fonte e recusa de link do YouTube sem id extraível
-- [ ] `extrairMidias` / `reescreverMidias` condicionais à fonte
+- [x] `validarFormulario` com mensagem por fonte e recusa de link do YouTube sem id extraível
+- [x] `extrairMidias` / `reescreverMidias` condicionais à fonte
 
 ### Reprodução
 
-- [ ] `src/hooks/useReprodutorVideo.ts` com as duas fontes atrás de uma superfície só
-- [ ] Carga única do `iframe_api` por página, encadeando `onYouTubeIframeAPIReady`
-- [ ] Polling de 200 ms no ramo YouTube do hook; o ramo do arquivo segue em `timeupdate`
-- [ ] Teto de busca movido para o hook
-- [ ] `ControlesVideo` convertido em apresentacional (estado e comandos por props)
-- [ ] Mensagem de falha quando a API não carrega ou `onError` dispara
+- [x] `src/hooks/useReprodutorVideo.ts` com as duas fontes atrás de uma superfície só
+- [x] Carga única do `iframe_api` por página, encadeando `onYouTubeIframeAPIReady`
+- [x] Polling de 200 ms no ramo YouTube do hook; o ramo do arquivo segue em `timeupdate`
+- [x] Teto de busca movido para o hook
+- [x] `ControlesVideo` convertido em apresentacional (estado e comandos por props)
+- [x] Mensagem de falha quando a API não carrega ou `onError` dispara
 
 ### Autoria e IA
 
-- [ ] `Select` de fonte no `case 'video-interativo'` do drawer, com aviso sobre o pacote offline
-- [ ] Pré-visualização respeitando a fonte
-- [ ] `fonteVideo` no esquema JSON e na conversão do marcador `VIDEOINTERATIVO` no prompt
+- [x] Campo único (arquivo + URL) nos dois blocos de vídeo, sem seletor de fonte, com o aviso
+      de pacote offline aparecendo quando a URL é do YouTube
+- [x] Pré-visualização respeitando a fonte
+- [x] `fonteVideo` no esquema JSON e na conversão do marcador `VIDEOINTERATIVO` no prompt
 
 ### Testes
 
-- [ ] Os 14 testes atuais de `video-interativo-block.test.tsx` passando sem alteração de asserção
-- [ ] Testes do hook com duplo de `window.YT`: criação do player, polling disparando o marco,
+- [x] Os 15 testes de `video-interativo-block.test.tsx` passando sem alteração de asserção
+- [x] Testes do hook com duplo de `window.YT`: criação do player, polling disparando o marco,
       `seekTo` preso no teto, erro de carregamento
-- [ ] `blocos.test.ts`: as duas fontes em `extrairMidias` / `reescreverMidias` e as mensagens de
+- [x] `blocos.test.ts`: as duas fontes em `extrairMidias` / `reescreverMidias` e as mensagens de
       `validarFormulario`
-- [ ] `content-block-drawer.test.tsx`: troca de fonte no bloco interativo
+- [x] `content-block-drawer.test.tsx`: troca de fonte no bloco interativo
 
 ### Fechamento
 
-- [ ] `pnpm build` limpo, `pnpm test` verde, player Vite compilando
-- [ ] Verificação manual: um bloco de cada fonte na mesma unidade, pergunta disparando nas duas,
-      e exportação SCORM em que só o arquivo enviado aparece dentro de `images/`
+- [x] `pnpm build` limpo, `pnpm test` verde, player Vite compilando
+- [x] Verificado em navegador (Playwright sobre o player Vite): as 20 checagens da fonte arquivo
+      seguem passando; no YouTube a duração chega por polling, o pino aparece, a pergunta dispara
+      durante a reprodução, a nota é registrada e o pino fica verde; com o domínio do YouTube
+      bloqueado aparece a mensagem de falha
+- [x] `getDuration is not a function`: o polling começava fora do `onReady`, quando o player
+      ainda não tem métodos. Falha presente desde a primeira implementação, exposta só quando o
+      ramo do YouTube passou a rodar de fato
+- [ ] Falta: exportar um SCORM real e conferir que só o vídeo enviado entra em `images/`
 
 ## Verificação
 

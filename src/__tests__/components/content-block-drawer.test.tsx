@@ -115,7 +115,10 @@ describe('ContentBlockDrawer', () => {
       screen.getByPlaceholderText('Digite o título do vídeo...'),
       'Uso do capacete'
     )
-    await usuario.type(screen.getByPlaceholderText('ou cole a URL aqui...'), 'https://b.com/a.mp4')
+    await usuario.type(
+      screen.getByPlaceholderText('ou cole o link do YouTube aqui...'),
+      'https://b.com/a.mp4'
+    )
 
     await usuario.click(screen.getByRole('button', { name: /adicionar/i }))
     await usuario.type(screen.getByPlaceholderText('mm:ss — ex.: 02:30'), '01:30')
@@ -151,7 +154,10 @@ describe('ContentBlockDrawer', () => {
     const onSave = montar('video-interativo')
 
     await usuario.type(screen.getByPlaceholderText('Digite o título do vídeo...'), 'Aula')
-    await usuario.type(screen.getByPlaceholderText('ou cole a URL aqui...'), 'https://b.com/a.mp4')
+    await usuario.type(
+      screen.getByPlaceholderText('ou cole o link do YouTube aqui...'),
+      'https://b.com/a.mp4'
+    )
 
     await usuario.click(screen.getByRole('button', { name: /adicionar/i }))
     await usuario.type(screen.getByPlaceholderText('mm:ss — ex.: 02:30'), 'agora')
@@ -161,17 +167,39 @@ describe('ContentBlockDrawer', () => {
     expect(erroToast).toHaveBeenCalledWith('Pergunta 1: informe o tempo no formato mm:ss')
   })
 
-  it('troca o campo de link do vídeo pelo upload ao escolher arquivo', async () => {
+  it('tem um campo de URL só, sem seletor de fonte, nos dois blocos de vídeo', async () => {
+    // Enviar arquivo e colar link são a mesma coisa: um campo, sem escolher a fonte.
+    for (const tipo of ['video', 'video-interativo'] as const) {
+      const { unmount } = render(
+        <ContentBlockDrawer
+          open
+          onOpenChange={jest.fn()}
+          mode="add"
+          blockData={{ tipo }}
+          onSave={jest.fn()}
+          onCancel={jest.fn()}
+        />
+      )
+
+      expect(screen.queryByText('Fonte do vídeo')).toBeNull()
+      expect(screen.queryByRole('combobox')).toBeNull()
+      expect(screen.getAllByPlaceholderText('ou cole o link do YouTube aqui...')).toHaveLength(1)
+      unmount()
+    }
+  })
+
+  it('avisa sobre o pacote offline assim que um link do YouTube é colado', async () => {
     const usuario = userEvent.setup()
-    montar('video')
+    montar('video-interativo')
 
-    expect(screen.getByPlaceholderText('Cole o link do vídeo do YouTube...')).toBeInTheDocument()
+    expect(screen.queryByText(/precisará de internet/i)).toBeNull()
 
-    await usuario.click(screen.getByRole('combobox'))
-    await usuario.click(screen.getByRole('option', { name: 'Arquivo do computador' }))
+    await usuario.type(
+      screen.getByPlaceholderText('ou cole o link do YouTube aqui...'),
+      'https://youtu.be/dQw4w9WgXcQ'
+    )
 
-    expect(screen.queryByPlaceholderText('Cole o link do vídeo do YouTube...')).toBeNull()
-    expect(screen.getByPlaceholderText('ou cole a URL aqui...')).toBeInTheDocument()
+    expect(screen.getByText(/precisará de internet/i)).toBeInTheDocument()
   })
 
   it('cobra título do evento na linha do tempo', async () => {
@@ -314,6 +342,37 @@ describe('ContentBlockDrawer', () => {
             fonte: 'Fonte A',
           }),
         ],
+      })
+    )
+  })
+})
+
+describe('fonte do vídeo interativo ao salvar', () => {
+  it('entrega fonteVideo youtube no objeto salvo', async () => {
+    const usuario = userEvent.setup()
+    const onSave = montar('video-interativo')
+
+    await usuario.type(screen.getByPlaceholderText('Digite o título do vídeo...'), 'Aula')
+
+    await usuario.type(
+      screen.getByPlaceholderText('ou cole o link do YouTube aqui...'),
+      'https://www.youtube.com/watch?v=dQw4w9WgXcQ'
+    )
+
+    await usuario.click(screen.getByRole('button', { name: /adicionar/i }))
+    await usuario.type(screen.getByPlaceholderText('mm:ss — ex.: 02:30'), '00:05')
+    await usuario.type(screen.getByPlaceholderText('O que o aluno precisa responder...'), 'P?')
+    await usuario.type(screen.getByPlaceholderText('A...'), 'A')
+    await usuario.type(screen.getByPlaceholderText('B...'), 'B')
+
+    await usuario.click(screen.getByRole('button', { name: /salvar/i }))
+
+    expect(erroToast).not.toHaveBeenCalled()
+    expect(onSave).toHaveBeenCalledWith(
+      expect.objectContaining({
+        tipo: 'video-interativo',
+        fonteVideo: 'youtube',
+        videoUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
       })
     )
   })

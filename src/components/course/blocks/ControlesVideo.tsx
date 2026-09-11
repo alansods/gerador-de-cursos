@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, type PointerEvent, type RefObject } from 'react'
 import { Maximize, Minimize, Pause, Play, Volume2, VolumeX } from 'lucide-react'
 import { formatarTempo } from '@/lib/tempo-video'
+import type { ComandosReprodutor, EstadoReprodutor } from '@/hooks/useReprodutorVideo'
 
 export interface MarcoVisivel {
   id: string
@@ -14,52 +15,30 @@ const PASSO_TECLADO = 5
 
 /**
  * Barra de controles própria. A timeline nativa do `<video>` não é estilizável em
- * nenhum navegador, então os marcadores de pergunta exigem desenhar o scrubber.
+ * nenhum navegador, e a do YouTube fica desligada com `controls: 0`, então os
+ * marcadores de pergunta exigem desenhar o scrubber.
+ *
+ * Componente apresentacional: o estado e o teto de busca vivem no `useReprodutorVideo`,
+ * que é quem sabe falar com cada uma das duas fontes.
  */
 export function ControlesVideo({
-  videoRef,
+  estado,
+  comandos,
   containerRef,
   marcos,
   limiteSegundos,
 }: {
-  videoRef: RefObject<HTMLVideoElement | null>
+  estado: EstadoReprodutor
+  comandos: ComandosReprodutor
   containerRef: RefObject<HTMLDivElement | null>
   marcos: MarcoVisivel[]
   limiteSegundos: number | null
 }) {
-  const [tempo, setTempo] = useState(0)
-  const [duracao, setDuracao] = useState(0)
-  const [tocando, setTocando] = useState(false)
-  const [mudo, setMudo] = useState(false)
   const [emTelaCheia, setEmTelaCheia] = useState(false)
-
   const trilhaRef = useRef<HTMLDivElement>(null)
   const arrastando = useRef(false)
 
-  useEffect(() => {
-    const video = videoRef.current
-    if (!video) return
-
-    const sincronizar = () => {
-      setTempo(video.currentTime)
-      setTocando(!video.paused)
-      setMudo(video.muted)
-      if (Number.isFinite(video.duration)) setDuracao(video.duration)
-    }
-
-    const eventos = [
-      'timeupdate',
-      'durationchange',
-      'loadedmetadata',
-      'play',
-      'pause',
-      'volumechange',
-    ]
-
-    sincronizar()
-    eventos.forEach((evento) => video.addEventListener(evento, sincronizar))
-    return () => eventos.forEach((evento) => video.removeEventListener(evento, sincronizar))
-  }, [videoRef])
+  const { tempo, duracao, tocando, mudo } = estado
 
   useEffect(() => {
     const aoTrocar = () => setEmTelaCheia(document.fullscreenElement === containerRef.current)
@@ -67,27 +46,7 @@ export function ControlesVideo({
     return () => document.removeEventListener('fullscreenchange', aoTrocar)
   }, [containerRef])
 
-  // Enquanto houver pergunta pendente adiante, o arrasto para nela em vez de passar.
-  const teto = limiteSegundos === null ? duracao : Math.min(limiteSegundos, duracao || Infinity)
   const percentual = (segundos: number) => (duracao > 0 ? (segundos / duracao) * 100 : 0)
-
-  const buscar = (segundos: number) => {
-    const video = videoRef.current
-    if (!video) return
-    video.currentTime = Math.min(Math.max(0, segundos), teto)
-  }
-
-  const alternarReproducao = () => {
-    const video = videoRef.current
-    if (!video) return
-    if (video.paused) video.play()
-    else video.pause()
-  }
-
-  const alternarSom = () => {
-    const video = videoRef.current
-    if (video) video.muted = !video.muted
-  }
 
   const alternarTelaCheia = () => {
     if (document.fullscreenElement) document.exitFullscreen()
@@ -108,11 +67,11 @@ export function ControlesVideo({
     trilhaRef.current?.focus()
     arrastando.current = true
     trilhaRef.current?.setPointerCapture(evento.pointerId)
-    buscar(fracaoEm(evento.clientX) * duracao)
+    comandos.buscar(fracaoEm(evento.clientX) * duracao)
   }
 
   const aoMover = (evento: PointerEvent<HTMLDivElement>) => {
-    if (arrastando.current) buscar(fracaoEm(evento.clientX) * duracao)
+    if (arrastando.current) comandos.buscar(fracaoEm(evento.clientX) * duracao)
   }
 
   const aoSoltar = (evento: PointerEvent<HTMLDivElement>) => {
@@ -121,11 +80,13 @@ export function ControlesVideo({
   }
 
   const aoTeclar = (evento: React.KeyboardEvent<HTMLDivElement>) => {
+    const alternarReproducao = () => (tocando ? comandos.pausar() : comandos.reproduzir())
+
     const atalhos: Record<string, () => void> = {
-      ArrowRight: () => buscar(tempo + PASSO_TECLADO),
-      ArrowLeft: () => buscar(tempo - PASSO_TECLADO),
-      Home: () => buscar(0),
-      End: () => buscar(teto),
+      ArrowRight: () => comandos.buscar(tempo + PASSO_TECLADO),
+      ArrowLeft: () => comandos.buscar(tempo - PASSO_TECLADO),
+      Home: () => comandos.buscar(0),
+      End: () => comandos.buscar(limiteSegundos ?? duracao),
       ' ': alternarReproducao,
     }
 
@@ -186,7 +147,7 @@ export function ControlesVideo({
       <div className="flex items-center gap-3 text-white">
         <button
           type="button"
-          onClick={alternarReproducao}
+          onClick={() => (tocando ? comandos.pausar() : comandos.reproduzir())}
           aria-label={tocando ? 'Pausar' : 'Reproduzir'}
           className="rounded p-1 hover:bg-white/15"
         >
@@ -201,7 +162,7 @@ export function ControlesVideo({
 
         <button
           type="button"
-          onClick={alternarSom}
+          onClick={comandos.alternarSom}
           aria-label={mudo ? 'Ativar som' : 'Silenciar'}
           className="rounded p-1 hover:bg-white/15"
         >

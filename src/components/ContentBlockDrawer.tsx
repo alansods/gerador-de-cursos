@@ -31,7 +31,7 @@ import {
   CategoriaItem,
   HotspotItem,
 } from '@/types/gerador-curso'
-import { CATALOGO_BLOCOS, cardsFlipcard, criarBlocoVazio } from '@/lib/blocos'
+import { CATALOGO_BLOCOS, cardsFlipcard, criarBlocoVazio, fonteDoVideo } from '@/lib/blocos'
 import { POLITICA_MIDIAS, type CategoriaMidia } from '@/lib/midias'
 import { enviarArquivo } from '@/lib/upload-cliente'
 import { extractYouTubeId } from '@/lib/youtube'
@@ -51,6 +51,14 @@ function prepararFormulario(blockData: Partial<ConteudoUnidade> | null): Partial
   const formulario: Partial<ConteudoUnidade> = {
     ...criarBlocoVazio(blockData?.tipo || 'paragrafo'),
     ...blockData,
+  }
+
+  // Bloco salvo antes de `fonteVideo` existir abriria com o seletor na fonte errada.
+  if (formulario.tipo === 'video' || formulario.tipo === 'video-interativo') {
+    formulario.fonteVideo = fonteDoVideo(
+      formulario,
+      formulario.tipo === 'video' ? 'youtube' : 'arquivo'
+    )
   }
 
   if (formulario.tipo === 'flipcard') {
@@ -83,11 +91,15 @@ function CampoArquivo({
   rotulo,
   url,
   onUrl,
+  placeholderUrl = 'ou cole a URL aqui...',
+  dica,
 }: {
   categoria: CategoriaMidia
   rotulo: string
   url: string
   onUrl: (url: string) => void
+  placeholderUrl?: string
+  dica?: React.ReactNode
 }) {
   const [enviando, setEnviando] = useState(false)
   const [previewQuebrado, setPreviewQuebrado] = useState(false)
@@ -151,7 +163,7 @@ function CampoArquivo({
       <Input
         value={url}
         onChange={(e) => onUrl(e.target.value)}
-        placeholder="ou cole a URL aqui..."
+        placeholder={placeholderUrl}
         className="text-sm"
       />
 
@@ -164,7 +176,7 @@ function CampoArquivo({
         />
       )}
 
-      <p className="text-xs text-muted-foreground">{politica.dicaTamanho}</p>
+      <p className="text-xs text-muted-foreground">{dica ?? politica.dicaTamanho}</p>
     </FormField>
   )
 }
@@ -908,7 +920,9 @@ export function ContentBlockDrawer({
         )
 
       case 'video': {
-        const deArquivo = formData.fonteVideo === 'arquivo'
+        // Sem seletor de fonte: enviar arquivo e colar link são o mesmo campo, e a URL
+        // é que diz qual player usar.
+        const deArquivo = fonteDoVideo(formData, 'youtube') === 'arquivo'
 
         return (
           <div className="space-y-4">
@@ -927,52 +941,20 @@ export function ContentBlockDrawer({
               />
             </FormField>
 
-            <FormField label="Fonte do vídeo">
-              <Select
-                value={formData.fonteVideo || 'youtube'}
-                onValueChange={(value) =>
-                  setFormData({
-                    ...formData,
-                    fonteVideo: value as ConteudoUnidade['fonteVideo'],
-                    videoUrl: '',
-                  })
-                }
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="youtube">Link do YouTube</SelectItem>
-                  <SelectItem value="arquivo">Arquivo do computador</SelectItem>
-                </SelectContent>
-              </Select>
-            </FormField>
-
-            {deArquivo ? (
-              <CampoArquivo
-                categoria="video"
-                rotulo="Arquivo de vídeo"
-                url={formData.videoUrl || ''}
-                onUrl={(videoUrl) => setFormData({ ...formData, videoUrl })}
-              />
-            ) : (
-              <FormField
-                label={
-                  <>
-                    Link do YouTube <span className="text-red-500">*</span>
-                  </>
-                }
-              >
-                <Input
-                  value={formData.videoUrl || ''}
-                  onChange={(e) => setFormData({ ...formData, videoUrl: e.target.value })}
-                  placeholder="Cole o link do vídeo do YouTube..."
-                />
-                <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
-                  Exemplo: https://www.youtube.com/watch?v=VIDEO_ID ou https://youtu.be/VIDEO_ID
-                </p>
-              </FormField>
-            )}
+            <CampoArquivo
+              categoria="video"
+              rotulo="Vídeo"
+              url={formData.videoUrl || ''}
+              onUrl={(videoUrl) =>
+                setFormData({
+                  ...formData,
+                  videoUrl,
+                  fonteVideo: fonteDoVideo({ videoUrl }, 'youtube'),
+                })
+              }
+              placeholderUrl="ou cole o link do YouTube aqui..."
+              dica="Envie um MP4/WebM (ideal até 25 MB) ou cole um link do YouTube."
+            />
 
             {formData.videoUrl && (
               <FormField label="Pré-visualização" className="mt-4">
@@ -1000,7 +982,9 @@ export function ContentBlockDrawer({
         )
       }
 
-      case 'video-interativo':
+      case 'video-interativo': {
+        const doYouTube = fonteDoVideo(formData) === 'youtube'
+
         return (
           <div className="space-y-4">
             <FormField
@@ -1020,20 +1004,42 @@ export function ContentBlockDrawer({
 
             <CampoArquivo
               categoria="video"
-              rotulo="Arquivo de vídeo"
+              rotulo="Vídeo"
               url={formData.videoUrl || ''}
-              onUrl={(videoUrl) => setFormData({ ...formData, videoUrl })}
+              onUrl={(videoUrl) =>
+                setFormData({ ...formData, videoUrl, fonteVideo: fonteDoVideo({ videoUrl }) })
+              }
+              placeholderUrl="ou cole o link do YouTube aqui..."
+              dica="Envie um MP4/WebM (ideal até 25 MB) ou cole um link do YouTube."
             />
+
+            {doYouTube && (
+              <p className="rounded-md border border-amber-300 bg-amber-50 p-3 text-xs text-amber-900 dark:border-amber-800 dark:bg-amber-950/30 dark:text-amber-200">
+                O vídeo do YouTube <strong>não</strong> é embutido no pacote SCORM: o aluno
+                precisará de internet e do domínio do YouTube liberado no LMS. Para funcionar
+                offline, envie o arquivo.
+              </p>
+            )}
 
             {formData.videoUrl && (
               <FormField label="Pré-visualização">
                 <div className="aspect-video w-full rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-800">
-                  <video
-                    controls
-                    preload="metadata"
-                    className="w-full h-full"
-                    src={formData.videoUrl}
-                  />
+                  {doYouTube ? (
+                    <iframe
+                      src={`https://www.youtube.com/embed/${extractYouTubeId(formData.videoUrl)}`}
+                      title="Pré-visualização do vídeo"
+                      className="w-full h-full"
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                      allowFullScreen
+                    />
+                  ) : (
+                    <video
+                      controls
+                      preload="metadata"
+                      className="w-full h-full"
+                      src={formData.videoUrl}
+                    />
+                  )}
                 </div>
               </FormField>
             )}
@@ -1104,6 +1110,7 @@ export function ContentBlockDrawer({
             />
           </div>
         )
+      }
 
       case 'accordion':
         return (

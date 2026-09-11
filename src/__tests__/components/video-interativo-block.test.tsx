@@ -168,6 +168,61 @@ describe('VideoInterativoBlock', () => {
   })
 })
 
+describe('fonte deduzida da URL', () => {
+  // Curso salvo antes de fonteVideo existir nunca passa por corrigirBloco: o bloco é
+  // lido direto do banco. Sem deduzir na renderização, um link do YouTube ia parar no
+  // src de um <video>, que falha com "no supported sources".
+  function montarSemCampo(videoUrl: string) {
+    const item = {
+      id: 'b-1',
+      tipo: 'video-interativo',
+      conteudo: '',
+      ordem: 0,
+      videoUrl,
+      videoTitulo: 'Aula',
+      perguntasVideo: [pergunta({})],
+    } as ConteudoUnidade
+
+    const { container } = render(
+      <ProgressoScormProvider valor={{ unidadeId: 'u-1', registrarQuiz: jest.fn() }}>
+        <VideoInterativoBlock item={item} blocoIndex={0} />
+      </ProgressoScormProvider>
+    )
+    return container
+  }
+
+  it('não coloca link do YouTube dentro de um <video>', () => {
+    expect(
+      montarSemCampo('https://www.youtube.com/watch?v=dQw4w9WgXcQ').querySelector('video')
+    ).toBeNull()
+  })
+
+  it('segue usando <video> para arquivo', () => {
+    expect(montarSemCampo('https://b.com/aula.mp4').querySelector('video')).not.toBeNull()
+  })
+
+  it('ignora fonteVideo arquivo quando a URL é inequivocamente do YouTube', () => {
+    const item = {
+      id: 'b-2',
+      tipo: 'video-interativo',
+      conteudo: '',
+      ordem: 0,
+      fonteVideo: 'arquivo',
+      videoUrl: 'https://youtu.be/dQw4w9WgXcQ',
+      videoTitulo: 'Aula',
+      perguntasVideo: [pergunta({})],
+    } as ConteudoUnidade
+
+    const { container } = render(
+      <ProgressoScormProvider valor={{ unidadeId: 'u-1', registrarQuiz: jest.fn() }}>
+        <VideoInterativoBlock item={item} blocoIndex={0} />
+      </ProgressoScormProvider>
+    )
+
+    expect(container.querySelector('video')).toBeNull()
+  })
+})
+
 describe('marcadores na linha do tempo', () => {
   it('posiciona um pino por pergunta, proporcional à duração', () => {
     const { marcadores } = montar(

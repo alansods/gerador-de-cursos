@@ -128,15 +128,13 @@ describe('validarFormulario', () => {
     expect(CATALOGO_BLOCOS.separador.validarFormulario(criarBlocoVazio('separador'))).toBeNull()
   })
 
-  it('adapta a mensagem do vídeo à fonte escolhida', () => {
-    const meta = CATALOGO_BLOCOS.video
-
-    expect(meta.validarFormulario(criarBlocoVazio('video'))).toBe(
-      'Adicione o link do vídeo do YouTube'
-    )
-    expect(meta.validarFormulario({ ...criarBlocoVazio('video'), fonteVideo: 'arquivo' })).toBe(
-      'Envie o arquivo de vídeo'
-    )
+  it('pede arquivo ou link sem obrigar a escolher a fonte', () => {
+    // Não há mais seletor de fonte: enviar e colar link são o mesmo campo.
+    for (const tipo of ['video', 'video-interativo'] as const) {
+      expect(CATALOGO_BLOCOS[tipo].validarFormulario(criarBlocoVazio(tipo))).toBe(
+        'Envie o arquivo de vídeo ou cole o link do YouTube'
+      )
+    }
   })
 
   it('cobra tempo, enunciado e alternativas em cada pergunta do vídeo interativo', () => {
@@ -552,6 +550,45 @@ describe('extrairMidiasDoBloco', () => {
       reescreverMidiasDoBloco(bloco, new Map([['https://blob.com/aula.mp4', 'images/aula.mp4']]))
         .videoUrl
     ).toBe('images/aula.mp4')
+  })
+
+  it('deduz a fonte pela URL quando o campo não veio', () => {
+    // Cobre curso salvo antes de fonteVideo existir e bloco da IA que omitiu o campo.
+    const semCampo = (tipo: 'video' | 'video-interativo', videoUrl: string) => {
+      const bloco = { ...criarBlocoVazio(tipo), videoUrl } as ConteudoUnidade
+      delete (bloco as Partial<ConteudoUnidade>).fonteVideo
+      return bloco
+    }
+
+    expect(extrairMidiasDoBloco(semCampo('video-interativo', 'https://b.com/aula.mp4'))).toEqual([
+      'https://b.com/aula.mp4',
+    ])
+    expect(
+      extrairMidiasDoBloco(semCampo('video-interativo', 'https://youtu.be/abc12345678'))
+    ).toEqual([])
+    // No bloco `video` sem o campo, o padrão legado é YouTube: antes de `fonteVideo`
+    // existir o formulário só aceitava link do YouTube, então não há .mp4 legado ali.
+    expect(extrairMidiasDoBloco(semCampo('video', 'https://youtu.be/abc12345678'))).toEqual([])
+    expect(extrairMidiasDoBloco(semCampo('video', 'https://b.com/aula.mp4'))).toEqual([])
+
+    // Com o campo declarado, o arquivo é embutido normalmente.
+    const declarado = {
+      ...criarBlocoVazio('video'),
+      fonteVideo: 'arquivo',
+      videoUrl: 'https://b.com/aula.mp4',
+    } as ConteudoUnidade
+    expect(extrairMidiasDoBloco(declarado)).toEqual(['https://b.com/aula.mp4'])
+  })
+
+  it('a URL do YouTube vence o campo declarado como arquivo', () => {
+    // Link do YouTube dentro de um <video> nunca toca; a URL é o fato.
+    const bloco = {
+      ...criarBlocoVazio('video-interativo'),
+      fonteVideo: 'arquivo',
+      videoUrl: 'https://youtu.be/abc12345678',
+    } as ConteudoUnidade
+
+    expect(extrairMidiasDoBloco(bloco)).toEqual([])
   })
 
   it('embute o vídeo do bloco interativo', () => {

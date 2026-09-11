@@ -34,6 +34,7 @@ import type {
   Unidade,
 } from '@/types/gerador-curso'
 import { segundosDeTempo } from '@/lib/tempo-video'
+import { ehUrlYouTubeValida } from '@/lib/youtube'
 
 export type TipoBloco = ConteudoUnidade['tipo']
 
@@ -108,6 +109,26 @@ export function alternativasDaPergunta(
     letra,
     texto: (pergunta[`opcao${letra}` as keyof PerguntaVideo] as string | undefined) ?? '',
   })).filter((alternativa) => temTexto(alternativa.texto))
+}
+
+/**
+ * Fonte efetiva do vídeo, usada na renderização e no empacotamento.
+ *
+ * A URL vence o campo declarado: link do YouTube dentro de um `<video>` nunca toca,
+ * então quando a URL é inequivocamente do YouTube não há outra leitura possível.
+ * O campo decide o resto, e `padraoLegado` cobre o bloco salvo antes de `fonteVideo`
+ * existir — que no `video` era sempre YouTube e no `video-interativo` sempre arquivo.
+ *
+ * Precisa ser consultada onde o bloco é lido, e não só em `corrigirBloco()`: curso
+ * vindo do banco não passa por normalização nenhuma.
+ */
+export function fonteDoVideo(
+  bloco: Partial<ConteudoUnidade>,
+  padraoLegado: 'youtube' | 'arquivo' = 'arquivo'
+): 'youtube' | 'arquivo' {
+  if (ehUrlYouTubeValida(bloco.videoUrl ?? '')) return 'youtube'
+  if (bloco.fonteVideo === 'arquivo' || bloco.fonteVideo === 'youtube') return bloco.fonteVideo
+  return padraoLegado
 }
 
 function perguntaVideoAproveitavel(pergunta?: Partial<PerguntaVideo>): boolean {
@@ -412,17 +433,16 @@ export const CATALOGO_BLOCOS: Record<TipoBloco, MetaBloco> = {
     categoria: 'midia',
     padroes: () => ({ fonteVideo: 'youtube', videoUrl: '', videoTitulo: '' }),
     validarFormulario: (b) => {
-      if (!temTexto(b.videoUrl))
-        return b.fonteVideo === 'arquivo'
-          ? 'Envie o arquivo de vídeo'
-          : 'Adicione o link do vídeo do YouTube'
+      if (!temTexto(b.videoUrl)) return 'Envie o arquivo de vídeo ou cole o link do YouTube'
       if (!temTexto(b.videoTitulo)) return 'Adicione um título para o vídeo'
       return null
     },
     // Só o vídeo enviado vira arquivo no ZIP; o do YouTube é página de streaming.
-    extrairMidias: (b) => (b.fonteVideo === 'arquivo' ? [b.videoUrl] : []),
+    extrairMidias: (b) => (fonteDoVideo(b, 'youtube') === 'arquivo' ? [b.videoUrl] : []),
     reescreverMidias: (b, mapear) =>
-      b.fonteVideo === 'arquivo' ? { videoUrl: mapear(b.videoUrl) ?? b.videoUrl } : {},
+      fonteDoVideo(b, 'youtube') === 'arquivo'
+        ? { videoUrl: mapear(b.videoUrl) ?? b.videoUrl }
+        : {},
   },
   'video-interativo': {
     tipo: 'video-interativo',
@@ -435,9 +455,14 @@ export const CATALOGO_BLOCOS: Record<TipoBloco, MetaBloco> = {
     icone: MonitorPlay,
     descricao: 'Vídeo com perguntas no meio',
     categoria: 'avaliativo',
-    padroes: () => ({ videoUrl: '', videoTitulo: '', perguntasVideo: [] }),
+    padroes: () => ({
+      fonteVideo: 'arquivo',
+      videoUrl: '',
+      videoTitulo: '',
+      perguntasVideo: [],
+    }),
     validarFormulario: (b) => {
-      if (!temTexto(b.videoUrl)) return 'Envie o arquivo de vídeo'
+      if (!temTexto(b.videoUrl)) return 'Envie o arquivo de vídeo ou cole o link do YouTube'
       if (!temTexto(b.videoTitulo)) return 'Adicione um título para o vídeo'
 
       const perguntas = b.perguntasVideo ?? []
@@ -464,8 +489,9 @@ export const CATALOGO_BLOCOS: Record<TipoBloco, MetaBloco> = {
 
       return null
     },
-    extrairMidias: (b) => [b.videoUrl],
-    reescreverMidias: (b, mapear) => ({ videoUrl: mapear(b.videoUrl) ?? b.videoUrl }),
+    extrairMidias: (b) => (fonteDoVideo(b) === 'arquivo' ? [b.videoUrl] : []),
+    reescreverMidias: (b, mapear) =>
+      fonteDoVideo(b) === 'arquivo' ? { videoUrl: mapear(b.videoUrl) ?? b.videoUrl } : {},
   },
   separador: {
     tipo: 'separador',
@@ -895,10 +921,11 @@ function corrigirBloco(bloco: ConteudoUnidade): ConteudoUnidade {
   }
 
   if (corrigido.tipo === 'video') {
-    corrigido.fonteVideo = corrigido.fonteVideo === 'arquivo' ? 'arquivo' : 'youtube'
+    corrigido.fonteVideo = fonteDoVideo(corrigido, 'youtube')
   }
 
   if (corrigido.tipo === 'video-interativo') {
+    corrigido.fonteVideo = fonteDoVideo(corrigido)
     corrigido.perguntasVideo = (corrigido.perguntasVideo ?? [])
       .filter(perguntaVideoAproveitavel)
       .map((pergunta, indice) => ({
