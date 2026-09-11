@@ -21,7 +21,7 @@ async function main() {
     if (existingUser) {
       console.log('⚠️  Usuário convidado já existe!')
       console.log(`   ID: ${existingUser.id}`)
-      console.log(`   Nome: ${existingUser.nome}`)
+      console.log(`   Nome: ${existingUser.name}`)
       console.log(`   Usuário: ${existingUser.email}`)
       return
     }
@@ -32,15 +32,15 @@ async function main() {
     // Criar usuário
     const guestUser = await prisma.user.create({
       data: {
-        nome: 'Usuário Convidado',
+        name: 'Usuário Convidado',
         email: 'convidado@senai.br',
-        senha: passwordHash,
+        password: passwordHash,
       },
     })
 
     console.log('✅ Usuário convidado criado com sucesso!')
     console.log(`   ID: ${guestUser.id}`)
-    console.log(`   Nome: ${guestUser.nome}`)
+    console.log(`   Nome: ${guestUser.name}`)
     console.log(`   Usuário: ${guestUser.email}`)
     console.log(`   Senha: senai2025`)
   } catch (error) {

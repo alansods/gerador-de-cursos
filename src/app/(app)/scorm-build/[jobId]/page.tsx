@@ -31,7 +31,7 @@ export default function SCORMBuildPage() {
       const url = URL.createObjectURL(blob)
       const a = document.createElement('a')
       a.href = url
-      a.download = `scorm-${jobStatus?.cursoTitulo || 'curso'}.zip`
+      a.download = `scorm-${jobStatus?.courseTitle || 'curso'}.zip`
       a.click()
       URL.revokeObjectURL(url)
     } catch (error) {
@@ -72,7 +72,7 @@ export default function SCORMBuildPage() {
           <p className="text-gray-600 dark:text-gray-400 text-center mb-4">
             O job de build SCORM não foi encontrado.
           </p>
-          <Button onClick={() => router.push('/cursos')} className="w-full">
+          <Button onClick={() => router.push('/courses')} className="w-full">
             Voltar para Cursos
           </Button>
         </Card>
@@ -105,7 +105,7 @@ export default function SCORMBuildPage() {
           </h1>
 
           {/* Curso */}
-          <p className="text-gray-600 dark:text-gray-400 mb-6">{jobStatus.cursoTitulo}</p>
+          <p className="text-gray-600 dark:text-gray-400 mb-6">{jobStatus.courseTitle}</p>
 
           {/* Progresso */}
           {jobStatus.progress && (

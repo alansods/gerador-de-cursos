@@ -13,7 +13,7 @@ export const MAX_CONCURRENT_COLLABORATORS = 2
 /** Kill switch manual: com a flag desligada, o editor se comporta como antes. */
 export const COLLAB_ENABLED = process.env.NEXT_PUBLIC_COLLAB_ENABLED === 'true'
 
-export const COURSE_ROOM = (courseId: string) => `curso:${courseId}`
+export const COURSE_ROOM = (courseId: string) => `course:${courseId}`
 
 /** Cores estáveis por usuário, para o cursor e o avatar não trocarem de cor */
 const COLLAB_COLORS = [

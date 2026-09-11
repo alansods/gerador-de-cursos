@@ -18,8 +18,8 @@ function pageJobs(page: number) {
     const numero = first + index + 1
     return {
       id: `job-${numero}`,
-      cursoId: `curso-${numero}`,
-      cursoTitulo: `Curso ${numero}`,
+      courseId: `curso-${numero}`,
+      courseTitle: `Curso ${numero}`,
       status: 'completed',
       createdAt: '2026-09-10T12:00:00.000Z',
       completedAt: '2026-09-10T12:01:00.000Z',

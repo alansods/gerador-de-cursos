@@ -34,7 +34,7 @@ test.describe('Landing Page', () => {
   test('navigates to cadastro when clicking CTA', async ({ page }) => {
     await page.getByRole('link', { name: 'Começar Grátis' }).first().click()
 
-    await expect(page).toHaveURL(/.*cadastro/)
+    await expect(page).toHaveURL(/.*signup/)
   })
 
   test('navigates to login when clicking login button', async ({ page }) => {

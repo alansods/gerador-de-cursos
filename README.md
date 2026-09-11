@@ -23,7 +23,7 @@ Upload a Word or PDF document, AI structures the content, and the SCORM package 
 - Export SCORM 1.2 packages compatible with any LMS
 - Player with integrated dark mode
 - Course PDF generation
-- JWT authentication (login/registration) with role-based access (ADMIN, GESTOR, CONTEUDISTA, REVISOR, CONVIDADO)
+- JWT authentication (login/registration) with role-based access (ADMIN, MANAGER, CONTENT_AUTHOR, REVIEWER, GUEST)
 - Course ownership, access requests/collaborators, and an editorial review workflow
 - Real-time co-editing (presence avatars and cursors) via Liveblocks
 - User management and activity logs
@@ -203,15 +203,15 @@ generate-scorm-isolated.mjs     # Isolated SCORM build script
 
 ## Database
 
-| Model                | Description                                                              |
-| -------------------- | ------------------------------------------------------------------------ |
-| `User`               | System users, with role (ADMIN, GESTOR, CONTEUDISTA, REVISOR, CONVIDADO) |
-| `Curso`              | Courses with units (JSON), owner, editorial status and version           |
-| `CursoColaborador`   | Users granted access to edit a course                                    |
-| `CursoAccessRequest` | Access requests to a course (pending/approved/denied/revoked)            |
-| `CursoComentario`    | Review comments on a course                                              |
-| `Activity`           | User action logs                                                         |
-| `SCORMJob`           | Queue and status of async SCORM exports                                  |
+| Model                | Description                                                               |
+| -------------------- | ------------------------------------------------------------------------- |
+| `User`               | System users, with role (ADMIN, MANAGER, CONTENT_AUTHOR, REVIEWER, GUEST) |
+| `Curso`              | Courses with units (JSON), owner, editorial status and version            |
+| `CursoColaborador`   | Users granted access to edit a course                                     |
+| `CursoAccessRequest` | Access requests to a course (pending/approved/denied/revoked)             |
+| `CursoComentario`    | Review comments on a course                                               |
+| `Activity`           | User action logs                                                          |
+| `SCORMJob`           | Queue and status of async SCORM exports                                   |
 
 ---
 

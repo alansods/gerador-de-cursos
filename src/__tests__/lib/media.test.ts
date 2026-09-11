@@ -18,7 +18,7 @@ describe('política de mídias', () => {
   })
 
   it('não aceita SVG, pelo risco de script dentro do iframe do LMS', () => {
-    expect(MEDIA_POLICY.imagem.allowedTypes).not.toContain('image/svg+xml')
+    expect(MEDIA_POLICY.image.allowedTypes).not.toContain('image/svg+xml')
   })
 
   it('não aceita WAV, que estouraria o peso do pacote', () => {
@@ -27,7 +27,7 @@ describe('política de mídias', () => {
   })
 
   it('recusa formato fora da allowlist', () => {
-    const { error } = validateFile({ type: 'image/svg+xml', size: 1000 }, 'imagem')
+    const { error } = validateFile({ type: 'image/svg+xml', size: 1000 }, 'image')
     expect(error).toMatch(/Formato não aceito/)
   })
 
@@ -43,7 +43,7 @@ describe('política de mídias', () => {
   })
 
   it('aceita sem aviso abaixo do recomendado', () => {
-    expect(validateFile({ type: 'application/pdf', size: 2 * MB }, 'documento')).toEqual({
+    expect(validateFile({ type: 'application/pdf', size: 2 * MB }, 'document')).toEqual({
       error: null,
       warning: null,
     })

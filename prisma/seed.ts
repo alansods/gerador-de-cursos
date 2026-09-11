@@ -345,7 +345,7 @@ async function main() {
   // ========================================
 
   console.log('🗑️  Limpando cursos existentes...')
-  await prisma.curso.deleteMany({})
+  await prisma.course.deleteMany({})
   console.log('✅ Cursos removidos\n')
 
   console.log('🗑️  Limpando usuários existentes...')
@@ -361,10 +361,10 @@ async function main() {
 
   const adminUser = await prisma.user.create({
     data: {
-      nome: 'Administrador',
+      name: 'Administrador',
       role: 'ADMIN',
       email: 'admin@senai.br',
-      senha: adminPasswordHash,
+      password: adminPasswordHash,
     },
   })
 
@@ -378,10 +378,10 @@ async function main() {
 
   const guestUser = await prisma.user.create({
     data: {
-      nome: 'Usuário Convidado',
-      role: 'CONVIDADO',
+      name: 'Usuário Convidado',
+      role: 'GUEST',
       email: 'convidado@senai.br',
-      senha: guestPasswordHash,
+      password: guestPasswordHash,
     },
   })
 
@@ -400,11 +400,19 @@ async function main() {
 
   for (const courseData of sampleCourses) {
     try {
-      const course = await prisma.curso.create({
-        data: { ...courseData, ownerId: adminUser.id },
+      const course = await prisma.course.create({
+        data: {
+          title: courseData.titulo,
+          description: courseData.descricao,
+          workload: courseData.cargaHoraria,
+          modality: courseData.modalidade,
+          category: courseData.categoria,
+          units: courseData.unidades,
+          ownerId: adminUser.id,
+        },
       })
       createdCourses++
-      console.log(`✅ Curso criado: ${course.titulo}`)
+      console.log(`✅ Curso criado: ${course.title}`)
     } catch (error) {
       console.error(`❌ Erro ao criar curso ${courseData.titulo}:`, error)
     }
@@ -413,7 +421,7 @@ async function main() {
   console.log(`\n✅ ${createdCourses} cursos criados`)
 
   // Mostrar estatísticas
-  const totalCourses = await prisma.curso.count()
+  const totalCourses = await prisma.course.count()
   const totalUsers = await prisma.user.count()
   console.log(`\n📊 Total de cursos no banco: ${totalCourses}`)
   console.log(`📊 Total de usuários no banco: ${totalUsers}`)

@@ -18,8 +18,8 @@ import {
   POST as createCursoHandler,
   PUT as updateCursoHandler,
   DELETE as deleteCursoHandler,
-} from '@/app/api/cursos/route'
-import { GET as getCursoByIdHandler } from '@/app/api/cursos/[id]/route'
+} from '@/app/api/courses/route'
+import { GET as getCursoByIdHandler } from '@/app/api/courses/[id]/route'
 import { prisma } from '@/lib/prisma'
 import { SignJWT } from 'jose'
 
@@ -51,8 +51,8 @@ async function authHeaders(role: string = 'ADMIN') {
 const authenticatedUser = {
   id: '1',
   email: 'testuser@senai.br',
-  senha: 'hashed',
-  nome: 'Test User',
+  password: 'hashed',
+  name: 'Test User',
   cargo: 'Administrador',
   role: 'ADMIN',
   createdAt: new Date(),
@@ -65,54 +65,54 @@ describe('API - Cursos', () => {
     mockPrisma.user.findUnique.mockResolvedValue(authenticatedUser as never)
   })
 
-  describe('GET /api/cursos', () => {
+  describe('GET /api/courses', () => {
     it('deve listar cursos com paginação', async () => {
       // Arrange
       const mockCourses = [
         {
           id: '1',
-          titulo: 'Curso 1',
-          descricao: 'Descrição 1',
-          cargaHoraria: '40h',
-          modalidade: 'Online',
-          categoria: 'Tecnologia',
-          unidades: [],
+          title: 'Curso 1',
+          description: 'Descrição 1',
+          workload: '40h',
+          modality: 'Online',
+          category: 'Tecnologia',
+          units: [],
           layout: 'classico',
           slug: null,
-          status: 'EM_ANDAMENTO',
+          status: 'IN_PROGRESS',
           version: 0,
           ownerId: '1',
-          owner: { id: '1', nome: 'Test User' },
-          revisadoPorId: null,
-          revisadoEm: null,
-          dataCriacao: new Date(),
-          dataModificacao: new Date(),
+          owner: { id: '1', name: 'Test User' },
+          reviewedById: null,
+          reviewedAt: null,
+          createdAt: new Date(),
+          updatedAt: new Date(),
         },
         {
           id: '2',
-          titulo: 'Curso 2',
-          descricao: 'Descrição 2',
-          cargaHoraria: '60h',
-          modalidade: 'Presencial',
-          categoria: 'Gestão',
-          unidades: [],
+          title: 'Curso 2',
+          description: 'Descrição 2',
+          workload: '60h',
+          modality: 'Presencial',
+          category: 'Gestão',
+          units: [],
           layout: 'classico',
           slug: null,
-          status: 'EM_ANDAMENTO',
+          status: 'IN_PROGRESS',
           version: 0,
           ownerId: '1',
-          owner: { id: '1', nome: 'Test User' },
-          revisadoPorId: null,
-          revisadoEm: null,
-          dataCriacao: new Date(),
-          dataModificacao: new Date(),
+          owner: { id: '1', name: 'Test User' },
+          reviewedById: null,
+          reviewedAt: null,
+          createdAt: new Date(),
+          updatedAt: new Date(),
         },
       ]
 
-      mockPrisma.curso.count.mockResolvedValue(2)
-      mockPrisma.curso.findMany.mockResolvedValue(mockCourses)
+      mockPrisma.course.count.mockResolvedValue(2)
+      mockPrisma.course.findMany.mockResolvedValue(mockCourses)
 
-      const request = new NextRequest('http://localhost:3000/api/cursos?page=1&limit=6', {
+      const request = new NextRequest('http://localhost:3000/api/courses?page=1&limit=6', {
         headers: await authHeaders(),
       })
 
@@ -123,7 +123,7 @@ describe('API - Cursos', () => {
       // Assert
       expect(response.status).toBe(200)
       expect(data.success).toBe(true)
-      expect(data.cursos).toHaveLength(2)
+      expect(data.courses).toHaveLength(2)
       expect(data.pagination).toEqual({
         page: 1,
         limit: 6,
@@ -132,8 +132,8 @@ describe('API - Cursos', () => {
       })
 
       // Verificar que foi chamado apenas uma vez (sem duplicação)
-      expect(mockPrisma.curso.findMany).toHaveBeenCalledTimes(1)
-      expect(mockPrisma.curso.count).toHaveBeenCalledTimes(1)
+      expect(mockPrisma.course.findMany).toHaveBeenCalledTimes(1)
+      expect(mockPrisma.course.count).toHaveBeenCalledTimes(1)
     })
 
     it('deve filtrar cursos por busca, categoria e modalidade', async () => {
@@ -141,30 +141,30 @@ describe('API - Cursos', () => {
       const mockCourses = [
         {
           id: '1',
-          titulo: 'JavaScript Avançado',
-          descricao: 'Curso avançado',
-          cargaHoraria: '40h',
-          modalidade: 'Online',
-          categoria: 'Tecnologia',
-          unidades: [],
+          title: 'JavaScript Avançado',
+          description: 'Curso avançado',
+          workload: '40h',
+          modality: 'Online',
+          category: 'Tecnologia',
+          units: [],
           layout: 'classico',
           slug: null,
-          status: 'EM_ANDAMENTO',
+          status: 'IN_PROGRESS',
           version: 0,
           ownerId: '1',
-          owner: { id: '1', nome: 'Test User' },
-          revisadoPorId: null,
-          revisadoEm: null,
-          dataCriacao: new Date(),
-          dataModificacao: new Date(),
+          owner: { id: '1', name: 'Test User' },
+          reviewedById: null,
+          reviewedAt: null,
+          createdAt: new Date(),
+          updatedAt: new Date(),
         },
       ]
 
-      mockPrisma.curso.count.mockResolvedValue(1)
-      mockPrisma.curso.findMany.mockResolvedValue(mockCourses)
+      mockPrisma.course.count.mockResolvedValue(1)
+      mockPrisma.course.findMany.mockResolvedValue(mockCourses)
 
       const request = new NextRequest(
-        'http://localhost:3000/api/cursos?page=1&limit=6&search=JavaScript&category=Tecnologia&modality=Online',
+        'http://localhost:3000/api/courses?page=1&limit=6&search=JavaScript&category=Tecnologia&modality=Online',
         { headers: await authHeaders() }
       )
 
@@ -174,12 +174,12 @@ describe('API - Cursos', () => {
 
       // Assert
       expect(response.status).toBe(200)
-      expect(data.cursos).toHaveLength(1)
-      expect(mockPrisma.curso.findMany).toHaveBeenCalledWith(
+      expect(data.courses).toHaveLength(1)
+      expect(mockPrisma.course.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
           where: expect.objectContaining({
-            categoria: 'Tecnologia',
-            modalidade: 'Online',
+            category: 'Tecnologia',
+            modality: 'Online',
             OR: expect.any(Array),
           }),
         })
@@ -187,32 +187,32 @@ describe('API - Cursos', () => {
     })
   })
 
-  describe('GET /api/cursos/[id]', () => {
+  describe('GET /api/courses/[id]', () => {
     it('deve buscar curso por ID', async () => {
       // Arrange
       const mockCourse = {
         id: '1',
-        titulo: 'Curso Teste',
-        descricao: 'Descrição teste',
-        cargaHoraria: '40h',
-        modalidade: 'Online',
-        categoria: 'Tecnologia',
-        unidades: [],
+        title: 'Curso Teste',
+        description: 'Descrição teste',
+        workload: '40h',
+        modality: 'Online',
+        category: 'Tecnologia',
+        units: [],
         layout: 'classico',
         slug: null,
-        status: 'EM_ANDAMENTO',
+        status: 'IN_PROGRESS',
         version: 0,
         ownerId: '1',
-        owner: { id: '1', nome: 'Test User' },
-        revisadoPorId: null,
-        revisadoEm: null,
-        dataCriacao: new Date(),
-        dataModificacao: new Date(),
+        owner: { id: '1', name: 'Test User' },
+        reviewedById: null,
+        reviewedAt: null,
+        createdAt: new Date(),
+        updatedAt: new Date(),
       }
 
-      mockPrisma.curso.findFirst.mockResolvedValue(mockCourse)
+      mockPrisma.course.findFirst.mockResolvedValue(mockCourse)
 
-      const request = new NextRequest('http://localhost:3000/api/cursos/1', {
+      const request = new NextRequest('http://localhost:3000/api/courses/1', {
         headers: await authHeaders(),
       })
 
@@ -225,17 +225,17 @@ describe('API - Cursos', () => {
       // Assert
       expect(response.status).toBe(200)
       expect(data.success).toBe(true)
-      expect(data.curso.id).toBe('1')
+      expect(data.course.id).toBe('1')
 
       // Verificar que foi chamado apenas uma vez
-      expect(mockPrisma.curso.findFirst).toHaveBeenCalledTimes(1)
+      expect(mockPrisma.course.findFirst).toHaveBeenCalledTimes(1)
     })
 
     it('deve retornar 404 se curso não existir', async () => {
       // Arrange
-      mockPrisma.curso.findFirst.mockResolvedValue(null)
+      mockPrisma.course.findFirst.mockResolvedValue(null)
 
-      const request = new NextRequest('http://localhost:3000/api/cursos/999', {
+      const request = new NextRequest('http://localhost:3000/api/courses/999', {
         headers: await authHeaders(),
       })
 
@@ -252,44 +252,44 @@ describe('API - Cursos', () => {
     })
   })
 
-  describe('POST /api/cursos', () => {
+  describe('POST /api/courses', () => {
     it('deve criar curso com autenticação válida', async () => {
       // Arrange
       const token = await createAuthToken()
       const mockUser = {
         id: '1',
         email: 'testuser@senai.br',
-        senha: 'hashed',
-        nome: 'Test User',
+        password: 'hashed',
+        name: 'Test User',
         cargo: 'Desenvolvedor',
         role: 'ADMIN',
-        dataCriacao: new Date(),
+        createdAt: new Date(),
       }
 
       const mockCourse = {
         id: '1',
-        titulo: 'Novo Curso',
-        descricao: 'Descrição do novo curso',
-        cargaHoraria: '40h',
-        modalidade: 'Online',
-        categoria: 'Tecnologia',
-        unidades: [],
+        title: 'Novo Curso',
+        description: 'Descrição do novo curso',
+        workload: '40h',
+        modality: 'Online',
+        category: 'Tecnologia',
+        units: [],
         layout: 'classico',
         slug: null,
-        status: 'EM_ANDAMENTO',
+        status: 'IN_PROGRESS',
         version: 0,
         ownerId: '1',
-        owner: { id: '1', nome: 'Test User' },
-        revisadoPorId: null,
-        revisadoEm: null,
-        dataCriacao: new Date(),
-        dataModificacao: new Date(),
+        owner: { id: '1', name: 'Test User' },
+        reviewedById: null,
+        reviewedAt: null,
+        createdAt: new Date(),
+        updatedAt: new Date(),
       }
 
       mockPrisma.user.findUnique.mockResolvedValue(mockUser)
-      mockPrisma.curso.create.mockResolvedValue(mockCourse)
+      mockPrisma.course.create.mockResolvedValue(mockCourse)
 
-      const request = new NextRequest('http://localhost:3000/api/cursos', {
+      const request = new NextRequest('http://localhost:3000/api/courses', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -312,13 +312,13 @@ describe('API - Cursos', () => {
       // Assert
       expect(response.status).toBe(201)
       expect(data.success).toBe(true)
-      expect(data.curso.titulo).toBe('Novo Curso')
-      expect(mockPrisma.curso.create).toHaveBeenCalledTimes(1)
+      expect(data.course.titulo).toBe('Novo Curso')
+      expect(mockPrisma.course.create).toHaveBeenCalledTimes(1)
     })
 
     it('deve retornar 401 sem autenticação', async () => {
       // Arrange
-      const request = new NextRequest('http://localhost:3000/api/cursos', {
+      const request = new NextRequest('http://localhost:3000/api/courses', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -339,20 +339,20 @@ describe('API - Cursos', () => {
       // Assert
       expect(response.status).toBe(401)
       expect(data.success).toBe(false)
-      expect(mockPrisma.curso.create).not.toHaveBeenCalled()
+      expect(mockPrisma.course.create).not.toHaveBeenCalled()
     })
 
     it('deve usar o papel do banco, não o do token, quando o admin rebaixa o usuário', async () => {
       // Arrange: token emitido enquanto o usuário ainda era ADMIN,
-      // mas o banco já registra o rebaixamento para REVISOR
+      // mas o banco já registra o rebaixamento para REVIEWER
       const token = await createAuthToken('1', 'ADMIN')
 
       mockPrisma.user.findUnique.mockResolvedValue({
         ...authenticatedUser,
-        role: 'REVISOR',
+        role: 'REVIEWER',
       } as never)
 
-      const request = new NextRequest('http://localhost:3000/api/cursos', {
+      const request = new NextRequest('http://localhost:3000/api/courses', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -375,7 +375,7 @@ describe('API - Cursos', () => {
       // Assert
       expect(response.status).toBe(403)
       expect(data.success).toBe(false)
-      expect(mockPrisma.curso.create).not.toHaveBeenCalled()
+      expect(mockPrisma.course.create).not.toHaveBeenCalled()
     })
 
     it('deve retornar 401 quando o usuário do token não existe mais no banco', async () => {
@@ -384,7 +384,7 @@ describe('API - Cursos', () => {
 
       mockPrisma.user.findUnique.mockResolvedValue(null as never)
 
-      const request = new NextRequest('http://localhost:3000/api/cursos', {
+      const request = new NextRequest('http://localhost:3000/api/courses', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -407,7 +407,7 @@ describe('API - Cursos', () => {
       // Assert
       expect(response.status).toBe(401)
       expect(data.success).toBe(false)
-      expect(mockPrisma.curso.create).not.toHaveBeenCalled()
+      expect(mockPrisma.course.create).not.toHaveBeenCalled()
     })
 
     it('deve retornar 400 com campos obrigatórios faltando', async () => {
@@ -416,16 +416,16 @@ describe('API - Cursos', () => {
       const mockUser = {
         id: '1',
         email: 'testuser@senai.br',
-        senha: 'hashed',
-        nome: 'Test User',
+        password: 'hashed',
+        name: 'Test User',
         cargo: 'Desenvolvedor',
         role: 'ADMIN',
-        dataCriacao: new Date(),
+        createdAt: new Date(),
       }
 
       mockPrisma.user.findUnique.mockResolvedValue(mockUser)
 
-      const request = new NextRequest('http://localhost:3000/api/cursos', {
+      const request = new NextRequest('http://localhost:3000/api/courses', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -448,74 +448,74 @@ describe('API - Cursos', () => {
     })
   })
 
-  describe('PUT /api/cursos', () => {
+  describe('PUT /api/courses', () => {
     async function update(currentStatus: string) {
       const token = await createAuthToken()
       const mockUser = {
         id: '1',
         email: 'testuser@senai.br',
-        senha: 'hashed',
-        nome: 'Test User',
+        password: 'hashed',
+        name: 'Test User',
         role: 'ADMIN',
-        dataCriacao: new Date(),
+        createdAt: new Date(),
       }
       const mockCourse = {
         id: '1',
-        titulo: 'Curso',
-        descricao: 'Desc',
-        cargaHoraria: '60h',
-        modalidade: 'Online',
-        categoria: 'Tecnologia',
-        unidades: [],
+        title: 'Curso',
+        description: 'Desc',
+        workload: '60h',
+        modality: 'Online',
+        category: 'Tecnologia',
+        units: [],
         layout: 'classico',
         slug: null,
         status: currentStatus,
         version: 0,
         ownerId: '1',
-        owner: { id: '1', nome: 'Test User' },
-        revisadoPorId: 'revisor-1',
-        revisadoEm: new Date(),
-        dataCriacao: new Date(),
-        dataModificacao: new Date(),
+        owner: { id: '1', name: 'Test User' },
+        reviewedById: 'revisor-1',
+        reviewedAt: new Date(),
+        createdAt: new Date(),
+        updatedAt: new Date(),
       }
 
       mockPrisma.user.findUnique.mockResolvedValue(mockUser as never)
-      mockPrisma.curso.findUnique.mockResolvedValue(mockCourse as never)
-      mockPrisma.curso.update.mockResolvedValue(mockCourse as never)
+      mockPrisma.course.findUnique.mockResolvedValue(mockCourse as never)
+      mockPrisma.course.update.mockResolvedValue(mockCourse as never)
 
-      const request = new NextRequest('http://localhost:3000/api/cursos', {
+      const request = new NextRequest('http://localhost:3000/api/courses', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json', Cookie: `auth-token=${token}` },
         body: JSON.stringify({ id: '1', titulo: 'Curso Editado', version: 0 }),
       })
 
       const res = await updateCursoHandler(request)
-      return { res, dados: mockPrisma.curso.update.mock.calls[0]?.[0]?.data }
+      return { res, dados: mockPrisma.course.update.mock.calls[0]?.[0]?.data }
     }
 
-    it('devolve curso APROVADO para EM_ANDAMENTO e limpa a revisão ao editar', async () => {
-      const { res, dados: data } = await update('APROVADO')
+    it('devolve curso APPROVED para IN_PROGRESS e limpa a revisão ao editar', async () => {
+      const { res, dados: data } = await update('APPROVED')
 
       expect(res.status).toBe(200)
-      expect(data.status).toBe('EM_ANDAMENTO')
-      expect(data.revisadoPorId).toBeNull()
-      expect(data.revisadoEm).toBeNull()
+      expect(data.status).toBe('IN_PROGRESS')
+      expect(data.reviewedById).toBeNull()
+      expect(data.reviewedAt).toBeNull()
     })
 
-    it('devolve curso REPROVADO para EM_ANDAMENTO ao editar', async () => {
-      const { dados: data } = await update('REPROVADO')
+    it('devolve curso REJECTED para IN_PROGRESS ao editar', async () => {
+      const { dados: data } = await update('REJECTED')
 
-      expect(data.status).toBe('EM_ANDAMENTO')
+      expect(data.status).toBe('IN_PROGRESS')
     })
 
-    it('não mexe no status de um curso EM_ANDAMENTO', async () => {
-      const { dados: data } = await update('EM_ANDAMENTO')
+    it('não mexe no status de um curso IN_PROGRESS', async () => {
+      const { dados: data } = await update('IN_PROGRESS')
 
       expect(data.status).toBeUndefined()
     })
 
-    it('não mexe no status de um curso EM_REVISAO', async () => {
-      const { dados: data } = await update('EM_REVISAO')
+    it('não mexe no status de um curso IN_REVIEW', async () => {
+      const { dados: data } = await update('IN_REVIEW')
 
       expect(data.status).toBeUndefined()
     })
@@ -526,38 +526,38 @@ describe('API - Cursos', () => {
       const mockUser = {
         id: '1',
         email: 'testuser@senai.br',
-        senha: 'hashed',
-        nome: 'Test User',
+        password: 'hashed',
+        name: 'Test User',
         cargo: 'Desenvolvedor',
         role: 'ADMIN',
-        dataCriacao: new Date(),
+        createdAt: new Date(),
       }
 
       const mockCourse = {
         id: '1',
-        titulo: 'Curso Atualizado',
-        descricao: 'Descrição atualizada',
-        cargaHoraria: '60h',
-        modalidade: 'Online',
-        categoria: 'Tecnologia',
-        unidades: [],
+        title: 'Curso Atualizado',
+        description: 'Descrição atualizada',
+        workload: '60h',
+        modality: 'Online',
+        category: 'Tecnologia',
+        units: [],
         layout: 'classico',
         slug: null,
-        status: 'EM_ANDAMENTO',
+        status: 'IN_PROGRESS',
         version: 0,
         ownerId: '1',
-        owner: { id: '1', nome: 'Test User' },
-        revisadoPorId: null,
-        revisadoEm: null,
-        dataCriacao: new Date(),
-        dataModificacao: new Date(),
+        owner: { id: '1', name: 'Test User' },
+        reviewedById: null,
+        reviewedAt: null,
+        createdAt: new Date(),
+        updatedAt: new Date(),
       }
 
       mockPrisma.user.findUnique.mockResolvedValue(mockUser)
-      mockPrisma.curso.findUnique.mockResolvedValue(mockCourse)
-      mockPrisma.curso.update.mockResolvedValue(mockCourse)
+      mockPrisma.course.findUnique.mockResolvedValue(mockCourse)
+      mockPrisma.course.update.mockResolvedValue(mockCourse)
 
-      const request = new NextRequest('http://localhost:3000/api/cursos', {
+      const request = new NextRequest('http://localhost:3000/api/courses', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -577,13 +577,13 @@ describe('API - Cursos', () => {
       // Assert
       expect(response.status).toBe(200)
       expect(data.success).toBe(true)
-      expect(data.curso.titulo).toBe('Curso Atualizado')
-      expect(mockPrisma.curso.update).toHaveBeenCalledTimes(1)
+      expect(data.course.titulo).toBe('Curso Atualizado')
+      expect(mockPrisma.course.update).toHaveBeenCalledTimes(1)
     })
 
     it('deve retornar 401 sem autenticação', async () => {
       // Arrange
-      const request = new NextRequest('http://localhost:3000/api/cursos', {
+      const request = new NextRequest('http://localhost:3000/api/courses', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -601,28 +601,28 @@ describe('API - Cursos', () => {
       // Assert
       expect(response.status).toBe(401)
       expect(data.success).toBe(false)
-      expect(mockPrisma.curso.update).not.toHaveBeenCalled()
+      expect(mockPrisma.course.update).not.toHaveBeenCalled()
     })
   })
 
-  describe('DELETE /api/cursos', () => {
+  describe('DELETE /api/courses', () => {
     it('deve deletar curso com autenticação válida', async () => {
       // Arrange
       const token = await createAuthToken()
       const mockUser = {
         id: '1',
         email: 'testuser@senai.br',
-        senha: 'hashed',
-        nome: 'Test User',
+        password: 'hashed',
+        name: 'Test User',
         cargo: 'Desenvolvedor',
         role: 'ADMIN',
-        dataCriacao: new Date(),
+        createdAt: new Date(),
       }
 
       mockPrisma.user.findUnique.mockResolvedValue(mockUser)
-      mockPrisma.curso.delete.mockResolvedValue({ id: '1' } as { id: string })
+      mockPrisma.course.delete.mockResolvedValue({ id: '1' } as { id: string })
 
-      const request = new NextRequest('http://localhost:3000/api/cursos?id=1', {
+      const request = new NextRequest('http://localhost:3000/api/courses?id=1', {
         method: 'DELETE',
         headers: {
           Cookie: `auth-token=${token}`,
@@ -636,12 +636,12 @@ describe('API - Cursos', () => {
       // Assert
       expect(response.status).toBe(200)
       expect(data.success).toBe(true)
-      expect(mockPrisma.curso.delete).toHaveBeenCalledTimes(1)
+      expect(mockPrisma.course.delete).toHaveBeenCalledTimes(1)
     })
 
     it('deve retornar 401 sem autenticação', async () => {
       // Arrange
-      const request = new NextRequest('http://localhost:3000/api/cursos?id=1', {
+      const request = new NextRequest('http://localhost:3000/api/courses?id=1', {
         method: 'DELETE',
       })
 
@@ -652,7 +652,7 @@ describe('API - Cursos', () => {
       // Assert
       expect(response.status).toBe(401)
       expect(data.success).toBe(false)
-      expect(mockPrisma.curso.delete).not.toHaveBeenCalled()
+      expect(mockPrisma.course.delete).not.toHaveBeenCalled()
     })
   })
 })

@@ -23,11 +23,11 @@ export function ManageCollaborators({ courseId, canManage }: Props) {
   const reportError = (error: unknown) =>
     toast.error(error instanceof Error ? error.message : 'Erro ao conectar com o servidor')
 
-  const respond = async (id: string, action: 'aprovar' | 'negar') => {
+  const respond = async (id: string, action: 'approve' | 'deny') => {
     try {
       // aprovar move a pessoa de pendente para colaborador: a mutation invalida os dois
-      await respondAccessRequest.mutateAsync({ id, acao: action })
-      toast.success(action === 'aprovar' ? 'Acesso concedido' : 'Solicitação negada')
+      await respondAccessRequest.mutateAsync({ id, action })
+      toast.success(action === 'approve' ? 'Acesso concedido' : 'Solicitação negada')
     } catch (error) {
       reportError(error)
     }
@@ -59,13 +59,13 @@ export function ManageCollaborators({ courseId, canManage }: Props) {
             {pendingRequests.map((accessRequest) => (
               <li key={accessRequest.id} className="space-y-2 rounded-lg border border-border p-3">
                 <div className="min-w-0">
-                  <p className="truncate text-sm font-medium">{accessRequest.solicitante.nome}</p>
+                  <p className="truncate text-sm font-medium">{accessRequest.requester.name}</p>
                   <p className="truncate text-xs text-muted-foreground">
-                    {accessRequest.solicitante.email}
+                    {accessRequest.requester.email}
                   </p>
-                  {accessRequest.mensagem && (
+                  {accessRequest.message && (
                     <p className="mt-1 text-xs italic text-muted-foreground">
-                      “{accessRequest.mensagem}”
+                      “{accessRequest.message}”
                     </p>
                   )}
                 </div>
@@ -79,7 +79,7 @@ export function ManageCollaborators({ courseId, canManage }: Props) {
                     <Button
                       size="sm"
                       className="h-7 gap-1 text-xs"
-                      onClick={() => respond(accessRequest.id, 'aprovar')}
+                      onClick={() => respond(accessRequest.id, 'approve')}
                     >
                       <Check className="h-3 w-3" />
                       Liberar acesso
@@ -88,7 +88,7 @@ export function ManageCollaborators({ courseId, canManage }: Props) {
                       size="sm"
                       variant="destructive"
                       className="h-7 gap-1 text-xs"
-                      onClick={() => respond(accessRequest.id, 'negar')}
+                      onClick={() => respond(accessRequest.id, 'deny')}
                     >
                       <X className="h-3 w-3" />
                       Negar
@@ -124,10 +124,10 @@ export function ManageCollaborators({ courseId, canManage }: Props) {
                 className="flex items-center justify-between gap-2 rounded-lg border border-border p-3"
               >
                 <div className="min-w-0">
-                  <p className="truncate text-sm font-medium">{collaborator.user.nome}</p>
+                  <p className="truncate text-sm font-medium">{collaborator.user.name}</p>
                   <p className="truncate text-xs text-muted-foreground">
                     {ROLE_LABELS[collaborator.user.role]} · concedido por{' '}
-                    {collaborator.concedidoPor?.nome ?? '—'}
+                    {collaborator.grantedBy?.name ?? '—'}
                   </p>
                 </div>
                 <div className="flex shrink-0 items-center gap-2">
@@ -136,8 +136,8 @@ export function ManageCollaborators({ courseId, canManage }: Props) {
                     size="icon"
                     className="h-8 w-8 text-destructive"
                     disabled={revoking === collaborator.user.id}
-                    onClick={() => revoke(collaborator.user.id, collaborator.user.nome)}
-                    aria-label={`Revogar acesso de ${collaborator.user.nome}`}
+                    onClick={() => revoke(collaborator.user.id, collaborator.user.name)}
+                    aria-label={`Revogar acesso de ${collaborator.user.name}`}
                   >
                     {revoking === collaborator.user.id ? (
                       <Loader2 className="h-4 w-4 animate-spin" />

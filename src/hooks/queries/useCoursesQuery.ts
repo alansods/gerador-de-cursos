@@ -2,7 +2,7 @@
 
 import { useCallback } from 'react'
 import { useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { fetchCourses } from '@/app/(app)/cursos/actions'
+import { fetchCourses } from '@/app/(app)/courses/actions'
 import { queryKeys, type CourseFilters } from '@/lib/query-keys'
 
 export function useCoursesQuery(filters: CourseFilters) {
@@ -34,7 +34,7 @@ export function useDeleteCourseMutation() {
 
   return useMutation({
     mutationFn: async (id: string) => {
-      const response = await fetch(`/api/cursos?id=${id}`, { method: 'DELETE' })
+      const response = await fetch(`/api/courses?id=${id}`, { method: 'DELETE' })
       const data = await response.json()
 
       if (!data.success) throw new Error(data.error || 'Erro ao deletar curso')

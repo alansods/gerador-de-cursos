@@ -68,8 +68,8 @@ export async function POST(req: NextRequest) {
     return createSuccessResponse({
       course: normalizedCourse,
       tokenUsage,
-      resumo: summary,
-      modo: readMode,
+      summary,
+      mode: readMode,
     })
   } catch (error) {
     console.error('Erro ao gerar curso:', error)

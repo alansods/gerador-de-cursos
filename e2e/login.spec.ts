@@ -11,7 +11,7 @@ import { test, expect, type Page } from '@playwright/test'
 const USER = {
   id: '1',
   email: 'admin@senai.br',
-  nome: 'Admin',
+  name: 'Admin',
   role: 'ADMIN',
 }
 
@@ -115,7 +115,7 @@ test.describe('E2E - Login Flow', () => {
         contentType: 'application/json',
         body: JSON.stringify({
           success: true,
-          user: { ...USER, email: 'convidado@senai.br', role: 'CONVIDADO' },
+          user: { ...USER, email: 'convidado@senai.br', role: 'GUEST' },
         }),
       })
     })
@@ -125,7 +125,7 @@ test.describe('E2E - Login Flow', () => {
 
     // Assert - o próprio AuthContext envia as credenciais do convidado
     await expect(page).toHaveURL('/home')
-    expect(bodies).toEqual([{ email: 'convidado@senai.br', senha: 'convidado' }])
+    expect(bodies).toEqual([{ email: 'convidado@senai.br', password: 'convidado' }])
   })
 
   test('deve mostrar erro com credenciais inválidas', async ({ page }) => {

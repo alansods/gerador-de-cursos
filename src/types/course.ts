@@ -1,7 +1,7 @@
 // Tipos para o gerador de cursos
 import type { CoursePermissions, CourseStatus } from '@/lib/permissions'
 
-export type { CoursePermissions as PermissoesCurso, CourseStatus as StatusCurso }
+export type { CoursePermissions, CourseStatus }
 
 export interface AccordionItem {
   id: string
@@ -210,9 +210,9 @@ export interface Course {
   status?: CourseStatus
   version?: number
   ownerId?: string
-  ownerNome?: string
-  permissoes?: CoursePermissions
-  solicitacaoPendente?: boolean
+  ownerName?: string
+  permissions?: CoursePermissions
+  hasPendingRequest?: boolean
   dataCriacao: Date
   dataModificacao: Date
   unidades: Unit[]

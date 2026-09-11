@@ -20,15 +20,15 @@ export function useCollabEvents() {
     (action: CollabAction, target: CollabTarget, author: string, name?: string) => {
       if (!active) return
       broadcastRef.current?.({
-        tipo: 'conteudo',
-        acao: action,
-        alvo: target,
-        autor: author,
-        nome: name ?? null,
+        type: 'content',
+        action,
+        target,
+        author,
+        name: name ?? null,
       })
     },
     [active, broadcastRef]
   )
 
-  return { avisar: notify }
+  return { notify }
 }

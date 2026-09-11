@@ -7,11 +7,11 @@ export const ACTIVITIES_POLLING_INTERVAL = 30_000
 
 export interface Activity {
   id: string
-  tipo: string
-  titulo: string
-  descricao: string | null
+  type: string
+  title: string
+  description: string | null
   createdAt: string
-  user?: { id: string; nome: string; email: string } | null
+  user?: { id: string; name: string; email: string } | null
 }
 
 export function useActivitiesQuery(limit: number) {

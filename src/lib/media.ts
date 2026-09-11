@@ -1,4 +1,4 @@
-export type MediaCategory = 'imagem' | 'audio' | 'video' | 'documento'
+export type MediaCategory = 'image' | 'audio' | 'video' | 'document'
 
 export interface MediaPolicy {
   category: MediaCategory
@@ -13,8 +13,8 @@ export interface MediaPolicy {
 const MB = 1024 * 1024
 
 export const MEDIA_POLICY: Record<MediaCategory, MediaPolicy> = {
-  imagem: {
-    category: 'imagem',
+  image: {
+    category: 'image',
     label: 'Imagem',
     allowedTypes: ['image/jpeg', 'image/png', 'image/webp', 'image/gif'],
     extensions: '.jpg,.jpeg,.png,.webp,.gif',
@@ -40,8 +40,8 @@ export const MEDIA_POLICY: Record<MediaCategory, MediaPolicy> = {
     recommendedLimitBytes: 25 * MB,
     sizeHint: 'Ideal até 25 MB (~5 min em 720p). Comprima antes de enviar.',
   },
-  documento: {
-    category: 'documento',
+  document: {
+    category: 'document',
     label: 'PDF',
     allowedTypes: ['application/pdf'],
     extensions: '.pdf',

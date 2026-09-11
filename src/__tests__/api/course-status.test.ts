@@ -8,7 +8,7 @@
  */
 
 import { NextRequest } from 'next/server'
-import { PATCH as patchStatusHandler } from '@/app/api/cursos/[id]/status/route'
+import { PATCH as patchStatusHandler } from '@/app/api/courses/[id]/status/route'
 import { isValidTransition } from '@/lib/course-status'
 import type { CourseStatus } from '@/lib/permissions'
 import { prisma } from '@/lib/prisma'
@@ -19,9 +19,9 @@ import { SignJWT } from 'jose'
 // este teste usa mantém o `tsc` limpo sem depender do tipo gerado.
 const mockPrisma = prisma as unknown as {
   user: { findUnique: jest.Mock }
-  curso: { findUnique: jest.Mock; update: jest.Mock }
-  cursoColaborador: { findUnique: jest.Mock }
-  cursoComentario: { create: jest.Mock }
+  course: { findUnique: jest.Mock; update: jest.Mock }
+  courseCollaborator: { findUnique: jest.Mock }
+  courseComment: { create: jest.Mock }
   $transaction: jest.Mock
 }
 
@@ -33,7 +33,7 @@ async function cookieFrom(userId: string, role: string) {
   const token = await new SignJWT({
     id: userId,
     email: 'testuser@senai.br',
-    nome: 'Test User',
+    name: 'Test User',
     cargo: 'Usuário',
     role,
   })
@@ -48,8 +48,8 @@ function dbUser(id: string, role: string) {
   return {
     id,
     email: 'testuser@senai.br',
-    senha: 'hashed',
-    nome: 'Test User',
+    password: 'hashed',
+    name: 'Test User',
     cargo: 'Usuário',
     role,
     createdAt: new Date(),
@@ -60,13 +60,13 @@ function dbUser(id: string, role: string) {
 function courseWithStatus(status: CourseStatus, ownerId: string | null = OWNER_ID) {
   return {
     id: 'curso-1',
-    titulo: 'Curso de Teste',
+    title: 'Curso de Teste',
     ownerId,
     status,
     version: 0,
-    revisadoPorId: null,
-    revisadoEm: null,
-    owner: ownerId ? { id: ownerId, nome: 'Dono', email: 'dono' } : null,
+    reviewedById: null,
+    reviewedAt: null,
+    owner: ownerId ? { id: ownerId, name: 'Dono', email: 'dono' } : null,
   }
 }
 
@@ -92,15 +92,17 @@ async function chamarPatch({
   }
 
   if (currentStatus) {
-    mockPrisma.curso.findUnique.mockResolvedValue(courseWithStatus(currentStatus, ownerId) as never)
-    mockPrisma.curso.update.mockResolvedValue({
+    mockPrisma.course.findUnique.mockResolvedValue(
+      courseWithStatus(currentStatus, ownerId) as never
+    )
+    mockPrisma.course.update.mockResolvedValue({
       ...courseWithStatus(currentStatus, ownerId),
       status: newStatus,
-      revisadoPorId: userId ?? null,
-      revisadoEm: new Date(),
+      reviewedById: userId ?? null,
+      reviewedAt: new Date(),
     } as never)
   } else {
-    mockPrisma.curso.findUnique.mockResolvedValue(null as never)
+    mockPrisma.course.findUnique.mockResolvedValue(null as never)
   }
 
   const headers: Record<string, string> = { 'Content-Type': 'application/json' }
@@ -108,10 +110,10 @@ async function chamarPatch({
     headers.Cookie = await cookieFrom(userId, role)
   }
 
-  const req = new NextRequest('http://localhost:3000/api/cursos/curso-1/status', {
+  const req = new NextRequest('http://localhost:3000/api/courses/curso-1/status', {
     method: 'PATCH',
     headers,
-    body: JSON.stringify({ status: newStatus, ...(comment ? { comentario: comment } : {}) }),
+    body: JSON.stringify({ status: newStatus, ...(comment ? { comment } : {}) }),
   })
 
   return patchStatusHandler(req, { params: Promise.resolve({ id: 'curso-1' }) })
@@ -119,22 +121,22 @@ async function chamarPatch({
 
 describe('transicaoValida', () => {
   const valid: Array<[CourseStatus, CourseStatus]> = [
-    ['EM_ANDAMENTO', 'EM_REVISAO'],
-    ['EM_REVISAO', 'APROVADO'],
-    ['EM_REVISAO', 'REPROVADO'],
-    ['EM_REVISAO', 'EM_ANDAMENTO'],
-    ['APROVADO', 'EM_ANDAMENTO'],
-    ['REPROVADO', 'EM_ANDAMENTO'],
-    ['REPROVADO', 'EM_REVISAO'],
+    ['IN_PROGRESS', 'IN_REVIEW'],
+    ['IN_REVIEW', 'APPROVED'],
+    ['IN_REVIEW', 'REJECTED'],
+    ['IN_REVIEW', 'IN_PROGRESS'],
+    ['APPROVED', 'IN_PROGRESS'],
+    ['REJECTED', 'IN_PROGRESS'],
+    ['REJECTED', 'IN_REVIEW'],
   ]
 
   const invalid: Array<[CourseStatus, CourseStatus]> = [
-    ['EM_ANDAMENTO', 'APROVADO'],
-    ['EM_ANDAMENTO', 'REPROVADO'],
-    ['EM_ANDAMENTO', 'EM_ANDAMENTO'],
-    ['APROVADO', 'REPROVADO'],
-    ['APROVADO', 'EM_REVISAO'],
-    ['REPROVADO', 'APROVADO'],
+    ['IN_PROGRESS', 'APPROVED'],
+    ['IN_PROGRESS', 'REJECTED'],
+    ['IN_PROGRESS', 'IN_PROGRESS'],
+    ['APPROVED', 'REJECTED'],
+    ['APPROVED', 'IN_REVIEW'],
+    ['REJECTED', 'APPROVED'],
   ]
 
   it.each(valid)('permite %s → %s', (from, to) => {
@@ -146,7 +148,7 @@ describe('transicaoValida', () => {
   })
 })
 
-describe('PATCH /api/cursos/[id]/status', () => {
+describe('PATCH /api/courses/[id]/status', () => {
   beforeEach(() => {
     jest.clearAllMocks()
     mockPrisma.$transaction.mockImplementation((ops: unknown) =>
@@ -156,8 +158,8 @@ describe('PATCH /api/cursos/[id]/status', () => {
 
   it('rejeita requisição sem autenticação com 401', async () => {
     const res = await chamarPatch({
-      newStatus: 'EM_REVISAO',
-      currentStatus: 'EM_ANDAMENTO',
+      newStatus: 'IN_REVIEW',
+      currentStatus: 'IN_PROGRESS',
       authenticated: false,
     })
 
@@ -167,8 +169,8 @@ describe('PATCH /api/cursos/[id]/status', () => {
   it('rejeita status fora do enum com 400', async () => {
     const res = await chamarPatch({
       userId: OWNER_ID,
-      role: 'CONTEUDISTA',
-      currentStatus: 'EM_ANDAMENTO',
+      role: 'CONTENT_AUTHOR',
+      currentStatus: 'IN_PROGRESS',
       newStatus: 'PUBLICADO',
     })
 
@@ -178,8 +180,8 @@ describe('PATCH /api/cursos/[id]/status', () => {
   it('retorna 404 quando o curso não existe', async () => {
     const res = await chamarPatch({
       userId: OWNER_ID,
-      role: 'CONTEUDISTA',
-      newStatus: 'EM_REVISAO',
+      role: 'CONTENT_AUTHOR',
+      newStatus: 'IN_REVIEW',
     })
 
     expect(res.status).toBe(404)
@@ -189,93 +191,93 @@ describe('PATCH /api/cursos/[id]/status', () => {
     const res = await chamarPatch({
       userId: OWNER_ID,
       role: 'ADMIN',
-      currentStatus: 'EM_ANDAMENTO',
-      newStatus: 'APROVADO',
+      currentStatus: 'IN_PROGRESS',
+      newStatus: 'APPROVED',
     })
 
     expect(res.status).toBe(422)
-    expect(mockPrisma.curso.update).not.toHaveBeenCalled()
+    expect(mockPrisma.course.update).not.toHaveBeenCalled()
   })
 
-  it('deixa o dono CONTEUDISTA enviar o próprio curso para revisão', async () => {
+  it('deixa o dono CONTENT_AUTHOR enviar o próprio curso para revisão', async () => {
     const res = await chamarPatch({
       userId: OWNER_ID,
-      role: 'CONTEUDISTA',
-      currentStatus: 'EM_ANDAMENTO',
-      newStatus: 'EM_REVISAO',
+      role: 'CONTENT_AUTHOR',
+      currentStatus: 'IN_PROGRESS',
+      newStatus: 'IN_REVIEW',
     })
 
     expect(res.status).toBe(200)
-    expect(mockPrisma.curso.update).toHaveBeenCalled()
+    expect(mockPrisma.course.update).toHaveBeenCalled()
   })
 
-  it('impede um CONTEUDISTA não-dono de enviar curso alheio para revisão', async () => {
+  it('impede um CONTENT_AUTHOR não-dono de enviar curso alheio para revisão', async () => {
     const res = await chamarPatch({
       userId: OTHER_ID,
-      role: 'CONTEUDISTA',
-      currentStatus: 'EM_ANDAMENTO',
-      newStatus: 'EM_REVISAO',
+      role: 'CONTENT_AUTHOR',
+      currentStatus: 'IN_PROGRESS',
+      newStatus: 'IN_REVIEW',
     })
 
     expect(res.status).toBe(403)
-    expect(mockPrisma.curso.update).not.toHaveBeenCalled()
+    expect(mockPrisma.course.update).not.toHaveBeenCalled()
   })
 
-  it('impede um CONTEUDISTA de aprovar, mesmo sendo o dono', async () => {
+  it('impede um CONTENT_AUTHOR de aprovar, mesmo sendo o dono', async () => {
     const res = await chamarPatch({
       userId: OWNER_ID,
-      role: 'CONTEUDISTA',
-      currentStatus: 'EM_REVISAO',
-      newStatus: 'APROVADO',
+      role: 'CONTENT_AUTHOR',
+      currentStatus: 'IN_REVIEW',
+      newStatus: 'APPROVED',
     })
 
     expect(res.status).toBe(403)
-    expect(mockPrisma.curso.update).not.toHaveBeenCalled()
+    expect(mockPrisma.course.update).not.toHaveBeenCalled()
   })
 
-  it('deixa o REVISOR aprovar e grava quem revisou', async () => {
+  it('deixa o REVIEWER aprovar e grava quem revisou', async () => {
     const res = await chamarPatch({
       userId: OTHER_ID,
-      role: 'REVISOR',
-      currentStatus: 'EM_REVISAO',
-      newStatus: 'APROVADO',
+      role: 'REVIEWER',
+      currentStatus: 'IN_REVIEW',
+      newStatus: 'APPROVED',
     })
 
     expect(res.status).toBe(200)
 
-    const data = mockPrisma.curso.update.mock.calls[0][0].data
-    expect(data.status).toBe('APROVADO')
-    expect(data.revisadoPorId).toBe(OTHER_ID)
-    expect(data.revisadoEm).toBeInstanceOf(Date)
+    const data = mockPrisma.course.update.mock.calls[0][0].data
+    expect(data.status).toBe('APPROVED')
+    expect(data.reviewedById).toBe(OTHER_ID)
+    expect(data.reviewedAt).toBeInstanceOf(Date)
   })
 
   it('exige comentário ao reprovar', async () => {
     const res = await chamarPatch({
       userId: OTHER_ID,
-      role: 'REVISOR',
-      currentStatus: 'EM_REVISAO',
-      newStatus: 'REPROVADO',
+      role: 'REVIEWER',
+      currentStatus: 'IN_REVIEW',
+      newStatus: 'REJECTED',
     })
 
     expect(res.status).toBe(400)
-    expect(mockPrisma.curso.update).not.toHaveBeenCalled()
+    expect(mockPrisma.course.update).not.toHaveBeenCalled()
   })
 
   it('reprova com comentário e registra o comentário na mesma transação', async () => {
     const res = await chamarPatch({
       userId: OTHER_ID,
-      role: 'REVISOR',
-      currentStatus: 'EM_REVISAO',
-      newStatus: 'REPROVADO',
+      role: 'REVIEWER',
+      currentStatus: 'IN_REVIEW',
+      newStatus: 'REJECTED',
       comment: 'Faltou a bibliografia',
     })
 
     expect(res.status).toBe(200)
-    expect(mockPrisma.cursoComentario.create).toHaveBeenCalledWith({
+    expect(mockPrisma.courseComment.create).toHaveBeenCalledWith({
       data: {
-        cursoId: 'curso-1',
-        autorId: OTHER_ID,
-        texto: 'Faltou a bibliografia',
+        courseId: 'curso-1',
+        authorId: OTHER_ID,
+        text: 'Faltou a bibliografia',
       },
     })
   })
@@ -283,27 +285,27 @@ describe('PATCH /api/cursos/[id]/status', () => {
   it('trata comentário só de espaços como ausente ao reprovar', async () => {
     const res = await chamarPatch({
       userId: OTHER_ID,
-      role: 'REVISOR',
-      currentStatus: 'EM_REVISAO',
-      newStatus: 'REPROVADO',
+      role: 'REVIEWER',
+      currentStatus: 'IN_REVIEW',
+      newStatus: 'REJECTED',
       comment: '    ',
     })
 
     expect(res.status).toBe(400)
   })
 
-  it('limpa revisadoPorId ao voltar um curso aprovado para EM_ANDAMENTO', async () => {
+  it('limpa revisadoPorId ao voltar um curso aprovado para IN_PROGRESS', async () => {
     const res = await chamarPatch({
       userId: OTHER_ID,
-      role: 'REVISOR',
-      currentStatus: 'APROVADO',
-      newStatus: 'EM_ANDAMENTO',
+      role: 'REVIEWER',
+      currentStatus: 'APPROVED',
+      newStatus: 'IN_PROGRESS',
     })
 
     expect(res.status).toBe(200)
 
-    const data = mockPrisma.curso.update.mock.calls[0][0].data
-    expect(data.revisadoPorId).toBeNull()
-    expect(data.revisadoEm).toBeNull()
+    const data = mockPrisma.course.update.mock.calls[0][0].data
+    expect(data.reviewedById).toBeNull()
+    expect(data.reviewedAt).toBeNull()
   })
 })

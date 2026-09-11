@@ -49,7 +49,7 @@ export default function CTA() {
               className="group min-w-[200px] text-base font-semibold shadow-xl"
               asChild
             >
-              <Link href="/cadastro">
+              <Link href="/signup">
                 <Rocket className="mr-2 h-5 w-5" />
                 Começar Grátis
                 <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />

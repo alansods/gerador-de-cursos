@@ -41,7 +41,7 @@ export function NewCourseWizard({
     <div className="flex flex-col gap-4">
       <StepIndicator
         steps={steps}
-        currentStep={state.etapa}
+        currentStep={state.step}
         completedCount={completed}
         onSelect={wizard.goTo}
       />
@@ -49,12 +49,10 @@ export function NewCourseWizard({
       <div className="overflow-hidden rounded-xl border border-border bg-card shadow-sm">
         {phase === 'form' && (
           <header className="border-b border-border px-6 py-5">
-            <h2 className="text-xl font-semibold text-foreground">
-              {stepTitle(state.etapa, isAi)}
-            </h2>
-            {stepDescription(state.etapa, isAi) && (
+            <h2 className="text-xl font-semibold text-foreground">{stepTitle(state.step, isAi)}</h2>
+            {stepDescription(state.step, isAi) && (
               <p className="mt-1.5 max-w-2xl text-sm leading-relaxed text-muted-foreground">
-                {stepDescription(state.etapa, isAi)}
+                {stepDescription(state.step, isAi)}
               </p>
             )}
           </header>
@@ -90,13 +88,11 @@ export function NewCourseWizard({
 
           {phase === 'form' && (
             <>
-              {state.etapa === 1 && (
-                <StepMethod method={state.metodo} onSelect={wizard.setMethod} />
-              )}
+              {state.step === 1 && <StepMethod method={state.method} onSelect={wizard.setMethod} />}
 
-              {state.etapa === 2 && !isAi && (
+              {state.step === 2 && !isAi && (
                 <StepInformation
-                  data={state.dados}
+                  data={state.data}
                   errors={wizard.errors}
                   showError={wizard.showError}
                   onChange={wizard.setField}
@@ -105,7 +101,7 @@ export function NewCourseWizard({
                 />
               )}
 
-              {state.etapa === 2 && isAi && (
+              {state.step === 2 && isAi && (
                 <StepDocument
                   file={wizard.file}
                   extracting={extracting}
@@ -118,14 +114,12 @@ export function NewCourseWizard({
                 />
               )}
 
-              {state.etapa === 3 && (
-                <StepLayout layout={state.layout} onSelect={wizard.setLayout} />
-              )}
+              {state.step === 3 && <StepLayout layout={state.layout} onSelect={wizard.setLayout} />}
 
-              {state.etapa === 4 && (
+              {state.step === 4 && (
                 <StepReview
-                  method={state.metodo}
-                  data={state.dados}
+                  method={state.method}
+                  data={state.data}
                   layout={state.layout}
                   file={wizard.file}
                   markers={wizard.markers}
@@ -141,9 +135,9 @@ export function NewCourseWizard({
             <Button
               type="button"
               variant="ghost"
-              onClick={state.etapa === 1 ? onCancel : wizard.back}
+              onClick={state.step === 1 ? onCancel : wizard.back}
             >
-              {state.etapa === 1 ? 'Cancelar' : 'Voltar'}
+              {state.step === 1 ? 'Cancelar' : 'Voltar'}
             </Button>
 
             <p
@@ -154,8 +148,8 @@ export function NewCourseWizard({
             </p>
 
             <Button type="button" onClick={onFinish} className="ml-auto gap-2 sm:ml-0">
-              {actionLabel(state.etapa, isAi)}
-              {state.etapa === TOTAL_STEPS ? (
+              {actionLabel(state.step, isAi)}
+              {state.step === TOTAL_STEPS ? (
                 isAi ? (
                   <Sparkles className="h-4 w-4" aria-hidden />
                 ) : (
@@ -209,8 +203,8 @@ function actionLabel(step: number, isAi: boolean): string {
 }
 
 function footerNotice(wizard: Wizard): string {
-  if (!wizard.submitted || wizard.isStepValid(wizard.state.etapa)) return ''
-  if (wizard.state.etapa === 1) return 'Selecione um método para continuar'
+  if (!wizard.submitted || wizard.isStepValid(wizard.state.step)) return ''
+  if (wizard.state.step === 1) return 'Selecione um método para continuar'
   if (wizard.isAi) return 'Envie um documento para continuar'
   return 'Corrija os campos destacados para continuar'
 }

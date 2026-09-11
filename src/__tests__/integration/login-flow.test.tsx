@@ -49,9 +49,9 @@ const loginOkResponse = {
     user: {
       id: '1',
       email: 'testuser@senai.br',
-      nome: 'Test User',
+      name: 'Test User',
       cargo: 'Desenvolvedor',
-      role: 'CONTEUDISTA',
+      role: 'CONTENT_AUTHOR',
     },
   }),
 }
@@ -113,7 +113,7 @@ describe('Integration - Login Flow', () => {
     expect(loginCalls()[0][1]).toEqual(
       expect.objectContaining({
         method: 'POST',
-        body: JSON.stringify({ email: 'testuser@senai.br', senha: 'senha123' }),
+        body: JSON.stringify({ email: 'testuser@senai.br', password: 'senha123' }),
       })
     )
   })

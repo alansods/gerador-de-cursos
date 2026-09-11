@@ -6,7 +6,7 @@ import type { UserRole } from '@/lib/permissions'
 
 export interface User {
   id: string
-  nome: string
+  name: string
   role: UserRole
   email: string
   createdAt: string
@@ -26,10 +26,10 @@ interface UsersResponse {
 }
 
 export interface UserData {
-  nome: string
+  name: string
   role: UserRole
   email: string
-  senha: string
+  password: string
 }
 
 export function useUsersQuery(filters: UserFilters) {

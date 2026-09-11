@@ -6,7 +6,7 @@ export interface ProtectedRoute {
 }
 
 export const PROTECTED_ROUTES: ProtectedRoute[] = [
-  { prefixes: ['/usuarios', '/api/users'], action: 'usuario:gerenciar' },
+  { prefixes: ['/users', '/api/users'], action: 'user:manage' },
 ]
 
 /**

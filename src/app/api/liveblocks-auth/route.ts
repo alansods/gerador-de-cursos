@@ -25,14 +25,14 @@ export async function POST(req: NextRequest) {
 
   try {
     const { room, resolver } = await req.json()
-    const courseId = typeof room === 'string' ? room.replace(/^curso:/, '') : ''
+    const courseId = typeof room === 'string' ? room.replace(/^course:/, '') : ''
 
     if (!courseId) {
       return createErrorResponse('Sala inválida', 400)
     }
 
     // A sala vem do segmento da URL do editor, que pode ser o id ou o slug
-    const reference = await prisma.curso.findFirst({
+    const reference = await prisma.course.findFirst({
       where: { OR: [{ id: courseId }, { slug: courseId }] },
       select: { id: true },
     })
@@ -79,12 +79,12 @@ export async function POST(req: NextRequest) {
           {
             success: false,
             error: `Já há ${MAX_CONCURRENT_COLLABORATORS} pessoas editando este curso`,
-            salaCheia: true,
+            roomFull: true,
           },
           { status: 403 }
         )
       }
-      return NextResponse.json({ success: true, cursoId: reference.id })
+      return NextResponse.json({ success: true, courseId: reference.id })
     }
 
     if (roomFull) {
@@ -92,7 +92,7 @@ export async function POST(req: NextRequest) {
         {
           success: false,
           error: `Já há ${MAX_CONCURRENT_COLLABORATORS} pessoas editando este curso`,
-          salaCheia: true,
+          roomFull: true,
         },
         { status: 403 }
       )
@@ -100,8 +100,8 @@ export async function POST(req: NextRequest) {
 
     const session = liveblocks.prepareSession(authResult.user.id, {
       userInfo: {
-        nome: authResult.user.nome,
-        cor: userColor(authResult.user.id),
+        name: authResult.user.name,
+        color: userColor(authResult.user.id),
         role: authResult.user.role,
       },
     })

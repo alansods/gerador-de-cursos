@@ -32,11 +32,11 @@ describe('API - Authentication', () => {
       const mockUser = {
         id: '1',
         email: 'testuser@senai.br',
-        senha: hashedPassword,
-        nome: 'Test User',
+        password: hashedPassword,
+        name: 'Test User',
         cargo: 'Desenvolvedor',
-        role: 'CONTEUDISTA',
-        dataCriacao: new Date(),
+        role: 'CONTENT_AUTHOR',
+        createdAt: new Date(),
       }
 
       mockPrisma.user.findUnique.mockResolvedValue(mockUser)
@@ -45,7 +45,7 @@ describe('API - Authentication', () => {
         method: 'POST',
         body: JSON.stringify({
           email: 'testuser@senai.br',
-          senha: 'senha123',
+          password: 'senha123',
         }),
         headers: {
           'Content-Type': 'application/json',
@@ -62,8 +62,8 @@ describe('API - Authentication', () => {
       expect(data.user).toEqual({
         id: '1',
         email: 'testuser@senai.br',
-        nome: 'Test User',
-        role: 'CONTEUDISTA',
+        name: 'Test User',
+        role: 'CONTENT_AUTHOR',
       })
       expect(response.headers.get('Set-Cookie')).toContain('token=')
 
@@ -79,7 +79,7 @@ describe('API - Authentication', () => {
         method: 'POST',
         body: JSON.stringify({
           email: 'wronguser',
-          senha: 'wrongpass',
+          password: 'wrongpass',
         }),
         headers: {
           'Content-Type': 'application/json',
@@ -105,11 +105,11 @@ describe('API - Authentication', () => {
       const mockUser = {
         id: '1',
         email: 'testuser@senai.br',
-        senha: hashedPassword,
-        nome: 'Test User',
+        password: hashedPassword,
+        name: 'Test User',
         cargo: 'Desenvolvedor',
-        role: 'CONTEUDISTA',
-        dataCriacao: new Date(),
+        role: 'CONTENT_AUTHOR',
+        createdAt: new Date(),
       }
 
       mockPrisma.user.findUnique.mockResolvedValue(mockUser)
@@ -118,7 +118,7 @@ describe('API - Authentication', () => {
         method: 'POST',
         body: JSON.stringify({
           email: 'testuser@senai.br',
-          senha: 'senhaErrada',
+          password: 'senhaErrada',
         }),
         headers: {
           'Content-Type': 'application/json',
@@ -141,7 +141,7 @@ describe('API - Authentication', () => {
         method: 'POST',
         body: JSON.stringify({
           email: '',
-          senha: '',
+          password: '',
         }),
         headers: {
           'Content-Type': 'application/json',
@@ -165,11 +165,11 @@ describe('API - Authentication', () => {
       const mockUser = {
         id: '1',
         email: 'testuser@senai.br',
-        senha: 'hashed',
-        nome: 'Test User',
+        password: 'hashed',
+        name: 'Test User',
         cargo: 'Desenvolvedor',
-        role: 'CONTEUDISTA',
-        dataCriacao: new Date(),
+        role: 'CONTENT_AUTHOR',
+        createdAt: new Date(),
       }
 
       mockPrisma.user.findUnique.mockResolvedValue(mockUser)
@@ -198,8 +198,8 @@ describe('API - Authentication', () => {
       expect(data.user).toEqual({
         id: '1',
         email: 'testuser@senai.br',
-        nome: 'Test User',
-        role: 'CONTEUDISTA',
+        name: 'Test User',
+        role: 'CONTENT_AUTHOR',
       })
 
       // CRÍTICO: Verificar que foi feita apenas UMA consulta ao banco

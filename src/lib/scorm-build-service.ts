@@ -373,13 +373,13 @@ export async function executeNextBuild(course: Course, courseId: string): Promis
       ...envWithoutTurbopack,
       NODE_ENV: 'production' as const,
       NEXT_OUTPUT_EXPORT: 'true', // Flag customizada para ativar export
-      SCORM_BUILD_CURSO_FILE: tempFile, // Arquivo temporário com curso
+      SCORM_BUILD_COURSE_FILE: tempFile, // Arquivo temporário com curso
     }
 
     console.log('🔧 [SCORM Build] Variáveis de ambiente configuradas:')
     console.log(`   - NODE_ENV: ${env.NODE_ENV}`)
     console.log(`   - NEXT_OUTPUT_EXPORT: ${env.NEXT_OUTPUT_EXPORT}`)
-    console.log(`   - SCORM_BUILD_CURSO_FILE: ${env.SCORM_BUILD_CURSO_FILE}`)
+    console.log(`   - SCORM_BUILD_COURSE_FILE: ${env.SCORM_BUILD_COURSE_FILE}`)
 
     // Executar build estático do Next.js
     const buildProcess = exec(

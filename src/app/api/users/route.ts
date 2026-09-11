@@ -10,11 +10,11 @@ import type { JWTPayload } from '@/lib/auth'
 function normalizeRole(role: unknown): UserRole {
   return typeof role === 'string' && ROLES.includes(role as UserRole)
     ? (role as UserRole)
-    : 'CONTEUDISTA'
+    : 'CONTENT_AUTHOR'
 }
 
 function denyUnlessCanManage(user: JWTPayload) {
-  if (can(user, 'usuario:gerenciar')) return null
+  if (can(user, 'user:manage')) return null
   return createErrorResponse('Você não tem permissão para gerenciar usuários', 403)
 }
 
@@ -51,7 +51,7 @@ export async function GET(request: NextRequest) {
 
     if (search) {
       where.OR = [
-        { nome: { contains: search, mode: 'insensitive' } },
+        { name: { contains: search, mode: 'insensitive' } },
         { email: { contains: search, mode: 'insensitive' } },
       ]
     }
@@ -73,7 +73,7 @@ export async function GET(request: NextRequest) {
         where,
         select: {
           id: true,
-          nome: true,
+          name: true,
           email: true,
           role: true,
           createdAt: true,
@@ -119,7 +119,7 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json()
-    const { nome: name, email, senha: password, role } = body
+    const { name, email, password, role } = body
 
     if (!name || !email || !password) {
       return NextResponse.json(
@@ -146,14 +146,14 @@ export async function POST(request: NextRequest) {
 
     const user = await prisma.user.create({
       data: {
-        nome: name,
+        name,
         email: normalizedEmail,
-        senha: hashedPassword,
+        password: hashedPassword,
         role: normalizeRole(role),
       },
       select: {
         id: true,
-        nome: true,
+        name: true,
         email: true,
         role: true,
         createdAt: true,
@@ -162,9 +162,9 @@ export async function POST(request: NextRequest) {
 
     // Registrar atividade
     await logActivity({
-      tipo: 'usuario_criado',
-      titulo: 'Novo usuário criado',
-      descricao: name,
+      type: 'usuario_criado',
+      title: 'Novo usuário criado',
+      description: name,
       entityId: user.id,
       entityType: 'usuario',
       userId: authResult.user.id,
@@ -193,7 +193,7 @@ export async function PUT(request: NextRequest) {
 
   try {
     const body = await request.json()
-    const { id, nome: name, email, senha: password, role } = body
+    const { id, name, email, password, role } = body
 
     if (!id) {
       return NextResponse.json(
@@ -203,7 +203,7 @@ export async function PUT(request: NextRequest) {
     }
 
     const updateData: Prisma.UserUpdateInput = {
-      nome: name,
+      name,
     }
 
     if (email !== undefined) {
@@ -221,7 +221,7 @@ export async function PUT(request: NextRequest) {
     }
 
     if (password) {
-      updateData.senha = await bcrypt.hash(password, 10)
+      updateData.password = await bcrypt.hash(password, 10)
     }
 
     const user = await prisma.user.update({
@@ -229,7 +229,7 @@ export async function PUT(request: NextRequest) {
       data: updateData,
       select: {
         id: true,
-        nome: true,
+        name: true,
         email: true,
         role: true,
       },
@@ -237,9 +237,9 @@ export async function PUT(request: NextRequest) {
 
     // Registrar atividade
     await logActivity({
-      tipo: 'usuario_editado',
-      titulo: 'Usuário editado',
-      descricao: user.nome,
+      type: 'usuario_editado',
+      title: 'Usuário editado',
+      description: user.name,
       entityId: user.id,
       entityType: 'usuario',
       userId: authResult.user.id,
@@ -287,7 +287,7 @@ export async function DELETE(request: NextRequest) {
     // Buscar usuário antes de deletar para obter o nome
     const existingUser = await prisma.user.findUnique({
       where: { id },
-      select: { nome: true },
+      select: { name: true },
     })
 
     await prisma.user.delete({
@@ -296,9 +296,9 @@ export async function DELETE(request: NextRequest) {
 
     // Registrar atividade
     await logActivity({
-      tipo: 'usuario_deletado',
-      titulo: 'Usuário deletado',
-      descricao: existingUser?.nome || 'Usuário',
+      type: 'usuario_deletado',
+      title: 'Usuário deletado',
+      description: existingUser?.name || 'Usuário',
       entityId: id,
       entityType: 'usuario',
       userId: authResult.user.id,

@@ -6,17 +6,7 @@ import { useCollabState } from './CollabProvider'
 
 const THROTTLE_INTERVAL = 50
 
-function Cursor({
-  x,
-  y,
-  nome: name,
-  color,
-}: {
-  x: number
-  y: number
-  nome: string
-  color: string
-}) {
+function Cursor({ x, y, name, color }: { x: number; y: number; name: string; color: string }) {
   return (
     <div
       className="pointer-events-none absolute z-50 transition-transform duration-75 ease-linear"
@@ -99,8 +89,8 @@ function Cursores({ containerRef }: { containerRef: RefObject<HTMLElement | null
             key={connectionId}
             x={presence.cursor.x * box.width}
             y={presence.cursor.y * box.height}
-            nome={info?.nome ?? 'Alguém'}
-            color={info?.cor ?? '#0047BB'}
+            name={info?.name ?? 'Alguém'}
+            color={info?.color ?? '#0047BB'}
           />
         ) : null
       )}

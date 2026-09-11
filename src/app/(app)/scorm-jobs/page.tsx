@@ -161,7 +161,7 @@ export default function SCORMJobsPage() {
             <AlertCircle className="h-12 w-12 text-muted-foreground/50 mx-auto mb-4" />
             <h3 className="text-lg font-semibold mb-2">Nenhum build encontrado</h3>
             <p className="text-muted-foreground mb-4">Você ainda não gerou nenhum pacote SCORM.</p>
-            <Button onClick={() => router.push('/cursos')}>Ir para Cursos</Button>
+            <Button onClick={() => router.push('/courses')}>Ir para Cursos</Button>
           </Card>
         ) : (
           <div className="space-y-4">
@@ -170,7 +170,7 @@ export default function SCORMJobsPage() {
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
                     <div className="flex items-center gap-3 mb-2">
-                      <h3 className="text-lg font-semibold">{job.cursoTitulo}</h3>
+                      <h3 className="text-lg font-semibold">{job.courseTitle}</h3>
                       {getStatusBadge(job.status)}
                     </div>
 
@@ -244,7 +244,7 @@ export default function SCORMJobsPage() {
                           const url = URL.createObjectURL(blob)
                           const a = document.createElement('a')
                           a.href = url
-                          a.download = `scorm-${job.cursoTitulo}.zip`
+                          a.download = `scorm-${job.courseTitle}.zip`
                           a.click()
                           URL.revokeObjectURL(url)
                         }}
@@ -259,7 +259,7 @@ export default function SCORMJobsPage() {
                     {job.status === 'failed' && (
                       <>
                         <Button
-                          onClick={() => restartJob(job.cursoId, job.cursoTitulo)}
+                          onClick={() => restartJob(job.courseId, job.courseTitle)}
                           variant="outline"
                           size="sm"
                           className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"

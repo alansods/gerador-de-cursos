@@ -158,7 +158,7 @@ function FileField({
         className="text-sm"
       />
 
-      {category === 'imagem' && url && !previewBroken && (
+      {category === 'image' && url && !previewBroken && (
         <img
           src={url}
           alt=""
@@ -287,7 +287,7 @@ function ItemEditor<T extends { id: string }>({
                         </Select>
                       ) : field.type === 'image' ? (
                         <FileField
-                          category="imagem"
+                          category="image"
                           label={field.label}
                           url={String(item[field.key] ?? '')}
                           onUrl={(url) => update(item.id, field.key, url)}
@@ -621,7 +621,7 @@ export function ContentBlockDrawer({
     setImagePreviewUrl(null)
 
     try {
-      const { url, warning } = await uploadFile(file, 'imagem')
+      const { url, warning } = await uploadFile(file, 'image')
 
       setFormData({ ...formData, conteudo: url })
       setImagePreviewUrl(url)
@@ -1670,7 +1670,7 @@ export function ContentBlockDrawer({
         return (
           <div className="space-y-5">
             <FileField
-              category="documento"
+              category="document"
               label="Arquivo PDF"
               url={formData.pdfUrl || ''}
               onUrl={(pdfUrl) => setFormData({ ...formData, pdfUrl })}
@@ -1708,7 +1708,7 @@ export function ContentBlockDrawer({
         return (
           <div className="space-y-5">
             <FileField
-              category="imagem"
+              category="image"
               label="Imagem de fundo"
               url={formData.imagemBase || ''}
               onUrl={(baseImage) => setFormData({ ...formData, imagemBase: baseImage })}

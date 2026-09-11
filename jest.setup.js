@@ -80,7 +80,7 @@ jest.mock('@/lib/prisma', () => ({
       findUnique: jest.fn(),
       create: jest.fn(),
     },
-    curso: {
+    course: {
       findMany: jest.fn(),
       findUnique: jest.fn(),
       findFirst: jest.fn(),
@@ -89,20 +89,20 @@ jest.mock('@/lib/prisma', () => ({
       delete: jest.fn(),
       count: jest.fn(),
     },
-    cursoColaborador: {
+    courseCollaborator: {
       findMany: jest.fn().mockResolvedValue([]),
       findUnique: jest.fn().mockResolvedValue(null),
       delete: jest.fn(),
       upsert: jest.fn(),
     },
-    cursoAccessRequest: {
+    courseAccessRequest: {
       findMany: jest.fn().mockResolvedValue([]),
       findUnique: jest.fn().mockResolvedValue(null),
       upsert: jest.fn(),
       update: jest.fn(),
       updateMany: jest.fn(),
     },
-    cursoComentario: {
+    courseComment: {
       findMany: jest.fn().mockResolvedValue([]),
       findUnique: jest.fn().mockResolvedValue(null),
       create: jest.fn(),

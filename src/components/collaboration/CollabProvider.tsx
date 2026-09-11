@@ -60,7 +60,7 @@ function EventBridge({ broadcastRef }: Pick<CollabState, 'broadcastRef'>) {
   }, [broadcast, broadcastRef])
 
   useEventListener(({ event }) => {
-    if (event.tipo !== 'conteudo') return
+    if (event.type !== 'content') return
     toast.info(message(event))
     // invalidar em vez de avisar o editor por ref: o cache sabe qual curso está
     // aberto, e o callback antigo capturava um id que podia estar velho
@@ -140,12 +140,12 @@ export function CollabProvider({ courseId, children }: Props) {
         const data = await response.json().catch(() => ({}))
 
         if (response.ok) {
-          setCanonicalCourseId(data?.cursoId ?? courseId)
+          setCanonicalCourseId(data?.courseId ?? courseId)
           setAuthorized(true)
           return
         }
 
-        if (data?.salaCheia) {
+        if (data?.roomFull) {
           setRoomFull(true)
           toast.info('Duas pessoas já estão editando este curso — colaboração desativada aqui.')
         }
@@ -191,7 +191,7 @@ export function CollabProvider({ courseId, children }: Props) {
         <ErrorMonitor onError={disableOnError} />
         <RoomProvider
           id={COURSE_ROOM(canonicalCourseId ?? courseId)}
-          initialPresence={{ cursor: null, unidadeAtiva: null }}
+          initialPresence={{ cursor: null, activeUnit: null }}
         >
           <EventBridge broadcastRef={broadcastRef} />
           {children}

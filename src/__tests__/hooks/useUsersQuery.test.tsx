@@ -19,7 +19,7 @@ const usersResponse = (page: number) => ({
       {
         id: `u${page}`,
         nome: `Usuário ${page}`,
-        role: 'CONTEUDISTA',
+        role: 'CONTENT_AUTHOR',
         email: 'a@b.c',
         createdAt: '',
         updatedAt: '',

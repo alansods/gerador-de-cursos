@@ -18,20 +18,20 @@ export type CreationMethod = 'manual' | 'ia'
 export type WizardPhase = 'form' | 'criando' | 'concluido'
 
 export const TOTAL_STEPS = 4
-const DRAFT_KEY = 'novo-curso:rascunho'
+const DRAFT_KEY = 'new-course:draft'
 
 export interface WizardState {
-  etapa: number
-  metodo: CreationMethod | null
+  step: number
+  method: CreationMethod | null
   layout: string
-  dados: ManualCourseData
+  data: ManualCourseData
 }
 
 const INITIAL_STATE: WizardState = {
-  etapa: 1,
-  metodo: null,
+  step: 1,
+  method: null,
   layout: DEFAULT_LAYOUT_ID,
-  dados: {
+  data: {
     titulo: '',
     categoria: '',
     descricao: '',
@@ -68,8 +68,8 @@ export function useNewCourseWizard() {
       categoria: category,
       descricao: description,
       cargaHoraria: workload,
-    } = state.dados
-    return !!(state.metodo || title || category || description || workload || file)
+    } = state.data
+    return !!(state.method || title || category || description || workload || file)
   }, [state, file])
 
   useEffect(() => {
@@ -96,16 +96,16 @@ export function useNewCourseWizard() {
     return () => window.removeEventListener('beforeunload', warning)
   }, [hasFilledData, phase])
 
-  const isAi = state.metodo === 'ia'
+  const isAi = state.method === 'ia'
 
   const errors = useMemo(() => {
     const lookup: Partial<Record<ManualCourseField, string>> = {}
-    for (const field of Object.keys(state.dados) as ManualCourseField[]) {
-      const error = validateField(field, state.dados[field])
+    for (const field of Object.keys(state.data) as ManualCourseField[]) {
+      const error = validateField(field, state.data[field])
       if (error) lookup[field] = error
     }
     return lookup
-  }, [state.dados])
+  }, [state.data])
 
   const showError = useCallback(
     (field: ManualCourseField) => !!errors[field] && (submitted || !!touched[field]),
@@ -114,15 +114,15 @@ export function useNewCourseWizard() {
 
   const isStepValid = useCallback(
     (step: number) => {
-      if (step === 1) return !!state.metodo
-      if (step === 2) return isAi ? !!file && !documentError : isManualCourseValid(state.dados)
+      if (step === 1) return !!state.method
+      if (step === 2) return isAi ? !!file && !documentError : isManualCourseValid(state.data)
       return true
     },
-    [state.metodo, state.dados, isAi, file, documentError]
+    [state.method, state.data, isAi, file, documentError]
   )
 
   const setField = useCallback((field: ManualCourseField, value: string) => {
-    setState((current) => ({ ...current, dados: { ...current.dados, [field]: value } }))
+    setState((current) => ({ ...current, data: { ...current.data, [field]: value } }))
   }, [])
 
   const markTouched = useCallback((field: ManualCourseField) => {
@@ -130,7 +130,7 @@ export function useNewCourseWizard() {
   }, [])
 
   const setMethod = useCallback((method: CreationMethod) => {
-    setState((current) => ({ ...current, metodo: method }))
+    setState((current) => ({ ...current, method }))
     setSubmitted(false)
   }, [])
 
@@ -161,32 +161,32 @@ export function useNewCourseWizard() {
   const goTo = useCallback(
     (step: number) => {
       if (step < 1 || step > TOTAL_STEPS) return
-      if (step > state.etapa) return
-      setState((current) => ({ ...current, etapa: step }))
+      if (step > state.step) return
+      setState((current) => ({ ...current, step }))
       setSubmitted(false)
     },
-    [state.etapa]
+    [state.step]
   )
 
   const back = useCallback(() => {
-    setState((current) => ({ ...current, etapa: Math.max(1, current.etapa - 1) }))
+    setState((current) => ({ ...current, step: Math.max(1, current.step - 1) }))
     setSubmitted(false)
   }, [])
 
   const advance = useCallback(() => {
-    if (!isStepValid(state.etapa)) {
+    if (!isStepValid(state.step)) {
       setSubmitted(true)
       return false
     }
 
-    if (state.etapa < TOTAL_STEPS) {
-      setState((current) => ({ ...current, etapa: current.etapa + 1 }))
+    if (state.step < TOTAL_STEPS) {
+      setState((current) => ({ ...current, step: current.step + 1 }))
       setSubmitted(false)
       return false
     }
 
     return true
-  }, [state.etapa, isStepValid])
+  }, [state.step, isStepValid])
 
   const restart = useCallback(() => {
     setState(INITIAL_STATE)
@@ -207,8 +207,8 @@ export function useNewCourseWizard() {
 
   const dataToSave = useCallback(
     () => ({
-      ...state.dados,
-      cargaHoraria: formatWorkload(state.dados.cargaHoraria),
+      ...state.data,
+      cargaHoraria: formatWorkload(state.data.cargaHoraria),
       layout: state.layout,
       unidades: [],
     }),
@@ -262,13 +262,13 @@ function readDraft(): WizardState | null {
     if (!raw) return null
 
     const salvo = JSON.parse(raw) as WizardState
-    if (!salvo?.dados) return null
+    if (!salvo?.data) return null
 
     return {
       ...INITIAL_STATE,
       ...salvo,
-      etapa: Math.min(Math.max(salvo.etapa ?? 1, 1), TOTAL_STEPS),
-      dados: { ...INITIAL_STATE.dados, ...salvo.dados },
+      step: Math.min(Math.max(salvo.step ?? 1, 1), TOTAL_STEPS),
+      data: { ...INITIAL_STATE.data, ...salvo.data },
     }
   } catch {
     return null

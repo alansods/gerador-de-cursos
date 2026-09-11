@@ -24,7 +24,7 @@ const courseApiResponse = (course: object = COURSE) => ({
   ok: true,
   status: 200,
   headers: { get: () => 'application/json' },
-  json: async () => ({ success: true, curso: course }),
+  json: async () => ({ success: true, course }),
 })
 
 function createWrapper() {

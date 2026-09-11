@@ -7,7 +7,7 @@ import { JWT_SECRET } from '@/lib/auth'
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { email, senha: password } = body
+    const { email, password } = body
 
     // Validação
     if (!email || !password) {
@@ -28,7 +28,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Verificar senha
-    const isPasswordValid = await bcrypt.compare(password, user.senha)
+    const isPasswordValid = await bcrypt.compare(password, user.password)
 
     if (!isPasswordValid) {
       return NextResponse.json({ success: false, error: 'Credenciais inválidas' }, { status: 401 })
@@ -38,7 +38,7 @@ export async function POST(request: NextRequest) {
     const token = await new SignJWT({
       id: user.id,
       email: user.email,
-      nome: user.nome,
+      name: user.name,
       role: user.role,
     })
       .setProtectedHeader({ alg: 'HS256' })
@@ -51,7 +51,7 @@ export async function POST(request: NextRequest) {
       user: {
         id: user.id,
         email: user.email,
-        nome: user.nome,
+        name: user.name,
         role: user.role,
       },
     })

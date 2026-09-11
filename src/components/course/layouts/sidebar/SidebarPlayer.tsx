@@ -12,13 +12,7 @@ interface SidebarPlayerProps {
 }
 
 export function SidebarPlayer({ course }: SidebarPlayerProps) {
-  const {
-    currentUnit,
-    navigate,
-    recordQuiz: registrarQuiz,
-    progress,
-    state,
-  } = useScormProgress(course)
+  const { currentUnit, navigate, recordQuiz, progress, state } = useScormProgress(course)
 
   const handleNavigate = (unitId: string | null) => {
     navigate(unitId)
@@ -26,7 +20,7 @@ export function SidebarPlayer({ course }: SidebarPlayerProps) {
   }
 
   return (
-    <ScormProgressProvider valor={{ unitId: currentUnit, registrarQuiz }}>
+    <ScormProgressProvider value={{ unitId: currentUnit, recordQuiz }}>
       <div className="min-h-screen flex bg-[#f7f7fb] dark:bg-[#121018]">
         <SidebarNavbar
           course={course}

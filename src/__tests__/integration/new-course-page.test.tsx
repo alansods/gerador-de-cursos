@@ -1,14 +1,14 @@
 import '@testing-library/jest-dom'
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import NewCoursePage from '@/app/(app)/cursos/novo/page'
-import { createCourseWithAi, extractDocument } from '@/app/(app)/cursos/novo/actions'
+import NewCoursePage from '@/app/(app)/courses/new/page'
+import { createCourseWithAi, extractDocument } from '@/app/(app)/courses/new/actions'
 
 const mockPush = jest.fn()
 const mockBack = jest.fn()
 jest.mock('next/navigation', () => ({
   useRouter: () => ({ push: mockPush, back: mockBack, replace: jest.fn(), prefetch: jest.fn() }),
-  usePathname: () => '/cursos/novo',
+  usePathname: () => '/courses/new',
   useSearchParams: () => new URLSearchParams(),
 }))
 
@@ -16,7 +16,7 @@ jest.mock('sonner', () => ({
   toast: { error: jest.fn(), success: jest.fn(), info: jest.fn() },
 }))
 
-jest.mock('@/app/(app)/cursos/novo/actions', () => ({
+jest.mock('@/app/(app)/courses/new/actions', () => ({
   extractDocument: jest.fn(),
   createCourseWithAi: jest.fn(),
   downloadSampleDocument: jest.fn(),
@@ -118,7 +118,7 @@ describe('Página Novo Curso', () => {
 
     await user.click(screen.getByRole('button', { name: 'Abrir no editor' }))
 
-    expect(mockPush).toHaveBeenCalledWith('/cursos/curso-123/editar')
+    expect(mockPush).toHaveBeenCalledWith('/courses/curso-123/edit')
   })
 
   it('bloqueia a etapa de informações enquanto houver campo inválido', async () => {

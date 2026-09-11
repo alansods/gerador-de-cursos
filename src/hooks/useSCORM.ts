@@ -31,7 +31,7 @@ export const useSCORM = () => {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ curso: course }),
+        body: JSON.stringify({ course }),
       })
 
       console.log('📡 [useSCORM] Response status:', response.status)

@@ -17,9 +17,9 @@ export type ActivityType =
   | 'curso_comentado'
 
 export interface LogActivityParams {
-  tipo: ActivityType
-  titulo: string
-  descricao?: string
+  type: ActivityType
+  title: string
+  description?: string
   entityId?: string
   entityType?: 'curso' | 'usuario'
   userId?: string
@@ -32,9 +32,9 @@ export async function logActivity(params: LogActivityParams) {
   try {
     await prisma.activity.create({
       data: {
-        tipo: params.tipo,
-        titulo: params.titulo,
-        descricao: params.descricao,
+        type: params.type,
+        title: params.title,
+        description: params.description,
         entityId: params.entityId,
         entityType: params.entityType,
         userId: params.userId,

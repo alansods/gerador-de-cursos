@@ -23,7 +23,7 @@ export async function POST(req: NextRequest) {
 
   try {
     const body = await req.json()
-    const { curso: course } = body
+    const { course } = body
 
     if (!course || !course.id) {
       return createErrorResponse('Curso é obrigatório', 400)
@@ -39,8 +39,8 @@ export async function POST(req: NextRequest) {
     // Criar job no banco de dados
     const job = await prisma.sCORMJob.create({
       data: {
-        cursoId: courseId,
-        cursoTitulo: courseData.titulo,
+        courseId,
+        courseTitle: courseData.titulo,
         status: 'pending',
         progress: 'Job criado, aguardando início da geração...',
       },

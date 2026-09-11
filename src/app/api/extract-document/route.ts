@@ -66,7 +66,7 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    return createSuccessResponse({ text, marcadores: detectMarkers(text) })
+    return createSuccessResponse({ text, markers: detectMarkers(text) })
   } catch (error) {
     console.error('Erro ao extrair documento:', error)
     return createErrorResponse('Erro ao processar documento', 500, error)

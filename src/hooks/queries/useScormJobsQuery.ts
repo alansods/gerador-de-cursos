@@ -5,8 +5,8 @@ import { queryKeys, type ScormJobFilters } from '@/lib/query-keys'
 
 export interface SCORMJob {
   id: string
-  cursoId: string
-  cursoTitulo: string
+  courseId: string
+  courseTitle: string
   status: 'pending' | 'building' | 'completed' | 'failed'
   progress?: string
   error?: string
@@ -130,7 +130,7 @@ export function useDeleteJobMutation() {
 export function useRestartBuildMutation() {
   return useMutation({
     mutationFn: async (courseId: string): Promise<string> => {
-      const courseResponse = await fetch(`/api/cursos/${courseId}`)
+      const courseResponse = await fetch(`/api/courses/${courseId}`)
       if (!courseResponse.ok) throw new Error('Curso não encontrado')
 
       const course = await courseResponse.json()
@@ -138,7 +138,7 @@ export function useRestartBuildMutation() {
       const buildResponse = await fetch('/api/generate-scorm-v2', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ curso: course }),
+        body: JSON.stringify({ course }),
       })
 
       if (!buildResponse.ok) {

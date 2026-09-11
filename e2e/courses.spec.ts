@@ -50,7 +50,7 @@ function countActions(page: Page) {
 const lines = (page: Page) => page.locator('tbody tr')
 
 async function createCourse(page: Page, title: string) {
-  const response = await page.request.post('/api/cursos', {
+  const response = await page.request.post('/api/courses', {
     data: {
       titulo: title,
       descricao: 'Curso criado pelo teste E2E da listagem de cursos.',
@@ -75,7 +75,7 @@ test.describe('E2E - Cursos Page', () => {
     const actions = countActions(page)
 
     // Act
-    await page.goto('/cursos')
+    await page.goto('/courses')
     await expect(lines(page).first()).toBeVisible()
 
     // Assert - uma única busca, sem a duplicação que o GeradorCursoContext causava
@@ -85,7 +85,7 @@ test.describe('E2E - Cursos Page', () => {
 
   test('deve fazer debounce na busca (não fazer requisição a cada tecla)', async ({ page }) => {
     // Arrange
-    await page.goto('/cursos')
+    await page.goto('/courses')
     await expect(lines(page).first()).toBeVisible()
 
     const actions = countActions(page)
@@ -102,7 +102,7 @@ test.describe('E2E - Cursos Page', () => {
 
   test('deve aplicar filtro de categoria com uma única busca', async ({ page }) => {
     // Arrange
-    await page.goto('/cursos')
+    await page.goto('/courses')
     await expect(lines(page).first()).toBeVisible()
 
     const actions = countActions(page)
@@ -120,7 +120,7 @@ test.describe('E2E - Cursos Page', () => {
 
   test('deve mostrar o estado vazio quando a busca não casa com nada', async ({ page }) => {
     // Arrange
-    await page.goto('/cursos')
+    await page.goto('/courses')
     await expect(lines(page).first()).toBeVisible()
 
     // Act
@@ -135,7 +135,7 @@ test.describe('E2E - Cursos Page', () => {
 
   test('deve limpar filtros corretamente', async ({ page }) => {
     // Arrange
-    await page.goto('/cursos')
+    await page.goto('/courses')
     await expect(lines(page).first()).toBeVisible()
     const initialTotal = await lines(page).count()
 
@@ -165,7 +165,7 @@ test.describe('E2E - Cursos Page', () => {
     const title = `Curso Busca E2E ${Date.now()}`
     await createCourse(page, title)
 
-    await page.goto('/cursos')
+    await page.goto('/courses')
     await expect(lines(page).first()).toBeVisible()
 
     // Act
@@ -178,7 +178,7 @@ test.describe('E2E - Cursos Page', () => {
 
   test('carrega a página seguinte pelo infinite scroll', async ({ page }) => {
     // Arrange - garantir mais cursos do que cabe numa página
-    await page.goto('/cursos')
+    await page.goto('/courses')
     await expect(lines(page).first()).toBeVisible()
 
     const firstPage = await lines(page).count()

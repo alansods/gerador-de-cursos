@@ -204,7 +204,7 @@ export default function LoginPage() {
               {/* Link para Cadastro */}
               <p className="switch-copy text-center mt-5 text-[13px] text-muted-foreground">
                 {t('login.noAccount')}{' '}
-                <Link href="/cadastro" className="text-primary font-medium hover:underline">
+                <Link href="/signup" className="text-primary font-medium hover:underline">
                   {t('login.createAccount')}
                 </Link>
               </p>

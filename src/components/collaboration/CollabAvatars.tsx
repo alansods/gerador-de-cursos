@@ -12,7 +12,7 @@ function initials(name: string) {
     .join('')
 }
 
-function Avatar({ nome: name, color }: { nome: string; color: string }) {
+function Avatar({ name, color }: { name: string; color: string }) {
   return (
     <div
       className="flex h-8 w-8 items-center justify-center rounded-full border-2 border-background text-[11px] font-semibold text-white"
@@ -45,9 +45,9 @@ function Avatars() {
 
   return (
     <div className="flex items-center -space-x-2" aria-label="Pessoas editando agora">
-      {eu?.info && <Avatar nome={`${eu.info.nome} (você)`} color={eu.info.cor} />}
+      {eu?.info && <Avatar name={`${eu.info.name} (você)`} color={eu.info.color} />}
       {others.map(({ connectionId, info }) => (
-        <Avatar key={connectionId} nome={info?.nome ?? 'Alguém'} color={info?.cor ?? '#0047BB'} />
+        <Avatar key={connectionId} name={info?.name ?? 'Alguém'} color={info?.color ?? '#0047BB'} />
       ))}
     </div>
   )

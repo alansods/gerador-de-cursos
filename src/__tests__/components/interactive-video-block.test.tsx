@@ -31,7 +31,7 @@ function question(extra: Partial<VideoQuestion>): VideoQuestion {
   }
 }
 
-function mount(videoQuestions: VideoQuestion[], registrarQuiz = jest.fn(), duration?: number) {
+function mount(videoQuestions: VideoQuestion[], recordQuiz = jest.fn(), duration?: number) {
   const item = {
     id: 'b-1',
     tipo: 'video-interativo',
@@ -43,7 +43,7 @@ function mount(videoQuestions: VideoQuestion[], registrarQuiz = jest.fn(), durat
   } as Block
 
   const { container } = render(
-    <ScormProgressProvider valor={{ unitId: 'u-1', registrarQuiz }}>
+    <ScormProgressProvider value={{ unitId: 'u-1', recordQuiz }}>
       <InteractiveVideoBlock item={item} blockIndex={0} />
     </ScormProgressProvider>
   )
@@ -71,10 +71,10 @@ function mount(videoQuestions: VideoQuestion[], registrarQuiz = jest.fn(), durat
   return {
     container,
     video,
-    avancarPara: advanceTo,
-    arrastarPara: dragTo,
+    advanceTo,
+    dragTo,
     marcadores: markers,
-    registrarQuiz,
+    recordQuiz,
   }
 }
 
@@ -86,7 +86,7 @@ describe('VideoInterativoBlock', () => {
   })
 
   it('pausa o vídeo e abre a pergunta ao alcançar o tempo', () => {
-    const { avancarPara: advanceTo } = mount([question({})])
+    const { advanceTo } = mount([question({})])
 
     expect(screen.queryByText('O que prende o capacete?')).toBeNull()
 
@@ -98,7 +98,7 @@ describe('VideoInterativoBlock', () => {
   })
 
   it('devolve a reprodução ao marco quando o aluno tenta pular a pergunta', () => {
-    const { video, arrastarPara: dragTo } = mount([question({})])
+    const { video, dragTo } = mount([question({})])
 
     dragTo(40)
 
@@ -108,13 +108,13 @@ describe('VideoInterativoBlock', () => {
 
   it('registra o acerto e libera o vídeo ao continuar', async () => {
     const user = userEvent.setup()
-    const { avancarPara: advanceTo, registrarQuiz } = mount([question({})])
+    const { advanceTo, recordQuiz } = mount([question({})])
 
     advanceTo(5)
     await user.click(screen.getByRole('button', { name: /A jugular/ }))
     await user.click(screen.getByRole('button', { name: 'Responder' }))
 
-    expect(registrarQuiz).toHaveBeenCalledWith('u-1', 0, 1, 1)
+    expect(recordQuiz).toHaveBeenCalledWith('u-1', 0, 1, 1)
     expect(screen.getByText('Resposta correta!')).toBeInTheDocument()
     expect(screen.getByText(/obrigatória em trabalho em altura/)).toBeInTheDocument()
 
@@ -126,20 +126,20 @@ describe('VideoInterativoBlock', () => {
 
   it('libera o vídeo mesmo quando o aluno erra, e reporta o erro na nota', async () => {
     const user = userEvent.setup()
-    const { avancarPara: advanceTo, registrarQuiz } = mount([question({})])
+    const { advanceTo, recordQuiz } = mount([question({})])
 
     advanceTo(5)
     await user.click(screen.getByRole('button', { name: /O casco/ }))
     await user.click(screen.getByRole('button', { name: 'Responder' }))
 
-    expect(registrarQuiz).toHaveBeenCalledWith('u-1', 0, 0, 1)
+    expect(recordQuiz).toHaveBeenCalledWith('u-1', 0, 0, 1)
     expect(screen.getByText('Resposta incorreta.')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /Continuar o vídeo/ })).toBeInTheDocument()
   })
 
   it('não reabre uma pergunta já respondida', async () => {
     const user = userEvent.setup()
-    const { avancarPara: advanceTo } = mount([question({})])
+    const { advanceTo } = mount([question({})])
 
     advanceTo(5)
     await user.click(screen.getByRole('button', { name: /A jugular/ }))
@@ -153,7 +153,7 @@ describe('VideoInterativoBlock', () => {
 
   it('dispara os marcos em ordem de tempo, acumulando a nota', async () => {
     const user = userEvent.setup()
-    const { avancarPara: advanceTo, registrarQuiz } = mount([
+    const { advanceTo, recordQuiz } = mount([
       question({ id: 'pv-2', tempo: '00:12', pergunta: 'Segunda?' }),
       question({ id: 'pv-1', tempo: '00:05' }),
     ])
@@ -163,7 +163,7 @@ describe('VideoInterativoBlock', () => {
 
     await user.click(screen.getByRole('button', { name: /A jugular/ }))
     await user.click(screen.getByRole('button', { name: 'Responder' }))
-    expect(registrarQuiz).toHaveBeenLastCalledWith('u-1', 0, 1, 2)
+    expect(recordQuiz).toHaveBeenLastCalledWith('u-1', 0, 1, 2)
     await user.click(screen.getByRole('button', { name: /Continuar o vídeo/ }))
 
     advanceTo(12)
@@ -171,7 +171,7 @@ describe('VideoInterativoBlock', () => {
 
     await user.click(screen.getByRole('button', { name: /A jugular/ }))
     await user.click(screen.getByRole('button', { name: 'Responder' }))
-    expect(registrarQuiz).toHaveBeenLastCalledWith('u-1', 0, 2, 2)
+    expect(recordQuiz).toHaveBeenLastCalledWith('u-1', 0, 2, 2)
   })
 })
 
@@ -191,7 +191,7 @@ describe('fonte deduzida da URL', () => {
     } as Block
 
     const { container } = render(
-      <ScormProgressProvider valor={{ unitId: 'u-1', registrarQuiz: jest.fn() }}>
+      <ScormProgressProvider value={{ unitId: 'u-1', recordQuiz: jest.fn() }}>
         <InteractiveVideoBlock item={item} blockIndex={0} />
       </ScormProgressProvider>
     )
@@ -221,7 +221,7 @@ describe('fonte deduzida da URL', () => {
     } as Block
 
     const { container } = render(
-      <ScormProgressProvider valor={{ unitId: 'u-1', registrarQuiz: jest.fn() }}>
+      <ScormProgressProvider value={{ unitId: 'u-1', recordQuiz: jest.fn() }}>
         <InteractiveVideoBlock item={item} blockIndex={0} />
       </ScormProgressProvider>
     )
@@ -251,7 +251,7 @@ describe('marcadores na linha do tempo', () => {
 
   it('distingue o pino respondido do pendente', async () => {
     const user = userEvent.setup()
-    const { avancarPara: advanceTo, marcadores: markers } = mount([question({})], jest.fn(), 100)
+    const { advanceTo, marcadores: markers } = mount([question({})], jest.fn(), 100)
 
     expect(markers()[0].getAttribute('title')).toBe('Pergunta em 00:05')
 
@@ -265,7 +265,7 @@ describe('marcadores na linha do tempo', () => {
 
   it('trava o avanço da barra na próxima pergunta pendente', async () => {
     const user = userEvent.setup()
-    const { video, avancarPara: advanceTo } = mount(
+    const { video, advanceTo } = mount(
       [question({}), question({ id: 'pv-2', tempo: '00:25', pergunta: 'Segunda?' })],
       jest.fn(),
       100
@@ -287,7 +287,7 @@ describe('marcadores na linha do tempo', () => {
   })
 
   it('deixa o aluno voltar livremente a um trecho já assistido', () => {
-    const { video, avancarPara: advanceTo } = mount([question({ tempo: '00:50' })], jest.fn(), 100)
+    const { video, advanceTo } = mount([question({ tempo: '00:50' })], jest.fn(), 100)
 
     advanceTo(30)
     fireEvent.keyDown(screen.getByRole('slider', { name: /linha do tempo/i }), { key: 'Home' })
@@ -297,7 +297,7 @@ describe('marcadores na linha do tempo', () => {
 
   it('libera a barra inteira quando não há mais pergunta pendente', async () => {
     const user = userEvent.setup()
-    const { video, avancarPara: advanceTo } = mount([question({})], jest.fn(), 100)
+    const { video, advanceTo } = mount([question({})], jest.fn(), 100)
 
     advanceTo(5)
     await user.click(screen.getByRole('button', { name: /A jugular/ }))
@@ -323,7 +323,7 @@ describe('marcadores na linha do tempo', () => {
   })
 
   it('esconde os controles enquanto a pergunta está aberta', () => {
-    const { avancarPara: advanceTo } = mount([question({})], jest.fn(), 100)
+    const { advanceTo } = mount([question({})], jest.fn(), 100)
 
     expect(screen.getByRole('slider', { name: /linha do tempo/i })).toBeInTheDocument()
 

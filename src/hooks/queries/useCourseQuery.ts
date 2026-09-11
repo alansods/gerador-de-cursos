@@ -8,13 +8,13 @@ import type { Course } from '@/types/course'
 export const VERSION_CONFLICT_ERROR = 'conflito-de-versao'
 
 async function fetchCourse(identifier: string): Promise<Course> {
-  const response = await fetch(`/api/cursos/${identifier}`, {
+  const response = await fetch(`/api/courses/${identifier}`, {
     headers: { 'Cache-Control': 'no-cache', Pragma: 'no-cache' },
   })
   const data = await response.json()
 
-  if (!data.success || !data.curso) throw new Error(data.error || 'Curso não encontrado')
-  return data.curso
+  if (!data.success || !data.course) throw new Error(data.error || 'Curso não encontrado')
+  return data.course
 }
 
 interface CourseOptions {
@@ -52,7 +52,7 @@ export function useUpdateCourseMutation() {
     mutationFn: async ({ id, course, version }: CourseEdit): Promise<Course> => {
       const sentVersion = course.version ?? version
 
-      const response = await fetch('/api/cursos', {
+      const response = await fetch('/api/courses', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -65,9 +65,9 @@ export function useUpdateCourseMutation() {
       if (response.status === 409) throw new Error(VERSION_CONFLICT_ERROR)
 
       const data = await response.json()
-      if (!data.success || !data.curso) throw new Error(data.error || 'Erro ao editar curso')
+      if (!data.success || !data.course) throw new Error(data.error || 'Erro ao editar curso')
 
-      return data.curso
+      return data.course
     },
     onSuccess: (updatedCourse) => {
       queryClient.setQueryData(queryKeys.courses.detail(updatedCourse.id), updatedCourse)
@@ -95,7 +95,7 @@ export function useCreateCourseMutation() {
     mutationFn: async (
       course: Omit<Course, 'id' | 'dataCriacao' | 'dataModificacao'>
     ): Promise<Course> => {
-      const response = await fetch('/api/cursos', {
+      const response = await fetch('/api/courses', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(course),
@@ -109,9 +109,9 @@ export function useCreateCourseMutation() {
       }
 
       const data = await response.json()
-      if (!data.success || !data.curso) throw new Error(data.error || 'Erro ao criar curso')
+      if (!data.success || !data.course) throw new Error(data.error || 'Erro ao criar curso')
 
-      return data.curso
+      return data.course
     },
     onSuccess: (createdCourse) => {
       queryClient.setQueryData(queryKeys.courses.detail(createdCourse.id), createdCourse)

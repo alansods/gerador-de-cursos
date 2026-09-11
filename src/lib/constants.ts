@@ -39,7 +39,7 @@ export const COURSE_MODALITIES = ['Presencial', 'Online', 'Híbrido'] as const
 export const DEFAULT_MODALITY = 'Online'
 
 // Rotas públicas (sem autenticação)
-export const PUBLIC_ROUTES = ['/login', '/cadastro', '/'] as const
+export const PUBLIC_ROUTES = ['/login', '/signup', '/'] as const
 
 // Validações de formulário
 export const VALIDATION_RULES = {

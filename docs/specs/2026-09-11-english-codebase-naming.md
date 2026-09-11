@@ -287,6 +287,52 @@ antes/depois não foi executada.
 - **sessionStorage**: `novo-curso:rascunho` → `new-course:draft`. O rascunho em andamento no
   momento do deploy se perde; aceitável por ser de sessão.
 
+#### Execução (11/09/2026)
+
+**Prisma.** Schema com `@map` nos campos e valores de enum e `@@map` nos modelos e também nos
+tipos de enum do Postgres (`@@map("RoleUsuario")`…). `prisma migrate diff` do schema antigo para o
+novo saiu vazio. O código foi adaptado por um codemod guiado pelos diagnósticos do `tsc` (274
+correções) e os valores de enum trocados como tokens (25 arquivos).
+
+O `tsc` não pega objeto que chega ao Prisma por variável ou spread — o TS não checa chave a mais
+fora de literal. Cinco pontos passaram por ele e quebrariam só em runtime: `selectedAuthor` e
+`selectedRequester` com `nome: true`, o filtro `{ curso: { ownerId } }` das solicitações pendentes,
+`...(cond && { revisadoPorId: null })` em duas rotas e o tipo literal do `where` em
+`fetchCourses`. Na Fase 3, procurar chave antiga em objeto literal do servidor em vez de confiar
+só no compilador.
+
+**Rede.** Tipos do cliente renomeados pelo language service; leituras do servidor (corpo, query)
+ajustadas à mão. Passaram para inglês: corpos e respostas de login, signup, me, users, activities,
+collaborators, comments, access-requests, status, scorm-status, extract-document,
+generate-course-from-text e liveblocks-auth; o envelope `course`/`courses` e o 409
+`conflict`/`currentVersion` de `/api/courses`; `?scope=mine|all`, `?commentId`, `?review=1`;
+`action: 'approve' | 'deny'`; as chaves de `CoursePermissions` (`canEdit`…) e
+`Course.permissions`/`hasPendingRequest`/`ownerName`; eventos, presença e `UserMeta` do Liveblocks;
+`WizardState` e a chave do rascunho; `MediaCategory` (`'image'`, `'document'` — uploads novos vão
+para `cursos/image/…`, as URLs já gravadas seguem válidas); ações de permissão; e
+`SCORM_BUILD_COURSE_FILE`.
+
+**JWT.** Tokens emitidos antes do deploy trazem `nome` e papéis em português. `resolveTokenRole`
+(em `permissions.ts`, usado pelo middleware e por `verifyAuth`) aceita os valores antigos, e
+`verifyAuth` lê `name ?? nome`. Os tokens vivem 24 h, então esse fallback pode sair depois.
+
+**Rotas.** 21 arquivos movidos, 113 literais de URL reescritos (strings, templates e regex, pela
+árvore do código — o caminho `cursos/…` do Blob, sem barra inicial, não foi tocado), `[unidadeId]`
+→ `[unitId]` e redirects permanentes no `next.config.ts`, conferidos com `curl` (308 para cada rota
+antiga, inclusive com parâmetro).
+
+**Regressões da Fase 1 corrigidas aqui.** `/api/extract-document` e `/api/generate-course-from-text`
+ainda respondiam `marcadores`/`resumo`, que a Fase 1 renomeou só no tipo do cliente: o wizard perdia
+a detecção de marcadores e o resumo da geração. Os testes não pegaram porque essas respostas são
+mockadas. Também sobras de nome (`registrarQuiz`, `valor`, `lerJson`, `avisar`).
+
+**Fora do escopo.** Links antigos com `?revisao=1` redirecionam, mas não abrem o painel de revisão
+(o parâmetro virou `review`). `useRestartBuildMutation` envia o envelope da resposta como se fosse o
+curso — bug anterior a esta mudança, não tratado.
+
+**Verificação.** `tsc` só com os 26 erros antigos; `pnpm test` 360/360; `pnpm build` limpo;
+`pnpm lint` sem erro novo; E2E no chromium verde depois de atualizar os mocks e as URLs dos specs.
+
 ### Fase 3 — Dados persistidos
 
 Única fase com risco de dado. Entregáveis, nesta ordem:

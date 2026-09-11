@@ -24,10 +24,10 @@ export function AccessRequestBell({ expanded = false }: Props) {
   const respondAccessRequest = useRespondAccessRequestMutation()
   const responding = respondAccessRequest.isPending ? respondAccessRequest.variables.id : null
 
-  const respond = async (id: string, action: 'aprovar' | 'negar') => {
+  const respond = async (id: string, action: 'approve' | 'deny') => {
     try {
-      await respondAccessRequest.mutateAsync({ id, acao: action })
-      toast.success(action === 'aprovar' ? 'Acesso concedido' : 'Solicitação negada')
+      await respondAccessRequest.mutateAsync({ id, action })
+      toast.success(action === 'approve' ? 'Acesso concedido' : 'Solicitação negada')
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Erro ao conectar com o servidor')
     }
@@ -82,12 +82,12 @@ export function AccessRequestBell({ expanded = false }: Props) {
               <div key={accessRequest.id} className="p-3 space-y-2">
                 <div>
                   <p className="text-sm">
-                    <span className="font-medium">{accessRequest.solicitante.nome}</span> pediu
-                    acesso a <span className="font-medium">{accessRequest.curso.titulo}</span>
+                    <span className="font-medium">{accessRequest.requester.name}</span> pediu acesso
+                    a <span className="font-medium">{accessRequest.course.title}</span>
                   </p>
-                  {accessRequest.mensagem && (
+                  {accessRequest.message && (
                     <p className="mt-1 text-xs italic text-muted-foreground">
-                      “{accessRequest.mensagem}”
+                      “{accessRequest.message}”
                     </p>
                   )}
                 </div>
@@ -101,7 +101,7 @@ export function AccessRequestBell({ expanded = false }: Props) {
                     <Button
                       size="sm"
                       className="h-7 gap-1 text-xs"
-                      onClick={() => respond(accessRequest.id, 'aprovar')}
+                      onClick={() => respond(accessRequest.id, 'approve')}
                     >
                       <Check className="h-3 w-3" />
                       Liberar acesso
@@ -110,7 +110,7 @@ export function AccessRequestBell({ expanded = false }: Props) {
                       size="sm"
                       variant="destructive"
                       className="h-7 gap-1 text-xs"
-                      onClick={() => respond(accessRequest.id, 'negar')}
+                      onClick={() => respond(accessRequest.id, 'deny')}
                     >
                       <X className="h-3 w-3" />
                       Negar

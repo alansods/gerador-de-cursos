@@ -32,9 +32,9 @@ interface Props {
 
 export function ReviewPanel({ course, onStatusChanged }: Props) {
   const searchParams = useSearchParams()
-  const [isOpen, setIsOpen] = useState(searchParams.get('revisao') === '1')
+  const [isOpen, setIsOpen] = useState(searchParams.get('review') === '1')
   const [text, setText] = useState('')
-  const [status, setStatus] = useState<CourseStatus>(course.status ?? 'EM_ANDAMENTO')
+  const [status, setStatus] = useState<CourseStatus>(course.status ?? 'IN_PROGRESS')
 
   const { comments, loading } = useCommentsQuery(course.id, isOpen)
   const addComment = useAddCommentMutation(course.id)
@@ -43,13 +43,13 @@ export function ReviewPanel({ course, onStatusChanged }: Props) {
 
   const sending = addComment.isPending || change.isPending
 
-  const permissions = course.permissoes
-  const canComment = permissions?.podeComentar ?? false
-  const canApprove = permissions?.podeAprovar ?? false
-  const canSubmitForReview = permissions?.podeEnviarRevisao ?? false
+  const permissions = course.permissions
+  const canComment = permissions?.canComment ?? false
+  const canApprove = permissions?.canApprove ?? false
+  const canSubmitForReview = permissions?.canSubmitForReview ?? false
 
   useEffect(() => {
-    setStatus(course.status ?? 'EM_ANDAMENTO')
+    setStatus(course.status ?? 'IN_PROGRESS')
   }, [course.status])
 
   const reportError = (error: unknown) =>
@@ -78,13 +78,13 @@ export function ReviewPanel({ course, onStatusChanged }: Props) {
   const changeStatus = async (newStatus: CourseStatus) => {
     const comment = text.trim()
 
-    if (newStatus === 'REPROVADO' && !comment) {
+    if (newStatus === 'REJECTED' && !comment) {
       toast.error('Escreva um comentário explicando a reprovação antes de reprovar')
       return
     }
 
     try {
-      await change.mutateAsync({ status: newStatus, comentario: comment || undefined })
+      await change.mutateAsync({ status: newStatus, comment: comment || undefined })
       setStatus(newStatus)
       setText('')
       onStatusChanged?.(newStatus)
@@ -140,7 +140,7 @@ export function ReviewPanel({ course, onStatusChanged }: Props) {
               <div key={comment.id} className="rounded-lg border border-border p-3">
                 <div className="flex items-start justify-between gap-2">
                   <div>
-                    <p className="text-sm font-medium">{comment.autor.nome}</p>
+                    <p className="text-sm font-medium">{comment.author.name}</p>
                     <p className="text-xs text-muted-foreground">
                       {new Date(comment.createdAt).toLocaleString('pt-BR', {
                         dateStyle: 'short',
@@ -148,7 +148,7 @@ export function ReviewPanel({ course, onStatusChanged }: Props) {
                       })}
                     </p>
                   </div>
-                  {comment.podeExcluir && (
+                  {comment.canDelete && (
                     <Button
                       variant="ghost"
                       size="icon"
@@ -160,7 +160,7 @@ export function ReviewPanel({ course, onStatusChanged }: Props) {
                     </Button>
                   )}
                 </div>
-                <p className="mt-2 text-sm whitespace-pre-wrap">{comment.texto}</p>
+                <p className="mt-2 text-sm whitespace-pre-wrap">{comment.text}</p>
               </div>
             ))
           )}
@@ -187,23 +187,23 @@ export function ReviewPanel({ course, onStatusChanged }: Props) {
             </>
           )}
 
-          {canSubmitForReview && status !== 'EM_REVISAO' && (
+          {canSubmitForReview && status !== 'IN_REVIEW' && (
             <Button
               variant="outline"
               className="w-full"
               disabled={sending}
-              onClick={() => changeStatus('EM_REVISAO')}
+              onClick={() => changeStatus('IN_REVIEW')}
             >
               Enviar para revisão
             </Button>
           )}
 
-          {canApprove && status === 'EM_REVISAO' && (
+          {canApprove && status === 'IN_REVIEW' && (
             <div className="flex gap-2">
               <Button
                 className="flex-1 gap-2 bg-emerald-600 hover:bg-emerald-700 text-white"
                 disabled={sending}
-                onClick={() => changeStatus('APROVADO')}
+                onClick={() => changeStatus('APPROVED')}
               >
                 <Check className="h-4 w-4" />
                 Aprovar
@@ -212,7 +212,7 @@ export function ReviewPanel({ course, onStatusChanged }: Props) {
                 variant="destructive"
                 className="flex-1 gap-2"
                 disabled={sending}
-                onClick={() => changeStatus('REPROVADO')}
+                onClick={() => changeStatus('REJECTED')}
               >
                 <X className="h-4 w-4" />
                 Reprovar
@@ -220,7 +220,7 @@ export function ReviewPanel({ course, onStatusChanged }: Props) {
             </div>
           )}
 
-          {canApprove && status === 'EM_REVISAO' && (
+          {canApprove && status === 'IN_REVIEW' && (
             <p className="text-xs text-muted-foreground">
               Ao reprovar, o comentário acima é obrigatório e fica registrado na thread.
             </p>

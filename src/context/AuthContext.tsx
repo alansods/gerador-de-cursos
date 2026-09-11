@@ -7,7 +7,7 @@ import { can, ROLES, type Action, type PermissionContext, type UserRole } from '
 
 interface User {
   id: string
-  nome: string
+  name: string
   email: string
   role?: UserRole
 }
@@ -49,7 +49,7 @@ export function AuthProvider({ children, initialUser }: AuthProviderProps) {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ email, senha: password }),
+        body: JSON.stringify({ email, password }),
       })
 
       const data = await response.json()
@@ -79,7 +79,7 @@ export function AuthProvider({ children, initialUser }: AuthProviderProps) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           email: 'convidado@senai.br',
-          senha: 'convidado',
+          password: 'convidado',
         }),
       })
 
@@ -214,8 +214,8 @@ export function AuthProvider({ children, initialUser }: AuthProviderProps) {
         role,
         can: checkPermission,
         isAdmin: role === 'ADMIN',
-        canManageUsers: checkPermission('usuario:gerenciar'),
-        canCreateCourse: checkPermission('curso:criar'),
+        canManageUsers: checkPermission('user:manage'),
+        canCreateCourse: checkPermission('course:create'),
         login,
         loginAsGuest,
         logout,

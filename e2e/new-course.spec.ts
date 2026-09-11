@@ -35,7 +35,7 @@ async function fillInformation(page: Page, title: string) {
 test.describe('E2E - Novo Curso', () => {
   test('percorre as quatro etapas e cria um curso manual', async ({ page }) => {
     await logIn(page, EMAIL, PASSWORD)
-    await page.goto('/cursos/novo')
+    await page.goto('/courses/new')
 
     await expect(page.getByRole('heading', { name: 'Como você quer começar?' })).toBeVisible()
     await page.getByRole('radio', { name: /Criação manual/ }).click()
@@ -63,13 +63,13 @@ test.describe('E2E - Novo Curso', () => {
     })
     await expect(page.getByRole('button', { name: 'Abrir no editor' })).toBeVisible()
 
-    await page.goto('/cursos')
+    await page.goto('/courses')
     await expect(page.getByText(title)).toBeVisible({ timeout: 15000 })
   })
 
   test('não avança com campos inválidos e destaca o que falta', async ({ page }) => {
     await logIn(page, EMAIL, PASSWORD)
-    await page.goto('/cursos/novo')
+    await page.goto('/courses/new')
 
     await page.getByRole('button', { name: /Continuar/ }).click()
     await expect(page.getByText('Selecione um método para continuar')).toBeVisible()
@@ -98,7 +98,7 @@ test.describe('E2E - Novo Curso', () => {
     expect(response.ok()).toBeTruthy()
     const example = await response.body()
 
-    await page.goto('/cursos/novo')
+    await page.goto('/courses/new')
     await page.getByRole('radio', { name: /Gerar por IA/ }).click()
     await page.getByRole('button', { name: /Continuar/ }).click()
 
@@ -117,9 +117,9 @@ test.describe('E2E - Novo Curso', () => {
 
   test('convidado consegue abrir o wizard e criar curso', async ({ page }) => {
     await logIn(page, GUEST_EMAIL, GUEST_PASSWORD)
-    await page.goto('/cursos/novo')
+    await page.goto('/courses/new')
 
-    await expect(page).toHaveURL(/\/cursos\/novo/)
+    await expect(page).toHaveURL(/\/courses\/new/)
     await expect(page.getByRole('heading', { name: 'Como você quer começar?' })).toBeVisible()
 
     await page.getByRole('radio', { name: /Criação manual/ }).click()
@@ -140,14 +140,14 @@ test.describe('E2E - Novo Curso', () => {
     test.skip(!EMAIL_REVISOR, 'defina E2E_EMAIL_REVISOR/E2E_SENHA_REVISOR para rodar')
 
     await logIn(page, EMAIL_REVISOR as string, REVIEWER_PASSWORD as string)
-    await page.goto('/cursos/novo')
+    await page.goto('/courses/new')
 
-    await expect(page).not.toHaveURL(/\/cursos\/novo/)
+    await expect(page).not.toHaveURL(/\/courses\/new/)
   })
 
   test('mantém o rascunho ao recarregar a página', async ({ page }) => {
     await logIn(page, EMAIL, PASSWORD)
-    await page.goto('/cursos/novo')
+    await page.goto('/courses/new')
 
     await page.getByRole('radio', { name: /Criação manual/ }).click()
     await page.getByRole('button', { name: /Continuar/ }).click()

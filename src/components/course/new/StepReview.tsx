@@ -17,7 +17,7 @@ interface StepReviewProps {
 
 interface SummaryRow {
   label: string
-  valor: string
+  value: string
   detail?: string
   step: number
 }
@@ -29,7 +29,7 @@ export function StepReview({ method, data, layout, file, markers, onEdit }: Step
   const lines: SummaryRow[] = [
     {
       label: 'Método',
-      valor: isAi ? 'Gerar por IA' : 'Criação manual',
+      value: isAi ? 'Gerar por IA' : 'Criação manual',
       detail: isAi
         ? markers?.found
           ? 'Estrutura definida pelos marcadores do documento'
@@ -40,13 +40,13 @@ export function StepReview({ method, data, layout, file, markers, onEdit }: Step
     isAi
       ? {
           label: 'Documento',
-          valor: file?.name ?? '—',
+          value: file?.name ?? '—',
           detail: file ? `${(file.size / 1024 / 1024).toFixed(2)} MB` : undefined,
           step: 2,
         }
       : {
           label: 'Curso',
-          valor: data.titulo || '—',
+          value: data.titulo || '—',
           detail: [data.categoria, `${data.cargaHoraria} horas`, data.modalidade]
             .filter(Boolean)
             .join(' · '),
@@ -54,14 +54,14 @@ export function StepReview({ method, data, layout, file, markers, onEdit }: Step
         },
     {
       label: 'Layout',
-      valor: meta?.name ?? layout,
+      value: meta?.name ?? layout,
       detail: meta?.description,
       step: 3,
     },
   ]
 
   if (!isAi) {
-    lines.push({ label: 'Descrição', valor: data.descricao || '—', step: 2 })
+    lines.push({ label: 'Descrição', value: data.descricao || '—', step: 2 })
   }
 
   return (
@@ -76,7 +76,7 @@ export function StepReview({ method, data, layout, file, markers, onEdit }: Step
             </span>
             <span className="min-w-0 flex-1">
               <span className="block text-sm font-medium leading-relaxed text-foreground">
-                {line.valor}
+                {line.value}
               </span>
               {line.detail && (
                 <span className="mt-0.5 block text-sm text-muted-foreground">{line.detail}</span>

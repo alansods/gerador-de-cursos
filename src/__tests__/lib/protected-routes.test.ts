@@ -55,12 +55,12 @@ describe('Rotas protegidas', () => {
   })
 
   it('regraDaRota casa o prefixo exato e os filhos, não prefixos parciais', () => {
-    expect(routeRule('/usuarios')?.action).toBe('usuario:gerenciar')
-    expect(routeRule('/usuarios/123')?.action).toBe('usuario:gerenciar')
-    expect(routeRule('/api/users')?.action).toBe('usuario:gerenciar')
+    expect(routeRule('/users')?.action).toBe('user:manage')
+    expect(routeRule('/users/123')?.action).toBe('user:manage')
+    expect(routeRule('/api/users')?.action).toBe('user:manage')
 
     expect(routeRule('/usuariospublicos')).toBeUndefined()
-    expect(routeRule('/cursos')).toBeUndefined()
+    expect(routeRule('/courses')).toBeUndefined()
     expect(routeRule('/home')).toBeUndefined()
   })
 })

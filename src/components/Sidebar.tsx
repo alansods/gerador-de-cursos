@@ -32,19 +32,19 @@ const navItems: Array<{
   action?: Action
 }> = [
   { icon: Home, label: 'Início', href: '/home', active: false },
-  { icon: BookOpen, label: 'Cursos', href: '/cursos', active: true },
+  { icon: BookOpen, label: 'Cursos', href: '/courses', active: true },
   { icon: Package, label: 'Builds SCORM', href: '/scorm-jobs', active: false },
   {
     icon: Users,
     label: 'Usuários',
-    href: '/usuarios',
+    href: '/users',
     active: false,
-    action: 'usuario:gerenciar',
+    action: 'user:manage',
   },
   {
     icon: Settings,
     label: 'Configurações',
-    href: '/configuracoes',
+    href: '/settings',
     active: false,
   },
 ]
@@ -155,11 +155,11 @@ export function Sidebar() {
               const Icon = item.icon
               const isActive =
                 pathname === item.href ||
-                (item.href === '/cursos' && pathname?.startsWith('/cursos')) ||
+                (item.href === '/courses' && pathname?.startsWith('/courses')) ||
                 (item.href === '/scorm-jobs' && pathname?.startsWith('/scorm-jobs')) ||
                 (item.href === '/scorm-build' && pathname?.startsWith('/scorm-build')) ||
-                (item.href === '/usuarios' && pathname?.startsWith('/usuarios')) ||
-                (item.href === '/configuracoes' && pathname?.startsWith('/configuracoes'))
+                (item.href === '/users' && pathname?.startsWith('/users')) ||
+                (item.href === '/settings' && pathname?.startsWith('/settings'))
 
               return (
                 <Link key={item.label} href={item.href}>
@@ -215,11 +215,11 @@ export function Sidebar() {
         <div className="p-4 border-t border-border">
           <div className={`flex items-center gap-3 mb-3 ${!isExpanded && 'justify-center'}`}>
             <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center shrink-0">
-              <span className="text-foreground">{user?.nome?.charAt(0).toUpperCase() || 'N'}</span>
+              <span className="text-foreground">{user?.name?.charAt(0).toUpperCase() || 'N'}</span>
             </div>
             {isExpanded && (
               <div className="flex-1 min-w-0 overflow-hidden">
-                <p className="truncate text-foreground">{user?.nome || 'Usuário'}</p>
+                <p className="truncate text-foreground">{user?.name || 'Usuário'}</p>
                 <p className="text-muted-foreground truncate" style={{ fontSize: '0.875rem' }}>
                   {user?.email || ''}
                 </p>

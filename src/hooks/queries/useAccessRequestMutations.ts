@@ -5,18 +5,18 @@ import { queryKeys } from '@/lib/query-keys'
 
 export interface AccessRequestResponse {
   id: string
-  acao: 'aprovar' | 'negar'
+  action: 'approve' | 'deny'
 }
 
 export function useRespondAccessRequestMutation(courseId?: string) {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: async ({ id, acao: action }: AccessRequestResponse) => {
-      const response = await fetch(`/api/solicitacoes/${id}`, {
+    mutationFn: async ({ id, action }: AccessRequestResponse) => {
+      const response = await fetch(`/api/access-requests/${id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ acao: action }),
+        body: JSON.stringify({ action }),
       })
       const data = await response.json()
 

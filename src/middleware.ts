@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { jwtVerify } from 'jose'
-import { can, mapJobTitleToRole, ROLES, type UserRole } from '@/lib/permissions'
+import { can, resolveTokenRole, type UserRole } from '@/lib/permissions'
 import { matchesPrefix, routeRule } from '@/lib/protected-routes'
 
 const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET)
 
 const PUBLIC_PATHS = [
   '/login',
-  '/cadastro',
+  '/signup',
   '/landingpage',
   '/preview',
   '/pdf-preview',
@@ -25,11 +25,7 @@ async function readSession(req: NextRequest): Promise<MiddlewareSession | null> 
 
   try {
     const { payload } = await jwtVerify(token, JWT_SECRET)
-    const tokenRole = payload.role
-    const role =
-      typeof tokenRole === 'string' && ROLES.includes(tokenRole as UserRole)
-        ? (tokenRole as UserRole)
-        : mapJobTitleToRole(payload.cargo as string | undefined)
+    const role = resolveTokenRole(payload.role, payload.cargo as string | undefined)
 
     return { id: payload.id as string, role }
   } catch {

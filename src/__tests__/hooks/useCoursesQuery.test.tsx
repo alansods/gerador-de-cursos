@@ -6,10 +6,10 @@
 
 import { renderHook, waitFor, act } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { fetchCourses } from '@/app/(app)/cursos/actions'
+import { fetchCourses } from '@/app/(app)/courses/actions'
 import { useCoursesQuery, useDeleteCourseMutation } from '@/hooks/queries/useCoursesQuery'
 
-jest.mock('@/app/(app)/cursos/actions', () => ({ fetchCourses: jest.fn() }))
+jest.mock('@/app/(app)/courses/actions', () => ({ fetchCourses: jest.fn() }))
 
 const mockFetchCourses = fetchCourses as jest.MockedFunction<typeof fetchCourses>
 const mockFetch = jest.fn()
@@ -86,7 +86,7 @@ describe('useCursosQuery', () => {
       await mutation.result.current.mutateAsync('curso-1')
     })
 
-    expect(mockFetch).toHaveBeenCalledWith('/api/cursos?id=curso-1', { method: 'DELETE' })
+    expect(mockFetch).toHaveBeenCalledWith('/api/courses?id=curso-1', { method: 'DELETE' })
     await waitFor(() => expect(mockFetchCourses).toHaveBeenCalledTimes(2))
   })
 

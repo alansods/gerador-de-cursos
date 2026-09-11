@@ -10,8 +10,8 @@
 
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import CoursesPage from '@/app/(app)/cursos/page'
-import { fetchCourses } from '@/app/(app)/cursos/actions'
+import CoursesPage from '@/app/(app)/courses/page'
+import { fetchCourses } from '@/app/(app)/courses/actions'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { AuthProvider } from '@/context/AuthContext'
 
@@ -26,12 +26,12 @@ jest.mock('next/navigation', () => ({
     prefetch: jest.fn(),
     back: jest.fn(),
   }),
-  usePathname: () => '/cursos',
+  usePathname: () => '/courses',
   useSearchParams: () => new URLSearchParams(),
 }))
 
 // Server Action: nao deve ser carregada no ambiente jsdom (puxa next/server)
-jest.mock('@/app/(app)/cursos/actions', () => ({
+jest.mock('@/app/(app)/courses/actions', () => ({
   fetchCourses: jest.fn(),
 }))
 
@@ -215,14 +215,14 @@ describe('Integration - Cursos Page', () => {
     expect(mockFetchCourses).toHaveBeenCalledTimes(1)
   })
 
-  it('busca a lista só pela Server Action, sem tocar em /api/cursos', async () => {
+  it('busca a lista só pela Server Action, sem tocar em /api/courses', async () => {
     renderCoursesPage()
     await waitForLoad()
 
     expect(mockFetchCourses).toHaveBeenCalledTimes(1)
 
     mockFetch.mock.calls.forEach((call) => {
-      expect(String(call[0])).not.toContain('/api/cursos')
+      expect(String(call[0])).not.toContain('/api/courses')
     })
   })
 })

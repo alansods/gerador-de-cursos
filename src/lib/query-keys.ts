@@ -1,4 +1,4 @@
-import type { FetchCoursesParams } from '@/app/(app)/cursos/actions'
+import type { FetchCoursesParams } from '@/app/(app)/courses/actions'
 
 export type CourseFilters = Omit<FetchCoursesParams, 'cursor'>
 

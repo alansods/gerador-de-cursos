@@ -62,7 +62,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               </h1>
             ) : (
               <Link
-                href="/cursos"
+                href="/courses"
                 className="text-base sm:text-lg font-semibold text-foreground hover:text-primary transition-colors truncate"
               >
                 Gerador de Cursos
@@ -138,7 +138,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                     <User className="w-4 h-4 text-primary-foreground" />
                   </div>
                   <div className="hidden lg:block">
-                    <p className="font-medium text-foreground">{user.nome}</p>
+                    <p className="font-medium text-foreground">{user.name}</p>
                     <p className="text-xs text-muted-foreground">{role ? ROLE_LABELS[role] : ''}</p>
                   </div>
                 </div>

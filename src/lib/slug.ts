@@ -38,7 +38,7 @@ export async function generateUniqueSlug(title: string, excludeId?: string): Pro
   let counter = 2
 
   while (true) {
-    const existing = await prisma.curso.findUnique({
+    const existing = await prisma.course.findUnique({
       where: { slug: candidate },
       select: { id: true },
     })

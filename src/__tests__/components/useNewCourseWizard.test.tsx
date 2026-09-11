@@ -31,8 +31,8 @@ describe('useNovoCursoWizard', () => {
   it('começa na etapa 1, sem método e com layout padrão', () => {
     const { result } = renderHook(() => useNewCourseWizard())
 
-    expect(result.current.state.etapa).toBe(1)
-    expect(result.current.state.metodo).toBeNull()
+    expect(result.current.state.step).toBe(1)
+    expect(result.current.state.method).toBeNull()
     expect(result.current.state.layout).toBe('classico')
     expect(result.current.isStepValid(1)).toBe(false)
   })
@@ -44,7 +44,7 @@ describe('useNovoCursoWizard', () => {
       result.current.advance()
     })
 
-    expect(result.current.state.etapa).toBe(1)
+    expect(result.current.state.step).toBe(1)
     expect(result.current.submitted).toBe(true)
   })
 
@@ -56,7 +56,7 @@ describe('useNovoCursoWizard', () => {
       result.current.advance()
     })
 
-    expect(result.current.state.etapa).toBe(2)
+    expect(result.current.state.step).toBe(2)
   })
 
   it('bloqueia a etapa 2 manual até todos os campos ficarem válidos', () => {
@@ -122,13 +122,13 @@ describe('useNovoCursoWizard', () => {
     act(() => {
       result.current.advance()
     })
-    expect(result.current.state.etapa).toBe(3)
+    expect(result.current.state.step).toBe(3)
 
     act(() => result.current.goTo(1))
-    expect(result.current.state.etapa).toBe(1)
+    expect(result.current.state.step).toBe(1)
 
     act(() => result.current.goTo(3))
-    expect(result.current.state.etapa).toBe(1)
+    expect(result.current.state.step).toBe(1)
   })
 
   it('sinaliza a conclusão apenas na última etapa', () => {
@@ -147,7 +147,7 @@ describe('useNovoCursoWizard', () => {
     act(() => {
       result.current.advance()
     })
-    expect(result.current.state.etapa).toBe(4)
+    expect(result.current.state.step).toBe(4)
 
     act(() => {
       finished = result.current.advance()
@@ -176,8 +176,8 @@ describe('useNovoCursoWizard', () => {
 
     const { result: restored } = renderHook(() => useNewCourseWizard())
 
-    expect(restored.current.state.dados.titulo).toBe(validData.titulo)
-    expect(restored.current.state.metodo).toBe('manual')
+    expect(restored.current.state.data.titulo).toBe(validData.titulo)
+    expect(restored.current.state.method).toBe('manual')
   })
 
   it('limpa o rascunho ao reiniciar', () => {
@@ -186,7 +186,7 @@ describe('useNovoCursoWizard', () => {
     fillManual(result)
     act(() => result.current.restart())
 
-    expect(result.current.state).toMatchObject({ etapa: 1, metodo: null })
-    expect(sessionStorage.getItem('novo-curso:rascunho')).toBeNull()
+    expect(result.current.state).toMatchObject({ step: 1, method: null })
+    expect(sessionStorage.getItem('new-course:draft')).toBeNull()
   })
 })

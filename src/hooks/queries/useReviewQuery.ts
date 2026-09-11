@@ -6,21 +6,21 @@ import type { CourseStatus } from '@/lib/permissions'
 
 export interface ReviewComment {
   id: string
-  texto: string
+  text: string
   createdAt: string
-  autor: { id: string; nome: string; email: string; role: string }
-  podeExcluir: boolean
+  author: { id: string; name: string; email: string; role: string }
+  canDelete: boolean
 }
 
 export function useCommentsQuery(courseId: string, enabled: boolean) {
   const query = useQuery({
     queryKey: queryKeys.comments(courseId),
     queryFn: async (): Promise<ReviewComment[]> => {
-      const response = await fetch(`/api/cursos/${courseId}/comentarios`)
+      const response = await fetch(`/api/courses/${courseId}/comments`)
       const data = await response.json()
 
       if (!data.success) throw new Error(data.error || 'Erro ao carregar comentários')
-      return data.comentarios
+      return data.comments
     },
     enabled,
     // abrir o painel tem que mostrar o que já foi comentado, não o cache
@@ -38,10 +38,10 @@ export function useAddCommentMutation(courseId: string) {
 
   return useMutation({
     mutationFn: async (text: string) => {
-      const response = await fetch(`/api/cursos/${courseId}/comentarios`, {
+      const response = await fetch(`/api/courses/${courseId}/comments`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ texto: text }),
+        body: JSON.stringify({ text }),
       })
       const data = await response.json()
 
@@ -56,10 +56,9 @@ export function useDeleteCommentMutation(courseId: string) {
 
   return useMutation({
     mutationFn: async (commentId: string) => {
-      const response = await fetch(
-        `/api/cursos/${courseId}/comentarios?comentarioId=${commentId}`,
-        { method: 'DELETE' }
-      )
+      const response = await fetch(`/api/courses/${courseId}/comments?commentId=${commentId}`, {
+        method: 'DELETE',
+      })
       const data = await response.json()
 
       if (!data.success) throw new Error(data.error || 'Erro ao excluir comentário')
@@ -70,18 +69,18 @@ export function useDeleteCommentMutation(courseId: string) {
 
 export interface StatusChange {
   status: CourseStatus
-  comentario?: string
+  comment?: string
 }
 
 export function useChangeStatusMutation(courseId: string) {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: async ({ status, comentario: comment }: StatusChange) => {
-      const response = await fetch(`/api/cursos/${courseId}/status`, {
+    mutationFn: async ({ status, comment }: StatusChange) => {
+      const response = await fetch(`/api/courses/${courseId}/status`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status, comentario: comment }),
+        body: JSON.stringify({ status, comment }),
       })
       const data = await response.json()
 

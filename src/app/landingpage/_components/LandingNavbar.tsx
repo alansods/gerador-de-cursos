@@ -77,7 +77,7 @@ export default function LandingNavbar() {
               <Link href="/login">Login</Link>
             </Button>
             <Button asChild>
-              <Link href="/cadastro">Começar Grátis</Link>
+              <Link href="/signup">Começar Grátis</Link>
             </Button>
           </div>
 
@@ -137,7 +137,7 @@ export default function LandingNavbar() {
               <Link href="/login">Login</Link>
             </Button>
             <Button asChild className="w-full">
-              <Link href="/cadastro">Começar Grátis</Link>
+              <Link href="/signup">Começar Grátis</Link>
             </Button>
           </div>
         </div>

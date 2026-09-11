@@ -12,9 +12,9 @@ export const dynamic = 'force-static'
 
 // Função para carregar dados do curso durante o build
 async function getCourseData(): Promise<Course | null> {
-  if (process.env.SCORM_BUILD_CURSO_FILE) {
+  if (process.env.SCORM_BUILD_COURSE_FILE) {
     try {
-      const courseFile = process.env.SCORM_BUILD_CURSO_FILE
+      const courseFile = process.env.SCORM_BUILD_COURSE_FILE
       const courseData = await fs.readFile(courseFile, 'utf-8')
       return JSON.parse(courseData) as Course
     } catch (error) {

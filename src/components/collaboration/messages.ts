@@ -1,18 +1,18 @@
 import type { CollabAction, CollabTarget, CollabEvent } from '@/liveblocks.config'
 
 const TARGET_LABEL: Record<CollabTarget, string> = {
-  bloco: 'o bloco',
-  unidade: 'a unidade',
+  block: 'o bloco',
+  unit: 'a unidade',
 }
 
 const ACTION_LABEL: Record<CollabAction, string> = {
-  adicionou: 'adicionou',
-  editou: 'editou',
-  excluiu: 'excluiu',
-  reordenou: 'reordenou',
+  added: 'adicionou',
+  updated: 'editou',
+  deleted: 'excluiu',
+  reordered: 'reordenou',
 }
 
-export function message({ autor: author, acao: action, alvo: target, nome: name }: CollabEvent) {
+export function message({ author, action, target, name }: CollabEvent) {
   const base = `${author} ${ACTION_LABEL[action]} ${TARGET_LABEL[target]}`
   return name ? `${base} "${name}"` : base
 }

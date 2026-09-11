@@ -25,7 +25,7 @@ export async function GET(req: NextRequest) {
         user: {
           select: {
             id: true,
-            nome: true,
+            name: true,
             email: true,
           },
         },
@@ -35,16 +35,16 @@ export async function GET(req: NextRequest) {
     // Formatar atividades
     const activitiesFormatted = activities.map((activity) => ({
       id: activity.id,
-      tipo: activity.tipo,
-      titulo: activity.titulo,
-      descricao: activity.descricao,
+      type: activity.type,
+      title: activity.title,
+      description: activity.description,
       entityId: activity.entityId,
       entityType: activity.entityType,
       userId: activity.userId,
       user: activity.user
         ? {
             id: activity.user.id,
-            nome: activity.user.nome,
+            name: activity.user.name,
             email: activity.user.email,
           }
         : null,

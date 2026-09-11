@@ -179,13 +179,13 @@ export default function HomePage() {
 
   // Mapear atividades para formato de exibição
   const recentActivities = activities.map((activity) => {
-    const { icon, iconBg, iconColor } = getActivityIconAndColor(activity.tipo)
+    const { icon, iconBg, iconColor } = getActivityIconAndColor(activity.type)
     return {
       icon,
-      title: activity.titulo,
-      subtitle: activity.descricao || '',
+      title: activity.title,
+      subtitle: activity.description || '',
       time: getRelativeTime(activity.createdAt),
-      userName: activity.user?.nome || 'Sistema',
+      userName: activity.user?.name || 'Sistema',
       iconBg,
       iconColor,
     }
@@ -219,7 +219,7 @@ export default function HomePage() {
             {/* Action Buttons */}
             <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
               <Button
-                onClick={() => router.push('/cursos/novo')}
+                onClick={() => router.push('/courses/new')}
                 className="bg-primary hover:bg-primary/90 text-white h-10 px-6 w-full sm:w-auto"
               >
                 <Plus className="w-4 h-4 mr-2" />
@@ -227,7 +227,7 @@ export default function HomePage() {
               </Button>
               <Button
                 variant="outline"
-                onClick={() => router.push('/cursos')}
+                onClick={() => router.push('/courses')}
                 className="h-10 px-6 border-border w-full sm:w-auto"
               >
                 Ver Todos os Cursos
@@ -295,7 +295,7 @@ export default function HomePage() {
                 </div>
                 <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 w-full md:w-auto">
                   <Button
-                    onClick={() => router.push('/cursos/novo')}
+                    onClick={() => router.push('/courses/new')}
                     className="bg-highlight hover:bg-highlight/90 text-white h-10 px-6 w-full sm:w-auto"
                   >
                     <Plus className="w-4 h-4 mr-2" />
@@ -303,7 +303,7 @@ export default function HomePage() {
                   </Button>
                   <Button
                     variant="outline"
-                    onClick={() => router.push('/cursos')}
+                    onClick={() => router.push('/courses')}
                     className="h-10 px-6 border-border w-full sm:w-auto"
                   >
                     Explorar Cursos

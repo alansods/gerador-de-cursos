@@ -36,8 +36,8 @@ export async function GET(req: NextRequest) {
         },
         select: {
           id: true,
-          cursoId: true,
-          cursoTitulo: true,
+          courseId: true,
+          courseTitle: true,
           status: true,
           progress: true,
           error: true,

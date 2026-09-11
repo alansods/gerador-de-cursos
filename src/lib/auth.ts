@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { jwtVerify } from 'jose'
 import { prisma } from '@/lib/prisma'
-import { mapJobTitleToRole, ROLES, type UserRole } from '@/lib/permissions'
+import { resolveTokenRole, type UserRole } from '@/lib/permissions'
 
 // Validar que JWT_SECRET está definido
 if (!process.env.JWT_SECRET) {
@@ -15,21 +15,8 @@ export const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET)
 export interface JWTPayload {
   id: string
   email: string
-  nome: string
+  name: string
   role: UserRole
-}
-
-/**
- * Tokens emitidos antes da introdução de roles não carregam o campo `role`, e sim
- * o antigo `cargo`. A coluna `cargo` não existe mais, mas esses tokens seguem
- * válidos por até 24h depois do deploy, então o papel ainda é derivado do `cargo`
- * que veio dentro do próprio token enquanto eles expiram.
- */
-export function resolverRole(role: unknown, cargo?: string | null): UserRole {
-  if (typeof role === 'string' && ROLES.includes(role as UserRole)) {
-    return role as UserRole
-  }
-  return mapJobTitleToRole(cargo)
 }
 
 /**
@@ -49,8 +36,8 @@ export async function verifyAuth(req: NextRequest): Promise<JWTPayload> {
     return {
       id: payload.id as string,
       email: payload.email as string,
-      nome: payload.nome as string,
-      role: resolverRole(payload.role, payload.cargo as string | undefined),
+      name: (payload.name ?? payload.nome) as string,
+      role: resolveTokenRole(payload.role, payload.cargo as string | undefined),
     }
   } catch {
     throw new Error('Token inválido ou expirado')
@@ -76,14 +63,14 @@ export async function requireAuth(req: NextRequest): Promise<{ user: JWTPayload 
 
   const current = await prisma.user.findUnique({
     where: { id: user.id },
-    select: { nome: true, role: true },
+    select: { name: true, role: true },
   })
 
   if (!current) {
     return NextResponse.json({ success: false, error: 'Usuário não encontrado' }, { status: 401 })
   }
 
-  return { user: { ...user, nome: current.nome, role: current.role } }
+  return { user: { ...user, name: current.name, role: current.role } }
 }
 
 /**

@@ -47,7 +47,7 @@ export default function LandingFooter() {
                 Login
               </Link>
               <Link
-                href="/cadastro"
+                href="/signup"
                 className="text-sm text-muted-foreground transition-colors hover:text-foreground"
               >
                 Cadastrar

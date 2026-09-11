@@ -149,7 +149,7 @@ export function useScormProgress(course: Course) {
     [units, saveState]
   )
 
-  const registrarQuiz = useCallback(
+  const recordQuiz = useCallback(
     (unitId: string, blockIndex: number, correctCount: number, total: number) => {
       const unitIndex = units.findIndex((u) => u.id === unitId)
       if (unitIndex < 0 || total <= 0) return
@@ -169,5 +169,5 @@ export function useScormProgress(course: Course) {
 
   const progress: ProgressSummary = useMemo(() => calculateProgress(state), [state])
 
-  return { currentUnit, navigate, recordQuiz: registrarQuiz, progress, state }
+  return { currentUnit, navigate, recordQuiz, progress, state }
 }
