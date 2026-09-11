@@ -11,7 +11,12 @@ import {
 } from '@/lib/blocos'
 import type { TipoBloco } from '@/lib/blocos'
 import { blockRegistry } from '@/components/course/blocks/registry'
-import type { ConteudoUnidade, CursoGerado, FlipcardItem } from '@/types/gerador-curso'
+import type {
+  ConteudoUnidade,
+  CursoGerado,
+  FlipcardItem,
+  PerguntaVideo,
+} from '@/types/gerador-curso'
 
 function cursoCom(conteudo: Partial<ConteudoUnidade>[]): CursoGerado {
   return {
@@ -121,6 +126,56 @@ describe('validarFormulario', () => {
 
   it('aceita o separador sem preenchimento, por não ter conteúdo próprio', () => {
     expect(CATALOGO_BLOCOS.separador.validarFormulario(criarBlocoVazio('separador'))).toBeNull()
+  })
+
+  it('adapta a mensagem do vídeo à fonte escolhida', () => {
+    const meta = CATALOGO_BLOCOS.video
+
+    expect(meta.validarFormulario(criarBlocoVazio('video'))).toBe(
+      'Adicione o link do vídeo do YouTube'
+    )
+    expect(meta.validarFormulario({ ...criarBlocoVazio('video'), fonteVideo: 'arquivo' })).toBe(
+      'Envie o arquivo de vídeo'
+    )
+  })
+
+  it('cobra tempo, enunciado e alternativas em cada pergunta do vídeo interativo', () => {
+    const meta = CATALOGO_BLOCOS['video-interativo']
+    const base = {
+      ...criarBlocoVazio('video-interativo'),
+      videoUrl: 'https://blob.com/aula.mp4',
+      videoTitulo: 'Aula',
+    }
+    const pergunta = (extra: Partial<PerguntaVideo>): PerguntaVideo => ({
+      id: 'pv-1',
+      tempo: '01:00',
+      pergunta: 'Pergunta?',
+      opcaoA: 'A',
+      opcaoB: 'B',
+      correta: 'A',
+      ...extra,
+    })
+
+    expect(meta.validarFormulario(base)).toBe('Adicione pelo menos uma pergunta')
+    expect(meta.validarFormulario({ ...base, perguntasVideo: [pergunta({ tempo: 'x' })] })).toBe(
+      'Pergunta 1: informe o tempo no formato mm:ss'
+    )
+    expect(meta.validarFormulario({ ...base, perguntasVideo: [pergunta({ pergunta: '' })] })).toBe(
+      'Pergunta 1: escreva o enunciado'
+    )
+    expect(meta.validarFormulario({ ...base, perguntasVideo: [pergunta({ opcaoB: '' })] })).toBe(
+      'Pergunta 1: preencha pelo menos 2 alternativas'
+    )
+    expect(meta.validarFormulario({ ...base, perguntasVideo: [pergunta({ correta: 'C' })] })).toBe(
+      'Pergunta 1: a alternativa marcada como correta está vazia'
+    )
+    expect(
+      meta.validarFormulario({
+        ...base,
+        perguntasVideo: [pergunta({}), pergunta({ id: 'pv-2', tempo: '1:00' })],
+      })
+    ).toBe('Pergunta 2: já existe uma pergunta neste tempo')
+    expect(meta.validarFormulario({ ...base, perguntasVideo: [pergunta({})] })).toBeNull()
   })
 
   it('exige legenda e fonte na imagem, além da URL', () => {
@@ -461,29 +516,55 @@ describe('extrairMidiasDoBloco', () => {
     expect(extrairMidiasDoBloco(criarBlocoVazio('tabs') as ConteudoUnidade)).toEqual([])
   })
 
-  it('cobre todo bloco que exige mídia do documento, exceto os de streaming', () => {
-    // `video` aponta para YouTube/Vimeo: é página de streaming, não arquivo para
-    // embutir no ZIP. Todo outro bloco com mídia precisa declarar extrairMidias,
-    // senão a URL remota sobrevive no pacote e quebra o curso em LMS sem internet.
-    const somenteStreaming: TipoBloco[] = ['video']
-
+  it('cobre todo bloco que exige mídia do documento', () => {
+    // Sem extrairMidias a URL remota sobrevive no pacote e quebra o curso em LMS sem
+    // internet.
     const semExtrator = TIPOS_BLOCO.filter(
-      (tipo) =>
-        CATALOGO_BLOCOS[tipo].exigeMidiaDoDocumento &&
-        !CATALOGO_BLOCOS[tipo].extrairMidias &&
-        !somenteStreaming.includes(tipo)
+      (tipo) => CATALOGO_BLOCOS[tipo].exigeMidiaDoDocumento && !CATALOGO_BLOCOS[tipo].extrairMidias
     )
 
     expect(semExtrator).toEqual([])
   })
 
-  it('não embute vídeo no pacote, por ser streaming externo', () => {
+  it('não embute vídeo do YouTube no pacote, por ser streaming externo', () => {
     const bloco = {
       ...criarBlocoVazio('video'),
+      fonteVideo: 'youtube',
       videoUrl: 'https://www.youtube.com/watch?v=abc',
     } as ConteudoUnidade
 
     expect(extrairMidiasDoBloco(bloco)).toEqual([])
+    expect(
+      reescreverMidiasDoBloco(bloco, new Map([['https://www.youtube.com/watch?v=abc', 'x.mp4']]))
+        .videoUrl
+    ).toBe('https://www.youtube.com/watch?v=abc')
+  })
+
+  it('embute o vídeo enviado como arquivo', () => {
+    const bloco = {
+      ...criarBlocoVazio('video'),
+      fonteVideo: 'arquivo',
+      videoUrl: 'https://blob.com/aula.mp4',
+    } as ConteudoUnidade
+
+    expect(extrairMidiasDoBloco(bloco)).toEqual(['https://blob.com/aula.mp4'])
+    expect(
+      reescreverMidiasDoBloco(bloco, new Map([['https://blob.com/aula.mp4', 'images/aula.mp4']]))
+        .videoUrl
+    ).toBe('images/aula.mp4')
+  })
+
+  it('embute o vídeo do bloco interativo', () => {
+    const bloco = {
+      ...criarBlocoVazio('video-interativo'),
+      videoUrl: 'https://blob.com/aula.mp4',
+    } as ConteudoUnidade
+
+    expect(extrairMidiasDoBloco(bloco)).toEqual(['https://blob.com/aula.mp4'])
+    expect(
+      reescreverMidiasDoBloco(bloco, new Map([['https://blob.com/aula.mp4', 'images/aula.mp4']]))
+        .videoUrl
+    ).toBe('images/aula.mp4')
   })
 })
 

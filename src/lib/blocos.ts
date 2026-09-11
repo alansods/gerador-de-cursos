@@ -15,6 +15,7 @@ import {
   RotateCcw,
   Target,
   Minus,
+  MonitorPlay,
   Music,
   PanelTop,
   Type,
@@ -26,10 +27,13 @@ import type {
   ConteudoUnidade,
   CursoGerado,
   FlipcardItem,
+  LetraAlternativa,
   ListaItem,
+  PerguntaVideo,
   QuizQuestion,
   Unidade,
 } from '@/types/gerador-curso'
+import { segundosDeTempo } from '@/lib/tempo-video'
 
 export type TipoBloco = ConteudoUnidade['tipo']
 
@@ -86,6 +90,36 @@ const MINIMO_PARES = 2
 const MINIMO_CATEGORIAS = 2
 
 const OPCOES_POR_PERGUNTA = 5
+
+const LETRAS_ALTERNATIVA: LetraAlternativa[] = ['A', 'B', 'C', 'D', 'E']
+const MINIMO_ALTERNATIVAS = 2
+
+/**
+ * Alternativas preenchidas de uma pergunta de vídeo. Os campos são achatados
+ * (`opcaoA`…`opcaoE`) porque o formulário do drawer edita lista de itens, não lista
+ * dentro de lista; esta função é a única tradução entre esse formato e a exibição.
+ */
+export function alternativasDaPergunta(
+  pergunta?: Partial<PerguntaVideo>
+): { letra: LetraAlternativa; texto: string }[] {
+  if (!pergunta) return []
+
+  return LETRAS_ALTERNATIVA.map((letra) => ({
+    letra,
+    texto: (pergunta[`opcao${letra}` as keyof PerguntaVideo] as string | undefined) ?? '',
+  })).filter((alternativa) => temTexto(alternativa.texto))
+}
+
+function perguntaVideoAproveitavel(pergunta?: Partial<PerguntaVideo>): boolean {
+  const alternativas = alternativasDaPergunta(pergunta)
+
+  return (
+    segundosDeTempo(pergunta?.tempo) !== null &&
+    temTexto(pergunta?.pergunta) &&
+    alternativas.length >= MINIMO_ALTERNATIVAS &&
+    alternativas.some((alternativa) => alternativa.letra === pergunta?.correta)
+  )
+}
 
 /**
  * Cards de um bloco flipcard, já normalizados. Converte o formato legado de card
@@ -374,14 +408,64 @@ export const CATALOGO_BLOCOS: Record<TipoBloco, MetaBloco> = {
     exigeMidiaDoDocumento: true,
     validar: (b) => ehUrl(b.videoUrl),
     icone: Video,
-    descricao: 'Vídeo do YouTube',
+    descricao: 'YouTube ou arquivo enviado',
     categoria: 'midia',
-    padroes: () => ({ videoUrl: '', videoTitulo: '' }),
+    padroes: () => ({ fonteVideo: 'youtube', videoUrl: '', videoTitulo: '' }),
     validarFormulario: (b) => {
-      if (!temTexto(b.videoUrl)) return 'Adicione o link do vídeo do YouTube'
+      if (!temTexto(b.videoUrl))
+        return b.fonteVideo === 'arquivo'
+          ? 'Envie o arquivo de vídeo'
+          : 'Adicione o link do vídeo do YouTube'
       if (!temTexto(b.videoTitulo)) return 'Adicione um título para o vídeo'
       return null
     },
+    // Só o vídeo enviado vira arquivo no ZIP; o do YouTube é página de streaming.
+    extrairMidias: (b) => (b.fonteVideo === 'arquivo' ? [b.videoUrl] : []),
+    reescreverMidias: (b, mapear) =>
+      b.fonteVideo === 'arquivo' ? { videoUrl: mapear(b.videoUrl) ?? b.videoUrl } : {},
+  },
+  'video-interativo': {
+    tipo: 'video-interativo',
+    rotulo: 'Vídeo interativo',
+    rotuloPlural: 'vídeos interativos',
+    marcador: 'VIDEOINTERATIVO',
+    geravelPorIA: true,
+    exigeMidiaDoDocumento: true,
+    validar: (b) => ehUrl(b.videoUrl) && (b.perguntasVideo ?? []).some(perguntaVideoAproveitavel),
+    icone: MonitorPlay,
+    descricao: 'Vídeo com perguntas no meio',
+    categoria: 'avaliativo',
+    padroes: () => ({ videoUrl: '', videoTitulo: '', perguntasVideo: [] }),
+    validarFormulario: (b) => {
+      if (!temTexto(b.videoUrl)) return 'Envie o arquivo de vídeo'
+      if (!temTexto(b.videoTitulo)) return 'Adicione um título para o vídeo'
+
+      const perguntas = b.perguntasVideo ?? []
+      if (perguntas.length === 0) return 'Adicione pelo menos uma pergunta'
+
+      const tempos = new Set<number>()
+
+      for (const [indice, pergunta] of perguntas.entries()) {
+        const rotulo = `Pergunta ${indice + 1}`
+        const segundos = segundosDeTempo(pergunta?.tempo)
+
+        if (segundos === null) return `${rotulo}: informe o tempo no formato mm:ss`
+        if (tempos.has(segundos)) return `${rotulo}: já existe uma pergunta neste tempo`
+        tempos.add(segundos)
+
+        if (!temTexto(pergunta.pergunta)) return `${rotulo}: escreva o enunciado`
+
+        const alternativas = alternativasDaPergunta(pergunta)
+        if (alternativas.length < MINIMO_ALTERNATIVAS)
+          return `${rotulo}: preencha pelo menos ${MINIMO_ALTERNATIVAS} alternativas`
+        if (!alternativas.some((alternativa) => alternativa.letra === pergunta.correta))
+          return `${rotulo}: a alternativa marcada como correta está vazia`
+      }
+
+      return null
+    },
+    extrairMidias: (b) => [b.videoUrl],
+    reescreverMidias: (b, mapear) => ({ videoUrl: mapear(b.videoUrl) ?? b.videoUrl }),
   },
   separador: {
     tipo: 'separador',
@@ -584,6 +668,7 @@ function baseBloco(): Partial<ConteudoUnidade> {
     quizData: undefined,
     tipoInfoBox: 'info',
     tituloInfoBox: '',
+    fonteVideo: 'youtube',
     videoUrl: '',
     videoTitulo: '',
   }
@@ -809,6 +894,21 @@ function corrigirBloco(bloco: ConteudoUnidade): ConteudoUnidade {
     corrigido.categorias = categoriasValidas(corrigido.categorias)
   }
 
+  if (corrigido.tipo === 'video') {
+    corrigido.fonteVideo = corrigido.fonteVideo === 'arquivo' ? 'arquivo' : 'youtube'
+  }
+
+  if (corrigido.tipo === 'video-interativo') {
+    corrigido.perguntasVideo = (corrigido.perguntasVideo ?? [])
+      .filter(perguntaVideoAproveitavel)
+      .map((pergunta, indice) => ({
+        ...pergunta,
+        id: temTexto(pergunta.id) ? pergunta.id : `pv-${indice + 1}`,
+        feedback: typeof pergunta.feedback === 'string' ? pergunta.feedback : '',
+      }))
+      .sort((a, b) => (segundosDeTempo(a.tempo) ?? 0) - (segundosDeTempo(b.tempo) ?? 0))
+  }
+
   if (corrigido.tipo === 'quiz') {
     const questions = (corrigido.quizData?.questions ?? [])
       .map(corrigirPergunta)
@@ -870,6 +970,8 @@ function motivoInvalido(tipo: TipoBloco): string {
       return 'sem URL de imagem válida'
     case 'video':
       return 'sem URL de vídeo válida'
+    case 'video-interativo':
+      return 'sem arquivo de vídeo ou sem pergunta com tempo e alternativas'
     case 'tabs':
       return 'sem abas com título e conteúdo'
     case 'linha-do-tempo':

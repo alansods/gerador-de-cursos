@@ -907,7 +907,9 @@ export function ContentBlockDrawer({
           </div>
         )
 
-      case 'video':
+      case 'video': {
+        const deArquivo = formData.fonteVideo === 'arquivo'
+
         return (
           <div className="space-y-4">
             <FormField
@@ -925,36 +927,181 @@ export function ContentBlockDrawer({
               />
             </FormField>
 
-            <FormField
-              label={
-                <>
-                  Link do YouTube <span className="text-red-500">*</span>
-                </>
-              }
-            >
-              <Input
-                value={formData.videoUrl || ''}
-                onChange={(e) => setFormData({ ...formData, videoUrl: e.target.value })}
-                placeholder="Cole o link do vídeo do YouTube..."
-              />
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
-                Exemplo: https://www.youtube.com/watch?v=VIDEO_ID ou https://youtu.be/VIDEO_ID
-              </p>
+            <FormField label="Fonte do vídeo">
+              <Select
+                value={formData.fonteVideo || 'youtube'}
+                onValueChange={(value) =>
+                  setFormData({
+                    ...formData,
+                    fonteVideo: value as ConteudoUnidade['fonteVideo'],
+                    videoUrl: '',
+                  })
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="youtube">Link do YouTube</SelectItem>
+                  <SelectItem value="arquivo">Arquivo do computador</SelectItem>
+                </SelectContent>
+              </Select>
             </FormField>
+
+            {deArquivo ? (
+              <CampoArquivo
+                categoria="video"
+                rotulo="Arquivo de vídeo"
+                url={formData.videoUrl || ''}
+                onUrl={(videoUrl) => setFormData({ ...formData, videoUrl })}
+              />
+            ) : (
+              <FormField
+                label={
+                  <>
+                    Link do YouTube <span className="text-red-500">*</span>
+                  </>
+                }
+              >
+                <Input
+                  value={formData.videoUrl || ''}
+                  onChange={(e) => setFormData({ ...formData, videoUrl: e.target.value })}
+                  placeholder="Cole o link do vídeo do YouTube..."
+                />
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                  Exemplo: https://www.youtube.com/watch?v=VIDEO_ID ou https://youtu.be/VIDEO_ID
+                </p>
+              </FormField>
+            )}
 
             {formData.videoUrl && (
               <FormField label="Pré-visualização" className="mt-4">
                 <div className="aspect-video w-full rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-800">
-                  <iframe
-                    src={`https://www.youtube.com/embed/${extractYouTubeId(formData.videoUrl)}`}
-                    title="YouTube video preview"
+                  {deArquivo ? (
+                    <video
+                      controls
+                      preload="metadata"
+                      className="w-full h-full"
+                      src={formData.videoUrl}
+                    />
+                  ) : (
+                    <iframe
+                      src={`https://www.youtube.com/embed/${extractYouTubeId(formData.videoUrl)}`}
+                      title="YouTube video preview"
+                      className="w-full h-full"
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                      allowFullScreen
+                    />
+                  )}
+                </div>
+              </FormField>
+            )}
+          </div>
+        )
+      }
+
+      case 'video-interativo':
+        return (
+          <div className="space-y-4">
+            <FormField
+              label={
+                <>
+                  Título do Vídeo <span className="text-red-500">*</span>
+                </>
+              }
+            >
+              <Input
+                value={formData.videoTitulo || ''}
+                onChange={(e) => setFormData({ ...formData, videoTitulo: e.target.value })}
+                placeholder="Digite o título do vídeo..."
+                autoFocus
+              />
+            </FormField>
+
+            <CampoArquivo
+              categoria="video"
+              rotulo="Arquivo de vídeo"
+              url={formData.videoUrl || ''}
+              onUrl={(videoUrl) => setFormData({ ...formData, videoUrl })}
+            />
+
+            {formData.videoUrl && (
+              <FormField label="Pré-visualização">
+                <div className="aspect-video w-full rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-800">
+                  <video
+                    controls
+                    preload="metadata"
                     className="w-full h-full"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                    allowFullScreen
+                    src={formData.videoUrl}
                   />
                 </div>
               </FormField>
             )}
+
+            <EditorDeItens
+              rotulo="Perguntas"
+              rotuloItem="Pergunta"
+              vazio="Nenhuma pergunta adicionada ainda."
+              itens={formData.perguntasVideo || []}
+              criarItem={() => ({
+                id: `pv-${Date.now()}`,
+                tempo: '',
+                pergunta: '',
+                opcaoA: '',
+                opcaoB: '',
+                correta: 'A' as const,
+              })}
+              onChange={(perguntasVideo) => setFormData({ ...formData, perguntasVideo })}
+              campos={[
+                {
+                  chave: 'tempo',
+                  rotulo: 'Tempo do vídeo',
+                  obrigatorio: true,
+                  placeholder: 'mm:ss — ex.: 02:30',
+                },
+                {
+                  chave: 'pergunta',
+                  rotulo: 'Enunciado',
+                  obrigatorio: true,
+                  tipo: 'multilinha',
+                  placeholder: 'O que o aluno precisa responder...',
+                },
+                {
+                  chave: 'opcaoA',
+                  rotulo: 'Alternativa A',
+                  obrigatorio: true,
+                  placeholder: 'A...',
+                },
+                {
+                  chave: 'opcaoB',
+                  rotulo: 'Alternativa B',
+                  obrigatorio: true,
+                  placeholder: 'B...',
+                },
+                { chave: 'opcaoC', rotulo: 'Alternativa C', placeholder: 'C... (opcional)' },
+                { chave: 'opcaoD', rotulo: 'Alternativa D', placeholder: 'D... (opcional)' },
+                { chave: 'opcaoE', rotulo: 'Alternativa E', placeholder: 'E... (opcional)' },
+                {
+                  chave: 'correta',
+                  rotulo: 'Alternativa correta',
+                  obrigatorio: true,
+                  tipo: 'select',
+                  opcoes: [
+                    { valor: 'A', rotulo: 'A' },
+                    { valor: 'B', rotulo: 'B' },
+                    { valor: 'C', rotulo: 'C' },
+                    { valor: 'D', rotulo: 'D' },
+                    { valor: 'E', rotulo: 'E' },
+                  ],
+                },
+                {
+                  chave: 'feedback',
+                  rotulo: 'Feedback',
+                  tipo: 'multilinha',
+                  placeholder: 'Explicação mostrada depois da resposta (opcional)...',
+                },
+              ]}
+            />
           </div>
         )
 
