@@ -49,7 +49,9 @@ const nextConfig: NextConfig = {
           return [
             { source: '/cursos/novo', destination: '/courses/new', permanent: true },
             { source: '/cursos/:id/editar', destination: '/courses/:id/edit', permanent: true },
+            { source: '/cursos', destination: '/courses', permanent: true },
             { source: '/cursos/:path*', destination: '/courses/:path*', permanent: true },
+            { source: '/usuarios', destination: '/users', permanent: true },
             { source: '/usuarios/:path*', destination: '/users/:path*', permanent: true },
             { source: '/configuracoes', destination: '/settings', permanent: true },
             { source: '/cadastro', destination: '/signup', permanent: true },
