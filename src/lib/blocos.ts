@@ -433,10 +433,7 @@ export const CATALOGO_BLOCOS: Record<TipoBloco, MetaBloco> = {
     categoria: 'midia',
     padroes: () => ({ fonteVideo: 'youtube', videoUrl: '', videoTitulo: '' }),
     validarFormulario: (b) => {
-      if (!temTexto(b.videoUrl))
-        return b.fonteVideo === 'arquivo'
-          ? 'Envie o arquivo de vídeo'
-          : 'Adicione o link do vídeo do YouTube'
+      if (!temTexto(b.videoUrl)) return 'Envie o arquivo de vídeo ou cole o link do YouTube'
       if (!temTexto(b.videoTitulo)) return 'Adicione um título para o vídeo'
       return null
     },
@@ -465,12 +462,7 @@ export const CATALOGO_BLOCOS: Record<TipoBloco, MetaBloco> = {
       perguntasVideo: [],
     }),
     validarFormulario: (b) => {
-      const deYouTube = b.fonteVideo === 'youtube'
-
-      if (!temTexto(b.videoUrl))
-        return deYouTube ? 'Adicione o link do vídeo do YouTube' : 'Envie o arquivo de vídeo'
-      if (deYouTube && !ehUrlYouTubeValida(b.videoUrl ?? ''))
-        return 'O link não parece ser de um vídeo do YouTube'
+      if (!temTexto(b.videoUrl)) return 'Envie o arquivo de vídeo ou cole o link do YouTube'
       if (!temTexto(b.videoTitulo)) return 'Adicione um título para o vídeo'
 
       const perguntas = b.perguntasVideo ?? []

@@ -128,49 +128,13 @@ describe('validarFormulario', () => {
     expect(CATALOGO_BLOCOS.separador.validarFormulario(criarBlocoVazio('separador'))).toBeNull()
   })
 
-  it('adapta a mensagem do vídeo à fonte escolhida', () => {
-    const meta = CATALOGO_BLOCOS.video
-
-    expect(meta.validarFormulario(criarBlocoVazio('video'))).toBe(
-      'Adicione o link do vídeo do YouTube'
-    )
-    expect(meta.validarFormulario({ ...criarBlocoVazio('video'), fonteVideo: 'arquivo' })).toBe(
-      'Envie o arquivo de vídeo'
-    )
-  })
-
-  it('recusa link que não seja do YouTube quando a fonte é YouTube', () => {
-    const base = {
-      ...criarBlocoVazio('video-interativo'),
-      fonteVideo: 'youtube' as const,
-      videoTitulo: 'Aula',
-      perguntasVideo: [
-        {
-          id: 'pv-1',
-          tempo: '01:00',
-          pergunta: 'P?',
-          opcaoA: 'A',
-          opcaoB: 'B',
-          correta: 'A' as const,
-        },
-      ],
+  it('pede arquivo ou link sem obrigar a escolher a fonte', () => {
+    // Não há mais seletor de fonte: enviar e colar link são o mesmo campo.
+    for (const tipo of ['video', 'video-interativo'] as const) {
+      expect(CATALOGO_BLOCOS[tipo].validarFormulario(criarBlocoVazio(tipo))).toBe(
+        'Envie o arquivo de vídeo ou cole o link do YouTube'
+      )
     }
-
-    expect(CATALOGO_BLOCOS['video-interativo'].validarFormulario(base)).toBe(
-      'Adicione o link do vídeo do YouTube'
-    )
-    expect(
-      CATALOGO_BLOCOS['video-interativo'].validarFormulario({
-        ...base,
-        videoUrl: 'https://vimeo.com/123',
-      })
-    ).toBe('O link não parece ser de um vídeo do YouTube')
-    expect(
-      CATALOGO_BLOCOS['video-interativo'].validarFormulario({
-        ...base,
-        videoUrl: 'https://youtu.be/abc12345678',
-      })
-    ).toBeNull()
   })
 
   it('cobra tempo, enunciado e alternativas em cada pergunta do vídeo interativo', () => {

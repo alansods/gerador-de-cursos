@@ -115,7 +115,10 @@ describe('ContentBlockDrawer', () => {
       screen.getByPlaceholderText('Digite o título do vídeo...'),
       'Uso do capacete'
     )
-    await usuario.type(screen.getByPlaceholderText('ou cole a URL aqui...'), 'https://b.com/a.mp4')
+    await usuario.type(
+      screen.getByPlaceholderText('ou cole o link do YouTube aqui...'),
+      'https://b.com/a.mp4'
+    )
 
     await usuario.click(screen.getByRole('button', { name: /adicionar/i }))
     await usuario.type(screen.getByPlaceholderText('mm:ss — ex.: 02:30'), '01:30')
@@ -151,7 +154,10 @@ describe('ContentBlockDrawer', () => {
     const onSave = montar('video-interativo')
 
     await usuario.type(screen.getByPlaceholderText('Digite o título do vídeo...'), 'Aula')
-    await usuario.type(screen.getByPlaceholderText('ou cole a URL aqui...'), 'https://b.com/a.mp4')
+    await usuario.type(
+      screen.getByPlaceholderText('ou cole o link do YouTube aqui...'),
+      'https://b.com/a.mp4'
+    )
 
     await usuario.click(screen.getByRole('button', { name: /adicionar/i }))
     await usuario.type(screen.getByPlaceholderText('mm:ss — ex.: 02:30'), 'agora')
@@ -161,32 +167,39 @@ describe('ContentBlockDrawer', () => {
     expect(erroToast).toHaveBeenCalledWith('Pergunta 1: informe o tempo no formato mm:ss')
   })
 
-  it('troca o upload pelo link no vídeo interativo, avisando sobre o pacote offline', async () => {
+  it('tem um campo de URL só, sem seletor de fonte, nos dois blocos de vídeo', async () => {
+    // Enviar arquivo e colar link são a mesma coisa: um campo, sem escolher a fonte.
+    for (const tipo of ['video', 'video-interativo'] as const) {
+      const { unmount } = render(
+        <ContentBlockDrawer
+          open
+          onOpenChange={jest.fn()}
+          mode="add"
+          blockData={{ tipo }}
+          onSave={jest.fn()}
+          onCancel={jest.fn()}
+        />
+      )
+
+      expect(screen.queryByText('Fonte do vídeo')).toBeNull()
+      expect(screen.queryByRole('combobox')).toBeNull()
+      expect(screen.getAllByPlaceholderText('ou cole o link do YouTube aqui...')).toHaveLength(1)
+      unmount()
+    }
+  })
+
+  it('avisa sobre o pacote offline assim que um link do YouTube é colado', async () => {
     const usuario = userEvent.setup()
     montar('video-interativo')
 
-    expect(screen.getByPlaceholderText('ou cole a URL aqui...')).toBeInTheDocument()
-    expect(screen.queryByText(/não.*é embutido no pacote SCORM/i)).toBeNull()
+    expect(screen.queryByText(/precisará de internet/i)).toBeNull()
 
-    await usuario.click(screen.getByRole('combobox'))
-    await usuario.click(screen.getByRole('option', { name: 'Link do YouTube' }))
+    await usuario.type(
+      screen.getByPlaceholderText('ou cole o link do YouTube aqui...'),
+      'https://youtu.be/dQw4w9WgXcQ'
+    )
 
-    expect(screen.queryByPlaceholderText('ou cole a URL aqui...')).toBeNull()
-    expect(screen.getByPlaceholderText('Cole o link do vídeo do YouTube...')).toBeInTheDocument()
     expect(screen.getByText(/precisará de internet/i)).toBeInTheDocument()
-  })
-
-  it('troca o campo de link do vídeo pelo upload ao escolher arquivo', async () => {
-    const usuario = userEvent.setup()
-    montar('video')
-
-    expect(screen.getByPlaceholderText('Cole o link do vídeo do YouTube...')).toBeInTheDocument()
-
-    await usuario.click(screen.getByRole('combobox'))
-    await usuario.click(screen.getByRole('option', { name: 'Arquivo do computador' }))
-
-    expect(screen.queryByPlaceholderText('Cole o link do vídeo do YouTube...')).toBeNull()
-    expect(screen.getByPlaceholderText('ou cole a URL aqui...')).toBeInTheDocument()
   })
 
   it('cobra título do evento na linha do tempo', async () => {
@@ -341,11 +354,8 @@ describe('fonte do vídeo interativo ao salvar', () => {
 
     await usuario.type(screen.getByPlaceholderText('Digite o título do vídeo...'), 'Aula')
 
-    await usuario.click(screen.getByRole('combobox'))
-    await usuario.click(screen.getByRole('option', { name: 'Link do YouTube' }))
-
     await usuario.type(
-      screen.getByPlaceholderText('Cole o link do vídeo do YouTube...'),
+      screen.getByPlaceholderText('ou cole o link do YouTube aqui...'),
       'https://www.youtube.com/watch?v=dQw4w9WgXcQ'
     )
 
