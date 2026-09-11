@@ -247,6 +247,19 @@ describe('marcadores na linha do tempo', () => {
     expect(video.currentTime).toBe(100)
   })
 
+  it('cancela o pointerdown da barra, para o arrasto não virar seleção de texto', () => {
+    montar([pergunta({})], jest.fn(), 100)
+
+    const barra = screen.getByRole('slider', { name: /linha do tempo/i })
+    barra.setPointerCapture = jest.fn()
+
+    const cancelado = !fireEvent.pointerDown(barra, { pointerId: 1, clientX: 0 })
+
+    expect(cancelado).toBe(true)
+    expect(barra).toHaveClass('outline-none')
+    expect(barra.closest('div.select-none')).not.toBeNull()
+  })
+
   it('esconde os controles enquanto a pergunta está aberta', () => {
     const { avancarPara } = montar([pergunta({})], jest.fn(), 100)
 

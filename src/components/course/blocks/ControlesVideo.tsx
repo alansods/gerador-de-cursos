@@ -102,6 +102,10 @@ export function ControlesVideo({
   }
 
   const aoApontar = (evento: PointerEvent<HTMLDivElement>) => {
+    // Sem isto o arrasto do scrubber vira seleção de texto da página inteira. Como
+    // preventDefault também cancela o foco por clique, ele é reposto na mão.
+    evento.preventDefault()
+    trilhaRef.current?.focus()
     arrastando.current = true
     trilhaRef.current?.setPointerCapture(evento.pointerId)
     buscar(fracaoEm(evento.clientX) * duracao)
@@ -132,7 +136,7 @@ export function ControlesVideo({
   }
 
   return (
-    <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/90 via-black/60 to-transparent px-3 pb-2 pt-10">
+    <div className="absolute inset-x-0 bottom-0 select-none bg-gradient-to-t from-black/90 via-black/60 to-transparent px-3 pb-2 pt-10">
       <div
         ref={trilhaRef}
         role="slider"
