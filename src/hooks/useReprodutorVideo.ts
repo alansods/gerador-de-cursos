@@ -47,6 +47,15 @@ const ERRO_CARGA =
  */
 let cargaDaApi: Promise<void> | null = null
 
+/**
+ * `new YT.Player(...)` devolve o objeto antes de a API estar ligada a ele: os métodos
+ * só existem depois do `onReady`. Consultar antes disso estoura
+ * "player.getDuration is not a function".
+ */
+function playerUsavel(player: PlayerYouTube | null): player is PlayerYouTube {
+  return !!player && typeof player.getDuration === 'function'
+}
+
 function carregarApiYouTube(): Promise<void> {
   if (typeof window === 'undefined') return Promise.reject(new Error('sem window'))
 
@@ -194,36 +203,39 @@ export function useReprodutorVideo({
           events: {
             onReady: () => {
               if (cancelado) return
+
               setEstado((anterior) => ({
                 ...anterior,
                 pronto: true,
                 duracao: playerRef.current?.getDuration() ?? 0,
               }))
+
+              // O polling só pode começar aqui: antes do onReady o player não tem
+              // método nenhum.
+              relogio = setInterval(() => {
+                const player = playerRef.current
+                if (!playerUsavel(player)) return
+
+                const duracao = player.getDuration() ?? 0
+                const tempo = player.getCurrentTime() ?? 0
+                const permitido = limitar(tempo, duracao)
+
+                if (permitido < tempo - 0.05) player.seekTo(permitido, true)
+
+                setEstado((anterior) => ({
+                  ...anterior,
+                  tempo: Math.min(tempo, permitido),
+                  duracao,
+                  tocando: player.getPlayerState() === TOCANDO,
+                  mudo: player.isMuted(),
+                }))
+              }, INTERVALO_POLLING)
             },
             onError: () => {
               if (!cancelado) setEstado((anterior) => ({ ...anterior, erro: ERRO_CARGA }))
             },
           },
         })
-
-        relogio = setInterval(() => {
-          const player = playerRef.current
-          if (!player) return
-
-          const duracao = player.getDuration() ?? 0
-          const tempo = player.getCurrentTime() ?? 0
-          const permitido = limitar(tempo, duracao)
-
-          if (permitido < tempo - 0.05) player.seekTo(permitido, true)
-
-          setEstado((anterior) => ({
-            ...anterior,
-            tempo: Math.min(tempo, permitido),
-            duracao,
-            tocando: player.getPlayerState() === TOCANDO,
-            mudo: player.isMuted(),
-          }))
-        }, INTERVALO_POLLING)
       })
       .catch(() => {
         if (!cancelado) setEstado((anterior) => ({ ...anterior, erro: ERRO_CARGA }))
@@ -232,24 +244,28 @@ export function useReprodutorVideo({
     return () => {
       cancelado = true
       if (relogio) clearInterval(relogio)
-      playerRef.current?.destroy()
+      // `destroy` também só aparece depois do onReady, e no StrictMode a limpeza roda
+      // com o player recém-construído.
+      if (typeof playerRef.current?.destroy === 'function') playerRef.current.destroy()
       playerRef.current = null
     }
   }, [fonte, url, limitar])
 
+  // A barra de controles aparece antes de o player do YouTube ficar pronto, então todo
+  // comando precisa tolerar o player ainda sem métodos.
   const comandos: ComandosReprodutor = {
     reproduzir: () => {
-      if (fonte === 'youtube') playerRef.current?.playVideo()
-      else videoRef.current?.play()
+      if (fonte !== 'youtube') return void videoRef.current?.play()
+      if (playerUsavel(playerRef.current)) playerRef.current.playVideo()
     },
     pausar: () => {
-      if (fonte === 'youtube') playerRef.current?.pauseVideo()
-      else videoRef.current?.pause()
+      if (fonte !== 'youtube') return void videoRef.current?.pause()
+      if (playerUsavel(playerRef.current)) playerRef.current.pauseVideo()
     },
     buscar: (segundos) => {
       if (fonte === 'youtube') {
         const player = playerRef.current
-        if (!player) return
+        if (!playerUsavel(player)) return
         const alvo = limitar(segundos, player.getDuration() ?? 0)
         player.seekTo(alvo, true)
         setEstado((anterior) => ({ ...anterior, tempo: alvo }))
@@ -263,7 +279,7 @@ export function useReprodutorVideo({
     alternarSom: () => {
       if (fonte === 'youtube') {
         const player = playerRef.current
-        if (!player) return
+        if (!playerUsavel(player)) return
         if (player.isMuted()) player.unMute()
         else player.mute()
         setEstado((anterior) => ({ ...anterior, mudo: !anterior.mudo }))
