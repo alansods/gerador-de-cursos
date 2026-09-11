@@ -244,6 +244,7 @@ Cada Unidade:
   "conteudo": "",
   "videoUrl": "https://exemplo.com/videos/aula.mp4",
   "videoTitulo": "Título do vídeo",
+  "fonteVideo": "arquivo",
   "perguntasVideo": [
     {
       "id": "pv-1",
@@ -422,7 +423,8 @@ ${sharedStructure}
   - "URL:" → videoUrl; "Título:" → videoTitulo
   - "fonteVideo": "arquivo" se a URL terminar em .mp4 ou .webm; caso contrário "youtube"
 - Bloco VIDEOINTERATIVO_INICIO...VIDEOINTERATIVO_FIM → tipo "video-interativo" (UM único bloco com todas as perguntas)
-  - "URL:" → videoUrl (sempre um arquivo .mp4 ou .webm); "Título:" → videoTitulo
+  - "URL:" → videoUrl (arquivo .mp4/.webm ou link do YouTube); "Título:" → videoTitulo
+  - "fonteVideo": "arquivo" se a URL terminar em .mp4 ou .webm; caso contrário "youtube"
   - "Tempo da Pergunta N:" → perguntasVideo[N-1].tempo (mantenha o formato mm:ss como está escrito)
   - "Pergunta N:" → perguntasVideo[N-1].pergunta
   - "Opção A/B/C/D/E da Pergunta N:" → perguntasVideo[N-1].opcaoA/opcaoB/opcaoC/opcaoD/opcaoE

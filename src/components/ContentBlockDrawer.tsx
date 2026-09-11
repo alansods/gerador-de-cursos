@@ -1000,7 +1000,9 @@ export function ContentBlockDrawer({
         )
       }
 
-      case 'video-interativo':
+      case 'video-interativo': {
+        const doYouTube = formData.fonteVideo === 'youtube'
+
         return (
           <div className="space-y-4">
             <FormField
@@ -1018,22 +1020,77 @@ export function ContentBlockDrawer({
               />
             </FormField>
 
-            <CampoArquivo
-              categoria="video"
-              rotulo="Arquivo de vídeo"
-              url={formData.videoUrl || ''}
-              onUrl={(videoUrl) => setFormData({ ...formData, videoUrl })}
-            />
+            <FormField label="Fonte do vídeo">
+              <Select
+                value={formData.fonteVideo || 'arquivo'}
+                onValueChange={(value) =>
+                  setFormData({
+                    ...formData,
+                    fonteVideo: value as ConteudoUnidade['fonteVideo'],
+                    videoUrl: '',
+                  })
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="arquivo">Arquivo do computador</SelectItem>
+                  <SelectItem value="youtube">Link do YouTube</SelectItem>
+                </SelectContent>
+              </Select>
+            </FormField>
+
+            {doYouTube ? (
+              <>
+                <FormField
+                  label={
+                    <>
+                      Link do YouTube <span className="text-red-500">*</span>
+                    </>
+                  }
+                >
+                  <Input
+                    value={formData.videoUrl || ''}
+                    onChange={(e) => setFormData({ ...formData, videoUrl: e.target.value })}
+                    placeholder="Cole o link do vídeo do YouTube..."
+                  />
+                </FormField>
+
+                <p className="rounded-md border border-amber-300 bg-amber-50 p-3 text-xs text-amber-900 dark:border-amber-800 dark:bg-amber-950/30 dark:text-amber-200">
+                  O vídeo do YouTube <strong>não</strong> é embutido no pacote SCORM: o aluno
+                  precisará de internet e do domínio do YouTube liberado no LMS. Para funcionar
+                  offline, envie o arquivo.
+                </p>
+              </>
+            ) : (
+              <CampoArquivo
+                categoria="video"
+                rotulo="Arquivo de vídeo"
+                url={formData.videoUrl || ''}
+                onUrl={(videoUrl) => setFormData({ ...formData, videoUrl })}
+              />
+            )}
 
             {formData.videoUrl && (
               <FormField label="Pré-visualização">
                 <div className="aspect-video w-full rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-800">
-                  <video
-                    controls
-                    preload="metadata"
-                    className="w-full h-full"
-                    src={formData.videoUrl}
-                  />
+                  {doYouTube ? (
+                    <iframe
+                      src={`https://www.youtube.com/embed/${extractYouTubeId(formData.videoUrl)}`}
+                      title="Pré-visualização do vídeo"
+                      className="w-full h-full"
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                      allowFullScreen
+                    />
+                  ) : (
+                    <video
+                      controls
+                      preload="metadata"
+                      className="w-full h-full"
+                      src={formData.videoUrl}
+                    />
+                  )}
                 </div>
               </FormField>
             )}
@@ -1104,6 +1161,7 @@ export function ContentBlockDrawer({
             />
           </div>
         )
+      }
 
       case 'accordion':
         return (

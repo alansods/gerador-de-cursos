@@ -1,10 +1,11 @@
 'use client'
 
-import { useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { CheckCircle2, XCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useRegistrarQuiz } from '@/components/course/ProgressoScormContext'
 import { ControlesVideo } from './ControlesVideo'
+import { useReprodutorVideo } from '@/hooks/useReprodutorVideo'
 import { alternativasDaPergunta } from '@/lib/blocos'
 import { formatarTempo, segundosDeTempo } from '@/lib/tempo-video'
 import { ConteudoUnidade, LetraAlternativa, PerguntaVideo } from '@/types/gerador-curso'
@@ -23,7 +24,6 @@ export function VideoInterativoBlock({
   blocoIndex?: number
 }) {
   const registrarResultado = useRegistrarQuiz(blocoIndex)
-  const videoRef = useRef<HTMLVideoElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
 
   const [respondidas, setRespondidas] = useState<Record<string, boolean>>({})
@@ -39,6 +39,28 @@ export function VideoInterativoBlock({
       .sort((a, b) => a.segundos - b.segundos)
   }, [item.perguntasVideo])
 
+  const proximoPendente = marcos.find((marco) => !respondidas[marco.id])
+  const deYouTube = item.fonteVideo === 'youtube'
+
+  const { estado, comandos, videoRef, montagemYouTubeRef } = useReprodutorVideo({
+    fonte: deYouTube ? 'youtube' : 'arquivo',
+    url: item.videoUrl ?? '',
+    tetoSegundos: proximoPendente?.segundos ?? null,
+  })
+
+  // A pergunta dispara pelo tempo publicado pelo reprodutor, e não por evento do
+  // elemento — é o que faz o YouTube e o arquivo seguirem o mesmo caminho.
+  useEffect(() => {
+    if (marcoAtivo || !proximoPendente) return
+    if (proximoPendente.segundos > estado.tempo + TOLERANCIA_SEGUNDOS) return
+
+    comandos.pausar()
+    setMarcoAtivo(proximoPendente)
+    setSelecionada(null)
+    setConfirmada(false)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [estado.tempo, marcoAtivo, proximoPendente])
+
   if (!item.videoUrl || marcos.length === 0) {
     return (
       <div className="mb-4 rounded-lg border border-dashed border-gray-300 dark:border-gray-700 p-8 text-center text-sm text-gray-500 dark:text-gray-400">
@@ -47,34 +69,12 @@ export function VideoInterativoBlock({
     )
   }
 
-  const abrirMarco = (marco: Marco) => {
-    videoRef.current?.pause()
-    setMarcoAtivo(marco)
-    setSelecionada(null)
-    setConfirmada(false)
-  }
-
-  const pendenteAte = (tempo: number) =>
-    marcos.find((marco) => !respondidas[marco.id] && marco.segundos <= tempo + TOLERANCIA_SEGUNDOS)
-
-  const aoAvancarTempo = () => {
-    const video = videoRef.current
-    if (!video || marcoAtivo) return
-
-    const marco = pendenteAte(video.currentTime)
-    if (marco) abrirMarco(marco)
-  }
-
-  // Impede pular uma pergunta arrastando a barra: devolve a reprodução para o marco.
-  const aoBuscar = () => {
-    const video = videoRef.current
-    if (!video || marcoAtivo) return
-
-    const marco = pendenteAte(video.currentTime)
-    if (!marco) return
-
-    video.currentTime = marco.segundos
-    abrirMarco(marco)
+  if (estado.erro) {
+    return (
+      <div className="mb-4 rounded-lg border border-dashed border-gray-300 dark:border-gray-700 p-8 text-center text-sm text-gray-500 dark:text-gray-400">
+        {estado.erro}
+      </div>
+    )
   }
 
   const confirmar = () => {
@@ -93,10 +93,9 @@ export function VideoInterativoBlock({
     setMarcoAtivo(null)
     setSelecionada(null)
     setConfirmada(false)
-    videoRef.current?.play()
+    comandos.reproduzir()
   }
 
-  const proximoPendente = marcos.find((marco) => !respondidas[marco.id])
   const alternativas = alternativasDaPergunta(marcoAtivo ?? undefined)
   const acertouAtual = confirmada && selecionada === marcoAtivo?.correta
 
@@ -112,21 +111,28 @@ export function VideoInterativoBlock({
         ref={containerRef}
         className="relative aspect-video w-full overflow-hidden rounded-lg bg-black shadow-lg"
       >
-        <video
-          ref={videoRef}
-          playsInline
-          preload="metadata"
-          className="h-full w-full"
-          src={item.videoUrl}
-          onTimeUpdate={aoAvancarTempo}
-          onSeeking={aoBuscar}
-        >
-          Seu navegador não reproduz vídeo.
-        </video>
+        {deYouTube ? (
+          // O YT.Player troca este div por um iframe; a variante arbitrária é o que
+          // faz esse iframe ocupar o quadro.
+          <div className="h-full w-full [&_iframe]:h-full [&_iframe]:w-full">
+            <div ref={montagemYouTubeRef} />
+          </div>
+        ) : (
+          <video
+            ref={videoRef}
+            playsInline
+            preload="metadata"
+            className="h-full w-full"
+            src={item.videoUrl}
+          >
+            Seu navegador não reproduz vídeo.
+          </video>
+        )}
 
         {!marcoAtivo && (
           <ControlesVideo
-            videoRef={videoRef}
+            estado={estado}
+            comandos={comandos}
             containerRef={containerRef}
             marcos={marcos.map((marco) => ({
               id: marco.id,

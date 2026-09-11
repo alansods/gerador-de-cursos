@@ -139,6 +139,40 @@ describe('validarFormulario', () => {
     )
   })
 
+  it('recusa link que não seja do YouTube quando a fonte é YouTube', () => {
+    const base = {
+      ...criarBlocoVazio('video-interativo'),
+      fonteVideo: 'youtube' as const,
+      videoTitulo: 'Aula',
+      perguntasVideo: [
+        {
+          id: 'pv-1',
+          tempo: '01:00',
+          pergunta: 'P?',
+          opcaoA: 'A',
+          opcaoB: 'B',
+          correta: 'A' as const,
+        },
+      ],
+    }
+
+    expect(CATALOGO_BLOCOS['video-interativo'].validarFormulario(base)).toBe(
+      'Adicione o link do vídeo do YouTube'
+    )
+    expect(
+      CATALOGO_BLOCOS['video-interativo'].validarFormulario({
+        ...base,
+        videoUrl: 'https://vimeo.com/123',
+      })
+    ).toBe('O link não parece ser de um vídeo do YouTube')
+    expect(
+      CATALOGO_BLOCOS['video-interativo'].validarFormulario({
+        ...base,
+        videoUrl: 'https://youtu.be/abc12345678',
+      })
+    ).toBeNull()
+  })
+
   it('cobra tempo, enunciado e alternativas em cada pergunta do vídeo interativo', () => {
     const meta = CATALOGO_BLOCOS['video-interativo']
     const base = {
@@ -552,6 +586,26 @@ describe('extrairMidiasDoBloco', () => {
       reescreverMidiasDoBloco(bloco, new Map([['https://blob.com/aula.mp4', 'images/aula.mp4']]))
         .videoUrl
     ).toBe('images/aula.mp4')
+  })
+
+  it('deduz a fonte pela URL quando o campo não veio', () => {
+    // Cobre curso salvo antes de fonteVideo existir e bloco da IA que omitiu o campo.
+    const semCampo = (tipo: 'video' | 'video-interativo', videoUrl: string) => {
+      const bloco = { ...criarBlocoVazio(tipo), videoUrl } as ConteudoUnidade
+      delete (bloco as Partial<ConteudoUnidade>).fonteVideo
+      return bloco
+    }
+
+    expect(extrairMidiasDoBloco(semCampo('video-interativo', 'https://b.com/aula.mp4'))).toEqual([
+      'https://b.com/aula.mp4',
+    ])
+    expect(
+      extrairMidiasDoBloco(semCampo('video-interativo', 'https://youtu.be/abc12345678'))
+    ).toEqual([])
+    expect(extrairMidiasDoBloco(semCampo('video', 'https://b.com/aula.mp4'))).toEqual([
+      'https://b.com/aula.mp4',
+    ])
+    expect(extrairMidiasDoBloco(semCampo('video', 'https://youtu.be/abc12345678'))).toEqual([])
   })
 
   it('embute o vídeo do bloco interativo', () => {

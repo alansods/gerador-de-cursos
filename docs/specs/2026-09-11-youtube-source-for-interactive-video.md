@@ -135,41 +135,44 @@ fontes. A refatoração faz parte do escopo — ver Requisitos.
 
 ### Dados e catálogo
 
-- [ ] `fonteVideo` aceito no `video-interativo`, com `corrigirBloco()` deduzindo a fonte da URL
+- [x] `fonteVideo` aceito no `video-interativo`, com `corrigirBloco()` deduzindo a fonte da URL
       via `ehUrlYouTubeValida` — a mesma dedução aplicada também ao bloco `video`
       ([blocos.ts](../../src/lib/blocos.ts))
-- [ ] `validarFormulario` com mensagem por fonte e recusa de link do YouTube sem id extraível
-- [ ] `extrairMidias` / `reescreverMidias` condicionais à fonte
+- [x] `validarFormulario` com mensagem por fonte e recusa de link do YouTube sem id extraível
+- [x] `extrairMidias` / `reescreverMidias` condicionais à fonte
 
 ### Reprodução
 
-- [ ] `src/hooks/useReprodutorVideo.ts` com as duas fontes atrás de uma superfície só
-- [ ] Carga única do `iframe_api` por página, encadeando `onYouTubeIframeAPIReady`
-- [ ] Polling de 200 ms no ramo YouTube do hook; o ramo do arquivo segue em `timeupdate`
-- [ ] Teto de busca movido para o hook
-- [ ] `ControlesVideo` convertido em apresentacional (estado e comandos por props)
-- [ ] Mensagem de falha quando a API não carrega ou `onError` dispara
+- [x] `src/hooks/useReprodutorVideo.ts` com as duas fontes atrás de uma superfície só
+- [x] Carga única do `iframe_api` por página, encadeando `onYouTubeIframeAPIReady`
+- [x] Polling de 200 ms no ramo YouTube do hook; o ramo do arquivo segue em `timeupdate`
+- [x] Teto de busca movido para o hook
+- [x] `ControlesVideo` convertido em apresentacional (estado e comandos por props)
+- [x] Mensagem de falha quando a API não carrega ou `onError` dispara
 
 ### Autoria e IA
 
-- [ ] `Select` de fonte no `case 'video-interativo'` do drawer, com aviso sobre o pacote offline
-- [ ] Pré-visualização respeitando a fonte
-- [ ] `fonteVideo` no esquema JSON e na conversão do marcador `VIDEOINTERATIVO` no prompt
+- [x] `Select` de fonte no `case 'video-interativo'` do drawer, com aviso sobre o pacote offline
+- [x] Pré-visualização respeitando a fonte
+- [x] `fonteVideo` no esquema JSON e na conversão do marcador `VIDEOINTERATIVO` no prompt
 
 ### Testes
 
-- [ ] Os 14 testes atuais de `video-interativo-block.test.tsx` passando sem alteração de asserção
-- [ ] Testes do hook com duplo de `window.YT`: criação do player, polling disparando o marco,
+- [x] Os 15 testes de `video-interativo-block.test.tsx` passando sem alteração de asserção
+- [x] Testes do hook com duplo de `window.YT`: criação do player, polling disparando o marco,
       `seekTo` preso no teto, erro de carregamento
-- [ ] `blocos.test.ts`: as duas fontes em `extrairMidias` / `reescreverMidias` e as mensagens de
+- [x] `blocos.test.ts`: as duas fontes em `extrairMidias` / `reescreverMidias` e as mensagens de
       `validarFormulario`
-- [ ] `content-block-drawer.test.tsx`: troca de fonte no bloco interativo
+- [x] `content-block-drawer.test.tsx`: troca de fonte no bloco interativo
 
 ### Fechamento
 
-- [ ] `pnpm build` limpo, `pnpm test` verde, player Vite compilando
-- [ ] Verificação manual: um bloco de cada fonte na mesma unidade, pergunta disparando nas duas,
-      e exportação SCORM em que só o arquivo enviado aparece dentro de `images/`
+- [x] `pnpm build` limpo, `pnpm test` verde, player Vite compilando
+- [x] Verificado em navegador (Playwright sobre o player Vite): as 20 checagens da fonte arquivo
+      seguem passando; no YouTube a duração chega por polling, o pino aparece, a pergunta dispara
+      durante a reprodução, a nota é registrada e o pino fica verde; com o domínio do YouTube
+      bloqueado aparece a mensagem de falha
+- [ ] Falta: exportar um SCORM real e conferir que só o vídeo enviado entra em `images/`
 
 ## Verificação
 

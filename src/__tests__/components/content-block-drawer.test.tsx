@@ -161,6 +161,21 @@ describe('ContentBlockDrawer', () => {
     expect(erroToast).toHaveBeenCalledWith('Pergunta 1: informe o tempo no formato mm:ss')
   })
 
+  it('troca o upload pelo link no vídeo interativo, avisando sobre o pacote offline', async () => {
+    const usuario = userEvent.setup()
+    montar('video-interativo')
+
+    expect(screen.getByPlaceholderText('ou cole a URL aqui...')).toBeInTheDocument()
+    expect(screen.queryByText(/não.*é embutido no pacote SCORM/i)).toBeNull()
+
+    await usuario.click(screen.getByRole('combobox'))
+    await usuario.click(screen.getByRole('option', { name: 'Link do YouTube' }))
+
+    expect(screen.queryByPlaceholderText('ou cole a URL aqui...')).toBeNull()
+    expect(screen.getByPlaceholderText('Cole o link do vídeo do YouTube...')).toBeInTheDocument()
+    expect(screen.getByText(/precisará de internet/i)).toBeInTheDocument()
+  })
+
   it('troca o campo de link do vídeo pelo upload ao escolher arquivo', async () => {
     const usuario = userEvent.setup()
     montar('video')
