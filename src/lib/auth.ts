@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { jwtVerify } from 'jose'
 import { prisma } from '@/lib/prisma'
-import { mapCargoParaRole, ROLES, type RoleUsuario } from '@/lib/permissions'
+import { resolveTokenRole, type UserRole } from '@/lib/permissions'
 
 // Validar que JWT_SECRET está definido
 if (!process.env.JWT_SECRET) {
@@ -15,21 +15,8 @@ export const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET)
 export interface JWTPayload {
   id: string
   email: string
-  nome: string
-  role: RoleUsuario
-}
-
-/**
- * Tokens emitidos antes da introdução de roles não carregam o campo `role`, e sim
- * o antigo `cargo`. A coluna `cargo` não existe mais, mas esses tokens seguem
- * válidos por até 24h depois do deploy, então o papel ainda é derivado do `cargo`
- * que veio dentro do próprio token enquanto eles expiram.
- */
-export function resolverRole(role: unknown, cargo?: string | null): RoleUsuario {
-  if (typeof role === 'string' && ROLES.includes(role as RoleUsuario)) {
-    return role as RoleUsuario
-  }
-  return mapCargoParaRole(cargo)
+  name: string
+  role: UserRole
 }
 
 /**
@@ -49,8 +36,8 @@ export async function verifyAuth(req: NextRequest): Promise<JWTPayload> {
     return {
       id: payload.id as string,
       email: payload.email as string,
-      nome: payload.nome as string,
-      role: resolverRole(payload.role, payload.cargo as string | undefined),
+      name: (payload.name ?? payload.nome) as string,
+      role: resolveTokenRole(payload.role, payload.cargo as string | undefined),
     }
   } catch {
     throw new Error('Token inválido ou expirado')
@@ -74,16 +61,16 @@ export async function requireAuth(req: NextRequest): Promise<{ user: JWTPayload 
     return NextResponse.json({ success: false, error: message }, { status: 401 })
   }
 
-  const atual = await prisma.user.findUnique({
+  const current = await prisma.user.findUnique({
     where: { id: user.id },
-    select: { nome: true, role: true },
+    select: { name: true, role: true },
   })
 
-  if (!atual) {
+  if (!current) {
     return NextResponse.json({ success: false, error: 'Usuário não encontrado' }, { status: 401 })
   }
 
-  return { user: { ...user, nome: atual.nome, role: atual.role } }
+  return { user: { ...user, name: current.name, role: current.role } }
 }
 
 /**
@@ -91,7 +78,7 @@ export async function requireAuth(req: NextRequest): Promise<{ user: JWTPayload 
  */
 export async function requireRole(
   req: NextRequest,
-  roles: RoleUsuario[]
+  roles: UserRole[]
 ): Promise<{ user: JWTPayload } | NextResponse> {
   const authResult = await requireAuth(req)
   if (authResult instanceof NextResponse) return authResult

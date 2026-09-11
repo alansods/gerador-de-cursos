@@ -1,13 +1,13 @@
 'use client'
 
-import type { CursoGerado } from '@/types/gerador-curso'
+import type { Course } from '@/types/course'
 import { resolveLayout } from './layouts'
 
 interface CoursePlayerProps {
-  curso: CursoGerado
+  course: Course
 }
 
-export function CoursePlayer({ curso }: CoursePlayerProps) {
-  const { Player } = resolveLayout(curso.layout)
-  return <Player curso={curso} />
+export function CoursePlayer({ course }: CoursePlayerProps) {
+  const { Player } = resolveLayout(course.layout)
+  return <Player course={course} />
 }

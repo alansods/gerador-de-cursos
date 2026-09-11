@@ -1,8 +1,8 @@
 'use client'
 
 import { useCallback } from 'react'
-import { useEstadoColab } from '@/components/colaboracao/CollabProvider'
-import type { AcaoColab, AlvoColab } from '@/liveblocks.config'
+import { useCollabState } from '@/components/collaboration/CollabProvider'
+import type { CollabAction, CollabTarget } from '@/liveblocks.config'
 
 /**
  * Interface do editor com a colaboração. Não chama nenhum hook do Liveblocks:
@@ -14,15 +14,21 @@ import type { AcaoColab, AlvoColab } from '@/liveblocks.config'
  * por aqui: a PonteDeEventos invalida a chave do curso direto no cache.
  */
 export function useCollabEvents() {
-  const { ativo, broadcastRef } = useEstadoColab()
+  const { active, broadcastRef } = useCollabState()
 
-  const avisar = useCallback(
-    (acao: AcaoColab, alvo: AlvoColab, autor: string, nome?: string) => {
-      if (!ativo) return
-      broadcastRef.current?.({ tipo: 'conteudo', acao, alvo, autor, nome: nome ?? null })
+  const notify = useCallback(
+    (action: CollabAction, target: CollabTarget, author: string, name?: string) => {
+      if (!active) return
+      broadcastRef.current?.({
+        type: 'content',
+        action,
+        target,
+        author,
+        name: name ?? null,
+      })
     },
-    [ativo, broadcastRef]
+    [active, broadcastRef]
   )
 
-  return { avisar }
+  return { notify }
 }

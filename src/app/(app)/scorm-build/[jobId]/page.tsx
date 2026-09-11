@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Loader2, Download, AlertCircle, CheckCircle2, XCircle } from 'lucide-react'
 import { toast } from 'sonner'
-import { useCancelarJobMutation, useScormJobStatusQuery } from '@/hooks/queries/useScormJobsQuery'
+import { useCancelJobMutation, useScormJobStatusQuery } from '@/hooks/queries/useScormJobsQuery'
 
 export default function SCORMBuildPage() {
   const params = useParams()
@@ -15,7 +15,7 @@ export default function SCORMBuildPage() {
 
   const [downloading, setDownloading] = useState(false)
   const { jobStatus, isLoading: loading } = useScormJobStatusQuery(jobId)
-  const cancelar = useCancelarJobMutation()
+  const cancel = useCancelJobMutation()
 
   // Download do arquivo
   const handleDownload = async () => {
@@ -31,7 +31,7 @@ export default function SCORMBuildPage() {
       const url = URL.createObjectURL(blob)
       const a = document.createElement('a')
       a.href = url
-      a.download = `scorm-${jobStatus?.cursoTitulo || 'curso'}.zip`
+      a.download = `scorm-${jobStatus?.courseTitle || 'curso'}.zip`
       a.click()
       URL.revokeObjectURL(url)
     } catch (error) {
@@ -47,7 +47,7 @@ export default function SCORMBuildPage() {
     if (!confirm('Deseja realmente cancelar este build?')) return
 
     try {
-      await cancelar.mutateAsync(jobId)
+      await cancel.mutateAsync(jobId)
       toast.success('Build cancelado')
       router.push('/scorm-jobs')
     } catch (error) {
@@ -72,7 +72,7 @@ export default function SCORMBuildPage() {
           <p className="text-gray-600 dark:text-gray-400 text-center mb-4">
             O job de build SCORM não foi encontrado.
           </p>
-          <Button onClick={() => router.push('/cursos')} className="w-full">
+          <Button onClick={() => router.push('/courses')} className="w-full">
             Voltar para Cursos
           </Button>
         </Card>
@@ -105,7 +105,7 @@ export default function SCORMBuildPage() {
           </h1>
 
           {/* Curso */}
-          <p className="text-gray-600 dark:text-gray-400 mb-6">{jobStatus.cursoTitulo}</p>
+          <p className="text-gray-600 dark:text-gray-400 mb-6">{jobStatus.courseTitle}</p>
 
           {/* Progresso */}
           {jobStatus.progress && (

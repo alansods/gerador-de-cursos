@@ -4,74 +4,74 @@ Fonte da verdade no código: [`src/lib/permissions.ts`](../src/lib/permissions.t
 
 ## Papéis (roles)
 
-| Role          | Label                                                                  |
-| ------------- | ---------------------------------------------------------------------- |
-| `ADMIN`       | Administrador                                                          |
-| `GESTOR`      | Gestor                                                                 |
-| `CONTEUDISTA` | Conteudista                                                            |
-| `REVISOR`     | Revisor                                                                |
-| `CONVIDADO`   | Convidado (conta de demonstração — permissões amplas são intencionais) |
+| Role             | Label                                                                  |
+| ---------------- | ---------------------------------------------------------------------- |
+| `ADMIN`          | Administrador                                                          |
+| `MANAGER`        | Gestor                                                                 |
+| `CONTENT_AUTHOR` | Conteudista                                                            |
+| `REVIEWER`       | Revisor                                                                |
+| `GUEST`          | Convidado (conta de demonstração — permissões amplas são intencionais) |
 
 ## Regras por ação
 
 ### Visualizar cursos
 
-Todos os usuários autenticados visualizam **todos** os cursos existentes. Não há filtro por dono ou por role em `GET /api/cursos` e `GET /api/cursos/[id]`.
+Todos os usuários autenticados visualizam **todos** os cursos existentes. Não há filtro por dono ou por role em `GET /api/courses` e `GET /api/courses/[id]`.
 
-### Editar curso (`curso:editar`)
+### Editar curso (`course:update`)
 
 - `ADMIN` — edita qualquer curso.
-- `GESTOR` — edita qualquer curso.
-- `CONVIDADO` — edita qualquer curso.
-- `CONTEUDISTA` — só edita se for **dono** (`curso.ownerId === user.id`) ou constar como **colaborador** (`CursoColaborador`) do curso.
-- `REVISOR` — não edita.
+- `MANAGER` — edita qualquer curso.
+- `GUEST` — edita qualquer curso.
+- `CONTENT_AUTHOR` — só edita se for **dono** (`course.ownerId === user.id`) ou constar como **colaborador** (`CourseCollaborator`) do curso.
+- `REVIEWER` — não edita.
 
-### Excluir curso (`curso:excluir`)
+### Excluir curso (`course:delete`)
 
 - `ADMIN` — exclui qualquer curso.
-- `GESTOR` — exclui qualquer curso.
-- `CONTEUDISTA` — só exclui se for **dono** do curso.
-- `CONVIDADO` / `REVISOR` — não excluem.
+- `MANAGER` — exclui qualquer curso.
+- `CONTENT_AUTHOR` — só exclui se for **dono** do curso.
+- `GUEST` / `REVIEWER` — não excluem.
 
-### Comentar no curso (`curso:comentar`)
+### Comentar no curso (`course:comment`)
 
-Todos podem comentar, exceto `CONVIDADO`.
+Todos podem comentar, exceto `GUEST`.
 
-### Enviar curso para revisão (`curso:enviarRevisao`)
+### Enviar curso para revisão (`course:submitForReview`)
 
-Mesma regra de `curso:editar`.
+Mesma regra de `course:update`.
 
-### Aprovar/reprovar curso (`curso:aprovar`)
+### Aprovar/reprovar curso (`course:approve`)
 
-Apenas `ADMIN`, `GESTOR` e `REVISOR`.
+Apenas `ADMIN`, `MANAGER` e `REVIEWER`.
 
-### Solicitar acesso a um curso (`curso:solicitarAcesso`)
+### Solicitar acesso a um curso (`course:requestAccess`)
 
-Apenas `CONTEUDISTA`, quando não é dono e ainda não tem colaboração concedida no curso.
+Apenas `CONTENT_AUTHOR`, quando não é dono e ainda não tem colaboração concedida no curso.
 
-### Gerenciar colaboradores do curso (`colaborador:gerenciar`)
+### Gerenciar colaboradores do curso (`collaborator:manage`)
 
-`ADMIN`, `GESTOR` ou o **dono** do curso.
+`ADMIN`, `MANAGER` ou o **dono** do curso.
 
-### Gerenciar usuários do sistema (`usuario:gerenciar`)
+### Gerenciar usuários do sistema (`user:manage`)
 
 Apenas `ADMIN`.
 
 ## Colaboração em cursos
 
-Colaboração é binária: um usuário consta ou não como colaborador (`CursoColaborador`) de um curso — não há graus de acesso. Constar como colaborador dá acesso de edição equivalente ao de um `CONTEUDISTA` dono.
+Colaboração é binária: um usuário consta ou não como colaborador (`CourseCollaborator`) de um curso — não há graus de acesso. Constar como colaborador dá acesso de edição equivalente ao de um `CONTENT_AUTHOR` dono.
 
-Fluxo: um `CONTEUDISTA` sem acesso solicita (`CursoAccessRequest`, status `PENDENTE`) → o dono, `GESTOR` ou `ADMIN` aprova/nega/revoga (`APROVADA` / `NEGADA` / `REVOGADA`).
+Fluxo: um `CONTENT_AUTHOR` sem acesso solicita (`CourseAccessRequest`, status `PENDING`) → o dono, `MANAGER` ou `ADMIN` aprova/nega/revoga (`APPROVED` / `DENIED` / `REVOKED`).
 
 ## Resumo rápido
 
-| Ação                    | ADMIN | GESTOR | CONTEUDISTA (dono/colaborador) | CONTEUDISTA (sem vínculo) | REVISOR | CONVIDADO |
-| ----------------------- | ----- | ------ | ------------------------------ | ------------------------- | ------- | --------- |
-| Ver cursos              | ✅    | ✅     | ✅                             | ✅                        | ✅      | ✅        |
-| Editar curso            | ✅    | ✅     | ✅                             | ❌                        | ❌      | ✅        |
-| Excluir curso           | ✅    | ✅     | ✅ (só dono)                   | ❌                        | ❌      | ❌        |
-| Comentar                | ✅    | ✅     | ✅                             | ✅                        | ✅      | ❌        |
-| Aprovar/reprovar        | ✅    | ✅     | ❌                             | ❌                        | ✅      | ❌        |
-| Solicitar acesso        | ❌    | ❌     | ❌                             | ✅                        | ❌      | ❌        |
-| Gerenciar colaboradores | ✅    | ✅     | ✅ (só dono)                   | ❌                        | ❌      | ❌        |
-| Gerenciar usuários      | ✅    | ❌     | ❌                             | ❌                        | ❌      | ❌        |
+| Ação                    | ADMIN | MANAGER | CONTENT_AUTHOR (dono/colaborador) | CONTENT_AUTHOR (sem vínculo) | REVIEWER | GUEST |
+| ----------------------- | ----- | ------- | --------------------------------- | ---------------------------- | -------- | ----- |
+| Ver cursos              | ✅    | ✅      | ✅                                | ✅                           | ✅       | ✅    |
+| Editar curso            | ✅    | ✅      | ✅                                | ❌                           | ❌       | ✅    |
+| Excluir curso           | ✅    | ✅      | ✅ (só dono)                      | ❌                           | ❌       | ❌    |
+| Comentar                | ✅    | ✅      | ✅                                | ✅                           | ✅       | ❌    |
+| Aprovar/reprovar        | ✅    | ✅      | ❌                                | ❌                           | ✅       | ❌    |
+| Solicitar acesso        | ❌    | ❌      | ❌                                | ✅                           | ❌       | ❌    |
+| Gerenciar colaboradores | ✅    | ✅      | ✅ (só dono)                      | ❌                           | ❌       | ❌    |
+| Gerenciar usuários      | ✅    | ❌      | ❌                                | ❌                           | ❌       | ❌    |

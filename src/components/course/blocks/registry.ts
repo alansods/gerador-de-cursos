@@ -1,52 +1,52 @@
 import { ComponentType } from 'react'
-import { ConteudoUnidade } from '@/types/gerador-curso'
-import { TituloBlock } from './TituloBlock'
-import { SubtituloBlock } from './SubtituloBlock'
-import { ParagrafoBlock } from './ParagrafoBlock'
-import { ImagemBlock } from './ImagemBlock'
+import { Block } from '@/types/course'
+import { HeadingBlock } from './HeadingBlock'
+import { SubheadingBlock } from './SubheadingBlock'
+import { ParagraphBlock } from './ParagraphBlock'
+import { ImageBlock } from './ImageBlock'
 import { AccordionBlock } from './AccordionBlock'
 import { FlipCardBlock } from './FlipCardBlock'
-import { ListaBlock } from './ListaBlock'
+import { ListBlock } from './ListBlock'
 import { QuizBlock } from './QuizBlock'
 import { InfoBoxBlock } from './InfoBoxBlock'
 import { VideoBlock } from './VideoBlock'
-import { ObjetivosBlock } from './ObjetivosBlock'
-import { SeparadorBlock } from './SeparadorBlock'
+import { LearningObjectivesBlock } from './LearningObjectivesBlock'
+import { DividerBlock } from './DividerBlock'
 import { TabsBlock } from './TabsBlock'
-import { LinhaDoTempoBlock } from './LinhaDoTempoBlock'
-import { CarrosselBlock } from './CarrosselBlock'
+import { TimelineBlock } from './TimelineBlock'
+import { CarouselBlock } from './CarouselBlock'
 import { AudioBlock } from './AudioBlock'
 import { PdfBlock } from './PdfBlock'
-import { ImagemInterativaBlock } from './ImagemInterativaBlock'
-import { AssociacaoBlock } from './AssociacaoBlock'
-import { CategorizacaoBlock } from './CategorizacaoBlock'
-import { VideoInterativoBlock } from './VideoInterativoBlock'
+import { InteractiveImageBlock } from './InteractiveImageBlock'
+import { MatchingBlock } from './MatchingBlock'
+import { CategorizationBlock } from './CategorizationBlock'
+import { InteractiveVideoBlock } from './InteractiveVideoBlock'
 
 export interface BlockProps {
-  item: ConteudoUnidade
-  blocoIndex?: number
+  item: Block
+  blockIndex?: number
 }
 
-export const blockRegistry: Record<ConteudoUnidade['tipo'], ComponentType<BlockProps>> = {
-  titulo: TituloBlock,
-  subtitulo: SubtituloBlock,
-  paragrafo: ParagrafoBlock,
-  imagem: ImagemBlock,
+export const blockRegistry: Record<Block['tipo'], ComponentType<BlockProps>> = {
+  titulo: HeadingBlock,
+  subtitulo: SubheadingBlock,
+  paragrafo: ParagraphBlock,
+  imagem: ImageBlock,
   accordion: AccordionBlock,
   flipcard: FlipCardBlock,
-  lista: ListaBlock,
+  lista: ListBlock,
   quiz: QuizBlock,
   'info-box': InfoBoxBlock,
   video: VideoBlock,
-  'objetivos-aprendizagem': ObjetivosBlock,
-  separador: SeparadorBlock,
+  'objetivos-aprendizagem': LearningObjectivesBlock,
+  separador: DividerBlock,
   tabs: TabsBlock,
-  'linha-do-tempo': LinhaDoTempoBlock,
-  carrossel: CarrosselBlock,
+  'linha-do-tempo': TimelineBlock,
+  carrossel: CarouselBlock,
   audio: AudioBlock,
   pdf: PdfBlock,
-  'imagem-interativa': ImagemInterativaBlock,
-  associacao: AssociacaoBlock,
-  categorizacao: CategorizacaoBlock,
-  'video-interativo': VideoInterativoBlock,
+  'imagem-interativa': InteractiveImageBlock,
+  associacao: MatchingBlock,
+  categorizacao: CategorizationBlock,
+  'video-interativo': InteractiveVideoBlock,
 }

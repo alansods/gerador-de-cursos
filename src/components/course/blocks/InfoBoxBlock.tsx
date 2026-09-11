@@ -1,11 +1,11 @@
 import { InfoBox } from '@/components/InfoBox'
-import { ConteudoUnidade } from '@/types/gerador-curso'
+import { Block } from '@/types/course'
 
-export function InfoBoxBlock({ item }: { item: ConteudoUnidade }) {
+export function InfoBoxBlock({ item }: { item: Block }) {
   return (
     <div className="mb-4 w-full">
       {item.tipoInfoBox ? (
-        <InfoBox tipo={item.tipoInfoBox} titulo={item.tituloInfoBox} className="w-full">
+        <InfoBox type={item.tipoInfoBox} title={item.tituloInfoBox} className="w-full">
           <div
             dangerouslySetInnerHTML={{
               __html: item.conteudo || '',

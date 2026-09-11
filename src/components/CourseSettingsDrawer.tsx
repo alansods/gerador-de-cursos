@@ -16,12 +16,12 @@ import { Settings } from 'lucide-react'
 import { LayoutSelector } from '@/components/course/LayoutSelector'
 import { DEFAULT_LAYOUT_ID } from '@/components/course/layouts'
 import { FormField } from '@/components/ui/form-field'
-import { CATEGORIAS_CURSO } from '@/lib/constants'
-import { ehUrlYouTubeValida, extractYouTubeId } from '@/lib/youtube'
+import { COURSE_CATEGORIES } from '@/lib/constants'
+import { isValidYouTubeUrl, extractYouTubeId } from '@/lib/youtube'
 
-import { GerenciarColaboradores } from '@/components/colaboracao/GerenciarColaboradores'
+import { ManageCollaborators } from '@/components/collaboration/ManageCollaborators'
 
-interface Unidade {
+interface Unit {
   id: string
   titulo: string
   descricao?: string
@@ -38,54 +38,54 @@ interface CourseData {
 }
 
 interface CourseSettingsDrawerProps {
-  cursoId?: string
-  podeGerenciarColaboradores?: boolean
+  courseId?: string
+  canManageCollaborators?: boolean
   open: boolean
   onOpenChange: (open: boolean) => void
   courseData: CourseData
-  unidades: Unidade[]
-  onSave: (courseData: CourseData, unidades: Unidade[]) => void
+  units: Unit[]
+  onSave: (courseData: CourseData, units: Unit[]) => void
 }
 
 export function CourseSettingsDrawer({
-  cursoId,
-  podeGerenciarColaboradores = false,
+  courseId,
+  canManageCollaborators = false,
   open,
   onOpenChange,
   courseData,
-  unidades,
+  units,
   onSave,
 }: CourseSettingsDrawerProps) {
   const [localCourseData, setLocalCourseData] = useState(courseData)
-  const [localUnidades, setLocalUnidades] = useState(unidades)
+  const [localUnits, setLocalUnits] = useState(units)
 
   useEffect(() => {
     setLocalCourseData(courseData)
-    setLocalUnidades(unidades)
-  }, [courseData, unidades])
+    setLocalUnits(units)
+  }, [courseData, units])
 
   const bannerVideoUrl = localCourseData.bannerVideoUrl?.trim() || ''
-  const bannerVideoInvalido = bannerVideoUrl !== '' && !ehUrlYouTubeValida(bannerVideoUrl)
-  const bannerVideoId = bannerVideoInvalido ? '' : extractYouTubeId(bannerVideoUrl)
+  const invalidBannerVideo = bannerVideoUrl !== '' && !isValidYouTubeUrl(bannerVideoUrl)
+  const bannerVideoId = invalidBannerVideo ? '' : extractYouTubeId(bannerVideoUrl)
 
   const handleSave = () => {
-    if (bannerVideoInvalido) return
-    onSave({ ...localCourseData, bannerVideoUrl }, localUnidades)
+    if (invalidBannerVideo) return
+    onSave({ ...localCourseData, bannerVideoUrl }, localUnits)
     onOpenChange(false)
   }
 
   const handleCancel = () => {
     setLocalCourseData(courseData)
-    setLocalUnidades(unidades)
+    setLocalUnits(units)
     onOpenChange(false)
   }
 
   React.useEffect(() => {
     if (open) {
       setLocalCourseData(courseData)
-      setLocalUnidades(unidades)
+      setLocalUnits(units)
     }
-  }, [open, courseData, unidades])
+  }, [open, courseData, units])
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -122,9 +122,9 @@ export function CourseSettingsDrawer({
 
             <FormField
               label="Vídeo introdutório"
-              opcional
-              erro="Link do YouTube inválido"
-              mostrarErro={bannerVideoInvalido}
+              optional
+              error="Link do YouTube inválido"
+              showError={invalidBannerVideo}
             >
               {(props) => (
                 <Input
@@ -178,9 +178,9 @@ export function CourseSettingsDrawer({
                     <SelectValue placeholder="Selecione uma categoria" />
                   </SelectTrigger>
                   <SelectContent>
-                    {CATEGORIAS_CURSO.map((categoria) => (
-                      <SelectItem key={categoria} value={categoria}>
-                        {categoria}
+                    {COURSE_CATEGORIES.map((category) => (
+                      <SelectItem key={category} value={category}>
+                        {category}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -209,12 +209,9 @@ export function CourseSettingsDrawer({
               />
             </FormField>
 
-            {cursoId && podeGerenciarColaboradores && (
+            {courseId && canManageCollaborators && (
               <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
-                <GerenciarColaboradores
-                  cursoId={cursoId}
-                  podeGerenciar={podeGerenciarColaboradores}
-                />
+                <ManageCollaborators courseId={courseId} canManage={canManageCollaborators} />
               </div>
             )}
           </div>
@@ -224,7 +221,7 @@ export function CourseSettingsDrawer({
           <Button variant="outline" onClick={handleCancel}>
             Cancelar
           </Button>
-          <Button onClick={handleSave} disabled={bannerVideoInvalido}>
+          <Button onClick={handleSave} disabled={invalidBannerVideo}>
             Salvar
           </Button>
         </SheetFooter>

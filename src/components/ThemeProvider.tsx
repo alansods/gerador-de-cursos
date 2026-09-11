@@ -2,29 +2,29 @@
 
 import { ThemeProvider as NextThemesProvider } from 'next-themes'
 
-const CHAVE_ANTIGA = 'darkMode'
-const CHAVE_ATUAL = 'theme'
+const LEGACY_KEY = 'darkMode'
+const CURRENT_KEY = 'theme'
 
-function migrarPreferenciaAntiga() {
+function migrateLegacyPreference() {
   if (typeof window === 'undefined') return
 
   try {
-    const antiga = localStorage.getItem(CHAVE_ANTIGA)
-    if (antiga === null) return
+    const legacy = localStorage.getItem(LEGACY_KEY)
+    if (legacy === null) return
 
-    if (localStorage.getItem(CHAVE_ATUAL) === null) {
-      const tema = antiga === 'true' ? 'dark' : 'light'
-      localStorage.setItem(CHAVE_ATUAL, tema)
+    if (localStorage.getItem(CURRENT_KEY) === null) {
+      const tema = legacy === 'true' ? 'dark' : 'light'
+      localStorage.setItem(CURRENT_KEY, tema)
       document.documentElement.classList.toggle('dark', tema === 'dark')
     }
 
-    localStorage.removeItem(CHAVE_ANTIGA)
+    localStorage.removeItem(LEGACY_KEY)
   } catch {
     // localStorage indisponível (modo privado, cookies bloqueados)
   }
 }
 
-migrarPreferenciaAntiga()
+migrateLegacyPreference()
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   return (

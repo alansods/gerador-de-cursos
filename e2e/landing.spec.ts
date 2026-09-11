@@ -34,7 +34,7 @@ test.describe('Landing Page', () => {
   test('navigates to cadastro when clicking CTA', async ({ page }) => {
     await page.getByRole('link', { name: 'Começar Grátis' }).first().click()
 
-    await expect(page).toHaveURL(/.*cadastro/)
+    await expect(page).toHaveURL(/.*signup/)
   })
 
   test('navigates to login when clicking login button', async ({ page }) => {
@@ -58,33 +58,33 @@ test.describe('Landing Page', () => {
 
     await menuButton.click()
 
-    const navegacao = page.getByRole('navigation')
-    await expect(navegacao.getByRole('button', { name: 'Recursos' })).toBeVisible()
-    await expect(navegacao.getByRole('link', { name: 'Começar Grátis' })).toBeVisible()
+    const navigation = page.getByRole('navigation')
+    await expect(navigation.getByRole('button', { name: 'Recursos' })).toBeVisible()
+    await expect(navigation.getByRole('link', { name: 'Começar Grátis' })).toBeVisible()
   })
 
   test('alterna o tema pela navbar', async ({ page }) => {
-    const raiz = page.locator('html')
-    const eraEscuro = await raiz.evaluate((el) => el.classList.contains('dark'))
+    const root = page.locator('html')
+    const wasDark = await root.evaluate((el) => el.classList.contains('dark'))
 
     await page.getByRole('button', { name: 'Toggle theme' }).click()
 
     await expect
-      .poll(async () => raiz.evaluate((el) => el.classList.contains('dark')))
-      .toBe(!eraEscuro)
+      .poll(async () => root.evaluate((el) => el.classList.contains('dark')))
+      .toBe(!wasDark)
   })
 
   test('FAQ accordion expands and collapses', async ({ page }) => {
     await page.locator('#faq').scrollIntoViewIfNeeded()
 
-    const primeiraPergunta = page.getByRole('button', { name: 'O que é SCORM?' })
-    await expect(primeiraPergunta).toHaveAttribute('data-state', 'closed')
+    const firstQuestion = page.getByRole('button', { name: 'O que é SCORM?' })
+    await expect(firstQuestion).toHaveAttribute('data-state', 'closed')
 
-    await primeiraPergunta.click()
-    await expect(primeiraPergunta).toHaveAttribute('data-state', 'open')
+    await firstQuestion.click()
+    await expect(firstQuestion).toHaveAttribute('data-state', 'open')
     await expect(page.getByText(/Sharable Content Object Reference Model/)).toBeVisible()
 
-    await primeiraPergunta.click()
-    await expect(primeiraPergunta).toHaveAttribute('data-state', 'closed')
+    await firstQuestion.click()
+    await expect(firstQuestion).toHaveAttribute('data-state', 'closed')
   })
 })

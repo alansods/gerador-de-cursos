@@ -10,45 +10,51 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-enum RoleUsuario {
+enum UserRole {
   ADMIN
-  GESTOR
-  CONTEUDISTA
-  REVISOR
-  CONVIDADO
+  MANAGER        @map("GESTOR")
+  CONTENT_AUTHOR @map("CONTEUDISTA")
+  REVIEWER       @map("REVISOR")
+  GUEST          @map("CONVIDADO")
+
+  @@map("RoleUsuario")
 }
 
-enum StatusCurso {
-  EM_ANDAMENTO
-  EM_REVISAO
-  APROVADO
-  REPROVADO
+enum CourseStatus {
+  IN_PROGRESS @map("EM_ANDAMENTO")
+  IN_REVIEW   @map("EM_REVISAO")
+  APPROVED    @map("APROVADO")
+  REJECTED    @map("REPROVADO")
+
+  @@map("StatusCurso")
 }
 
-enum StatusSolicitacao {
-  PENDENTE
-  APROVADA
-  NEGADA
-  REVOGADA
+enum AccessRequestStatus {
+  PENDING  @map("PENDENTE")
+  APPROVED @map("APROVADA")
+  DENIED   @map("NEGADA")
+  REVOKED  @map("REVOGADA")
+
+  @@map("StatusSolicitacao")
 }
 
 // Modelo de Usuário
 model User {
-  id             String      @id @default(cuid())
-  nome           String
-  role           RoleUsuario @default(CONTEUDISTA)
-  email          String      @unique
-  senha          String
-  createdAt      DateTime    @default(now()) @map("created_at")
-  updatedAt      DateTime    @updatedAt @map("updated_at")
-  activities     Activity[]
-  cursos         Curso[]     @relation("CursoOwner")
-  cursosRevisados Curso[]    @relation("CursoRevisor")
-  colaboracoes         CursoColaborador[]   @relation("ColaboracaoUsuario")
-  colaboracoesConcedidas CursoColaborador[] @relation("ColaboracaoConcedente")
-  solicitacoes         CursoAccessRequest[] @relation("SolicitacaoSolicitante")
-  solicitacoesRespondidas CursoAccessRequest[] @relation("SolicitacaoRespondente")
-  comentarios          CursoComentario[]    @relation("ComentarioAutor")
+  id                      String                @id @default(cuid())
+  name                    String                @map("nome")
+  role                    UserRole              @default(CONTENT_AUTHOR)
+  email                   String                @unique
+  password                String                @map("senha")
+  createdAt               DateTime              @default(now()) @map("created_at")
+  updatedAt               DateTime              @updatedAt @map("updated_at")
+  activities              Activity[]
+  courses                 Course[]              @relation("CourseOwner")
+  reviewedCourses         Course[]              @relation("CourseReviewer")
+  collaborations          CourseCollaborator[]  @relation("CollaborationUser")
+  grantedCollaborations   CourseCollaborator[]  @relation("CollaborationGrantor")
+  accessRequests          CourseAccessRequest[] @relation("AccessRequestRequester")
+  respondedAccessRequests CourseAccessRequest[] @relation("AccessRequestResponder")
+  comments                CourseComment[]       @relation("CommentAuthor")
 
   @@index([email])
   @@index([role])
@@ -56,102 +62,102 @@ model User {
 }
 
 // Modelo de Cursos (adaptado do sistema existente)
-model Curso {
-  id               String      @id @default(cuid())
-  titulo           String
-  slug             String?     @unique
-  descricao        String
-  cargaHoraria     String      @map("carga_horaria")
-  modalidade       String
-  categoria        String
-  layout           String      @default("classico")
-  bannerVideoUrl   String?     @map("banner_video_url")
-  unidades         Json        @default("[]")
-  status           StatusCurso @default(EM_ANDAMENTO)
-  version          Int         @default(0)
-  ownerId          String?     @map("owner_id")
-  owner            User?       @relation("CursoOwner", fields: [ownerId], references: [id], onDelete: SetNull)
-  revisadoPorId    String?     @map("revisado_por_id")
-  revisadoPor      User?       @relation("CursoRevisor", fields: [revisadoPorId], references: [id], onDelete: SetNull)
-  revisadoEm       DateTime?   @map("revisado_em")
-  dataCriacao      DateTime    @default(now()) @map("data_criacao")
-  dataModificacao  DateTime    @updatedAt @map("data_modificacao")
-  colaboradores    CursoColaborador[]
-  solicitacoes     CursoAccessRequest[]
-  comentarios      CursoComentario[]
+model Course {
+  id             String                @id @default(cuid())
+  title          String                @map("titulo")
+  slug           String?               @unique
+  description    String                @map("descricao")
+  workload       String                @map("carga_horaria")
+  modality       String                @map("modalidade")
+  category       String                @map("categoria")
+  layout         String                @default("classico")
+  bannerVideoUrl String?               @map("banner_video_url")
+  units          Json                  @default("[]") @map("unidades")
+  status         CourseStatus          @default(IN_PROGRESS)
+  version        Int                   @default(0)
+  ownerId        String?               @map("owner_id")
+  owner          User?                 @relation("CourseOwner", fields: [ownerId], references: [id], onDelete: SetNull)
+  reviewedById   String?               @map("revisado_por_id")
+  reviewedBy     User?                 @relation("CourseReviewer", fields: [reviewedById], references: [id], onDelete: SetNull)
+  reviewedAt     DateTime?             @map("revisado_em")
+  createdAt      DateTime              @default(now()) @map("data_criacao")
+  updatedAt      DateTime              @updatedAt @map("data_modificacao")
+  collaborators  CourseCollaborator[]
+  accessRequests CourseAccessRequest[]
+  comments       CourseComment[]
 
-  @@index([titulo])
-  @@index([categoria])
+  @@index([title])
+  @@index([category])
   @@index([ownerId])
   @@index([status])
   @@map("cursos")
 }
 
 // Acesso concedido a um curso de terceiro
-model CursoColaborador {
-  id             String           @id @default(cuid())
-  cursoId        String           @map("curso_id")
-  curso          Curso            @relation(fields: [cursoId], references: [id], onDelete: Cascade)
-  userId         String           @map("user_id")
-  user           User             @relation("ColaboracaoUsuario", fields: [userId], references: [id], onDelete: Cascade)
-  concedidoPorId String?          @map("concedido_por_id")
-  concedidoPor   User?            @relation("ColaboracaoConcedente", fields: [concedidoPorId], references: [id], onDelete: SetNull)
-  createdAt      DateTime         @default(now()) @map("created_at")
+model CourseCollaborator {
+  id          String   @id @default(cuid())
+  courseId    String   @map("curso_id")
+  course      Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  userId      String   @map("user_id")
+  user        User     @relation("CollaborationUser", fields: [userId], references: [id], onDelete: Cascade)
+  grantedById String?  @map("concedido_por_id")
+  grantedBy   User?    @relation("CollaborationGrantor", fields: [grantedById], references: [id], onDelete: SetNull)
+  createdAt   DateTime @default(now()) @map("created_at")
 
-  @@unique([cursoId, userId])
+  @@unique([courseId, userId])
   @@index([userId])
   @@map("curso_colaboradores")
 }
 
 // Pedido de acesso a um curso de terceiro
-model CursoAccessRequest {
-  id              String            @id @default(cuid())
-  cursoId         String            @map("curso_id")
-  curso           Curso             @relation(fields: [cursoId], references: [id], onDelete: Cascade)
-  solicitanteId   String            @map("solicitante_id")
-  solicitante     User              @relation("SolicitacaoSolicitante", fields: [solicitanteId], references: [id], onDelete: Cascade)
-  status          StatusSolicitacao @default(PENDENTE)
-  mensagem        String?
-  respondidoPorId String?           @map("respondido_por_id")
-  respondidoPor   User?             @relation("SolicitacaoRespondente", fields: [respondidoPorId], references: [id], onDelete: SetNull)
-  respondidoEm    DateTime?         @map("respondido_em")
-  createdAt       DateTime          @default(now()) @map("created_at")
-  updatedAt       DateTime          @updatedAt @map("updated_at")
+model CourseAccessRequest {
+  id            String              @id @default(cuid())
+  courseId      String              @map("curso_id")
+  course        Course              @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  requesterId   String              @map("solicitante_id")
+  requester     User                @relation("AccessRequestRequester", fields: [requesterId], references: [id], onDelete: Cascade)
+  status        AccessRequestStatus @default(PENDING)
+  message       String?             @map("mensagem")
+  respondedById String?             @map("respondido_por_id")
+  respondedBy   User?               @relation("AccessRequestResponder", fields: [respondedById], references: [id], onDelete: SetNull)
+  respondedAt   DateTime?           @map("respondido_em")
+  createdAt     DateTime            @default(now()) @map("created_at")
+  updatedAt     DateTime            @updatedAt @map("updated_at")
 
-  @@unique([cursoId, solicitanteId])
+  @@unique([courseId, requesterId])
   @@index([status])
-  @@index([solicitanteId])
+  @@index([requesterId])
   @@map("curso_access_requests")
 }
 
 // Thread única de comentários por curso
-model CursoComentario {
+model CourseComment {
   id        String   @id @default(cuid())
-  cursoId   String   @map("curso_id")
-  curso     Curso    @relation(fields: [cursoId], references: [id], onDelete: Cascade)
-  autorId   String   @map("autor_id")
-  autor     User     @relation("ComentarioAutor", fields: [autorId], references: [id], onDelete: Cascade)
-  texto     String
+  courseId  String   @map("curso_id")
+  course    Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  authorId  String   @map("autor_id")
+  author    User     @relation("CommentAuthor", fields: [authorId], references: [id], onDelete: Cascade)
+  text      String   @map("texto")
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  @@index([cursoId, createdAt])
+  @@index([courseId, createdAt])
   @@map("curso_comentarios")
 }
 
 // Modelo de Atividades (log de ações dos usuários)
 model Activity {
   id          String   @id @default(cuid())
-  tipo        String   // 'curso_criado', 'curso_editado', 'curso_deletado', 'usuario_criado', 'usuario_editado', 'usuario_deletado'
-  titulo      String   // título descritivo da atividade
-  descricao   String?  // descrição adicional (ex: nome do curso ou usuário)
+  type        String   @map("tipo") // 'curso_criado', 'curso_editado', 'curso_deletado', 'usuario_criado', 'usuario_editado', 'usuario_deletado'
+  title       String   @map("titulo") // título descritivo da atividade
+  description String?  @map("descricao") // descrição adicional (ex: nome do curso ou usuário)
   entityId    String?  @map("entity_id") // ID da entidade afetada (curso ou usuário)
   entityType  String?  @map("entity_type") // 'curso' ou 'usuario'
   userId      String?  @map("user_id") // ID do usuário que realizou a ação
   user        User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
   createdAt   DateTime @default(now()) @map("created_at")
 
-  @@index([tipo])
+  @@index([type])
   @@index([createdAt])
   @@index([userId])
   @@map("activities")
@@ -159,18 +165,18 @@ model Activity {
 
 // Modelo de Jobs de Geração SCORM
 model SCORMJob {
-  id           String   @id @default(cuid())
-  cursoId      String   @map("curso_id")
-  cursoTitulo  String   @map("curso_titulo")
-  status       String   // 'pending', 'building', 'completed', 'failed'
-  progress     String?  // mensagem de progresso atual
-  error        String?  // mensagem de erro se falhar
-  zipData      Bytes?   @map("zip_data") // dados do ZIP (Buffer) quando completado
-  createdAt    DateTime @default(now()) @map("created_at")
-  completedAt  DateTime? @map("completed_at")
+  id          String    @id @default(cuid())
+  courseId    String    @map("curso_id")
+  courseTitle String    @map("curso_titulo")
+  status      String // 'pending', 'building', 'completed', 'failed'
+  progress    String? // mensagem de progresso atual
+  error       String? // mensagem de erro se falhar
+  zipData     Bytes?    @map("zip_data") // dados do ZIP (Buffer) quando completado
+  createdAt   DateTime  @default(now()) @map("created_at")
+  completedAt DateTime? @map("completed_at")
 
   @@index([status])
   @@index([createdAt])
-  @@index([cursoId])
+  @@index([courseId])
   @@map("scorm_jobs")
 }

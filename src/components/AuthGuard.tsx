@@ -38,10 +38,10 @@ export function AuthGuard({ children }: AuthGuardProps) {
   ]
 
   // Rotas autenticadas que ocultam a sidebar do app (modo imersivo)
-  const noSidebarRoutes = ['/editar']
+  const noSidebarRoutes = ['/edit']
 
   // Rotas de autenticação (login/cadastro)
-  const authRoutes = ['/login', '/cadastro']
+  const authRoutes = ['/login', '/signup']
   const isAuthRoute = authRoutes.some((route) => pathname?.includes(route))
 
   // Detectar ambiente SCORM: pathname inclui scorm-preview OU window.SCORM existe
@@ -52,7 +52,7 @@ export function AuthGuard({ children }: AuthGuardProps) {
     publicRoutes.some((route) => pathname?.includes(route)) || isScormEnvironment
 
   // Durante build SCORM, tratar como rota pública para evitar loading
-  const isScormBuild = typeof process !== 'undefined' && process.env.SCORM_BUILD_CURSO_FILE
+  const isScormBuild = typeof process !== 'undefined' && process.env.SCORM_BUILD_COURSE_FILE
 
   // Redirecionar para login se não autenticado e não for rota pública
   useEffect(() => {

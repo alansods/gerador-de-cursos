@@ -2,8 +2,8 @@ import type { LayoutMeta } from '../types'
 
 export const sidebarMeta: LayoutMeta = {
   id: 'sidebar',
-  nome: 'Sidebar',
-  descricao:
+  name: 'Sidebar',
+  description:
     'Menu lateral fixo, paleta violeta/ciano e navegação por cards — alternativa ao Clássico.',
   blockTheme: {
     accent: '#7c3aed',

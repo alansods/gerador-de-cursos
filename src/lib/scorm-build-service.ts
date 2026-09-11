@@ -2,8 +2,8 @@ import { exec } from 'child_process'
 import * as fs from 'fs/promises'
 import * as path from 'path'
 import JSZip from 'jszip'
-import type { CursoGerado } from '@/types/gerador-curso'
-import { extrairMidiasDoBloco, reescreverMidiasDoBloco } from './blocos'
+import type { Course } from '@/types/course'
+import { extractBlockMedia, rewriteBlockMedia } from './blocks'
 
 /**
  * Converte caminhos absolutos (/_next/..., /favicon.ico) para caminhos relativos
@@ -31,23 +31,23 @@ function convertAbsolutePathsToRelative(html: string, prefix: string): string {
 /**
  * Detecta todas as URLs de imagens no curso (recursivamente)
  */
-export function detectMediaUrls(curso: CursoGerado): string[] {
+export function detectMediaUrls(course: Course): string[] {
   console.log('🔍 [SCORM Build] Detectando mídias do curso...')
   const urls = new Set<string>()
 
-  curso.unidades?.forEach((unidade) => {
-    unidade.conteudo?.forEach((bloco) => {
+  course.unidades?.forEach((unit) => {
+    unit.conteudo?.forEach((block) => {
       // Dirigido pelo CATALOGO_BLOCOS: bloco novo com mídia declara extrairMidias
       // e passa a ser embutido no ZIP sem tocar neste arquivo.
-      extrairMidiasDoBloco(bloco).forEach((url) => {
+      extractBlockMedia(block).forEach((url) => {
         if (url.startsWith('http://') || url.startsWith('https://')) urls.add(url)
       })
     })
   })
 
-  const lista = Array.from(urls)
-  console.log(`✅ [SCORM Build] Total de ${lista.length} mídia(s) detectada(s)`)
-  return lista
+  const list = Array.from(urls)
+  console.log(`✅ [SCORM Build] Total de ${list.length} mídia(s) detectada(s)`)
+  return list
 }
 
 /**
@@ -78,22 +78,22 @@ async function downloadImage(url: string, outputPath: string): Promise<void> {
  * Baixa todas as imagens do curso e atualiza referências
  */
 export async function downloadAndUpdateImages(
-  curso: CursoGerado,
-  cursoId: string
-): Promise<{ curso: CursoGerado; imageMap: Map<string, string> }> {
+  course: Course,
+  courseId: string
+): Promise<{ course: Course; imageMap: Map<string, string> }> {
   console.log('🖼️ [SCORM Build] Iniciando download de imagens...')
-  const midiaUrls = detectMediaUrls(curso)
+  const mediaUrls = detectMediaUrls(course)
   const imageMap = new Map<string, string>()
-  const publicDir = path.join(process.cwd(), 'public', 'scorm-images', cursoId)
+  const publicDir = path.join(process.cwd(), 'public', 'scorm-images', courseId)
 
   console.log(`📁 [SCORM Build] Criando diretório para imagens: ${publicDir}`)
   // Criar diretório se não existir
   await fs.mkdir(publicDir, { recursive: true })
 
   // Baixar cada imagem
-  for (let i = 0; i < midiaUrls.length; i++) {
-    const url = midiaUrls[i]
-    console.log(`⬇️ [SCORM Build] Baixando imagem ${i + 1}/${midiaUrls.length}: ${url}`)
+  for (let i = 0; i < mediaUrls.length; i++) {
+    const url = mediaUrls[i]
+    console.log(`⬇️ [SCORM Build] Baixando imagem ${i + 1}/${mediaUrls.length}: ${url}`)
 
     try {
       const urlHash = Buffer.from(url).toString('base64').replace(/[/+=]/g, '').substring(0, 16)
@@ -113,43 +113,43 @@ export async function downloadAndUpdateImages(
   }
 
   console.log(
-    `✅ [SCORM Build] Download de imagens concluído. ${imageMap.size}/${midiaUrls.length} imagens baixadas com sucesso.`
+    `✅ [SCORM Build] Download de imagens concluído. ${imageMap.size}/${mediaUrls.length} imagens baixadas com sucesso.`
   )
 
   // Atualizar referências no curso
   console.log('🔄 [SCORM Build] Atualizando referências de imagens no curso...')
-  const cursoAtualizado = JSON.parse(JSON.stringify(curso)) as CursoGerado
+  const updatedCourse = JSON.parse(JSON.stringify(course)) as Course
 
   // Dirigido pelo CATALOGO_BLOCOS: bloco novo com mídia declara reescreverMidias e passa
   // a ser reescrito sem tocar neste arquivo.
   let updatedCount = 0
-  cursoAtualizado.unidades?.forEach((unidade) => {
-    unidade.conteudo = unidade.conteudo?.map((bloco) => {
-      const reescrito = reescreverMidiasDoBloco(bloco, imageMap)
-      if (reescrito !== bloco) updatedCount++
-      return reescrito
+  updatedCourse.unidades?.forEach((unit) => {
+    unit.conteudo = unit.conteudo?.map((block) => {
+      const rewritten = rewriteBlockMedia(block, imageMap)
+      if (rewritten !== block) updatedCount++
+      return rewritten
     })
   })
 
   console.log(`✅ [SCORM Build] ${updatedCount} referências de imagens atualizadas no curso`)
-  return { curso: cursoAtualizado, imageMap }
+  return { course: updatedCourse, imageMap }
 }
 
 /**
  * Salva o curso em um arquivo temporário para ser usado durante o build
  */
-async function saveCursoForBuild(curso: CursoGerado, cursoId: string): Promise<string> {
+async function saveCourseForBuild(course: Course, courseId: string): Promise<string> {
   const tempDir = path.join(process.cwd(), '.scorm-build')
-  const tempFile = path.join(tempDir, `curso-${cursoId}.json`)
+  const tempFile = path.join(tempDir, `curso-${courseId}.json`)
 
   console.log(`💾 [SCORM Build] Salvando curso em arquivo temporário: ${tempFile}`)
   // Criar diretório se não existir
   await fs.mkdir(tempDir, { recursive: true })
 
   // Salvar curso
-  const cursoJson = JSON.stringify(curso, null, 2)
-  await fs.writeFile(tempFile, cursoJson, 'utf-8')
-  console.log(`✅ [SCORM Build] Curso salvo com sucesso (${cursoJson.length} bytes)`)
+  const courseJson = JSON.stringify(course, null, 2)
+  await fs.writeFile(tempFile, courseJson, 'utf-8')
+  console.log(`✅ [SCORM Build] Curso salvo com sucesso (${courseJson.length} bytes)`)
 
   return tempFile
 }
@@ -157,10 +157,10 @@ async function saveCursoForBuild(curso: CursoGerado, cursoId: string): Promise<s
 /**
  * Remove o arquivo temporário do curso após o build
  */
-async function removeCursoBuildFile(cursoId: string): Promise<void> {
+async function removeCourseBuildFile(courseId: string): Promise<void> {
   try {
     const tempDir = path.join(process.cwd(), '.scorm-build')
-    const tempFile = path.join(tempDir, `curso-${cursoId}.json`)
+    const tempFile = path.join(tempDir, `curso-${courseId}.json`)
     await fs.unlink(tempFile).catch(() => {})
   } catch (error) {
     // Ignorar erros ao remover arquivo temporário
@@ -349,12 +349,12 @@ async function restoreProblematicPages(hiddenDirs: string[]): Promise<void> {
 /**
  * Executa o build do Next.js programaticamente
  */
-export async function executeNextBuild(curso: CursoGerado, cursoId: string): Promise<void> {
+export async function executeNextBuild(course: Course, courseId: string): Promise<void> {
   const buildTimeout = 10 * 60 * 1000 // 10 minutos
 
   console.log('📝 [SCORM Build] Salvando curso em arquivo temporário...')
   // Salvar curso em arquivo temporário
-  const tempFile = await saveCursoForBuild(curso, cursoId)
+  const tempFile = await saveCourseForBuild(course, courseId)
   console.log(`✅ [SCORM Build] Curso salvo em: ${tempFile}`)
 
   // Ocultar todas as pastas de API durante o build estático
@@ -373,13 +373,13 @@ export async function executeNextBuild(curso: CursoGerado, cursoId: string): Pro
       ...envWithoutTurbopack,
       NODE_ENV: 'production' as const,
       NEXT_OUTPUT_EXPORT: 'true', // Flag customizada para ativar export
-      SCORM_BUILD_CURSO_FILE: tempFile, // Arquivo temporário com curso
+      SCORM_BUILD_COURSE_FILE: tempFile, // Arquivo temporário com curso
     }
 
     console.log('🔧 [SCORM Build] Variáveis de ambiente configuradas:')
     console.log(`   - NODE_ENV: ${env.NODE_ENV}`)
     console.log(`   - NEXT_OUTPUT_EXPORT: ${env.NEXT_OUTPUT_EXPORT}`)
-    console.log(`   - SCORM_BUILD_CURSO_FILE: ${env.SCORM_BUILD_CURSO_FILE}`)
+    console.log(`   - SCORM_BUILD_COURSE_FILE: ${env.SCORM_BUILD_COURSE_FILE}`)
 
     // Executar build estático do Next.js
     const buildProcess = exec(
@@ -398,7 +398,7 @@ export async function executeNextBuild(curso: CursoGerado, cursoId: string): Pro
 
         // Remover arquivo temporário após build
         console.log('🧹 [SCORM Build] Removendo arquivo temporário do curso...')
-        await removeCursoBuildFile(cursoId)
+        await removeCourseBuildFile(courseId)
 
         if (error) {
           console.error('❌ [SCORM Build] Erro no build:', error)
@@ -435,7 +435,7 @@ export async function executeNextBuild(curso: CursoGerado, cursoId: string): Pro
     const timeout = setTimeout(() => {
       console.error('⏱️ [SCORM Build] Timeout após 10 minutos, encerrando processo...')
       buildProcess.kill()
-      removeCursoBuildFile(cursoId)
+      removeCourseBuildFile(courseId)
       // Garantir que as pastas sejam restauradas mesmo em caso de timeout
       restoreApiRoutes(hiddenApiDirs)
       restoreProblematicPages(hiddenPagesDirs)
@@ -469,11 +469,11 @@ export async function verifyBuildOutput(): Promise<boolean> {
 /**
  * Copia arquivos do out/ para o ZIP SCORM
  */
-export async function copyBuildFilesToZip(zip: JSZip, cursoId: string): Promise<void> {
+export async function copyBuildFilesToZip(zip: JSZip, courseId: string): Promise<void> {
   console.log('📦 [SCORM Build] Iniciando cópia de arquivos para ZIP...')
   const outDir = path.join(process.cwd(), 'out')
   const scormPreviewDir = path.join(outDir, 'scorm-preview')
-  const publicImagesDir = path.join(process.cwd(), 'public', 'scorm-images', cursoId)
+  const publicImagesDir = path.join(process.cwd(), 'public', 'scorm-images', courseId)
 
   let filesAdded = 0
 
@@ -528,12 +528,12 @@ export async function copyBuildFilesToZip(zip: JSZip, cursoId: string): Promise<
   console.log(`📂 [SCORM Build] Copiando arquivos do diretório scorm-preview/...`)
   if (await verifyPathExists(scormPreviewDir)) {
     // Copiar arquivos HTML das unidades com conversão de caminhos
-    const unidadeDir = path.join(scormPreviewDir, 'unidade')
-    if (await verifyPathExists(unidadeDir)) {
-      const unidadeFiles = await fs.readdir(unidadeDir)
-      for (const file of unidadeFiles) {
+    const unitDir = path.join(scormPreviewDir, 'unidade')
+    if (await verifyPathExists(unitDir)) {
+      const unitFiles = await fs.readdir(unitDir)
+      for (const file of unitFiles) {
         if (file.endsWith('.html')) {
-          const filePath = path.join(unidadeDir, file)
+          const filePath = path.join(unitDir, file)
           let content = await fs.readFile(filePath, 'utf-8')
           // Converter caminhos absolutos para relativos (dois níveis acima: ../../)
           content = convertAbsolutePathsToRelative(content, '../../')
@@ -625,11 +625,11 @@ async function verifyPathExists(filePath: string): Promise<boolean> {
 /**
  * Limpa arquivos temporários (imagens baixadas, diretório out/)
  */
-export async function cleanupTempFiles(cursoId: string): Promise<void> {
+export async function cleanupTempFiles(courseId: string): Promise<void> {
   console.log('🧹 [SCORM Build] Iniciando limpeza de arquivos temporários...')
   try {
     // Limpar imagens baixadas
-    const publicImagesDir = path.join(process.cwd(), 'public', 'scorm-images', cursoId)
+    const publicImagesDir = path.join(process.cwd(), 'public', 'scorm-images', courseId)
     if (await verifyPathExists(publicImagesDir)) {
       console.log(`   🗑️ [SCORM Build] Removendo imagens de: ${publicImagesDir}`)
       await fs.rm(publicImagesDir, { recursive: true, force: true })
@@ -640,7 +640,7 @@ export async function cleanupTempFiles(cursoId: string): Promise<void> {
 
     // Limpar arquivo temporário do curso
     const tempDir = path.join(process.cwd(), '.scorm-build')
-    const tempFile = path.join(tempDir, `curso-${cursoId}.json`)
+    const tempFile = path.join(tempDir, `curso-${courseId}.json`)
     if (await verifyPathExists(tempFile)) {
       console.log(`   🗑️ [SCORM Build] Removendo arquivo temporário do curso: ${tempFile}`)
       await fs.unlink(tempFile).catch(() => {})

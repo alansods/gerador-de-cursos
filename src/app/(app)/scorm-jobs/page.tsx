@@ -21,13 +21,13 @@ import {
 } from 'lucide-react'
 import { toast } from 'sonner'
 import {
-  useCancelarJobMutation,
-  useDeletarJobMutation,
-  useReiniciarBuildMutation,
+  useCancelJobMutation,
+  useDeleteJobMutation,
+  useRestartBuildMutation,
   useScormJobsQuery,
 } from '@/hooks/queries/useScormJobsQuery'
 
-const JOBS_POR_PAGINA = 10
+const JOBS_PER_PAGE = 10
 
 export default function SCORMJobsPage() {
   const router = useRouter()
@@ -38,7 +38,7 @@ export default function SCORMJobsPage() {
     isLoading: loading,
   } = useScormJobsQuery({
     page,
-    limit: JOBS_POR_PAGINA,
+    limit: JOBS_PER_PAGE,
   })
 
   // apagar o último job da página deixa a página corrente sem existir
@@ -47,21 +47,21 @@ export default function SCORMJobsPage() {
       setPage(pagination.totalPages)
     }
   }, [page, pagination.totalPages])
-  const cancelar = useCancelarJobMutation()
-  const deletar = useDeletarJobMutation()
-  const reiniciar = useReiniciarBuildMutation()
+  const cancel = useCancelJobMutation()
+  const remove = useDeleteJobMutation()
+  const restart = useRestartBuildMutation()
 
-  const avisarErro = (error: unknown, padrao: string) =>
-    toast.error(error instanceof Error ? error.message : padrao)
+  const reportError = (error: unknown, fallback: string) =>
+    toast.error(error instanceof Error ? error.message : fallback)
 
   const cancelJob = async (jobId: string) => {
     if (!confirm('Deseja realmente cancelar este build?')) return
 
     try {
-      await cancelar.mutateAsync(jobId)
+      await cancel.mutateAsync(jobId)
       toast.success('Build cancelado com sucesso')
     } catch (error) {
-      avisarErro(error, 'Erro ao cancelar build')
+      reportError(error, 'Erro ao cancelar build')
     }
   }
 
@@ -69,22 +69,22 @@ export default function SCORMJobsPage() {
     if (!confirm('Deseja realmente apagar este item? Esta ação não pode ser desfeita.')) return
 
     try {
-      await deletar.mutateAsync(jobId)
+      await remove.mutateAsync(jobId)
       toast.success('Item apagado com sucesso')
     } catch (error) {
-      avisarErro(error, 'Erro ao apagar item')
+      reportError(error, 'Erro ao apagar item')
     }
   }
 
-  const restartJob = async (cursoId: string, cursoTitulo: string) => {
-    if (!confirm(`Deseja reiniciar o build para "${cursoTitulo}"?`)) return
+  const restartJob = async (courseId: string, courseTitle: string) => {
+    if (!confirm(`Deseja reiniciar o build para "${courseTitle}"?`)) return
 
     try {
-      const jobId = await reiniciar.mutateAsync(cursoId)
+      const jobId = await restart.mutateAsync(courseId)
       toast.success('Build reiniciado!')
       router.push(`/scorm-build/${jobId}`)
     } catch (error) {
-      avisarErro(error, 'Erro ao reiniciar build')
+      reportError(error, 'Erro ao reiniciar build')
     }
   }
 
@@ -161,7 +161,7 @@ export default function SCORMJobsPage() {
             <AlertCircle className="h-12 w-12 text-muted-foreground/50 mx-auto mb-4" />
             <h3 className="text-lg font-semibold mb-2">Nenhum build encontrado</h3>
             <p className="text-muted-foreground mb-4">Você ainda não gerou nenhum pacote SCORM.</p>
-            <Button onClick={() => router.push('/cursos')}>Ir para Cursos</Button>
+            <Button onClick={() => router.push('/courses')}>Ir para Cursos</Button>
           </Card>
         ) : (
           <div className="space-y-4">
@@ -170,7 +170,7 @@ export default function SCORMJobsPage() {
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
                     <div className="flex items-center gap-3 mb-2">
-                      <h3 className="text-lg font-semibold">{job.cursoTitulo}</h3>
+                      <h3 className="text-lg font-semibold">{job.courseTitle}</h3>
                       {getStatusBadge(job.status)}
                     </div>
 
@@ -244,7 +244,7 @@ export default function SCORMJobsPage() {
                           const url = URL.createObjectURL(blob)
                           const a = document.createElement('a')
                           a.href = url
-                          a.download = `scorm-${job.cursoTitulo}.zip`
+                          a.download = `scorm-${job.courseTitle}.zip`
                           a.click()
                           URL.revokeObjectURL(url)
                         }}
@@ -259,7 +259,7 @@ export default function SCORMJobsPage() {
                     {job.status === 'failed' && (
                       <>
                         <Button
-                          onClick={() => restartJob(job.cursoId, job.cursoTitulo)}
+                          onClick={() => restartJob(job.courseId, job.courseTitle)}
                           variant="outline"
                           size="sm"
                           className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
@@ -305,7 +305,7 @@ export default function SCORMJobsPage() {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => setPage((atual) => atual - 1)}
+                onClick={() => setPage((current) => current - 1)}
                 disabled={pagination.page === 1}
               >
                 Anterior
@@ -316,7 +316,7 @@ export default function SCORMJobsPage() {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => setPage((atual) => atual + 1)}
+                onClick={() => setPage((current) => current + 1)}
                 disabled={pagination.page === pagination.totalPages}
               >
                 Próxima

@@ -3,7 +3,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Clock, GraduationCap, Layers, ArrowRight } from 'lucide-react'
-import type { CursoGerado } from '@/types/gerador-curso'
+import type { Course } from '@/types/course'
 import { CoursePlayer } from '@/components/course/CoursePlayer'
 import fs from 'fs/promises'
 
@@ -11,12 +11,12 @@ import fs from 'fs/promises'
 export const dynamic = 'force-static'
 
 // Função para carregar dados do curso durante o build
-async function getCursoData(): Promise<CursoGerado | null> {
-  if (process.env.SCORM_BUILD_CURSO_FILE) {
+async function getCourseData(): Promise<Course | null> {
+  if (process.env.SCORM_BUILD_COURSE_FILE) {
     try {
-      const cursoFile = process.env.SCORM_BUILD_CURSO_FILE
-      const cursoData = await fs.readFile(cursoFile, 'utf-8')
-      return JSON.parse(cursoData) as CursoGerado
+      const courseFile = process.env.SCORM_BUILD_COURSE_FILE
+      const courseData = await fs.readFile(courseFile, 'utf-8')
+      return JSON.parse(courseData) as Course
     } catch (error) {
       console.error('[scorm-preview] Erro ao carregar curso:', error)
     }
@@ -25,9 +25,9 @@ async function getCursoData(): Promise<CursoGerado | null> {
 }
 
 export default async function SCORMPreviewPage() {
-  const curso = await getCursoData()
+  const course = await getCourseData()
 
-  if (!curso) {
+  if (!course) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
         <div className="text-center">
@@ -42,5 +42,5 @@ export default async function SCORMPreviewPage() {
     )
   }
 
-  return <CoursePlayer curso={curso} />
+  return <CoursePlayer course={course} />
 }

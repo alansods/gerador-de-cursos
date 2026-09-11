@@ -19,7 +19,7 @@ export const dynamic = 'error'
 export default function LoginPage() {
   const t = useTranslations('auth')
   const [email, setEmail] = useState('')
-  const [senha, setSenha] = useState('')
+  const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [rememberMe, setRememberMe] = useState(true)
   const [loading, setLoading] = useState(false)
@@ -35,7 +35,7 @@ export default function LoginPage() {
       newErrors.email = t('validation.usernameRequired')
     }
 
-    if (!senha) {
+    if (!password) {
       newErrors.senha = t('validation.passwordRequired')
     }
 
@@ -51,7 +51,7 @@ export default function LoginPage() {
     }
 
     setLoading(true)
-    const success = await login(email.trim(), senha)
+    const success = await login(email.trim(), password)
     setLoading(false)
 
     if (success) {
@@ -90,8 +90,8 @@ export default function LoginPage() {
                 <FormField
                   label={t('login.username')}
                   htmlFor="login-email"
-                  erro={errors.email}
-                  mostrarErro={!!errors.email}
+                  error={errors.email}
+                  showError={!!errors.email}
                 >
                   <div className="relative">
                     <User className="absolute left-3.5 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4 pointer-events-none" />
@@ -119,17 +119,17 @@ export default function LoginPage() {
                 <FormField
                   label={t('login.password')}
                   htmlFor="login-senha"
-                  erro={errors.senha}
-                  mostrarErro={!!errors.senha}
+                  error={errors.senha}
+                  showError={!!errors.senha}
                 >
                   <div className="relative">
                     <Lock className="absolute left-3.5 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4 pointer-events-none" />
                     <Input
                       id="login-senha"
                       type={showPassword ? 'text' : 'password'}
-                      value={senha}
+                      value={password}
                       onChange={(e) => {
-                        setSenha(e.target.value)
+                        setPassword(e.target.value)
                         if (errors.senha) {
                           setErrors({ ...errors, senha: undefined })
                         }
@@ -204,7 +204,7 @@ export default function LoginPage() {
               {/* Link para Cadastro */}
               <p className="switch-copy text-center mt-5 text-[13px] text-muted-foreground">
                 {t('login.noAccount')}{' '}
-                <Link href="/cadastro" className="text-primary font-medium hover:underline">
+                <Link href="/signup" className="text-primary font-medium hover:underline">
                   {t('login.createAccount')}
                 </Link>
               </p>

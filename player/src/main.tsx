@@ -4,11 +4,11 @@ import './styles.css'
 import App from './App'
 import { scormAPI } from './scorm-api'
 import { ThemeProvider } from '@/components/ThemeProvider'
-import type { CursoGerado } from '@/types/gerador-curso'
+import type { Course } from '@/types/course'
 
 declare global {
   interface Window {
-    __COURSE_DATA__: CursoGerado | null
+    __COURSE_DATA__: Course | null
   }
 }
 
@@ -30,7 +30,7 @@ const courseData = window.__COURSE_DATA__
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <ThemeProvider>
-      <App curso={courseData} />
+      <App course={courseData} />
     </ThemeProvider>
   </React.StrictMode>
 )

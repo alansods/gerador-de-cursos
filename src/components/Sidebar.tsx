@@ -16,12 +16,12 @@ import {
   X,
   Package,
 } from 'lucide-react'
-import { ROLE_LABELS, type Acao } from '@/lib/permissions'
+import { ROLE_LABELS, type Action } from '@/lib/permissions'
 import { Button } from './ui/button'
 import { useTheme } from '@/hooks/useTheme'
 import { useAuth } from '@/context/AuthContext'
 import { usePathname } from 'next/navigation'
-import { SinoSolicitacoes } from '@/components/colaboracao/SinoSolicitacoes'
+import { AccessRequestBell } from '@/components/collaboration/AccessRequestBell'
 import Link from 'next/link'
 
 const navItems: Array<{
@@ -29,22 +29,22 @@ const navItems: Array<{
   label: string
   href: string
   active: boolean
-  acao?: Acao
+  action?: Action
 }> = [
   { icon: Home, label: 'Início', href: '/home', active: false },
-  { icon: BookOpen, label: 'Cursos', href: '/cursos', active: true },
+  { icon: BookOpen, label: 'Cursos', href: '/courses', active: true },
   { icon: Package, label: 'Builds SCORM', href: '/scorm-jobs', active: false },
   {
     icon: Users,
     label: 'Usuários',
-    href: '/usuarios',
+    href: '/users',
     active: false,
-    acao: 'usuario:gerenciar',
+    action: 'user:manage',
   },
   {
     icon: Settings,
     label: 'Configurações',
-    href: '/configuracoes',
+    href: '/settings',
     active: false,
   },
 ]
@@ -56,7 +56,7 @@ export function Sidebar() {
   const { isDarkMode, toggleDarkMode } = useTheme()
   const { user, logout, can, role } = useAuth()
   const pathname = usePathname()
-  const itensVisiveis = navItems.filter((item) => !item.acao || can(item.acao))
+  const visibleItems = navItems.filter((item) => !item.action || can(item.action))
 
   const isExpanded = isPinned || isHovered
 
@@ -151,15 +151,15 @@ export function Sidebar() {
         {/* Navigation */}
         <nav className="flex-1 p-4 pt-6">
           <div className="space-y-3">
-            {itensVisiveis.map((item) => {
+            {visibleItems.map((item) => {
               const Icon = item.icon
               const isActive =
                 pathname === item.href ||
-                (item.href === '/cursos' && pathname?.startsWith('/cursos')) ||
+                (item.href === '/courses' && pathname?.startsWith('/courses')) ||
                 (item.href === '/scorm-jobs' && pathname?.startsWith('/scorm-jobs')) ||
                 (item.href === '/scorm-build' && pathname?.startsWith('/scorm-build')) ||
-                (item.href === '/usuarios' && pathname?.startsWith('/usuarios')) ||
-                (item.href === '/configuracoes' && pathname?.startsWith('/configuracoes'))
+                (item.href === '/users' && pathname?.startsWith('/users')) ||
+                (item.href === '/settings' && pathname?.startsWith('/settings'))
 
               return (
                 <Link key={item.label} href={item.href}>
@@ -177,7 +177,7 @@ export function Sidebar() {
             })}
 
             <div className={isExpanded ? '' : 'flex justify-center'}>
-              <SinoSolicitacoes expandido={isExpanded} />
+              <AccessRequestBell expanded={isExpanded} />
             </div>
           </div>
         </nav>
@@ -215,11 +215,11 @@ export function Sidebar() {
         <div className="p-4 border-t border-border">
           <div className={`flex items-center gap-3 mb-3 ${!isExpanded && 'justify-center'}`}>
             <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center shrink-0">
-              <span className="text-foreground">{user?.nome?.charAt(0).toUpperCase() || 'N'}</span>
+              <span className="text-foreground">{user?.name?.charAt(0).toUpperCase() || 'N'}</span>
             </div>
             {isExpanded && (
               <div className="flex-1 min-w-0 overflow-hidden">
-                <p className="truncate text-foreground">{user?.nome || 'Usuário'}</p>
+                <p className="truncate text-foreground">{user?.name || 'Usuário'}</p>
                 <p className="text-muted-foreground truncate" style={{ fontSize: '0.875rem' }}>
                   {user?.email || ''}
                 </p>

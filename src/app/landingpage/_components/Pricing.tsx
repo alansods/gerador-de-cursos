@@ -142,7 +142,7 @@ export default function Pricing() {
                     variant={plan.highlight ? 'default' : 'outline'}
                     asChild
                   >
-                    <Link href={plan.price === 0 ? '/cadastro' : '#'}>
+                    <Link href={plan.price === 0 ? '/signup' : '#'}>
                       {plan.cta}
                       <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
                     </Link>

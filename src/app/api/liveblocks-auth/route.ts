@@ -2,13 +2,13 @@ import { NextRequest, NextResponse } from 'next/server'
 import { Liveblocks } from '@liveblocks/node'
 import { prisma } from '@/lib/prisma'
 import { requireAuth, createErrorResponse } from '@/lib/auth'
-import { podeEditarCurso } from '@/lib/permissions'
-import { buscarCursoComColaboracao } from '@/lib/curso-acesso'
-import { MAX_COLAB_SIMULTANEOS, SALA_DO_CURSO, corDoUsuario } from '@/lib/collab-config'
+import { canEditCourse } from '@/lib/permissions'
+import { fetchCourseWithCollaboration } from '@/lib/course-access'
+import { MAX_CONCURRENT_COLLABORATORS, COURSE_ROOM, userColor } from '@/lib/collab-config'
 
-const chave = process.env.LIVEBLOCKS_SECRET_KEY
+const key = process.env.LIVEBLOCKS_SECRET_KEY
 
-const liveblocks = chave ? new Liveblocks({ secret: chave }) : null
+const liveblocks = key ? new Liveblocks({ secret: key }) : null
 
 export async function POST(req: NextRequest) {
   // Sem chave configurada a colaboração simplesmente não existe; o editor
@@ -25,73 +25,74 @@ export async function POST(req: NextRequest) {
 
   try {
     const { room, resolver } = await req.json()
-    const cursoId = typeof room === 'string' ? room.replace(/^curso:/, '') : ''
+    const courseId = typeof room === 'string' ? room.replace(/^course:/, '') : ''
 
-    if (!cursoId) {
+    if (!courseId) {
       return createErrorResponse('Sala inválida', 400)
     }
 
     // A sala vem do segmento da URL do editor, que pode ser o id ou o slug
-    const referencia = await prisma.curso.findFirst({
-      where: { OR: [{ id: cursoId }, { slug: cursoId }] },
+    const reference = await prisma.course.findFirst({
+      where: { OR: [{ id: courseId }, { slug: courseId }] },
       select: { id: true },
     })
 
-    if (!referencia) {
+    if (!reference) {
       return createErrorResponse('Curso não encontrado', 404)
     }
 
-    const { curso, colaboracao } = await buscarCursoComColaboracao(
-      referencia.id,
+    const { course, collaboration } = await fetchCourseWithCollaboration(
+      reference.id,
       authResult.user.id
     )
 
-    if (!curso) {
+    if (!course) {
       return createErrorResponse('Curso não encontrado', 404)
     }
 
     // A sala é sempre ancorada no id canônico: slug muda ao renomear o curso e
     // dois clientes que chegaram por formatos de URL diferentes (id vs slug)
     // acabariam em salas distintas, sem se enxergar
-    const roomId = SALA_DO_CURSO(referencia.id)
-    const podeEditar = podeEditarCurso(authResult.user, curso, colaboracao)
+    const roomId = COURSE_ROOM(reference.id)
+    const canEdit = canEditCourse(authResult.user, course, collaboration)
 
     // Limite do plano gratuito: recusa o terceiro participante, mas quem já
     // está na sala pode reconectar sem ser barrado. A sala só passa a existir na
     // primeira conexão; até lá getActiveUsers responde 404, o que aqui significa
     // sala vazia
-    const ativos = await liveblocks
+    const activeUsers = await liveblocks
       .getActiveUsers(roomId)
       .then(({ data }) => data)
-      .catch((erro) => {
-        if ((erro as { status?: number }).status === 404) return []
-        throw erro
+      .catch((error) => {
+        if ((error as { status?: number }).status === 404) return []
+        throw error
       })
-    const distintos = new Set(ativos.map((u) => u.id).filter(Boolean))
-    const salaCheia = distintos.size >= MAX_COLAB_SIMULTANEOS && !distintos.has(authResult.user.id)
+    const distinct = new Set(activeUsers.map((u) => u.id).filter(Boolean))
+    const roomFull =
+      distinct.size >= MAX_CONCURRENT_COLLABORATORS && !distinct.has(authResult.user.id)
 
     // Pré-check do CollabProvider: só resolve o id canônico da sala e diz se dá
     // pra entrar, sem emitir token do Liveblocks
     if (resolver) {
-      if (salaCheia) {
+      if (roomFull) {
         return NextResponse.json(
           {
             success: false,
-            error: `Já há ${MAX_COLAB_SIMULTANEOS} pessoas editando este curso`,
-            salaCheia: true,
+            error: `Já há ${MAX_CONCURRENT_COLLABORATORS} pessoas editando este curso`,
+            roomFull: true,
           },
           { status: 403 }
         )
       }
-      return NextResponse.json({ success: true, cursoId: referencia.id })
+      return NextResponse.json({ success: true, courseId: reference.id })
     }
 
-    if (salaCheia) {
+    if (roomFull) {
       return NextResponse.json(
         {
           success: false,
-          error: `Já há ${MAX_COLAB_SIMULTANEOS} pessoas editando este curso`,
-          salaCheia: true,
+          error: `Já há ${MAX_CONCURRENT_COLLABORATORS} pessoas editando este curso`,
+          roomFull: true,
         },
         { status: 403 }
       )
@@ -99,13 +100,13 @@ export async function POST(req: NextRequest) {
 
     const session = liveblocks.prepareSession(authResult.user.id, {
       userInfo: {
-        nome: authResult.user.nome,
-        cor: corDoUsuario(authResult.user.id),
+        name: authResult.user.name,
+        color: userColor(authResult.user.id),
         role: authResult.user.role,
       },
     })
 
-    session.allow(roomId, podeEditar ? session.FULL_ACCESS : session.READ_ACCESS)
+    session.allow(roomId, canEdit ? session.FULL_ACCESS : session.READ_ACCESS)
 
     const { status, body } = await session.authorize()
     return new Response(body, { status })

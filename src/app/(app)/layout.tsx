@@ -1,4 +1,4 @@
-import { GeradorCursoProvider } from '@/context/GeradorCursoContext'
+import { CourseEditorProvider } from '@/context/CourseEditorContext'
 import { AuthProviderWrapper } from '@/components/AuthProviderWrapper'
 import { QueryProvider } from '@/components/QueryProvider'
 
@@ -6,7 +6,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
     <QueryProvider>
       <AuthProviderWrapper>
-        <GeradorCursoProvider>{children}</GeradorCursoProvider>
+        <CourseEditorProvider>{children}</CourseEditorProvider>
       </AuthProviderWrapper>
     </QueryProvider>
   )

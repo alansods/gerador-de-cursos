@@ -2,14 +2,14 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requireAuth, createErrorResponse } from '@/lib/auth'
 
-const PAGINA_PADRAO = 1
-const LIMITE_PADRAO = 10
-const LIMITE_MAXIMO = 50
+const DEFAULT_PAGE = 1
+const DEFAULT_LIMIT = 10
+const MAX_LIMIT = 50
 
-function lerInteiroPositivo(valor: string | null, padrao: number, maximo?: number) {
-  const numero = Number.parseInt(valor ?? '', 10)
-  if (!Number.isFinite(numero) || numero < 1) return padrao
-  return maximo ? Math.min(numero, maximo) : numero
+function readPositiveInt(value: string | null, fallback: number, max?: number) {
+  const numero = Number.parseInt(value ?? '', 10)
+  if (!Number.isFinite(numero) || numero < 1) return fallback
+  return max ? Math.min(numero, max) : numero
 }
 
 /**
@@ -25,8 +25,8 @@ export async function GET(req: NextRequest) {
 
   try {
     const searchParams = req.nextUrl.searchParams
-    const page = lerInteiroPositivo(searchParams.get('page'), PAGINA_PADRAO)
-    const limit = lerInteiroPositivo(searchParams.get('limit'), LIMITE_PADRAO, LIMITE_MAXIMO)
+    const page = readPositiveInt(searchParams.get('page'), DEFAULT_PAGE)
+    const limit = readPositiveInt(searchParams.get('limit'), DEFAULT_LIMIT, MAX_LIMIT)
 
     const [total, jobs] = await Promise.all([
       prisma.sCORMJob.count(),
@@ -36,8 +36,8 @@ export async function GET(req: NextRequest) {
         },
         select: {
           id: true,
-          cursoId: true,
-          cursoTitulo: true,
+          courseId: true,
+          courseTitle: true,
           status: true,
           progress: true,
           error: true,

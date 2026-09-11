@@ -7,7 +7,7 @@
 import { renderHook, waitFor, act } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import {
-  INTERVALO_POLLING_JOB,
+  JOB_POLLING_INTERVAL,
   useScormJobStatusQuery,
   useScormJobsQuery,
   type SCORMJob,
@@ -16,13 +16,13 @@ import {
 const mockFetch = jest.fn()
 global.fetch = mockFetch
 
-const responderComStatus = (status: SCORMJob['status']) =>
+const respondWithStatus = (status: SCORMJob['status']) =>
   mockFetch.mockResolvedValue({
     ok: true,
     json: async () => ({ id: 'job-1', cursoId: 'c1', cursoTitulo: 'Curso', status }),
   })
 
-function criarWrapper() {
+function createWrapper() {
   const queryClient = new QueryClient({
     defaultOptions: { queries: { retry: false, gcTime: 0 } },
   })
@@ -43,43 +43,43 @@ describe('useScormJobStatusQuery', () => {
   })
 
   it('continua consultando enquanto o job está em andamento', async () => {
-    responderComStatus('building')
+    respondWithStatus('building')
 
     const { result } = renderHook(() => useScormJobStatusQuery('job-1'), {
-      wrapper: criarWrapper(),
+      wrapper: createWrapper(),
     })
 
     await waitFor(() => expect(result.current.jobStatus?.status).toBe('building'))
     expect(mockFetch).toHaveBeenCalledTimes(1)
 
     await act(async () => {
-      jest.advanceTimersByTime(INTERVALO_POLLING_JOB)
+      jest.advanceTimersByTime(JOB_POLLING_INTERVAL)
     })
 
     await waitFor(() => expect(mockFetch).toHaveBeenCalledTimes(2))
   })
 
   it('para de consultar assim que o job conclui', async () => {
-    responderComStatus('completed')
+    respondWithStatus('completed')
 
     const { result } = renderHook(() => useScormJobStatusQuery('job-1'), {
-      wrapper: criarWrapper(),
+      wrapper: createWrapper(),
     })
 
     await waitFor(() => expect(result.current.jobStatus?.status).toBe('completed'))
     expect(mockFetch).toHaveBeenCalledTimes(1)
 
     await act(async () => {
-      jest.advanceTimersByTime(INTERVALO_POLLING_JOB * 5)
+      jest.advanceTimersByTime(JOB_POLLING_INTERVAL * 5)
     })
 
     expect(mockFetch).toHaveBeenCalledTimes(1)
   })
 
   it('não consulta sem jobId', () => {
-    responderComStatus('pending')
+    respondWithStatus('pending')
 
-    renderHook(() => useScormJobStatusQuery(''), { wrapper: criarWrapper() })
+    renderHook(() => useScormJobStatusQuery(''), { wrapper: createWrapper() })
 
     expect(mockFetch).not.toHaveBeenCalled()
   })
@@ -100,7 +100,7 @@ describe('useScormJobsQuery', () => {
     })
 
     const { result } = renderHook(() => useScormJobsQuery({ page: 2, limit: 10 }), {
-      wrapper: criarWrapper(),
+      wrapper: createWrapper(),
     })
 
     await waitFor(() => expect(result.current.jobs).toHaveLength(1))

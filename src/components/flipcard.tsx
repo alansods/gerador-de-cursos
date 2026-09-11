@@ -4,40 +4,40 @@ import { useState } from 'react'
 import { RotateCcw } from 'lucide-react'
 
 interface FlipCardProps {
-  tipoFrente: 'imagem' | 'imagem-titulo' | 'titulo'
-  imagemFrente?: string
-  tituloFrente?: string
-  conteudoVerso: string
-  alturaCard?: string
-  indice?: number
+  frontType: 'imagem' | 'imagem-titulo' | 'titulo'
+  frontImage?: string
+  frontTitle?: string
+  backContent: string
+  cardHeight?: string
+  index?: number
 }
 
 export function FlipCard({
-  tipoFrente,
-  imagemFrente,
-  tituloFrente,
-  conteudoVerso,
-  alturaCard,
-  indice,
+  frontType,
+  frontImage,
+  frontTitle,
+  backContent,
+  cardHeight,
+  index,
 }: FlipCardProps) {
-  const [virado, setVirado] = useState(false)
+  const [flipped, setFlipped] = useState(false)
 
-  const altura = alturaCard || '300px'
-  const numero = typeof indice === 'number' ? String(indice).padStart(2, '0') : null
-  const comImagem = tipoFrente === 'imagem' || tipoFrente === 'imagem-titulo'
-  const titulo = tituloFrente || (comImagem ? '' : 'Card')
+  const height = cardHeight || '300px'
+  const numero = typeof index === 'number' ? String(index).padStart(2, '0') : null
+  const withImage = frontType === 'imagem' || frontType === 'imagem-titulo'
+  const title = frontTitle || (withImage ? '' : 'Card')
 
   return (
-    <div className="fc" style={{ height: altura }}>
-      <div className={`fc-inner ${virado ? 'fc-virado' : ''}`}>
+    <div className="fc" style={{ height }}>
+      <div className={`fc-inner ${flipped ? 'fc-virado' : ''}`}>
         <div className="fc-face fc-frente">
-          {comImagem ? (
+          {withImage ? (
             <>
-              <div className="fc-band" style={tipoFrente === 'imagem' ? { flex: 1 } : undefined}>
-                {imagemFrente && (
+              <div className="fc-band" style={frontType === 'imagem' ? { flex: 1 } : undefined}>
+                {frontImage && (
                   <img
-                    src={imagemFrente}
-                    alt={tituloFrente || 'Capa do card'}
+                    src={frontImage}
+                    alt={frontTitle || 'Capa do card'}
                     onError={(e) => {
                       e.currentTarget.style.display = 'none'
                     }}
@@ -45,10 +45,10 @@ export function FlipCard({
                 )}
               </div>
               <div className="fc-body">
-                {(numero || titulo) && (
+                {(numero || title) && (
                   <div className="fc-linha">
                     {numero && <span className="fc-num">{numero}</span>}
-                    {titulo && <span className="fc-title">{titulo}</span>}
+                    {title && <span className="fc-title">{title}</span>}
                   </div>
                 )}
                 <span className="fc-cta">
@@ -61,7 +61,7 @@ export function FlipCard({
             <div className="fc-body fc-body-titulo">
               {numero && <span className="fc-num fc-num-grande">{numero}</span>}
               <div>
-                <div className="fc-title fc-title-grande">{titulo}</div>
+                <div className="fc-title fc-title-grande">{title}</div>
                 <div className="fc-regua" />
                 <span className="fc-cta">
                   <RotateCcw className="fc-icone" />
@@ -74,27 +74,27 @@ export function FlipCard({
 
         <div className="fc-face fc-back">
           <div className="fc-scroll">
-            {(numero || tituloFrente) && (
+            {(numero || frontTitle) && (
               <div className="fc-linha fc-linha-verso">
                 {numero && <span className="fc-num">{numero}</span>}
-                {tituloFrente && <span className="fc-title-verso">{tituloFrente}</span>}
+                {frontTitle && <span className="fc-title-verso">{frontTitle}</span>}
               </div>
             )}
-            <div className="fc-text" dangerouslySetInnerHTML={{ __html: conteudoVerso }} />
+            <div className="fc-text" dangerouslySetInnerHTML={{ __html: backContent }} />
           </div>
-          <button type="button" className="fc-close" onClick={() => setVirado(false)}>
+          <button type="button" className="fc-close" onClick={() => setFlipped(false)}>
             <RotateCcw className="fc-icone" />
             Voltar
           </button>
         </div>
       </div>
 
-      {!virado && (
+      {!flipped && (
         <button
           type="button"
           className="fc-hit"
-          aria-label={`Virar card${tituloFrente ? `: ${tituloFrente}` : ''}`}
-          onClick={() => setVirado(true)}
+          aria-label={`Virar card${frontTitle ? `: ${frontTitle}` : ''}`}
+          onClick={() => setFlipped(true)}
         />
       )}
 

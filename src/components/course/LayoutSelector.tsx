@@ -3,7 +3,7 @@
 import { Check } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { layoutRegistry } from './layouts'
-import { MiniaturaLayout } from './novo/MiniaturaLayout'
+import { LayoutThumbnail } from './new/LayoutThumbnail'
 
 interface LayoutSelectorProps {
   value: string
@@ -35,11 +35,11 @@ export function LayoutSelector({ value, onChange, className }: LayoutSelectorPro
                 <Check className="w-3 h-3" />
               </span>
             )}
-            <MiniaturaLayout layoutId={meta.id} className="w-full h-20 mb-3" />
+            <LayoutThumbnail layoutId={meta.id} className="w-full h-20 mb-3" />
             <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-1">
-              {meta.nome}
+              {meta.name}
             </h3>
-            <p className="text-xs text-gray-500 dark:text-gray-400">{meta.descricao}</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400">{meta.description}</p>
           </button>
         )
       })}

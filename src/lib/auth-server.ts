@@ -36,7 +36,7 @@ export async function getServerUser(): Promise<JWTPayload | null> {
       // Buscar usuário no banco para garantir que ainda existe
       const user = await prisma.user.findUnique({
         where: { id: payload.id as string },
-        select: { id: true, nome: true, email: true, role: true },
+        select: { id: true, name: true, email: true, role: true },
       })
 
       if (!user) {
@@ -47,7 +47,7 @@ export async function getServerUser(): Promise<JWTPayload | null> {
       return {
         id: user.id,
         email: user.email,
-        nome: user.nome,
+        name: user.name,
         role: user.role,
       }
     } catch (error) {

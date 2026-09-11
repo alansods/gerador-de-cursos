@@ -1,26 +1,23 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
-import { requireAuth, createErrorResponse } from '@/lib/auth';
+import { NextRequest, NextResponse } from 'next/server'
+import { prisma } from '@/lib/prisma'
+import { requireAuth, createErrorResponse } from '@/lib/auth'
 
 /**
  * GET /api/scorm-status/[jobId]
  * Verifica o status de um job de geração SCORM (consulta no DB)
  */
-export async function GET(
-  req: NextRequest,
-  { params }: { params: Promise<{ jobId: string }> }
-) {
-  const authResult = await requireAuth(req);
+export async function GET(req: NextRequest, { params }: { params: Promise<{ jobId: string }> }) {
+  const authResult = await requireAuth(req)
 
   if (authResult instanceof NextResponse) {
-    return authResult; // Retorna erro 401 se não autenticado
+    return authResult // Retorna erro 401 se não autenticado
   }
 
   try {
-    const { jobId } = await params;
+    const { jobId } = await params
 
     if (!jobId) {
-      return createErrorResponse('Job ID é obrigatório', 400);
+      return createErrorResponse('Job ID é obrigatório', 400)
     }
 
     // Consultar job no banco de dados
@@ -28,8 +25,8 @@ export async function GET(
       where: { id: jobId },
       select: {
         id: true,
-        cursoId: true,
-        cursoTitulo: true,
+        courseId: true,
+        courseTitle: true,
         status: true,
         progress: true,
         error: true,
@@ -37,33 +34,29 @@ export async function GET(
         completedAt: true,
         // Não retornar zipData para economizar largura de banda
       },
-    });
+    })
 
     if (!job) {
-      return NextResponse.json(
-        { error: 'Job não encontrado' },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: 'Job não encontrado' }, { status: 404 })
     }
 
     // Retornar status do job
     return NextResponse.json({
       id: job.id,
-      cursoId: job.cursoId,
-      cursoTitulo: job.cursoTitulo,
+      courseId: job.courseId,
+      courseTitle: job.courseTitle,
       status: job.status,
       progress: job.progress,
       error: job.error,
       createdAt: job.createdAt.toISOString(),
       completedAt: job.completedAt?.toISOString(),
-    });
+    })
   } catch (error) {
-    console.error('❌ [API scorm-status] Erro:', error);
+    console.error('❌ [API scorm-status] Erro:', error)
     return createErrorResponse(
       `Erro ao verificar status: ${error instanceof Error ? error.message : 'Erro desconhecido'}`,
       500,
       error
-    );
+    )
   }
 }
-

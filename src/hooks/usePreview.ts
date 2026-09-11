@@ -1,10 +1,10 @@
 'use client'
 
 export const usePreview = () => {
-  const openPreview = (curso: any) => {
+  const openPreview = (course: { slug?: string; id: string }) => {
     // Abrir preview em nova aba
-    window.open(`/cursos/${curso.slug || curso.id}/preview`, '_blank');
-  };
+    window.open(`/courses/${course.slug || course.id}/preview`, '_blank')
+  }
 
-  return { openPreview };
-};
+  return { openPreview }
+}

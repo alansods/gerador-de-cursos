@@ -13,7 +13,7 @@ export async function GET(request: NextRequest) {
       select: {
         id: true,
         email: true,
-        nome: true,
+        name: true,
         role: true,
       },
     })
@@ -28,7 +28,7 @@ export async function GET(request: NextRequest) {
       user: {
         id: user.id,
         email: user.email,
-        nome: user.nome,
+        name: user.name,
         role: user.role,
       },
     })

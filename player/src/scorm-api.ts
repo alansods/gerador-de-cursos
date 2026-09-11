@@ -26,7 +26,7 @@ interface SCORM2004API {
 
 type SCORMAPIType = SCORM12API | SCORM2004API
 
-type ElementoLogico =
+type LogicalElement =
   | 'location'
   | 'suspendData'
   | 'status'
@@ -36,7 +36,7 @@ type ElementoLogico =
   | 'sessionTime'
   | 'exit'
 
-const ELEMENTOS: Record<ElementoLogico, { scorm12: string; scorm2004: string }> = {
+const ELEMENTS: Record<LogicalElement, { scorm12: string; scorm2004: string }> = {
   location: { scorm12: 'cmi.core.lesson_location', scorm2004: 'cmi.location' },
   suspendData: { scorm12: 'cmi.suspend_data', scorm2004: 'cmi.suspend_data' },
   status: { scorm12: 'cmi.core.lesson_status', scorm2004: 'cmi.completion_status' },
@@ -102,21 +102,21 @@ export interface SCORMWrapper {
   setValue: (param: string, value: string) => boolean
   getStudentName: () => string
   getLocation: () => string
-  setLocation: (valor: string) => boolean
+  setLocation: (value: string) => boolean
   getSuspendData: () => string
-  setSuspendData: (valor: string) => boolean
+  setSuspendData: (value: string) => boolean
   getStatus: () => string
-  setStatus: (valor: 'incomplete' | 'completed' | 'passed' | 'failed') => boolean
-  setScore: (nota: number) => boolean
-  setSessionTime: (valor: string) => boolean
-  setExit: (valor: 'suspend' | '') => boolean
+  setStatus: (value: 'incomplete' | 'completed' | 'passed' | 'failed') => boolean
+  setScore: (score: number) => boolean
+  setSessionTime: (value: string) => boolean
+  setExit: (value: 'suspend' | '') => boolean
 }
 
 function createSCORMWrapper(): SCORMWrapper {
   const API = typeof window !== 'undefined' ? findAPI(window) : null
-  const usa12 = !API || is12(API)
-  const chave = (elemento: ElementoLogico) =>
-    usa12 ? ELEMENTOS[elemento].scorm12 : ELEMENTOS[elemento].scorm2004
+  const uses12 = !API || is12(API)
+  const key = (element: LogicalElement) =>
+    uses12 ? ELEMENTS[element].scorm12 : ELEMENTS[element].scorm2004
 
   if (API) {
     console.log('[SCORM-PLAYER] ✅ API encontrada:', is12(API) ? 'SCORM 1.2' : 'SCORM 2004')
@@ -170,43 +170,43 @@ function createSCORMWrapper(): SCORMWrapper {
     },
 
     getLocation() {
-      return this.getValue(chave('location'))
+      return this.getValue(key('location'))
     },
 
-    setLocation(valor: string) {
-      return this.setValue(chave('location'), valor)
+    setLocation(value: string) {
+      return this.setValue(key('location'), value)
     },
 
     getSuspendData() {
-      return this.getValue(chave('suspendData'))
+      return this.getValue(key('suspendData'))
     },
 
-    setSuspendData(valor: string) {
-      return this.setValue(chave('suspendData'), valor)
+    setSuspendData(value: string) {
+      return this.setValue(key('suspendData'), value)
     },
 
     getStatus() {
-      return this.getValue(chave('status'))
+      return this.getValue(key('status'))
     },
 
-    setStatus(valor: 'incomplete' | 'completed' | 'passed' | 'failed') {
-      return this.setValue(chave('status'), valor)
+    setStatus(value: 'incomplete' | 'completed' | 'passed' | 'failed') {
+      return this.setValue(key('status'), value)
     },
 
-    setScore(nota: number) {
-      const limitada = Math.max(0, Math.min(100, Math.round(nota)))
-      const ok = this.setValue(chave('scoreRaw'), String(limitada))
-      this.setValue(chave('scoreMin'), '0')
-      this.setValue(chave('scoreMax'), '100')
+    setScore(score: number) {
+      const limited = Math.max(0, Math.min(100, Math.round(score)))
+      const ok = this.setValue(key('scoreRaw'), String(limited))
+      this.setValue(key('scoreMin'), '0')
+      this.setValue(key('scoreMax'), '100')
       return ok
     },
 
-    setSessionTime(valor: string) {
-      return this.setValue(chave('sessionTime'), valor)
+    setSessionTime(value: string) {
+      return this.setValue(key('sessionTime'), value)
     },
 
-    setExit(valor: 'suspend' | '') {
-      return this.setValue(chave('exit'), valor)
+    setExit(value: 'suspend' | '') {
+      return this.setValue(key('exit'), value)
     },
   }
 }

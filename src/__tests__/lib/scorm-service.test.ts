@@ -1,7 +1,7 @@
 import { generateManifest, generateSCORMFromPlayerDist } from '@/lib/scorm-service'
-import type { CursoGerado } from '@/types/gerador-curso'
+import type { Course } from '@/types/course'
 
-const curso: CursoGerado = {
+const course: Course = {
   id: 'curso-1',
   titulo: 'Segurança do Trabalho',
   descricao: '',
@@ -13,7 +13,7 @@ const curso: CursoGerado = {
 
 describe('generateManifest', () => {
   it('lista exatamente os arquivos que foram para o ZIP', () => {
-    const manifesto = generateManifest(curso, ['index.html', 'assets/app.js'])
+    const manifesto = generateManifest(course, ['index.html', 'assets/app.js'])
 
     expect(manifesto).toContain('<file href="index.html"/>')
     expect(manifesto).toContain('<file href="assets/app.js"/>')
@@ -21,7 +21,7 @@ describe('generateManifest', () => {
   })
 
   it('escapa o título do curso no XML', () => {
-    const manifesto = generateManifest({ ...curso, titulo: 'NR-6 & EPI' }, ['index.html'])
+    const manifesto = generateManifest({ ...course, titulo: 'NR-6 & EPI' }, ['index.html'])
 
     expect(manifesto).toContain('<title>NR-6 &amp; EPI</title>')
   })
@@ -31,7 +31,7 @@ describe('generateSCORMFromPlayerDist', () => {
   it('falha com mensagem acionável quando o player não foi buildado', async () => {
     const cwd = jest.spyOn(process, 'cwd').mockReturnValue('/tmp/sem-player-dist')
 
-    await expect(generateSCORMFromPlayerDist(curso)).rejects.toThrow(
+    await expect(generateSCORMFromPlayerDist(course)).rejects.toThrow(
       'player/dist/index.html não encontrado'
     )
 

@@ -3,13 +3,13 @@ import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { ContentBlockDrawer } from '@/components/ContentBlockDrawer'
 import { blockRegistry } from '@/components/course/blocks'
-import { CATALOGO_BLOCOS, TIPOS_BLOCO, criarBlocoVazio } from '@/lib/blocos'
-import type { ConteudoUnidade } from '@/types/gerador-curso'
+import { BLOCK_CATALOG, BLOCK_TYPES, createEmptyBlock } from '@/lib/blocks'
+import type { Block } from '@/types/course'
 
-const erroToast = jest.fn()
+const errorToast = jest.fn()
 jest.mock('sonner', () => ({
   toast: {
-    error: (...args: unknown[]) => erroToast(...args),
+    error: (...args: unknown[]) => errorToast(...args),
     success: jest.fn(),
     info: jest.fn(),
   },
@@ -21,13 +21,13 @@ jest.mock('@/components/RichTextEditor', () => ({
   ),
 }))
 
-function montar(tipo: ConteudoUnidade['tipo'], onSave = jest.fn()) {
+function mount(type: Block['tipo'], onSave = jest.fn()) {
   render(
     <ContentBlockDrawer
       open
       onOpenChange={jest.fn()}
       mode="add"
-      blockData={{ tipo }}
+      blockData={{ tipo: type }}
       onSave={onSave}
       onCancel={jest.fn()}
     />
@@ -35,54 +35,54 @@ function montar(tipo: ConteudoUnidade['tipo'], onSave = jest.fn()) {
   return onSave
 }
 
-beforeEach(() => erroToast.mockClear())
+beforeEach(() => errorToast.mockClear())
 
 describe('preview do bloco no editor', () => {
   it('tem componente de render para todo tipo do catálogo', () => {
     // O card do editor renderiza blockRegistry[item.tipo] no fallback. Sem entrada
     // aqui, o bloco recém-criado aparecia como um card vazio.
-    for (const tipo of TIPOS_BLOCO) {
-      expect(blockRegistry[tipo]).toBeDefined()
+    for (const type of BLOCK_TYPES) {
+      expect(blockRegistry[type]).toBeDefined()
     }
   })
 })
 
 describe('ContentBlockDrawer', () => {
   it('mostra o rótulo do catálogo no cabeçalho de cada tipo', () => {
-    for (const tipo of TIPOS_BLOCO) {
+    for (const type of BLOCK_TYPES) {
       const { unmount } = render(
         <ContentBlockDrawer
           open
           onOpenChange={jest.fn()}
           mode="add"
-          blockData={{ tipo }}
+          blockData={{ tipo: type }}
           onSave={jest.fn()}
           onCancel={jest.fn()}
         />
       )
 
-      expect(screen.getAllByText(CATALOGO_BLOCOS[tipo].rotulo).length).toBeGreaterThan(0)
+      expect(screen.getAllByText(BLOCK_CATALOG[type].label).length).toBeGreaterThan(0)
       unmount()
     }
   })
 
   it('bloqueia o salvamento de bloco vazio e mostra a mensagem do catálogo', async () => {
-    const usuario = userEvent.setup()
-    const onSave = montar('tabs')
+    const user = userEvent.setup()
+    const onSave = mount('tabs')
 
-    await usuario.click(screen.getByRole('button', { name: /salvar/i }))
+    await user.click(screen.getByRole('button', { name: /salvar/i }))
 
     expect(onSave).not.toHaveBeenCalled()
-    expect(erroToast).toHaveBeenCalledWith(
-      CATALOGO_BLOCOS.tabs.validarFormulario(criarBlocoVazio('tabs'))
+    expect(errorToast).toHaveBeenCalledWith(
+      BLOCK_CATALOG.tabs.validateForm(createEmptyBlock('tabs'))
     )
   })
 
   it('salva o separador sem exigir preenchimento', async () => {
-    const usuario = userEvent.setup()
-    const onSave = montar('separador')
+    const user = userEvent.setup()
+    const onSave = mount('separador')
 
-    await usuario.click(screen.getByRole('button', { name: /salvar/i }))
+    await user.click(screen.getByRole('button', { name: /salvar/i }))
 
     expect(onSave).toHaveBeenCalledWith(
       expect.objectContaining({ tipo: 'separador', estiloSeparador: 'linha' })
@@ -90,15 +90,15 @@ describe('ContentBlockDrawer', () => {
   })
 
   it('permite montar uma aba completa e salvar', async () => {
-    const usuario = userEvent.setup()
-    const onSave = montar('tabs')
+    const user = userEvent.setup()
+    const onSave = mount('tabs')
 
-    await usuario.click(screen.getByRole('button', { name: /adicionar/i }))
-    await usuario.type(screen.getByPlaceholderText('Título da aba...'), 'Riscos')
-    await usuario.type(screen.getByPlaceholderText('Conteúdo da aba...'), 'Físicos e químicos')
-    await usuario.click(screen.getByRole('button', { name: /salvar/i }))
+    await user.click(screen.getByRole('button', { name: /adicionar/i }))
+    await user.type(screen.getByPlaceholderText('Título da aba...'), 'Riscos')
+    await user.type(screen.getByPlaceholderText('Conteúdo da aba...'), 'Físicos e químicos')
+    await user.click(screen.getByRole('button', { name: /salvar/i }))
 
-    expect(erroToast).not.toHaveBeenCalled()
+    expect(errorToast).not.toHaveBeenCalled()
     expect(onSave).toHaveBeenCalledWith(
       expect.objectContaining({
         tipo: 'tabs',
@@ -108,30 +108,27 @@ describe('ContentBlockDrawer', () => {
   })
 
   it('monta uma pergunta do vídeo interativo e salva', async () => {
-    const usuario = userEvent.setup()
-    const onSave = montar('video-interativo')
+    const user = userEvent.setup()
+    const onSave = mount('video-interativo')
 
-    await usuario.type(
-      screen.getByPlaceholderText('Digite o título do vídeo...'),
-      'Uso do capacete'
-    )
-    await usuario.type(
+    await user.type(screen.getByPlaceholderText('Digite o título do vídeo...'), 'Uso do capacete')
+    await user.type(
       screen.getByPlaceholderText('ou cole o link do YouTube aqui...'),
       'https://b.com/a.mp4'
     )
 
-    await usuario.click(screen.getByRole('button', { name: /adicionar/i }))
-    await usuario.type(screen.getByPlaceholderText('mm:ss — ex.: 02:30'), '01:30')
-    await usuario.type(
+    await user.click(screen.getByRole('button', { name: /adicionar/i }))
+    await user.type(screen.getByPlaceholderText('mm:ss — ex.: 02:30'), '01:30')
+    await user.type(
       screen.getByPlaceholderText('O que o aluno precisa responder...'),
       'O que prende o capacete?'
     )
-    await usuario.type(screen.getByPlaceholderText('A...'), 'O casco')
-    await usuario.type(screen.getByPlaceholderText('B...'), 'A jugular')
+    await user.type(screen.getByPlaceholderText('A...'), 'O casco')
+    await user.type(screen.getByPlaceholderText('B...'), 'A jugular')
 
-    await usuario.click(screen.getByRole('button', { name: /salvar/i }))
+    await user.click(screen.getByRole('button', { name: /salvar/i }))
 
-    expect(erroToast).not.toHaveBeenCalled()
+    expect(errorToast).not.toHaveBeenCalled()
     expect(onSave).toHaveBeenCalledWith(
       expect.objectContaining({
         tipo: 'video-interativo',
@@ -150,32 +147,32 @@ describe('ContentBlockDrawer', () => {
   })
 
   it('recusa a pergunta do vídeo cuja alternativa correta está vazia', async () => {
-    const usuario = userEvent.setup()
-    const onSave = montar('video-interativo')
+    const user = userEvent.setup()
+    const onSave = mount('video-interativo')
 
-    await usuario.type(screen.getByPlaceholderText('Digite o título do vídeo...'), 'Aula')
-    await usuario.type(
+    await user.type(screen.getByPlaceholderText('Digite o título do vídeo...'), 'Aula')
+    await user.type(
       screen.getByPlaceholderText('ou cole o link do YouTube aqui...'),
       'https://b.com/a.mp4'
     )
 
-    await usuario.click(screen.getByRole('button', { name: /adicionar/i }))
-    await usuario.type(screen.getByPlaceholderText('mm:ss — ex.: 02:30'), 'agora')
-    await usuario.click(screen.getByRole('button', { name: /salvar/i }))
+    await user.click(screen.getByRole('button', { name: /adicionar/i }))
+    await user.type(screen.getByPlaceholderText('mm:ss — ex.: 02:30'), 'agora')
+    await user.click(screen.getByRole('button', { name: /salvar/i }))
 
     expect(onSave).not.toHaveBeenCalled()
-    expect(erroToast).toHaveBeenCalledWith('Pergunta 1: informe o tempo no formato mm:ss')
+    expect(errorToast).toHaveBeenCalledWith('Pergunta 1: informe o tempo no formato mm:ss')
   })
 
   it('tem um campo de URL só, sem seletor de fonte, nos dois blocos de vídeo', async () => {
     // Enviar arquivo e colar link são a mesma coisa: um campo, sem escolher a fonte.
-    for (const tipo of ['video', 'video-interativo'] as const) {
+    for (const type of ['video', 'video-interativo'] as const) {
       const { unmount } = render(
         <ContentBlockDrawer
           open
           onOpenChange={jest.fn()}
           mode="add"
-          blockData={{ tipo }}
+          blockData={{ tipo: type }}
           onSave={jest.fn()}
           onCancel={jest.fn()}
         />
@@ -189,12 +186,12 @@ describe('ContentBlockDrawer', () => {
   })
 
   it('avisa sobre o pacote offline assim que um link do YouTube é colado', async () => {
-    const usuario = userEvent.setup()
-    montar('video-interativo')
+    const user = userEvent.setup()
+    mount('video-interativo')
 
     expect(screen.queryByText(/precisará de internet/i)).toBeNull()
 
-    await usuario.type(
+    await user.type(
       screen.getByPlaceholderText('ou cole o link do YouTube aqui...'),
       'https://youtu.be/dQw4w9WgXcQ'
     )
@@ -203,38 +200,38 @@ describe('ContentBlockDrawer', () => {
   })
 
   it('cobra título do evento na linha do tempo', async () => {
-    const usuario = userEvent.setup()
-    const onSave = montar('linha-do-tempo')
+    const user = userEvent.setup()
+    const onSave = mount('linha-do-tempo')
 
-    await usuario.click(screen.getByRole('button', { name: /adicionar/i }))
-    await usuario.type(screen.getByPlaceholderText('Ex.: 1990 ou Março/2024'), '1943')
-    await usuario.click(screen.getByRole('button', { name: /salvar/i }))
+    await user.click(screen.getByRole('button', { name: /adicionar/i }))
+    await user.type(screen.getByPlaceholderText('Ex.: 1990 ou Março/2024'), '1943')
+    await user.click(screen.getByRole('button', { name: /salvar/i }))
 
     expect(onSave).not.toHaveBeenCalled()
-    expect(erroToast).toHaveBeenCalledWith('Todos os eventos devem ter título')
+    expect(errorToast).toHaveBeenCalledWith('Todos os eventos devem ter título')
   })
 
   it('monta uma grade de flipcards num único bloco', async () => {
-    const usuario = userEvent.setup()
-    const onSave = montar('flipcard')
+    const user = userEvent.setup()
+    const onSave = mount('flipcard')
 
-    await usuario.click(screen.getByRole('button', { name: /adicionar/i }))
-    await usuario.type(screen.getByPlaceholderText('Digite o título...'), 'Flexbox')
-    await usuario.type(
+    await user.click(screen.getByRole('button', { name: /adicionar/i }))
+    await user.type(screen.getByPlaceholderText('Digite o título...'), 'Flexbox')
+    await user.type(
       screen.getByPlaceholderText('Digite o conteúdo do verso...'),
       'Layout em uma dimensão'
     )
 
-    await usuario.click(screen.getByRole('button', { name: /adicionar/i }))
-    await usuario.type(screen.getAllByPlaceholderText('Digite o título...')[1], 'CSS Grid')
-    await usuario.type(
+    await user.click(screen.getByRole('button', { name: /adicionar/i }))
+    await user.type(screen.getAllByPlaceholderText('Digite o título...')[1], 'CSS Grid')
+    await user.type(
       screen.getAllByPlaceholderText('Digite o conteúdo do verso...')[1],
       'Layout em duas dimensões'
     )
 
-    await usuario.click(screen.getByRole('button', { name: /salvar/i }))
+    await user.click(screen.getByRole('button', { name: /salvar/i }))
 
-    expect(erroToast).not.toHaveBeenCalled()
+    expect(errorToast).not.toHaveBeenCalled()
     expect(onSave).toHaveBeenCalledWith(
       expect.objectContaining({
         tipo: 'flipcard',
@@ -253,7 +250,7 @@ describe('ContentBlockDrawer', () => {
   })
 
   it('abre um flipcard legado de card único já como lista', async () => {
-    const usuario = userEvent.setup()
+    const user = userEvent.setup()
     const onSave = jest.fn()
     render(
       <ContentBlockDrawer
@@ -273,9 +270,9 @@ describe('ContentBlockDrawer', () => {
 
     expect(screen.getByDisplayValue('Conceito antigo')).toBeInTheDocument()
 
-    await usuario.click(screen.getByRole('button', { name: /salvar/i }))
+    await user.click(screen.getByRole('button', { name: /salvar/i }))
 
-    expect(erroToast).not.toHaveBeenCalled()
+    expect(errorToast).not.toHaveBeenCalled()
     expect(onSave).toHaveBeenCalledWith(
       expect.objectContaining({
         itensFlipcard: [
@@ -302,36 +299,36 @@ describe('ContentBlockDrawer', () => {
     expect(screen.getByRole('button', { name: 'Meia largura' })).toBeInTheDocument()
     unmount()
 
-    montar('flipcard')
+    mount('flipcard')
     expect(screen.queryByRole('button', { name: 'Meia largura' })).not.toBeInTheDocument()
   })
 
   it('remove item da lista sem afetar os demais', async () => {
-    const usuario = userEvent.setup()
-    const onSave = montar('carrossel')
+    const user = userEvent.setup()
+    const onSave = mount('carrossel')
 
-    await usuario.click(screen.getByRole('button', { name: /adicionar/i }))
-    await usuario.type(
+    await user.click(screen.getByRole('button', { name: /adicionar/i }))
+    await user.type(
       screen.getByPlaceholderText('ou cole a URL aqui...'),
       'https://exemplo.com/a.png'
     )
-    await usuario.click(screen.getByRole('button', { name: /adicionar/i }))
+    await user.click(screen.getByRole('button', { name: /adicionar/i }))
 
     const urls = screen.getAllByPlaceholderText('ou cole a URL aqui...')
     expect(urls).toHaveLength(2)
-    await usuario.type(urls[1], 'https://exemplo.com/b.png')
+    await user.type(urls[1], 'https://exemplo.com/b.png')
 
-    const legendas = screen.getAllByPlaceholderText('Legenda da imagem...')
+    const captions = screen.getAllByPlaceholderText('Legenda da imagem...')
     const fontes = screen.getAllByPlaceholderText('Fonte da imagem...')
-    await usuario.type(legendas[0], 'Legenda A')
-    await usuario.type(fontes[0], 'Fonte A')
-    await usuario.type(legendas[1], 'Legenda B')
-    await usuario.type(fontes[1], 'Fonte B')
+    await user.type(captions[0], 'Legenda A')
+    await user.type(fontes[0], 'Fonte A')
+    await user.type(captions[1], 'Legenda B')
+    await user.type(fontes[1], 'Fonte B')
 
-    const remover = screen.getAllByRole('button', { name: '' })
-    await usuario.click(remover[remover.length - 1])
+    const remove = screen.getAllByRole('button', { name: '' })
+    await user.click(remove[remove.length - 1])
 
-    await usuario.click(screen.getByRole('button', { name: /salvar/i }))
+    await user.click(screen.getByRole('button', { name: /salvar/i }))
 
     expect(onSave).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -349,25 +346,25 @@ describe('ContentBlockDrawer', () => {
 
 describe('fonte do vídeo interativo ao salvar', () => {
   it('entrega fonteVideo youtube no objeto salvo', async () => {
-    const usuario = userEvent.setup()
-    const onSave = montar('video-interativo')
+    const user = userEvent.setup()
+    const onSave = mount('video-interativo')
 
-    await usuario.type(screen.getByPlaceholderText('Digite o título do vídeo...'), 'Aula')
+    await user.type(screen.getByPlaceholderText('Digite o título do vídeo...'), 'Aula')
 
-    await usuario.type(
+    await user.type(
       screen.getByPlaceholderText('ou cole o link do YouTube aqui...'),
       'https://www.youtube.com/watch?v=dQw4w9WgXcQ'
     )
 
-    await usuario.click(screen.getByRole('button', { name: /adicionar/i }))
-    await usuario.type(screen.getByPlaceholderText('mm:ss — ex.: 02:30'), '00:05')
-    await usuario.type(screen.getByPlaceholderText('O que o aluno precisa responder...'), 'P?')
-    await usuario.type(screen.getByPlaceholderText('A...'), 'A')
-    await usuario.type(screen.getByPlaceholderText('B...'), 'B')
+    await user.click(screen.getByRole('button', { name: /adicionar/i }))
+    await user.type(screen.getByPlaceholderText('mm:ss — ex.: 02:30'), '00:05')
+    await user.type(screen.getByPlaceholderText('O que o aluno precisa responder...'), 'P?')
+    await user.type(screen.getByPlaceholderText('A...'), 'A')
+    await user.type(screen.getByPlaceholderText('B...'), 'B')
 
-    await usuario.click(screen.getByRole('button', { name: /salvar/i }))
+    await user.click(screen.getByRole('button', { name: /salvar/i }))
 
-    expect(erroToast).not.toHaveBeenCalled()
+    expect(errorToast).not.toHaveBeenCalled()
     expect(onSave).toHaveBeenCalledWith(
       expect.objectContaining({
         tipo: 'video-interativo',

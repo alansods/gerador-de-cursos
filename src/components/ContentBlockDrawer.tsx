@@ -24,16 +24,10 @@ import {
   LayoutGrid,
 } from 'lucide-react'
 import Image from 'next/image'
-import {
-  ConteudoUnidade,
-  AccordionItem,
-  ListaItem,
-  CategoriaItem,
-  HotspotItem,
-} from '@/types/gerador-curso'
-import { CATALOGO_BLOCOS, cardsFlipcard, criarBlocoVazio, fonteDoVideo } from '@/lib/blocos'
-import { POLITICA_MIDIAS, type CategoriaMidia } from '@/lib/midias'
-import { enviarArquivo } from '@/lib/upload-cliente'
+import { Block, AccordionItem, ListItem, CategoryItem, HotspotItem } from '@/types/course'
+import { BLOCK_CATALOG, cardsFlipcard, createEmptyBlock, videoSource } from '@/lib/blocks'
+import { MEDIA_POLICY, type MediaCategory } from '@/lib/media'
+import { uploadFile } from '@/lib/client-upload'
 import { extractYouTubeId } from '@/lib/youtube'
 import { RichTextEditor } from './RichTextEditor'
 import { toast } from 'sonner'
@@ -42,85 +36,82 @@ interface ContentBlockDrawerProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   mode: 'add' | 'edit'
-  blockData: Partial<ConteudoUnidade> | null
-  onSave: (data: Omit<ConteudoUnidade, 'id' | 'ordem'>) => void
+  blockData: Partial<Block> | null
+  onSave: (data: Omit<Block, 'id' | 'ordem'>) => void
   onCancel: () => void
 }
 
-function prepararFormulario(blockData: Partial<ConteudoUnidade> | null): Partial<ConteudoUnidade> {
-  const formulario: Partial<ConteudoUnidade> = {
-    ...criarBlocoVazio(blockData?.tipo || 'paragrafo'),
+function prepareForm(blockData: Partial<Block> | null): Partial<Block> {
+  const form: Partial<Block> = {
+    ...createEmptyBlock(blockData?.tipo || 'paragrafo'),
     ...blockData,
   }
 
   // Bloco salvo antes de `fonteVideo` existir abriria com o seletor na fonte errada.
-  if (formulario.tipo === 'video' || formulario.tipo === 'video-interativo') {
-    formulario.fonteVideo = fonteDoVideo(
-      formulario,
-      formulario.tipo === 'video' ? 'youtube' : 'arquivo'
-    )
+  if (form.tipo === 'video' || form.tipo === 'video-interativo') {
+    form.fonteVideo = videoSource(form, form.tipo === 'video' ? 'youtube' : 'arquivo')
   }
 
-  if (formulario.tipo === 'flipcard') {
-    formulario.itensFlipcard = cardsFlipcard(formulario)
-    delete formulario.tipoFrente
-    delete formulario.imagemFrente
-    delete formulario.tituloFrente
-    delete formulario.conteudoVerso
+  if (form.tipo === 'flipcard') {
+    form.itensFlipcard = cardsFlipcard(form)
+    delete form.tipoFrente
+    delete form.imagemFrente
+    delete form.tituloFrente
+    delete form.conteudoVerso
   }
 
-  return formulario
+  return form
 }
 
-const LARGURAS_BLOCO: { colunas: 6 | 12; rotulo: string }[] = [
-  { colunas: 12, rotulo: 'Largura total' },
-  { colunas: 6, rotulo: 'Meia largura' },
+const BLOCK_WIDTHS: { columns: 6 | 12; label: string }[] = [
+  { columns: 12, label: 'Largura total' },
+  { columns: 6, label: 'Meia largura' },
 ]
 
-const MODOS_EXIBICAO_CARROSSEL: {
-  valor: NonNullable<ConteudoUnidade['modoCarrossel']>
-  rotulo: string
-  icone: typeof GalleryHorizontal
+const CAROUSEL_DISPLAY_MODES: {
+  value: NonNullable<Block['modoCarrossel']>
+  label: string
+  icon: typeof GalleryHorizontal
 }[] = [
-  { valor: 'carrossel', rotulo: 'Carrossel', icone: GalleryHorizontal },
-  { valor: 'grade', rotulo: 'Grade', icone: LayoutGrid },
+  { value: 'carrossel', label: 'Carrossel', icon: GalleryHorizontal },
+  { value: 'grade', label: 'Grade', icon: LayoutGrid },
 ]
 
-function CampoArquivo({
-  categoria,
-  rotulo,
+function FileField({
+  category,
+  label,
   url,
   onUrl,
   placeholderUrl = 'ou cole a URL aqui...',
-  dica,
+  hint,
 }: {
-  categoria: CategoriaMidia
-  rotulo: string
+  category: MediaCategory
+  label: string
   url: string
   onUrl: (url: string) => void
   placeholderUrl?: string
-  dica?: React.ReactNode
+  hint?: React.ReactNode
 }) {
-  const [enviando, setEnviando] = useState(false)
-  const [previewQuebrado, setPreviewQuebrado] = useState(false)
-  const entradaArquivo = React.useRef<HTMLInputElement>(null)
-  const politica = POLITICA_MIDIAS[categoria]
+  const [sending, setSending] = useState(false)
+  const [previewBroken, setPreviewBroken] = useState(false)
+  const fileInput = React.useRef<HTMLInputElement>(null)
+  const policy = MEDIA_POLICY[category]
 
   useEffect(() => {
-    setPreviewQuebrado(false)
+    setPreviewBroken(false)
   }, [url])
 
-  const aoSelecionar = async (arquivo: File) => {
-    setEnviando(true)
+  const onSelect = async (file: File) => {
+    setSending(true)
     try {
-      const { url: enviada, aviso } = await enviarArquivo(arquivo, categoria)
-      onUrl(enviada)
-      if (aviso) toast.warning(aviso)
-      else toast.success(`${politica.rotulo} enviado`)
-    } catch (erro) {
-      toast.error(erro instanceof Error ? erro.message : 'Erro ao enviar o arquivo')
+      const { url: uploaded, warning } = await uploadFile(file, category)
+      onUrl(uploaded)
+      if (warning) toast.warning(warning)
+      else toast.success(`${policy.label} enviado`)
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Erro ao enviar o arquivo')
     } finally {
-      setEnviando(false)
+      setSending(false)
     }
   }
 
@@ -128,7 +119,7 @@ function CampoArquivo({
     <FormField
       label={
         <>
-          {rotulo} <span className="text-destructive">*</span>
+          {label} <span className="text-destructive">*</span>
         </>
       }
     >
@@ -137,24 +128,24 @@ function CampoArquivo({
           type="button"
           variant="outline"
           size="sm"
-          disabled={enviando}
-          onClick={() => entradaArquivo.current?.click()}
+          disabled={sending}
+          onClick={() => fileInput.current?.click()}
         >
-          {enviando ? (
+          {sending ? (
             <Loader2 className="h-4 w-4 mr-2 animate-spin" />
           ) : (
             <Upload className="h-4 w-4 mr-2" />
           )}
-          {enviando ? 'Enviando...' : 'Escolher arquivo'}
+          {sending ? 'Enviando...' : 'Escolher arquivo'}
         </Button>
         <input
-          ref={entradaArquivo}
+          ref={fileInput}
           type="file"
-          accept={politica.extensoes}
+          accept={policy.extensions}
           className="hidden"
           onChange={(e) => {
-            const arquivo = e.target.files?.[0]
-            if (arquivo) aoSelecionar(arquivo)
+            const file = e.target.files?.[0]
+            if (file) onSelect(file)
             e.target.value = ''
           }}
         />
@@ -167,40 +158,40 @@ function CampoArquivo({
         className="text-sm"
       />
 
-      {categoria === 'imagem' && url && !previewQuebrado && (
+      {category === 'image' && url && !previewBroken && (
         <img
           src={url}
           alt=""
-          onError={() => setPreviewQuebrado(true)}
+          onError={() => setPreviewBroken(true)}
           className="max-h-40 w-auto rounded-md border border-border object-contain"
         />
       )}
 
-      <p className="text-xs text-muted-foreground">{dica ?? politica.dicaTamanho}</p>
+      <p className="text-xs text-muted-foreground">{hint ?? policy.sizeHint}</p>
     </FormField>
   )
 }
 
-interface CampoItem<T> {
-  chave: keyof T & string
-  rotulo: string
-  obrigatorio?: boolean
+interface FieldConfig<T> {
+  key: keyof T & string
+  label: string
+  required?: boolean
   placeholder?: string
-  tipo?: 'texto' | 'multilinha' | 'select' | 'imagem'
-  opcoes?: { valor: string; rotulo: string }[]
-  visivelSe?: (item: T) => boolean
+  type?: 'text' | 'multiline' | 'select' | 'image'
+  options?: { value: string; label: string }[]
+  visibleIf?: (item: T) => boolean
 }
 
-function ItemField<T>({ campo, children }: { campo: CampoItem<T>; children: React.ReactNode }) {
-  if (campo.tipo === 'imagem') return <>{children}</>
+function ItemField<T>({ field, children }: { field: FieldConfig<T>; children: React.ReactNode }) {
+  if (field.type === 'image') return <>{children}</>
 
   return (
     <FormField
-      compacto
+      compact
       label={
         <>
-          {campo.rotulo}
-          {campo.obrigatorio && <span className="text-destructive"> *</span>}
+          {field.label}
+          {field.required && <span className="text-destructive"> *</span>}
         </>
       }
     >
@@ -209,37 +200,37 @@ function ItemField<T>({ campo, children }: { campo: CampoItem<T>; children: Reac
   )
 }
 
-function EditorDeItens<T extends { id: string }>({
-  rotulo,
-  rotuloItem,
-  itens,
-  campos,
-  criarItem,
+function ItemEditor<T extends { id: string }>({
+  label,
+  itemLabel,
+  items,
+  fields,
+  createItem,
   onChange,
-  vazio,
+  emptyText: empty,
 }: {
-  rotulo: string
-  rotuloItem: string
-  itens: T[]
-  campos: CampoItem<T>[]
-  criarItem: () => T
-  onChange: (itens: T[]) => void
-  vazio: string
+  label: string
+  itemLabel: string
+  items: T[]
+  fields: FieldConfig<T>[]
+  createItem: () => T
+  onChange: (items: T[]) => void
+  emptyText: string
 }) {
-  const atualizar = (id: string, chave: string, valor: string) =>
-    onChange(itens.map((item) => (item.id === id ? { ...item, [chave]: valor } : item)))
+  const update = (id: string, key: string, value: string) =>
+    onChange(items.map((item) => (item.id === id ? { ...item, [key]: value } : item)))
 
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <span className="text-sm font-medium text-foreground">
-          {rotulo} <span className="text-destructive">*</span>
+          {label} <span className="text-destructive">*</span>
         </span>
         <Button
           type="button"
           variant="outline"
           size="sm"
-          onClick={() => onChange([...itens, criarItem()])}
+          onClick={() => onChange([...items, createItem()])}
           className="text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-800 hover:bg-blue-50 dark:hover:bg-blue-950/20"
         >
           <Plus className="h-4 w-4 mr-2" />
@@ -247,65 +238,65 @@ function EditorDeItens<T extends { id: string }>({
         </Button>
       </div>
 
-      {itens.length > 0 ? (
+      {items.length > 0 ? (
         <div className="space-y-3 max-h-[400px] overflow-y-auto">
-          {itens.map((item, index) => (
+          {items.map((item, index) => (
             <Card key={item.id} className="p-4">
               <div className="flex items-center justify-between mb-3">
                 <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">
-                  {rotuloItem} {index + 1}
+                  {itemLabel} {index + 1}
                 </span>
                 <Button
                   type="button"
                   variant="ghost"
                   size="sm"
-                  onClick={() => onChange(itens.filter((outro) => outro.id !== item.id))}
+                  onClick={() => onChange(items.filter((another) => another.id !== item.id))}
                   className="text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-950/20"
                 >
                   <Trash2 className="h-4 w-4" />
                 </Button>
               </div>
               <div className="space-y-3">
-                {campos
-                  .filter((campo) => !campo.visivelSe || campo.visivelSe(item))
-                  .map((campo) => (
-                    <ItemField key={campo.chave} campo={campo}>
-                      {campo.tipo === 'multilinha' ? (
+                {fields
+                  .filter((field) => !field.visibleIf || field.visibleIf(item))
+                  .map((field) => (
+                    <ItemField key={field.key} field={field}>
+                      {field.type === 'multiline' ? (
                         <Textarea
-                          value={String(item[campo.chave] ?? '')}
-                          onChange={(e) => atualizar(item.id, campo.chave, e.target.value)}
-                          placeholder={campo.placeholder}
+                          value={String(item[field.key] ?? '')}
+                          onChange={(e) => update(item.id, field.key, e.target.value)}
+                          placeholder={field.placeholder}
                           rows={3}
                           className="text-sm"
                         />
-                      ) : campo.tipo === 'select' ? (
+                      ) : field.type === 'select' ? (
                         <Select
-                          value={String(item[campo.chave] ?? '')}
-                          onValueChange={(valor) => atualizar(item.id, campo.chave, valor)}
+                          value={String(item[field.key] ?? '')}
+                          onValueChange={(value) => update(item.id, field.key, value)}
                         >
                           <SelectTrigger className="text-sm">
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
-                            {(campo.opcoes ?? []).map((opcao) => (
-                              <SelectItem key={opcao.valor} value={opcao.valor}>
-                                {opcao.rotulo}
+                            {(field.options ?? []).map((option) => (
+                              <SelectItem key={option.value} value={option.value}>
+                                {option.label}
                               </SelectItem>
                             ))}
                           </SelectContent>
                         </Select>
-                      ) : campo.tipo === 'imagem' ? (
-                        <CampoArquivo
-                          categoria="imagem"
-                          rotulo={campo.rotulo}
-                          url={String(item[campo.chave] ?? '')}
-                          onUrl={(url) => atualizar(item.id, campo.chave, url)}
+                      ) : field.type === 'image' ? (
+                        <FileField
+                          category="image"
+                          label={field.label}
+                          url={String(item[field.key] ?? '')}
+                          onUrl={(url) => update(item.id, field.key, url)}
                         />
                       ) : (
                         <Input
-                          value={String(item[campo.chave] ?? '')}
-                          onChange={(e) => atualizar(item.id, campo.chave, e.target.value)}
-                          placeholder={campo.placeholder}
+                          value={String(item[field.key] ?? '')}
+                          onChange={(e) => update(item.id, field.key, e.target.value)}
+                          placeholder={field.placeholder}
                           className="text-sm"
                         />
                       )}
@@ -316,21 +307,21 @@ function EditorDeItens<T extends { id: string }>({
           ))}
         </div>
       ) : (
-        <p className="text-sm text-gray-500 dark:text-gray-400 italic">{vazio}</p>
+        <p className="text-sm text-gray-500 dark:text-gray-400 italic">{empty}</p>
       )}
     </div>
   )
 }
 
-function EditorDeCategorias({
-  categorias,
+function CategoryEditor({
+  categories,
   onChange,
 }: {
-  categorias: CategoriaItem[]
-  onChange: (categorias: CategoriaItem[]) => void
+  categories: CategoryItem[]
+  onChange: (categories: CategoryItem[]) => void
 }) {
-  const atualizar = (id: string, mudanca: Partial<CategoriaItem>) =>
-    onChange(categorias.map((c) => (c.id === id ? { ...c, ...mudanca } : c)))
+  const update = (id: string, change: Partial<CategoryItem>) =>
+    onChange(categories.map((c) => (c.id === id ? { ...c, ...change } : c)))
 
   return (
     <div className="space-y-4">
@@ -343,7 +334,7 @@ function EditorDeCategorias({
           variant="outline"
           size="sm"
           onClick={() =>
-            onChange([...categorias, { id: `cat-${Date.now()}`, nome: '', itens: [] }])
+            onChange([...categories, { id: `cat-${Date.now()}`, nome: '', itens: [] }])
           }
           className="text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-800 hover:bg-blue-50 dark:hover:bg-blue-950/20"
         >
@@ -352,10 +343,10 @@ function EditorDeCategorias({
         </Button>
       </div>
 
-      {categorias.length > 0 ? (
+      {categories.length > 0 ? (
         <div className="space-y-3 max-h-[400px] overflow-y-auto">
-          {categorias.map((categoria, index) => (
-            <Card key={categoria.id} className="p-4">
+          {categories.map((category, index) => (
+            <Card key={category.id} className="p-4">
               <div className="flex items-center justify-between mb-3">
                 <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">
                   Categoria {index + 1}
@@ -364,7 +355,7 @@ function EditorDeCategorias({
                   type="button"
                   variant="ghost"
                   size="sm"
-                  onClick={() => onChange(categorias.filter((outra) => outra.id !== categoria.id))}
+                  onClick={() => onChange(categories.filter((other) => other.id !== category.id))}
                   className="text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/20"
                 >
                   <Trash2 className="h-4 w-4" />
@@ -372,21 +363,23 @@ function EditorDeCategorias({
               </div>
 
               <Input
-                value={categoria.nome}
-                onChange={(e) => atualizar(categoria.id, { nome: e.target.value })}
+                value={category.nome}
+                onChange={(e) => update(category.id, { nome: e.target.value })}
                 placeholder="Nome da categoria..."
                 className="text-sm"
               />
 
               <div className="mt-3 space-y-2">
-                {categoria.itens.map((entrada) => (
-                  <div key={entrada.id} className="flex items-center gap-2">
+                {category.itens.map((input) => (
+                  <div key={input.id} className="flex items-center gap-2">
                     <Input
-                      value={entrada.texto}
+                      value={input.texto}
                       onChange={(e) =>
-                        atualizar(categoria.id, {
-                          itens: categoria.itens.map((outro) =>
-                            outro.id === entrada.id ? { ...outro, texto: e.target.value } : outro
+                        update(category.id, {
+                          itens: category.itens.map((another) =>
+                            another.id === input.id
+                              ? { ...another, texto: e.target.value }
+                              : another
                           ),
                         })
                       }
@@ -398,8 +391,8 @@ function EditorDeCategorias({
                       variant="ghost"
                       size="sm"
                       onClick={() =>
-                        atualizar(categoria.id, {
-                          itens: categoria.itens.filter((outro) => outro.id !== entrada.id),
+                        update(category.id, {
+                          itens: category.itens.filter((another) => another.id !== input.id),
                         })
                       }
                       className="text-red-600 dark:text-red-400"
@@ -414,8 +407,8 @@ function EditorDeCategorias({
                   variant="outline"
                   size="sm"
                   onClick={() =>
-                    atualizar(categoria.id, {
-                      itens: [...categoria.itens, { id: `item-${Date.now()}`, texto: '' }],
+                    update(category.id, {
+                      itens: [...category.itens, { id: `item-${Date.now()}`, texto: '' }],
                     })
                   }
                 >
@@ -435,22 +428,22 @@ function EditorDeCategorias({
   )
 }
 
-function EditorDeHotspots({
-  imagemBase,
+function HotspotEditor({
+  baseImage,
   hotspots,
   onChange,
 }: {
-  imagemBase: string
+  baseImage: string
   hotspots: HotspotItem[]
   onChange: (hotspots: HotspotItem[]) => void
 }) {
-  const atualizar = (id: string, mudanca: Partial<HotspotItem>) =>
-    onChange(hotspots.map((h) => (h.id === id ? { ...h, ...mudanca } : h)))
+  const update = (id: string, change: Partial<HotspotItem>) =>
+    onChange(hotspots.map((h) => (h.id === id ? { ...h, ...change } : h)))
 
-  const adicionarNoClique = (evento: React.MouseEvent<HTMLDivElement>) => {
-    const area = evento.currentTarget.getBoundingClientRect()
-    const x = Math.round(((evento.clientX - area.left) / area.width) * 100)
-    const y = Math.round(((evento.clientY - area.top) / area.height) * 100)
+  const addOnClick = (event: React.MouseEvent<HTMLDivElement>) => {
+    const area = event.currentTarget.getBoundingClientRect()
+    const x = Math.round(((event.clientX - area.left) / area.width) * 100)
+    const y = Math.round(((event.clientY - area.top) / area.height) * 100)
     onChange([...hotspots, { id: `hotspot-${Date.now()}`, x, y, titulo: '', conteudo: '' }])
   }
 
@@ -477,13 +470,13 @@ function EditorDeHotspots({
             Adicionar
           </Button>
         </div>
-        {imagemBase ? (
+        {baseImage ? (
           <>
             <div
-              onClick={adicionarNoClique}
+              onClick={addOnClick}
               className="relative inline-block max-w-full cursor-crosshair rounded-lg border border-gray-200 dark:border-gray-700"
             >
-              <img src={imagemBase} alt="" className="max-w-full h-auto rounded-lg" />
+              <img src={baseImage} alt="" className="max-w-full h-auto rounded-lg" />
               {hotspots.map((hotspot, index) => (
                 <span
                   key={hotspot.id}
@@ -518,7 +511,7 @@ function EditorDeHotspots({
                   type="button"
                   variant="ghost"
                   size="sm"
-                  onClick={() => onChange(hotspots.filter((outro) => outro.id !== hotspot.id))}
+                  onClick={() => onChange(hotspots.filter((another) => another.id !== hotspot.id))}
                   className="text-red-600 dark:text-red-400"
                 >
                   <Trash2 className="h-4 w-4" />
@@ -526,22 +519,22 @@ function EditorDeHotspots({
               </div>
               <div className="space-y-3">
                 <div className="grid grid-cols-2 gap-3">
-                  {(['x', 'y'] as const).map((eixo) => (
+                  {(['x', 'y'] as const).map((axis) => (
                     <FormField
-                      key={eixo}
-                      compacto
-                      label={eixo === 'x' ? 'Horizontal (%)' : 'Vertical (%)'}
-                      htmlFor={`${hotspot.id}-${eixo}`}
+                      key={axis}
+                      compact
+                      label={axis === 'x' ? 'Horizontal (%)' : 'Vertical (%)'}
+                      htmlFor={`${hotspot.id}-${axis}`}
                     >
                       <Input
-                        id={`${hotspot.id}-${eixo}`}
+                        id={`${hotspot.id}-${axis}`}
                         type="number"
                         min={0}
                         max={100}
-                        value={hotspot[eixo]}
+                        value={hotspot[axis]}
                         onChange={(e) =>
-                          atualizar(hotspot.id, {
-                            [eixo]: Math.min(100, Math.max(0, Number(e.target.value) || 0)),
+                          update(hotspot.id, {
+                            [axis]: Math.min(100, Math.max(0, Number(e.target.value) || 0)),
                           })
                         }
                         className="text-sm"
@@ -552,13 +545,13 @@ function EditorDeHotspots({
 
                 <Input
                   value={hotspot.titulo}
-                  onChange={(e) => atualizar(hotspot.id, { titulo: e.target.value })}
+                  onChange={(e) => update(hotspot.id, { titulo: e.target.value })}
                   placeholder="Título do ponto..."
                   className="text-sm"
                 />
                 <Textarea
                   value={hotspot.conteudo}
-                  onChange={(e) => atualizar(hotspot.id, { conteudo: e.target.value })}
+                  onChange={(e) => update(hotspot.id, { conteudo: e.target.value })}
                   placeholder="Descrição exibida ao clicar..."
                   rows={3}
                   className="text-sm"
@@ -580,18 +573,16 @@ export function ContentBlockDrawer({
   onSave,
   onCancel,
 }: ContentBlockDrawerProps) {
-  const [selectedType, setSelectedType] = useState<ConteudoUnidade['tipo'] | null>(
-    blockData?.tipo || null
-  )
+  const [selectedType, setSelectedType] = useState<Block['tipo'] | null>(blockData?.tipo || null)
 
-  const [formData, setFormData] = useState<Partial<ConteudoUnidade>>(prepararFormulario(blockData))
+  const [formData, setFormData] = useState<Partial<Block>>(prepareForm(blockData))
   const [isUploadingImage, setIsUploadingImage] = useState(false)
   const [imagePreviewUrl, setImagePreviewUrl] = useState<string | null>(null)
 
   useEffect(() => {
     if (open) {
       setSelectedType(blockData?.tipo || null)
-      setFormData(prepararFormulario(blockData))
+      setFormData(prepareForm(blockData))
       if (blockData?.conteudo && blockData?.tipo === 'imagem') {
         setImagePreviewUrl(blockData.conteudo)
       }
@@ -603,13 +594,13 @@ export function ContentBlockDrawer({
 
     if (!validateForm()) return
 
-    onSave(formData as Omit<ConteudoUnidade, 'id' | 'ordem'>)
+    onSave(formData as Omit<Block, 'id' | 'ordem'>)
     onOpenChange(false)
   }
 
   const handleCancel = () => {
     setSelectedType(null)
-    setFormData(criarBlocoVazio('paragrafo'))
+    setFormData(createEmptyBlock('paragrafo'))
     setImagePreviewUrl(null)
     onCancel()
   }
@@ -617,9 +608,9 @@ export function ContentBlockDrawer({
   const validateForm = (): boolean => {
     if (!selectedType) return false
 
-    const erro = CATALOGO_BLOCOS[selectedType].validarFormulario(formData)
-    if (erro) {
-      toast.error(erro)
+    const error = BLOCK_CATALOG[selectedType].validateForm(formData)
+    if (error) {
+      toast.error(error)
       return false
     }
     return true
@@ -630,11 +621,11 @@ export function ContentBlockDrawer({
     setImagePreviewUrl(null)
 
     try {
-      const { url, aviso } = await enviarArquivo(file, 'imagem')
+      const { url, warning } = await uploadFile(file, 'image')
 
       setFormData({ ...formData, conteudo: url })
       setImagePreviewUrl(url)
-      if (aviso) toast.warning(aviso)
+      if (warning) toast.warning(warning)
       else toast.success('Imagem enviada')
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Erro ao enviar imagem')
@@ -670,7 +661,7 @@ export function ContentBlockDrawer({
   }
 
   const handleAddListItem = () => {
-    const newItem: ListaItem = {
+    const newItem: ListItem = {
       id: `list-item-${Date.now()}`,
       texto: '',
     }
@@ -696,8 +687,8 @@ export function ContentBlockDrawer({
     })
   }
 
-  const handleAddObjetivo = () => {
-    const newItem: ListaItem = {
+  const handleAddObjective = () => {
+    const newItem: ListItem = {
       id: `objetivo-${Date.now()}`,
       texto: '',
     }
@@ -707,14 +698,14 @@ export function ContentBlockDrawer({
     })
   }
 
-  const handleRemoveObjetivo = (id: string) => {
+  const handleRemoveObjective = (id: string) => {
     setFormData({
       ...formData,
       itensObjetivos: formData.itensObjetivos?.filter((item) => item.id !== id),
     })
   }
 
-  const handleUpdateObjetivo = (id: string, value: string) => {
+  const handleUpdateObjective = (id: string, value: string) => {
     setFormData({
       ...formData,
       itensObjetivos: formData.itensObjetivos?.map((item) =>
@@ -922,7 +913,7 @@ export function ContentBlockDrawer({
       case 'video': {
         // Sem seletor de fonte: enviar arquivo e colar link são o mesmo campo, e a URL
         // é que diz qual player usar.
-        const deArquivo = fonteDoVideo(formData, 'youtube') === 'arquivo'
+        const fromFile = videoSource(formData, 'youtube') === 'arquivo'
 
         return (
           <div className="space-y-4">
@@ -941,25 +932,25 @@ export function ContentBlockDrawer({
               />
             </FormField>
 
-            <CampoArquivo
-              categoria="video"
-              rotulo="Vídeo"
+            <FileField
+              category="video"
+              label="Vídeo"
               url={formData.videoUrl || ''}
               onUrl={(videoUrl) =>
                 setFormData({
                   ...formData,
                   videoUrl,
-                  fonteVideo: fonteDoVideo({ videoUrl }, 'youtube'),
+                  fonteVideo: videoSource({ videoUrl }, 'youtube'),
                 })
               }
               placeholderUrl="ou cole o link do YouTube aqui..."
-              dica="Envie um MP4/WebM (ideal até 25 MB) ou cole um link do YouTube."
+              hint="Envie um MP4/WebM (ideal até 25 MB) ou cole um link do YouTube."
             />
 
             {formData.videoUrl && (
               <FormField label="Pré-visualização" className="mt-4">
                 <div className="aspect-video w-full rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-800">
-                  {deArquivo ? (
+                  {fromFile ? (
                     <video
                       controls
                       preload="metadata"
@@ -983,7 +974,7 @@ export function ContentBlockDrawer({
       }
 
       case 'video-interativo': {
-        const doYouTube = fonteDoVideo(formData) === 'youtube'
+        const ofYouTube = videoSource(formData) === 'youtube'
 
         return (
           <div className="space-y-4">
@@ -1002,18 +993,18 @@ export function ContentBlockDrawer({
               />
             </FormField>
 
-            <CampoArquivo
-              categoria="video"
-              rotulo="Vídeo"
+            <FileField
+              category="video"
+              label="Vídeo"
               url={formData.videoUrl || ''}
               onUrl={(videoUrl) =>
-                setFormData({ ...formData, videoUrl, fonteVideo: fonteDoVideo({ videoUrl }) })
+                setFormData({ ...formData, videoUrl, fonteVideo: videoSource({ videoUrl }) })
               }
               placeholderUrl="ou cole o link do YouTube aqui..."
-              dica="Envie um MP4/WebM (ideal até 25 MB) ou cole um link do YouTube."
+              hint="Envie um MP4/WebM (ideal até 25 MB) ou cole um link do YouTube."
             />
 
-            {doYouTube && (
+            {ofYouTube && (
               <p className="rounded-md border border-amber-300 bg-amber-50 p-3 text-xs text-amber-900 dark:border-amber-800 dark:bg-amber-950/30 dark:text-amber-200">
                 O vídeo do YouTube <strong>não</strong> é embutido no pacote SCORM: o aluno
                 precisará de internet e do domínio do YouTube liberado no LMS. Para funcionar
@@ -1024,7 +1015,7 @@ export function ContentBlockDrawer({
             {formData.videoUrl && (
               <FormField label="Pré-visualização">
                 <div className="aspect-video w-full rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-800">
-                  {doYouTube ? (
+                  {ofYouTube ? (
                     <iframe
                       src={`https://www.youtube.com/embed/${extractYouTubeId(formData.videoUrl)}`}
                       title="Pré-visualização do vídeo"
@@ -1044,12 +1035,12 @@ export function ContentBlockDrawer({
               </FormField>
             )}
 
-            <EditorDeItens
-              rotulo="Perguntas"
-              rotuloItem="Pergunta"
-              vazio="Nenhuma pergunta adicionada ainda."
-              itens={formData.perguntasVideo || []}
-              criarItem={() => ({
+            <ItemEditor
+              label="Perguntas"
+              itemLabel="Pergunta"
+              emptyText="Nenhuma pergunta adicionada ainda."
+              items={formData.perguntasVideo || []}
+              createItem={() => ({
                 id: `pv-${Date.now()}`,
                 tempo: '',
                 pergunta: '',
@@ -1057,53 +1048,55 @@ export function ContentBlockDrawer({
                 opcaoB: '',
                 correta: 'A' as const,
               })}
-              onChange={(perguntasVideo) => setFormData({ ...formData, perguntasVideo })}
-              campos={[
+              onChange={(videoQuestions) =>
+                setFormData({ ...formData, perguntasVideo: videoQuestions })
+              }
+              fields={[
                 {
-                  chave: 'tempo',
-                  rotulo: 'Tempo do vídeo',
-                  obrigatorio: true,
+                  key: 'tempo',
+                  label: 'Tempo do vídeo',
+                  required: true,
                   placeholder: 'mm:ss — ex.: 02:30',
                 },
                 {
-                  chave: 'pergunta',
-                  rotulo: 'Enunciado',
-                  obrigatorio: true,
-                  tipo: 'multilinha',
+                  key: 'pergunta',
+                  label: 'Enunciado',
+                  required: true,
+                  type: 'multiline',
                   placeholder: 'O que o aluno precisa responder...',
                 },
                 {
-                  chave: 'opcaoA',
-                  rotulo: 'Alternativa A',
-                  obrigatorio: true,
+                  key: 'opcaoA',
+                  label: 'Alternativa A',
+                  required: true,
                   placeholder: 'A...',
                 },
                 {
-                  chave: 'opcaoB',
-                  rotulo: 'Alternativa B',
-                  obrigatorio: true,
+                  key: 'opcaoB',
+                  label: 'Alternativa B',
+                  required: true,
                   placeholder: 'B...',
                 },
-                { chave: 'opcaoC', rotulo: 'Alternativa C', placeholder: 'C... (opcional)' },
-                { chave: 'opcaoD', rotulo: 'Alternativa D', placeholder: 'D... (opcional)' },
-                { chave: 'opcaoE', rotulo: 'Alternativa E', placeholder: 'E... (opcional)' },
+                { key: 'opcaoC', label: 'Alternativa C', placeholder: 'C... (opcional)' },
+                { key: 'opcaoD', label: 'Alternativa D', placeholder: 'D... (opcional)' },
+                { key: 'opcaoE', label: 'Alternativa E', placeholder: 'E... (opcional)' },
                 {
-                  chave: 'correta',
-                  rotulo: 'Alternativa correta',
-                  obrigatorio: true,
-                  tipo: 'select',
-                  opcoes: [
-                    { valor: 'A', rotulo: 'A' },
-                    { valor: 'B', rotulo: 'B' },
-                    { valor: 'C', rotulo: 'C' },
-                    { valor: 'D', rotulo: 'D' },
-                    { valor: 'E', rotulo: 'E' },
+                  key: 'correta',
+                  label: 'Alternativa correta',
+                  required: true,
+                  type: 'select',
+                  options: [
+                    { value: 'A', label: 'A' },
+                    { value: 'B', label: 'B' },
+                    { value: 'C', label: 'C' },
+                    { value: 'D', label: 'D' },
+                    { value: 'E', label: 'E' },
                   ],
                 },
                 {
-                  chave: 'feedback',
-                  rotulo: 'Feedback',
-                  tipo: 'multilinha',
+                  key: 'feedback',
+                  label: 'Feedback',
+                  type: 'multiline',
                   placeholder: 'Explicação mostrada depois da resposta (opcional)...',
                 },
               ]}
@@ -1156,7 +1149,7 @@ export function ContentBlockDrawer({
                             Título <span className="text-red-500">*</span>
                           </>
                         }
-                        compacto
+                        compact
                       >
                         <Input
                           value={item.titulo}
@@ -1173,7 +1166,7 @@ export function ContentBlockDrawer({
                             Conteúdo <span className="text-red-500">*</span>
                           </>
                         }
-                        compacto
+                        compact
                       >
                         <Textarea
                           value={item.conteudo}
@@ -1289,7 +1282,7 @@ export function ContentBlockDrawer({
                 type="button"
                 variant="outline"
                 size="sm"
-                onClick={handleAddObjetivo}
+                onClick={handleAddObjective}
                 className="text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-800 hover:bg-blue-50 dark:hover:bg-blue-950/20"
               >
                 <Plus className="h-4 w-4 mr-2" />
@@ -1306,7 +1299,7 @@ export function ContentBlockDrawer({
                     </span>
                     <Input
                       value={item.texto}
-                      onChange={(e) => handleUpdateObjetivo(item.id, e.target.value)}
+                      onChange={(e) => handleUpdateObjective(item.id, e.target.value)}
                       placeholder="Descreva o objetivo de aprendizagem..."
                       className="flex-1"
                     />
@@ -1314,7 +1307,7 @@ export function ContentBlockDrawer({
                       type="button"
                       variant="ghost"
                       size="sm"
-                      onClick={() => handleRemoveObjetivo(item.id)}
+                      onClick={() => handleRemoveObjective(item.id)}
                       className="text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-950/20"
                     >
                       <Trash2 className="h-4 w-4" />
@@ -1409,50 +1402,52 @@ export function ContentBlockDrawer({
       case 'flipcard':
         return (
           <div className="space-y-5">
-            <EditorDeItens
-              rotulo="Flipcards"
-              rotuloItem="Card"
-              vazio="Nenhum flipcard adicionado ainda."
-              itens={formData.itensFlipcard || []}
-              criarItem={() => ({
+            <ItemEditor
+              label="Flipcards"
+              itemLabel="Card"
+              emptyText="Nenhum flipcard adicionado ainda."
+              items={formData.itensFlipcard || []}
+              createItem={() => ({
                 id: `flip-${Date.now()}`,
                 tipoFrente: 'titulo' as const,
                 imagemFrente: '',
                 tituloFrente: '',
                 conteudoVerso: '',
               })}
-              onChange={(itensFlipcard) => setFormData({ ...formData, itensFlipcard })}
-              campos={[
+              onChange={(flipcardItems) =>
+                setFormData({ ...formData, itensFlipcard: flipcardItems })
+              }
+              fields={[
                 {
-                  chave: 'tipoFrente',
-                  rotulo: 'Tipo de frente',
-                  obrigatorio: true,
-                  tipo: 'select',
-                  opcoes: [
-                    { valor: 'titulo', rotulo: 'Apenas título centralizado' },
-                    { valor: 'imagem', rotulo: 'Apenas imagem' },
-                    { valor: 'imagem-titulo', rotulo: 'Imagem com título no rodapé' },
+                  key: 'tipoFrente',
+                  label: 'Tipo de frente',
+                  required: true,
+                  type: 'select',
+                  options: [
+                    { value: 'titulo', label: 'Apenas título centralizado' },
+                    { value: 'imagem', label: 'Apenas imagem' },
+                    { value: 'imagem-titulo', label: 'Imagem com título no rodapé' },
                   ],
                 },
                 {
-                  chave: 'imagemFrente',
-                  rotulo: 'Imagem da frente',
-                  obrigatorio: true,
-                  tipo: 'imagem',
-                  visivelSe: (card) => card.tipoFrente !== 'titulo',
+                  key: 'imagemFrente',
+                  label: 'Imagem da frente',
+                  required: true,
+                  type: 'image',
+                  visibleIf: (card) => card.tipoFrente !== 'titulo',
                 },
                 {
-                  chave: 'tituloFrente',
-                  rotulo: 'Título da frente',
-                  obrigatorio: true,
+                  key: 'tituloFrente',
+                  label: 'Título da frente',
+                  required: true,
                   placeholder: 'Digite o título...',
-                  visivelSe: (card) => card.tipoFrente !== 'imagem',
+                  visibleIf: (card) => card.tipoFrente !== 'imagem',
                 },
                 {
-                  chave: 'conteudoVerso',
-                  rotulo: 'Conteúdo do verso',
-                  obrigatorio: true,
-                  tipo: 'multilinha',
+                  key: 'conteudoVerso',
+                  label: 'Conteúdo do verso',
+                  required: true,
+                  type: 'multiline',
                   placeholder: 'Digite o conteúdo do verso...',
                 },
               ]}
@@ -1479,7 +1474,7 @@ export function ContentBlockDrawer({
               onValueChange={(value) =>
                 setFormData({
                   ...formData,
-                  estiloSeparador: value as ConteudoUnidade['estiloSeparador'],
+                  estiloSeparador: value as Block['estiloSeparador'],
                 })
               }
             >
@@ -1497,25 +1492,25 @@ export function ContentBlockDrawer({
 
       case 'tabs':
         return (
-          <EditorDeItens
-            rotulo="Abas"
-            rotuloItem="Aba"
-            vazio="Nenhuma aba adicionada ainda."
-            itens={formData.itensTabs || []}
-            criarItem={() => ({ id: `tab-${Date.now()}`, titulo: '', conteudo: '' })}
-            onChange={(itensTabs) => setFormData({ ...formData, itensTabs })}
-            campos={[
+          <ItemEditor
+            label="Abas"
+            itemLabel="Aba"
+            emptyText="Nenhuma aba adicionada ainda."
+            items={formData.itensTabs || []}
+            createItem={() => ({ id: `tab-${Date.now()}`, titulo: '', conteudo: '' })}
+            onChange={(tabItems) => setFormData({ ...formData, itensTabs: tabItems })}
+            fields={[
               {
-                chave: 'titulo',
-                rotulo: 'Título',
-                obrigatorio: true,
+                key: 'titulo',
+                label: 'Título',
+                required: true,
                 placeholder: 'Título da aba...',
               },
               {
-                chave: 'conteudo',
-                rotulo: 'Conteúdo',
-                obrigatorio: true,
-                tipo: 'multilinha',
+                key: 'conteudo',
+                label: 'Conteúdo',
+                required: true,
+                type: 'multiline',
                 placeholder: 'Conteúdo da aba...',
               },
             ]}
@@ -1531,7 +1526,7 @@ export function ContentBlockDrawer({
                 onValueChange={(value) =>
                   setFormData({
                     ...formData,
-                    orientacaoTimeline: value as ConteudoUnidade['orientacaoTimeline'],
+                    orientacaoTimeline: value as Block['orientacaoTimeline'],
                   })
                 }
               >
@@ -1545,30 +1540,32 @@ export function ContentBlockDrawer({
               </Select>
             </FormField>
 
-            <EditorDeItens
-              rotulo="Eventos"
-              rotuloItem="Evento"
-              vazio="Nenhum evento adicionado ainda."
-              itens={formData.itensTimeline || []}
-              criarItem={() => ({
+            <ItemEditor
+              label="Eventos"
+              itemLabel="Evento"
+              emptyText="Nenhum evento adicionado ainda."
+              items={formData.itensTimeline || []}
+              createItem={() => ({
                 id: `evento-${Date.now()}`,
                 data: '',
                 titulo: '',
                 descricao: '',
               })}
-              onChange={(itensTimeline) => setFormData({ ...formData, itensTimeline })}
-              campos={[
-                { chave: 'data', rotulo: 'Data', placeholder: 'Ex.: 1990 ou Março/2024' },
+              onChange={(timelineItems) =>
+                setFormData({ ...formData, itensTimeline: timelineItems })
+              }
+              fields={[
+                { key: 'data', label: 'Data', placeholder: 'Ex.: 1990 ou Março/2024' },
                 {
-                  chave: 'titulo',
-                  rotulo: 'Título',
-                  obrigatorio: true,
+                  key: 'titulo',
+                  label: 'Título',
+                  required: true,
                   placeholder: 'Título do evento...',
                 },
                 {
-                  chave: 'descricao',
-                  rotulo: 'Descrição',
-                  tipo: 'multilinha',
+                  key: 'descricao',
+                  label: 'Descrição',
+                  type: 'multiline',
                   placeholder: 'Descrição do evento...',
                 },
               ]}
@@ -1581,50 +1578,52 @@ export function ContentBlockDrawer({
           <div className="space-y-5">
             <FormField label="Exibição">
               <div className="grid grid-cols-2 gap-2">
-                {MODOS_EXIBICAO_CARROSSEL.map((modo) => {
-                  const ativo = (formData.modoCarrossel || 'carrossel') === modo.valor
-                  const Icone = modo.icone
+                {CAROUSEL_DISPLAY_MODES.map((mode) => {
+                  const active = (formData.modoCarrossel || 'carrossel') === mode.value
+                  const Icon = mode.icon
 
                   return (
                     <Button
-                      key={modo.valor}
+                      key={mode.value}
                       type="button"
-                      variant={ativo ? 'default' : 'outline'}
-                      onClick={() => setFormData({ ...formData, modoCarrossel: modo.valor })}
+                      variant={active ? 'default' : 'outline'}
+                      onClick={() => setFormData({ ...formData, modoCarrossel: mode.value })}
                       className="h-auto flex-col gap-1.5 py-3"
                     >
-                      <Icone className="h-5 w-5" />
-                      {modo.rotulo}
+                      <Icon className="h-5 w-5" />
+                      {mode.label}
                     </Button>
                   )
                 })}
               </div>
             </FormField>
 
-            <EditorDeItens
-              rotulo="Imagens"
-              rotuloItem="Imagem"
-              vazio="Nenhuma imagem adicionada ainda."
-              itens={formData.itensCarrossel || []}
-              criarItem={() => ({ id: `img-${Date.now()}`, url: '', legenda: '', fonte: '' })}
-              onChange={(itensCarrossel) => setFormData({ ...formData, itensCarrossel })}
-              campos={[
+            <ItemEditor
+              label="Imagens"
+              itemLabel="Imagem"
+              emptyText="Nenhuma imagem adicionada ainda."
+              items={formData.itensCarrossel || []}
+              createItem={() => ({ id: `img-${Date.now()}`, url: '', legenda: '', fonte: '' })}
+              onChange={(carouselItems) =>
+                setFormData({ ...formData, itensCarrossel: carouselItems })
+              }
+              fields={[
                 {
-                  chave: 'url',
-                  rotulo: 'Imagem',
-                  obrigatorio: true,
-                  tipo: 'imagem',
+                  key: 'url',
+                  label: 'Imagem',
+                  required: true,
+                  type: 'image',
                 },
                 {
-                  chave: 'legenda',
-                  rotulo: 'Legenda',
-                  obrigatorio: true,
+                  key: 'legenda',
+                  label: 'Legenda',
+                  required: true,
                   placeholder: 'Legenda da imagem...',
                 },
                 {
-                  chave: 'fonte',
-                  rotulo: 'Fonte',
-                  obrigatorio: true,
+                  key: 'fonte',
+                  label: 'Fonte',
+                  required: true,
                   placeholder: 'Fonte da imagem...',
                 },
               ]}
@@ -1635,9 +1634,9 @@ export function ContentBlockDrawer({
       case 'audio':
         return (
           <div className="space-y-5">
-            <CampoArquivo
-              categoria="audio"
-              rotulo="Arquivo de áudio"
+            <FileField
+              category="audio"
+              label="Arquivo de áudio"
               url={formData.audioUrl || ''}
               onUrl={(audioUrl) => setFormData({ ...formData, audioUrl })}
             />
@@ -1670,9 +1669,9 @@ export function ContentBlockDrawer({
       case 'pdf':
         return (
           <div className="space-y-5">
-            <CampoArquivo
-              categoria="documento"
-              rotulo="Arquivo PDF"
+            <FileField
+              category="document"
+              label="Arquivo PDF"
               url={formData.pdfUrl || ''}
               onUrl={(pdfUrl) => setFormData({ ...formData, pdfUrl })}
             />
@@ -1708,15 +1707,15 @@ export function ContentBlockDrawer({
       case 'imagem-interativa':
         return (
           <div className="space-y-5">
-            <CampoArquivo
-              categoria="imagem"
-              rotulo="Imagem de fundo"
+            <FileField
+              category="image"
+              label="Imagem de fundo"
               url={formData.imagemBase || ''}
-              onUrl={(imagemBase) => setFormData({ ...formData, imagemBase })}
+              onUrl={(baseImage) => setFormData({ ...formData, imagemBase: baseImage })}
             />
 
-            <EditorDeHotspots
-              imagemBase={formData.imagemBase || ''}
+            <HotspotEditor
+              baseImage={formData.imagemBase || ''}
               hotspots={formData.hotspots || []}
               onChange={(hotspots) => setFormData({ ...formData, hotspots })}
             />
@@ -1733,24 +1732,26 @@ export function ContentBlockDrawer({
 
       case 'associacao':
         return (
-          <EditorDeItens
-            rotulo="Pares"
-            rotuloItem="Par"
-            vazio="Nenhum par adicionado ainda."
-            itens={formData.paresAssociacao || []}
-            criarItem={() => ({ id: `par-${Date.now()}`, esquerda: '', direita: '' })}
-            onChange={(paresAssociacao) => setFormData({ ...formData, paresAssociacao })}
-            campos={[
+          <ItemEditor
+            label="Pares"
+            itemLabel="Par"
+            emptyText="Nenhum par adicionado ainda."
+            items={formData.paresAssociacao || []}
+            createItem={() => ({ id: `par-${Date.now()}`, esquerda: '', direita: '' })}
+            onChange={(matchingPairs) =>
+              setFormData({ ...formData, paresAssociacao: matchingPairs })
+            }
+            fields={[
               {
-                chave: 'esquerda',
-                rotulo: 'Item fixo',
-                obrigatorio: true,
+                key: 'esquerda',
+                label: 'Item fixo',
+                required: true,
                 placeholder: 'Ex.: Água',
               },
               {
-                chave: 'direita',
-                rotulo: 'Correspondente',
-                obrigatorio: true,
+                key: 'direita',
+                label: 'Correspondente',
+                required: true,
                 placeholder: 'Ex.: H₂O',
               },
             ]}
@@ -1759,9 +1760,9 @@ export function ContentBlockDrawer({
 
       case 'categorizacao':
         return (
-          <EditorDeCategorias
-            categorias={formData.categorias || []}
-            onChange={(categorias) => setFormData({ ...formData, categorias })}
+          <CategoryEditor
+            categories={formData.categorias || []}
+            onChange={(categories) => setFormData({ ...formData, categorias: categories })}
           />
         )
 
@@ -1770,8 +1771,8 @@ export function ContentBlockDrawer({
     }
   }
 
-  const meta = selectedType ? CATALOGO_BLOCOS[selectedType] : null
-  const Icon = meta?.icone
+  const meta = selectedType ? BLOCK_CATALOG[selectedType] : null
+  const Icon = meta?.icon
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -1787,24 +1788,24 @@ export function ContentBlockDrawer({
               <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                 {mode === 'add' ? 'ADICIONAR' : 'EDITAR'}
               </p>
-              <SheetTitle className="text-xl">{meta?.rotulo ?? 'Conteúdo'}</SheetTitle>
+              <SheetTitle className="text-xl">{meta?.label ?? 'Conteúdo'}</SheetTitle>
             </div>
           </div>
         </SheetHeader>
 
         <div className="flex-1 overflow-y-auto px-6 py-6 space-y-5">
           {renderForm()}
-          {meta?.larguraAjustavel && (
+          {meta?.adjustableWidth && (
             <FormField label="Largura do bloco">
               <div className="grid grid-cols-2 gap-2">
-                {LARGURAS_BLOCO.map((largura) => (
+                {BLOCK_WIDTHS.map((width) => (
                   <Button
-                    key={largura.colunas}
+                    key={width.columns}
                     type="button"
-                    variant={(formData.colunas ?? 12) === largura.colunas ? 'default' : 'outline'}
-                    onClick={() => setFormData({ ...formData, colunas: largura.colunas })}
+                    variant={(formData.colunas ?? 12) === width.columns ? 'default' : 'outline'}
+                    onClick={() => setFormData({ ...formData, colunas: width.columns })}
                   >
-                    {largura.rotulo}
+                    {width.label}
                   </Button>
                 ))}
               </div>
