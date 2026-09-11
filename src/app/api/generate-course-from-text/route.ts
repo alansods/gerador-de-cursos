@@ -233,7 +233,29 @@ Cada Unidade:
   "tipo": "video",
   "conteudo": "",
   "videoUrl": "https://www.youtube.com/watch?v=xxxxxxxxxxx",
-  "videoTitulo": "Título do vídeo"
+  "videoTitulo": "Título do vídeo",
+  "fonteVideo": "youtube"
+}
+
+### 11b. video-interativo — apenas com URL de arquivo de vídeo presente no documento
+{
+  "titulo": "string",
+  "tipo": "video-interativo",
+  "conteudo": "",
+  "videoUrl": "https://exemplo.com/videos/aula.mp4",
+  "videoTitulo": "Título do vídeo",
+  "perguntasVideo": [
+    {
+      "id": "pv-1",
+      "tempo": "01:30",
+      "pergunta": "Pergunta?",
+      "opcaoA": "Alternativa A",
+      "opcaoB": "Alternativa B",
+      "opcaoC": "Alternativa C",
+      "correta": "B",
+      "feedback": "Explicação mostrada depois da resposta"
+    }
+  ]
 }
 
 ### 12. tabs
@@ -398,6 +420,15 @@ ${sharedStructure}
   - "URL:" → conteudo; "Legenda:" → legenda; "Fonte:" → fonte; "Tamanho:" → tamanho
 - Bloco VIDEO_INICIO...VIDEO_FIM → tipo "video"
   - "URL:" → videoUrl; "Título:" → videoTitulo
+  - "fonteVideo": "arquivo" se a URL terminar em .mp4 ou .webm; caso contrário "youtube"
+- Bloco VIDEOINTERATIVO_INICIO...VIDEOINTERATIVO_FIM → tipo "video-interativo" (UM único bloco com todas as perguntas)
+  - "URL:" → videoUrl (sempre um arquivo .mp4 ou .webm); "Título:" → videoTitulo
+  - "Tempo da Pergunta N:" → perguntasVideo[N-1].tempo (mantenha o formato mm:ss como está escrito)
+  - "Pergunta N:" → perguntasVideo[N-1].pergunta
+  - "Opção A/B/C/D/E da Pergunta N:" → perguntasVideo[N-1].opcaoA/opcaoB/opcaoC/opcaoD/opcaoE
+  - "Resposta Correta da Pergunta N:" → perguntasVideo[N-1].correta (a letra, em maiúscula)
+  - "Feedback da Pergunta N:" → perguntasVideo[N-1].feedback
+  - Mínimo de 2 alternativas por pergunta; NUNCA invente um tempo que não esteja no documento
 - Bloco TABS_INICIO...TABS_FIM → tipo "tabs"
   - "Título da Aba N:" → itensTabs[N].titulo
   - "Conteúdo da Aba N:" → itensTabs[N].conteudo (em HTML)
@@ -472,6 +503,7 @@ ${sharedStructure}
 - Use ao menos 1 recurso interativo (accordion, tabs, quiz ou flipcard) por unidade
 - NUNCA gere o bloco separador no modo automático
 - NUNCA gere o bloco imagem-interativa no modo automático: as coordenadas dos pontos precisam vir do documento
+- NUNCA gere o bloco video-interativo no modo automático: os tempos das perguntas precisam vir do documento, e você não assiste ao vídeo
 
 ## Texto para analisar
 

@@ -20,6 +20,7 @@ import { PdfBlock } from './PdfBlock'
 import { ImagemInterativaBlock } from './ImagemInterativaBlock'
 import { AssociacaoBlock } from './AssociacaoBlock'
 import { CategorizacaoBlock } from './CategorizacaoBlock'
+import { VideoInterativoBlock } from './VideoInterativoBlock'
 
 export interface BlockProps {
   item: ConteudoUnidade
@@ -47,4 +48,5 @@ export const blockRegistry: Record<ConteudoUnidade['tipo'], ComponentType<BlockP
   'imagem-interativa': ImagemInterativaBlock,
   associacao: AssociacaoBlock,
   categorizacao: CategorizacaoBlock,
+  'video-interativo': VideoInterativoBlock,
 }

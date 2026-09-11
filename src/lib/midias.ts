@@ -1,4 +1,4 @@
-export type CategoriaMidia = 'imagem' | 'audio' | 'documento'
+export type CategoriaMidia = 'imagem' | 'audio' | 'video' | 'documento'
 
 export interface PoliticaMidia {
   categoria: CategoriaMidia
@@ -30,6 +30,15 @@ export const POLITICA_MIDIAS: Record<CategoriaMidia, PoliticaMidia> = {
     limiteRigidoBytes: 25 * MB,
     limiteRecomendadoBytes: 10 * MB,
     dicaTamanho: 'Ideal até 10 MB (~15 min a 96 kbps mono). WAV não é aceito.',
+  },
+  video: {
+    categoria: 'video',
+    rotulo: 'Vídeo',
+    tiposPermitidos: ['video/mp4', 'video/webm'],
+    extensoes: '.mp4,.webm',
+    limiteRigidoBytes: 100 * MB,
+    limiteRecomendadoBytes: 25 * MB,
+    dicaTamanho: 'Ideal até 25 MB (~5 min em 720p). Comprima antes de enviar.',
   },
   documento: {
     categoria: 'documento',

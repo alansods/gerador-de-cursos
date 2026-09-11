@@ -85,6 +85,21 @@ export interface QuizData {
   questions: QuizQuestion[] // Array de perguntas do quiz
 }
 
+export type LetraAlternativa = 'A' | 'B' | 'C' | 'D' | 'E'
+
+export interface PerguntaVideo {
+  id: string
+  tempo: string // "mm:ss" ou "hh:mm:ss", como o autor digita
+  pergunta: string
+  opcaoA: string
+  opcaoB: string
+  opcaoC?: string
+  opcaoD?: string
+  opcaoE?: string
+  correta: LetraAlternativa
+  feedback?: string
+}
+
 export interface ConteudoUnidade {
   id: string
   tipo:
@@ -108,6 +123,7 @@ export interface ConteudoUnidade {
     | 'imagem-interativa'
     | 'associacao'
     | 'categorizacao'
+    | 'video-interativo'
   conteudo: string
   ordem: number
   // Propriedades específicas para imagens
@@ -138,8 +154,11 @@ export interface ConteudoUnidade {
   tipoInfoBox?: 'atencao' | 'saiba_mais' | 'info' | 'curiosidade'
   tituloInfoBox?: string
   // Propriedades específicas para video
+  fonteVideo?: 'youtube' | 'arquivo'
   videoUrl?: string
   videoTitulo?: string
+  // Propriedades específicas para video-interativo
+  perguntasVideo?: PerguntaVideo[]
   // Propriedades específicas para objetivos-aprendizagem
   itensObjetivos?: ListaItem[]
   // Propriedades específicas para separador

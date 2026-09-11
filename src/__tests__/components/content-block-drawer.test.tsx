@@ -107,6 +107,73 @@ describe('ContentBlockDrawer', () => {
     )
   })
 
+  it('monta uma pergunta do vídeo interativo e salva', async () => {
+    const usuario = userEvent.setup()
+    const onSave = montar('video-interativo')
+
+    await usuario.type(
+      screen.getByPlaceholderText('Digite o título do vídeo...'),
+      'Uso do capacete'
+    )
+    await usuario.type(screen.getByPlaceholderText('ou cole a URL aqui...'), 'https://b.com/a.mp4')
+
+    await usuario.click(screen.getByRole('button', { name: /adicionar/i }))
+    await usuario.type(screen.getByPlaceholderText('mm:ss — ex.: 02:30'), '01:30')
+    await usuario.type(
+      screen.getByPlaceholderText('O que o aluno precisa responder...'),
+      'O que prende o capacete?'
+    )
+    await usuario.type(screen.getByPlaceholderText('A...'), 'O casco')
+    await usuario.type(screen.getByPlaceholderText('B...'), 'A jugular')
+
+    await usuario.click(screen.getByRole('button', { name: /salvar/i }))
+
+    expect(erroToast).not.toHaveBeenCalled()
+    expect(onSave).toHaveBeenCalledWith(
+      expect.objectContaining({
+        tipo: 'video-interativo',
+        videoUrl: 'https://b.com/a.mp4',
+        perguntasVideo: [
+          expect.objectContaining({
+            tempo: '01:30',
+            pergunta: 'O que prende o capacete?',
+            opcaoA: 'O casco',
+            opcaoB: 'A jugular',
+            correta: 'A',
+          }),
+        ],
+      })
+    )
+  })
+
+  it('recusa a pergunta do vídeo cuja alternativa correta está vazia', async () => {
+    const usuario = userEvent.setup()
+    const onSave = montar('video-interativo')
+
+    await usuario.type(screen.getByPlaceholderText('Digite o título do vídeo...'), 'Aula')
+    await usuario.type(screen.getByPlaceholderText('ou cole a URL aqui...'), 'https://b.com/a.mp4')
+
+    await usuario.click(screen.getByRole('button', { name: /adicionar/i }))
+    await usuario.type(screen.getByPlaceholderText('mm:ss — ex.: 02:30'), 'agora')
+    await usuario.click(screen.getByRole('button', { name: /salvar/i }))
+
+    expect(onSave).not.toHaveBeenCalled()
+    expect(erroToast).toHaveBeenCalledWith('Pergunta 1: informe o tempo no formato mm:ss')
+  })
+
+  it('troca o campo de link do vídeo pelo upload ao escolher arquivo', async () => {
+    const usuario = userEvent.setup()
+    montar('video')
+
+    expect(screen.getByPlaceholderText('Cole o link do vídeo do YouTube...')).toBeInTheDocument()
+
+    await usuario.click(screen.getByRole('combobox'))
+    await usuario.click(screen.getByRole('option', { name: 'Arquivo do computador' }))
+
+    expect(screen.queryByPlaceholderText('Cole o link do vídeo do YouTube...')).toBeNull()
+    expect(screen.getByPlaceholderText('ou cole a URL aqui...')).toBeInTheDocument()
+  })
+
   it('cobra título do evento na linha do tempo', async () => {
     const usuario = userEvent.setup()
     const onSave = montar('linha-do-tempo')
