@@ -105,7 +105,7 @@ export function QuizContent({ quizData, isEditing = false, onResult }: QuizConte
 
   const totalQuestions = quizData.questions.length
 
-  // ── Tela de resultados ────────────────────────────────────────────────────
+  // ── Results screen ────────────────────────────────────────────────────────
   if (showResults && !isEditing) {
     const { correctAnswers, total, pct } = calculateResults()
     const perfect = pct === 100

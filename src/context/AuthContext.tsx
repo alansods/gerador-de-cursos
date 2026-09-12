@@ -36,10 +36,10 @@ interface AuthProviderProps {
 
 export function AuthProvider({ children, initialUser }: AuthProviderProps) {
   const [user, setUser] = useState<User | null>(initialUser || null)
-  const [loading, setLoading] = useState(true) // Começa como true para verificar sessão
+  const [loading, setLoading] = useState(true) // starts true so the session gets checked
   const router = useRouter()
   const pathname = usePathname()
-  const checkSessionRef = useRef(false) // Prevenir verificações duplicadas
+  const checkSessionRef = useRef(false) // prevents duplicate checks
 
   const login = async (email: string, password: string): Promise<boolean> => {
     setLoading(true)
@@ -62,7 +62,7 @@ export function AuthProvider({ children, initialUser }: AuthProviderProps) {
         return false
       }
     } catch (error) {
-      console.error('Erro no login:', error)
+      console.error('Login failed:', error)
       toast.error('Erro ao conectar com o servidor')
       return false
     } finally {
@@ -91,7 +91,7 @@ export function AuthProvider({ children, initialUser }: AuthProviderProps) {
       setUser(data.user)
       router.push('/home')
     } catch (error) {
-      console.error('Erro no login como convidado:', error)
+      console.error('Guest login failed:', error)
       toast.error('Não foi possível entrar como convidado. Tente novamente.')
     } finally {
       setLoading(false)
@@ -100,60 +100,60 @@ export function AuthProvider({ children, initialUser }: AuthProviderProps) {
 
   const logout = async () => {
     try {
-      console.log('[AuthContext] 🚪 Iniciando logout...')
+      console.log('[AuthContext] 🚪 Logging out...')
 
-      // Chamar API de logout para limpar cookie
+      // Call the logout API to clear the cookie
       const response = await fetch('/api/auth/logout', {
         method: 'POST',
         credentials: 'include',
       })
 
       if (!response.ok) {
-        console.warn('[AuthContext] ⚠️ Erro na resposta do logout, mas continuando...')
+        console.warn('[AuthContext] ⚠️ Logout responded with an error, continuing anyway...')
       }
 
-      // Limpar estado local
+      // Clear the local state
       setUser(null)
 
-      // Resetar ref para permitir nova verificação de sessão
+      // Reset the ref so the session can be checked again
       checkSessionRef.current = false
 
-      console.log('[AuthContext] ✅ Logout concluído, redirecionando para login')
+      console.log('[AuthContext] ✅ Logged out, redirecting to login')
 
       router.push('/login')
     } catch (error) {
-      console.error('[AuthContext] ❌ Erro no logout:', error)
+      console.error('[AuthContext] ❌ Logout failed:', error)
 
-      // Mesmo com erro, limpar estado local e redirecionar
+      // Clear the local state and redirect even on failure
       setUser(null)
       checkSessionRef.current = false
       router.push('/login')
     }
   }
 
-  // Verificar sessão ao carregar
+  // Check the session on mount
   useEffect(() => {
-    // Não verificar sessão em rotas SCORM (pacotes estáticos)
-    // Detectar ambiente SCORM: pathname inclui scorm-preview OU window.SCORM existe
+    // Never check the session on SCORM routes (static packages)
+    // Detect the SCORM environment: scorm-preview in the pathname OR window.SCORM present
     const isScormEnvironment =
       pathname?.includes('/scorm-preview') || (typeof window !== 'undefined' && 'SCORM' in window)
 
     if (isScormEnvironment) {
-      console.log('[AuthContext] ⏭️ Pulando verificação de sessão (rota SCORM)')
+      console.log('[AuthContext] ⏭️ Skipping the session check (SCORM route)')
       setLoading(false)
       return
     }
 
-    // Prevenir verificações duplicadas (React Strict Mode)
+    // Prevent duplicate checks (React Strict Mode)
     if (checkSessionRef.current) {
-      console.log('[AuthContext] 🚫 Verificação de sessão já em andamento')
+      console.log('[AuthContext] 🚫 A session check is already running')
       return
     }
 
     checkSessionRef.current = true
 
     const checkSession = async () => {
-      console.log('[AuthContext] 🔐 Verificando sessão...')
+      console.log('[AuthContext] 🔐 Checking the session...')
 
       try {
         const response = await fetch('/api/auth/me', {
@@ -165,7 +165,7 @@ export function AuthProvider({ children, initialUser }: AuthProviderProps) {
         })
 
         if (!response.ok) {
-          console.log('[AuthContext] ⚠️ Erro ao verificar sessão:', response.status)
+          console.log('[AuthContext] ⚠️ Session check failed:', response.status)
           setUser(null)
           setLoading(false)
           return
@@ -174,14 +174,14 @@ export function AuthProvider({ children, initialUser }: AuthProviderProps) {
         const data = await response.json()
 
         if (data.success && data.authenticated && data.user) {
-          console.log('[AuthContext] ✅ Sessão válida, usuário:', data.user.email)
+          console.log('[AuthContext] ✅ Session is valid, user:', data.user.email)
           setUser(data.user)
         } else {
-          console.log('[AuthContext] ℹ️ Nenhuma sessão ativa')
+          console.log('[AuthContext] ℹ️ No active session')
           setUser(null)
         }
       } catch (error) {
-        console.error('[AuthContext] ❌ Erro ao verificar sessão:', error)
+        console.error('[AuthContext] ❌ Session check failed:', error)
         setUser(null)
       } finally {
         setLoading(false)
@@ -190,14 +190,14 @@ export function AuthProvider({ children, initialUser }: AuthProviderProps) {
 
     checkSession()
 
-    // Cleanup não necessário pois é apenas uma verificação única
+    // No cleanup needed: this runs once
   }, [pathname]) // Reexecutar quando o pathname mudar
 
   const isAuthenticated = !!user
 
-  // Sem papel reconhecido o usuário fica sem permissão alguma (falha fechada).
-  // `/api/auth/me` sempre devolve o papel lido do banco, então isso só acontece
-  // se a sessão ainda não carregou.
+  // With no recognized role the user gets no permission at all (fail closed).
+  // `/api/auth/me` always returns the role read from the database, so this only
+  // happens while the session is still loading.
   const role: UserRole | null = user?.role && ROLES.includes(user.role) ? user.role : null
 
   const permissionUser = user && role ? { id: user.id, role } : null

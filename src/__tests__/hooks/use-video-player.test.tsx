@@ -122,8 +122,8 @@ afterEach(() => {
   delete (window as any).YT
 })
 
-describe('useReprodutorVideo — fonte YouTube', () => {
-  it('cria o player com a barra do YouTube desligada', async () => {
+describe('useVideoPlayer — YouTube source', () => {
+  it('creates the player with the YouTube bar turned off', async () => {
     await mountReady()
 
     expect(created).toHaveLength(1)
@@ -131,7 +131,7 @@ describe('useReprodutorVideo — fonte YouTube', () => {
     expect(created[0].playerVars).toMatchObject({ controls: 0, disablekb: 1 })
   })
 
-  it('publica tempo e duração por polling, já que não existe timeupdate', async () => {
+  it('publishes time and duration by polling, since there is no timeupdate', async () => {
     await mountReady()
 
     fakeTime = 12
@@ -140,7 +140,7 @@ describe('useReprodutorVideo — fonte YouTube', () => {
     await waitFor(() => expect(readState()).toMatchObject({ tempo: 12, duracao: 60, pronto: true }))
   })
 
-  it('prende a busca no teto', async () => {
+  it('clamps the seek at the ceiling', async () => {
     await mountReady('https://youtu.be/abc12345678', 20)
 
     await act(async () => {
@@ -150,7 +150,7 @@ describe('useReprodutorVideo — fonte YouTube', () => {
     expect(seeks.at(-1)).toBe(20)
   })
 
-  it('puxa de volta quando o tempo passa do teto por conta própria', async () => {
+  it('pulls back when the time drifts past the ceiling on its own', async () => {
     await mountReady('https://youtu.be/abc12345678', 20)
 
     fakeTime = 35
@@ -159,7 +159,7 @@ describe('useReprodutorVideo — fonte YouTube', () => {
     expect(seeks.at(-1)).toBe(20)
   })
 
-  it('não consulta o player antes do onReady', async () => {
+  it('never queries the player before onReady', async () => {
     // O construtor devolve o objeto sem métodos; consultar antes da hora estoura
     // "player.getDuration is not a function".
     onReadyDelay = 5000
@@ -173,9 +173,9 @@ describe('useReprodutorVideo — fonte YouTube', () => {
     expect(readState()).toMatchObject({ pronto: false, erro: null })
   })
 
-  it('desmonta sem estourar antes do onReady', async () => {
+  it('unmounts without throwing before onReady', async () => {
     // O StrictMode do Next monta, desmonta e remonta em desenvolvimento: a limpeza
-    // roda com o player recém-construído, ainda sem `destroy`.
+    // runs against a freshly built player that has no `destroy` yet.
     onReadyDelay = 5000
 
     const { unmount } = render(
@@ -187,7 +187,7 @@ describe('useReprodutorVideo — fonte YouTube', () => {
     expect(() => unmount()).not.toThrow()
   })
 
-  it('avisa quando o link não tem id de vídeo', async () => {
+  it('warns when the link carries no video id', async () => {
     render(<Probe source="youtube" url="https://exemplo.com/nao-e-youtube" ceiling={null} />)
     await advance(10)
 
@@ -196,8 +196,8 @@ describe('useReprodutorVideo — fonte YouTube', () => {
   })
 })
 
-describe('useReprodutorVideo — fonte arquivo', () => {
-  it('não toca na API do YouTube', async () => {
+describe('useVideoPlayer — file source', () => {
+  it('never touches the YouTube API', async () => {
     render(<Probe source="arquivo" url="https://b.com/a.mp4" ceiling={5} />)
     await advance(300)
 

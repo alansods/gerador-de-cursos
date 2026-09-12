@@ -61,8 +61,8 @@ export function VideoControls({
   }
 
   const onPointer = (event: PointerEvent<HTMLDivElement>) => {
-    // Sem isto o arrasto do scrubber vira seleção de texto da página inteira. Como
-    // preventDefault também cancela o foco por clique, ele é reposto na mão.
+    // Without this, dragging the scrubber selects the text of the whole page. Since
+    // preventDefault also cancels the click focus, it is restored by hand.
     event.preventDefault()
     trackRef.current?.focus()
     dragging.current = true

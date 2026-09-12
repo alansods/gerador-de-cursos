@@ -23,7 +23,7 @@ export async function POST(req: NextRequest) {
   const authResult = await requireAuth(req)
 
   if (authResult instanceof NextResponse) {
-    return authResult // Retorna erro 401 se não autenticado
+    return authResult // 401 when not authenticated
   }
 
   try {
@@ -47,7 +47,7 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    // Usar Google Gemini se disponível, senão OpenAI
+    // Prefer Google Gemini, fall back to OpenAI
     let course: Course
     let tokenUsage: TokenUsage | undefined
 
@@ -75,7 +75,7 @@ export async function POST(req: NextRequest) {
       mode: readMode,
     })
   } catch (error) {
-    console.error('Erro ao gerar curso:', error)
+    console.error('Course generation failed:', error)
     return createErrorResponse(
       error instanceof Error ? error.message : 'Erro ao gerar curso com IA',
       500,
@@ -527,7 +527,7 @@ async function generateWithGemini(
 
   const prompt = buildPrompt(text, mode)
 
-  // Tentar diferentes modelos em ordem de preferência (nomes atualizados 2025+)
+  // Try the models in order of preference (2025+ names)
   // Referência: https://ai.google.dev/models/gemini
   const modelNames = ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-1.5-flash-latest']
   let lastError: Error | null = null
@@ -543,7 +543,7 @@ async function generateWithGemini(
 
       console.log(`✅ Modelo ${modelName} funcionou!`)
 
-      // Extrair JSON da resposta (pode vir com markdown code blocks)
+      // Pull the JSON out of the answer (it may arrive inside markdown code blocks)
       let jsonText = generatedText.trim()
 
       // Remover markdown code blocks se existirem
@@ -560,7 +560,7 @@ async function generateWithGemini(
         throw new Error('Resposta da IA não contém título ou descrição válidos')
       }
 
-      // Garantir que unidades seja um array
+      // Make sure units is an array
       if (!Array.isArray(courseData.units)) {
         courseData.units = []
       }
@@ -574,10 +574,10 @@ async function generateWithGemini(
 
       return { course: courseData, tokenUsage }
     } catch (error) {
-      console.error(`❌ Erro com modelo ${modelName}:`, error)
+      console.error(`❌ Model ${modelName} failed:`, error)
       lastError = error instanceof Error ? error : new Error(String(error))
 
-      // Continuar para próximo modelo em caso de erro de modelo não encontrado ou quota excedida
+      // Move on to the next model when it is missing or the quota ran out
       const isRetryable =
         error instanceof Error &&
         (error.message.includes('not found') ||
@@ -590,7 +590,7 @@ async function generateWithGemini(
         throw error
       }
 
-      // Continuar para o próximo modelo
+      // Move on to the next model
       continue
     }
   }
@@ -655,7 +655,7 @@ async function generateWithOpenAI(
       throw new Error('Resposta da IA não contém título ou descrição válidos')
     }
 
-    // Garantir que unidades seja um array
+    // Make sure units is an array
     if (!Array.isArray(courseData.units)) {
       courseData.units = []
     }
@@ -669,7 +669,7 @@ async function generateWithOpenAI(
 
     return { course: courseData, tokenUsage }
   } catch (error) {
-    console.error('Erro ao gerar com OpenAI:', error)
+    console.error('OpenAI generation failed:', error)
     throw new Error(
       `Erro ao processar resposta da IA: ${error instanceof Error ? error.message : 'Erro desconhecido'}`
     )

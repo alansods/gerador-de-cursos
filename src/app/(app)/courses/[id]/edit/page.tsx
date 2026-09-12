@@ -1,7 +1,7 @@
 'use client'
 
-// Esta página não deve ser exportada estaticamente (usa context e hooks client-side)
-// O Next.js deve ignorar esta página durante build estático
+// This page must not be exported statically (it uses context and client-side hooks)
+// Next.js must skip it during the static build
 export const dynamic = 'error'
 
 import React, { useState, useEffect, useRef } from 'react'
@@ -223,7 +223,7 @@ function CourseEditor() {
 
   const courseId = params.id as string
 
-  // Selecionar o curso ao carregar a página (busca do servidor se necessário)
+  // Select the course on mount (fetching from the server when needed)
   useEffect(() => {
     if (!courseId || state.loading) return
 
@@ -239,14 +239,14 @@ function CourseEditor() {
     selectCourse(courseId)
   }, [courseId, state.loading, state.currentCourse?.id, state.currentCourse?.slug, selectCourse])
 
-  // Atualizar isFetchingCurso quando o curso for carregado
+  // Refresh isFetchingCourse once the course has loaded
   useEffect(() => {
     if (state.currentCourse?.id === courseId || state.currentCourse?.slug === courseId) {
       setIsFetchingCourse(false)
     }
   }, [state.currentCourse, courseId])
 
-  // Bloquear a edição para quem não tem permissão no curso
+  // Block editing for anyone without permission on the course
   useEffect(() => {
     const course = state.currentCourse
     const isThisCourse = course?.id === courseId || course?.slug === courseId
@@ -257,7 +257,7 @@ function CourseEditor() {
     }
   }, [state.currentCourse, courseId, router])
 
-  // Atualizar preview da imagem ao editar conteúdo
+  // Refresh the image preview when editing content
   useEffect(() => {
     if (editingBlock?.type === 'image' && editingBlock.content) {
       if (editingBlock.content.startsWith('http')) {
@@ -270,7 +270,7 @@ function CourseEditor() {
     }
   }, [editingBlock])
 
-  // Atualizar preview da imagem ao adicionar conteúdo
+  // Refresh the image preview when adding content
   useEffect(() => {
     if (tempBlock.type === 'image' && tempBlock.content) {
       if (tempBlock.content.startsWith('http')) {
@@ -291,21 +291,21 @@ function CourseEditor() {
     }
   }, [editCourseModal, state.currentCourse])
 
-  // Rolar para o topo ao mudar de unidade
+  // Scroll to the top when the unit changes
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }, [activeUnitIndex])
 
-  // Reordenar item recém-adicionado para a posição correta após o state atualizar
+  // Move a freshly added item into place once the state settles
   useEffect(() => {
     if (pendingInsert.current) {
       const { unitId, targetIndex } = pendingInsert.current
       const unit = state.currentCourse?.units?.find((u) => u.id === unitId)
       if (unit) {
         const c = [...(unit.blocks || [])]
-        console.log('🔍 useEffect reordenamento - c.length:', c.length, 'targetIndex:', targetIndex)
+        console.log('🔍 reorder effect - c.length:', c.length, 'targetIndex:', targetIndex)
         console.log(
-          '🔍 Array ANTES do arrayMove:',
+          '🔍 Array BEFORE arrayMove:',
           c.map((item, i) => `[${i}] ${item.type} order:${item.order}`)
         )
 
@@ -315,7 +315,7 @@ function CourseEditor() {
           reord.forEach((item, i) => (item.order = i))
 
           console.log(
-            '🔍 Array DEPOIS do arrayMove:',
+            '🔍 Array AFTER arrayMove:',
             reord.map((item, i) => `[${i}] ${item.type} order:${item.order}`)
           )
           updateUnit(unitId, { blocks: reord })
@@ -439,7 +439,7 @@ function CourseEditor() {
           category: editedCategory,
         })
       } catch (error) {
-        console.error('Erro ao salvar edição do curso:', error)
+        console.error('Failed to save the course edit:', error)
       }
     }
   }
@@ -486,9 +486,9 @@ function CourseEditor() {
       if (warning) toast.warning(warning)
       const data = { url: uploadedUrl }
 
-      // Atualizar URL da imagem no estado correto
+      // Store the image URL in the right piece of state
       if (forFlipcard) {
-        // Para flipcard, atualizar frontImage
+        // A flipcard updates frontImage
         if (forEdit && editingBlock) {
           setEditingBlock({
             ...editingBlock,
@@ -512,12 +512,12 @@ function CourseEditor() {
         })
       }
 
-      // Mostrar preview
+      // Show the preview
       setImagePreviewUrl(data.url)
 
       toast.success('Imagem enviada')
     } catch (error) {
-      console.error('Erro ao fazer upload:', error)
+      console.error('Upload failed:', error)
       toast.error('Erro ao enviar imagem')
     } finally {
       setIsUploadingImage(false)
@@ -551,11 +551,11 @@ function CourseEditor() {
     if (contentDrawerMode === 'add') {
       if (insertAtIndex.current) {
         const { unitId, index } = insertAtIndex.current
-        console.log('🔍 Adicionando conteúdo - unidadeId:', unitId, 'index:', index)
+        console.log('🔍 Adding content - unitId:', unitId, 'index:', index)
 
         const unit = state.currentCourse?.units?.find((u) => u.id === unitId)
         const contentLength = unit?.blocks?.length || 0
-        console.log('🔍 Tamanho atual do conteúdo:', contentLength)
+        console.log('🔍 Current content length:', contentLength)
 
         setPendingBlock({
           unitId,
@@ -571,10 +571,10 @@ function CourseEditor() {
         }
 
         if (index < contentLength) {
-          console.log('🔍 Precisa reordenar - index:', index, '< conteudoLength:', contentLength)
+          console.log('🔍 Reorder needed - index:', index, '< contentLength:', contentLength)
           pendingInsert.current = { unitId, targetIndex: index }
         } else {
-          console.log('🔍 NÃO precisa reordenar - adicionar no final')
+          console.log('🔍 No reorder needed - appending at the end')
         }
       }
       toast.success('Conteúdo adicionado')
@@ -598,12 +598,12 @@ function CourseEditor() {
 
   const handleSaveBlock = () => {
     if (tempBlock.type === 'accordion') {
-      // Validar accordion
+      // Validate the accordion
       if (!tempBlock.items || tempBlock.items.length === 0) {
         alert('Adicione pelo menos um item ao accordion.')
         return
       }
-      // Verificar se todos os itens têm título e conteúdo
+      // Every item needs a title and content
       const invalidItems = tempBlock.items.some(
         (item) => !item.title.trim() || !item.content.trim()
       )
@@ -612,7 +612,7 @@ function CourseEditor() {
         return
       }
     } else if (tempBlock.type === 'flipcard') {
-      // Validar flipcard
+      // Validate the flipcard
       if (!tempBlock.frontType) {
         alert('Selecione o tipo de frente do flipcard.')
         return
@@ -637,7 +637,7 @@ function CourseEditor() {
         return
       }
     } else if (tempBlock.type === 'list') {
-      // Validar lista
+      // Validate the list
       if (!tempBlock.listItems || tempBlock.listItems.length === 0) {
         alert('Adicione pelo menos um item à lista.')
         return
@@ -647,7 +647,7 @@ function CourseEditor() {
         return
       }
     } else if (tempBlock.type === 'quiz') {
-      // Validar quiz
+      // Validate the quiz
       if (
         !tempBlock.quizData ||
         !tempBlock.quizData.questions ||
@@ -657,7 +657,7 @@ function CourseEditor() {
         return
       }
 
-      // Validar cada pergunta
+      // Validate each question
       for (const question of tempBlock.quizData.questions) {
         if (!question.question.trim()) {
           alert('Todas as perguntas devem ter um texto preenchido.')
@@ -686,7 +686,7 @@ function CourseEditor() {
         }
       }
     } else if (tempBlock.type === 'info-box') {
-      // Validar info-box
+      // Validate the info box
       if (!tempBlock.infoBoxType) {
         alert('Selecione o tipo do Info Box.')
         return
@@ -723,7 +723,7 @@ function CourseEditor() {
       infoBoxType: tempBlock.infoBoxType,
       infoBoxTitle: tempBlock.infoBoxTitle,
     })
-    // Se foi solicitada inserção em posição específica, registrar para reordenar após state atualizar
+    // When a specific position was requested, remember it and reorder after the state settles
     if (insertAtIndex.current && insertAtIndex.current.unitId === tempBlock.unitId) {
       pendingInsert.current = {
         unitId: tempBlock.unitId,
@@ -791,7 +791,7 @@ function CourseEditor() {
     setEditingBlock(null)
   }
 
-  // Funções para gerenciar itens do accordion
+  // Accordion item handlers
   const handleAddAccordionItem = () => {
     const newItem = {
       id: `accordion-item-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
@@ -824,7 +824,7 @@ function CourseEditor() {
     })
   }
 
-  // Funções para gerenciar itens da lista
+  // List item handlers
   const handleAddListItem = () => {
     const newItem = {
       id: `lista-item-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
@@ -853,7 +853,7 @@ function CourseEditor() {
     })
   }
 
-  // Funções para gerenciar quiz
+  // Quiz handlers
   const handleAddQuizQuestion = () => {
     if (!tempBlock.quizData) return
     const newQuestion: QuizQuestion = {
@@ -973,7 +973,7 @@ function CourseEditor() {
     columns: 6 | 12 = 12
   ) => {
     if (unitId) {
-      // Inicializar quizData com uma pergunta vazia se for quiz
+      // Seed quizData with an empty question for a quiz
       const quizDataInitial: QuizData | undefined =
         type === 'quiz'
           ? {
@@ -985,7 +985,7 @@ function CourseEditor() {
                   options: Array.from({ length: 5 }, (_, i) => ({
                     id: `opcao-${Date.now()}-${i}`,
                     text: '',
-                    isCorrect: i === 0, // primeira opção como correta por padrão
+                    isCorrect: i === 0, // first option correct by default
                     feedback: '',
                   })),
                 },
@@ -1020,7 +1020,7 @@ function CourseEditor() {
     }
   }
 
-  // handleMoverUnidadeAcima e handleMoverUnidadeAbaixo removidos — reordenação via drag-and-drop na sidebar
+  // The move-up/move-down handlers are gone — reordering happens by drag-and-drop in the sidebar
 
   const handlePreview = () => {
     if (state.currentCourse) {
@@ -1044,7 +1044,7 @@ function CourseEditor() {
     notify('reordered', 'block', authorName)
   }
 
-  // Verificar se está carregando ou se o curso não foi encontrado
+  // Loading, or the course was not found
   if (state.loading || isFetchingCourse || !state.currentCourse) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#F5F7FA] dark:bg-gray-950">
@@ -1293,7 +1293,7 @@ function CourseEditor() {
                                         : savedBlocks
 
                                       console.log(
-                                        `🔍 Unidade ${unit.title} - Total de conteúdos:`,
+                                        `🔍 Unit ${unit.title} - total blocks:`,
                                         blocks.length
                                       )
                                       blocks.forEach((c, i) => {
@@ -1303,7 +1303,7 @@ function CourseEditor() {
                                         )
                                       })
 
-                                      // Agrupar itens em linhas
+                                      // Group the items into rows
                                       type RowInfo = {
                                         startIndex: number
                                         endIndex: number
@@ -1333,7 +1333,7 @@ function CourseEditor() {
                                           totalCols: rSum,
                                         })
 
-                                      console.log('🟣 ROWS calculadas:', rows)
+                                      console.log('🟣 Computed rows:', rows)
                                       rows.forEach((r, i) => {
                                         console.log(
                                           `  Row ${i}: startIndex=${r.startIndex}, endIndex=${r.endIndex}, totalCols=${r.totalCols}`
@@ -1360,7 +1360,7 @@ function CourseEditor() {
                                               onClick={(e) => {
                                                 e?.stopPropagation()
                                                 console.log(
-                                                  '🔵 CLIQUE no botão inserir - posição:',
+                                                  '🔵 CLICK on the insert button - position:',
                                                   targetPosition
                                                 )
                                                 handleOpenAddContentDrawer(unit.id, targetPosition)
@@ -1435,7 +1435,7 @@ function CourseEditor() {
                                               }
 
                                               console.log(
-                                                `🔍 Renderizando conteúdo [${row.startIndex + itemIndex}]:`,
+                                                `🔍 Rendering block [${row.startIndex + itemIndex}]:`,
                                                 item.type,
                                                 item.id,
                                                 item.videoTitle || item.content?.substring(0, 50)
@@ -4397,27 +4397,27 @@ function CourseEditor() {
               setExportModalOpen(false)
             } catch (error) {
               // Erro já foi tratado no hook, modal permanece aberto
-              console.error('Erro ao gerar PDF:', error)
+              console.error('PDF generation failed:', error)
             }
           }}
           onExportSCORM={async (filename) => {
             try {
-              console.log('🔄 [Export] Iniciando exportação SCORM...')
-              console.log('📦 [Export] Curso atual:', state.currentCourse)
+              console.log('🔄 [Export] Starting the SCORM export...')
+              console.log('📦 [Export] Current course:', state.currentCourse)
               console.log('📝 [Export] Filename:', filename)
 
               if (state.currentCourse) {
-                console.log('✅ [Export] Curso encontrado, chamando generateSCORM...')
+                console.log('✅ [Export] Course found, calling generateSCORM...')
                 await generateSCORM(state.currentCourse, filename)
-                console.log('✅ [Export] generateSCORM concluído')
+                console.log('✅ [Export] generateSCORM finished')
                 setExportModalOpen(false)
               } else {
-                console.error('❌ [Export] state.cursoAtual é null/undefined')
+                console.error('❌ [Export] state.currentCourse is null/undefined')
                 toast.error('Erro: Curso não encontrado')
               }
             } catch (error) {
               // Erro já foi tratado no hook, modal permanece aberto
-              console.error('❌ [Export] Erro ao gerar SCORM:', error)
+              console.error('❌ [Export] SCORM generation failed:', error)
             }
           }}
           courseName={state.currentCourse?.title || 'Curso'}

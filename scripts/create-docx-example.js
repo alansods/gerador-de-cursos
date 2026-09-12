@@ -865,7 +865,7 @@ Packer.toBuffer(doc).then((buffer) => {
   const filePath = path.join(publicDir, 'exemplo-curso.docx');
   fs.writeFileSync(filePath, buffer);
   console.log('✅ Arquivo criado com sucesso:', filePath);
-  console.log('📄 Curso: Fabricação de Pizza Artesanal de Carne de Sol');
+  console.log('📄 Course: Fabricação de Pizza Artesanal de Carne de Sol');
 }).catch((error) => {
-  console.error('❌ Erro ao criar arquivo:', error);
+  console.error('❌ Failed to create the file:', error);
 });

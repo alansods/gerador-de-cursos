@@ -5,7 +5,7 @@ import { prisma } from '@/lib/prisma'
 import { generateSCORMFromPlayerDist } from '@/lib/scorm-service'
 import { downloadAndUpdateImages, cleanupTempFiles } from '@/lib/scorm-build-service'
 
-// Geração in-memory é rápida (segundos), mas mantemos margem para download de imagens
+// In-memory generation takes seconds, but image downloads need headroom
 export const maxDuration = 60
 
 /**
@@ -32,11 +32,11 @@ export async function POST(req: NextRequest) {
     const courseData = course as Course
     const courseId = courseData.id
 
-    console.log(`📦 [API generate-scorm-v2] Iniciando geração para: ${courseData.title}`)
-    console.log(`   📍 Curso ID: ${courseId}`)
-    console.log(`   📍 Unidades: ${courseData.units?.length || 0}`)
+    console.log(`📦 [API generate-scorm-v2] Starting generation for: ${courseData.title}`)
+    console.log(`   📍 Course id: ${courseId}`)
+    console.log(`   📍 Units: ${courseData.units?.length || 0}`)
 
-    // Criar job no banco de dados
+    // Create the job row
     const job = await prisma.sCORMJob.create({
       data: {
         courseId,
@@ -46,14 +46,14 @@ export async function POST(req: NextRequest) {
       },
     })
 
-    console.log(`   ✅ Job criado no DB: ${job.id}`)
+    console.log(`   ✅ Job created: ${job.id}`)
 
-    // Executar geração após enviar a resposta (after garante execução na Vercel)
+    // Run the generation after the response is sent (after() keeps it alive on Vercel)
     after(async () => {
       try {
         await executeBuildInBackground(job.id, courseData)
       } catch (error) {
-        console.error(`❌ [Background Build] Erro no job ${job.id}:`, error)
+        console.error(`❌ [Background Build] Job ${job.id} failed:`, error)
         await prisma.sCORMJob
           .update({
             where: { id: job.id },
@@ -67,7 +67,7 @@ export async function POST(req: NextRequest) {
       }
     })
 
-    // Retornar jobId imediatamente
+    // Return the job id right away
     return NextResponse.json(
       {
         jobId: job.id,
@@ -77,7 +77,7 @@ export async function POST(req: NextRequest) {
       { status: 202 }
     )
   } catch (error) {
-    console.error('❌ [API generate-scorm-v2] Erro:', error)
+    console.error('❌ [API generate-scorm-v2] Failed:', error)
 
     return createErrorResponse(
       `Erro ao iniciar geração SCORM: ${error instanceof Error ? error.message : 'Erro desconhecido'}`,
@@ -105,9 +105,9 @@ async function executeBuildInBackground(jobId: string, course: Course): Promise<
   })
 
   try {
-    console.log(`🔨 [Background Build] Job ${jobId}: Iniciando geração in-memory...`)
+    console.log(`🔨 [Background Build] Job ${jobId}: starting the in-memory generation...`)
 
-    // 1. Baixar imagens externas e atualizar referências no curso
+    // 1. Download the external images and rewrite the course references
     await prisma.sCORMJob.update({
       where: { id: jobId },
       data: { progress: '🖼️ Baixando imagens do curso...' },
@@ -117,16 +117,16 @@ async function executeBuildInBackground(jobId: string, course: Course): Promise<
     try {
       const { course: courseWithImages } = await downloadAndUpdateImages(course, course.id)
       finalCourse = courseWithImages
-      console.log(`   ✅ [Background Build] Job ${jobId}: Imagens processadas`)
+      console.log(`   ✅ [Background Build] Job ${jobId}: images processed`)
     } catch (imgError) {
-      // Não abortar por falha no download de imagens — gerar sem elas
+      // A failed image download never aborts the build — generate without them
       console.warn(
         `   ⚠️ [Background Build] Job ${jobId}: Erro ao baixar imagens, continuando sem elas:`,
         imgError
       )
     }
 
-    // 2. Gerar pacote SCORM em memória
+    // 2. Build the SCORM package in memory
     await prisma.sCORMJob.update({
       where: { id: jobId },
       data: { progress: '📦 Gerando pacote SCORM...' },
@@ -138,10 +138,10 @@ async function executeBuildInBackground(jobId: string, course: Course): Promise<
       `✅ [Background Build] Job ${jobId}: Pacote gerado (${(zipBuffer.length / 1024).toFixed(2)} KB)`
     )
 
-    // 3. Limpar arquivos temporários de imagens
+    // 3. Clean up the temporary image files
     await cleanupTempFiles(course.id).catch(() => {})
 
-    // 4. Salvar ZIP no banco de dados
+    // 4. Store the ZIP
     const zipArray = new Uint8Array(zipBuffer)
 
     await prisma.sCORMJob.update({
@@ -154,10 +154,10 @@ async function executeBuildInBackground(jobId: string, course: Course): Promise<
       },
     })
 
-    console.log(`✅ [Background Build] Job ${jobId}: Salvo no DB e pronto para download`)
+    console.log(`✅ [Background Build] Job ${jobId}: stored and ready for download`)
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido'
-    console.error(`❌ [Background Build] Job ${jobId}: Erro fatal:`, errorMessage)
+    console.error(`❌ [Background Build] Job ${jobId}: fatal error:`, errorMessage)
 
     await cleanupTempFiles(course.id).catch(() => {})
 

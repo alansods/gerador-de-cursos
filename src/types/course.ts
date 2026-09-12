@@ -1,4 +1,4 @@
-// Tipos para o gerador de cursos
+// Course content types
 import type { CoursePermissions, CourseStatus } from '@/lib/permissions'
 
 export type { CoursePermissions, CourseStatus }
@@ -69,27 +69,27 @@ export interface CategoryItem {
 
 export interface QuizItem {
   id: string
-  text: string // texto da opção de resposta
-  isCorrect: boolean // se esta é a resposta correta
-  feedback: string // feedback específico para esta resposta
+  text: string // answer option text
+  isCorrect: boolean // whether this is the correct answer
+  feedback: string // feedback shown for this answer
 }
 
 export interface QuizQuestion {
-  id: string // ID único para a pergunta
-  question: string // pergunta do quiz
-  hint?: string // dica opcional para a pergunta
-  options: QuizItem[] // array com exatamente 5 opções
+  id: string // unique question id
+  question: string // quiz question
+  hint?: string // optional hint
+  options: QuizItem[] // exactly five options
 }
 
 export interface QuizData {
-  questions: QuizQuestion[] // Array de perguntas do quiz
+  questions: QuizQuestion[] // quiz questions
 }
 
 export type OptionLetter = 'A' | 'B' | 'C' | 'D' | 'E'
 
 export interface VideoQuestion {
   id: string
-  time: string // "mm:ss" ou "hh:mm:ss", como o autor digita
+  time: string // "mm:ss" or "hh:mm:ss", as the author types it
   question: string
   optionA: string
   optionB: string
@@ -126,60 +126,60 @@ export interface Block {
     | 'interactive-video'
   content: string
   order: number
-  // Propriedades específicas para imagens
+  // image-specific
   size?: 'small' | 'medium' | 'large'
   caption?: string
   source?: string
-  // Propriedades específicas para parágrafos
+  // paragraph-specific
   textColor?: string
   alignment?: 'left' | 'center' | 'right' | 'justify'
-  // Propriedades de layout
+  // layout
   columns?: 6 | 12
-  // Propriedades específicas para accordion
+  // accordion-specific
   items?: AccordionItem[]
-  // Propriedades específicas para flipcard
+  // flipcard-specific
   flipcardItems?: FlipcardItem[]
-  cardHeight?: string // altura compartilhada por todos os cards da grade
-  // Propriedades específicas para lista
+  cardHeight?: string // height shared by every card in the grid
+  // list-specific
   listItems?: ListItem[]
-  listType?: 'ordered' | 'unordered' | 'check' // lista ordenada (numerada), não ordenada (bullets) ou com ícone de check
-  // Propriedades específicas para quiz
+  listType?: 'ordered' | 'unordered' | 'check' // numbered, bulleted or check-icon list
+  // quiz-specific
   quizData?: QuizData
-  // Propriedades específicas para info-box
+  // info-box-specific
   infoBoxType?: 'warning' | 'learn-more' | 'info' | 'fun-fact'
   infoBoxTitle?: string
-  // Propriedades específicas para video
+  // video-specific
   videoSource?: 'youtube' | 'file'
   videoUrl?: string
   videoTitle?: string
-  // Propriedades específicas para video-interativo
+  // interactive-video-specific
   videoQuestions?: VideoQuestion[]
-  // Propriedades específicas para objetivos-aprendizagem
+  // learning-objectives-specific
   objectiveItems?: ListItem[]
-  // Propriedades específicas para separador
+  // divider-specific
   dividerStyle?: 'line' | 'space' | 'line-icon'
-  // Propriedades específicas para tabs
+  // tabs-specific
   tabItems?: TabItem[]
-  // Propriedades específicas para linha-do-tempo
+  // timeline-specific
   timelineItems?: TimelineItem[]
   timelineOrientation?: 'vertical' | 'horizontal'
-  // Propriedades específicas para carrossel
+  // carousel-specific
   carouselItems?: CarouselItem[]
   carouselMode?: 'carousel' | 'grid'
-  // Propriedades específicas para audio
+  // audio-specific
   audioUrl?: string
   audioTitle?: string
   transcript?: string
-  // Propriedades específicas para pdf
+  // pdf-specific
   pdfUrl?: string
   pdfTitle?: string
   allowPdfDownload?: boolean
-  // Propriedades específicas para imagem-interativa
+  // interactive-image-specific
   baseImage?: string
   hotspots?: HotspotItem[]
-  // Propriedades específicas para associacao
+  // matching-specific
   matchingPairs?: MatchingPair[]
-  // Propriedades específicas para categorizacao
+  // categorization-specific
   categories?: CategoryItem[]
 }
 

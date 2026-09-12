@@ -98,7 +98,7 @@ const waitForLoad = () =>
     expect(screen.getByText('JavaScript Básico')).toBeInTheDocument()
   })
 
-describe('Integration - Cursos Page', () => {
+describe('Integration - Courses page', () => {
   beforeEach(() => {
     jest.clearAllMocks()
     mockFetchCourses.mockResolvedValue(searchResponse as never)
@@ -108,7 +108,7 @@ describe('Integration - Cursos Page', () => {
     })
   })
 
-  it('deve carregar cursos apenas UMA VEZ ao montar a página', async () => {
+  it('loads the courses exactly ONCE on mount', async () => {
     renderCoursesPage()
 
     await waitForLoad()
@@ -118,7 +118,7 @@ describe('Integration - Cursos Page', () => {
     expect(mockFetchCourses).toHaveBeenCalledWith(expect.objectContaining({ limit: 6, search: '' }))
   })
 
-  it('deve fazer debounce na busca (não fazer requisição a cada tecla)', async () => {
+  it('debounces the search instead of firing a request per keystroke', async () => {
     jest.useFakeTimers()
     const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime })
 
@@ -144,7 +144,7 @@ describe('Integration - Cursos Page', () => {
     jest.useRealTimers()
   })
 
-  it('deve aplicar filtro de categoria sem requisições duplicadas', async () => {
+  it('applies the category filter without duplicate requests', async () => {
     const user = userEvent.setup()
 
     renderCoursesPage()
@@ -167,7 +167,7 @@ describe('Integration - Cursos Page', () => {
     expect(mockFetchCourses).toHaveBeenCalledTimes(1)
   })
 
-  it('deve limpar filtros e recarregar cursos sem duplicação', async () => {
+  it('clears the filters and reloads the courses without duplication', async () => {
     jest.useFakeTimers()
     const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime })
 
@@ -199,8 +199,8 @@ describe('Integration - Cursos Page', () => {
     jest.useRealTimers()
   })
 
-  it('reaproveita o cache ao voltar para a listagem dentro do staleTime', async () => {
-    // mesmo QueryClient nos dois monts = o que acontece ao sair da pagina e voltar
+  it('reuses the cache when returning to the list within staleTime', async () => {
+    // the same QueryClient across both mounts = what happens when leaving the page and coming back
     const queryClient = createQueryClient(60_000)
 
     const { unmount } = renderCoursesPage(queryClient)
@@ -215,7 +215,7 @@ describe('Integration - Cursos Page', () => {
     expect(mockFetchCourses).toHaveBeenCalledTimes(1)
   })
 
-  it('busca a lista só pela Server Action, sem tocar em /api/courses', async () => {
+  it('fetches the list through the Server Action alone, never /api/courses', async () => {
     renderCoursesPage()
     await waitForLoad()
 

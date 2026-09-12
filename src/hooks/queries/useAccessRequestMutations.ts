@@ -25,7 +25,7 @@ export function useRespondAccessRequestMutation(courseId?: string) {
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: queryKeys.accessRequests.pending() })
 
-      // a tela de colaboradores do curso lista as mesmas solicitações
+      // the course collaborators screen lists these same requests
       if (courseId) {
         await queryClient.invalidateQueries({
           queryKey: queryKeys.accessRequests.ofCourse(courseId),

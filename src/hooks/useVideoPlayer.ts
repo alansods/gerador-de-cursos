@@ -113,8 +113,8 @@ export function useVideoPlayer({
     error: null,
   })
 
-  // O teto muda a cada pergunta respondida; a ref mantém o clamp sempre no valor atual
-  // sem recriar os comandos.
+  // The ceiling moves with every answered question; the ref keeps the clamp on the current
+  // value without rebuilding the commands.
   const ceilingRef = useRef(ceilingSeconds)
   ceilingRef.current = ceilingSeconds
 
@@ -124,7 +124,7 @@ export function useVideoPlayer({
     return Math.min(Math.max(0, seconds), ceiling)
   }, [])
 
-  // --- fonte arquivo: eventos nativos, como sempre foi ---------------------------
+  // --- file source: native events, as it always was -----------------------------
   useEffect(() => {
     if (source !== 'arquivo') return
     const video = videoRef.current
@@ -140,7 +140,7 @@ export function useVideoPlayer({
         ready: true,
       }))
 
-    // Prende o clamp também no seek direto do elemento, que existe fora da nossa barra.
+    // Clamp the element's own seek too, which happens outside our control bar.
     const onSearch = () => {
       const duration = Number.isFinite(video.duration) ? video.duration : 0
       const allowed = clamp(video.currentTime, duration)
@@ -167,7 +167,7 @@ export function useVideoPlayer({
     }
   }, [source, clamp])
 
-  // --- fonte youtube: API externa, sem timeupdate, logo polling ------------------
+  // --- youtube source: external API, no timeupdate, hence polling ---------------
   useEffect(() => {
     if (source !== 'youtube') return
 
@@ -192,8 +192,8 @@ export function useVideoPlayer({
           videoId: idVideo,
           width: '100%',
           height: '100%',
-          // controls: 0 tira a barra do YouTube — sem isso o aluno pularia a pergunta
-          // por um caminho que o nosso teto não alcança.
+          // controls: 0 hides the YouTube bar — without it the learner could skip the
+          // question through a path our ceiling never sees.
           playerVars: {
             controls: 0,
             disablekb: 1,
@@ -211,8 +211,8 @@ export function useVideoPlayer({
                 duration: playerRef.current?.getDuration() ?? 0,
               }))
 
-              // O polling só pode começar aqui: antes do onReady o player não tem
-              // método nenhum.
+              // Polling can only start here: before onReady the player has no methods
+              // at all.
               clock = setInterval(() => {
                 const player = playerRef.current
                 if (!playerUsable(player)) return
@@ -245,15 +245,15 @@ export function useVideoPlayer({
     return () => {
       cancelled = true
       if (clock) clearInterval(clock)
-      // `destroy` também só aparece depois do onReady, e no StrictMode a limpeza roda
-      // com o player recém-construído.
+      // `destroy` also shows up only after onReady, and in StrictMode the cleanup runs
+      // against a freshly built player.
       if (typeof playerRef.current?.destroy === 'function') playerRef.current.destroy()
       playerRef.current = null
     }
   }, [source, url, clamp])
 
-  // A barra de controles aparece antes de o player do YouTube ficar pronto, então todo
-  // comando precisa tolerar o player ainda sem métodos.
+  // The control bar renders before the YouTube player is ready, so every command
+  // must tolerate a player that still has no methods.
   const commands: PlayerCommands = {
     play: () => {
       if (source !== 'youtube') return void videoRef.current?.play()

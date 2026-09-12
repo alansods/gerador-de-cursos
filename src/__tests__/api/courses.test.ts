@@ -26,7 +26,7 @@ import { SignJWT } from 'jose'
 // Mock do prisma já está configurado no jest.setup.js
 const mockPrisma = prisma as jest.Mocked<typeof prisma>
 
-// Helper para criar token de autenticação
+// Builds an authentication token
 async function createAuthToken(userId: string = '1', role: string = 'ADMIN') {
   const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET)
   return await new SignJWT({
@@ -46,8 +46,8 @@ async function authHeaders(role: string = 'ADMIN') {
   return { 'Content-Type': 'application/json', Cookie: `auth-token=${token}` }
 }
 
-// `requireAuth` relê o papel do banco a cada requisição, então todo teste
-// autenticado precisa do usuário correspondente ao token
+// `requireAuth` re-reads the role from the database on every request, so every test
+// authenticated test needs the user matching the token
 const authenticatedUser = {
   id: '1',
   email: 'testuser@senai.br',
@@ -59,14 +59,14 @@ const authenticatedUser = {
   updatedAt: new Date(),
 }
 
-describe('API - Cursos', () => {
+describe('API - Courses', () => {
   beforeEach(() => {
     jest.clearAllMocks()
     mockPrisma.user.findUnique.mockResolvedValue(authenticatedUser as never)
   })
 
   describe('GET /api/courses', () => {
-    it('deve listar cursos com paginação', async () => {
+    it('lists courses with pagination', async () => {
       // Arrange
       const mockCourses = [
         {
@@ -131,12 +131,12 @@ describe('API - Cursos', () => {
         totalPages: 1,
       })
 
-      // Verificar que foi chamado apenas uma vez (sem duplicação)
+      // Assert a single call, with no duplication
       expect(mockPrisma.course.findMany).toHaveBeenCalledTimes(1)
       expect(mockPrisma.course.count).toHaveBeenCalledTimes(1)
     })
 
-    it('deve filtrar cursos por busca, categoria e modalidade', async () => {
+    it('filters courses by search, category and modality', async () => {
       // Arrange
       const mockCourses = [
         {
@@ -188,7 +188,7 @@ describe('API - Cursos', () => {
   })
 
   describe('GET /api/courses/[id]', () => {
-    it('deve buscar curso por ID', async () => {
+    it('fetches a course by id', async () => {
       // Arrange
       const mockCourse = {
         id: '1',
@@ -227,11 +227,11 @@ describe('API - Cursos', () => {
       expect(data.success).toBe(true)
       expect(data.course.id).toBe('1')
 
-      // Verificar que foi chamado apenas uma vez
+      // Assert a single call
       expect(mockPrisma.course.findFirst).toHaveBeenCalledTimes(1)
     })
 
-    it('deve retornar 404 se curso não existir', async () => {
+    it('returns 404 when the course does not exist', async () => {
       // Arrange
       mockPrisma.course.findFirst.mockResolvedValue(null)
 
@@ -253,7 +253,7 @@ describe('API - Cursos', () => {
   })
 
   describe('POST /api/courses', () => {
-    it('deve criar curso com autenticação válida', async () => {
+    it('creates a course with a valid session', async () => {
       // Arrange
       const token = await createAuthToken()
       const mockUser = {
@@ -316,7 +316,7 @@ describe('API - Cursos', () => {
       expect(mockPrisma.course.create).toHaveBeenCalledTimes(1)
     })
 
-    it('deve retornar 401 sem autenticação', async () => {
+    it('returns 401 without authentication', async () => {
       // Arrange
       const request = new NextRequest('http://localhost:3000/api/courses', {
         method: 'POST',
@@ -342,9 +342,9 @@ describe('API - Cursos', () => {
       expect(mockPrisma.course.create).not.toHaveBeenCalled()
     })
 
-    it('deve usar o papel do banco, não o do token, quando o admin rebaixa o usuário', async () => {
-      // Arrange: token emitido enquanto o usuário ainda era ADMIN,
-      // mas o banco já registra o rebaixamento para REVIEWER
+    it('uses the role from the database, not the token, after an admin demotes the user', async () => {
+      // Arrange: token issued while the user was still ADMIN,
+      // while the database already records the demotion to REVIEWER
       const token = await createAuthToken('1', 'ADMIN')
 
       mockPrisma.user.findUnique.mockResolvedValue({
@@ -378,7 +378,7 @@ describe('API - Cursos', () => {
       expect(mockPrisma.course.create).not.toHaveBeenCalled()
     })
 
-    it('deve retornar 401 quando o usuário do token não existe mais no banco', async () => {
+    it('returns 401 when the token user no longer exists', async () => {
       // Arrange
       const token = await createAuthToken()
 
@@ -410,7 +410,7 @@ describe('API - Cursos', () => {
       expect(mockPrisma.course.create).not.toHaveBeenCalled()
     })
 
-    it('deve retornar 400 com campos obrigatórios faltando', async () => {
+    it('returns 400 when a required field is missing', async () => {
       // Arrange
       const token = await createAuthToken()
       const mockUser = {
@@ -493,7 +493,7 @@ describe('API - Cursos', () => {
       return { res, dados: mockPrisma.course.update.mock.calls[0]?.[0]?.data }
     }
 
-    it('devolve curso APPROVED para IN_PROGRESS e limpa a revisão ao editar', async () => {
+    it('sends an APPROVED course back to IN_PROGRESS and clears the review on edit', async () => {
       const { res, dados: data } = await update('APPROVED')
 
       expect(res.status).toBe(200)
@@ -502,25 +502,25 @@ describe('API - Cursos', () => {
       expect(data.reviewedAt).toBeNull()
     })
 
-    it('devolve curso REJECTED para IN_PROGRESS ao editar', async () => {
+    it('sends a REJECTED course back to IN_PROGRESS on edit', async () => {
       const { dados: data } = await update('REJECTED')
 
       expect(data.status).toBe('IN_PROGRESS')
     })
 
-    it('não mexe no status de um curso IN_PROGRESS', async () => {
+    it('leaves an IN_PROGRESS course status alone', async () => {
       const { dados: data } = await update('IN_PROGRESS')
 
       expect(data.status).toBeUndefined()
     })
 
-    it('não mexe no status de um curso IN_REVIEW', async () => {
+    it('leaves an IN_REVIEW course status alone', async () => {
       const { dados: data } = await update('IN_REVIEW')
 
       expect(data.status).toBeUndefined()
     })
 
-    it('deve atualizar curso com autenticação válida', async () => {
+    it('updates a course with a valid session', async () => {
       // Arrange
       const token = await createAuthToken()
       const mockUser = {
@@ -581,7 +581,7 @@ describe('API - Cursos', () => {
       expect(mockPrisma.course.update).toHaveBeenCalledTimes(1)
     })
 
-    it('deve retornar 401 sem autenticação', async () => {
+    it('returns 401 without authentication', async () => {
       // Arrange
       const request = new NextRequest('http://localhost:3000/api/courses', {
         method: 'PUT',
@@ -606,7 +606,7 @@ describe('API - Cursos', () => {
   })
 
   describe('DELETE /api/courses', () => {
-    it('deve deletar curso com autenticação válida', async () => {
+    it('deletes a course with a valid session', async () => {
       // Arrange
       const token = await createAuthToken()
       const mockUser = {
@@ -639,7 +639,7 @@ describe('API - Cursos', () => {
       expect(mockPrisma.course.delete).toHaveBeenCalledTimes(1)
     })
 
-    it('deve retornar 401 sem autenticação', async () => {
+    it('returns 401 without authentication', async () => {
       // Arrange
       const request = new NextRequest('http://localhost:3000/api/courses?id=1', {
         method: 'DELETE',

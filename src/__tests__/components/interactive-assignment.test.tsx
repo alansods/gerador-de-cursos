@@ -32,8 +32,8 @@ async function assign(user: ReturnType<typeof userEvent.setup>, chip: string, ta
   await user.click(screen.getByRole('button', { name: target }))
 }
 
-describe('associação', () => {
-  it('permite associar sem arrastar, só com clique e teclado', async () => {
+describe('matching', () => {
+  it('matches without dragging, by click and keyboard alone', async () => {
     const user = userEvent.setup()
     render(<MatchingBlock item={matching} />)
 
@@ -44,7 +44,7 @@ describe('associação', () => {
     expect(screen.getByText('2 de 2 corretos')).toBeInTheDocument()
   })
 
-  it('só libera a verificação depois de atribuir todas as fichas', async () => {
+  it('unlocks the check only once every token is assigned', async () => {
     const user = userEvent.setup()
     render(<MatchingBlock item={matching} />)
 
@@ -57,7 +57,7 @@ describe('associação', () => {
     expect(screen.getByRole('button', { name: 'Verificar' })).toBeEnabled()
   })
 
-  it('conta o erro quando os lados são trocados', async () => {
+  it('counts a mistake when the sides are swapped', async () => {
     const user = userEvent.setup()
     render(<MatchingBlock item={matching} />)
 
@@ -68,7 +68,7 @@ describe('associação', () => {
     expect(screen.getByText('0 de 2 corretos')).toBeInTheDocument()
   })
 
-  it('devolve o ocupante ao banco quando o alvo já está preenchido', async () => {
+  it('returns the occupant to the pool when the target is taken', async () => {
     const user = userEvent.setup()
     render(<MatchingBlock item={matching} />)
 
@@ -79,8 +79,8 @@ describe('associação', () => {
   })
 })
 
-describe('categorização', () => {
-  it('aceita mais de um item por categoria e apura o resultado', async () => {
+describe('categorization', () => {
+  it('accepts more than one item per category and scores the result', async () => {
     const user = userEvent.setup()
     render(<CategorizationBlock item={categorization} />)
 
@@ -91,7 +91,7 @@ describe('categorização', () => {
     expect(screen.getByText('2 de 2 corretos')).toBeInTheDocument()
   })
 
-  it('reabre a atividade ao tentar novamente', async () => {
+  it('reopens the activity on retry', async () => {
     const user = userEvent.setup()
     render(<CategorizationBlock item={categorization} />)
 

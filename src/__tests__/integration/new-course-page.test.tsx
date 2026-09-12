@@ -58,15 +58,15 @@ beforeEach(() => {
   mockCreateCourse.mockResolvedValue('curso-123')
 })
 
-describe('Página Novo Curso', () => {
-  it('abre na etapa 1 pedindo o método', () => {
+describe('New Course page', () => {
+  it('opens on step 1 asking for the method', () => {
     render(<NewCoursePage />)
 
     expect(screen.getByRole('heading', { name: 'Como você quer começar?' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /Continuar/ })).toBeInTheDocument()
   })
 
-  it('avisa quando tenta continuar sem escolher método', async () => {
+  it('warns when continuing without a method', async () => {
     const user = userEvent.setup()
     render(<NewCoursePage />)
 
@@ -76,7 +76,7 @@ describe('Página Novo Curso', () => {
     expect(screen.getByRole('heading', { name: 'Como você quer começar?' })).toBeInTheDocument()
   })
 
-  it('percorre as quatro etapas e cria o curso manual', async () => {
+  it('walks the four steps and creates the manual course', async () => {
     const user = userEvent.setup()
     render(<NewCoursePage />)
 
@@ -121,7 +121,7 @@ describe('Página Novo Curso', () => {
     expect(mockPush).toHaveBeenCalledWith('/courses/curso-123/edit')
   })
 
-  it('bloqueia a etapa de informações enquanto houver campo inválido', async () => {
+  it('blocks the information step while a field is invalid', async () => {
     const user = userEvent.setup()
     render(<NewCoursePage />)
 
@@ -137,7 +137,7 @@ describe('Página Novo Curso', () => {
     expect(mockCreateCourse).not.toHaveBeenCalled()
   })
 
-  it('lê o documento em segundo plano, sem expor a detecção ao usuário', async () => {
+  it('reads the document in the background, without exposing the detection', async () => {
     const user = userEvent.setup()
     mockExtract.mockResolvedValue({
       text: 'QUIZ_INICIO a QUIZ_FIM',
@@ -159,7 +159,7 @@ describe('Página Novo Curso', () => {
     expect(screen.queryByText(/marcadores suportados/)).not.toBeInTheDocument()
   })
 
-  it('gera o curso por IA e mostra o resumo do que foi criado', async () => {
+  it('generates the course with AI and shows a summary of what was created', async () => {
     const user = userEvent.setup()
     mockExtract.mockResolvedValue({
       text: 'texto sem marcador',
@@ -186,7 +186,7 @@ describe('Página Novo Curso', () => {
     expect(mockGenerate).toHaveBeenCalledWith('texto sem marcador')
   })
 
-  it('volta para a etapa do documento quando a geração falha', async () => {
+  it('returns to the document step when the generation fails', async () => {
     const user = userEvent.setup()
     mockExtract.mockResolvedValue({
       text: 'texto',
@@ -209,7 +209,7 @@ describe('Página Novo Curso', () => {
     expect(screen.getByRole('heading', { name: 'Envie o documento base' })).toBeInTheDocument()
   })
 
-  it('permite voltar a uma etapa concluída pelo stepper', async () => {
+  it('allows going back to a finished step through the stepper', async () => {
     const user = userEvent.setup()
     render(<NewCoursePage />)
 

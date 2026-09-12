@@ -13,13 +13,13 @@ config({ path: envFallback })
 // Verificar se DATABASE_URL foi carregado
 const databaseUrl = process.env.DATABASE_URL
 if (!databaseUrl || databaseUrl.includes('placeholder')) {
-  console.error('❌ DATABASE_URL não configurado ou está como placeholder')
-  console.error(`   Valor atual: ${databaseUrl || 'não encontrado'}`)
-  console.error('   Configure DATABASE_URL no arquivo .env.local')
+  console.error('❌ DATABASE_URL is not set or is still a placeholder')
+  console.error(`   Current value: ${databaseUrl || 'not found'}`)
+  console.error('   Set DATABASE_URL in .env.local')
   process.exit(1)
 }
 
-console.log(`✅ DATABASE_URL carregado: ${databaseUrl.substring(0, 30)}...`)
+console.log(`✅ DATABASE_URL loaded: ${databaseUrl.substring(0, 30)}...`)
 
 const prisma = new PrismaClient({
   log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
@@ -325,38 +325,38 @@ const sampleCourses = [
 ]
 
 async function main() {
-  console.log('🌱 Iniciando seed do banco de dados...\n')
+  console.log('🌱 Seeding the database...\n')
 
   // ========================================
   // PROTEÇÃO: NÃO RODAR EM PRODUÇÃO
   // ========================================
 
   if (process.env.NODE_ENV === 'production' || process.env.VERCEL_ENV === 'production') {
-    console.error('❌ ERRO: Seed não pode ser executado em produção!')
-    console.error('   Este seed deleta TODOS os dados existentes.')
-    console.error('   Para produção, crie usuários manualmente via interface ou migrations.')
+    console.error('❌ ERROR: the seed cannot run in production!')
+    console.error('   It deletes ALL existing data.')
+    console.error('   In production, create users through the UI or a migration.')
     process.exit(1)
   }
 
-  console.log('✅ Ambiente: desenvolvimento (seed permitido)\n')
+  console.log('✅ Environment: development (seed allowed)\n')
 
   // ========================================
   // LIMPAR DADOS EXISTENTES
   // ========================================
 
-  console.log('🗑️  Limpando cursos existentes...')
+  console.log('🗑️  Removing existing courses...')
   await prisma.course.deleteMany({})
-  console.log('✅ Cursos removidos\n')
+  console.log('✅ Courses removed\n')
 
-  console.log('🗑️  Limpando usuários existentes...')
+  console.log('🗑️  Removing existing users...')
   await prisma.user.deleteMany({})
-  console.log('✅ Usuários removidos\n')
+  console.log('✅ Users removed\n')
 
   // ========================================
   // CRIAR USUÁRIOS
   // ========================================
 
-  console.log('👤 Criando usuário administrador...')
+  console.log('👤 Creating the admin user...')
   const adminPasswordHash = await bcrypt.hash('Admin@Senai2025!', 10)
 
   const adminUser = await prisma.user.create({
@@ -368,12 +368,12 @@ async function main() {
     },
   })
 
-  console.log('✅ Usuário admin criado')
-  console.log('   Usuário: admin')
-  console.log('   Senha: Admin@Senai2025!')
+  console.log('✅ Admin user created')
+  console.log('   User: admin')
+  console.log('   Password: Admin@Senai2025!')
   console.log(`   ID: ${adminUser.id}\n`)
 
-  console.log('👤 Criando usuário convidado...')
+  console.log('👤 Creating the guest user...')
   const guestPasswordHash = await bcrypt.hash('convidado', 10)
 
   const guestUser = await prisma.user.create({
@@ -385,16 +385,16 @@ async function main() {
     },
   })
 
-  console.log('✅ Usuário convidado criado')
-  console.log('   Usuário: convidado')
-  console.log('   Senha: convidado')
+  console.log('✅ Guest user created')
+  console.log('   User: convidado')
+  console.log('   Password: convidado')
   console.log(`   ID: ${guestUser.id}\n`)
 
   // ========================================
   // CRIAR CURSOS
   // ========================================
 
-  console.log('✨ Criando cursos de exemplo...\n')
+  console.log('✨ Creating sample courses...\n')
 
   let createdCourses = 0
 
@@ -412,26 +412,26 @@ async function main() {
         },
       })
       createdCourses++
-      console.log(`✅ Curso criado: ${course.title}`)
+      console.log(`✅ Course created: ${course.title}`)
     } catch (error) {
-      console.error(`❌ Erro ao criar curso ${courseData.title}:`, error)
+      console.error(`❌ Failed to create course ${courseData.title}:`, error)
     }
   }
 
-  console.log(`\n✅ ${createdCourses} cursos criados`)
+  console.log(`\n✅ ${createdCourses} courses created`)
 
   // Mostrar estatísticas
   const totalCourses = await prisma.course.count()
   const totalUsers = await prisma.user.count()
-  console.log(`\n📊 Total de cursos no banco: ${totalCourses}`)
-  console.log(`📊 Total de usuários no banco: ${totalUsers}`)
+  console.log(`\n📊 Courses in the database: ${totalCourses}`)
+  console.log(`📊 Users in the database: ${totalUsers}`)
 
-  console.log('\n🎉 Seed concluído com sucesso!\n')
+  console.log('\n🎉 Seed finished successfully!\n')
 }
 
 main()
   .catch((e) => {
-    console.error('❌ Erro durante seed:', e)
+    console.error('❌ Seed failed:', e)
     process.exit(1)
   })
   .finally(async () => {

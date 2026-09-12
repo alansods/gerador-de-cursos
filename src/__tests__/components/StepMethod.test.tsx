@@ -13,22 +13,22 @@ const emptyData: ManualCourseData = {
   modality: 'Online',
 }
 
-describe('StepMetodo', () => {
-  it('expõe os dois métodos como radiogroup', () => {
+describe('StepMethod', () => {
+  it('exposes both methods as a radiogroup', () => {
     render(<StepMethod method={null} onSelect={jest.fn()} />)
 
     expect(screen.getByRole('radiogroup', { name: 'Método de criação' })).toBeInTheDocument()
     expect(screen.getAllByRole('radio')).toHaveLength(2)
   })
 
-  it('marca o método selecionado com aria-checked', () => {
+  it('marks the selected method with aria-checked', () => {
     render(<StepMethod method="ia" onSelect={jest.fn()} />)
 
     expect(screen.getByRole('radio', { name: /Gerar por IA/ })).toBeChecked()
     expect(screen.getByRole('radio', { name: /Criação manual/ })).not.toBeChecked()
   })
 
-  it('seleciona pelo clique', async () => {
+  it('selects on click', async () => {
     const onSelect = jest.fn()
     render(<StepMethod method={null} onSelect={onSelect} />)
 
@@ -37,7 +37,7 @@ describe('StepMetodo', () => {
     expect(onSelect).toHaveBeenCalledWith('manual')
   })
 
-  it('navega entre as opções pelas setas', async () => {
+  it('moves between the options with the arrow keys', async () => {
     const onSelect = jest.fn()
     render(<StepMethod method="manual" onSelect={onSelect} />)
 
@@ -48,7 +48,7 @@ describe('StepMetodo', () => {
     expect(onSelect).toHaveBeenCalledWith('ia')
   })
 
-  it('mantém um único ponto de tabulação no grupo', () => {
+  it('keeps a single tab stop in the group', () => {
     render(<StepMethod method="ia" onSelect={jest.fn()} />)
 
     const focusables = screen.getAllByRole('radio').filter((button) => button.tabIndex === 0)
@@ -58,7 +58,7 @@ describe('StepMetodo', () => {
   })
 })
 
-describe('StepInformacoes', () => {
+describe('StepInformation', () => {
   function renderComponent(props: Partial<React.ComponentProps<typeof StepInformation>> = {}) {
     return render(
       <StepInformation
@@ -72,7 +72,7 @@ describe('StepInformacoes', () => {
     )
   }
 
-  it('associa a mensagem de erro ao campo', () => {
+  it('ties the error message to the field', () => {
     renderComponent()
 
     const title = screen.getByLabelText('Título do curso')
@@ -80,19 +80,19 @@ describe('StepInformacoes', () => {
     expect(title).toHaveAccessibleDescription('Informe o título do curso')
   })
 
-  it('move o foco para o primeiro campo inválido ao tentar avançar', () => {
+  it('moves the focus to the first invalid field on an attempt to advance', () => {
     renderComponent({ submitted: true })
 
     expect(screen.getByLabelText('Título do curso')).toHaveFocus()
   })
 
-  it('não mexe no foco enquanto o usuário não tentou avançar', () => {
+  it('leaves the focus alone until the user tries to advance', () => {
     renderComponent({ submitted: false })
 
     expect(screen.getByLabelText('Título do curso')).not.toHaveFocus()
   })
 
-  it('navega pelas categorias com as setas', async () => {
+  it('moves through the categories with the arrow keys', async () => {
     const onChange = jest.fn()
     renderComponent({ data: { ...emptyData, category: 'Tecnologia' }, onChange })
 
@@ -102,7 +102,7 @@ describe('StepInformacoes', () => {
     expect(onChange).toHaveBeenCalledWith('category', 'Marketing')
   })
 
-  it('volta para a última categoria com End e Home', async () => {
+  it('jumps to the last and first category with End and Home', async () => {
     const onChange = jest.fn()
     renderComponent({ data: { ...emptyData, category: 'Tecnologia' }, onChange })
 

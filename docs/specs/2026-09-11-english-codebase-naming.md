@@ -479,7 +479,7 @@ rótulos do `.docx` e todo o conteúdo digitado pelo autor.
 - Mensagens de erro que só aparecem em log.
 - `CLAUDE.md`: seção "Como Criar um Novo Tipo de Conteúdo" e demais referências a nomes antigos
   (`CATALOGO_BLOCOS`, `blocos.ts`, `corrigirBloco`, `POLITICA_MIDIAS`, `EditorDeItens`…).
-- `README.md` e `docs/permissoes-usuarios.md` (documentação viva; o nome do arquivo também:
+- `README.md` e `docs/user-permissions.md` (documentação viva; o nome do arquivo também:
   `docs/user-permissions.md`). Specs antigas ficam como estão.
 - `package.json`: `"name": "my-app"` → nome do projeto.
 
@@ -571,3 +571,30 @@ Estado: `tsc` nos mesmos 26 erros pré-existentes da baseline, `pnpm test` 375/3
 
 Pendente da fase: rodar `scripts/migrate-course-json.ts` (dry-run e execução real, com
 backup do Neon antes) e `prisma migrate deploy`.
+
+## Execução da Fase 4 (12/09/2026)
+
+Última fase: o que o compilador nunca leu.
+
+- **Descrições de teste** — as ~450 chamadas de `describe`/`it`/`test` passaram para inglês,
+  em todos os 33 arquivos de Jest e nos 6 specs do Playwright. Os `describe` que citavam o
+  nome da função sob teste foram corrigidos para o nome atual (`criarBlocoVazio` →
+  `createEmptyBlock`, `permissoesDoCurso` → `getCoursePermissions`, `hashCurso` →
+  `hashCourse`, `transicaoValida` → `isValidTransition`, entre outros).
+- **Comentários** — os ~330 comentários em português foram reescritos, incluindo os
+  cabeçalhos de seção do `pdf-service.ts`, os blocos explicativos do `scorm-build-service.ts`,
+  do `liveblocks-auth` e do `useVideoPlayer`, e os comentários do `schema.prisma`.
+- **Logs** — as ~300 mensagens de `console.*` do app, dos scripts e do seed. Mensagens que o
+  usuário final lê (`toast.error`, `alert`, textos de erro devolvidos pela API) continuam em
+  pt-BR, pela regra de fronteira.
+- **Documentação e metadados** — `docs/permissoes-usuarios.md` → `docs/user-permissions.md`,
+  `docs/specs/2026-09-07-novos-blocos-conteudo.md` → `...-new-content-blocks.md`,
+  `package.json` com `"name": "course-generator"`, e as referências no README, no CLAUDE.md e
+  nas specs que apontavam para os nomes antigos.
+
+Ficam em português, de propósito: o nome físico da coluna `instrutor` citada num script de
+migração, o título do curso de exemplo, o segmento `/unidade-N` das rotas do player e as
+fixtures de teste que exercitam o formato legado.
+
+Estado: `tsc` nos mesmos 26 erros de baseline, `pnpm test` 375/375, `pnpm build` limpo,
+`pnpm test:e2e --project=chromium` verde.

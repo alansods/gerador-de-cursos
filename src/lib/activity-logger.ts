@@ -41,7 +41,7 @@ export async function logActivity(params: LogActivityParams) {
       },
     })
   } catch (error) {
-    console.error('Erro ao registrar atividade:', error)
-    // Não propagar o erro para não afetar a operação principal
+    console.error('Failed to log the activity:', error)
+    // Swallow the error so it never breaks the main operation
   }
 }

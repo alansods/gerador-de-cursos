@@ -50,7 +50,7 @@ export function useCourseAccess(courseId: string, enabled: boolean) {
             'Erro ao carregar solicitações'
           ),
         enabled,
-        // quem abre a gestão de acessos precisa do estado corrente, não do cache
+        // opening the access management needs the current state, not the cache
         staleTime: 0,
       },
     ],

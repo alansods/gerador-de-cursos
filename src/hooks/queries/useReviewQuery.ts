@@ -23,7 +23,7 @@ export function useCommentsQuery(courseId: string, enabled: boolean) {
       return data.comments
     },
     enabled,
-    // abrir o painel tem que mostrar o que já foi comentado, não o cache
+    // opening the panel must show what was already commented, not the cache
     staleTime: 0,
   })
 
@@ -87,7 +87,7 @@ export function useChangeStatusMutation(courseId: string) {
       if (!data.success) throw new Error(data.error || 'Erro ao alterar o status')
     },
     onSuccess: async () => {
-      // a mudança de status registra um comentário automático
+      // a status change records an automatic comment
       await queryClient.invalidateQueries({ queryKey: queryKeys.comments(courseId) })
       await queryClient.invalidateQueries({ queryKey: queryKeys.courses.all })
     },

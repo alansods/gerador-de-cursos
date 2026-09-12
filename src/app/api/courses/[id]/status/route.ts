@@ -42,7 +42,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       )
     }
 
-    // Enviar para revisão é de quem edita; aprovar e reprovar são do revisor
+    // Sending to review belongs to whoever edits; approving and rejecting belong to the reviewer
     const action = newStatus === 'IN_REVIEW' ? 'course:submitForReview' : 'course:approve'
     const ctx = newStatus === 'IN_REVIEW' ? { course, collaboration } : {}
 
@@ -97,7 +97,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       },
     })
   } catch (error) {
-    console.error('Erro ao alterar status do curso:', error)
+    console.error('Failed to change the course status:', error)
     return createErrorResponse('Erro ao alterar status do curso', 500, error)
   }
 }

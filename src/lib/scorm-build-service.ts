@@ -14,15 +14,15 @@ import { extractBlockMedia, rewriteBlockMedia } from './blocks'
  * @returns HTML com caminhos relativos
  */
 function convertAbsolutePathsToRelative(html: string, prefix: string): string {
-  // Converter /_next/ para ../_next/ ou ../../_next/
+  // Rewrite /_next/ to ../_next/ or ../../_next/
   html = html.replace(/href="\/_next\//g, `href="${prefix}_next/`)
   html = html.replace(/src="\/_next\//g, `src="${prefix}_next/`)
 
-  // Converter /favicon.ico para ../favicon.ico ou ../../favicon.ico
+  // Rewrite /favicon.ico to ../favicon.ico or ../../favicon.ico
   html = html.replace(/href="\/favicon\.ico/g, `href="${prefix}favicon.ico`)
 
-  // Converter outros assets com / inicial
-  // Mas preservar URLs externas (http://, https://, //)
+  // Rewrite the remaining root-relative assets
+  // while preserving external URLs (http://, https://, //)
   html = html.replace(/(href|src)="\/(?!\/|http)/g, `$1="${prefix}`)
 
   return html
@@ -32,13 +32,13 @@ function convertAbsolutePathsToRelative(html: string, prefix: string): string {
  * Detecta todas as URLs de imagens no curso (recursivamente)
  */
 export function detectMediaUrls(course: Course): string[] {
-  console.log('🔍 [SCORM Build] Detectando mídias do curso...')
+  console.log('🔍 [SCORM Build] Detecting the course media...')
   const urls = new Set<string>()
 
   course.units?.forEach((unit) => {
     unit.blocks?.forEach((block) => {
-      // Dirigido pelo CATALOGO_BLOCOS: bloco novo com mídia declara extrairMidias
-      // e passa a ser embutido no ZIP sem tocar neste arquivo.
+      // Driven by BLOCK_CATALOG: a new block with media declares extractMedia
+      // and gets bundled into the ZIP without touching this file.
       extractBlockMedia(block).forEach((url) => {
         if (url.startsWith('http://') || url.startsWith('https://')) urls.add(url)
       })
@@ -46,7 +46,7 @@ export function detectMediaUrls(course: Course): string[] {
   })
 
   const list = Array.from(urls)
-  console.log(`✅ [SCORM Build] Total de ${list.length} mídia(s) detectada(s)`)
+  console.log(`✅ [SCORM Build] ${list.length} media file(s) detected`)
   return list
 }
 
@@ -62,14 +62,14 @@ async function downloadImage(url: string, outputPath: string): Promise<void> {
 
     const buffer = Buffer.from(await response.arrayBuffer())
 
-    // Criar diretório se não existir
+    // Create the directory when missing
     const dir = path.dirname(outputPath)
     await fs.mkdir(dir, { recursive: true })
 
-    // Salvar arquivo
+    // Write the file
     await fs.writeFile(outputPath, buffer)
   } catch (error) {
-    console.error(`Erro ao baixar imagem ${url}:`, error)
+    console.error(`Failed to download the image ${url}:`, error)
     throw error
   }
 }
@@ -81,34 +81,34 @@ export async function downloadAndUpdateImages(
   course: Course,
   courseId: string
 ): Promise<{ course: Course; imageMap: Map<string, string> }> {
-  console.log('🖼️ [SCORM Build] Iniciando download de imagens...')
+  console.log('🖼️ [SCORM Build] Downloading the images...')
   const mediaUrls = detectMediaUrls(course)
   const imageMap = new Map<string, string>()
   const publicDir = path.join(process.cwd(), 'public', 'scorm-images', courseId)
 
-  console.log(`📁 [SCORM Build] Criando diretório para imagens: ${publicDir}`)
-  // Criar diretório se não existir
+  console.log(`📁 [SCORM Build] Creating the image directory: ${publicDir}`)
+  // Create the directory when missing
   await fs.mkdir(publicDir, { recursive: true })
 
-  // Baixar cada imagem
+  // Download each image
   for (let i = 0; i < mediaUrls.length; i++) {
     const url = mediaUrls[i]
-    console.log(`⬇️ [SCORM Build] Baixando imagem ${i + 1}/${mediaUrls.length}: ${url}`)
+    console.log(`⬇️ [SCORM Build] Downloading image ${i + 1}/${mediaUrls.length}: ${url}`)
 
     try {
       const urlHash = Buffer.from(url).toString('base64').replace(/[/+=]/g, '').substring(0, 16)
       const extension = path.extname(new URL(url).pathname) || '.jpg'
       const filename = `midia-${i + 1}-${urlHash}${extension}`
       const outputPath = path.join(publicDir, filename)
-      // Relativo e sem o id do curso: é onde o generateSCORMFromPlayerDist grava no ZIP.
+      // Relative and without the course id: that is where generateSCORMFromPlayerDist writes in the ZIP.
       const publicPath = `images/${filename}`
 
       await downloadImage(url, outputPath)
       imageMap.set(url, publicPath)
-      console.log(`✅ [SCORM Build] Imagem baixada com sucesso: ${url} -> ${publicPath}`)
+      console.log(`✅ [SCORM Build] Image downloaded: ${url} -> ${publicPath}`)
     } catch (error) {
-      console.error(`❌ [SCORM Build] Erro ao baixar imagem ${url}:`, error)
-      // Continuar mesmo se uma imagem falhar
+      console.error(`❌ [SCORM Build] Failed to download the image ${url}:`, error)
+      // Carry on even when one image fails
     }
   }
 
@@ -116,12 +116,12 @@ export async function downloadAndUpdateImages(
     `✅ [SCORM Build] Download de imagens concluído. ${imageMap.size}/${mediaUrls.length} imagens baixadas com sucesso.`
   )
 
-  // Atualizar referências no curso
-  console.log('🔄 [SCORM Build] Atualizando referências de imagens no curso...')
+  // Rewrite the references inside the course
+  console.log('🔄 [SCORM Build] Rewriting the image references in the course...')
   const updatedCourse = JSON.parse(JSON.stringify(course)) as Course
 
-  // Dirigido pelo CATALOGO_BLOCOS: bloco novo com mídia declara reescreverMidias e passa
-  // a ser reescrito sem tocar neste arquivo.
+  // Driven by BLOCK_CATALOG: a new block with media declares rewriteMedia and gets
+  // rewritten without touching this file.
   let updatedCount = 0
   updatedCourse.units?.forEach((unit) => {
     unit.blocks = unit.blocks?.map((block) => {
@@ -131,7 +131,7 @@ export async function downloadAndUpdateImages(
     })
   })
 
-  console.log(`✅ [SCORM Build] ${updatedCount} referências de imagens atualizadas no curso`)
+  console.log(`✅ [SCORM Build] ${updatedCount} image reference(s) rewritten in the course`)
   return { course: updatedCourse, imageMap }
 }
 
@@ -142,14 +142,14 @@ async function saveCourseForBuild(course: Course, courseId: string): Promise<str
   const tempDir = path.join(process.cwd(), '.scorm-build')
   const tempFile = path.join(tempDir, `curso-${courseId}.json`)
 
-  console.log(`💾 [SCORM Build] Salvando curso em arquivo temporário: ${tempFile}`)
-  // Criar diretório se não existir
+  console.log(`💾 [SCORM Build] Writing the course to a temporary file: ${tempFile}`)
+  // Create the directory when missing
   await fs.mkdir(tempDir, { recursive: true })
 
-  // Salvar curso
+  // Write the course
   const courseJson = JSON.stringify(course, null, 2)
   await fs.writeFile(tempFile, courseJson, 'utf-8')
-  console.log(`✅ [SCORM Build] Curso salvo com sucesso (${courseJson.length} bytes)`)
+  console.log(`✅ [SCORM Build] Course written (${courseJson.length} bytes)`)
 
   return tempFile
 }
@@ -163,7 +163,7 @@ async function removeCourseBuildFile(courseId: string): Promise<void> {
     const tempFile = path.join(tempDir, `curso-${courseId}.json`)
     await fs.unlink(tempFile).catch(() => {})
   } catch (error) {
-    // Ignorar erros ao remover arquivo temporário
+    // Ignore failures while removing the temporary file
   }
 }
 
@@ -177,16 +177,16 @@ async function hideApiRoutes(): Promise<string[]> {
   const hiddenDirs: string[] = []
 
   try {
-    // Ler todos os diretórios em src/app
+    // Read every directory under src/app
     const entries = await fs.readdir(appDir, { withFileTypes: true })
 
-    // Filtrar apenas diretórios que começam com "api"
+    // Keep only the directories starting with "api"
     const apiDirs = entries
       .filter((entry) => entry.isDirectory() && entry.name.startsWith('api'))
       .map((entry) => entry.name)
 
     if (apiDirs.length === 0) {
-      console.log('ℹ️ [SCORM Build] Nenhuma pasta de API encontrada')
+      console.log('ℹ️ [SCORM Build] No API folder found')
       return hiddenDirs
     }
 
@@ -194,31 +194,31 @@ async function hideApiRoutes(): Promise<string[]> {
       `📦 [SCORM Build] Encontradas ${apiDirs.length} pasta(s) de API: ${apiDirs.join(', ')}`
     )
 
-    // Mover cada pasta de API para fora de src/app
+    // Move every API folder out of src/app
     for (const apiDirName of apiDirs) {
       const apiDir = path.join(appDir, apiDirName)
-      // Mover para FORA de src/app para garantir que o Next.js não encontre
-      // Usar nome único baseado no nome da pasta original
+      // Move it OUTSIDE src/app so Next.js cannot find it
+      // Use a unique name derived from the original folder
       const hiddenApiDir = path.join(process.cwd(), `.${apiDirName}-hidden-temp`)
 
-      console.log(`📦 [SCORM Build] Ocultando pasta /${apiDirName} durante build estático...`)
-      console.log(`   📁 Movendo de: ${apiDir}`)
-      console.log(`   📁 Para: ${hiddenApiDir}`)
+      console.log(`📦 [SCORM Build] Hiding the /${apiDirName} folder during the static build...`)
+      console.log(`   📁 From: ${apiDir}`)
+      console.log(`   📁 To: ${hiddenApiDir}`)
 
-      // Se já existe uma pasta oculta de um build anterior, remover primeiro
+      // Drop a hidden folder left over from an earlier build
       if (await verifyPathExists(hiddenApiDir)) {
-        console.log('   🧹 Removendo pasta oculta anterior...')
+        console.log('   🧹 Removing the previous hidden folder...')
         await fs.rm(hiddenApiDir, { recursive: true, force: true })
       }
 
       await fs.rename(apiDir, hiddenApiDir)
-      console.log(`✅ [SCORM Build] Pasta /${apiDirName} ocultada com sucesso`)
+      console.log(`✅ [SCORM Build] Folder /${apiDirName} hidden`)
       hiddenDirs.push(hiddenApiDir)
     }
 
-    console.log(`✅ [SCORM Build] ${hiddenDirs.length} pasta(s) de API ocultadas`)
+    console.log(`✅ [SCORM Build] ${hiddenDirs.length} API folder(s) hidden`)
   } catch (error) {
-    console.error('❌ [SCORM Build] Erro ao ocultar pastas de API:', error)
+    console.error('❌ [SCORM Build] Failed to hide the API folders:', error)
   }
 
   return hiddenDirs
@@ -229,7 +229,7 @@ async function hideApiRoutes(): Promise<string[]> {
  */
 async function restoreApiRoutes(hiddenApiDirs: string[]): Promise<void> {
   if (!hiddenApiDirs || hiddenApiDirs.length === 0) {
-    console.log('ℹ️ [SCORM Build] Nenhuma pasta de API para restaurar')
+    console.log('ℹ️ [SCORM Build] No API folder to restore')
     return
   }
 
@@ -239,28 +239,28 @@ async function restoreApiRoutes(hiddenApiDirs: string[]): Promise<void> {
     try {
       const exists = await verifyPathExists(hiddenApiDir)
       if (exists) {
-        // Extrair o nome original da pasta do caminho oculto
-        // Exemplo: .api-hidden-temp -> api, .api 2-hidden-temp -> api 2
+        // Recover the original folder name from the hidden path
+        // For example: .api-hidden-temp -> api, .api 2-hidden-temp -> api 2
         const dirBaseName = path.basename(hiddenApiDir)
         const apiDirName = dirBaseName.replace(/^\./, '').replace(/-hidden-temp$/, '')
         const apiDir = path.join(appDir, apiDirName)
 
-        console.log(`📦 [SCORM Build] Restaurando pasta /${apiDirName} após build...`)
+        console.log(`📦 [SCORM Build] Restoring the /${apiDirName} folder after the build...`)
 
-        // Se a pasta api já existe (caso de erro), remover primeiro
+        // Drop the api folder when it already exists (error path)
         if (await verifyPathExists(apiDir)) {
           await fs.rm(apiDir, { recursive: true, force: true })
         }
 
         await fs.rename(hiddenApiDir, apiDir)
-        console.log(`✅ [SCORM Build] Pasta /${apiDirName} restaurada com sucesso`)
+        console.log(`✅ [SCORM Build] Folder /${apiDirName} restored`)
       }
     } catch (error) {
-      console.error(`❌ [SCORM Build] Erro ao restaurar pasta ${hiddenApiDir}:`, error)
+      console.error(`❌ [SCORM Build] Failed to restore the folder ${hiddenApiDir}:`, error)
     }
   }
 
-  console.log(`✅ [SCORM Build] ${hiddenApiDirs.length} pasta(s) de API restauradas`)
+  console.log(`✅ [SCORM Build] ${hiddenApiDirs.length} API folder(s) restored`)
 }
 
 /**
@@ -270,9 +270,9 @@ async function restoreApiRoutes(hiddenApiDirs: string[]): Promise<void> {
 async function hideProblematicPages(): Promise<string[]> {
   const hiddenDirs: string[] = []
   const problematicPaths = [
-    // Páginas dinâmicas que não devem ser exportadas estaticamente
+    // Dynamic pages that must not be exported statically
     path.join(process.cwd(), 'src', 'app', 'cursos', '[id]'),
-    // Página de PDF preview (não faz parte do SCORM)
+    // PDF preview page (not part of the SCORM package)
     path.join(process.cwd(), 'src', 'app', 'pdf-preview'),
   ]
 
@@ -287,21 +287,21 @@ async function hideProblematicPages(): Promise<string[]> {
         console.log(
           `📦 [SCORM Build] Ocultando pasta problemática: ${path.basename(problematicPath)}`
         )
-        console.log(`   📁 Movendo de: ${problematicPath}`)
-        console.log(`   📁 Para: ${hiddenPath}`)
+        console.log(`   📁 From: ${problematicPath}`)
+        console.log(`   📁 To: ${hiddenPath}`)
 
-        // Se já existe uma pasta oculta de um build anterior, remover primeiro
+        // Drop a hidden folder left over from an earlier build
         if (await verifyPathExists(hiddenPath)) {
-          console.log('   🧹 Removendo pasta oculta anterior...')
+          console.log('   🧹 Removing the previous hidden folder...')
           await fs.rm(hiddenPath, { recursive: true, force: true })
         }
 
         await fs.rename(problematicPath, hiddenPath)
-        console.log(`✅ [SCORM Build] Pasta ${path.basename(problematicPath)} ocultada com sucesso`)
+        console.log(`✅ [SCORM Build] Folder ${path.basename(problematicPath)} hidden`)
         hiddenDirs.push(hiddenPath)
       }
     } catch (error) {
-      console.error(`❌ [SCORM Build] Erro ao ocultar pasta ${problematicPath}:`, error)
+      console.error(`❌ [SCORM Build] Failed to hide the folder ${problematicPath}:`, error)
     }
   }
 
@@ -316,32 +316,32 @@ async function restoreProblematicPages(hiddenDirs: string[]): Promise<void> {
     try {
       const exists = await verifyPathExists(hiddenDir)
       if (exists) {
-        // Extrair o nome original da pasta do nome oculto
+        // Recover the original folder name from the hidden name
         // .hidden-[id]-temp -> [id]
         // .hidden-pdf-preview-temp -> pdf-preview
         const dirName = path.basename(hiddenDir).replace('.hidden-', '').replace('-temp', '')
 
-        // Determinar o caminho original baseado no nome da pasta
+        // Work out the original path from the folder name
         let originalPath: string
         if (dirName === '[id]') {
           originalPath = path.join(process.cwd(), 'src', 'app', 'cursos', dirName)
         } else if (dirName === 'pdf-preview') {
           originalPath = path.join(process.cwd(), 'src', 'app', dirName)
         } else {
-          // Fallback: tentar em src/app
+          // Fallback: try src/app
           originalPath = path.join(process.cwd(), 'src', 'app', dirName)
         }
 
-        console.log(`📦 [SCORM Build] Restaurando pasta: ${dirName}`)
-        // Se a pasta original já existe (caso de erro), remover primeiro
+        console.log(`📦 [SCORM Build] Restoring the folder: ${dirName}`)
+        // Drop the original folder when it already exists (error path)
         if (await verifyPathExists(originalPath)) {
           await fs.rm(originalPath, { recursive: true, force: true })
         }
         await fs.rename(hiddenDir, originalPath)
-        console.log(`✅ [SCORM Build] Pasta ${dirName} restaurada com sucesso`)
+        console.log(`✅ [SCORM Build] Folder ${dirName} restored`)
       }
     } catch (error) {
-      console.error(`❌ [SCORM Build] Erro ao restaurar pasta ${hiddenDir}:`, error)
+      console.error(`❌ [SCORM Build] Failed to restore the folder ${hiddenDir}:`, error)
     }
   }
 }
@@ -350,38 +350,38 @@ async function restoreProblematicPages(hiddenDirs: string[]): Promise<void> {
  * Executa o build do Next.js programaticamente
  */
 export async function executeNextBuild(course: Course, courseId: string): Promise<void> {
-  const buildTimeout = 10 * 60 * 1000 // 10 minutos
+  const buildTimeout = 10 * 60 * 1000 // 10 minutes
 
-  console.log('📝 [SCORM Build] Salvando curso em arquivo temporário...')
-  // Salvar curso em arquivo temporário
+  console.log('📝 [SCORM Build] Writing the course to a temporary file...')
+  // Write the course to a temporary file
   const tempFile = await saveCourseForBuild(course, courseId)
-  console.log(`✅ [SCORM Build] Curso salvo em: ${tempFile}`)
+  console.log(`✅ [SCORM Build] Course written to: ${tempFile}`)
 
-  // Ocultar todas as pastas de API durante o build estático
+  // Hide every API folder during the static build
   const hiddenApiDirs = await hideApiRoutes()
 
-  // Ocultar pastas problemáticas durante o build estático
+  // Hide the problematic folders during the static build
   const hiddenPagesDirs = await hideProblematicPages()
 
   return new Promise((resolve, reject) => {
-    console.log('🔨 [SCORM Build] Iniciando build do Next.js...')
-    console.log(`📁 [SCORM Build] Diretório de trabalho: ${process.cwd()}`)
+    console.log('🔨 [SCORM Build] Starting the Next.js build...')
+    console.log(`📁 [SCORM Build] Working directory: ${process.cwd()}`)
 
-    // Configurar variáveis de ambiente para build estático
+    // Environment variables for the static build
     const { TURBOPACK, ...envWithoutTurbopack } = process.env
     const env: NodeJS.ProcessEnv = {
       ...envWithoutTurbopack,
       NODE_ENV: 'production' as const,
-      NEXT_OUTPUT_EXPORT: 'true', // Flag customizada para ativar export
-      SCORM_BUILD_COURSE_FILE: tempFile, // Arquivo temporário com curso
+      NEXT_OUTPUT_EXPORT: 'true', // custom flag that turns the export on
+      SCORM_BUILD_COURSE_FILE: tempFile, // temporary file holding the course
     }
 
-    console.log('🔧 [SCORM Build] Variáveis de ambiente configuradas:')
+    console.log('🔧 [SCORM Build] Environment variables set:')
     console.log(`   - NODE_ENV: ${env.NODE_ENV}`)
     console.log(`   - NEXT_OUTPUT_EXPORT: ${env.NEXT_OUTPUT_EXPORT}`)
     console.log(`   - SCORM_BUILD_COURSE_FILE: ${env.SCORM_BUILD_COURSE_FILE}`)
 
-    // Executar build estático do Next.js
+    // Run the static Next.js build
     const buildProcess = exec(
       'next build',
       {
@@ -390,29 +390,29 @@ export async function executeNextBuild(course: Course, courseId: string): Promis
         maxBuffer: 1024 * 1024 * 10, // 10MB buffer
       },
       async (error, stdout, stderr) => {
-        console.log('📋 [SCORM Build] Build finalizado, processando resultado...')
+        console.log('📋 [SCORM Build] Build finished, processing the result...')
 
-        // Restaurar pastas após build
+        // Restore the folders after the build
         await restoreApiRoutes(hiddenApiDirs)
         await restoreProblematicPages(hiddenPagesDirs)
 
-        // Remover arquivo temporário após build
-        console.log('🧹 [SCORM Build] Removendo arquivo temporário do curso...')
+        // Remove the temporary file after the build
+        console.log('🧹 [SCORM Build] Removing the temporary course file...')
         await removeCourseBuildFile(courseId)
 
         if (error) {
-          console.error('❌ [SCORM Build] Erro no build:', error)
+          console.error('❌ [SCORM Build] Build failed:', error)
           console.error('📋 [SCORM Build] stderr:', stderr)
           console.error('📋 [SCORM Build] stdout:', stdout)
-          // Garantir que as pastas sejam restauradas mesmo em caso de erro
+          // Restore the folders even on failure
           await restoreApiRoutes(hiddenApiDirs)
           await restoreProblematicPages(hiddenPagesDirs)
           reject(new Error(`Build falhou: ${error.message}`))
           return
         }
 
-        console.log('✅ [SCORM Build] Build concluído com sucesso')
-        console.log('📋 [SCORM Build] Output do build:')
+        console.log('✅ [SCORM Build] Build finished')
+        console.log('📋 [SCORM Build] Build output:')
         console.log(stdout)
         if (stderr) {
           console.log('⚠️ [SCORM Build] Warnings:')
@@ -422,7 +422,7 @@ export async function executeNextBuild(course: Course, courseId: string): Promis
       }
     )
 
-    // Logs durante o build
+    // Build logs
     buildProcess.stdout?.on('data', (data) => {
       console.log(`📦 [SCORM Build] ${data.toString().trim()}`)
     })
@@ -433,10 +433,10 @@ export async function executeNextBuild(course: Course, courseId: string): Promis
 
     // Timeout
     const timeout = setTimeout(() => {
-      console.error('⏱️ [SCORM Build] Timeout após 10 minutos, encerrando processo...')
+      console.error('⏱️ [SCORM Build] Timed out after 10 minutes, killing the process...')
       buildProcess.kill()
       removeCourseBuildFile(courseId)
-      // Garantir que as pastas sejam restauradas mesmo em caso de timeout
+      // Restore the folders even on timeout
       restoreApiRoutes(hiddenApiDirs)
       restoreProblematicPages(hiddenPagesDirs)
       reject(new Error('Build timeout após 10 minutos'))
@@ -444,7 +444,7 @@ export async function executeNextBuild(course: Course, courseId: string): Promis
 
     buildProcess.on('exit', (code, signal) => {
       clearTimeout(timeout)
-      console.log(`🔄 [SCORM Build] Processo finalizado com código: ${code}, sinal: ${signal}`)
+      console.log(`🔄 [SCORM Build] Process exited with code: ${code}, signal: ${signal}`)
     })
   })
 }
@@ -454,14 +454,14 @@ export async function executeNextBuild(course: Course, courseId: string): Promis
  */
 export async function verifyBuildOutput(): Promise<boolean> {
   const outDir = path.join(process.cwd(), 'out')
-  console.log(`🔍 [SCORM Build] Verificando se diretório out/ existe: ${outDir}`)
+  console.log(`🔍 [SCORM Build] Checking whether out/ exists: ${outDir}`)
   try {
     const stats = await fs.stat(outDir)
     const exists = stats.isDirectory()
-    console.log(`✅ [SCORM Build] Diretório out/ ${exists ? 'existe' : 'não existe'}`)
+    console.log(`✅ [SCORM Build] out/ ${exists ? 'exists' : 'does not exist'}`)
     return exists
   } catch (error) {
-    console.log(`❌ [SCORM Build] Diretório out/ não encontrado:`, error)
+    console.log(`❌ [SCORM Build] out/ not found:`, error)
     return false
   }
 }
@@ -470,14 +470,14 @@ export async function verifyBuildOutput(): Promise<boolean> {
  * Copia arquivos do out/ para o ZIP SCORM
  */
 export async function copyBuildFilesToZip(zip: JSZip, courseId: string): Promise<void> {
-  console.log('📦 [SCORM Build] Iniciando cópia de arquivos para ZIP...')
+  console.log('📦 [SCORM Build] Copying the files into the ZIP...')
   const outDir = path.join(process.cwd(), 'out')
   const scormPreviewDir = path.join(outDir, 'scorm-preview')
   const publicImagesDir = path.join(process.cwd(), 'public', 'scorm-images', courseId)
 
   let filesAdded = 0
 
-  // Função recursiva para adicionar arquivos ao ZIP
+  // Recursive helper that adds files to the ZIP
   async function addDirectoryToZip(dirPath: string, zipPath: string): Promise<void> {
     try {
       const entries = await fs.readdir(dirPath, { withFileTypes: true })
@@ -496,22 +496,22 @@ export async function copyBuildFilesToZip(zip: JSZip, courseId: string): Promise
           zip.file(zipEntryPath, content)
           filesAdded++
           if (filesAdded % 10 === 0) {
-            console.log(`   📄 [SCORM Build] ${filesAdded} arquivos adicionados ao ZIP...`)
+            console.log(`   📄 [SCORM Build] ${filesAdded} files added to the ZIP...`)
           }
         }
       }
     } catch (error) {
-      console.error(`❌ [SCORM Build] Erro ao copiar diretório ${dirPath}:`, error)
+      console.error(`❌ [SCORM Build] Failed to copy the directory ${dirPath}:`, error)
     }
   }
 
-  // Copiar página principal do scorm-preview
-  // O Next.js com output: 'export' gera páginas como [nome].html na raiz
-  console.log(`📂 [SCORM Build] Copiando página principal scorm-preview.html...`)
+  // Copy the main scorm-preview page
+  // With output: 'export', Next.js emits pages as [name].html at the root
+  console.log(`📂 [SCORM Build] Copying the main page scorm-preview.html...`)
   const scormPreviewHtmlFile = path.join(outDir, 'scorm-preview.html')
   if (await verifyPathExists(scormPreviewHtmlFile)) {
     let content = await fs.readFile(scormPreviewHtmlFile, 'utf-8')
-    // Converter caminhos absolutos para relativos
+    // Rewrite the absolute paths as relative ones
     content = convertAbsolutePathsToRelative(content, '../')
     zip.file('scorm-preview/index.html', content)
     filesAdded++
@@ -524,10 +524,10 @@ export async function copyBuildFilesToZip(zip: JSZip, courseId: string): Promise
     )
   }
 
-  // Copiar arquivos adicionais do diretório scorm-preview (se existir)
-  console.log(`📂 [SCORM Build] Copiando arquivos do diretório scorm-preview/...`)
+  // Copy the extra files from the scorm-preview directory, when present
+  console.log(`📂 [SCORM Build] Copying the files from scorm-preview/...`)
   if (await verifyPathExists(scormPreviewDir)) {
-    // Copiar arquivos HTML das unidades com conversão de caminhos
+    // Copy the unit HTML files, rewriting their paths
     const unitDir = path.join(scormPreviewDir, 'unidade')
     if (await verifyPathExists(unitDir)) {
       const unitFiles = await fs.readdir(unitDir)
@@ -535,16 +535,16 @@ export async function copyBuildFilesToZip(zip: JSZip, courseId: string): Promise
         if (file.endsWith('.html')) {
           const filePath = path.join(unitDir, file)
           let content = await fs.readFile(filePath, 'utf-8')
-          // Converter caminhos absolutos para relativos (dois níveis acima: ../../)
+          // Rewrite the absolute paths as relative ones (dois níveis acima: ../../)
           content = convertAbsolutePathsToRelative(content, '../../')
           zip.file(`scorm-preview/unidade/${file}`, content)
           filesAdded++
         }
       }
-      console.log(`✅ [SCORM Build] Arquivos HTML das unidades copiados com caminhos convertidos`)
+      console.log(`✅ [SCORM Build] Unit HTML files copied with rewritten paths`)
     }
 
-    // Copiar outros arquivos (txt, etc) sem conversão
+    // Copy the remaining files (txt and friends) untouched
     const entries = await fs.readdir(scormPreviewDir, { withFileTypes: true })
     for (const entry of entries) {
       if (!entry.isDirectory() && !entry.name.endsWith('.html')) {
@@ -555,41 +555,41 @@ export async function copyBuildFilesToZip(zip: JSZip, courseId: string): Promise
       }
     }
 
-    console.log(`✅ [SCORM Build] Arquivos do diretório scorm-preview copiados`)
+    console.log(`✅ [SCORM Build] Files from scorm-preview copied`)
   } else {
-    console.log(`ℹ️ [SCORM Build] Diretório scorm-preview/ não existe (normal para build estático)`)
+    console.log(`ℹ️ [SCORM Build] scorm-preview/ does not exist (expected in a static build)`)
   }
 
-  // Copiar assets estáticos (_next/static)
-  console.log(`📂 [SCORM Build] Copiando assets estáticos (_next/static)...`)
+  // Copy the static assets (_next/static)
+  console.log(`📂 [SCORM Build] Copying the static assets (_next/static)...`)
   const nextStaticDir = path.join(outDir, '_next', 'static')
   if (await verifyPathExists(nextStaticDir)) {
     await addDirectoryToZip(nextStaticDir, '_next/static')
-    console.log(`✅ [SCORM Build] Assets estáticos copiados`)
+    console.log(`✅ [SCORM Build] Static assets copied`)
   } else {
-    console.log(`⚠️ [SCORM Build] Diretório _next/static não encontrado: ${nextStaticDir}`)
+    console.log(`⚠️ [SCORM Build] _next/static not found: ${nextStaticDir}`)
   }
 
-  // Copiar imagens baixadas
-  console.log(`📂 [SCORM Build] Copiando imagens baixadas...`)
+  // Copy the downloaded images
+  console.log(`📂 [SCORM Build] Copying the downloaded images...`)
   if (await verifyPathExists(publicImagesDir)) {
     await addDirectoryToZip(publicImagesDir, 'scorm-images')
-    console.log(`✅ [SCORM Build] Imagens copiadas`)
+    console.log(`✅ [SCORM Build] Images copied`)
   } else {
-    console.log(`⚠️ [SCORM Build] Diretório de imagens não encontrado: ${publicImagesDir}`)
+    console.log(`⚠️ [SCORM Build] Image directory not found: ${publicImagesDir}`)
   }
 
-  // Copiar index.html do scorm-preview (página inicial do preview)
-  // O Next.js com output: 'export' gera index.html em cada rota
-  console.log(`📄 [SCORM Build] Copiando index.html...`)
+  // Copy the scorm-preview index.html (the preview home page)
+  // With output: 'export', Next.js emits an index.html per route
+  console.log(`📄 [SCORM Build] Copying index.html...`)
   const scormIndexPath = path.join(outDir, 'scorm-preview', 'index.html')
   if (await verifyPathExists(scormIndexPath)) {
     const content = await fs.readFile(scormIndexPath)
     zip.file('index.html', content)
-    console.log(`✅ [SCORM Build] index.html copiado de scorm-preview/index.html`)
+    console.log(`✅ [SCORM Build] index.html copied from scorm-preview/index.html`)
   } else {
-    // Se não existir, criar um index.html básico que redireciona
-    console.log(`⚠️ [SCORM Build] index.html não encontrado, criando redirecionamento...`)
+    // When it is missing, write a minimal redirecting index.html
+    console.log(`⚠️ [SCORM Build] index.html not found, writing a redirect...`)
     const redirectHtml = `<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -602,7 +602,7 @@ export async function copyBuildFilesToZip(zip: JSZip, courseId: string): Promise
 </body>
 </html>`
     zip.file('index.html', redirectHtml)
-    console.log(`✅ [SCORM Build] index.html de redirecionamento criado`)
+    console.log(`✅ [SCORM Build] Redirecting index.html written`)
   }
 
   console.log(
@@ -626,37 +626,37 @@ async function verifyPathExists(filePath: string): Promise<boolean> {
  * Limpa arquivos temporários (imagens baixadas, diretório out/)
  */
 export async function cleanupTempFiles(courseId: string): Promise<void> {
-  console.log('🧹 [SCORM Build] Iniciando limpeza de arquivos temporários...')
+  console.log('🧹 [SCORM Build] Cleaning up the temporary files...')
   try {
-    // Limpar imagens baixadas
+    // Remove the downloaded images
     const publicImagesDir = path.join(process.cwd(), 'public', 'scorm-images', courseId)
     if (await verifyPathExists(publicImagesDir)) {
-      console.log(`   🗑️ [SCORM Build] Removendo imagens de: ${publicImagesDir}`)
+      console.log(`   🗑️ [SCORM Build] Removing the images from: ${publicImagesDir}`)
       await fs.rm(publicImagesDir, { recursive: true, force: true })
-      console.log(`✅ [SCORM Build] Imagens removidas com sucesso`)
+      console.log(`✅ [SCORM Build] Images removed`)
     } else {
-      console.log(`ℹ️ [SCORM Build] Diretório de imagens não existe, nada para limpar`)
+      console.log(`ℹ️ [SCORM Build] No image directory, nothing to clean`)
     }
 
-    // Limpar arquivo temporário do curso
+    // Remove the temporary course file
     const tempDir = path.join(process.cwd(), '.scorm-build')
     const tempFile = path.join(tempDir, `curso-${courseId}.json`)
     if (await verifyPathExists(tempFile)) {
-      console.log(`   🗑️ [SCORM Build] Removendo arquivo temporário do curso: ${tempFile}`)
+      console.log(`   🗑️ [SCORM Build] Removing the temporary course file: ${tempFile}`)
       await fs.unlink(tempFile).catch(() => {})
-      console.log(`✅ [SCORM Build] Arquivo temporário removido`)
+      console.log(`✅ [SCORM Build] Temporary file removed`)
     }
 
-    // Limpar diretório out/ (opcional - pode querer manter para debug)
+    // Cleaning out/ is optional — keeping it helps debugging
     // const outDir = path.join(process.cwd(), 'out');
     // if (await verifyPathExists(outDir)) {
     //   await fs.rm(outDir, { recursive: true, force: true });
     //   console.log(`🧹 Limpeza: diretório out/ removido`);
     // }
 
-    console.log(`✅ [SCORM Build] Limpeza concluída`)
+    console.log(`✅ [SCORM Build] Cleanup finished`)
   } catch (error) {
-    console.error('❌ [SCORM Build] Erro ao limpar arquivos temporários:', error)
-    // Não falhar se a limpeza falhar
+    console.error('❌ [SCORM Build] Failed to clean the temporary files:', error)
+    // A failed cleanup never fails the build
   }
 }

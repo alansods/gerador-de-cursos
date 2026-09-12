@@ -13,7 +13,7 @@ import { cardsFlipcard } from '@/lib/blocks'
 type CourseSummary = Course
 
 // ========================================================================
-// 🎨 CENTRAL DE DESIGN (THEME v2 — layout "apostila")
+// 🎨 DESIGN TOKENS (THEME v2 — "workbook" layout)
 // ========================================================================
 const THEME = {
   colors: {
@@ -50,7 +50,7 @@ function hexToRgb(hex: string): number[] | null {
   return [(value >> 16) & 255, (value >> 8) & 255, value & 255]
 }
 
-// Constantes de layout (em mm)
+// Layout constants (in mm)
 const PAGE_WIDTH = 210
 const PAGE_HEIGHT = 297
 const MARGIN = THEME.layout.margin
@@ -168,7 +168,7 @@ export async function generateCoursePDF(course: CourseSummary, filename?: string
   })
 
   // ========================================================================
-  // FONTES CUSTOMIZADAS (Open Sans) — carregadas sob demanda
+  // CUSTOM FONTS (Open Sans) — loaded on demand
   // ========================================================================
   const { OPEN_SANS_REGULAR_B64, OPEN_SANS_BOLD_B64, OPEN_SANS_ITALIC_B64, OPEN_SANS_LIGHT_B64 } =
     await import('./pdf-fonts')
@@ -182,7 +182,7 @@ export async function generateCoursePDF(course: CourseSummary, filename?: string
   doc.addFileToVFS('OpenSans-Light.ttf', OPEN_SANS_LIGHT_B64)
   doc.addFont('OpenSans-Light.ttf', 'OpenSans', 'light')
 
-  // Pré-carrega imagens dos blocos "imagem" antes de montar o documento
+  // Preload the images of "image" blocks before laying the document out
   const loadedImages = await preloadImages(course)
   let figureCounter = 0
   let quizAnswerKey: AnswerKeyEntry[] = []
@@ -192,7 +192,7 @@ export async function generateCoursePDF(course: CourseSummary, filename?: string
   let measuring = false
 
   // ========================================================================
-  // FUNÇÕES HELPER DE RENDERIZAÇÃO
+  // RENDERING HELPERS
   // ========================================================================
 
   /** Verifica se precisa de uma nova página e a adiciona se necessário */
@@ -338,7 +338,7 @@ export async function generateCoursePDF(course: CourseSummary, filename?: string
   }
 
   // ========================================================================
-  // CAPA
+  // COVER
   // ========================================================================
   const renderCoverPage = () => {
     doc.setFillColor(THEME.colors.primary)
@@ -382,7 +382,7 @@ export async function generateCoursePDF(course: CourseSummary, filename?: string
   }
 
   // ========================================================================
-  // ROSTO + FICHA TÉCNICA
+  // TITLE PAGE + CREDITS
   // ========================================================================
   const renderTitlePage = () => {
     doc.addPage()
@@ -426,7 +426,7 @@ export async function generateCoursePDF(course: CourseSummary, filename?: string
   }
 
   // ========================================================================
-  // SUMÁRIO (duas passadas)
+  // TABLE OF CONTENTS (two passes)
   // ========================================================================
   let tocPageNumber = 0
 
@@ -500,7 +500,7 @@ export async function generateCoursePDF(course: CourseSummary, filename?: string
   }
 
   // ========================================================================
-  // CABEÇALHO CORRIDO
+  // RUNNING HEADER
   // ========================================================================
   const addRunningHeader = (page: number, label: string) => {
     doc.setPage(page)
@@ -511,7 +511,7 @@ export async function generateCoursePDF(course: CourseSummary, filename?: string
   }
 
   // ========================================================================
-  // ABERTURA DE UNIDADE
+  // UNIT OPENER
   // ========================================================================
   const renderUnitOpener = (unit: Unit, index: number): number => {
     doc.addPage()
@@ -558,7 +558,7 @@ export async function generateCoursePDF(course: CourseSummary, filename?: string
   }
 
   // ========================================================================
-  // ROTEADOR DE BLOCOS DE CONTEÚDO
+  // CONTENT BLOCK ROUTER
   // ========================================================================
   const renderContentItem = (item: Block, y: number): number => {
     switch (item.type) {
@@ -696,7 +696,7 @@ export async function generateCoursePDF(course: CourseSummary, filename?: string
   }
 
   // ========================================================================
-  // BLOCOS ESPECÍFICOS
+  // BLOCK RENDERERS
   // ========================================================================
 
   const renderImageBox = (item: Block, y: number): number => {
@@ -977,7 +977,7 @@ export async function generateCoursePDF(course: CourseSummary, filename?: string
   }
 
   // ========================================================================
-  // INÍCIO DA EXECUÇÃO
+  // ENTRY POINT
   // ========================================================================
 
   const units = course.units || []
@@ -1016,7 +1016,7 @@ export async function generateCoursePDF(course: CourseSummary, filename?: string
   const openerPages = new Set(tocEntries.map((entry) => entry.page))
   const firstContentPage = tocEntries[0]?.page ?? totalPages + 1
   for (let p = firstContentPage; p <= totalPages; p++) {
-    if (openerPages.has(p)) continue // página de abertura já tem seu próprio rótulo de unidade
+    if (openerPages.has(p)) continue // an opener page already carries its own unit label
     let unitIdx = 0
     for (let i = 0; i < tocEntries.length; i++) {
       if (tocEntries[i].page <= p) unitIdx = i

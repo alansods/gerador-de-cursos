@@ -14,7 +14,7 @@ export const usePDF = () => {
     try {
       await generateCoursePDF(course, filename)
     } catch (error) {
-      console.error('Erro ao gerar PDF:', error)
+      console.error('PDF generation failed:', error)
       alert('Erro ao gerar PDF. Verifique o console para mais detalhes.')
     } finally {
       setIsGenerating(false)

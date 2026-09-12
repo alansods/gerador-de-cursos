@@ -10,7 +10,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ jobI
   const authResult = await requireAuth(req)
 
   if (authResult instanceof NextResponse) {
-    return authResult // Retorna erro 401 se não autenticado
+    return authResult // 401 when not authenticated
   }
 
   try {
@@ -20,7 +20,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ jobI
       return createErrorResponse('Job ID é obrigatório', 400)
     }
 
-    // Buscar job no banco de dados (incluindo zipData)
+    // Read the job, zipData included
     const job = await prisma.sCORMJob.findUnique({
       where: { id: jobId },
     })
@@ -46,7 +46,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ jobI
         .normalize('NFD') // Decompõe caracteres acentuados
         .replace(/[\u0300-\u036f]/g, '') // Remove acentos
         .toLowerCase()
-        .replace(/[^a-z0-9]+/g, '-') // Substitui caracteres não alfanuméricos por '-'
+        .replace(/[^a-z0-9]+/g, '-') // replace every non-alphanumeric character with '-'
         .replace(/^-+|-+$/g, '') // Remove '-' no início/fim
 
       // Retornar ZIP
@@ -59,7 +59,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ jobI
         },
       })
 
-      // Opcional: Limpar job após download (ou manter por 1 hora para redownload)
+      // Optional: drop the job after the download (or keep it for an hour to allow a redownload)
       // await prisma.sCORMJob.delete({ where: { id: jobId } });
 
       return response
@@ -67,7 +67,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ jobI
 
     return NextResponse.json({ error: 'ZIP não disponível' }, { status: 404 })
   } catch (error) {
-    console.error('❌ [API scorm-download] Erro:', error)
+    console.error('❌ [API scorm-download] Failed:', error)
     return createErrorResponse(
       `Erro ao baixar SCORM: ${error instanceof Error ? error.message : 'Erro desconhecido'}`,
       500,

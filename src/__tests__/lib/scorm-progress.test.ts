@@ -15,24 +15,24 @@ const course = (id: string, ...units: string[]) => ({
   units: units.map((u) => ({ id: u })),
 })
 
-describe('hashCurso', () => {
-  it('é estável para o mesmo curso', () => {
+describe('hashCourse', () => {
+  it('is stable for the same course', () => {
     expect(hashCourse(course('c1', 'u1', 'u2'))).toBe(hashCourse(course('c1', 'u1', 'u2')))
   })
 
-  it('muda quando uma unidade é removida', () => {
+  it('changes when a unit is removed', () => {
     expect(hashCourse(course('c1', 'u1', 'u2'))).not.toBe(hashCourse(course('c1', 'u1')))
   })
 
-  it('muda quando as unidades são reordenadas', () => {
+  it('changes when the units are reordered', () => {
     expect(hashCourse(course('c1', 'u1', 'u2'))).not.toBe(hashCourse(course('c1', 'u2', 'u1')))
   })
 })
 
-describe('encode/decode de suspend_data', () => {
+describe('suspend_data encode/decode', () => {
   const hash = hashCourse(course('c1', 'u1', 'u2', 'u3'))
 
-  it('faz ida e volta preservando visitadas e quizzes', () => {
+  it('round-trips visited units and quizzes', () => {
     const state: ProgressState = {
       visited: [true, false, true],
       quizzes: { [quizKey(0, 2)]: { correct: 3, total: 5 } },
@@ -43,27 +43,27 @@ describe('encode/decode de suspend_data', () => {
     expect(decoded).toEqual(state)
   })
 
-  it('descarta o estado quando o hash do curso diverge', () => {
+  it('drops the state when the course hash differs', () => {
     const salvo = encodeSuspendData(createEmptyState(3), hash)
     const otherHash = hashCourse(course('c1', 'u1', 'u2'))
 
     expect(decodeSuspendData(salvo, otherHash, 3)).toBeNull()
   })
 
-  it('descarta entrada vazia, malformada ou de outra versão', () => {
+  it('drops empty, malformed or older-version input', () => {
     expect(decodeSuspendData('', hash, 3)).toBeNull()
     expect(decodeSuspendData(null, hash, 3)).toBeNull()
     expect(decodeSuspendData('lixo', hash, 3)).toBeNull()
     expect(decodeSuspendData(`v0|${hash}|111|`, hash, 3)).toBeNull()
   })
 
-  it('ajusta o bitmap quando o curso ganhou unidades', () => {
+  it('resizes the bitmap when the course gained units', () => {
     const salvo = encodeSuspendData({ visited: [true, true], quizzes: {} }, hash)
 
     expect(decodeSuspendData(salvo, hash, 4)?.visited).toEqual([true, true, false, false])
   })
 
-  it('nunca ultrapassa o limite de 4096 caracteres', () => {
+  it('never exceeds the 4096 character limit', () => {
     const quizzes: ProgressState['quizzes'] = {}
     for (let u = 0; u < 200; u++) {
       for (let b = 0; b < 10; b++) quizzes[quizKey(u, b)] = { correct: 9, total: 10 }
@@ -75,7 +75,7 @@ describe('encode/decode de suspend_data', () => {
     expect(encoded.length).toBeLessThanOrEqual(4096)
   })
 
-  it('preserva as unidades visitadas mesmo ao truncar os quizzes', () => {
+  it('keeps the visited units even when the quizzes are truncated', () => {
     const quizzes: ProgressState['quizzes'] = {}
     for (let u = 0; u < 200; u++) {
       for (let b = 0; b < 10; b++) quizzes[quizKey(u, b)] = { correct: 9, total: 10 }
@@ -92,8 +92,8 @@ describe('encode/decode de suspend_data', () => {
   })
 })
 
-describe('calcularProgresso', () => {
-  it('só marca concluído com todas as unidades visitadas', () => {
+describe('calculateProgress', () => {
+  it('marks completion only when every unit was visited', () => {
     expect(calculateProgress({ visited: [true, true, false], quizzes: {} })).toEqual({
       visited: 2,
       total: 3,
@@ -104,17 +104,17 @@ describe('calcularProgresso', () => {
     expect(calculateProgress({ visited: [true, true, true], quizzes: {} }).completed).toBe(true)
   })
 
-  it('não marca concluído um curso sem unidades', () => {
+  it('never marks a course with no units as completed', () => {
     expect(calculateProgress(createEmptyState(0)).completed).toBe(false)
   })
 })
 
-describe('calcularNota', () => {
-  it('retorna null sem quizzes respondidos', () => {
+describe('calculateScore', () => {
+  it('returns null when no quiz was answered', () => {
     expect(calculateScore(createEmptyState(3))).toBeNull()
   })
 
-  it('agrega acertos de todos os quizzes em 0-100', () => {
+  it('aggregates every quiz into a 0-100 score', () => {
     const state: ProgressState = {
       visited: [true],
       quizzes: { '0-1': { correct: 3, total: 4 }, '0-2': { correct: 1, total: 4 } },
@@ -124,18 +124,18 @@ describe('calcularNota', () => {
   })
 })
 
-describe('formatarSessionTime', () => {
-  it('usa o formato HH:MM:SS.SS com zeros à esquerda', () => {
+describe('formatSessionTime', () => {
+  it('uses the HH:MM:SS.SS format with leading zeros', () => {
     expect(formatSessionTime(0)).toBe('00:00:00.00')
     expect(formatSessionTime(1500)).toBe('00:00:01.50')
     expect(formatSessionTime(65_000)).toBe('00:01:05.00')
   })
 
-  it('acumula horas além de 99 sem truncar', () => {
+  it('accumulates past 99 hours without truncating', () => {
     expect(formatSessionTime(100 * 3600 * 1000)).toBe('100:00:00.00')
   })
 
-  it('trata entrada negativa como zero', () => {
+  it('treats negative input as zero', () => {
     expect(formatSessionTime(-5000)).toBe('00:00:00.00')
   })
 })

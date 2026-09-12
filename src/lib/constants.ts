@@ -2,19 +2,19 @@
  * Constantes compartilhadas da aplicação
  */
 
-// Limites de arquivos
+// File size limits
 export const FILE_SIZE_LIMITS = {
   IMAGE: 10 * 1024 * 1024, // 10MB
   DOCUMENT: 10 * 1024 * 1024, // 10MB
 } as const
 
-// Tempos de expiração
+// Expiry times
 export const EXPIRATION_TIMES = {
   JWT_TOKEN: '7d',
-  COOKIE_MAX_AGE: 60 * 60 * 24 * 7, // 7 dias em segundos
+  COOKIE_MAX_AGE: 60 * 60 * 24 * 7, // 7 days, in seconds
 } as const
 
-// Tipos de arquivo aceitos
+// Accepted file types
 export const ACCEPTED_FILE_TYPES = {
   IMAGE: ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml'],
   DOCUMENT: [
@@ -23,7 +23,7 @@ export const ACCEPTED_FILE_TYPES = {
   ],
 } as const
 
-// Categorias e modalidades de curso (mesma lista usada nos filtros e na criação)
+// Course categories and modalities (the same list used by the filters and by creation)
 export const COURSE_CATEGORIES = [
   'Gastronomia',
   'Tecnologia',
@@ -38,10 +38,10 @@ export const COURSE_MODALITIES = ['Presencial', 'Online', 'Híbrido'] as const
 
 export const DEFAULT_MODALITY = 'Online'
 
-// Rotas públicas (sem autenticação)
+// Public routes (no authentication)
 export const PUBLIC_ROUTES = ['/login', '/signup', '/'] as const
 
-// Validações de formulário
+// Form validation
 export const VALIDATION_RULES = {
   USER: {
     MIN_NAME_LENGTH: 2,
@@ -63,7 +63,7 @@ export const VALIDATION_RULES = {
   },
 } as const
 
-// Mensagens de erro padrão
+// Default error messages
 export const ERROR_MESSAGES = {
   AUTH: {
     INVALID_CREDENTIALS: 'Usuário ou senha incorretos',

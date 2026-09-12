@@ -31,24 +31,24 @@ function options(correctAt: number, total = 5) {
   }))
 }
 
-describe('catálogo de blocos', () => {
-  it('cobre exatamente os tipos que o editor sabe renderizar', () => {
+describe('block catalog', () => {
+  it('covers exactly the types the editor can render', () => {
     expect(BLOCK_TYPES.sort()).toEqual(Object.keys(blockRegistry).sort())
   })
 
-  it('deixa fora da geração por IA apenas o separador', () => {
+  it('excludes only the divider from AI generation', () => {
     expect(BLOCK_TYPES.filter((type) => !BLOCK_CATALOG[type].aiGeneratable)).toEqual(['divider'])
   })
 
-  it('não repete marcadores entre tipos', () => {
+  it('never reuses a marker across types', () => {
     const markers = BLOCK_TYPES.map((type) => BLOCK_CATALOG[type].marker).filter(Boolean)
 
     expect(new Set(markers).size).toBe(markers.length)
   })
 
-  it('tem rótulo próprio para todo tipo, sem cair em texto genérico', () => {
-    // O card do editor lê CATALOGO_BLOCOS[tipo].rotulo. Enquanto isso era uma cadeia
-    // de ternários com fallback 'Conteúdo', bloco novo aparecia sem nome.
+  it('gives every type its own label, never a generic one', () => {
+    // The editor card reads BLOCK_CATALOG[type].label. While that was a chain of
+    // ternaries falling back to 'Conteúdo', a new block showed up unnamed.
     for (const type of BLOCK_TYPES) {
       const label = BLOCK_CATALOG[type].label
       expect(label.trim()).not.toBe('')
@@ -59,7 +59,7 @@ describe('catálogo de blocos', () => {
     expect(new Set(labels).size).toBe(labels.length)
   })
 
-  it('declara ícone, descrição e categoria conhecida para todo tipo', () => {
+  it('declares an icon, a description and a known category for every type', () => {
     const categories = BLOCK_CATEGORIES.map((c) => c.id)
 
     for (const type of BLOCK_TYPES) {
@@ -70,7 +70,7 @@ describe('catálogo de blocos', () => {
     }
   })
 
-  it('não deixa nenhum tipo fora das categorias exibidas no modal', () => {
+  it('leaves no type out of the categories shown in the modal', () => {
     const grouped = BLOCK_CATEGORIES.flatMap((category) =>
       BLOCK_TYPES.filter((type) => BLOCK_CATALOG[type].category === category.id)
     )
@@ -79,8 +79,8 @@ describe('catálogo de blocos', () => {
   })
 })
 
-describe('criarBlocoVazio', () => {
-  it('devolve o tipo pedido e os campos base para todo tipo', () => {
+describe('createEmptyBlock', () => {
+  it('returns the requested type and the base fields for every type', () => {
     for (const type of BLOCK_TYPES) {
       const block = createEmptyBlock(type)
 
@@ -90,7 +90,7 @@ describe('criarBlocoVazio', () => {
     }
   })
 
-  it('aplica os padrões declarados no catálogo', () => {
+  it('applies the defaults declared in the catalog', () => {
     expect(createEmptyBlock('list').listType).toBe('unordered')
     expect(createEmptyBlock('info-box').infoBoxType).toBe('info')
     expect(createEmptyBlock('flipcard').cardHeight).toBe('300px')
@@ -98,7 +98,7 @@ describe('criarBlocoVazio', () => {
     expect(createEmptyBlock('image').size).toBe('medium')
   })
 
-  it('devolve coleções novas a cada chamada, sem estado compartilhado', () => {
+  it('returns fresh collections on every call, with no shared state', () => {
     const a = createEmptyBlock('accordion')
     const b = createEmptyBlock('accordion')
 
@@ -108,8 +108,8 @@ describe('criarBlocoVazio', () => {
   })
 })
 
-describe('validarFormulario', () => {
-  it('recusa bloco recém-criado e explica o motivo', () => {
+describe('validateForm', () => {
+  it('rejects a freshly created block and explains why', () => {
     const withoutOwnContent: BlockType[] = ['divider']
 
     for (const type of BLOCK_TYPES.filter((t) => !withoutOwnContent.includes(t))) {
@@ -120,11 +120,11 @@ describe('validarFormulario', () => {
     }
   })
 
-  it('aceita o separador sem preenchimento, por não ter conteúdo próprio', () => {
+  it('accepts an empty divider, which has no content of its own', () => {
     expect(BLOCK_CATALOG.divider.validateForm(createEmptyBlock('divider'))).toBeNull()
   })
 
-  it('pede arquivo ou link sem obrigar a escolher a fonte', () => {
+  it('asks for a file or a link without forcing a source choice', () => {
     // Não há mais seletor de fonte: enviar e colar link são o mesmo campo.
     for (const type of ['video', 'interactive-video'] as const) {
       expect(BLOCK_CATALOG[type].validateForm(createEmptyBlock(type))).toBe(
@@ -133,7 +133,7 @@ describe('validarFormulario', () => {
     }
   })
 
-  it('cobra tempo, enunciado e alternativas em cada pergunta do vídeo interativo', () => {
+  it('requires time, prompt and options on every interactive video question', () => {
     const meta = BLOCK_CATALOG['interactive-video']
     const base = {
       ...createEmptyBlock('interactive-video'),
@@ -172,7 +172,7 @@ describe('validarFormulario', () => {
     expect(meta.validateForm({ ...base, videoQuestions: [question({})] })).toBeNull()
   })
 
-  it('exige legenda e fonte na imagem, além da URL', () => {
+  it('requires caption and source on an image, on top of the URL', () => {
     const meta = BLOCK_CATALOG.image
     const base = { ...createEmptyBlock('image'), content: 'https://exemplo.com/a.png' }
 
@@ -181,7 +181,7 @@ describe('validarFormulario', () => {
     expect(meta.validateForm({ ...base, caption: 'Legenda', source: 'SENAI' })).toBeNull()
   })
 
-  it('cobra imagem e título conforme o tipo de frente de cada card', () => {
+  it('requires image and title according to each card front type', () => {
     const meta = BLOCK_CATALOG.flipcard
     const card = (extra: Partial<FlipcardItem>): FlipcardItem => ({
       id: 'c-1',
@@ -210,7 +210,7 @@ describe('validarFormulario', () => {
     expect(meta.validateForm(block(card({ frontTitle: 'Frente' })))).toBeNull()
   })
 
-  it('exige o verso de cada card', () => {
+  it('requires the back of every card', () => {
     const meta = BLOCK_CATALOG.flipcard
 
     expect(
@@ -221,7 +221,7 @@ describe('validarFormulario', () => {
     ).toBe('Card 1: adicione o conteúdo do verso')
   })
 
-  it('é mais estrito que a aceitação de bloco vindo da IA', () => {
+  it('is stricter than the acceptance of an AI-generated block', () => {
     const partialAccordion = {
       ...createEmptyBlock('accordion'),
       items: [
@@ -237,8 +237,8 @@ describe('validarFormulario', () => {
   })
 })
 
-describe('blocos da fase 1', () => {
-  it('descarta abas sem título ou sem conteúdo', () => {
+describe('phase 1 blocks', () => {
+  it('drops tabs with no title or no content', () => {
     const { course } = normalizeCourse(
       courseWith([
         {
@@ -255,7 +255,7 @@ describe('blocos da fase 1', () => {
     expect(course.units[0].blocks[0].tabItems).toHaveLength(1)
   })
 
-  it('preenche id e campos ausentes dos eventos da linha do tempo', () => {
+  it('fills in missing ids and fields on timeline events', () => {
     const { course } = normalizeCourse(
       courseWith([
         {
@@ -274,7 +274,7 @@ describe('blocos da fase 1', () => {
     })
   })
 
-  it('corrige orientação e modo inválidos', () => {
+  it('fixes an invalid orientation and mode', () => {
     const { course } = normalizeCourse(
       courseWith([
         {
@@ -296,7 +296,7 @@ describe('blocos da fase 1', () => {
     expect(course.units[0].blocks[1].carouselMode).toBe('carousel')
   })
 
-  it('descarta imagens do carrossel sem URL válida', () => {
+  it('drops carousel images without a valid URL', () => {
     const { course, summary } = normalizeCourse(
       courseWith([
         {
@@ -319,7 +319,7 @@ describe('blocos da fase 1', () => {
     })
   })
 
-  it('mantém o separador mesmo sem conteúdo e normaliza o estilo', () => {
+  it('keeps the divider even when empty and normalizes its style', () => {
     const { course } = normalizeCourse(
       courseWith([{ type: 'divider', content: '', dividerStyle: 'pontilhado' as never }])
     )
@@ -330,7 +330,7 @@ describe('blocos da fase 1', () => {
 })
 
 describe('cardsFlipcard', () => {
-  it('converte o formato legado de card único', () => {
+  it('converts the legacy single-card format', () => {
     expect(
       cardsFlipcard(
         upgradeBlock({
@@ -352,7 +352,7 @@ describe('cardsFlipcard', () => {
     ])
   })
 
-  it('ignora os campos legados quando já existe a lista de cards', () => {
+  it('ignores the legacy fields once the card list exists', () => {
     const cards = cardsFlipcard(
       upgradeBlock({
         tipo: 'flipcard',
@@ -368,7 +368,7 @@ describe('cardsFlipcard', () => {
     expect(cards[0].frontTitle).toBe('Nova')
   })
 
-  it('normaliza tipo de frente inválido e id ausente', () => {
+  it('normalizes an invalid front type and a missing id', () => {
     const cards = cardsFlipcard({
       type: 'flipcard',
       flipcardItems: [{ frontType: 'inexistente', backContent: 'v' }] as unknown as FlipcardItem[],
@@ -378,12 +378,12 @@ describe('cardsFlipcard', () => {
     expect(cards[0].id).toBe('flip-1')
   })
 
-  it('devolve lista vazia para um bloco sem cards', () => {
+  it('returns an empty list for a block with no cards', () => {
     expect(cardsFlipcard(createEmptyBlock('flipcard'))).toEqual([])
   })
 })
 
-describe('mesclarFlipcardsAdjacentes', () => {
+describe('mergeAdjacentFlipcards', () => {
   const legacyFlipcard = (id: string, title: string, order: number): Block =>
     upgradeBlock({
       id,
@@ -396,7 +396,7 @@ describe('mesclarFlipcardsAdjacentes', () => {
       conteudoVerso: `Verso de ${title}`,
     }) as unknown as Block
 
-  it('junta flipcards vizinhos num bloco só, com ids de card únicos', () => {
+  it('merges neighbouring flipcards into one block, with unique card ids', () => {
     const result = mergeAdjacentFlipcards([
       legacyFlipcard('c-57', 'Flexbox', 0),
       legacyFlipcard('c-58', 'CSS Grid', 1),
@@ -410,7 +410,7 @@ describe('mesclarFlipcardsAdjacentes', () => {
     expect((result[0] as unknown as Record<string, unknown>).frontTitle).toBeUndefined()
   })
 
-  it('não junta flipcards separados por outro bloco', () => {
+  it('does not merge flipcards separated by another block', () => {
     const result = mergeAdjacentFlipcards([
       legacyFlipcard('c-1', 'A', 0),
       { id: 'p-1', type: 'paragraph', content: 'Texto', order: 1 } as Block,
@@ -421,7 +421,7 @@ describe('mesclarFlipcardsAdjacentes', () => {
     expect(result.map((b) => b.order)).toEqual([0, 1, 2])
   })
 
-  it('renumera a ordem depois de mesclar', () => {
+  it('renumbers the order after merging', () => {
     const result = mergeAdjacentFlipcards([
       legacyFlipcard('c-1', 'A', 0),
       legacyFlipcard('c-2', 'B', 1),
@@ -431,7 +431,7 @@ describe('mesclarFlipcardsAdjacentes', () => {
     expect(result.map((b) => b.order)).toEqual([0, 1])
   })
 
-  it('preserva blocos que já estão no formato de grade', () => {
+  it('preserves blocks already in the grid format', () => {
     const block = {
       id: 'f-1',
       type: 'flipcard',
@@ -447,7 +447,7 @@ describe('mesclarFlipcardsAdjacentes', () => {
     expect(mergeAdjacentFlipcards([block])[0].flipcardItems).toHaveLength(2)
   })
 
-  it('deixa o conteúdo sem flipcard intacto', () => {
+  it('leaves content without flipcards untouched', () => {
     const content = [
       { id: 'p-1', type: 'paragraph', content: 'A', order: 0 },
       { id: 'p-2', type: 'paragraph', content: 'B', order: 1 },
@@ -457,8 +457,8 @@ describe('mesclarFlipcardsAdjacentes', () => {
   })
 })
 
-describe('extrairMidiasDoBloco', () => {
-  it('coleta a URL de cada bloco de mídia', () => {
+describe('extractBlockMedia', () => {
+  it('collects the URL of every media block', () => {
     const cases: [Block['type'], Partial<Block>, string[]][] = [
       ['image', { content: 'https://x.com/a.png' }, ['https://x.com/a.png']],
       [
@@ -501,13 +501,13 @@ describe('extrairMidiasDoBloco', () => {
     }
   })
 
-  it('não devolve nada para blocos sem mídia', () => {
+  it('returns nothing for blocks without media', () => {
     expect(extractBlockMedia(createEmptyBlock('paragraph') as Block)).toEqual([])
     expect(extractBlockMedia(createEmptyBlock('tabs') as Block)).toEqual([])
   })
 
-  it('cobre todo bloco que exige mídia do documento', () => {
-    // Sem extrairMidias a URL remota sobrevive no pacote e quebra o curso em LMS sem
+  it('covers every block that requires media from the document', () => {
+    // Without extractMedia the remote URL survives in the package and breaks the course
     // internet.
     const withoutExtractor = BLOCK_TYPES.filter(
       (type) => BLOCK_CATALOG[type].requiresDocumentMedia && !BLOCK_CATALOG[type].extractMedia
@@ -516,7 +516,7 @@ describe('extrairMidiasDoBloco', () => {
     expect(withoutExtractor).toEqual([])
   })
 
-  it('não embute vídeo do YouTube no pacote, por ser streaming externo', () => {
+  it('does not bundle a YouTube video, which is external streaming', () => {
     const block = {
       ...createEmptyBlock('video'),
       videoSource: 'youtube',
@@ -529,7 +529,7 @@ describe('extrairMidiasDoBloco', () => {
     ).toBe('https://www.youtube.com/watch?v=abc')
   })
 
-  it('embute o vídeo enviado como arquivo', () => {
+  it('bundles a video uploaded as a file', () => {
     const block = {
       ...createEmptyBlock('video'),
       videoSource: 'file',
@@ -542,8 +542,8 @@ describe('extrairMidiasDoBloco', () => {
     ).toBe('images/aula.mp4')
   })
 
-  it('deduz a fonte pela URL quando o campo não veio', () => {
-    // Cobre curso salvo antes de fonteVideo existir e bloco da IA que omitiu o campo.
+  it('infers the source from the URL when the field is missing', () => {
+    // Covers a course saved before videoSource existed and an AI block that omitted it.
     const withoutField = (type: 'video' | 'interactive-video', videoUrl: string) => {
       const block = { ...createEmptyBlock(type), videoUrl } as Block
       delete (block as Partial<Block>).videoSource
@@ -556,12 +556,12 @@ describe('extrairMidiasDoBloco', () => {
     expect(
       extractBlockMedia(withoutField('interactive-video', 'https://youtu.be/abc12345678'))
     ).toEqual([])
-    // No bloco `video` sem o campo, o padrão legado é YouTube: antes de `fonteVideo`
-    // existir o formulário só aceitava link do YouTube, então não há .mp4 legado ali.
+    // On a `video` block without the field the legacy default is YouTube: before
+    // `videoSource` existed the form only took YouTube links, so no legacy .mp4 exists.
     expect(extractBlockMedia(withoutField('video', 'https://youtu.be/abc12345678'))).toEqual([])
     expect(extractBlockMedia(withoutField('video', 'https://b.com/aula.mp4'))).toEqual([])
 
-    // Com o campo declarado, o arquivo é embutido normalmente.
+    // With the field declared, the file is bundled as usual.
     const declared = {
       ...createEmptyBlock('video'),
       videoSource: 'file',
@@ -570,8 +570,8 @@ describe('extrairMidiasDoBloco', () => {
     expect(extractBlockMedia(declared)).toEqual(['https://b.com/aula.mp4'])
   })
 
-  it('a URL do YouTube vence o campo declarado como arquivo', () => {
-    // Link do YouTube dentro de um <video> nunca toca; a URL é o fato.
+  it('lets a YouTube URL win over a source declared as file', () => {
+    // A YouTube link inside a <video> never plays; the URL is the fact.
     const block = {
       ...createEmptyBlock('interactive-video'),
       videoSource: 'file',
@@ -581,7 +581,7 @@ describe('extrairMidiasDoBloco', () => {
     expect(extractBlockMedia(block)).toEqual([])
   })
 
-  it('embute o vídeo do bloco interativo', () => {
+  it('bundles the video of the interactive block', () => {
     const block = {
       ...createEmptyBlock('interactive-video'),
       videoUrl: 'https://blob.com/aula.mp4',
@@ -594,8 +594,8 @@ describe('extrairMidiasDoBloco', () => {
   })
 })
 
-describe('blocos da fase 2', () => {
-  it('descarta áudio e PDF sem URL válida', () => {
+describe('phase 2 blocks', () => {
+  it('drops audio and PDF without a valid URL', () => {
     const { course, summary } = normalizeCourse(
       courseWith([
         { type: 'audio', content: '', audioUrl: 'nao-url' },
@@ -611,7 +611,7 @@ describe('blocos da fase 2', () => {
     ])
   })
 
-  it('assume download permitido quando o campo vem ausente', () => {
+  it('assumes download is allowed when the field is missing', () => {
     const { course } = normalizeCourse(
       courseWith([{ type: 'pdf', content: '', pdfUrl: 'https://x.com/a.pdf' }])
     )
@@ -620,8 +620,8 @@ describe('blocos da fase 2', () => {
   })
 })
 
-describe('blocos da fase 3', () => {
-  it('descarta imagem interativa sem imagem de fundo ou sem ponto com título', () => {
+describe('phase 3 blocks', () => {
+  it('drops an interactive image with no base image or no titled hotspot', () => {
     const { course, summary } = normalizeCourse(
       courseWith([
         { type: 'interactive-image', content: '', baseImage: 'nao-url', hotspots: [] },
@@ -647,7 +647,7 @@ describe('blocos da fase 3', () => {
     ])
   })
 
-  it('prende as coordenadas do hotspot na faixa de 0 a 100', () => {
+  it('clamps hotspot coordinates to the 0-100 range', () => {
     const { course } = normalizeCourse(
       courseWith([
         {
@@ -670,7 +670,7 @@ describe('blocos da fase 3', () => {
     expect(hotspots.map((h) => h.id)).toEqual(['hotspot-1', 'hotspot-2'])
   })
 
-  it('exige dois pares completos na associação', () => {
+  it('requires two complete pairs in a matching block', () => {
     const { course, summary } = normalizeCourse(
       courseWith([
         {
@@ -697,7 +697,7 @@ describe('blocos da fase 3', () => {
     expect(course.units[0].blocks[0].matchingPairs!.map((p) => p.id)).toEqual(['par-1', 'par-2'])
   })
 
-  it('descarta categoria sem nome ou sem item e exige duas restantes', () => {
+  it('drops a category with no name or no item and requires two to remain', () => {
     const { course, summary } = normalizeCourse(
       courseWith([
         {
@@ -737,8 +737,8 @@ describe('blocos da fase 3', () => {
   })
 })
 
-describe('normalizarCursoGerado', () => {
-  it('reindexa ordem e preenche ids ausentes', () => {
+describe('normalizeCourse', () => {
+  it('reindexes the order and fills in missing ids', () => {
     const { course } = normalizeCourse(
       courseWith([
         { type: 'paragraph', content: '<p>A</p>' },
@@ -752,7 +752,7 @@ describe('normalizarCursoGerado', () => {
     expect(course.units[0].id).toBe('unidade-1')
   })
 
-  it('descarta bloco de tipo desconhecido', () => {
+  it('drops a block of an unknown type', () => {
     const { course, summary } = normalizeCourse(
       courseWith([{ type: 'tipo-que-nao-existe' as Block['type'], content: 'x' }])
     )
@@ -764,7 +764,7 @@ describe('normalizarCursoGerado', () => {
     })
   })
 
-  it('descarta quiz com menos de cinco opções', () => {
+  it('drops a quiz with fewer than five options', () => {
     const { course, summary } = normalizeCourse(
       courseWith([
         {
@@ -779,7 +779,7 @@ describe('normalizarCursoGerado', () => {
     expect(summary.discarded[0].type).toBe('quiz')
   })
 
-  it('mantém apenas uma alternativa correta quando a IA marca duas', () => {
+  it('keeps a single correct option when the AI marks two', () => {
     const twoCorrect = options(0).map((o, i) => ({ ...o, isCorrect: i === 0 || i === 2 }))
     const { course } = normalizeCourse(
       courseWith([
@@ -796,7 +796,7 @@ describe('normalizarCursoGerado', () => {
     expect(question.options.filter((o) => o.isCorrect)).toHaveLength(1)
   })
 
-  it('corta opções extras preservando a correta', () => {
+  it('trims the extra options while keeping the correct one', () => {
     const sixWithCorrectLast = options(5, 6)
     const { course } = normalizeCourse(
       courseWith([
@@ -814,7 +814,7 @@ describe('normalizarCursoGerado', () => {
     expect(question.options.find((o) => o.isCorrect)?.text).toBe('Opção 6')
   })
 
-  it('descarta accordion sem itens completos', () => {
+  it('drops an accordion without complete items', () => {
     const { course } = normalizeCourse(
       courseWith([
         { type: 'accordion', content: '', items: [{ id: 'i-1', title: 'T', content: '' }] },
@@ -824,7 +824,7 @@ describe('normalizarCursoGerado', () => {
     expect(course.units[0].blocks).toHaveLength(0)
   })
 
-  it('descarta flipcard sem verso', () => {
+  it('drops a flipcard without a back', () => {
     const { course } = normalizeCourse(
       courseWith([
         upgradeBlock({ tipo: 'flipcard', conteudo: '', tituloFrente: 'Frente' }) as Partial<Block>,
@@ -834,7 +834,7 @@ describe('normalizarCursoGerado', () => {
     expect(course.units[0].blocks).toHaveLength(0)
   })
 
-  it('descarta apenas os cards inaproveitáveis de um flipcard', () => {
+  it('drops only the unusable cards of a flipcard', () => {
     const { course } = normalizeCourse(
       courseWith([
         {
@@ -852,7 +852,7 @@ describe('normalizarCursoGerado', () => {
     expect(course.units[0].blocks[0].flipcardItems?.[0].frontTitle).toBe('Frente')
   })
 
-  it('migra flipcard de card único para a lista de cards', () => {
+  it('migrates a single-card flipcard into the card list', () => {
     const { course } = normalizeCourse(
       courseWith([
         upgradeBlock({
@@ -877,7 +877,7 @@ describe('normalizarCursoGerado', () => {
     expect((block as unknown as Record<string, unknown>).backContent).toBeUndefined()
   })
 
-  it('converte lista em HTML para itensLista', () => {
+  it('converts an HTML list into listItems', () => {
     const { course } = normalizeCourse(
       courseWith([{ type: 'list', content: '<ul><li>Multímetro</li><li>Chave</li></ul>' }])
     )
@@ -888,7 +888,7 @@ describe('normalizarCursoGerado', () => {
     expect(block.listType).toBe('unordered')
   })
 
-  it('corrige tipoLista e tipoInfoBox inválidos', () => {
+  it('fixes an invalid listType and infoBoxType', () => {
     const { course } = normalizeCourse(
       courseWith([
         {
@@ -909,7 +909,7 @@ describe('normalizarCursoGerado', () => {
     expect(course.units[0].blocks[1].infoBoxType).toBe('info')
   })
 
-  it('descarta imagem e vídeo sem URL válida', () => {
+  it('drops image and video without a valid URL', () => {
     const { course, summary } = normalizeCourse(
       courseWith([
         { type: 'image', content: 'painel.png' },
@@ -922,7 +922,7 @@ describe('normalizarCursoGerado', () => {
     expect(summary.discarded).toHaveLength(2)
   })
 
-  it('resume unidades, blocos e contagem por tipo', () => {
+  it('summarizes units, blocks and the count per type', () => {
     const { summary } = normalizeCourse(
       courseWith([
         { type: 'paragraph', content: '<p>A</p>' },
@@ -943,7 +943,7 @@ describe('normalizarCursoGerado', () => {
     })
   })
 
-  it('tolera unidades ausentes ou fora do formato', () => {
+  it('tolerates missing or malformed units', () => {
     const { course, summary } = normalizeCourse({ title: 'C', description: 'D' } as Course)
 
     expect(course.units).toEqual([])
@@ -951,8 +951,8 @@ describe('normalizarCursoGerado', () => {
   })
 })
 
-describe('reescreverMidiasDoBloco', () => {
-  it('troca a URL remota pelo caminho local em cada bloco de mídia', () => {
+describe('rewriteBlockMedia', () => {
+  it('swaps the remote URL for the local path in every media block', () => {
     const lookup = new Map([
       ['https://x.com/a.png', 'images/a.png'],
       ['https://x.com/f.png', 'images/f.png'],
@@ -1015,7 +1015,7 @@ describe('reescreverMidiasDoBloco', () => {
     expect(interactive.baseImage).toBe('images/base.png')
   })
 
-  it('preserva a URL quando o download falhou e ela não está no mapa', () => {
+  it('keeps the URL when the download failed and it is not in the map', () => {
     const block = {
       ...createEmptyBlock('image'),
       content: 'https://x.com/z.png',
@@ -1023,9 +1023,9 @@ describe('reescreverMidiasDoBloco', () => {
     expect(rewriteBlockMedia(block, new Map()).content).toBe('https://x.com/z.png')
   })
 
-  it('todo bloco que declara extrairMidias também sabe reescrever', () => {
-    // Sem a contraparte, o arquivo é embutido no ZIP mas o bloco continua apontando
-    // para a URL remota — foi exatamente o bug do `imagem-interativa` no LMS.
+  it('every block declaring extractMedia can also rewrite it', () => {
+    // Without the counterpart the file is bundled but the block keeps pointing at the
+    // remote URL — exactly the `interactive-image` bug seen in the LMS.
     const withoutRewrite = BLOCK_TYPES.filter(
       (type) => BLOCK_CATALOG[type].extractMedia && !BLOCK_CATALOG[type].rewriteMedia
     )

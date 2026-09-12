@@ -1,9 +1,9 @@
-// Caminho do Ficheiro: src/lib/scorm-service.ts
+// src/lib/scorm-service.ts
 
 import JSZip from 'jszip'
 import fs from 'fs/promises'
 import path from 'path'
-// Importe os seus tipos TypeScript. Ajuste o caminho se estiver incorreto.
+// Course types shared with the app.
 import { Course } from '@/types/course'
 
 /**
@@ -20,7 +20,7 @@ function escapeHtml(str: string | undefined | null): string {
 }
 
 // =======================================================================
-// 1. GERADOR DO MANIFESTO (imsmanifest.xml)
+// 1. MANIFEST GENERATOR (imsmanifest.xml)
 // =======================================================================
 export function generateManifest(course: Course, files: string[]): string {
   const sanitizedTitle = course.title.replace(/[^a-zA-Z0-9_-]/g, '_')
@@ -55,7 +55,7 @@ ${fileList}
 </manifest>`
 }
 // =======================================================================
-// 2. FUNÇÃO PRINCIPAL DE GERAÇÃO DO ZIP
+// 2. MAIN ZIP GENERATION FUNCTION
 // =======================================================================
 
 /**
@@ -67,11 +67,11 @@ export async function generateSCORMFromPlayerDist(
   course: Course,
   courseId?: string
 ): Promise<Buffer> {
-  console.log(`📦 [SCORM Service] Iniciando geração via Vite player para: ${course.title}`)
+  console.log(`📦 [SCORM Service] Generating from the Vite player for: ${course.title}`)
 
   const distDir = path.join(process.cwd(), 'player', 'dist')
 
-  // Verificar se o player foi buildado
+  // Check that the player was built
   try {
     await fs.access(path.join(distDir, 'index.html'))
   } catch {
@@ -83,7 +83,7 @@ export async function generateSCORMFromPlayerDist(
   const zip = new JSZip()
   const zipFiles: string[] = []
 
-  // 1. Copiar todos os arquivos de player/dist/ para o ZIP recursivamente
+  // 1. Copy every file from player/dist/ into the ZIP, recursively
   async function addDirectoryToZip(dir: string, zipPrefix: string): Promise<void> {
     const entries = await fs.readdir(dir, { withFileTypes: true })
     for (const entry of entries) {
@@ -101,20 +101,20 @@ export async function generateSCORMFromPlayerDist(
 
   await addDirectoryToZip(distDir, '')
 
-  // 2. Injetar course data no index.html (sobrescreve o arquivo copiado)
+  // 2. Inject the course data into index.html (overwrites the copied file)
   let indexHtml = await fs.readFile(path.join(distDir, 'index.html'), 'utf-8')
   const courseJson = JSON.stringify(course)
   indexHtml = indexHtml.replace('null /* COURSE_DATA_PLACEHOLDER */', courseJson)
-  // Remover atributo crossorigin que o Vite adiciona — muitos LMSes bloqueiam
-  // carregamento de assets com esse atributo por política de CORS
+  // Drop the crossorigin attribute Vite adds — many LMSes block assets
+  // carrying it, by CORS policy
   indexHtml = indexHtml.replace(/ crossorigin/g, '')
-  // Garantir que o charset UTF-8 está declarado (evita mojibake no LMS)
+  // Declare the UTF-8 charset (prevents mojibake inside the LMS)
   if (!indexHtml.includes('charset')) {
     indexHtml = indexHtml.replace('<head>', '<head>\n  <meta charset="UTF-8" />')
   }
   zip.file('index.html', Buffer.from(indexHtml, 'utf-8'))
 
-  // 3. Embutir imagens baixadas localmente
+  // 3. Bundle the locally downloaded images
   if (courseId) {
     const imagesDir = path.join(process.cwd(), 'public', 'scorm-images', courseId)
     try {
@@ -125,16 +125,16 @@ export async function generateSCORMFromPlayerDist(
         zip.file(`images/${file}`, fileContent)
         zipFiles.push(`images/${file}`)
       }
-      console.log(`   🖼️ [SCORM Service] ${imageFiles.length} imagem(ns) embutida(s) no ZIP`)
+      console.log(`   🖼️ [SCORM Service] ${imageFiles.length} image(s) bundled into the ZIP`)
     } catch {
-      console.log(`   ℹ️ [SCORM Service] Nenhuma imagem local encontrada para embutir`)
+      console.log(`   ℹ️ [SCORM Service] No local image to bundle`)
     }
   }
 
-  // 4. Gerar imsmanifest.xml
+  // 4. Write imsmanifest.xml
   zip.file('imsmanifest.xml', generateManifest(course, zipFiles))
 
-  console.log(`✅ [SCORM Service] Pacote (Vite player) gerado com sucesso para: ${course.title}`)
+  console.log(`✅ [SCORM Service] Package (Vite player) generated for: ${course.title}`)
 
   return zip.generateAsync({
     type: 'nodebuffer',

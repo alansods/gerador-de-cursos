@@ -14,7 +14,7 @@ const user = (role: UserRole, id = 'u1') => ({ id, role })
 
 const courseOf = (ownerId: string | null) => ({ id: 'c1', ownerId })
 
-describe('mapCargoParaRole', () => {
+describe('mapJobTitleToRole', () => {
   it.each([
     ['Administrador', 'ADMIN'],
     ['Convidado', 'GUEST'],
@@ -26,7 +26,7 @@ describe('mapCargoParaRole', () => {
   })
 })
 
-describe('can - ações globais', () => {
+describe('can - global actions', () => {
   const matrix: Array<[Action, Record<UserRole, boolean>]> = [
     [
       'user:manage',
@@ -76,47 +76,47 @@ describe('can - ações globais', () => {
     })
   })
 
-  it('nega tudo para usuário não autenticado', () => {
+  it('denies everything to an unauthenticated user', () => {
     expect(can(null, 'course:create')).toBe(false)
     expect(can(undefined, 'user:manage')).toBe(false)
   })
 })
 
-describe('podeEditarCurso', () => {
-  it('ADMIN e MANAGER editam qualquer curso', () => {
+describe('canEditCourse', () => {
+  it('lets ADMIN and MANAGER edit any course', () => {
     expect(canEditCourse(user('ADMIN'), courseOf('outro'))).toBe(true)
     expect(canEditCourse(user('MANAGER'), courseOf('outro'))).toBe(true)
   })
 
-  it('CONTENT_AUTHOR edita apenas o próprio curso', () => {
+  it('lets CONTENT_AUTHOR edit only their own course', () => {
     expect(canEditCourse(user('CONTENT_AUTHOR'), courseOf('u1'))).toBe(true)
     expect(canEditCourse(user('CONTENT_AUTHOR'), courseOf('outro'))).toBe(false)
   })
 
-  it('CONTENT_AUTHOR edita curso alheio quando tem colaboração concedida', () => {
+  it('lets CONTENT_AUTHOR edit someone else\u2019s course once collaboration is granted', () => {
     expect(canEditCourse(user('CONTENT_AUTHOR'), courseOf('outro'), { granted: true })).toBe(true)
   })
 
-  it('CONTENT_AUTHOR sem colaboração não edita curso alheio', () => {
+  it('blocks CONTENT_AUTHOR from another course without collaboration', () => {
     expect(canEditCourse(user('CONTENT_AUTHOR'), courseOf('outro'), null)).toBe(false)
   })
 
-  it('REVIEWER nunca edita, mesmo com colaboração concedida', () => {
+  it('never lets REVIEWER edit, even with collaboration granted', () => {
     expect(canEditCourse(user('REVIEWER'), courseOf('outro'), { granted: true })).toBe(false)
   })
 
-  it('GUEST edita qualquer curso, como ADMIN e MANAGER', () => {
+  it('lets GUEST edit any course, like ADMIN and MANAGER', () => {
     expect(canEditCourse(user('GUEST'), courseOf('outro'))).toBe(true)
   })
 
-  it('curso órfão (sem dono) só é editável por ADMIN e MANAGER', () => {
+  it('lets only ADMIN and MANAGER edit an orphan course', () => {
     expect(canEditCourse(user('ADMIN'), courseOf(null))).toBe(true)
     expect(canEditCourse(user('CONTENT_AUTHOR'), courseOf(null))).toBe(false)
   })
 })
 
-describe('podeExcluirCurso', () => {
-  it('CONTENT_AUTHOR exclui só o próprio, mesmo sendo colaborador EDITOR', () => {
+describe('canDeleteCourse', () => {
+  it('lets CONTENT_AUTHOR delete only their own course, even as an EDITOR collaborator', () => {
     expect(canDeleteCourse(user('CONTENT_AUTHOR'), courseOf('u1'))).toBe(true)
     expect(canDeleteCourse(user('CONTENT_AUTHOR'), courseOf('outro'))).toBe(false)
     expect(
@@ -127,14 +127,14 @@ describe('podeExcluirCurso', () => {
     ).toBe(false)
   })
 
-  it('REVIEWER e GUEST não excluem', () => {
+  it('blocks REVIEWER and GUEST from deleting', () => {
     expect(canDeleteCourse(user('REVIEWER'), courseOf('u1'))).toBe(false)
     expect(canDeleteCourse(user('GUEST'), courseOf('u1'))).toBe(false)
   })
 })
 
 describe('course:requestAccess', () => {
-  it('só CONTENT_AUTHOR e apenas em curso alheio', () => {
+  it('allows only CONTENT_AUTHOR, and only on another course', () => {
     const course = courseOf('outro')
     expect(can(user('CONTENT_AUTHOR'), 'course:requestAccess', { course })).toBe(true)
     expect(
@@ -145,7 +145,7 @@ describe('course:requestAccess', () => {
     expect(can(user('REVIEWER'), 'course:requestAccess', { course })).toBe(false)
   })
 
-  it('não solicita acesso a curso onde já é colaborador', () => {
+  it('never requests access to a course where the user already collaborates', () => {
     expect(
       can(user('CONTENT_AUTHOR'), 'course:requestAccess', {
         course: courseOf('outro'),
@@ -156,7 +156,7 @@ describe('course:requestAccess', () => {
 })
 
 describe('collaborator:manage', () => {
-  it('dono, ADMIN e MANAGER gerenciam colaboradores', () => {
+  it('lets the owner, ADMIN and MANAGER manage collaborators', () => {
     expect(
       can(user('CONTENT_AUTHOR'), 'collaborator:manage', {
         course: courseOf('u1'),
@@ -176,13 +176,13 @@ describe('collaborator:manage', () => {
 })
 
 describe('assertCan', () => {
-  it('lança ForbiddenError quando negado', () => {
+  it('throws ForbiddenError when denied', () => {
     expect(() => assertCan(user('REVIEWER'), 'course:create')).toThrow(ForbiddenError)
     expect(() => assertCan(user('ADMIN'), 'course:create')).not.toThrow()
     expect(() => assertCan(user('GUEST'), 'course:create')).not.toThrow()
   })
 
-  it('ForbiddenError carrega status 403', () => {
+  it('gives ForbiddenError a 403 status', () => {
     try {
       assertCan(user('REVIEWER'), 'user:manage')
       throw new Error('deveria ter lançado')
@@ -193,8 +193,8 @@ describe('assertCan', () => {
   })
 })
 
-describe('permissoesDoCurso', () => {
-  it('resume as permissões do dono conteudista', () => {
+describe('getCoursePermissions', () => {
+  it('summarizes the permissions of a content-author owner', () => {
     expect(getCoursePermissions(user('CONTENT_AUTHOR'), courseOf('u1'))).toEqual({
       canEdit: true,
       canDelete: true,
@@ -207,7 +207,7 @@ describe('permissoesDoCurso', () => {
     })
   })
 
-  it('resume as permissões do revisor em curso alheio', () => {
+  it('summarizes the permissions of a reviewer on another course', () => {
     expect(getCoursePermissions(user('REVIEWER'), courseOf('outro'))).toEqual({
       canEdit: false,
       canDelete: false,

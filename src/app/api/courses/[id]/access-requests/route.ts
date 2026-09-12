@@ -39,7 +39,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 
     return createSuccessResponse({ accessRequests })
   } catch (error) {
-    console.error('Erro ao listar solicitações:', error)
+    console.error('Failed to list the access requests:', error)
     return createErrorResponse('Erro ao listar solicitações', 500, error)
   }
 }
@@ -78,8 +78,8 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       return createErrorResponse('Você já tem acesso a este curso', 409)
     }
 
-    // Uma solicitação por usuário e curso: um novo pedido reabre a mesma linha,
-    // então nunca há duas pendências para o dono responder
+    // One request per user and course: a new request reopens the same row,
+    // so the owner never faces two pending requests
     const accessRequest = await prisma.courseAccessRequest.upsert({
       where: { courseId_requesterId: { courseId: id, requesterId: authResult.user.id } },
       create: {
@@ -107,7 +107,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 
     return createSuccessResponse({ accessRequest }, 201)
   } catch (error) {
-    console.error('Erro ao solicitar acesso:', error)
+    console.error('Failed to request access:', error)
     return createErrorResponse('Erro ao solicitar acesso', 500, error)
   }
 }

@@ -42,8 +42,8 @@ export function InteractiveVideoBlock({ item, blockIndex }: { item: Block; block
     ceilingSeconds: nextPending?.seconds ?? null,
   })
 
-  // A pergunta dispara pelo tempo publicado pelo reprodutor, e não por evento do
-  // elemento — é o que faz o YouTube e o arquivo seguirem o mesmo caminho.
+  // The question fires on the time published by the player, not on an element event —
+  // that is what makes YouTube and a file follow the same path.
   useEffect(() => {
     if (activeCue || !nextPending) return
     if (nextPending.seconds > state.time + TOLERANCE_SECONDS) return
@@ -106,8 +106,8 @@ export function InteractiveVideoBlock({ item, blockIndex }: { item: Block; block
         className="relative aspect-video w-full overflow-hidden rounded-lg bg-black shadow-lg"
       >
         {fromYouTube ? (
-          // O YT.Player troca este div por um iframe; a variante arbitrária é o que
-          // faz esse iframe ocupar o quadro.
+          // YT.Player swaps this div for an iframe; the arbitrary variant is what makes
+          // that iframe fill the frame.
           <div className="h-full w-full [&_iframe]:h-full [&_iframe]:w-full">
             <div ref={youTubeMountRef} />
           </div>

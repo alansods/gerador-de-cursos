@@ -28,13 +28,13 @@ function occurrences(regex: RegExp, filter: (line: string) => boolean) {
   return findings
 }
 
-describe('espaçamento entre label e campo', () => {
-  it('nenhum <label> de campo define margem própria', () => {
+describe('label to field spacing', () => {
+  it('no field <label> sets a margin of its own', () => {
     const findings = occurrences(/<label\b/, (line) => /\bmb-[0-9.]/.test(line))
     expect(findings).toEqual([])
   })
 
-  it('nenhum <label> de campo usa cor hardcoded em vez de token semântico', () => {
+  it('no field <label> hardcodes a color instead of a semantic token', () => {
     const findings = occurrences(
       /<label\b/,
       (line) => /font-medium/.test(line) && /text-gray-/.test(line)
@@ -42,7 +42,7 @@ describe('espaçamento entre label e campo', () => {
     expect(findings).toEqual([])
   })
 
-  it('FormField mantém o gap de 8px entre label e campo', () => {
+  it('FormField keeps the 8px gap between label and field', () => {
     const source = fs.readFileSync(path.join(ROOT, 'components/ui/form-field.tsx'), 'utf8')
     expect(source).toContain("'flex flex-col gap-2'")
   })

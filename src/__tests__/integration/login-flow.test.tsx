@@ -86,7 +86,7 @@ describe('Integration - Login Flow', () => {
     routeFetch(loginOkResponse)
   })
 
-  it('deve renderizar o formulário de login', async () => {
+  it('renders the login form', async () => {
     renderLoginPage()
 
     expect(userField()).toBeInTheDocument()
@@ -96,7 +96,7 @@ describe('Integration - Login Flow', () => {
     await waitFor(() => expect(mockFetch).toHaveBeenCalled())
   })
 
-  it('deve fazer login com credenciais válidas', async () => {
+  it('logs in with valid credentials', async () => {
     const user = userEvent.setup()
 
     renderLoginPage()
@@ -118,7 +118,7 @@ describe('Integration - Login Flow', () => {
     )
   })
 
-  it('deve mostrar erro com credenciais inválidas', async () => {
+  it('shows an error for invalid credentials', async () => {
     const user = userEvent.setup()
 
     routeFetch({
@@ -140,7 +140,7 @@ describe('Integration - Login Flow', () => {
     expect(loginCalls()).toHaveLength(1)
   })
 
-  it('deve validar campos obrigatórios', async () => {
+  it('validates the required fields', async () => {
     const user = userEvent.setup()
 
     renderLoginPage()
@@ -155,7 +155,7 @@ describe('Integration - Login Flow', () => {
     expect(loginCalls()).toHaveLength(0)
   })
 
-  it('deve mostrar/ocultar senha ao clicar no ícone', async () => {
+  it('toggles the password visibility from the icon', async () => {
     const user = userEvent.setup()
 
     renderLoginPage()
@@ -173,7 +173,7 @@ describe('Integration - Login Flow', () => {
     await waitFor(() => expect(passwordInput.type).toBe('password'))
   })
 
-  it('deve desabilitar o formulário durante o login', async () => {
+  it('disables the form while logging in', async () => {
     const user = userEvent.setup()
 
     mockFetch.mockImplementation((url: string) =>

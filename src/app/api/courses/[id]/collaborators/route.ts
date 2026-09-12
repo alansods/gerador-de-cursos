@@ -38,7 +38,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 
     return createSuccessResponse({ collaborators })
   } catch (error) {
-    console.error('Erro ao listar colaboradores:', error)
+    console.error('Failed to list the collaborators:', error)
     return createErrorResponse('Erro ao listar colaboradores', 500, error)
   }
 }
@@ -104,7 +104,7 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
 
     return createSuccessResponse({ userId })
   } catch (error) {
-    console.error('Erro ao revogar acesso:', error)
+    console.error('Failed to revoke the access:', error)
     return createErrorResponse('Erro ao revogar acesso', 500, error)
   }
 }

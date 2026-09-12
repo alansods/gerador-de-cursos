@@ -9,7 +9,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const { email, password } = body
 
-    // Validação
+    // Validation
     if (!email || !password) {
       return NextResponse.json(
         { success: false, error: 'E-mail e senha são obrigatórios' },
@@ -17,7 +17,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // O e-mail é gravado em minúsculas; normalizar aqui evita que a caixa
+    // The email is stored in lowercase; normalizing here keeps the casing
     // digitada no login impeça a entrada
     const user = await prisma.user.findUnique({
       where: { email: String(email).trim().toLowerCase() },
@@ -27,14 +27,14 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, error: 'Credenciais inválidas' }, { status: 401 })
     }
 
-    // Verificar senha
+    // Check the password
     const isPasswordValid = await bcrypt.compare(password, user.password)
 
     if (!isPasswordValid) {
       return NextResponse.json({ success: false, error: 'Credenciais inválidas' }, { status: 401 })
     }
 
-    // Criar token JWT
+    // Issue the JWT
     const token = await new SignJWT({
       id: user.id,
       email: user.email,
@@ -67,7 +67,7 @@ export async function POST(request: NextRequest) {
 
     return response
   } catch (error) {
-    console.error('Erro no login:', error)
+    console.error('Login failed:', error)
     return NextResponse.json({ success: false, error: 'Erro interno do servidor' }, { status: 500 })
   }
 }

@@ -64,13 +64,13 @@ async function createCourse(page: Page, title: string) {
   expect(response.ok()).toBeTruthy()
 }
 
-test.describe('E2E - Cursos Page', () => {
+test.describe('E2E - Courses page', () => {
   test.beforeEach(async ({ page }) => {
     // Fazer login antes de cada teste
     await logIn(page)
   })
 
-  test('deve carregar cursos apenas UMA VEZ ao acessar a página', async ({ page }) => {
+  test('loads the courses exactly ONCE when the page opens', async ({ page }) => {
     // Arrange
     const actions = countActions(page)
 
@@ -83,7 +83,7 @@ test.describe('E2E - Cursos Page', () => {
     expect(actions.count).toBe(1)
   })
 
-  test('deve fazer debounce na busca (não fazer requisição a cada tecla)', async ({ page }) => {
+  test('debounces the search instead of firing a request per keystroke', async ({ page }) => {
     // Arrange
     await page.goto('/courses')
     await expect(lines(page).first()).toBeVisible()
@@ -100,7 +100,7 @@ test.describe('E2E - Cursos Page', () => {
     expect(actions.count).toBeLessThanOrEqual(1)
   })
 
-  test('deve aplicar filtro de categoria com uma única busca', async ({ page }) => {
+  test('applies the category filter with a single search', async ({ page }) => {
     // Arrange
     await page.goto('/courses')
     await expect(lines(page).first()).toBeVisible()
@@ -118,7 +118,7 @@ test.describe('E2E - Cursos Page', () => {
     expect(actions.count).toBe(1)
   })
 
-  test('deve mostrar o estado vazio quando a busca não casa com nada', async ({ page }) => {
+  test('shows the empty state when the search matches nothing', async ({ page }) => {
     // Arrange
     await page.goto('/courses')
     await expect(lines(page).first()).toBeVisible()
@@ -133,7 +133,7 @@ test.describe('E2E - Cursos Page', () => {
     await expect(page.getByText('Tente ajustar os filtros de busca')).toBeVisible()
   })
 
-  test('deve limpar filtros corretamente', async ({ page }) => {
+  test('clears the filters', async ({ page }) => {
     // Arrange
     await page.goto('/courses')
     await expect(lines(page).first()).toBeVisible()
@@ -160,7 +160,7 @@ test.describe('E2E - Cursos Page', () => {
     expect(actions.count).toBeLessThanOrEqual(1)
   })
 
-  test('deve encontrar um curso recém-criado pela busca', async ({ page }) => {
+  test('finds a freshly created course through the search', async ({ page }) => {
     // Arrange
     const title = `Curso Busca E2E ${Date.now()}`
     await createCourse(page, title)
@@ -176,7 +176,7 @@ test.describe('E2E - Cursos Page', () => {
     await expect(page.getByRole('cell', { name: title })).toBeVisible()
   })
 
-  test('carrega a página seguinte pelo infinite scroll', async ({ page }) => {
+  test('loads the next page through the infinite scroll', async ({ page }) => {
     // Arrange - garantir mais cursos do que cabe numa página
     await page.goto('/courses')
     await expect(lines(page).first()).toBeVisible()

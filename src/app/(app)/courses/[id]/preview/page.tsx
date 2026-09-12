@@ -1,7 +1,7 @@
 'use client'
 
-// Esta página não deve ser exportada estaticamente (usa hooks client-side)
-// O Next.js deve ignorar esta página durante build estático
+// This page must not be exported statically (it uses client-side hooks)
+// Next.js must skip it during the static build
 export const dynamic = 'error'
 
 import { useEffect } from 'react'
@@ -17,7 +17,7 @@ export default function PreviewCoursePage() {
   const router = useRouter()
 
   const pathname = usePathname()
-  // Extrai o segmento do curso diretamente do pathname (sempre confiável)
+  // Read the course segment straight from the pathname, which is always reliable
   const courseUrlSegment = pathname.split('/')[2]
   const courseId = (params?.id as string | undefined) || courseUrlSegment
 

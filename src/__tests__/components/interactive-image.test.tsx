@@ -19,8 +19,8 @@ const item: Block = {
 
 const ponto = (n: number) => screen.getByRole('button', { name: new RegExp(`^Ponto ${n}`) })
 
-describe('imagem interativa', () => {
-  it('abre o popup no ponto clicado e não mostra nada antes', async () => {
+describe('interactive image', () => {
+  it('opens the popup on the clicked hotspot and shows nothing before', async () => {
     const user = userEvent.setup()
     render(<InteractiveImageBlock item={item} />)
 
@@ -32,7 +32,7 @@ describe('imagem interativa', () => {
     expect(screen.getByText('Camada externa rígida.')).toBeInTheDocument()
   })
 
-  it('fecha pelo X e devolve o foco ao ponto', async () => {
+  it('closes on the X and returns the focus to the hotspot', async () => {
     const user = userEvent.setup()
     render(<InteractiveImageBlock item={item} />)
 
@@ -43,7 +43,7 @@ describe('imagem interativa', () => {
     expect(ponto(1)).toHaveFocus()
   })
 
-  it('troca de ponto sem deixar dois popups abertos', async () => {
+  it('switches hotspots without leaving two popups open', async () => {
     const user = userEvent.setup()
     render(<InteractiveImageBlock item={item} />)
 
@@ -54,7 +54,7 @@ describe('imagem interativa', () => {
     expect(screen.getByRole('dialog')).toHaveAccessibleName('Jugular')
   })
 
-  it('fecha ao clicar no mesmo ponto de novo', async () => {
+  it('closes when the same hotspot is clicked again', async () => {
     const user = userEvent.setup()
     render(<InteractiveImageBlock item={item} />)
 
@@ -64,7 +64,7 @@ describe('imagem interativa', () => {
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
   })
 
-  it('fecha ao clicar fora do popup', async () => {
+  it('closes on a click outside the popup', async () => {
     const user = userEvent.setup()
     render(
       <div>
@@ -79,7 +79,7 @@ describe('imagem interativa', () => {
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
   })
 
-  it('não fecha ao clicar dentro do próprio popup', async () => {
+  it('stays open on a click inside the popup', async () => {
     const user = userEvent.setup()
     render(<InteractiveImageBlock item={item} />)
 
@@ -89,7 +89,7 @@ describe('imagem interativa', () => {
     expect(screen.getByRole('dialog')).toBeInTheDocument()
   })
 
-  it('fecha com Escape e devolve o foco ao ponto', async () => {
+  it('closes on Escape and returns the focus to the hotspot', async () => {
     const user = userEvent.setup()
     render(<InteractiveImageBlock item={item} />)
 

@@ -14,9 +14,9 @@ import type { CourseStatus } from '@/lib/permissions'
 import { prisma } from '@/lib/prisma'
 import { SignJWT } from 'jose'
 
-// `jest.Mocked<typeof prisma>` não funciona aqui: os métodos do Prisma são
-// genéricos e o utilitário não os reescreve como mocks. Declarar só o que
-// este teste usa mantém o `tsc` limpo sem depender do tipo gerado.
+// `jest.Mocked<typeof prisma>` does not work here: the Prisma methods are generic
+// and the utility never rewrites them as mocks. Declaring only what this test uses
+// keeps `tsc` clean without depending on the generated type.
 const mockPrisma = prisma as unknown as {
   user: { findUnique: jest.Mock }
   course: { findUnique: jest.Mock; update: jest.Mock }
@@ -119,7 +119,7 @@ async function chamarPatch({
   return patchStatusHandler(req, { params: Promise.resolve({ id: 'curso-1' }) })
 }
 
-describe('transicaoValida', () => {
+describe('isValidTransition', () => {
   const valid: Array<[CourseStatus, CourseStatus]> = [
     ['IN_PROGRESS', 'IN_REVIEW'],
     ['IN_REVIEW', 'APPROVED'],
@@ -156,7 +156,7 @@ describe('PATCH /api/courses/[id]/status', () => {
     )
   })
 
-  it('rejeita requisição sem autenticação com 401', async () => {
+  it('rejects an unauthenticated request with 401', async () => {
     const res = await chamarPatch({
       newStatus: 'IN_REVIEW',
       currentStatus: 'IN_PROGRESS',
@@ -166,7 +166,7 @@ describe('PATCH /api/courses/[id]/status', () => {
     expect(res.status).toBe(401)
   })
 
-  it('rejeita status fora do enum com 400', async () => {
+  it('rejects a status outside the enum with 400', async () => {
     const res = await chamarPatch({
       userId: OWNER_ID,
       role: 'CONTENT_AUTHOR',
@@ -177,7 +177,7 @@ describe('PATCH /api/courses/[id]/status', () => {
     expect(res.status).toBe(400)
   })
 
-  it('retorna 404 quando o curso não existe', async () => {
+  it('returns 404 when the course does not exist', async () => {
     const res = await chamarPatch({
       userId: OWNER_ID,
       role: 'CONTENT_AUTHOR',
@@ -187,7 +187,7 @@ describe('PATCH /api/courses/[id]/status', () => {
     expect(res.status).toBe(404)
   })
 
-  it('retorna 422 numa transição inválida, antes de checar permissão', async () => {
+  it('returns 422 on an invalid transition, before checking permission', async () => {
     const res = await chamarPatch({
       userId: OWNER_ID,
       role: 'ADMIN',
@@ -199,7 +199,7 @@ describe('PATCH /api/courses/[id]/status', () => {
     expect(mockPrisma.course.update).not.toHaveBeenCalled()
   })
 
-  it('deixa o dono CONTENT_AUTHOR enviar o próprio curso para revisão', async () => {
+  it('lets a CONTENT_AUTHOR owner send their own course to review', async () => {
     const res = await chamarPatch({
       userId: OWNER_ID,
       role: 'CONTENT_AUTHOR',
@@ -211,7 +211,7 @@ describe('PATCH /api/courses/[id]/status', () => {
     expect(mockPrisma.course.update).toHaveBeenCalled()
   })
 
-  it('impede um CONTENT_AUTHOR não-dono de enviar curso alheio para revisão', async () => {
+  it('stops a non-owner CONTENT_AUTHOR from sending another course to review', async () => {
     const res = await chamarPatch({
       userId: OTHER_ID,
       role: 'CONTENT_AUTHOR',
@@ -223,7 +223,7 @@ describe('PATCH /api/courses/[id]/status', () => {
     expect(mockPrisma.course.update).not.toHaveBeenCalled()
   })
 
-  it('impede um CONTENT_AUTHOR de aprovar, mesmo sendo o dono', async () => {
+  it('stops a CONTENT_AUTHOR from approving, even as the owner', async () => {
     const res = await chamarPatch({
       userId: OWNER_ID,
       role: 'CONTENT_AUTHOR',
@@ -235,7 +235,7 @@ describe('PATCH /api/courses/[id]/status', () => {
     expect(mockPrisma.course.update).not.toHaveBeenCalled()
   })
 
-  it('deixa o REVIEWER aprovar e grava quem revisou', async () => {
+  it('lets a REVIEWER approve and records who reviewed it', async () => {
     const res = await chamarPatch({
       userId: OTHER_ID,
       role: 'REVIEWER',
@@ -251,7 +251,7 @@ describe('PATCH /api/courses/[id]/status', () => {
     expect(data.reviewedAt).toBeInstanceOf(Date)
   })
 
-  it('exige comentário ao reprovar', async () => {
+  it('requires a comment when rejecting', async () => {
     const res = await chamarPatch({
       userId: OTHER_ID,
       role: 'REVIEWER',
@@ -263,7 +263,7 @@ describe('PATCH /api/courses/[id]/status', () => {
     expect(mockPrisma.course.update).not.toHaveBeenCalled()
   })
 
-  it('reprova com comentário e registra o comentário na mesma transação', async () => {
+  it('rejects with a comment and stores it in the same transaction', async () => {
     const res = await chamarPatch({
       userId: OTHER_ID,
       role: 'REVIEWER',
@@ -282,7 +282,7 @@ describe('PATCH /api/courses/[id]/status', () => {
     })
   })
 
-  it('trata comentário só de espaços como ausente ao reprovar', async () => {
+  it('treats a whitespace-only comment as missing when rejecting', async () => {
     const res = await chamarPatch({
       userId: OTHER_ID,
       role: 'REVIEWER',
@@ -294,7 +294,7 @@ describe('PATCH /api/courses/[id]/status', () => {
     expect(res.status).toBe(400)
   })
 
-  it('limpa revisadoPorId ao voltar um curso aprovado para IN_PROGRESS', async () => {
+  it('clears reviewedById when an approved course goes back to IN_PROGRESS', async () => {
     const res = await chamarPatch({
       userId: OTHER_ID,
       role: 'REVIEWER',

@@ -102,7 +102,7 @@ export function useCreateCourseMutation() {
       const contentType = response.headers.get('content-type')
       if (!contentType?.includes('application/json')) {
         const text = await response.text()
-        console.error('Resposta não é JSON:', text.substring(0, 200))
+        console.error('Response is not JSON:', text.substring(0, 200))
         throw new Error('Resposta inválida do servidor. Verifique os logs do servidor.')
       }
 

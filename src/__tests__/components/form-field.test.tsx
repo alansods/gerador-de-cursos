@@ -2,7 +2,7 @@ import { render, screen } from '@testing-library/react'
 import { FormField } from '@/components/ui/form-field'
 import { Input } from '@/components/ui/input'
 
-it('label e campo ficam no mesmo wrapper gap-2', () => {
+it('keeps the label and the field in the same gap-2 wrapper', () => {
   const { container } = render(
     <FormField label="Nome do curso">{(props) => <Input {...props} defaultValue="x" />}</FormField>
   )
@@ -14,7 +14,7 @@ it('label e campo ficam no mesmo wrapper gap-2', () => {
   expect(input.id).toBeTruthy()
 })
 
-it('campo sem render prop nao emite htmlFor orfao', () => {
+it('emits no orphan htmlFor for a field without a render prop', () => {
   const { container } = render(
     <FormField label="Layout do curso">
       <div>seletor</div>

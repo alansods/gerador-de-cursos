@@ -37,10 +37,10 @@ function mount(type: Block['type'], onSave = jest.fn()) {
 
 beforeEach(() => errorToast.mockClear())
 
-describe('preview do bloco no editor', () => {
-  it('tem componente de render para todo tipo do catálogo', () => {
+describe('block preview in the editor', () => {
+  it('has a render component for every type in the catalog', () => {
     // O card do editor renderiza blockRegistry[item.tipo] no fallback. Sem entrada
-    // aqui, o bloco recém-criado aparecia como um card vazio.
+    // here, a freshly created block showed up as an empty card.
     for (const type of BLOCK_TYPES) {
       expect(blockRegistry[type]).toBeDefined()
     }
@@ -48,7 +48,7 @@ describe('preview do bloco no editor', () => {
 })
 
 describe('ContentBlockDrawer', () => {
-  it('mostra o rótulo do catálogo no cabeçalho de cada tipo', () => {
+  it('shows the catalog label in the header of each type', () => {
     for (const type of BLOCK_TYPES) {
       const { unmount } = render(
         <ContentBlockDrawer
@@ -66,7 +66,7 @@ describe('ContentBlockDrawer', () => {
     }
   })
 
-  it('bloqueia o salvamento de bloco vazio e mostra a mensagem do catálogo', async () => {
+  it('blocks saving an empty block and shows the catalog message', async () => {
     const user = userEvent.setup()
     const onSave = mount('tabs')
 
@@ -78,7 +78,7 @@ describe('ContentBlockDrawer', () => {
     )
   })
 
-  it('salva o separador sem exigir preenchimento', async () => {
+  it('saves the divider with nothing filled in', async () => {
     const user = userEvent.setup()
     const onSave = mount('divider')
 
@@ -89,7 +89,7 @@ describe('ContentBlockDrawer', () => {
     )
   })
 
-  it('permite montar uma aba completa e salvar', async () => {
+  it('builds a complete tab and saves it', async () => {
     const user = userEvent.setup()
     const onSave = mount('tabs')
 
@@ -107,7 +107,7 @@ describe('ContentBlockDrawer', () => {
     )
   })
 
-  it('monta uma pergunta do vídeo interativo e salva', async () => {
+  it('builds an interactive video question and saves it', async () => {
     const user = userEvent.setup()
     const onSave = mount('interactive-video')
 
@@ -146,7 +146,7 @@ describe('ContentBlockDrawer', () => {
     )
   })
 
-  it('recusa a pergunta do vídeo cuja alternativa correta está vazia', async () => {
+  it('rejects a video question whose correct option is empty', async () => {
     const user = userEvent.setup()
     const onSave = mount('interactive-video')
 
@@ -164,8 +164,8 @@ describe('ContentBlockDrawer', () => {
     expect(errorToast).toHaveBeenCalledWith('Pergunta 1: informe o tempo no formato mm:ss')
   })
 
-  it('tem um campo de URL só, sem seletor de fonte, nos dois blocos de vídeo', async () => {
-    // Enviar arquivo e colar link são a mesma coisa: um campo, sem escolher a fonte.
+  it('offers a single URL field, with no source picker, on both video blocks', async () => {
+    // Uploading a file and pasting a link are the same thing: one field, no source picker.
     for (const type of ['video', 'interactive-video'] as const) {
       const { unmount } = render(
         <ContentBlockDrawer
@@ -185,7 +185,7 @@ describe('ContentBlockDrawer', () => {
     }
   })
 
-  it('avisa sobre o pacote offline assim que um link do YouTube é colado', async () => {
+  it('warns about the offline package as soon as a YouTube link is pasted', async () => {
     const user = userEvent.setup()
     mount('interactive-video')
 
@@ -199,7 +199,7 @@ describe('ContentBlockDrawer', () => {
     expect(screen.getByText(/precisará de internet/i)).toBeInTheDocument()
   })
 
-  it('cobra título do evento na linha do tempo', async () => {
+  it('requires a title on the timeline event', async () => {
     const user = userEvent.setup()
     const onSave = mount('timeline')
 
@@ -211,7 +211,7 @@ describe('ContentBlockDrawer', () => {
     expect(errorToast).toHaveBeenCalledWith('Todos os eventos devem ter título')
   })
 
-  it('monta uma grade de flipcards num único bloco', async () => {
+  it('builds a flipcard grid inside a single block', async () => {
     const user = userEvent.setup()
     const onSave = mount('flipcard')
 
@@ -249,7 +249,7 @@ describe('ContentBlockDrawer', () => {
     )
   })
 
-  it('abre um flipcard legado de card único já como lista', async () => {
+  it('opens a legacy single-card flipcard already as a list', async () => {
     const user = userEvent.setup()
     const onSave = jest.fn()
     render(
@@ -290,7 +290,7 @@ describe('ContentBlockDrawer', () => {
     )
   })
 
-  it('oferece o seletor de largura só nos blocos que o declaram', () => {
+  it('offers the width picker only on the blocks that declare it', () => {
     const { unmount } = render(
       <ContentBlockDrawer
         open
@@ -308,7 +308,7 @@ describe('ContentBlockDrawer', () => {
     expect(screen.queryByRole('button', { name: 'Meia largura' })).not.toBeInTheDocument()
   })
 
-  it('remove item da lista sem afetar os demais', async () => {
+  it('removes a list item without touching the others', async () => {
     const user = userEvent.setup()
     const onSave = mount('carousel')
 
@@ -349,8 +349,8 @@ describe('ContentBlockDrawer', () => {
   })
 })
 
-describe('fonte do vídeo interativo ao salvar', () => {
-  it('entrega fonteVideo youtube no objeto salvo', async () => {
+describe('interactive video source on save', () => {
+  it('writes a youtube videoSource into the saved object', async () => {
     const user = userEvent.setup()
     const onSave = mount('interactive-video')
 

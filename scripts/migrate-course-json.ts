@@ -26,7 +26,7 @@ function countKeys(value: unknown, seen: Set<string>) {
 
 async function main() {
   const total = await prisma.course.count()
-  console.log(`${total} curso(s) no banco. Modo: ${dryRun ? 'dry-run' : 'gravando'}`)
+  console.log(`${total} course(s) in the database. Mode: ${dryRun ? 'dry-run' : 'writing'}`)
 
   let processed = 0
   let changed = 0
@@ -68,12 +68,12 @@ async function main() {
     }
   }
 
-  console.log(`\n${processed} lido(s), ${changed} ${dryRun ? 'seriam alterados' : 'alterado(s)'}.`)
+  console.log(`\n${processed} read, ${changed} ${dryRun ? 'would change' : 'changed'}.`)
 }
 
 main()
   .catch((error) => {
-    console.error('Falhou:', error)
+    console.error('Failed:', error)
     process.exitCode = 1
   })
   .finally(() => prisma.$disconnect())

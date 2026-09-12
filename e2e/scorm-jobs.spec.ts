@@ -65,8 +65,8 @@ async function mockJobs(page: Page, urls: string[], total = TOTAL_JOBS) {
   })
 }
 
-test.describe('E2E - Histórico de Builds SCORM', () => {
-  test('pede a primeira página com o limite da tela', async ({ page }) => {
+test.describe('E2E - SCORM build history', () => {
+  test('requests the first page with the screen limit', async ({ page }) => {
     const urls: string[] = []
     await mockSession(page)
     await mockJobs(page, urls)
@@ -77,7 +77,7 @@ test.describe('E2E - Histórico de Builds SCORM', () => {
     expect(urls[0]).toBe(`/api/scorm-jobs?page=1&limit=${JOBS_PER_PAGE}`)
   })
 
-  test('renderiza apenas os jobs da página corrente', async ({ page }) => {
+  test('renders only the jobs of the current page', async ({ page }) => {
     const urls: string[] = []
     await mockSession(page)
     await mockJobs(page, urls)
@@ -90,7 +90,7 @@ test.describe('E2E - Histórico de Builds SCORM', () => {
     await expect(page.getByRole('heading', { name: 'Curso 11', exact: true })).toBeHidden()
   })
 
-  test('navega entre as páginas e desabilita os extremos', async ({ page }) => {
+  test('moves between pages and disables the ends', async ({ page }) => {
     const urls: string[] = []
     await mockSession(page)
     await mockJobs(page, urls)
@@ -118,7 +118,7 @@ test.describe('E2E - Histórico de Builds SCORM', () => {
     await expect(page.getByRole('heading', { name: 'Curso 11', exact: true })).toBeVisible()
   })
 
-  test('esconde a paginação quando cabe em uma página', async ({ page }) => {
+  test('hides the pagination when everything fits on one page', async ({ page }) => {
     const urls: string[] = []
     await mockSession(page)
     await mockJobs(page, urls, JOBS_PER_PAGE)
@@ -130,7 +130,9 @@ test.describe('E2E - Histórico de Builds SCORM', () => {
     await expect(page.getByRole('button', { name: 'Anterior' })).toBeHidden()
   })
 
-  test('mostra o header no padrão das outras telas, com ícone', async ({ page }) => {
+  test('shows the header in the same shape as the other screens, with an icon', async ({
+    page,
+  }) => {
     const urls: string[] = []
     await mockSession(page)
     await mockJobs(page, urls)
@@ -150,7 +152,7 @@ test.describe('E2E - Histórico de Builds SCORM', () => {
     await expect(header).toHaveClass(/sm:mb-8/)
   })
 
-  test('entra na tela com a animação de transição', async ({ page }) => {
+  test('enters the screen with the transition animation', async ({ page }) => {
     const urls: string[] = []
     await mockSession(page)
     await mockJobs(page, urls)
@@ -167,7 +169,7 @@ test.describe('E2E - Histórico de Builds SCORM', () => {
       .toMatch(/none|matrix\(1, 0, 0, 1, 0, 0\)/)
   })
 
-  test('não deixa cor fora do tema no modo escuro', async ({ page }) => {
+  test('leaves no off-theme color in dark mode', async ({ page }) => {
     const urls: string[] = []
     await mockSession(page)
     await mockJobs(page, urls)

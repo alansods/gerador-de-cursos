@@ -48,7 +48,7 @@ function mount(videoQuestions: VideoQuestion[], recordQuiz = jest.fn(), duration
     </ScormProgressProvider>
   )
 
-  // Sem vídeo o bloco cai no placeholder; os utilitários abaixo não são usados nesse caso.
+  // With no video the block falls back to the placeholder; the helpers below stay unused.
   const video = container.querySelector('video') as HTMLVideoElement
   if (video) Object.defineProperty(video, 'currentTime', { value: 0, writable: true })
 
@@ -78,14 +78,14 @@ function mount(videoQuestions: VideoQuestion[], recordQuiz = jest.fn(), duration
   }
 }
 
-describe('VideoInterativoBlock', () => {
-  it('avisa quando não há vídeo ou pergunta aproveitável', () => {
+describe('InteractiveVideoBlock', () => {
+  it('warns when there is no usable video or question', () => {
     mount([question({ time: 'nao é tempo' })])
 
     expect(screen.getByText(/incompleto ou sem perguntas/i)).toBeInTheDocument()
   })
 
-  it('pausa o vídeo e abre a pergunta ao alcançar o tempo', () => {
+  it('pauses the video and opens the question at the marked time', () => {
     const { advanceTo } = mount([question({})])
 
     expect(screen.queryByText('O que prende o capacete?')).toBeNull()
@@ -97,7 +97,7 @@ describe('VideoInterativoBlock', () => {
     expect(screen.getByText(/Pergunta em 00:05/)).toBeInTheDocument()
   })
 
-  it('devolve a reprodução ao marco quando o aluno tenta pular a pergunta', () => {
+  it('rewinds to the marker when the learner tries to skip the question', () => {
     const { video, dragTo } = mount([question({})])
 
     dragTo(40)
@@ -106,7 +106,7 @@ describe('VideoInterativoBlock', () => {
     expect(screen.getByText('O que prende o capacete?')).toBeInTheDocument()
   })
 
-  it('registra o acerto e libera o vídeo ao continuar', async () => {
+  it('records a correct answer and releases the video on continue', async () => {
     const user = userEvent.setup()
     const { advanceTo, recordQuiz } = mount([question({})])
 
@@ -124,7 +124,7 @@ describe('VideoInterativoBlock', () => {
     expect(screen.queryByText('O que prende o capacete?')).toBeNull()
   })
 
-  it('libera o vídeo mesmo quando o aluno erra, e reporta o erro na nota', async () => {
+  it('releases the video on a wrong answer too, and reports it in the score', async () => {
     const user = userEvent.setup()
     const { advanceTo, recordQuiz } = mount([question({})])
 
@@ -137,7 +137,7 @@ describe('VideoInterativoBlock', () => {
     expect(screen.getByRole('button', { name: /Continuar o vídeo/ })).toBeInTheDocument()
   })
 
-  it('não reabre uma pergunta já respondida', async () => {
+  it('never reopens a question that was already answered', async () => {
     const user = userEvent.setup()
     const { advanceTo } = mount([question({})])
 
@@ -151,7 +151,7 @@ describe('VideoInterativoBlock', () => {
     expect(screen.queryByText('O que prende o capacete?')).toBeNull()
   })
 
-  it('dispara os marcos em ordem de tempo, acumulando a nota', async () => {
+  it('fires the markers in time order, accumulating the score', async () => {
     const user = userEvent.setup()
     const { advanceTo, recordQuiz } = mount([
       question({ id: 'pv-2', time: '00:12', question: 'Segunda?' }),
@@ -175,10 +175,10 @@ describe('VideoInterativoBlock', () => {
   })
 })
 
-describe('fonte deduzida da URL', () => {
-  // Curso salvo antes de fonteVideo existir nunca passa por corrigirBloco: o bloco é
-  // lido direto do banco. Sem deduzir na renderização, um link do YouTube ia parar no
-  // src de um <video>, que falha com "no supported sources".
+describe('source inferred from the URL', () => {
+  // A course saved before videoSource existed never goes through repairBlock: the block
+  // is read straight from the database. Without inferring at render time, a YouTube link
+  // would land in a <video> src, which fails with "no supported sources".
   function renderWithoutField(videoUrl: string) {
     const item = {
       id: 'b-1',
@@ -198,17 +198,17 @@ describe('fonte deduzida da URL', () => {
     return container
   }
 
-  it('não coloca link do YouTube dentro de um <video>', () => {
+  it('never puts a YouTube link inside a <video>', () => {
     expect(
       renderWithoutField('https://www.youtube.com/watch?v=dQw4w9WgXcQ').querySelector('video')
     ).toBeNull()
   })
 
-  it('segue usando <video> para arquivo', () => {
+  it('keeps using <video> for a file', () => {
     expect(renderWithoutField('https://b.com/aula.mp4').querySelector('video')).not.toBeNull()
   })
 
-  it('ignora fonteVideo arquivo quando a URL é inequivocamente do YouTube', () => {
+  it('ignores a file videoSource when the URL is unmistakably YouTube', () => {
     const item = {
       id: 'b-2',
       type: 'interactive-video',
@@ -230,8 +230,8 @@ describe('fonte deduzida da URL', () => {
   })
 })
 
-describe('marcadores na linha do tempo', () => {
-  it('posiciona um pino por pergunta, proporcional à duração', () => {
+describe('markers on the timeline', () => {
+  it('places one pin per question, proportional to the duration', () => {
     const { marcadores: markers } = mount(
       [question({}), question({ id: 'pv-2', time: '00:25', question: 'Segunda?' })],
       jest.fn(),
@@ -245,11 +245,11 @@ describe('marcadores na linha do tempo', () => {
     expect(pinos[1].style.left).toBe('25%')
   })
 
-  it('não desenha pino enquanto a duração é desconhecida', () => {
+  it('draws no pin while the duration is unknown', () => {
     expect(mount([question({})]).marcadores()).toHaveLength(0)
   })
 
-  it('distingue o pino respondido do pendente', async () => {
+  it('tells an answered pin from a pending one', async () => {
     const user = userEvent.setup()
     const { advanceTo, marcadores: markers } = mount([question({})], jest.fn(), 100)
 
@@ -263,7 +263,7 @@ describe('marcadores na linha do tempo', () => {
     expect(markers()[0].getAttribute('title')).toBe('Pergunta em 00:05 — respondida')
   })
 
-  it('trava o avanço da barra na próxima pergunta pendente', async () => {
+  it('locks the scrubber at the next pending question', async () => {
     const user = userEvent.setup()
     const { video, advanceTo } = mount(
       [question({}), question({ id: 'pv-2', time: '00:25', question: 'Segunda?' })],
@@ -286,7 +286,7 @@ describe('marcadores na linha do tempo', () => {
     expect(video.currentTime).toBe(25)
   })
 
-  it('deixa o aluno voltar livremente a um trecho já assistido', () => {
+  it('lets the learner scrub back freely through watched footage', () => {
     const { video, advanceTo } = mount([question({ time: '00:50' })], jest.fn(), 100)
 
     advanceTo(30)
@@ -295,7 +295,7 @@ describe('marcadores na linha do tempo', () => {
     expect(video.currentTime).toBe(0)
   })
 
-  it('libera a barra inteira quando não há mais pergunta pendente', async () => {
+  it('unlocks the whole bar once no question is pending', async () => {
     const user = userEvent.setup()
     const { video, advanceTo } = mount([question({})], jest.fn(), 100)
 
@@ -309,7 +309,7 @@ describe('marcadores na linha do tempo', () => {
     expect(video.currentTime).toBe(100)
   })
 
-  it('cancela o pointerdown da barra, para o arrasto não virar seleção de texto', () => {
+  it('cancels the bar pointerdown so dragging never turns into text selection', () => {
     mount([question({})], jest.fn(), 100)
 
     const barra = screen.getByRole('slider', { name: /linha do tempo/i })
@@ -322,7 +322,7 @@ describe('marcadores na linha do tempo', () => {
     expect(barra.closest('div.select-none')).not.toBeNull()
   })
 
-  it('esconde os controles enquanto a pergunta está aberta', () => {
+  it('hides the controls while the question is open', () => {
     const { advanceTo } = mount([question({})], jest.fn(), 100)
 
     expect(screen.getByRole('slider', { name: /linha do tempo/i })).toBeInTheDocument()

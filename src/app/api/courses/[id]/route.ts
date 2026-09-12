@@ -22,7 +22,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   try {
     const { id } = await params
 
-    // Tenta encontrar por ID primeiro; se não achar, tenta por slug
+    // Try the id first, then the slug
     const course = await prisma.course.findFirst({
       where: { OR: [{ id }, { slug: id }] },
       include: { owner: { select: { id: true, name: true } } },
@@ -34,7 +34,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 
     const collaboration = await fetchCollaboration(course.id, authResult.user.id)
 
-    // Normalizar unidades: garantir IDs, slugs e estrutura correta
+    // Normalize the units: ensure ids, slugs and a well-formed structure
     const originalUnits = upgradeUnits(course.units) as unknown as Partial<Unit>[]
     const mappedUnits = originalUnits.map((unit: Partial<Unit>, index: number) => {
       const unitId = unit.id || `unidade-${Date.now()}-${index}`
@@ -59,7 +59,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     })
     const normalizedUnits = slugifyUnits(mappedUnits)
 
-    // Converter para formato CursoGerado
+    // Map to the API course shape
     const formattedCourse: Course = {
       id: course.id,
       slug: course.slug ?? undefined,
@@ -82,7 +82,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 
     return createSuccessResponse({ course: formattedCourse })
   } catch (error) {
-    console.error('Erro ao buscar curso:', error)
+    console.error('Failed to fetch the course:', error)
     return createErrorResponse('Erro ao buscar curso', 500, error)
   }
 }

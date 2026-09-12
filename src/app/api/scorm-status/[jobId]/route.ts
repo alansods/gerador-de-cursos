@@ -10,7 +10,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ jobI
   const authResult = await requireAuth(req)
 
   if (authResult instanceof NextResponse) {
-    return authResult // Retorna erro 401 se não autenticado
+    return authResult // 401 when not authenticated
   }
 
   try {
@@ -32,7 +32,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ jobI
         error: true,
         createdAt: true,
         completedAt: true,
-        // Não retornar zipData para economizar largura de banda
+        // Leave zipData out to save bandwidth
       },
     })
 
@@ -52,7 +52,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ jobI
       completedAt: job.completedAt?.toISOString(),
     })
   } catch (error) {
-    console.error('❌ [API scorm-status] Erro:', error)
+    console.error('❌ [API scorm-status] Failed:', error)
     return createErrorResponse(
       `Erro ao verificar status: ${error instanceof Error ? error.message : 'Erro desconhecido'}`,
       500,

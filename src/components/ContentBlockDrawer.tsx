@@ -47,7 +47,7 @@ function prepareForm(blockData: Partial<Block> | null): Partial<Block> {
     ...blockData,
   }
 
-  // Bloco salvo antes de `videoSource` existir abriria com o seletor na fonte errada.
+  // A block saved before `videoSource` existed would open with the picker on the wrong source.
   if (form.type === 'video' || form.type === 'interactive-video') {
     form.videoSource = videoSource(form, form.type === 'video' ? 'youtube' : 'file')
   }
@@ -905,8 +905,8 @@ export function ContentBlockDrawer({
         )
 
       case 'video': {
-        // Sem seletor de fonte: enviar arquivo e colar link são o mesmo campo, e a URL
-        // é que diz qual player usar.
+        // No source picker: uploading a file and pasting a link share one field, and the URL
+        // decides which player to use.
         const fromFile = videoSource(formData, 'youtube') === 'file'
 
         return (

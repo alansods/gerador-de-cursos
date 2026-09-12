@@ -101,7 +101,7 @@ export default function SignupPage() {
         }
       }
     } catch (error) {
-      console.error('Erro no cadastro:', error)
+      console.error('Signup failed:', error)
       toast.error(t('errors.serverError'))
     } finally {
       setLoading(false)

@@ -1,6 +1,6 @@
 'use client'
 
-// Esta página não deve ser exportada estaticamente (usa context e API)
+// This page must not be exported statically (it uses context and the API)
 export const dynamic = 'error'
 
 import { Card, CardContent } from '@/components/ui/card'
@@ -59,7 +59,7 @@ export default function HomePage() {
     },
   ]
 
-  // Mapear tipo de atividade para ícone e cor
+  // Map an activity type to an icon and a color
   const getActivityIconAndColor = (type: string) => {
     switch (type) {
       case 'course_created':
@@ -177,7 +177,7 @@ export default function HomePage() {
     return date.toLocaleDateString('pt-BR')
   }
 
-  // Mapear atividades para formato de exibição
+  // Map the activities into their display shape
   const recentActivities = activities.map((activity) => {
     const { icon, iconBg, iconColor } = getActivityIconAndColor(activity.type)
     return {

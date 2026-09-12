@@ -27,7 +27,7 @@ function createWrapper() {
   }
 }
 
-describe('useCursosQuery', () => {
+describe('useCoursesQuery', () => {
   beforeEach(() => {
     jest.clearAllMocks()
     mockFetchCourses.mockResolvedValue({
@@ -39,7 +39,7 @@ describe('useCursosQuery', () => {
     mockFetch.mockResolvedValue({ ok: true, json: async () => ({ success: true }) })
   })
 
-  it('encadeia o cursor da página seguinte e concatena as linhas', async () => {
+  it('chains the next page cursor and concatenates the rows', async () => {
     const page1 = {
       courses: [{ id: 'a', title: 'Curso A' }],
       nextCursor: 'a',
@@ -68,13 +68,13 @@ describe('useCursosQuery', () => {
       await result.current.loadMore()
     })
 
-    // o cursor da 2a chamada vem do nextCursor da 1a pagina
+    // the cursor of the 2nd call comes from the nextCursor of the 1st page
     expect(mockFetchCourses).toHaveBeenNthCalledWith(2, expect.objectContaining({ cursor: 'a' }))
     await waitFor(() => expect(result.current.courses.map((c) => c.id)).toEqual(['a', 'b']))
     expect(result.current.hasMore).toBe(false)
   })
 
-  it('deletar um curso invalida a listagem em cache', async () => {
+  it('invalidates the cached list when a course is deleted', async () => {
     const wrapper = createWrapper()
 
     const list = renderHook(() => useCoursesQuery(FILTERS), { wrapper })
@@ -90,7 +90,7 @@ describe('useCursosQuery', () => {
     await waitFor(() => expect(mockFetchCourses).toHaveBeenCalledTimes(2))
   })
 
-  it('propaga o erro da API para quem chamou', async () => {
+  it('propagates the API error to the caller', async () => {
     mockFetch.mockResolvedValue({
       ok: false,
       json: async () => ({ success: false, error: 'Sem permissão' }),

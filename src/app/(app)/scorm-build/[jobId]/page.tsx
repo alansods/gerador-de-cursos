@@ -17,7 +17,7 @@ export default function SCORMBuildPage() {
   const { jobStatus, isLoading: loading } = useScormJobStatusQuery(jobId)
   const cancel = useCancelJobMutation()
 
-  // Download do arquivo
+  // Download the file
   const handleDownload = async () => {
     setDownloading(true)
     try {
@@ -35,7 +35,7 @@ export default function SCORMBuildPage() {
       a.click()
       URL.revokeObjectURL(url)
     } catch (error) {
-      console.error('Erro ao baixar:', error)
+      console.error('Download failed:', error)
       alert('Erro ao baixar o arquivo')
     } finally {
       setDownloading(false)

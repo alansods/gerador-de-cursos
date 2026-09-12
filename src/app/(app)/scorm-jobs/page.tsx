@@ -41,7 +41,7 @@ export default function SCORMJobsPage() {
     limit: JOBS_PER_PAGE,
   })
 
-  // apagar o último job da página deixa a página corrente sem existir
+  // deleting the last job on the page leaves the current page out of range
   useEffect(() => {
     if (pagination.totalPages > 0 && page > pagination.totalPages) {
       setPage(pagination.totalPages)

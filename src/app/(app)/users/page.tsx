@@ -1,6 +1,6 @@
 'use client'
 
-// Esta página não deve ser exportada estaticamente (usa API)
+// This page must not be exported statically (it uses the API)
 export const dynamic = 'error'
 
 import { useState, useEffect } from 'react'
@@ -91,7 +91,7 @@ export default function UsersPage() {
   const isUpdating = updateUser.isPending
   const isDeleting = deleteUser.isPending
 
-  // filtrar volta para a primeira página: a atual pode nem existir no novo recorte
+  // filtering goes back to page one: the current page may not exist in the new slice
   useEffect(() => {
     setPage(1)
   }, [searchTerm, startDate, endDate, selectedRole])

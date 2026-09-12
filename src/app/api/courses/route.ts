@@ -49,7 +49,7 @@ export async function GET(req: NextRequest) {
     const modality = searchParams.get('modality') || ''
     const scope = searchParams.get('scope') || 'all'
 
-    // Construir filtros
+    // Build the filters
     const where: Prisma.CourseWhereInput = {}
 
     if (scope === 'mine') {
@@ -71,10 +71,10 @@ export async function GET(req: NextRequest) {
       where.modality = modality
     }
 
-    // Contar total de cursos
+    // Total course count
     const total = await prisma.course.count({ where })
 
-    // Buscar cursos com paginação
+    // Fetch the page of courses
     const courses = await prisma.course.findMany({
       where,
       skip: (page - 1) * limit,
@@ -83,8 +83,8 @@ export async function GET(req: NextRequest) {
       include: { owner: { select: { id: true, name: true } } },
     })
 
-    // Colaborações do usuário nos cursos listados, numa consulta só, para que
-    // um colaborador não apareça sem permissão de edição na listagem
+    // The user's collaborations on the listed courses, in a single query, so that
+    // a collaborator never shows up without edit permission in the list
     const collaborations = await prisma.courseCollaborator.findMany({
       where: { userId: authResult.user.id, courseId: { in: courses.map((c) => c.id) } },
       select: { courseId: true },
@@ -93,7 +93,7 @@ export async function GET(req: NextRequest) {
       collaborations.map((c) => [c.courseId, { granted: true as const }])
     )
 
-    // Solicitações de acesso pendentes do usuário, para exibir "Aguardando acesso"
+    // The user's pending access requests, to show "Aguardando acesso"
     const pendingAccessRequests = await prisma.courseAccessRequest.findMany({
       where: {
         requesterId: authResult.user.id,
@@ -104,9 +104,9 @@ export async function GET(req: NextRequest) {
     })
     const pendingRequestByCourse = new Set(pendingAccessRequests.map((s) => s.courseId))
 
-    // Converter para formato CursoGerado com normalização de unidades
+    // Map to the API course shape, normalizing the units
     const formattedCourses: Course[] = courses.map((course) => {
-      // Normalizar unidades: garantir IDs, slugs e estrutura correta
+      // Normalize the units: ensure ids, slugs and a well-formed structure
       const originalUnits = upgradeUnits(course.units) as unknown as UnitInput[]
       const mappedUnits = originalUnits.map((unit: UnitInput, index: number) => {
         const unitId = unit.id || `unidade-${course.id}-${index}`
@@ -163,7 +163,7 @@ export async function GET(req: NextRequest) {
       },
     })
   } catch (error) {
-    console.error('Erro ao listar cursos:', error)
+    console.error('Failed to list courses:', error)
     return createErrorResponse('Erro ao listar cursos', 500, error)
   }
 }
@@ -176,7 +176,7 @@ export async function POST(req: NextRequest) {
   const authResult = await requireAuth(req)
 
   if (authResult instanceof NextResponse) {
-    return authResult // Retorna erro 401 se não autenticado
+    return authResult // 401 when not authenticated
   }
 
   try {
@@ -185,12 +185,12 @@ export async function POST(req: NextRequest) {
     const body = await req.json()
     const { title, description, workload, modality, category, layout, bannerVideoUrl, units } = body
 
-    // Validar campos obrigatórios
+    // Validate the required fields
     if (!title || !description || !workload || !modality || !category) {
       return createErrorResponse('Missing required fields', 400)
     }
 
-    // Normalizar unidades: garantir IDs, slugs e estrutura correta
+    // Normalize the units: ensure ids, slugs and a well-formed structure
     const mappedUnits = (upgradeUnits(units) as unknown as UnitInput[]).map((unit, index) => {
       const unitId = unit.id || `unidade-${Date.now()}-${index}`
       const normalizedContent = (unit.blocks || []).map((item: UnitContent, itemIndex: number) => ({
@@ -209,10 +209,10 @@ export async function POST(req: NextRequest) {
     })
     const normalizedUnits = slugifyUnits(mappedUnits)
 
-    // Gerar slug único a partir do título
+    // Build a unique slug from the title
     const slug = await generateUniqueSlug(title)
 
-    // Criar curso
+    // Create the course
     const course = await prisma.course.create({
       data: {
         title,
@@ -228,7 +228,7 @@ export async function POST(req: NextRequest) {
       },
     })
 
-    // Registrar atividade
+    // Log the activity
     await logActivity({
       type: 'course_created',
       title: 'Novo curso criado',
@@ -238,7 +238,7 @@ export async function POST(req: NextRequest) {
       userId: authResult.user.id,
     })
 
-    // Converter para formato CursoGerado
+    // Map to the API course shape
     const formattedCourse: Course = {
       id: course.id,
       slug: course.slug ?? undefined,
@@ -263,7 +263,7 @@ export async function POST(req: NextRequest) {
     if (error instanceof ForbiddenError) {
       return createErrorResponse(error.message, 403)
     }
-    console.error('Erro ao criar curso:', error)
+    console.error('Failed to create the course:', error)
     return createErrorResponse('Erro ao criar curso', 500, error)
   }
 }
@@ -276,7 +276,7 @@ export async function PUT(req: NextRequest) {
   const authResult = await requireAuth(req)
 
   if (authResult instanceof NextResponse) {
-    return authResult // Retorna erro 401 se não autenticado
+    return authResult // 401 when not authenticated
   }
 
   try {
@@ -298,7 +298,7 @@ export async function PUT(req: NextRequest) {
       return createErrorResponse('ID do curso é obrigatório', 400)
     }
 
-    // Verificar se o curso existe
+    // Check that the course exists
     const existingCourse = await prisma.course.findUnique({
       where: { id },
     })
@@ -311,7 +311,7 @@ export async function PUT(req: NextRequest) {
 
     assertCan(authResult.user, 'course:update', { course: existingCourse, collaboration })
 
-    // Guarda de concorrência: rejeita escrita baseada numa versão desatualizada
+    // Concurrency guard: reject a write based on a stale version
     if (typeof version === 'number' && version !== existingCourse.version) {
       return NextResponse.json(
         {
@@ -325,7 +325,7 @@ export async function PUT(req: NextRequest) {
       )
     }
 
-    // Normalizar unidades se fornecidas
+    // Normalize the units when they are provided
     let normalizedUnits = undefined
     if (units !== undefined) {
       const mappedUnits = (upgradeUnits(units) as unknown as UnitInput[]).map((unit, index) => {
@@ -349,7 +349,7 @@ export async function PUT(req: NextRequest) {
       normalizedUnits = slugifyUnits(mappedUnits)
     }
 
-    // Regenerar slug se o título mudou
+    // Regenerate the slug when the title changed
     let newSlug: string | undefined = undefined
     if (title && title !== existingCourse.title) {
       newSlug = await generateUniqueSlug(title, id)
@@ -357,7 +357,7 @@ export async function PUT(req: NextRequest) {
       newSlug = await generateUniqueSlug(title || existingCourse.title, id)
     }
 
-    // Atualizar curso
+    // Update the course
     const course = await prisma.course.update({
       where: { id },
       data: {
@@ -372,9 +372,9 @@ export async function PUT(req: NextRequest) {
         ...(normalizedUnits !== undefined && {
           units: normalizedUnits as unknown as Prisma.InputJsonValue,
         }),
-        // Editar invalida a revisão: um curso aprovado cujo conteúdo mudou não
-        // foi aprovado nesta versão, e o revisor registrado nunca a viu.
-        // Vale para APPROVED e REJECTED — os dois voltam a rascunho.
+        // Editing invalidates the review: an approved course whose content changed
+        // was not approved in this version, and the recorded reviewer never saw it.
+        // Applies to APPROVED and REJECTED — both go back to draft.
         ...(REVIEW_INVALIDATED_ON_EDIT.includes(existingCourse.status) && {
           status: 'IN_PROGRESS' as const,
           reviewedById: null,
@@ -384,7 +384,7 @@ export async function PUT(req: NextRequest) {
       },
     })
 
-    // Registrar atividade
+    // Log the activity
     await logActivity({
       type: 'course_updated',
       title: 'Curso editado',
@@ -394,7 +394,7 @@ export async function PUT(req: NextRequest) {
       userId: authResult.user.id,
     })
 
-    // Converter para formato CursoGerado
+    // Map to the API course shape
     const formattedCourse: Course = {
       id: course.id,
       slug: course.slug ?? undefined,
@@ -419,7 +419,7 @@ export async function PUT(req: NextRequest) {
     if (error instanceof ForbiddenError) {
       return createErrorResponse(error.message, 403)
     }
-    console.error('Erro ao atualizar curso:', error)
+    console.error('Failed to update the course:', error)
     return createErrorResponse('Erro ao atualizar curso', 500, error)
   }
 }
@@ -432,7 +432,7 @@ export async function DELETE(req: NextRequest) {
   const authResult = await requireAuth(req)
 
   if (authResult instanceof NextResponse) {
-    return authResult // Retorna erro 401 se não autenticado
+    return authResult // 401 when not authenticated
   }
 
   try {
@@ -443,7 +443,7 @@ export async function DELETE(req: NextRequest) {
       return createErrorResponse('ID do curso é obrigatório', 400)
     }
 
-    // Verificar se o curso existe
+    // Check that the course exists
     const existingCourse = await prisma.course.findUnique({
       where: { id },
     })
@@ -454,12 +454,12 @@ export async function DELETE(req: NextRequest) {
 
     assertCan(authResult.user, 'course:delete', { course: existingCourse })
 
-    // Deletar curso
+    // Delete the course
     await prisma.course.delete({
       where: { id },
     })
 
-    // Registrar atividade
+    // Log the activity
     await logActivity({
       type: 'course_deleted',
       title: 'Curso deletado',
@@ -474,7 +474,7 @@ export async function DELETE(req: NextRequest) {
     if (error instanceof ForbiddenError) {
       return createErrorResponse(error.message, 403)
     }
-    console.error('Erro ao deletar curso:', error)
+    console.error('Failed to delete the course:', error)
     return createErrorResponse('Erro ao deletar curso', 500, error)
   }
 }

@@ -41,13 +41,13 @@ function createWrapper() {
   }
 }
 
-describe('GeradorCursoContext sobre o cache', () => {
+describe('CourseEditorContext over the cache', () => {
   beforeEach(() => {
     jest.clearAllMocks()
     mockFetch.mockResolvedValue(courseApiResponse())
   })
 
-  it('não fica em loading enquanto nenhum curso está selecionado', () => {
+  it('never sits on loading while no course is selected', () => {
     const { result } = renderHook(() => useCourseEditor(), { wrapper: createWrapper() })
 
     expect(result.current.state.loading).toBe(false)
@@ -55,7 +55,7 @@ describe('GeradorCursoContext sobre o cache', () => {
     expect(mockFetch).not.toHaveBeenCalled()
   })
 
-  it('mantém selecionarCurso estável depois de o curso carregar', async () => {
+  it('keeps selectCourse stable after the course loads', async () => {
     const { result } = renderHook(() => useCourseEditor(), { wrapper: createWrapper() })
 
     const selectInitial = result.current.selectCourse
@@ -66,11 +66,11 @@ describe('GeradorCursoContext sobre o cache', () => {
 
     await waitFor(() => expect(result.current.state.currentCourse?.id).toBe('c1'))
 
-    // se a identidade mudasse, o efeito que a chama se realimentaria
+    // if the identity changed, the effect calling it would feed itself
     expect(result.current.selectCourse).toBe(selectInitial)
   })
 
-  it('no conflito 409 recarrega a versão do servidor e propaga o erro', async () => {
+  it('reloads the server version on a 409 and propagates the error', async () => {
     const { result } = renderHook(() => useCourseEditor(), { wrapper: createWrapper() })
 
     act(() => {
@@ -94,7 +94,7 @@ describe('GeradorCursoContext sobre o cache', () => {
     expect(result.current.state.currentCourse?.title).toBe('Do servidor')
   })
 
-  it('manda a versão conhecida do curso no PUT, para o servidor detectar conflito', async () => {
+  it('sends the known course version on PUT so the server can detect a conflict', async () => {
     const { result } = renderHook(() => useCourseEditor(), { wrapper: createWrapper() })
 
     act(() => {

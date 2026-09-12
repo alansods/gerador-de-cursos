@@ -3,21 +3,21 @@ import { SAMPLE_DOCUMENT_TEXT } from '@/lib/sample-document'
 import { detectMarkers } from '@/lib/markers'
 import { isValidYouTubeUrl } from '@/lib/youtube'
 
-describe('documento de exemplo', () => {
+describe('sample document', () => {
   const detection = detectMarkers(SAMPLE_DOCUMENT_TEXT)
 
-  it('demonstra todos os marcadores suportados', () => {
+  it('demonstrates every supported marker', () => {
     const demonstratedTypes = Object.keys(detection.byType).sort()
     const expectedTypes = BLOCKS_WITH_MARKER.map((meta) => meta.type).sort()
 
     expect(demonstratedTypes).toEqual(expectedTypes)
   })
 
-  it('é lido no modo markers', () => {
+  it('is read in markers mode', () => {
     expect(detection.mode).toBe('markers')
   })
 
-  it('fecha todos os marcadores que abre', () => {
+  it('closes every marker it opens', () => {
     for (const meta of BLOCKS_WITH_MARKER) {
       const openings =
         SAMPLE_DOCUMENT_TEXT.match(new RegExp(`\\b${meta.marker}_INICIO\\b`, 'g')) ?? []
@@ -30,7 +30,7 @@ describe('documento de exemplo', () => {
     }
   })
 
-  it('traz o cabeçalho do curso que a IA usa nos metadados', () => {
+  it('carries the course header the AI reads as metadata', () => {
     expect(SAMPLE_DOCUMENT_TEXT).toContain('CURSO:')
     expect(SAMPLE_DOCUMENT_TEXT).toContain('DESCRIÇÃO:')
     expect(SAMPLE_DOCUMENT_TEXT).toContain('CARGA HORÁRIA:')
@@ -38,14 +38,14 @@ describe('documento de exemplo', () => {
     expect(SAMPLE_DOCUMENT_TEXT).toContain('CATEGORIA:')
   })
 
-  it('traz o vídeo introdutório do banner com link do YouTube válido', () => {
+  it('carries the banner intro video with a valid YouTube link', () => {
     const line = SAMPLE_DOCUMENT_TEXT.split('\n').find((l) => l.startsWith('VÍDEO INTRODUTÓRIO:'))
 
     expect(line).toBeDefined()
     expect(isValidYouTubeUrl(line!.replace('VÍDEO INTRODUTÓRIO:', '').trim())).toBe(true)
   })
 
-  it('tem quiz com cinco opções e resposta correta indicada', () => {
+  it('has a quiz with five options and the correct answer marked', () => {
     expect(SAMPLE_DOCUMENT_TEXT).toContain('Opção E:')
     expect(SAMPLE_DOCUMENT_TEXT).toContain('Resposta Correta:')
   })

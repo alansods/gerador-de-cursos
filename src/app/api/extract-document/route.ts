@@ -11,7 +11,7 @@ export async function POST(req: NextRequest) {
   const authResult = await requireAuth(req)
 
   if (authResult instanceof NextResponse) {
-    return authResult // Retorna erro 401 se não autenticado
+    return authResult // 401 when not authenticated
   }
 
   try {
@@ -22,7 +22,7 @@ export async function POST(req: NextRequest) {
       return createErrorResponse('Arquivo não fornecido', 400)
     }
 
-    // Validar tipo de arquivo
+    // Validate the file type
     const allowedTypes = [
       'application/vnd.openxmlformats-officedocument.wordprocessingml.document', // .docx
       'application/msword', // .doc
@@ -41,7 +41,7 @@ export async function POST(req: NextRequest) {
       return createErrorResponse('Arquivo muito grande. Tamanho máximo: 10MB', 400)
     }
 
-    // Converter arquivo para buffer
+    // Turn the file into a buffer
     const arrayBuffer = await file.arrayBuffer()
     const buffer = Buffer.from(arrayBuffer)
 
@@ -51,7 +51,7 @@ export async function POST(req: NextRequest) {
       const result = await mammoth.extractRawText({ buffer })
       text = result.value
     } catch (mammothError) {
-      console.error('Erro ao extrair texto com mammoth:', mammothError)
+      console.error('mammoth failed to extract the text:', mammothError)
       return createErrorResponse(
         'Erro ao processar documento. Certifique-se de que é um arquivo Word válido.',
         400,
@@ -68,7 +68,7 @@ export async function POST(req: NextRequest) {
 
     return createSuccessResponse({ text, markers: detectMarkers(text) })
   } catch (error) {
-    console.error('Erro ao extrair documento:', error)
+    console.error('Document extraction failed:', error)
     return createErrorResponse('Erro ao processar documento', 500, error)
   }
 }

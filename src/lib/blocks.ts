@@ -420,7 +420,7 @@ export const BLOCK_CATALOG: Record<BlockType, BlockMeta> = {
       if (!hasText(b.videoTitle)) return 'Adicione um título para o vídeo'
       return null
     },
-    // Só o vídeo enviado vira arquivo no ZIP; o do YouTube é página de streaming.
+    // Only an uploaded video becomes a file in the ZIP; a YouTube one is a streaming page.
     extractMedia: (b) => (videoSource(b, 'youtube') === 'file' ? [b.videoUrl] : []),
     rewriteMedia: (b, mapper) =>
       videoSource(b, 'youtube') === 'file' ? { videoUrl: mapper(b.videoUrl) ?? b.videoUrl } : {},

@@ -86,7 +86,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 
     return createSuccessResponse({ id, status: approved ? 'APPROVED' : 'DENIED' })
   } catch (error) {
-    console.error('Erro ao responder solicitação:', error)
+    console.error('Failed to answer the access request:', error)
     return createErrorResponse('Erro ao responder solicitação', 500, error)
   }
 }

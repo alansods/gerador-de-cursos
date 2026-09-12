@@ -26,8 +26,8 @@ describe('API - Authentication', () => {
   })
 
   describe('POST /api/auth/login', () => {
-    it('deve fazer login com credenciais válidas', async () => {
-      // Arrange - preparar dados de teste
+    it('logs in with valid credentials', async () => {
+      // Arrange
       const hashedPassword = await bcrypt.hash('senha123', 10)
       const mockUser = {
         id: '1',
@@ -52,7 +52,7 @@ describe('API - Authentication', () => {
         },
       })
 
-      // Act - executar a ação
+      // Act
       const response = await loginHandler(request)
       const data = await response.json()
 
@@ -67,11 +67,11 @@ describe('API - Authentication', () => {
       })
       expect(response.headers.get('Set-Cookie')).toContain('token=')
 
-      // CRÍTICO: Verificar que não houve requisições duplicadas ao banco
+      // CRITICAL: assert there was no duplicate database query
       expect(mockPrisma.user.findUnique).toHaveBeenCalledTimes(1)
     })
 
-    it('deve retornar erro com credenciais inválidas', async () => {
+    it('fails with unknown credentials', async () => {
       // Arrange
       mockPrisma.user.findUnique.mockResolvedValue(null)
 
@@ -95,11 +95,11 @@ describe('API - Authentication', () => {
       expect(data.success).toBe(false)
       expect(data.error).toBe('Credenciais inválidas')
 
-      // CRÍTICO: Verificar que foi feita apenas UMA consulta ao banco
+      // CRITICAL: assert exactly ONE database query
       expect(mockPrisma.user.findUnique).toHaveBeenCalledTimes(1)
     })
 
-    it('deve retornar erro com senha incorreta', async () => {
+    it('fails with a wrong password', async () => {
       // Arrange
       const hashedPassword = await bcrypt.hash('senhaCorreta', 10)
       const mockUser = {
@@ -135,7 +135,7 @@ describe('API - Authentication', () => {
       expect(data.error).toBe('Credenciais inválidas')
     })
 
-    it('deve retornar erro com campos obrigatórios faltando', async () => {
+    it('fails when a required field is missing', async () => {
       // Arrange
       const request = new NextRequest('http://localhost:3000/api/auth/login', {
         method: 'POST',
@@ -160,7 +160,7 @@ describe('API - Authentication', () => {
   })
 
   describe('GET /api/auth/me', () => {
-    it('deve retornar dados do usuário autenticado', async () => {
+    it('returns the authenticated user', async () => {
       // Arrange
       const mockUser = {
         id: '1',
@@ -202,11 +202,11 @@ describe('API - Authentication', () => {
         role: 'CONTENT_AUTHOR',
       })
 
-      // CRÍTICO: Verificar que foi feita apenas UMA consulta ao banco
+      // CRITICAL: assert exactly ONE database query
       expect(mockPrisma.user.findUnique).toHaveBeenCalledTimes(1)
     })
 
-    it('deve retornar erro sem token', async () => {
+    it('fails without a token', async () => {
       // Arrange
       const request = new NextRequest('http://localhost:3000/api/auth/me')
 
@@ -220,7 +220,7 @@ describe('API - Authentication', () => {
       expect(data.error).toBe('Token de autenticação não encontrado')
     })
 
-    it('deve retornar erro com token inválido', async () => {
+    it('fails with an invalid token', async () => {
       // Arrange
       const request = new NextRequest('http://localhost:3000/api/auth/me', {
         headers: {
@@ -239,7 +239,7 @@ describe('API - Authentication', () => {
   })
 
   describe('POST /api/auth/logout', () => {
-    it('deve fazer logout com sucesso', async () => {
+    it('logs out', async () => {
       // Arrange
       const request = new NextRequest('http://localhost:3000/api/auth/logout', {
         method: 'POST',

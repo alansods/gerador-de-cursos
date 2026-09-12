@@ -10,26 +10,26 @@ config({ path: resolve(process.cwd(), '.env') })
 const prisma = new PrismaClient()
 
 async function main() {
-  console.log('👤 Criando usuário convidado...\n')
+  console.log('👤 Creating the guest user...\n')
 
   try {
-    // Verificar se usuário já existe
+    // Check whether the user already exists
     const existingUser = await prisma.user.findUnique({
       where: { email: 'convidado@senai.br' },
     })
 
     if (existingUser) {
-      console.log('⚠️  Usuário convidado já existe!')
+      console.log('⚠️  The guest user already exists!')
       console.log(`   ID: ${existingUser.id}`)
-      console.log(`   Nome: ${existingUser.name}`)
-      console.log(`   Usuário: ${existingUser.email}`)
+      console.log(`   Name: ${existingUser.name}`)
+      console.log(`   Email: ${existingUser.email}`)
       return
     }
 
-    // Hash da senha
+    // Hash the password
     const passwordHash = await bcrypt.hash('senai2025', 10)
 
-    // Criar usuário
+    // Create the user
     const guestUser = await prisma.user.create({
       data: {
         name: 'Usuário Convidado',
@@ -38,20 +38,20 @@ async function main() {
       },
     })
 
-    console.log('✅ Usuário convidado criado com sucesso!')
+    console.log('✅ Guest user created')
     console.log(`   ID: ${guestUser.id}`)
-    console.log(`   Nome: ${guestUser.name}`)
-    console.log(`   Usuário: ${guestUser.email}`)
-    console.log(`   Senha: senai2025`)
+    console.log(`   Name: ${guestUser.name}`)
+    console.log(`   Email: ${guestUser.email}`)
+    console.log(`   Password: senai2025`)
   } catch (error) {
-    console.error('❌ Erro ao criar usuário:', error)
+    console.error('❌ Failed to create the user:', error)
     throw error
   }
 }
 
 main()
   .catch((e) => {
-    console.error('Erro:', e)
+    console.error('Failed:', e)
     process.exit(1)
   })
   .finally(async () => {

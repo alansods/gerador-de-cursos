@@ -3,7 +3,7 @@ import { jwtVerify } from 'jose'
 import { prisma } from '@/lib/prisma'
 import { resolveTokenRole, type UserRole } from '@/lib/permissions'
 
-// Validar que JWT_SECRET está definido
+// Require JWT_SECRET
 if (!process.env.JWT_SECRET) {
   throw new Error(
     '❌ JWT_SECRET não está definido! Configure a variável de ambiente JWT_SECRET no .env.local'

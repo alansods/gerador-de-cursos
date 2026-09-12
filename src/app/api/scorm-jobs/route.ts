@@ -20,7 +20,7 @@ export async function GET(req: NextRequest) {
   const authResult = await requireAuth(req)
 
   if (authResult instanceof NextResponse) {
-    return authResult // Retorna erro 401 se não autenticado
+    return authResult // 401 when not authenticated
   }
 
   try {
@@ -43,7 +43,7 @@ export async function GET(req: NextRequest) {
           error: true,
           createdAt: true,
           completedAt: true,
-          // Não retornar zipData para economizar largura de banda
+          // Leave zipData out to save bandwidth
         },
         skip: (page - 1) * limit,
         take: limit,
@@ -64,7 +64,7 @@ export async function GET(req: NextRequest) {
       },
     })
   } catch (error) {
-    console.error('❌ [API scorm-jobs] Erro:', error)
+    console.error('❌ [API scorm-jobs] Failed:', error)
     return createErrorResponse(
       `Erro ao buscar jobs: ${error instanceof Error ? error.message : 'Erro desconhecido'}`,
       500,

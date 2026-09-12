@@ -94,7 +94,9 @@ const nextUnit = async (page: Page) => {
   await page.waitForTimeout(1900)
 }
 
-test('rastreia progresso, retoma a sessão e conclui o curso no LMS', async ({ page }) => {
+test('tracks progress, resumes the session and completes the course in the LMS', async ({
+  page,
+}) => {
   await openLms(page)
 
   expect((await cmi(page)).cmi['cmi.core.lesson_status']).toBe('incomplete')
@@ -147,7 +149,7 @@ test('rastreia progresso, retoma a sessão e conclui o curso no LMS', async ({ p
   expect(state.cmi['cmi.core.lesson_status']).toBe('completed')
 })
 
-test('o manifesto não declara arquivos ausentes do pacote', async () => {
+test('the manifest declares no file missing from the package', async () => {
   const zip = await JSZip.loadAsync(await generateSCORMFromPlayerDist(testCourse))
   const manifesto = await zip.file('imsmanifest.xml')!.async('string')
 

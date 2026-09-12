@@ -19,15 +19,15 @@ describe('extractYouTubeId', () => {
   )
 })
 
-describe('ehUrlYouTubeValida', () => {
-  it('aceita as quatro formas suportadas', () => {
+describe('isValidYouTubeUrl', () => {
+  it('accepts the four supported forms', () => {
     expect(isValidYouTubeUrl('https://www.youtube.com/watch?v=dQw4w9WgXcQ')).toBe(true)
     expect(isValidYouTubeUrl('https://youtu.be/dQw4w9WgXcQ')).toBe(true)
     expect(isValidYouTubeUrl('https://www.youtube.com/embed/dQw4w9WgXcQ')).toBe(true)
     expect(isValidYouTubeUrl('https://www.youtube.com/v/dQw4w9WgXcQ')).toBe(true)
   })
 
-  it('rejeita link que não é do YouTube e string vazia', () => {
+  it('rejects a non-YouTube link and an empty string', () => {
     expect(isValidYouTubeUrl('https://vimeo.com/123456')).toBe(false)
     expect(isValidYouTubeUrl('')).toBe(false)
   })

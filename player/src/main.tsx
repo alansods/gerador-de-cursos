@@ -12,13 +12,13 @@ declare global {
   }
 }
 
-// Expõe o wrapper como window.SCORM — os hooks existentes (useLMS, CoursePlayer)
-// já esperam esse objeto nesse endereço
+// Exposes the wrapper as window.SCORM — the existing hooks (useLMS, CoursePlayer)
+// already expect the object at that address
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 ;(window as any).SCORM = scormAPI
 
-// Abre a sessão. Status, bookmark, suspend_data e session_time são responsabilidade
-// do useProgressoScorm, montado pelos layouts de curso.
+// Opens the session. Status, bookmark, suspend_data and session_time belong to
+// useScormProgress, mounted by the course layouts.
 if (scormAPI.init()) {
   console.log('[SCORM-PLAYER] Sessão iniciada, status:', scormAPI.getStatus() || 'not attempted')
 } else {

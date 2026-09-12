@@ -114,7 +114,7 @@ outra e a linha seguinte muda de posição.
 - Outras ações em lote (exportar, mudar status).
 - Lixeira / desfazer exclusão.
 - i18n: a página ainda usa textos fixos em pt-BR; os novos seguem o mesmo padrão.
-- Mudança de regra de permissão — `docs/permissoes-usuarios.md` continua válido.
+- Mudança de regra de permissão — `docs/user-permissions.md` continua válido.
 
 ## Testes
 

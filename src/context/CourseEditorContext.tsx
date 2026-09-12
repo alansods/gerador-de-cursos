@@ -151,7 +151,7 @@ export function CourseEditorProvider({ children }: { children: React.ReactNode }
     () => ({
       currentCourse,
       editMode: currentCourse !== null,
-      // sem curso selecionado a query fica ociosa, e ociosa não é carregando
+      // with no course selected the query is idle, and idle is not loading
       loading: selectedCourse !== null && isLoading,
     }),
     [currentCourse, selectedCourse, isLoading]

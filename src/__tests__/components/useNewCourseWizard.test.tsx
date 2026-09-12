@@ -27,8 +27,8 @@ function fillManual(result: { current: ReturnType<typeof useNewCourseWizard> }) 
 
 beforeEach(() => sessionStorage.clear())
 
-describe('useNovoCursoWizard', () => {
-  it('começa na etapa 1, sem método e com layout padrão', () => {
+describe('useNewCourseWizard', () => {
+  it('starts on step 1, with no method and the default layout', () => {
     const { result } = renderHook(() => useNewCourseWizard())
 
     expect(result.current.state.step).toBe(1)
@@ -37,7 +37,7 @@ describe('useNovoCursoWizard', () => {
     expect(result.current.isStepValid(1)).toBe(false)
   })
 
-  it('não avança sem método e passa a mostrar o erro', () => {
+  it('does not advance without a method and starts showing the error', () => {
     const { result } = renderHook(() => useNewCourseWizard())
 
     act(() => {
@@ -48,7 +48,7 @@ describe('useNovoCursoWizard', () => {
     expect(result.current.submitted).toBe(true)
   })
 
-  it('avança quando a etapa é válida', () => {
+  it('advances once the step is valid', () => {
     const { result } = renderHook(() => useNewCourseWizard())
 
     act(() => result.current.setMethod('manual'))
@@ -59,7 +59,7 @@ describe('useNovoCursoWizard', () => {
     expect(result.current.state.step).toBe(2)
   })
 
-  it('bloqueia a etapa 2 manual até todos os campos ficarem válidos', () => {
+  it('blocks the manual step 2 until every field is valid', () => {
     const { result } = renderHook(() => useNewCourseWizard())
 
     act(() => result.current.setMethod('manual'))
@@ -69,7 +69,7 @@ describe('useNovoCursoWizard', () => {
     expect(result.current.isStepValid(2)).toBe(true)
   })
 
-  it('só mostra erro do campo depois do blur ou da tentativa de avançar', () => {
+  it('shows a field error only after blur or an attempt to advance', () => {
     const { result } = renderHook(() => useNewCourseWizard())
 
     act(() => result.current.setMethod('manual'))
@@ -79,7 +79,7 @@ describe('useNovoCursoWizard', () => {
     expect(result.current.showError('title')).toBe(true)
   })
 
-  it('exige documento válido na etapa 2 da IA', () => {
+  it('requires a valid document on the AI step 2', () => {
     const { result } = renderHook(() => useNewCourseWizard())
 
     act(() => result.current.setMethod('ia'))
@@ -90,7 +90,7 @@ describe('useNovoCursoWizard', () => {
     expect(result.current.documentError).toBe('')
   })
 
-  it('recusa arquivo fora do formato e mantém a etapa inválida', () => {
+  it('rejects a file of the wrong format and keeps the step invalid', () => {
     const { result } = renderHook(() => useNewCourseWizard())
 
     act(() => result.current.setMethod('ia'))
@@ -101,7 +101,7 @@ describe('useNovoCursoWizard', () => {
     expect(result.current.isStepValid(2)).toBe(false)
   })
 
-  it('avisa sobre arquivo grande sem bloquear', () => {
+  it('warns about a large file without blocking', () => {
     const { result } = renderHook(() => useNewCourseWizard())
 
     act(() => result.current.setMethod('ia'))
@@ -111,7 +111,7 @@ describe('useNovoCursoWizard', () => {
     expect(result.current.documentWarning).toContain('Arquivo grande')
   })
 
-  it('volta para etapas já visitadas e ignora salto para as futuras', () => {
+  it('goes back to visited steps and ignores a jump to future ones', () => {
     const { result } = renderHook(() => useNewCourseWizard())
 
     act(() => result.current.setMethod('manual'))
@@ -131,7 +131,7 @@ describe('useNovoCursoWizard', () => {
     expect(result.current.state.step).toBe(1)
   })
 
-  it('sinaliza a conclusão apenas na última etapa', () => {
+  it('signals completion only on the last step', () => {
     const { result } = renderHook(() => useNewCourseWizard())
 
     fillManual(result)
@@ -155,7 +155,7 @@ describe('useNovoCursoWizard', () => {
     expect(finished).toBe(true)
   })
 
-  it('formata a carga horária no payload de salvamento', () => {
+  it('formats the workload in the save payload', () => {
     const { result } = renderHook(() => useNewCourseWizard())
 
     fillManual(result)
@@ -168,7 +168,7 @@ describe('useNovoCursoWizard', () => {
     })
   })
 
-  it('guarda o rascunho e restaura no próximo mount', () => {
+  it('stores the draft and restores it on the next mount', () => {
     const { result, unmount } = renderHook(() => useNewCourseWizard())
 
     fillManual(result)
@@ -180,7 +180,7 @@ describe('useNovoCursoWizard', () => {
     expect(restored.current.state.method).toBe('manual')
   })
 
-  it('limpa o rascunho ao reiniciar', () => {
+  it('clears the draft on reset', () => {
     const { result } = renderHook(() => useNewCourseWizard())
 
     fillManual(result)
