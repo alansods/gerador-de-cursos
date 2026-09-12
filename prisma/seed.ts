@@ -28,204 +28,204 @@ const prisma = new PrismaClient({
 const sampleUnits = [
   {
     id: 'unit-1',
-    titulo: 'Fundamentos do Next.js',
-    descricao:
+    title: 'Fundamentos do Next.js',
+    description:
       'Nesta unidade você aprenderá os conceitos fundamentais do Next.js, incluindo sua arquitetura, recursos principais e como ele se diferencia do React puro.',
-    ordem: 0,
-    conteudo: [
+    order: 0,
+    blocks: [
       {
         id: 'content-1-1',
-        tipo: 'titulo',
-        conteudo: 'O que é Next.js?',
-        ordem: 0,
-        colunas: 12,
+        type: 'heading',
+        content: 'O que é Next.js?',
+        order: 0,
+        columns: 12,
       },
       {
         id: 'content-1-2',
-        tipo: 'paragrafo',
-        conteudo:
+        type: 'paragraph',
+        content:
           'Next.js é um framework React para produção criado pela Vercel. Ele oferece renderização híbrida estática e do servidor, otimização automática de imagens, code splitting e muito mais. O Next.js foi projetado para resolver problemas comuns no desenvolvimento React, como configuração complexa, otimização de performance e SEO.',
-        ordem: 1,
-        colunas: 12,
-        alinhamento: 'justificado',
+        order: 1,
+        columns: 12,
+        alignment: 'justify',
       },
       {
         id: 'content-1-3',
-        tipo: 'subtitulo',
-        conteudo: 'Principais Características',
-        ordem: 2,
-        colunas: 12,
+        type: 'subheading',
+        content: 'Principais Características',
+        order: 2,
+        columns: 12,
       },
       {
         id: 'content-1-4',
-        tipo: 'paragrafo',
-        conteudo:
+        type: 'paragraph',
+        content:
           '<ul><li><strong>Server-Side Rendering (SSR):</strong> Renderização no servidor para melhor SEO e performance inicial</li><li><strong>Static Site Generation (SSG):</strong> Geração de páginas estáticas em tempo de build</li><li><strong>Image Optimization:</strong> Otimização automática de imagens com lazy loading</li><li><strong>API Routes:</strong> Criação de APIs RESTful diretamente no projeto</li><li><strong>TypeScript Support:</strong> Suporte nativo ao TypeScript</li></ul>',
-        ordem: 3,
-        colunas: 12,
-        alinhamento: 'esquerda',
+        order: 3,
+        columns: 12,
+        alignment: 'left',
       },
       {
         id: 'content-1-5',
-        tipo: 'titulo',
-        conteudo: 'App Router',
-        ordem: 4,
-        colunas: 12,
+        type: 'heading',
+        content: 'App Router',
+        order: 4,
+        columns: 12,
       },
       {
         id: 'content-1-6',
-        tipo: 'paragrafo',
-        conteudo:
+        type: 'paragraph',
+        content:
           'O App Router é a nova arquitetura de roteamento introduzida no Next.js 13 e aprimorada no Next.js 14. Ele utiliza o sistema de arquivos para definir rotas, oferecendo layouts compartilhados, loading states, error boundaries e muito mais. Esta nova abordagem torna o desenvolvimento mais intuitivo e permite melhor organização do código.',
-        ordem: 5,
-        colunas: 12,
-        alinhamento: 'justificado',
+        order: 5,
+        columns: 12,
+        alignment: 'justify',
       },
     ],
   },
   {
     id: 'unit-2',
-    titulo: 'Server Components',
-    descricao:
+    title: 'Server Components',
+    description:
       'Explore os React Server Components e aprenda como renderizar componentes no servidor para melhorar performance e reduzir o tamanho do bundle JavaScript.',
-    ordem: 1,
-    conteudo: [
+    order: 1,
+    blocks: [
       {
         id: 'content-2-1',
-        tipo: 'titulo',
-        conteudo: 'React Server Components',
-        ordem: 0,
-        colunas: 12,
+        type: 'heading',
+        content: 'React Server Components',
+        order: 0,
+        columns: 12,
       },
       {
         id: 'content-2-2',
-        tipo: 'paragrafo',
-        conteudo:
+        type: 'paragraph',
+        content:
           'Os Server Components são uma nova forma de criar componentes React que são renderizados exclusivamente no servidor. Diferente dos componentes tradicionais que são enviados ao cliente como JavaScript, os Server Components permanecem no servidor, reduzindo significativamente o tamanho do bundle enviado ao navegador.',
-        ordem: 1,
-        colunas: 12,
-        alinhamento: 'justificado',
+        order: 1,
+        columns: 12,
+        alignment: 'justify',
       },
       {
         id: 'content-2-3',
-        tipo: 'subtitulo',
-        conteudo: 'Vantagens dos Server Components',
-        ordem: 2,
-        colunas: 12,
+        type: 'subheading',
+        content: 'Vantagens dos Server Components',
+        order: 2,
+        columns: 12,
       },
       {
         id: 'content-2-4',
-        tipo: 'paragrafo',
-        conteudo:
+        type: 'paragraph',
+        content:
           'As principais vantagens incluem: acesso direto a recursos do servidor (como bancos de dados e APIs internas), melhor segurança (código sensível não é enviado ao cliente), e melhor performance (menos JavaScript no cliente significa tempos de carregamento mais rápidos).',
-        ordem: 3,
-        colunas: 12,
-        alinhamento: 'justificado',
+        order: 3,
+        columns: 12,
+        alignment: 'justify',
       },
       {
         id: 'content-2-5',
-        tipo: 'subtitulo',
-        conteudo: 'Quando Usar Server Components',
-        ordem: 4,
-        colunas: 6,
+        type: 'subheading',
+        content: 'Quando Usar Server Components',
+        order: 4,
+        columns: 6,
       },
       {
         id: 'content-2-6',
-        tipo: 'subtitulo',
-        conteudo: 'Quando Usar Client Components',
-        ordem: 4,
-        colunas: 6,
+        type: 'subheading',
+        content: 'Quando Usar Client Components',
+        order: 4,
+        columns: 6,
       },
       {
         id: 'content-2-7',
-        tipo: 'paragrafo',
-        conteudo:
+        type: 'paragraph',
+        content:
           'Use Server Components quando precisar: buscar dados, acessar recursos do backend, manter informações sensíveis no servidor, ou reduzir JavaScript no cliente.',
-        ordem: 5,
-        colunas: 6,
-        alinhamento: 'justificado',
+        order: 5,
+        columns: 6,
+        alignment: 'justify',
       },
       {
         id: 'content-2-8',
-        tipo: 'paragrafo',
-        conteudo:
+        type: 'paragraph',
+        content:
           'Use Client Components quando precisar: usar hooks do React (useState, useEffect), acessar APIs do navegador, lidar com eventos de usuário, ou usar bibliotecas que dependem do cliente.',
-        ordem: 5,
-        colunas: 6,
-        alinhamento: 'justificado',
+        order: 5,
+        columns: 6,
+        alignment: 'justify',
       },
     ],
   },
   {
     id: 'unit-3',
-    titulo: 'Banco de Dados e APIs',
-    descricao:
+    title: 'Banco de Dados e APIs',
+    description:
       'Aprenda a integrar bancos de dados com Next.js usando Prisma ORM e como criar API Routes para construir backends completos.',
-    ordem: 2,
-    conteudo: [
+    order: 2,
+    blocks: [
       {
         id: 'content-3-1',
-        tipo: 'titulo',
-        conteudo: 'Prisma ORM',
-        ordem: 0,
-        colunas: 12,
+        type: 'heading',
+        content: 'Prisma ORM',
+        order: 0,
+        columns: 12,
       },
       {
         id: 'content-3-2',
-        tipo: 'paragrafo',
-        conteudo:
+        type: 'paragraph',
+        content:
           'Prisma é um ORM (Object-Relational Mapping) moderno e type-safe para Node.js e TypeScript. Ele oferece uma camada de abstração para trabalhar com bancos de dados relacionais, fornecendo type-safety completo, migrações automáticas e uma excelente experiência de desenvolvimento.',
-        ordem: 1,
-        colunas: 12,
-        alinhamento: 'justificado',
+        order: 1,
+        columns: 12,
+        alignment: 'justify',
       },
       {
         id: 'content-3-3',
-        tipo: 'subtitulo',
-        conteudo: 'Configuração do Prisma',
-        ordem: 2,
-        colunas: 12,
+        type: 'subheading',
+        content: 'Configuração do Prisma',
+        order: 2,
+        columns: 12,
       },
       {
         id: 'content-3-4',
-        tipo: 'paragrafo',
-        conteudo:
+        type: 'paragraph',
+        content:
           'Para usar o Prisma em um projeto Next.js, você precisa: instalar o Prisma Client, criar um schema.prisma definindo seus modelos, configurar a conexão com o banco de dados, e gerar o cliente Prisma. O Prisma gera tipos TypeScript automaticamente baseados no seu schema, garantindo type-safety em tempo de compilação.',
-        ordem: 3,
-        colunas: 12,
-        alinhamento: 'justificado',
+        order: 3,
+        columns: 12,
+        alignment: 'justify',
       },
       {
         id: 'content-3-5',
-        tipo: 'titulo',
-        conteudo: 'API Routes no Next.js',
-        ordem: 4,
-        colunas: 12,
+        type: 'heading',
+        content: 'API Routes no Next.js',
+        order: 4,
+        columns: 12,
       },
       {
         id: 'content-3-6',
-        tipo: 'paragrafo',
-        conteudo:
+        type: 'paragraph',
+        content:
           'Next.js permite criar APIs RESTful diretamente na pasta app/api (ou pages/api na versão Pages Router). Cada arquivo route.ts (ou route.js) exporta funções nomeadas com os métodos HTTP (GET, POST, PUT, DELETE, etc.), permitindo criar backends completos sem precisar de um servidor separado.',
-        ordem: 5,
-        colunas: 12,
-        alinhamento: 'justificado',
+        order: 5,
+        columns: 12,
+        alignment: 'justify',
       },
       {
         id: 'content-3-7',
-        tipo: 'subtitulo',
-        conteudo: 'Exemplo de API Route',
-        ordem: 6,
-        colunas: 12,
+        type: 'subheading',
+        content: 'Exemplo de API Route',
+        order: 6,
+        columns: 12,
       },
       {
         id: 'content-3-8',
-        tipo: 'paragrafo',
-        conteudo:
+        type: 'paragraph',
+        content:
           'Um exemplo básico de API Route para buscar dados do banco usando Prisma: <pre><code>export async function GET() {\n  const cursos = await prisma.curso.findMany();\n  return NextResponse.json(cursos);\n}</code></pre>',
-        ordem: 7,
-        colunas: 12,
-        alinhamento: 'esquerda',
+        order: 7,
+        columns: 12,
+        alignment: 'left',
       },
     ],
   },
@@ -233,94 +233,94 @@ const sampleUnits = [
 
 const sampleCourses = [
   {
-    titulo: 'Fundamentos de Python para Análise de Dados',
-    descricao:
+    title: 'Fundamentos de Python para Análise de Dados',
+    description:
       'Aprenda Python desde o básico até análise de dados com Pandas, NumPy e visualização com Matplotlib. Ideal para iniciantes em programação.',
-    cargaHoraria: '32 horas',
-    modalidade: 'Online',
-    categoria: 'Tecnologia',
-    unidades: sampleUnits,
+    workload: '32 horas',
+    modality: 'Online',
+    category: 'Tecnologia',
+    units: sampleUnits,
   },
   {
-    titulo: 'Liderança e Gestão de Equipes',
-    descricao:
+    title: 'Liderança e Gestão de Equipes',
+    description:
       'Desenvolva habilidades essenciais de liderança. Aprenda a motivar equipes, gerenciar conflitos e alcançar resultados através de pessoas.',
-    cargaHoraria: '24 horas',
-    modalidade: 'Híbrido',
-    categoria: 'Gestão',
-    unidades: sampleUnits,
+    workload: '24 horas',
+    modality: 'Híbrido',
+    category: 'Gestão',
+    units: sampleUnits,
   },
   {
-    titulo: 'Design Thinking na Prática',
-    descricao:
+    title: 'Design Thinking na Prática',
+    description:
       'Metodologia para resolver problemas complexos de forma criativa. Aprenda as 5 etapas do Design Thinking através de casos reais e workshops práticos.',
-    cargaHoraria: '16 horas',
-    modalidade: 'Presencial',
-    categoria: 'Inovação',
-    unidades: sampleUnits,
+    workload: '16 horas',
+    modality: 'Presencial',
+    category: 'Inovação',
+    units: sampleUnits,
   },
   {
-    titulo: 'Marketing Digital e Growth',
-    descricao:
+    title: 'Marketing Digital e Growth',
+    description:
       'Estratégias de marketing digital para crescimento acelerado. SEO, tráfego pago, funis de conversão, métricas e otimização de campanhas.',
-    cargaHoraria: '28 horas',
-    modalidade: 'Online',
-    categoria: 'Marketing',
-    unidades: sampleUnits,
+    workload: '28 horas',
+    modality: 'Online',
+    category: 'Marketing',
+    units: sampleUnits,
   },
   {
-    titulo: 'Desenvolvimento Web Full Stack',
-    descricao:
+    title: 'Desenvolvimento Web Full Stack',
+    description:
       'Construa aplicações web completas do zero. React, Node.js, APIs RESTful, bancos de dados e deploy em produção.',
-    cargaHoraria: '80 horas',
-    modalidade: 'Online',
-    categoria: 'Tecnologia',
-    unidades: sampleUnits,
+    workload: '80 horas',
+    modality: 'Online',
+    category: 'Tecnologia',
+    units: sampleUnits,
   },
   {
-    titulo: 'Excel Avançado para Negócios',
-    descricao:
+    title: 'Excel Avançado para Negócios',
+    description:
       'Domine fórmulas avançadas, tabelas dinâmicas, macros e automação. Análise de dados corporativos e relatórios profissionais.',
-    cargaHoraria: '20 horas',
-    modalidade: 'Híbrido',
-    categoria: 'Produtividade',
-    unidades: sampleUnits,
+    workload: '20 horas',
+    modality: 'Híbrido',
+    category: 'Produtividade',
+    units: sampleUnits,
   },
   {
-    titulo: 'Comunicação e Oratória',
-    descricao:
+    title: 'Comunicação e Oratória',
+    description:
       'Desenvolva habilidades de comunicação eficaz. Apresentações impactantes, linguagem corporal, storytelling e persuasão.',
-    cargaHoraria: '12 horas',
-    modalidade: 'Presencial',
-    categoria: 'Soft Skills',
-    unidades: sampleUnits,
+    workload: '12 horas',
+    modality: 'Presencial',
+    category: 'Soft Skills',
+    units: sampleUnits,
   },
   {
-    titulo: 'UX/UI Design Moderno',
-    descricao:
+    title: 'UX/UI Design Moderno',
+    description:
       'Crie experiências digitais incríveis. Pesquisa com usuários, wireframes, prototipagem no Figma e testes de usabilidade.',
-    cargaHoraria: '36 horas',
-    modalidade: 'Online',
-    categoria: 'Design',
-    unidades: sampleUnits,
+    workload: '36 horas',
+    modality: 'Online',
+    category: 'Design',
+    units: sampleUnits,
   },
   {
-    titulo: 'Finanças Pessoais e Investimentos',
-    descricao:
+    title: 'Finanças Pessoais e Investimentos',
+    description:
       'Organize suas finanças e aprenda a investir. Orçamento, controle de gastos, renda passiva e estratégias de investimento.',
-    cargaHoraria: '16 horas',
-    modalidade: 'Online',
-    categoria: 'Finanças',
-    unidades: sampleUnits,
+    workload: '16 horas',
+    modality: 'Online',
+    category: 'Finanças',
+    units: sampleUnits,
   },
   {
-    titulo: 'DevOps e Cloud Computing',
-    descricao:
+    title: 'DevOps e Cloud Computing',
+    description:
       'Automação de infraestrutura, CI/CD, Docker, Kubernetes e AWS. Práticas modernas de desenvolvimento e operações.',
-    cargaHoraria: '40 horas',
-    modalidade: 'Online',
-    categoria: 'Tecnologia',
-    unidades: sampleUnits,
+    workload: '40 horas',
+    modality: 'Online',
+    category: 'Tecnologia',
+    units: sampleUnits,
   },
 ]
 
@@ -402,19 +402,19 @@ async function main() {
     try {
       const course = await prisma.course.create({
         data: {
-          title: courseData.titulo,
-          description: courseData.descricao,
-          workload: courseData.cargaHoraria,
-          modality: courseData.modalidade,
-          category: courseData.categoria,
-          units: courseData.unidades,
+          title: courseData.title,
+          description: courseData.description,
+          workload: courseData.workload,
+          modality: courseData.modality,
+          category: courseData.category,
+          units: courseData.units,
           ownerId: adminUser.id,
         },
       })
       createdCourses++
       console.log(`✅ Curso criado: ${course.title}`)
     } catch (error) {
-      console.error(`❌ Erro ao criar curso ${courseData.titulo}:`, error)
+      console.error(`❌ Erro ao criar curso ${courseData.title}:`, error)
     }
   }
 

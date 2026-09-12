@@ -21,13 +21,13 @@ jest.mock('@/components/RichTextEditor', () => ({
   ),
 }))
 
-function mount(type: Block['tipo'], onSave = jest.fn()) {
+function mount(type: Block['type'], onSave = jest.fn()) {
   render(
     <ContentBlockDrawer
       open
       onOpenChange={jest.fn()}
       mode="add"
-      blockData={{ tipo: type }}
+      blockData={{ type }}
       onSave={onSave}
       onCancel={jest.fn()}
     />
@@ -55,7 +55,7 @@ describe('ContentBlockDrawer', () => {
           open
           onOpenChange={jest.fn()}
           mode="add"
-          blockData={{ tipo: type }}
+          blockData={{ type }}
           onSave={jest.fn()}
           onCancel={jest.fn()}
         />
@@ -80,12 +80,12 @@ describe('ContentBlockDrawer', () => {
 
   it('salva o separador sem exigir preenchimento', async () => {
     const user = userEvent.setup()
-    const onSave = mount('separador')
+    const onSave = mount('divider')
 
     await user.click(screen.getByRole('button', { name: /salvar/i }))
 
     expect(onSave).toHaveBeenCalledWith(
-      expect.objectContaining({ tipo: 'separador', estiloSeparador: 'linha' })
+      expect.objectContaining({ type: 'divider', dividerStyle: 'line' })
     )
   })
 
@@ -101,15 +101,15 @@ describe('ContentBlockDrawer', () => {
     expect(errorToast).not.toHaveBeenCalled()
     expect(onSave).toHaveBeenCalledWith(
       expect.objectContaining({
-        tipo: 'tabs',
-        itensTabs: [expect.objectContaining({ titulo: 'Riscos', conteudo: 'Físicos e químicos' })],
+        type: 'tabs',
+        tabItems: [expect.objectContaining({ title: 'Riscos', content: 'Físicos e químicos' })],
       })
     )
   })
 
   it('monta uma pergunta do vídeo interativo e salva', async () => {
     const user = userEvent.setup()
-    const onSave = mount('video-interativo')
+    const onSave = mount('interactive-video')
 
     await user.type(screen.getByPlaceholderText('Digite o título do vídeo...'), 'Uso do capacete')
     await user.type(
@@ -131,15 +131,15 @@ describe('ContentBlockDrawer', () => {
     expect(errorToast).not.toHaveBeenCalled()
     expect(onSave).toHaveBeenCalledWith(
       expect.objectContaining({
-        tipo: 'video-interativo',
+        type: 'interactive-video',
         videoUrl: 'https://b.com/a.mp4',
-        perguntasVideo: [
+        videoQuestions: [
           expect.objectContaining({
-            tempo: '01:30',
-            pergunta: 'O que prende o capacete?',
-            opcaoA: 'O casco',
-            opcaoB: 'A jugular',
-            correta: 'A',
+            time: '01:30',
+            question: 'O que prende o capacete?',
+            optionA: 'O casco',
+            optionB: 'A jugular',
+            correct: 'A',
           }),
         ],
       })
@@ -148,7 +148,7 @@ describe('ContentBlockDrawer', () => {
 
   it('recusa a pergunta do vídeo cuja alternativa correta está vazia', async () => {
     const user = userEvent.setup()
-    const onSave = mount('video-interativo')
+    const onSave = mount('interactive-video')
 
     await user.type(screen.getByPlaceholderText('Digite o título do vídeo...'), 'Aula')
     await user.type(
@@ -166,13 +166,13 @@ describe('ContentBlockDrawer', () => {
 
   it('tem um campo de URL só, sem seletor de fonte, nos dois blocos de vídeo', async () => {
     // Enviar arquivo e colar link são a mesma coisa: um campo, sem escolher a fonte.
-    for (const type of ['video', 'video-interativo'] as const) {
+    for (const type of ['video', 'interactive-video'] as const) {
       const { unmount } = render(
         <ContentBlockDrawer
           open
           onOpenChange={jest.fn()}
           mode="add"
-          blockData={{ tipo: type }}
+          blockData={{ type }}
           onSave={jest.fn()}
           onCancel={jest.fn()}
         />
@@ -187,7 +187,7 @@ describe('ContentBlockDrawer', () => {
 
   it('avisa sobre o pacote offline assim que um link do YouTube é colado', async () => {
     const user = userEvent.setup()
-    mount('video-interativo')
+    mount('interactive-video')
 
     expect(screen.queryByText(/precisará de internet/i)).toBeNull()
 
@@ -201,7 +201,7 @@ describe('ContentBlockDrawer', () => {
 
   it('cobra título do evento na linha do tempo', async () => {
     const user = userEvent.setup()
-    const onSave = mount('linha-do-tempo')
+    const onSave = mount('timeline')
 
     await user.click(screen.getByRole('button', { name: /adicionar/i }))
     await user.type(screen.getByPlaceholderText('Ex.: 1990 ou Março/2024'), '1943')
@@ -234,15 +234,15 @@ describe('ContentBlockDrawer', () => {
     expect(errorToast).not.toHaveBeenCalled()
     expect(onSave).toHaveBeenCalledWith(
       expect.objectContaining({
-        tipo: 'flipcard',
-        itensFlipcard: [
+        type: 'flipcard',
+        flipcardItems: [
           expect.objectContaining({
-            tituloFrente: 'Flexbox',
-            conteudoVerso: 'Layout em uma dimensão',
+            frontTitle: 'Flexbox',
+            backContent: 'Layout em uma dimensão',
           }),
           expect.objectContaining({
-            tituloFrente: 'CSS Grid',
-            conteudoVerso: 'Layout em duas dimensões',
+            frontTitle: 'CSS Grid',
+            backContent: 'Layout em duas dimensões',
           }),
         ],
       })
@@ -258,10 +258,15 @@ describe('ContentBlockDrawer', () => {
         onOpenChange={jest.fn()}
         mode="edit"
         blockData={{
-          tipo: 'flipcard',
-          tipoFrente: 'titulo',
-          tituloFrente: 'Conceito antigo',
-          conteudoVerso: 'Definição antiga',
+          type: 'flipcard',
+          flipcardItems: [
+            {
+              id: 'c-1',
+              frontType: 'title',
+              frontTitle: 'Conceito antigo',
+              backContent: 'Definição antiga',
+            },
+          ],
         }}
         onSave={onSave}
         onCancel={jest.fn()}
@@ -275,10 +280,10 @@ describe('ContentBlockDrawer', () => {
     expect(errorToast).not.toHaveBeenCalled()
     expect(onSave).toHaveBeenCalledWith(
       expect.objectContaining({
-        itensFlipcard: [
+        flipcardItems: [
           expect.objectContaining({
-            tituloFrente: 'Conceito antigo',
-            conteudoVerso: 'Definição antiga',
+            frontTitle: 'Conceito antigo',
+            backContent: 'Definição antiga',
           }),
         ],
       })
@@ -291,7 +296,7 @@ describe('ContentBlockDrawer', () => {
         open
         onOpenChange={jest.fn()}
         mode="add"
-        blockData={{ tipo: 'paragrafo' }}
+        blockData={{ type: 'paragraph' }}
         onSave={jest.fn()}
         onCancel={jest.fn()}
       />
@@ -305,7 +310,7 @@ describe('ContentBlockDrawer', () => {
 
   it('remove item da lista sem afetar os demais', async () => {
     const user = userEvent.setup()
-    const onSave = mount('carrossel')
+    const onSave = mount('carousel')
 
     await user.click(screen.getByRole('button', { name: /adicionar/i }))
     await user.type(
@@ -332,11 +337,11 @@ describe('ContentBlockDrawer', () => {
 
     expect(onSave).toHaveBeenCalledWith(
       expect.objectContaining({
-        itensCarrossel: [
+        carouselItems: [
           expect.objectContaining({
             url: 'https://exemplo.com/a.png',
-            legenda: 'Legenda A',
-            fonte: 'Fonte A',
+            caption: 'Legenda A',
+            source: 'Fonte A',
           }),
         ],
       })
@@ -347,7 +352,7 @@ describe('ContentBlockDrawer', () => {
 describe('fonte do vídeo interativo ao salvar', () => {
   it('entrega fonteVideo youtube no objeto salvo', async () => {
     const user = userEvent.setup()
-    const onSave = mount('video-interativo')
+    const onSave = mount('interactive-video')
 
     await user.type(screen.getByPlaceholderText('Digite o título do vídeo...'), 'Aula')
 
@@ -367,8 +372,8 @@ describe('fonte do vídeo interativo ao salvar', () => {
     expect(errorToast).not.toHaveBeenCalled()
     expect(onSave).toHaveBeenCalledWith(
       expect.objectContaining({
-        tipo: 'video-interativo',
-        fonteVideo: 'youtube',
+        type: 'interactive-video',
+        videoSource: 'youtube',
         videoUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
       })
     )

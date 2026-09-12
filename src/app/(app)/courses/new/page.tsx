@@ -138,7 +138,7 @@ export default function NewCoursePage() {
           <NewCourseWizard
             wizard={wizard}
             extracting={extracting}
-            createdCourseTitle={wizard.state.data.titulo || 'Seu curso'}
+            createdCourseTitle={wizard.state.data.title || 'Seu curso'}
             onCancel={() => router.push('/courses')}
             onFinish={finish}
             onDownloadSample={downloadSample}

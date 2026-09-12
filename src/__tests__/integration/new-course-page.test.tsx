@@ -103,12 +103,12 @@ describe('Página Novo Curso', () => {
     await waitFor(() =>
       expect(mockCreateCourse).toHaveBeenCalledWith(
         expect.objectContaining({
-          titulo: 'Fundamentos de Automação',
-          categoria: 'Tecnologia',
-          cargaHoraria: '40 horas',
-          modalidade: 'Online',
-          layout: 'classico',
-          unidades: [],
+          title: 'Fundamentos de Automação',
+          category: 'Tecnologia',
+          workload: '40 horas',
+          modality: 'Online',
+          layout: 'classic',
+          units: [],
         })
       )
     )
@@ -166,7 +166,7 @@ describe('Página Novo Curso', () => {
       markers: { found: false, total: 0, byType: {}, mode: 'auto' },
     })
     mockGenerate.mockResolvedValue({
-      course: { titulo: 'Curso gerado', unidades: [] } as never,
+      course: { title: 'Curso gerado', units: [] } as never,
       summary: { units: 3, blocks: 12, byType: { quiz: 2, accordion: 1 }, discarded: [] },
     })
 

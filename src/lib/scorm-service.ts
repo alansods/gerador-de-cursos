@@ -23,7 +23,7 @@ function escapeHtml(str: string | undefined | null): string {
 // 1. GERADOR DO MANIFESTO (imsmanifest.xml)
 // =======================================================================
 export function generateManifest(course: Course, files: string[]): string {
-  const sanitizedTitle = course.titulo.replace(/[^a-zA-Z0-9_-]/g, '_')
+  const sanitizedTitle = course.title.replace(/[^a-zA-Z0-9_-]/g, '_')
   const fileList = files.map((f) => `      <file href="${escapeHtml(f)}"/>`).join('\n')
 
   return `<?xml version="1.0" encoding="UTF-8"?>
@@ -40,9 +40,9 @@ export function generateManifest(course: Course, files: string[]): string {
   </metadata>
   <organizations default="ORG-${sanitizedTitle}">
     <organization identifier="ORG-${sanitizedTitle}">
-      <title>${escapeHtml(course.titulo)}</title>
+      <title>${escapeHtml(course.title)}</title>
       <item identifier="ITEM-${sanitizedTitle}" identifierref="RES-${sanitizedTitle}">
-        <title>${escapeHtml(course.titulo)}</title>
+        <title>${escapeHtml(course.title)}</title>
       </item>
     </organization>
   </organizations>
@@ -67,7 +67,7 @@ export async function generateSCORMFromPlayerDist(
   course: Course,
   courseId?: string
 ): Promise<Buffer> {
-  console.log(`📦 [SCORM Service] Iniciando geração via Vite player para: ${course.titulo}`)
+  console.log(`📦 [SCORM Service] Iniciando geração via Vite player para: ${course.title}`)
 
   const distDir = path.join(process.cwd(), 'player', 'dist')
 
@@ -134,7 +134,7 @@ export async function generateSCORMFromPlayerDist(
   // 4. Gerar imsmanifest.xml
   zip.file('imsmanifest.xml', generateManifest(course, zipFiles))
 
-  console.log(`✅ [SCORM Service] Pacote (Vite player) gerado com sucesso para: ${course.titulo}`)
+  console.log(`✅ [SCORM Service] Pacote (Vite player) gerado com sucesso para: ${course.title}`)
 
   return zip.generateAsync({
     type: 'nodebuffer',

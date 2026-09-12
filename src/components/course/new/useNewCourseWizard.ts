@@ -32,11 +32,11 @@ const INITIAL_STATE: WizardState = {
   method: null,
   layout: DEFAULT_LAYOUT_ID,
   data: {
-    titulo: '',
-    categoria: '',
-    descricao: '',
-    cargaHoraria: '',
-    modalidade: DEFAULT_MODALITY,
+    title: '',
+    category: '',
+    description: '',
+    workload: '',
+    modality: DEFAULT_MODALITY,
   },
 }
 
@@ -63,12 +63,7 @@ export function useNewCourseWizard() {
   }, [])
 
   const hasFilledData = useMemo(() => {
-    const {
-      titulo: title,
-      categoria: category,
-      descricao: description,
-      cargaHoraria: workload,
-    } = state.data
+    const { title, category, description, workload } = state.data
     return !!(state.method || title || category || description || workload || file)
   }, [state, file])
 
@@ -208,9 +203,9 @@ export function useNewCourseWizard() {
   const dataToSave = useCallback(
     () => ({
       ...state.data,
-      cargaHoraria: formatWorkload(state.data.cargaHoraria),
+      workload: formatWorkload(state.data.workload),
       layout: state.layout,
-      unidades: [],
+      units: [],
     }),
     [state]
   )

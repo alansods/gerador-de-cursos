@@ -162,11 +162,11 @@ export async function POST(request: NextRequest) {
 
     // Registrar atividade
     await logActivity({
-      type: 'usuario_criado',
+      type: 'user_created',
       title: 'Novo usuário criado',
       description: name,
       entityId: user.id,
-      entityType: 'usuario',
+      entityType: 'user',
       userId: authResult.user.id,
     })
 
@@ -237,11 +237,11 @@ export async function PUT(request: NextRequest) {
 
     // Registrar atividade
     await logActivity({
-      type: 'usuario_editado',
+      type: 'user_updated',
       title: 'Usuário editado',
       description: user.name,
       entityId: user.id,
-      entityType: 'usuario',
+      entityType: 'user',
       userId: authResult.user.id,
     })
 
@@ -296,11 +296,11 @@ export async function DELETE(request: NextRequest) {
 
     // Registrar atividade
     await logActivity({
-      type: 'usuario_deletado',
+      type: 'user_deleted',
       title: 'Usuário deletado',
       description: existingUser?.name || 'Usuário',
       entityId: id,
-      entityType: 'usuario',
+      entityType: 'user',
       userId: authResult.user.id,
     })
 

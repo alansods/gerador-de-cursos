@@ -23,16 +23,16 @@ import { ManageCollaborators } from '@/components/collaboration/ManageCollaborat
 
 interface Unit {
   id: string
-  titulo: string
-  descricao?: string
-  conteudo?: unknown[]
+  title: string
+  description?: string
+  blocks?: unknown[]
 }
 
 interface CourseData {
-  titulo: string
-  descricao: string
-  categoria?: string
-  cargaHoraria: string
+  title: string
+  description: string
+  category?: string
+  workload: string
   layout?: string
   bannerVideoUrl?: string
 }
@@ -110,9 +110,9 @@ export function CourseSettingsDrawer({
               {(props) => (
                 <Input
                   {...props}
-                  value={localCourseData.titulo}
+                  value={localCourseData.title}
                   onChange={(e) =>
-                    setLocalCourseData({ ...localCourseData, titulo: e.target.value })
+                    setLocalCourseData({ ...localCourseData, title: e.target.value })
                   }
                   placeholder="Digite o nome do curso"
                   className="w-full"
@@ -155,9 +155,9 @@ export function CourseSettingsDrawer({
               {(props) => (
                 <Textarea
                   {...props}
-                  value={localCourseData.descricao}
+                  value={localCourseData.description}
                   onChange={(e) =>
-                    setLocalCourseData({ ...localCourseData, descricao: e.target.value })
+                    setLocalCourseData({ ...localCourseData, description: e.target.value })
                   }
                   placeholder="Digite uma breve descrição"
                   rows={4}
@@ -169,9 +169,9 @@ export function CourseSettingsDrawer({
             <FormField label="Categoria">
               {(props) => (
                 <Select
-                  value={localCourseData.categoria}
+                  value={localCourseData.category}
                   onValueChange={(value) =>
-                    setLocalCourseData({ ...localCourseData, categoria: value })
+                    setLocalCourseData({ ...localCourseData, category: value })
                   }
                 >
                   <SelectTrigger id={props.id} className="w-full">
@@ -192,9 +192,9 @@ export function CourseSettingsDrawer({
               {(props) => (
                 <Input
                   {...props}
-                  value={localCourseData.cargaHoraria}
+                  value={localCourseData.workload}
                   onChange={(e) =>
-                    setLocalCourseData({ ...localCourseData, cargaHoraria: e.target.value })
+                    setLocalCourseData({ ...localCourseData, workload: e.target.value })
                   }
                   placeholder="Ex: 20 horas"
                   className="w-full"

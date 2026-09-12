@@ -2,10 +2,10 @@ import { act, renderHook } from '@testing-library/react'
 import { useNewCourseWizard } from '@/components/course/new/useNewCourseWizard'
 
 const validData = {
-  titulo: 'Fundamentos de Automação',
-  categoria: 'Tecnologia',
-  descricao: 'Ao final o aluno identifica componentes e configura um CLP básico com segurança.',
-  cargaHoraria: '40',
+  title: 'Fundamentos de Automação',
+  category: 'Tecnologia',
+  description: 'Ao final o aluno identifica componentes e configura um CLP básico com segurança.',
+  workload: '40',
 }
 
 function docx(name = 'apostila.docx', size = 400 * 1024): File {
@@ -20,7 +20,7 @@ function fillManual(result: { current: ReturnType<typeof useNewCourseWizard> }) 
   act(() => {
     result.current.setMethod('manual')
     for (const [field, value] of Object.entries(validData)) {
-      result.current.setField(field as 'titulo', value)
+      result.current.setField(field as 'title', value)
     }
   })
 }
@@ -33,7 +33,7 @@ describe('useNovoCursoWizard', () => {
 
     expect(result.current.state.step).toBe(1)
     expect(result.current.state.method).toBeNull()
-    expect(result.current.state.layout).toBe('classico')
+    expect(result.current.state.layout).toBe('classic')
     expect(result.current.isStepValid(1)).toBe(false)
   })
 
@@ -73,10 +73,10 @@ describe('useNovoCursoWizard', () => {
     const { result } = renderHook(() => useNewCourseWizard())
 
     act(() => result.current.setMethod('manual'))
-    expect(result.current.showError('titulo')).toBe(false)
+    expect(result.current.showError('title')).toBe(false)
 
-    act(() => result.current.markTouched('titulo'))
-    expect(result.current.showError('titulo')).toBe(true)
+    act(() => result.current.markTouched('title'))
+    expect(result.current.showError('title')).toBe(true)
   })
 
   it('exige documento válido na etapa 2 da IA', () => {
@@ -161,10 +161,10 @@ describe('useNovoCursoWizard', () => {
     fillManual(result)
 
     expect(result.current.dataToSave()).toMatchObject({
-      cargaHoraria: '40 horas',
-      layout: 'classico',
-      modalidade: 'Online',
-      unidades: [],
+      workload: '40 horas',
+      layout: 'classic',
+      modality: 'Online',
+      units: [],
     })
   })
 
@@ -176,7 +176,7 @@ describe('useNovoCursoWizard', () => {
 
     const { result: restored } = renderHook(() => useNewCourseWizard())
 
-    expect(restored.current.state.data.titulo).toBe(validData.titulo)
+    expect(restored.current.state.data.title).toBe(validData.title)
     expect(restored.current.state.method).toBe('manual')
   })
 

@@ -122,7 +122,7 @@ export function ReviewPanel({ course, onStatusChanged }: Props) {
             Revisão
             <Badge className={COURSE_STATUS_CLASSES[status]}>{COURSE_STATUS_LABELS[status]}</Badge>
           </SheetTitle>
-          <SheetDescription className="line-clamp-2">{course.titulo}</SheetDescription>
+          <SheetDescription className="line-clamp-2">{course.title}</SheetDescription>
         </SheetHeader>
 
         <div className="flex-1 overflow-y-auto py-4 space-y-3">

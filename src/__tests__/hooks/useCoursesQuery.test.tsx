@@ -41,13 +41,13 @@ describe('useCursosQuery', () => {
 
   it('encadeia o cursor da página seguinte e concatena as linhas', async () => {
     const page1 = {
-      courses: [{ id: 'a', titulo: 'Curso A' }],
+      courses: [{ id: 'a', title: 'Curso A' }],
       nextCursor: 'a',
       hasMore: true,
       total: 2,
     }
     const page2 = {
-      courses: [{ id: 'b', titulo: 'Curso B' }],
+      courses: [{ id: 'b', title: 'Curso B' }],
       nextCursor: null,
       hasMore: false,
       total: 2,

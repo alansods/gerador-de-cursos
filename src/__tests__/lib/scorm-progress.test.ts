@@ -12,7 +12,7 @@ import {
 
 const course = (id: string, ...units: string[]) => ({
   id,
-  unidades: units.map((u) => ({ id: u })),
+  units: units.map((u) => ({ id: u })),
 })
 
 describe('hashCurso', () => {
@@ -34,8 +34,8 @@ describe('encode/decode de suspend_data', () => {
 
   it('faz ida e volta preservando visitadas e quizzes', () => {
     const state: ProgressState = {
-      visitadas: [true, false, true],
-      quizzes: { [quizKey(0, 2)]: { acertos: 3, total: 5 } },
+      visited: [true, false, true],
+      quizzes: { [quizKey(0, 2)]: { correct: 3, total: 5 } },
     }
 
     const decoded = decodeSuspendData(encodeSuspendData(state, hash), hash, 3)
@@ -58,17 +58,17 @@ describe('encode/decode de suspend_data', () => {
   })
 
   it('ajusta o bitmap quando o curso ganhou unidades', () => {
-    const salvo = encodeSuspendData({ visitadas: [true, true], quizzes: {} }, hash)
+    const salvo = encodeSuspendData({ visited: [true, true], quizzes: {} }, hash)
 
-    expect(decodeSuspendData(salvo, hash, 4)?.visitadas).toEqual([true, true, false, false])
+    expect(decodeSuspendData(salvo, hash, 4)?.visited).toEqual([true, true, false, false])
   })
 
   it('nunca ultrapassa o limite de 4096 caracteres', () => {
     const quizzes: ProgressState['quizzes'] = {}
     for (let u = 0; u < 200; u++) {
-      for (let b = 0; b < 10; b++) quizzes[quizKey(u, b)] = { acertos: 9, total: 10 }
+      for (let b = 0; b < 10; b++) quizzes[quizKey(u, b)] = { correct: 9, total: 10 }
     }
-    const state = { visitadas: new Array(200).fill(true), quizzes }
+    const state = { visited: new Array(200).fill(true), quizzes }
 
     const encoded = encodeSuspendData(state, hash)
 
@@ -78,34 +78,30 @@ describe('encode/decode de suspend_data', () => {
   it('preserva as unidades visitadas mesmo ao truncar os quizzes', () => {
     const quizzes: ProgressState['quizzes'] = {}
     for (let u = 0; u < 200; u++) {
-      for (let b = 0; b < 10; b++) quizzes[quizKey(u, b)] = { acertos: 9, total: 10 }
+      for (let b = 0; b < 10; b++) quizzes[quizKey(u, b)] = { correct: 9, total: 10 }
     }
     const visited = new Array(200).fill(false)
     visited[0] = true
     visited[199] = true
 
-    const decoded = decodeSuspendData(
-      encodeSuspendData({ visitadas: visited, quizzes }, hash),
-      hash,
-      200
-    )
+    const decoded = decodeSuspendData(encodeSuspendData({ visited, quizzes }, hash), hash, 200)
 
-    expect(decoded?.visitadas[0]).toBe(true)
-    expect(decoded?.visitadas[199]).toBe(true)
+    expect(decoded?.visited[0]).toBe(true)
+    expect(decoded?.visited[199]).toBe(true)
     expect(decoded?.quizzes).toEqual({})
   })
 })
 
 describe('calcularProgresso', () => {
   it('só marca concluído com todas as unidades visitadas', () => {
-    expect(calculateProgress({ visitadas: [true, true, false], quizzes: {} })).toEqual({
+    expect(calculateProgress({ visited: [true, true, false], quizzes: {} })).toEqual({
       visited: 2,
       total: 3,
       percentage: 67,
       completed: false,
     })
 
-    expect(calculateProgress({ visitadas: [true, true, true], quizzes: {} }).completed).toBe(true)
+    expect(calculateProgress({ visited: [true, true, true], quizzes: {} }).completed).toBe(true)
   })
 
   it('não marca concluído um curso sem unidades', () => {
@@ -120,8 +116,8 @@ describe('calcularNota', () => {
 
   it('agrega acertos de todos os quizzes em 0-100', () => {
     const state: ProgressState = {
-      visitadas: [true],
-      quizzes: { '0-1': { acertos: 3, total: 4 }, '0-2': { acertos: 1, total: 4 } },
+      visited: [true],
+      quizzes: { '0-1': { correct: 3, total: 4 }, '0-2': { correct: 1, total: 4 } },
     }
 
     expect(calculateScore(state)).toBe(50)

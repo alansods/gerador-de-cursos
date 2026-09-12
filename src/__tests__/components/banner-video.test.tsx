@@ -15,15 +15,15 @@ jest.mock('@/components/course/LayoutSelector', () => ({
 
 const baseCourse: Course = {
   id: 'curso-1',
-  titulo: 'Fundamentos de Cozinha Italiana',
-  descricao: 'Massas frescas, molhos-mãe e risotos clássicos.',
-  cargaHoraria: '20 horas',
-  modalidade: 'Presencial',
-  categoria: 'Gastronomia',
-  layout: 'classico',
-  dataCriacao: new Date(),
-  dataModificacao: new Date(),
-  unidades: [],
+  title: 'Fundamentos de Cozinha Italiana',
+  description: 'Massas frescas, molhos-mãe e risotos clássicos.',
+  workload: '20 horas',
+  modality: 'Presencial',
+  category: 'Gastronomia',
+  layout: 'classic',
+  createdAt: new Date(),
+  updatedAt: new Date(),
+  units: [],
 }
 
 function openDrawer(bannerVideoUrl = '', onSave = jest.fn()) {
@@ -32,11 +32,11 @@ function openDrawer(bannerVideoUrl = '', onSave = jest.fn()) {
       open
       onOpenChange={jest.fn()}
       courseData={{
-        titulo: baseCourse.titulo,
-        descricao: baseCourse.descricao,
-        categoria: baseCourse.categoria,
-        cargaHoraria: baseCourse.cargaHoraria,
-        layout: 'classico',
+        title: baseCourse.title,
+        description: baseCourse.description,
+        category: baseCourse.category,
+        workload: baseCourse.workload,
+        layout: 'classic',
         bannerVideoUrl,
       }}
       units={[]}
@@ -125,7 +125,7 @@ describe('banner do layout clássico', () => {
 
     const iframe = container.querySelector('iframe')
     expect(iframe).toHaveAttribute('src', 'https://www.youtube.com/embed/dQw4w9WgXcQ')
-    expect(iframe).toHaveAttribute('title', baseCourse.titulo)
+    expect(iframe).toHaveAttribute('title', baseCourse.title)
   })
 
   it('ignora link que não é do YouTube em vez de embutir url inválida', () => {

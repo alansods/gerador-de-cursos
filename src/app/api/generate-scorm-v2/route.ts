@@ -32,15 +32,15 @@ export async function POST(req: NextRequest) {
     const courseData = course as Course
     const courseId = courseData.id
 
-    console.log(`📦 [API generate-scorm-v2] Iniciando geração para: ${courseData.titulo}`)
+    console.log(`📦 [API generate-scorm-v2] Iniciando geração para: ${courseData.title}`)
     console.log(`   📍 Curso ID: ${courseId}`)
-    console.log(`   📍 Unidades: ${courseData.unidades?.length || 0}`)
+    console.log(`   📍 Unidades: ${courseData.units?.length || 0}`)
 
     // Criar job no banco de dados
     const job = await prisma.sCORMJob.create({
       data: {
         courseId,
-        courseTitle: courseData.titulo,
+        courseTitle: courseData.title,
         status: 'pending',
         progress: 'Job criado, aguardando início da geração...',
       },

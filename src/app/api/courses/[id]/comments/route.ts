@@ -76,11 +76,11 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     })
 
     await logActivity({
-      type: 'curso_comentado',
+      type: 'course_commented',
       title: 'Comentário em curso',
       description: course.title,
       entityId: id,
-      entityType: 'curso',
+      entityType: 'course',
       userId: authResult.user.id,
     })
 

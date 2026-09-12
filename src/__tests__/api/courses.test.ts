@@ -32,7 +32,7 @@ async function createAuthToken(userId: string = '1', role: string = 'ADMIN') {
   return await new SignJWT({
     id: userId,
     email: 'testuser@senai.br',
-    nome: 'Test User',
+    name: 'Test User',
     cargo: 'Administrador',
     role,
   })
@@ -77,7 +77,7 @@ describe('API - Cursos', () => {
           modality: 'Online',
           category: 'Tecnologia',
           units: [],
-          layout: 'classico',
+          layout: 'classic',
           slug: null,
           status: 'IN_PROGRESS',
           version: 0,
@@ -96,7 +96,7 @@ describe('API - Cursos', () => {
           modality: 'Presencial',
           category: 'Gestão',
           units: [],
-          layout: 'classico',
+          layout: 'classic',
           slug: null,
           status: 'IN_PROGRESS',
           version: 0,
@@ -147,7 +147,7 @@ describe('API - Cursos', () => {
           modality: 'Online',
           category: 'Tecnologia',
           units: [],
-          layout: 'classico',
+          layout: 'classic',
           slug: null,
           status: 'IN_PROGRESS',
           version: 0,
@@ -198,7 +198,7 @@ describe('API - Cursos', () => {
         modality: 'Online',
         category: 'Tecnologia',
         units: [],
-        layout: 'classico',
+        layout: 'classic',
         slug: null,
         status: 'IN_PROGRESS',
         version: 0,
@@ -274,7 +274,7 @@ describe('API - Cursos', () => {
         modality: 'Online',
         category: 'Tecnologia',
         units: [],
-        layout: 'classico',
+        layout: 'classic',
         slug: null,
         status: 'IN_PROGRESS',
         version: 0,
@@ -296,12 +296,12 @@ describe('API - Cursos', () => {
           Cookie: `auth-token=${token}`,
         },
         body: JSON.stringify({
-          titulo: 'Novo Curso',
-          descricao: 'Descrição do novo curso',
-          cargaHoraria: '40h',
-          modalidade: 'Online',
-          categoria: 'Tecnologia',
-          unidades: [],
+          title: 'Novo Curso',
+          description: 'Descrição do novo curso',
+          workload: '40h',
+          modality: 'Online',
+          category: 'Tecnologia',
+          units: [],
         }),
       })
 
@@ -312,7 +312,7 @@ describe('API - Cursos', () => {
       // Assert
       expect(response.status).toBe(201)
       expect(data.success).toBe(true)
-      expect(data.course.titulo).toBe('Novo Curso')
+      expect(data.course.title).toBe('Novo Curso')
       expect(mockPrisma.course.create).toHaveBeenCalledTimes(1)
     })
 
@@ -324,11 +324,11 @@ describe('API - Cursos', () => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          titulo: 'Novo Curso',
-          descricao: 'Descrição',
-          cargaHoraria: '40h',
-          modalidade: 'Online',
-          categoria: 'Tecnologia',
+          title: 'Novo Curso',
+          description: 'Descrição',
+          workload: '40h',
+          modality: 'Online',
+          category: 'Tecnologia',
         }),
       })
 
@@ -359,12 +359,12 @@ describe('API - Cursos', () => {
           Cookie: `auth-token=${token}`,
         },
         body: JSON.stringify({
-          titulo: 'Curso Proibido',
-          descricao: 'Não deve ser criado',
-          cargaHoraria: '40h',
-          modalidade: 'Online',
-          categoria: 'Tecnologia',
-          unidades: [],
+          title: 'Curso Proibido',
+          description: 'Não deve ser criado',
+          workload: '40h',
+          modality: 'Online',
+          category: 'Tecnologia',
+          units: [],
         }),
       })
 
@@ -391,12 +391,12 @@ describe('API - Cursos', () => {
           Cookie: `auth-token=${token}`,
         },
         body: JSON.stringify({
-          titulo: 'Curso Órfão',
-          descricao: 'Autor removido',
-          cargaHoraria: '40h',
-          modalidade: 'Online',
-          categoria: 'Tecnologia',
-          unidades: [],
+          title: 'Curso Órfão',
+          description: 'Autor removido',
+          workload: '40h',
+          modality: 'Online',
+          category: 'Tecnologia',
+          units: [],
         }),
       })
 
@@ -432,8 +432,8 @@ describe('API - Cursos', () => {
           Cookie: `auth-token=${token}`,
         },
         body: JSON.stringify({
-          titulo: '',
-          descricao: '',
+          title: '',
+          description: '',
         }),
       })
 
@@ -467,7 +467,7 @@ describe('API - Cursos', () => {
         modality: 'Online',
         category: 'Tecnologia',
         units: [],
-        layout: 'classico',
+        layout: 'classic',
         slug: null,
         status: currentStatus,
         version: 0,
@@ -486,7 +486,7 @@ describe('API - Cursos', () => {
       const request = new NextRequest('http://localhost:3000/api/courses', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json', Cookie: `auth-token=${token}` },
-        body: JSON.stringify({ id: '1', titulo: 'Curso Editado', version: 0 }),
+        body: JSON.stringify({ id: '1', title: 'Curso Editado', version: 0 }),
       })
 
       const res = await updateCursoHandler(request)
@@ -541,7 +541,7 @@ describe('API - Cursos', () => {
         modality: 'Online',
         category: 'Tecnologia',
         units: [],
-        layout: 'classico',
+        layout: 'classic',
         slug: null,
         status: 'IN_PROGRESS',
         version: 0,
@@ -565,8 +565,8 @@ describe('API - Cursos', () => {
         },
         body: JSON.stringify({
           id: '1',
-          titulo: 'Curso Atualizado',
-          cargaHoraria: '60h',
+          title: 'Curso Atualizado',
+          workload: '60h',
         }),
       })
 
@@ -577,7 +577,7 @@ describe('API - Cursos', () => {
       // Assert
       expect(response.status).toBe(200)
       expect(data.success).toBe(true)
-      expect(data.course.titulo).toBe('Curso Atualizado')
+      expect(data.course.title).toBe('Curso Atualizado')
       expect(mockPrisma.course.update).toHaveBeenCalledTimes(1)
     })
 
@@ -590,7 +590,7 @@ describe('API - Cursos', () => {
         },
         body: JSON.stringify({
           id: '1',
-          titulo: 'Curso Atualizado',
+          title: 'Curso Atualizado',
         }),
       })
 

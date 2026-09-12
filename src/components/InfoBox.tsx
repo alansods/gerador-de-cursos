@@ -4,31 +4,31 @@ import { ReactNode, useState, useEffect, useRef } from 'react'
 import { Info, TriangleAlert, Lightbulb, ChevronDown } from 'lucide-react'
 
 interface InfoBoxProps {
-  type: 'atencao' | 'saiba_mais' | 'info' | 'curiosidade'
+  type: 'warning' | 'learn-more' | 'info' | 'fun-fact'
   title?: string
   children: ReactNode
   className?: string
 }
 
 const variantMap = {
-  atencao: 'warn',
-  saiba_mais: 'info',
+  warning: 'warn',
+  'learn-more': 'info',
   info: 'info',
-  curiosidade: 'recap',
+  'fun-fact': 'recap',
 } as const
 
 const iconMap = {
-  atencao: TriangleAlert,
-  saiba_mais: Info,
+  warning: TriangleAlert,
+  'learn-more': Info,
   info: Info,
-  curiosidade: Lightbulb,
+  'fun-fact': Lightbulb,
 }
 
 const tagMap = {
-  atencao: 'Atenção',
-  saiba_mais: 'Saiba mais',
+  warning: 'Atenção',
+  'learn-more': 'Saiba mais',
   info: 'Informação',
-  curiosidade: 'Curiosidade',
+  'fun-fact': 'Curiosidade',
 }
 
 export function InfoBox({ type, title, children, className = '' }: InfoBoxProps) {

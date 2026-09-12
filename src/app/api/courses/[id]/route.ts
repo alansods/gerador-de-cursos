@@ -6,6 +6,7 @@ import { fetchCollaboration } from '@/lib/course-access'
 import { Block, Course, Unit } from '@/types/course'
 import { slugifyUnits } from '@/lib/slug'
 import { mergeAdjacentFlipcards } from '@/lib/blocks'
+import { upgradeUnits } from '@/lib/legacy-course'
 
 /**
  * GET /api/cursos/[id]
@@ -34,26 +35,26 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     const collaboration = await fetchCollaboration(course.id, authResult.user.id)
 
     // Normalizar unidades: garantir IDs, slugs e estrutura correta
-    const originalUnits = (course.units as Partial<Unit>[]) || []
+    const originalUnits = upgradeUnits(course.units) as unknown as Partial<Unit>[]
     const mappedUnits = originalUnits.map((unit: Partial<Unit>, index: number) => {
       const unitId = unit.id || `unidade-${Date.now()}-${index}`
-      const originalContent = unit.conteudo || (unit as { aulas?: Partial<Block>[] }).aulas || []
+      const originalContent = unit.blocks || []
       const normalizedContent = mergeAdjacentFlipcards(
         originalContent
           .map((item: Partial<Block>, itemIndex: number) => ({
             ...item,
             id: item.id || `conteudo-${Date.now()}-${index}-${itemIndex}`,
-            ordem: item.ordem ?? itemIndex,
-            tipo: item.tipo || 'paragrafo',
+            order: item.order ?? itemIndex,
+            type: item.type || 'paragraph',
           }))
-          .sort((a, b) => a.ordem - b.ordem) as Block[]
+          .sort((a, b) => a.order - b.order) as Block[]
       )
 
       return {
         ...unit,
         id: unitId,
-        ordem: unit.ordem ?? index,
-        conteudo: normalizedContent,
+        order: unit.order ?? index,
+        blocks: normalizedContent,
       }
     })
     const normalizedUnits = slugifyUnits(mappedUnits)
@@ -62,21 +63,21 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     const formattedCourse: Course = {
       id: course.id,
       slug: course.slug ?? undefined,
-      titulo: course.title,
-      descricao: course.description,
-      cargaHoraria: course.workload,
-      modalidade: course.modality,
-      categoria: course.category,
+      title: course.title,
+      description: course.description,
+      workload: course.workload,
+      modality: course.modality,
+      category: course.category,
       layout: course.layout,
       bannerVideoUrl: course.bannerVideoUrl ?? undefined,
-      unidades: normalizedUnits,
+      units: normalizedUnits,
       status: course.status,
       version: course.version,
       ownerId: course.ownerId ?? undefined,
       ownerName: course.owner?.name ?? undefined,
       permissions: getCoursePermissions(authResult.user, course, collaboration),
-      dataCriacao: course.createdAt,
-      dataModificacao: course.updatedAt,
+      createdAt: course.createdAt,
+      updatedAt: course.updatedAt,
     }
 
     return createSuccessResponse({ course: formattedCourse })

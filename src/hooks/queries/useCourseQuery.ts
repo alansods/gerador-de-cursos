@@ -92,9 +92,7 @@ export function useCreateCourseMutation() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: async (
-      course: Omit<Course, 'id' | 'dataCriacao' | 'dataModificacao'>
-    ): Promise<Course> => {
+    mutationFn: async (course: Omit<Course, 'id' | 'createdAt' | 'updatedAt'>): Promise<Course> => {
       const response = await fetch('/api/courses', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

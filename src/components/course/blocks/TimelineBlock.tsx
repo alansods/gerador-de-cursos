@@ -1,7 +1,7 @@
 import { Block } from '@/types/course'
 
 export function TimelineBlock({ item }: { item: Block }) {
-  const items = item.itensTimeline ?? []
+  const items = item.timelineItems ?? []
 
   if (items.length === 0) {
     return (
@@ -11,7 +11,7 @@ export function TimelineBlock({ item }: { item: Block }) {
     )
   }
 
-  if (item.orientacaoTimeline === 'horizontal') {
+  if (item.timelineOrientation === 'horizontal') {
     return (
       <div className="mb-4 overflow-x-auto">
         <ol className="flex gap-6 pb-2">
@@ -22,14 +22,12 @@ export function TimelineBlock({ item }: { item: Block }) {
                 <span className="h-px flex-1 bg-gray-200 dark:bg-gray-700" />
               </div>
               <p className="mt-3 text-xs font-semibold uppercase tracking-wider text-(--block-accent,#2563eb)">
-                {event.data}
+                {event.date}
               </p>
-              <h4 className="mt-1 font-semibold text-gray-900 dark:text-gray-100">
-                {event.titulo}
-              </h4>
+              <h4 className="mt-1 font-semibold text-gray-900 dark:text-gray-100">{event.title}</h4>
               <div
                 className="mt-1 text-sm text-gray-700 dark:text-gray-300 leading-relaxed"
-                dangerouslySetInnerHTML={{ __html: event.descricao }}
+                dangerouslySetInnerHTML={{ __html: event.description }}
               />
             </li>
           ))}
@@ -44,12 +42,12 @@ export function TimelineBlock({ item }: { item: Block }) {
         <li key={event.id || idx} className="ml-6 pb-8 last:pb-0">
           <span className="absolute -left-1.5 flex h-3 w-3 rounded-full bg-(--block-accent,#2563eb)" />
           <p className="text-xs font-semibold uppercase tracking-wider text-(--block-accent,#2563eb)">
-            {event.data}
+            {event.date}
           </p>
-          <h4 className="mt-1 font-semibold text-gray-900 dark:text-gray-100">{event.titulo}</h4>
+          <h4 className="mt-1 font-semibold text-gray-900 dark:text-gray-100">{event.title}</h4>
           <div
             className="mt-1 text-gray-700 dark:text-gray-300 leading-relaxed"
-            dangerouslySetInnerHTML={{ __html: event.descricao }}
+            dangerouslySetInnerHTML={{ __html: event.description }}
           />
         </li>
       ))}

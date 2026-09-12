@@ -35,8 +35,8 @@ export function detectMediaUrls(course: Course): string[] {
   console.log('🔍 [SCORM Build] Detectando mídias do curso...')
   const urls = new Set<string>()
 
-  course.unidades?.forEach((unit) => {
-    unit.conteudo?.forEach((block) => {
+  course.units?.forEach((unit) => {
+    unit.blocks?.forEach((block) => {
       // Dirigido pelo CATALOGO_BLOCOS: bloco novo com mídia declara extrairMidias
       // e passa a ser embutido no ZIP sem tocar neste arquivo.
       extractBlockMedia(block).forEach((url) => {
@@ -123,8 +123,8 @@ export async function downloadAndUpdateImages(
   // Dirigido pelo CATALOGO_BLOCOS: bloco novo com mídia declara reescreverMidias e passa
   // a ser reescrito sem tocar neste arquivo.
   let updatedCount = 0
-  updatedCourse.unidades?.forEach((unit) => {
-    unit.conteudo = unit.conteudo?.map((block) => {
+  updatedCourse.units?.forEach((unit) => {
+    unit.blocks = unit.blocks?.map((block) => {
       const rewritten = rewriteBlockMedia(block, imageMap)
       if (rewritten !== block) updatedCount++
       return rewritten

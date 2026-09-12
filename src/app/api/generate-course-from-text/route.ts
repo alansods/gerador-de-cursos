@@ -4,6 +4,7 @@ import { GoogleGenerativeAI } from '@google/generative-ai'
 import { Course } from '@/types/course'
 import { normalizeCourse, type GenerationSummary } from '@/lib/blocks'
 import { detectMarkers, type ReadMode } from '@/lib/markers'
+import { upgradeCourse } from '@/lib/legacy-course'
 
 export const maxDuration = 60
 
@@ -62,7 +63,9 @@ export async function POST(req: NextRequest) {
       throw new Error('Nenhuma API de IA disponível')
     }
 
-    const { course: normalizedCourse, summary } = normalizeCourse(course)
+    const { course: normalizedCourse, summary } = normalizeCourse(
+      upgradeCourse(course as unknown as Record<string, unknown>) as unknown as Course
+    )
     recordDiscards(summary)
 
     return createSuccessResponse({
@@ -102,13 +105,13 @@ function buildPrompt(text: string, mode: ReadMode = 'auto'): string {
   const sharedStructure = `## Estrutura geral do JSON
 
 {
-  "titulo": "string",
-  "descricao": "string",
-  "categoria": "string",
-  "cargaHoraria": "X horas",
-  "modalidade": "Online",
+  "title": "string",
+  "description": "string",
+  "category": "string",
+  "workload": "X horas",
+  "modality": "Online",
   "bannerVideoUrl": "string (opcional)",
-  "unidades": [ <array de Unidade> ]
+  "units": [ <array de Unidade> ]
 }
 
 - "bannerVideoUrl" é o vídeo de apresentação do curso, exibido no banner da página
@@ -118,142 +121,142 @@ function buildPrompt(text: string, mode: ReadMode = 'auto'): string {
 
 Cada Unidade:
 {
-  "titulo": "string",
-  "descricao": "string",
-  "conteudo": [ <array de ConteudoUnidade> ]
+  "title": "string",
+  "description": "string",
+  "content": [ <array de Bloco> ]
 }
 
 ## Recursos disponíveis
 
-### 1. titulo
-{ "titulo": "string", "tipo": "titulo", "conteudo": "Texto do título" }
+### 1. heading
+{ "title": "string", "type": "heading", "content": "Texto do título" }
 
-### 2. subtitulo
-{ "titulo": "string", "tipo": "subtitulo", "conteudo": "Texto do subtítulo" }
+### 2. subheading
+{ "title": "string", "type": "subheading", "content": "Texto do subtítulo" }
 
-### 3. paragrafo
-{ "titulo": "string", "tipo": "paragrafo", "conteudo": "<p>HTML</p>" }
+### 3. paragraph
+{ "title": "string", "type": "paragraph", "content": "<p>HTML</p>" }
 
-### 4. lista
+### 4. list
 {
-  "titulo": "string",
-  "tipo": "lista",
-  "conteudo": "",
-  "tipoLista": "nao-ordenada" | "ordenada" | "check",
-  "itensLista": [
-    { "id": "li-1", "texto": "Primeiro item" },
-    { "id": "li-2", "texto": "Segundo item" }
+  "title": "string",
+  "type": "list",
+  "content": "",
+  "listType": "unordered" | "ordered" | "check",
+  "listItems": [
+    { "id": "li-1", "text": "Primeiro item" },
+    { "id": "li-2", "text": "Segundo item" }
   ]
 }
-- Use "ordenada" para passos numerados de um processo
+- Use "ordered" para passos numerados de um processo
 - Use "check" para requisitos, critérios ou itens verificáveis
-- Use "nao-ordenada" para listas simples de itens
+- Use "unordered" para listas simples de itens
 
-### 5. objetivos-aprendizagem
+### 5. learning-objectives
 {
-  "titulo": "string",
-  "tipo": "objetivos-aprendizagem",
-  "conteudo": "",
-  "itensObjetivos": [
-    { "id": "obj-1", "texto": "Identificar os componentes de um CLP" },
-    { "id": "obj-2", "texto": "Configurar entradas e saídas digitais" }
+  "title": "string",
+  "type": "learning-objectives",
+  "content": "",
+  "objectiveItems": [
+    { "id": "obj-1", "text": "Identificar os componentes de um CLP" },
+    { "id": "obj-2", "text": "Configurar entradas e saídas digitais" }
   ]
 }
 
 ### 6. info-box
 {
-  "titulo": "string",
-  "tipo": "info-box",
-  "conteudo": "<p>Conteúdo</p>",
-  "tipoInfoBox": "atencao" | "saiba_mais" | "info" | "curiosidade",
-  "tituloInfoBox": "Título da caixa"
+  "title": "string",
+  "type": "info-box",
+  "content": "<p>Conteúdo</p>",
+  "infoBoxType": "warning" | "learn-more" | "info" | "fun-fact",
+  "infoBoxTitle": "Título da caixa"
 }
 
 ### 7. accordion
 {
-  "titulo": "string",
-  "tipo": "accordion",
-  "conteudo": "",
+  "title": "string",
+  "type": "accordion",
+  "content": "",
   "items": [
-    { "id": "item-1", "titulo": "Tópico 1", "conteudo": "<p>Detalhes</p>" },
-    { "id": "item-2", "titulo": "Tópico 2", "conteudo": "<p>Detalhes</p>" }
+    { "id": "item-1", "title": "Tópico 1", "content": "<p>Detalhes</p>" },
+    { "id": "item-2", "title": "Tópico 2", "content": "<p>Detalhes</p>" }
   ]
 }
 
 ### 8. flipcard — uma grade de cards; use de 2 a 4 cards por bloco
 {
-  "titulo": "string",
-  "tipo": "flipcard",
-  "conteudo": "",
-  "itensFlipcard": [
+  "title": "string",
+  "type": "flipcard",
+  "content": "",
+  "flipcardItems": [
     {
-      "tipoFrente": "titulo",
-      "tituloFrente": "Conceito ou pergunta na frente",
-      "conteudoVerso": "<p>Explicação no verso</p>"
+      "frontType": "title",
+      "frontTitle": "Conceito ou pergunta na frente",
+      "backContent": "<p>Explicação no verso</p>"
     }
   ]
 }
 
 ### 9. quiz — OBRIGATÓRIO: exatamente 5 opções; apenas uma com "isCorrect": true
 {
-  "titulo": "string",
-  "tipo": "quiz",
-  "conteudo": "",
+  "title": "string",
+  "type": "quiz",
+  "content": "",
   "quizData": {
     "questions": [
       {
         "id": "q-1",
-        "pergunta": "Pergunta?",
-        "dica": "Dica opcional",
-        "opcoes": [
-          { "id": "op-1", "texto": "Opção A", "isCorrect": false, "feedback": "Explicação A" },
-          { "id": "op-2", "texto": "Opção B", "isCorrect": true,  "feedback": "Correto! Explicação B" },
-          { "id": "op-3", "texto": "Opção C", "isCorrect": false, "feedback": "Explicação C" },
-          { "id": "op-4", "texto": "Opção D", "isCorrect": false, "feedback": "Explicação D" },
-          { "id": "op-5", "texto": "Opção E", "isCorrect": false, "feedback": "Explicação E" }
+        "question": "Pergunta?",
+        "hint": "Dica opcional",
+        "options": [
+          { "id": "op-1", "text": "Opção A", "isCorrect": false, "feedback": "Explicação A" },
+          { "id": "op-2", "text": "Opção B", "isCorrect": true,  "feedback": "Correto! Explicação B" },
+          { "id": "op-3", "text": "Opção C", "isCorrect": false, "feedback": "Explicação C" },
+          { "id": "op-4", "text": "Opção D", "isCorrect": false, "feedback": "Explicação D" },
+          { "id": "op-5", "text": "Opção E", "isCorrect": false, "feedback": "Explicação E" }
         ]
       }
     ]
   }
 }
 
-### 10. imagem — apenas com URL presente no documento
+### 10. image — apenas com URL presente no documento
 {
-  "titulo": "string",
-  "tipo": "imagem",
-  "conteudo": "https://exemplo.com/painel.png",
-  "legenda": "Legenda da imagem",
-  "fonte": "Crédito da imagem",
-  "tamanho": "pequena" | "media" | "grande"
+  "title": "string",
+  "type": "image",
+  "content": "https://exemplo.com/painel.png",
+  "caption": "Legenda da imagem",
+  "source": "Crédito da imagem",
+  "size": "small" | "medium" | "large"
 }
 
 ### 11. video — apenas com URL presente no documento
 {
-  "titulo": "string",
-  "tipo": "video",
-  "conteudo": "",
+  "title": "string",
+  "type": "video",
+  "content": "",
   "videoUrl": "https://www.youtube.com/watch?v=xxxxxxxxxxx",
-  "videoTitulo": "Título do vídeo",
-  "fonteVideo": "youtube"
+  "videoTitle": "Título do vídeo",
+  "videoSource": "youtube"
 }
 
-### 11b. video-interativo — apenas com URL de arquivo de vídeo presente no documento
+### 11b. interactive-video — apenas com URL de arquivo de vídeo presente no documento
 {
-  "titulo": "string",
-  "tipo": "video-interativo",
-  "conteudo": "",
+  "title": "string",
+  "type": "interactive-video",
+  "content": "",
   "videoUrl": "https://exemplo.com/videos/aula.mp4",
-  "videoTitulo": "Título do vídeo",
-  "fonteVideo": "arquivo",
-  "perguntasVideo": [
+  "videoTitle": "Título do vídeo",
+  "videoSource": "file",
+  "videoQuestions": [
     {
       "id": "pv-1",
-      "tempo": "01:30",
-      "pergunta": "Pergunta?",
-      "opcaoA": "Alternativa A",
-      "opcaoB": "Alternativa B",
-      "opcaoC": "Alternativa C",
-      "correta": "B",
+      "time": "01:30",
+      "question": "Pergunta?",
+      "optionA": "Alternativa A",
+      "optionB": "Alternativa B",
+      "optionC": "Alternativa C",
+      "correct": "B",
       "feedback": "Explicação mostrada depois da resposta"
     }
   ]
@@ -261,118 +264,118 @@ Cada Unidade:
 
 ### 12. tabs
 {
-  "titulo": "string",
-  "tipo": "tabs",
-  "conteudo": "",
-  "itensTabs": [
-    { "id": "tab-1", "titulo": "Título da aba", "conteudo": "<p>HTML</p>" }
+  "title": "string",
+  "type": "tabs",
+  "content": "",
+  "tabItems": [
+    { "id": "tab-1", "title": "Título da aba", "content": "<p>HTML</p>" }
   ]
 }
 
-### 13. linha-do-tempo
+### 13. timeline
 {
-  "titulo": "string",
-  "tipo": "linha-do-tempo",
-  "conteudo": "",
-  "orientacaoTimeline": "vertical" | "horizontal",
-  "itensTimeline": [
+  "title": "string",
+  "type": "timeline",
+  "content": "",
+  "timelineOrientation": "vertical" | "horizontal",
+  "timelineItems": [
     {
-      "id": "evento-1",
-      "data": "1943",
-      "titulo": "Título do evento",
-      "descricao": "<p>HTML</p>"
+      "id": "timeline-1",
+      "date": "1943",
+      "title": "Título do evento",
+      "description": "<p>HTML</p>"
     }
   ]
 }
 
-### 14. carrossel — apenas com URLs presentes no documento
+### 14. carousel — apenas com URLs presentes no documento
 {
-  "titulo": "string",
-  "tipo": "carrossel",
-  "conteudo": "",
-  "modoCarrossel": "carrossel" | "grade",
-  "itensCarrossel": [
+  "title": "string",
+  "type": "carousel",
+  "content": "",
+  "carouselMode": "carousel" | "grid",
+  "carouselItems": [
     {
       "id": "img-1",
       "url": "https://exemplo.com/foto.png",
-      "legenda": "Legenda",
-      "fonte": "Crédito"
+      "caption": "Legenda",
+      "source": "Crédito"
     }
   ]
 }
 
-### 15. separador — só quando o documento marcar explicitamente
-{ "titulo": "string", "tipo": "separador", "conteudo": "", "estiloSeparador": "linha" }
+### 15. divider — só quando o documento marcar explicitamente
+{ "title": "string", "type": "divider", "content": "", "dividerStyle": "line" }
 
 ### 16. audio — apenas com URL presente no documento
 {
-  "titulo": "string",
-  "tipo": "audio",
-  "conteudo": "",
+  "title": "string",
+  "type": "audio",
+  "content": "",
   "audioUrl": "https://exemplo.com/narracao.mp3",
-  "audioTitulo": "Título do áudio",
-  "transcricao": "<p>Transcrição em HTML</p>"
+  "audioTitle": "Título do áudio",
+  "transcript": "<p>Transcrição em HTML</p>"
 }
 
 ### 17. pdf — apenas com URL presente no documento
 {
-  "titulo": "string",
-  "tipo": "pdf",
-  "conteudo": "",
+  "title": "string",
+  "type": "pdf",
+  "content": "",
   "pdfUrl": "https://exemplo.com/ficha.pdf",
-  "pdfTitulo": "Título do documento",
-  "permitirDownloadPdf": true
+  "pdfTitle": "Título do documento",
+  "allowPdfDownload": true
 }
 
-### 18. imagem-interativa — apenas com URL presente no documento
+### 18. interactive-image — apenas com URL presente no documento
 {
-  "titulo": "string",
-  "tipo": "imagem-interativa",
-  "conteudo": "",
-  "imagemBase": "https://exemplo.com/equipamento.png",
-  "legenda": "Legenda da imagem",
+  "title": "string",
+  "type": "interactive-image",
+  "content": "",
+  "baseImage": "https://exemplo.com/equipamento.png",
+  "caption": "Legenda da imagem",
   "hotspots": [
     {
       "id": "hotspot-1",
       "x": 50,
       "y": 20,
-      "titulo": "Nome da parte",
-      "conteudo": "<p>Explicação exibida ao clicar</p>"
+      "title": "Nome da parte",
+      "content": "<p>Explicação exibida ao clicar</p>"
     }
   ]
 }
 
-### 19. associacao
+### 19. matching
 {
-  "titulo": "string",
-  "tipo": "associacao",
-  "conteudo": "",
-  "paresAssociacao": [
-    { "id": "par-1", "esquerda": "Termo fixo", "direita": "Correspondente" }
+  "title": "string",
+  "type": "matching",
+  "content": "",
+  "matchingPairs": [
+    { "id": "par-1", "left": "Termo fixo", "right": "Correspondente" }
   ]
 }
 
-### 20. categorizacao
+### 20. categorization
 {
-  "titulo": "string",
-  "tipo": "categorizacao",
-  "conteudo": "",
-  "categorias": [
+  "title": "string",
+  "type": "categorization",
+  "content": "",
+  "categories": [
     {
       "id": "cat-1",
-      "nome": "Nome da categoria",
-      "itens": [{ "id": "cat-1-item-1", "texto": "Item que pertence a esta categoria" }]
+      "name": "Nome da category",
+      "items": [{ "id": "cat-1-item-1", "text": "Item que pertence a esta categoria" }]
     }
   ]
 }
 
 ## Regras gerais
 
-- NÃO use "aulas" — use sempre "conteudo"
+- NÃO use "blocks" — use sempre "content"
 - IDs únicos simples: "item-1", "q-1", "op-1"
-- HTML (em campos "conteudo") apenas com: <p>, <strong>, <em>
-- Para listas, use SEMPRE o campo "itensLista" — NUNCA coloque listas em HTML no campo "conteudo"
-- Para objetivos de aprendizagem, use SEMPRE o campo "itensObjetivos"
+- HTML (em campos "content") apenas com: <p>, <strong>, <em>
+- Para listas, use SEMPRE o campo "listItems" — NUNCA coloque listas em HTML no campo "content"
+- Para objetivos de aprendizagem, use SEMPRE o campo "objectiveItems"
 - Retorne APENAS o JSON válido, sem markdown, sem explicações
 
 ## IMPORTANTE: Uso estrito do conteúdo do documento
@@ -382,94 +385,94 @@ Cada Unidade:
 - NÃO invente, crie ou adicione informações que não estejam no texto original
 - NÃO adicione exemplos, casos práticos, curiosidades ou contextos extras por conta própria
 - NÃO expanda conceitos além do que está escrito no documento
-- NUNCA gere blocos "imagem" ou "video" sem uma URL que apareça literalmente no documento —
+- NUNCA gere blocos "image" ou "video" sem uma URL que apareça literalmente no documento —
   na ausência de URL, o bloco simplesmente não existe
 - Use apenas as informações, exemplos e dados que foram explicitamente fornecidos no texto
 - Se o documento for curto ou superficial, o curso gerado também deve refletir isso
 - Sua função é ESTRUTURAR e ORGANIZAR o conteúdo existente, não criar conteúdo novo`
 
   if (mode === 'markers') {
-    return `Você é um especialista em design instrucional. Analise o texto abaixo e gere uma estrutura de curso em JSON respeitando os marcadores de recursos presentes no texto.
+    return `Você é um especialista em design instrucional. Analise o texto abaixo e gere uma estrutura de curso em JSON respeitando os marcadores de recursos presentes no text.
 
 ${sharedStructure}
 
 ## Como converter os marcadores
 
-- Bloco ACCORDION_INICIO...ACCORDION_FIM → tipo "accordion"
-  - "Título do Item N:" → items[N].titulo
-  - "Conteúdo do Item N:" → items[N].conteudo (em HTML)
-- Bloco QUIZ_INICIO...QUIZ_FIM → tipo "quiz"
-  - "Pergunta:" → quizData.questions[].pergunta
-  - "Opção A/B/C/D/E:" → opcoes[] (identifique a correta pelo contexto)
+- Bloco ACCORDION_INICIO...ACCORDION_FIM → type "accordion"
+  - "Título do Item N:" → items[N].title
+  - "Conteúdo do Item N:" → items[N].content (em HTML)
+- Bloco QUIZ_INICIO...QUIZ_FIM → type "quiz"
+  - "Pergunta:" → quizData.questions[].question
+  - "Opção A/B/C/D/E:" → options[] (identifique a correta pelo contexto)
   - "Resposta Correta:" → marque o isCorrect correspondente
-- Bloco FLIPCARD_INICIO...FLIPCARD_FIM → tipo "flipcard" (UM único bloco com todos os cards)
-  - "Frente do Card N:" ou "Título do Card N:" → itensFlipcard[N-1].tituloFrente
-  - "Verso do Card N:" → itensFlipcard[N-1].conteudoVerso (em HTML)
-  - "Imagem do Card N:" → itensFlipcard[N-1].imagemFrente
-  - "Tipo de Frente do Card N:" → itensFlipcard[N-1].tipoFrente (titulo | imagem | imagem-titulo; use "titulo" se ausente)
+- Bloco FLIPCARD_INICIO...FLIPCARD_FIM → type "flipcard" (UM único bloco com todos os cards)
+  - "Frente do Card N:" ou "Título do Card N:" → flipcardItems[N-1].frontTitle
+  - "Verso do Card N:" → flipcardItems[N-1].backContent (em HTML)
+  - "Imagem do Card N:" → flipcardItems[N-1].frontImage
+  - "Tipo de Frente do Card N:" → flipcardItems[N-1].frontType (title | image | image-title; use "title" se ausente)
   - Se os rótulos vierem sem numeração ("Frente:" / "Verso:"), gere um único card
-- Bloco OBJETIVOS_INICIO...OBJETIVOS_FIM → tipo "objetivos-aprendizagem"
-  - Cada linha "Objetivo:" → itensObjetivos[].texto
-- Bloco INFOBOX_INICIO...INFOBOX_FIM → tipo "info-box"
-  - "Tipo:" → tipoInfoBox (atencao | saiba_mais | info | curiosidade; use "info" se ausente)
-  - "Título:" → tituloInfoBox
-  - "Conteúdo:" → conteudo (em HTML)
-- Bloco LISTA_INICIO...LISTA_FIM → tipo "lista"
-  - "Tipo:" → tipoLista (ordenada | nao-ordenada | check; use "nao-ordenada" se ausente)
-  - Cada linha "Item:" → itensLista[].texto
-- Bloco IMAGEM_INICIO...IMAGEM_FIM → tipo "imagem"
-  - "URL:" → conteudo; "Legenda:" → legenda; "Fonte:" → fonte; "Tamanho:" → tamanho
-- Bloco VIDEO_INICIO...VIDEO_FIM → tipo "video"
-  - "URL:" → videoUrl; "Título:" → videoTitulo
-  - "fonteVideo": "arquivo" se a URL terminar em .mp4 ou .webm; caso contrário "youtube"
-- Bloco VIDEOINTERATIVO_INICIO...VIDEOINTERATIVO_FIM → tipo "video-interativo" (UM único bloco com todas as perguntas)
-  - "URL:" → videoUrl (arquivo .mp4/.webm ou link do YouTube); "Título:" → videoTitulo
-  - "fonteVideo": "arquivo" se a URL terminar em .mp4 ou .webm; caso contrário "youtube"
-  - "Tempo da Pergunta N:" → perguntasVideo[N-1].tempo (mantenha o formato mm:ss como está escrito)
-  - "Pergunta N:" → perguntasVideo[N-1].pergunta
-  - "Opção A/B/C/D/E da Pergunta N:" → perguntasVideo[N-1].opcaoA/opcaoB/opcaoC/opcaoD/opcaoE
-  - "Resposta Correta da Pergunta N:" → perguntasVideo[N-1].correta (a letra, em maiúscula)
-  - "Feedback da Pergunta N:" → perguntasVideo[N-1].feedback
+- Bloco OBJETIVOS_INICIO...OBJETIVOS_FIM → type "learning-objectives"
+  - Cada linha "Objetivo:" → objectiveItems[].text
+- Bloco INFOBOX_INICIO...INFOBOX_FIM → type "info-box"
+  - "Tipo:" → infoBoxType (warning | learn-more | info | fun-fact; use "info" se ausente)
+  - "Título:" → infoBoxTitle
+  - "Conteúdo:" → content (em HTML)
+- Bloco LISTA_INICIO...LISTA_FIM → type "list"
+  - "Tipo:" → listType (ordered | unordered | check; use "unordered" se ausente)
+  - Cada linha "Item:" → listItems[].text
+- Bloco IMAGEM_INICIO...IMAGEM_FIM → type "image"
+  - "URL:" → content; "Legenda:" → caption; "Fonte:" → source; "Tamanho:" → size
+- Bloco VIDEO_INICIO...VIDEO_FIM → type "video"
+  - "URL:" → videoUrl; "Título:" → videoTitle
+  - "videoSource": "file" se a URL terminar em .mp4 ou .webm; caso contrário "youtube"
+- Bloco VIDEOINTERATIVO_INICIO...VIDEOINTERATIVO_FIM → type "interactive-video" (UM único bloco com todas as perguntas)
+  - "URL:" → videoUrl (arquivo .mp4/.webm ou link do YouTube); "Título:" → videoTitle
+  - "videoSource": "file" se a URL terminar em .mp4 ou .webm; caso contrário "youtube"
+  - "Tempo da Pergunta N:" → videoQuestions[N-1].time (mantenha o formato mm:ss como está escrito)
+  - "Pergunta N:" → videoQuestions[N-1].question
+  - "Opção A/B/C/D/E da Pergunta N:" → videoQuestions[N-1].optionA/optionB/optionC/optionD/optionE
+  - "Resposta Correta da Pergunta N:" → videoQuestions[N-1].correct (a letra, em maiúscula)
+  - "Feedback da Pergunta N:" → videoQuestions[N-1].feedback
   - Mínimo de 2 alternativas por pergunta; NUNCA invente um tempo que não esteja no documento
-- Bloco TABS_INICIO...TABS_FIM → tipo "tabs"
-  - "Título da Aba N:" → itensTabs[N].titulo
-  - "Conteúdo da Aba N:" → itensTabs[N].conteudo (em HTML)
-- Bloco TIMELINE_INICIO...TIMELINE_FIM → tipo "linha-do-tempo"
-  - "Orientação:" → orientacaoTimeline (vertical | horizontal; use "vertical" se ausente)
-  - "Data:" → itensTimeline[].data
-  - "Título do Evento:" → itensTimeline[].titulo
-  - "Descrição do Evento:" → itensTimeline[].descricao (em HTML)
-- Bloco CARROSSEL_INICIO...CARROSSEL_FIM → tipo "carrossel"
-  - "Exibição:" → modoCarrossel (carrossel | grade; use "carrossel" se ausente)
-  - "URL da Imagem N:" → itensCarrossel[N].url
-  - "Legenda da Imagem N:" → itensCarrossel[N].legenda
-  - "Fonte da Imagem N:" → itensCarrossel[N].fonte
+- Bloco TABS_INICIO...TABS_FIM → type "tabs"
+  - "Título da Aba N:" → tabItems[N].title
+  - "Conteúdo da Aba N:" → tabItems[N].content (em HTML)
+- Bloco TIMELINE_INICIO...TIMELINE_FIM → type "timeline"
+  - "Orientação:" → timelineOrientation (vertical | horizontal; use "vertical" se ausente)
+  - "Data:" → timelineItems[].date
+  - "Título do Evento:" → timelineItems[].title
+  - "Descrição do Evento:" → timelineItems[].description (em HTML)
+- Bloco CARROSSEL_INICIO...CARROSSEL_FIM → type "carousel"
+  - "Exibição:" → carouselMode (carousel | grid; use "carousel" se ausente)
+  - "URL da Imagem N:" → carouselItems[N].url
+  - "Legenda da Imagem N:" → carouselItems[N].caption
+  - "Fonte da Imagem N:" → carouselItems[N].source
   - Nunca invente URL de imagem: sem URL, a imagem não entra
-- Bloco SEPARADOR_INICIO...SEPARADOR_FIM → tipo "separador"
-  - "Estilo:" → estiloSeparador (linha | espaco | linha-icone; use "linha" se ausente)
-- Bloco AUDIO_INICIO...AUDIO_FIM → tipo "audio"
-  - "URL:" → audioUrl; "Título:" → audioTitulo
-  - "Transcrição:" → transcricao (em HTML)
+- Bloco SEPARADOR_INICIO...SEPARADOR_FIM → type "divider"
+  - "Estilo:" → dividerStyle (line | space | line-icon; use "line" se ausente)
+- Bloco AUDIO_INICIO...AUDIO_FIM → type "audio"
+  - "URL:" → audioUrl; "Título:" → audioTitle
+  - "Transcrição:" → transcript (em HTML)
   - Nunca invente URL de áudio: sem URL, o bloco não existe
-- Bloco PDF_INICIO...PDF_FIM → tipo "pdf"
-  - "URL:" → pdfUrl; "Título:" → pdfTitulo
-  - "Permitir Download:" → permitirDownloadPdf (sim/não → true/false; use true se ausente)
+- Bloco PDF_INICIO...PDF_FIM → type "pdf"
+  - "URL:" → pdfUrl; "Título:" → pdfTitle
+  - "Permitir Download:" → allowPdfDownload (sim/não → true/false; use true se ausente)
   - Nunca invente URL de PDF: sem URL, o bloco não existe
-- Bloco HOTSPOT_INICIO...HOTSPOT_FIM → tipo "imagem-interativa"
-  - "URL:" → imagemBase; "Legenda:" → legenda
+- Bloco HOTSPOT_INICIO...HOTSPOT_FIM → type "interactive-image"
+  - "URL:" → baseImage; "Legenda:" → caption
   - "X do Ponto N:" → hotspots[N].x; "Y do Ponto N:" → hotspots[N].y (números de 0 a 100)
-  - "Título do Ponto N:" → hotspots[N].titulo
-  - "Conteúdo do Ponto N:" → hotspots[N].conteudo (em HTML)
+  - "Título do Ponto N:" → hotspots[N].title
+  - "Conteúdo do Ponto N:" → hotspots[N].content (em HTML)
   - Nunca invente URL de imagem nem coordenadas: sem URL, o bloco não existe
-- Bloco ASSOCIACAO_INICIO...ASSOCIACAO_FIM → tipo "associacao"
-  - "Item N:" → paresAssociacao[N].esquerda
-  - "Correspondente N:" → paresAssociacao[N].direita
+- Bloco ASSOCIACAO_INICIO...ASSOCIACAO_FIM → type "matching"
+  - "Item N:" → matchingPairs[N].left
+  - "Correspondente N:" → matchingPairs[N].right
   - Descarte o par que não tiver os dois lados; são necessários no mínimo 2 pares
-- Bloco CATEGORIZACAO_INICIO...CATEGORIZACAO_FIM → tipo "categorizacao"
-  - "Categoria N:" → categorias[N].nome
-  - "Item M da Categoria N:" → categorias[N].itens[M].texto
-  - São necessárias no mínimo 2 categorias, cada uma com ao menos 1 item
-- Conteúdo fora de marcadores → use titulo, subtitulo, paragrafo ou lista conforme adequado
+- Bloco CATEGORIZACAO_INICIO...CATEGORIZACAO_FIM → type "categorization"
+  - "Categoria N:" → categories[N].name
+  - "Item M da Categoria N:" → categories[N].items[M].text
+  - São necessárias no mínimo 2 categories, cada uma com ao menos 1 item
+- Conteúdo fora de marcadores → use title, subtitulo, paragrafo ou lista conforme adequado
 
 ## Texto para analisar
 
@@ -482,30 +485,30 @@ ${sharedStructure}
 
 ## Diretrizes de escolha automática
 
-- Título de seção explícito, diferente do título da unidade → titulo
-- Divisão interna de uma seção → subtitulo
-- Texto introdutório ou explicativo → paragrafo
-- "Objetivos", "ao final desta unidade você será capaz de" → objetivos-aprendizagem
-- Lista de ingredientes, materiais, características → lista (tipoLista: "nao-ordenada")
-- Passos numerados de um processo → lista (tipoLista: "ordenada")
-- Requisitos, critérios verificáveis → lista (tipoLista: "check")
+- Título de seção explícito, diferente do título da unidade → heading
+- Divisão interna de uma seção → subheading
+- Texto introdutório ou explicativo → paragraph
+- "Objetivos", "ao final desta unidade você será capaz de" → learning-objectives
+- Lista de ingredientes, materiais, características → list (listType: "unordered")
+- Passos numerados de um processo → list (listType: "ordered")
+- Requisitos, critérios verificáveis → list (listType: "check")
 - 3 ou mais tópicos relacionados com subconteúdo → accordion
 - 2 a 5 alternativas comparáveis do mesmo assunto (perfis, abordagens, papéis) → tabs
-- Fatos com data, evolução histórica, cronologia de etapas → linha-do-tempo
+- Fatos com date, evolução histórica, cronologia de etapas → timeline
 - 2 a 4 termos técnicos com definição, ou perguntas retóricas com resposta → UM bloco flipcard com um card para cada; NUNCA gere vários blocos flipcard seguidos
-- 4 ou mais pares "termo — definição" do mesmo assunto → associacao
-- Itens explicitamente agrupados em 2 ou mais conjuntos nomeados → categorizacao
-- "Atenção:", "Importante:", aviso de segurança → info-box (tipoInfoBox: "atencao")
-- "Sabia que", curiosidade, fato interessante → info-box (tipoInfoBox: "curiosidade")
-- URL de imagem no texto → imagem, com a legenda que estiver ao lado
+- 4 ou mais pares "termo — definição" do mesmo assunto → matching
+- Itens explicitamente agrupados em 2 ou mais conjuntos nomeados → categorization
+- "Atenção:", "Importante:", aviso de segurança → info-box (infoBoxType: "warning")
+- "Sabia que", curiosidade, fato interessante → info-box (infoBoxType: "fun-fact")
+- URL de imagem no texto → image, com a legenda que estiver ao lado
 - URL de YouTube ou Vimeo no texto → video
 - URL de arquivo .mp3, .m4a ou .ogg no texto → audio
 - URL de arquivo .pdf no texto → pdf
 - Revisão ao final de cada unidade → quiz (1 a 3 perguntas baseadas no conteúdo real)
 - Use ao menos 1 recurso interativo (accordion, tabs, quiz ou flipcard) por unidade
-- NUNCA gere o bloco separador no modo automático
-- NUNCA gere o bloco imagem-interativa no modo automático: as coordenadas dos pontos precisam vir do documento
-- NUNCA gere o bloco video-interativo no modo automático: os tempos das perguntas precisam vir do documento, e você não assiste ao vídeo
+- NUNCA gere o bloco divider no modo automático
+- NUNCA gere o bloco interactive-image no modo automático: as coordenadas dos pontos precisam vir do documento
+- NUNCA gere o bloco interactive-video no modo automático: os tempos das perguntas precisam vir do documento, e você não assiste ao vídeo
 
 ## Texto para analisar
 
@@ -553,13 +556,13 @@ async function generateWithGemini(
       const courseData = JSON.parse(jsonText) as Course
 
       // Validar estrutura básica
-      if (!courseData.titulo || !courseData.descricao) {
+      if (!courseData.title || !courseData.description) {
         throw new Error('Resposta da IA não contém título ou descrição válidos')
       }
 
       // Garantir que unidades seja um array
-      if (!Array.isArray(courseData.unidades)) {
-        courseData.unidades = []
+      if (!Array.isArray(courseData.units)) {
+        courseData.units = []
       }
 
       const tokenUsage: TokenUsage = {
@@ -648,13 +651,13 @@ async function generateWithOpenAI(
     const courseData = JSON.parse(jsonText) as Course
 
     // Validar estrutura básica
-    if (!courseData.titulo || !courseData.descricao) {
+    if (!courseData.title || !courseData.description) {
       throw new Error('Resposta da IA não contém título ou descrição válidos')
     }
 
     // Garantir que unidades seja um array
-    if (!Array.isArray(courseData.unidades)) {
-      courseData.unidades = []
+    if (!Array.isArray(courseData.units)) {
+      courseData.units = []
     }
 
     const tokenUsage: TokenUsage = {

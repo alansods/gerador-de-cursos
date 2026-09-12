@@ -8,24 +8,24 @@ import { logActivity } from '@/lib/activity-logger'
 import { generateUniqueSlug, slugifyUnits } from '@/lib/slug'
 import { Prisma } from '@prisma/client'
 import type { CourseStatus } from '@/lib/permissions'
+import { upgradeUnits } from '@/lib/legacy-course'
 
 /** Status cuja revisão deixa de valer assim que o conteúdo muda. */
 const REVIEW_INVALIDATED_ON_EDIT: CourseStatus[] = ['APPROVED', 'REJECTED']
 
 type UnitContent = {
   id?: string
-  ordem?: number
-  tipo?: string
+  order?: number
+  type?: string
   [key: string]: unknown
 }
 
 type UnitInput = {
   id?: string
-  ordem?: number
-  titulo?: string
-  descricao?: string
-  conteudo?: UnitContent[]
-  aulas?: UnitContent[]
+  order?: number
+  title?: string
+  description?: string
+  blocks?: UnitContent[]
   [key: string]: unknown
 }
 
@@ -107,22 +107,22 @@ export async function GET(req: NextRequest) {
     // Converter para formato CursoGerado com normalização de unidades
     const formattedCourses: Course[] = courses.map((course) => {
       // Normalizar unidades: garantir IDs, slugs e estrutura correta
-      const originalUnits = (course.units as UnitInput[]) || []
+      const originalUnits = upgradeUnits(course.units) as unknown as UnitInput[]
       const mappedUnits = originalUnits.map((unit: UnitInput, index: number) => {
         const unitId = unit.id || `unidade-${course.id}-${index}`
-        const originalContent = unit.conteudo || unit.aulas || []
+        const originalContent = unit.blocks || []
         const normalizedContent = originalContent.map((item: UnitContent, itemIndex: number) => ({
           ...item,
           id: item.id || `conteudo-${course.id}-${index}-${itemIndex}`,
-          ordem: item.ordem ?? itemIndex,
-          tipo: item.tipo || 'paragrafo',
+          order: item.order ?? itemIndex,
+          type: item.type || 'paragraph',
         }))
 
         return {
           ...unit,
           id: unitId,
-          ordem: unit.ordem ?? index,
-          conteudo: normalizedContent,
+          order: unit.order ?? index,
+          blocks: normalizedContent,
         }
       })
       const normalizedUnits = slugifyUnits(mappedUnits)
@@ -130,26 +130,26 @@ export async function GET(req: NextRequest) {
       return {
         id: course.id,
         slug: course.slug ?? undefined,
-        titulo: course.title,
-        descricao: course.description,
-        cargaHoraria: course.workload,
-        modalidade: course.modality,
-        categoria: course.category,
+        title: course.title,
+        description: course.description,
+        workload: course.workload,
+        modality: course.modality,
+        category: course.category,
         layout: course.layout,
         bannerVideoUrl: course.bannerVideoUrl ?? undefined,
-        unidades: normalizedUnits,
+        units: normalizedUnits,
         status: course.status,
         version: course.version,
         ownerId: course.ownerId ?? undefined,
-        ownerNome: course.owner?.name ?? undefined,
-        permissoes: getCoursePermissions(
+        ownerName: course.owner?.name ?? undefined,
+        permissions: getCoursePermissions(
           authResult.user,
           course,
           collaborationByCourse.get(course.id) ?? null
         ),
-        solicitacaoPendente: pendingRequestByCourse.has(course.id),
-        dataCriacao: course.createdAt,
-        dataModificacao: course.updatedAt,
+        hasPendingRequest: pendingRequestByCourse.has(course.id),
+        createdAt: course.createdAt,
+        updatedAt: course.updatedAt,
       }
     })
 
@@ -183,16 +183,7 @@ export async function POST(req: NextRequest) {
     assertCan(authResult.user, 'course:create')
 
     const body = await req.json()
-    const {
-      titulo: title,
-      descricao: description,
-      cargaHoraria: workload,
-      modalidade: modality,
-      categoria: category,
-      layout,
-      bannerVideoUrl,
-      unidades: units,
-    } = body
+    const { title, description, workload, modality, category, layout, bannerVideoUrl, units } = body
 
     // Validar campos obrigatórios
     if (!title || !description || !workload || !modality || !category) {
@@ -200,22 +191,20 @@ export async function POST(req: NextRequest) {
     }
 
     // Normalizar unidades: garantir IDs, slugs e estrutura correta
-    const mappedUnits = (units || []).map((unit: UnitInput, index: number) => {
+    const mappedUnits = (upgradeUnits(units) as unknown as UnitInput[]).map((unit, index) => {
       const unitId = unit.id || `unidade-${Date.now()}-${index}`
-      const originalContent = unit.conteudo || unit.aulas || []
-      const normalizedContent = originalContent.map((item: UnitContent, itemIndex: number) => ({
+      const normalizedContent = (unit.blocks || []).map((item: UnitContent, itemIndex: number) => ({
         ...item,
         id: item.id || `conteudo-${Date.now()}-${index}-${itemIndex}`,
-        ordem: item.ordem ?? itemIndex,
-        tipo: item.tipo || 'paragrafo',
+        order: item.order ?? itemIndex,
+        type: item.type || 'paragraph',
       }))
 
       return {
         ...unit,
         id: unitId,
-        ordem: unit.ordem ?? index,
-        conteudo: normalizedContent,
-        aulas: undefined,
+        order: unit.order ?? index,
+        blocks: normalizedContent,
       }
     })
     const normalizedUnits = slugifyUnits(mappedUnits)
@@ -232,7 +221,7 @@ export async function POST(req: NextRequest) {
         workload,
         modality,
         category,
-        layout: layout || 'classico',
+        layout: layout || 'classic',
         bannerVideoUrl: bannerVideoUrl || null,
         units: normalizedUnits as unknown as Prisma.InputJsonValue,
         ownerId: authResult.user.id,
@@ -241,11 +230,11 @@ export async function POST(req: NextRequest) {
 
     // Registrar atividade
     await logActivity({
-      type: 'curso_criado',
+      type: 'course_created',
       title: 'Novo curso criado',
       description: title,
       entityId: course.id,
-      entityType: 'curso',
+      entityType: 'course',
       userId: authResult.user.id,
     })
 
@@ -253,20 +242,20 @@ export async function POST(req: NextRequest) {
     const formattedCourse: Course = {
       id: course.id,
       slug: course.slug ?? undefined,
-      titulo: course.title,
-      descricao: course.description,
-      cargaHoraria: course.workload,
-      modalidade: course.modality,
-      categoria: course.category,
+      title: course.title,
+      description: course.description,
+      workload: course.workload,
+      modality: course.modality,
+      category: course.category,
       layout: course.layout,
       bannerVideoUrl: course.bannerVideoUrl ?? undefined,
-      unidades: (course.units as unknown as Unit[]) || [],
+      units: upgradeUnits(course.units) as unknown as Unit[],
       status: course.status,
       version: course.version,
       ownerId: course.ownerId ?? undefined,
       permissions: getCoursePermissions(authResult.user, course),
-      dataCriacao: course.createdAt,
-      dataModificacao: course.updatedAt,
+      createdAt: course.createdAt,
+      updatedAt: course.updatedAt,
     }
 
     return createSuccessResponse({ course: formattedCourse }, 201)
@@ -294,14 +283,14 @@ export async function PUT(req: NextRequest) {
     const body = await req.json()
     const {
       id,
-      titulo: title,
-      descricao: description,
-      cargaHoraria: workload,
-      modalidade: modality,
-      categoria: category,
+      title,
+      description,
+      workload,
+      modality,
+      category,
       layout,
       bannerVideoUrl,
-      unidades: units,
+      units,
       version,
     } = body
 
@@ -339,22 +328,22 @@ export async function PUT(req: NextRequest) {
     // Normalizar unidades se fornecidas
     let normalizedUnits = undefined
     if (units !== undefined) {
-      const mappedUnits = units.map((unit: UnitInput, index: number) => {
+      const mappedUnits = (upgradeUnits(units) as unknown as UnitInput[]).map((unit, index) => {
         const unitId = unit.id || `unidade-${Date.now()}-${index}`
-        const originalContent = unit.conteudo || unit.aulas || []
-        const normalizedContent = originalContent.map((item: UnitContent, itemIndex: number) => ({
-          ...item,
-          id: item.id || `conteudo-${Date.now()}-${index}-${itemIndex}`,
-          ordem: item.ordem ?? itemIndex,
-          tipo: item.tipo || 'paragrafo',
-        }))
+        const normalizedContent = (unit.blocks || []).map(
+          (item: UnitContent, itemIndex: number) => ({
+            ...item,
+            id: item.id || `conteudo-${Date.now()}-${index}-${itemIndex}`,
+            order: item.order ?? itemIndex,
+            type: item.type || 'paragraph',
+          })
+        )
 
         return {
           ...unit,
           id: unitId,
-          ordem: unit.ordem ?? index,
-          conteudo: normalizedContent,
-          aulas: undefined,
+          order: unit.order ?? index,
+          blocks: normalizedContent,
         }
       })
       normalizedUnits = slugifyUnits(mappedUnits)
@@ -372,15 +361,17 @@ export async function PUT(req: NextRequest) {
     const course = await prisma.course.update({
       where: { id },
       data: {
-        ...(title && { titulo: title }),
+        ...(title && { title }),
         ...(newSlug && { slug: newSlug }),
-        ...(description && { descricao: description }),
-        ...(workload && { cargaHoraria: workload }),
-        ...(modality && { modalidade: modality }),
-        ...(category && { categoria: category }),
+        ...(description && { description }),
+        ...(workload && { workload }),
+        ...(modality && { modality }),
+        ...(category && { category }),
         ...(layout && { layout }),
         ...(bannerVideoUrl !== undefined && { bannerVideoUrl: bannerVideoUrl || null }),
-        ...(normalizedUnits !== undefined && { unidades: normalizedUnits }),
+        ...(normalizedUnits !== undefined && {
+          units: normalizedUnits as unknown as Prisma.InputJsonValue,
+        }),
         // Editar invalida a revisão: um curso aprovado cujo conteúdo mudou não
         // foi aprovado nesta versão, e o revisor registrado nunca a viu.
         // Vale para APPROVED e REJECTED — os dois voltam a rascunho.
@@ -395,11 +386,11 @@ export async function PUT(req: NextRequest) {
 
     // Registrar atividade
     await logActivity({
-      type: 'curso_editado',
+      type: 'course_updated',
       title: 'Curso editado',
       description: course.title,
       entityId: course.id,
-      entityType: 'curso',
+      entityType: 'course',
       userId: authResult.user.id,
     })
 
@@ -407,20 +398,20 @@ export async function PUT(req: NextRequest) {
     const formattedCourse: Course = {
       id: course.id,
       slug: course.slug ?? undefined,
-      titulo: course.title,
-      descricao: course.description,
-      cargaHoraria: course.workload,
-      modalidade: course.modality,
-      categoria: course.category,
+      title: course.title,
+      description: course.description,
+      workload: course.workload,
+      modality: course.modality,
+      category: course.category,
       layout: course.layout,
       bannerVideoUrl: course.bannerVideoUrl ?? undefined,
-      unidades: (course.units as unknown as Unit[]) || [],
+      units: upgradeUnits(course.units) as unknown as Unit[],
       status: course.status,
       version: course.version,
       ownerId: course.ownerId ?? undefined,
       permissions: getCoursePermissions(authResult.user, course, collaboration),
-      dataCriacao: course.createdAt,
-      dataModificacao: course.updatedAt,
+      createdAt: course.createdAt,
+      updatedAt: course.updatedAt,
     }
 
     return createSuccessResponse({ course: formattedCourse })
@@ -470,11 +461,11 @@ export async function DELETE(req: NextRequest) {
 
     // Registrar atividade
     await logActivity({
-      type: 'curso_deletado',
+      type: 'course_deleted',
       title: 'Curso deletado',
       description: existingCourse.title,
       entityId: id,
-      entityType: 'curso',
+      entityType: 'course',
       userId: authResult.user.id,
     })
 

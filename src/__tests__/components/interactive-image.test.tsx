@@ -6,14 +6,14 @@ import type { Block } from '@/types/course'
 
 const item: Block = {
   id: 'b1',
-  ordem: 0,
-  tipo: 'imagem-interativa',
-  conteudo: '',
-  imagemBase: 'https://exemplo.com/capacete.png',
-  legenda: 'Partes do capacete',
+  order: 0,
+  type: 'interactive-image',
+  content: '',
+  baseImage: 'https://exemplo.com/capacete.png',
+  caption: 'Partes do capacete',
   hotspots: [
-    { id: 'h1', x: 50, y: 25, titulo: 'Casco', conteudo: '<p>Camada externa rígida.</p>' },
-    { id: 'h2', x: 32, y: 72, titulo: 'Jugular', conteudo: '<p>Prende ao queixo.</p>' },
+    { id: 'h1', x: 50, y: 25, title: 'Casco', content: '<p>Camada externa rígida.</p>' },
+    { id: 'h2', x: 32, y: 72, title: 'Jugular', content: '<p>Prende ao queixo.</p>' },
   ],
 }
 

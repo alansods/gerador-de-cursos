@@ -27,11 +27,11 @@ export function InteractiveVideoBlock({ item, blockIndex }: { item: Block; block
   const [confirmed, setConfirmed] = useState(false)
 
   const cues = useMemo<Cue[]>(() => {
-    return (item.perguntasVideo ?? [])
-      .map((question) => ({ ...question, seconds: timeToSeconds(question.tempo) }))
+    return (item.videoQuestions ?? [])
+      .map((question) => ({ ...question, seconds: timeToSeconds(question.time) }))
       .filter((cue): cue is Cue => cue.seconds !== null)
       .sort((a, b) => a.seconds - b.seconds)
-  }, [item.perguntasVideo])
+  }, [item.videoQuestions])
 
   const nextPending = cues.find((cue) => !answered[cue.id])
   const fromYouTube = videoSource(item) === 'youtube'
@@ -74,7 +74,7 @@ export function InteractiveVideoBlock({ item, blockIndex }: { item: Block; block
   const confirm = () => {
     if (!activeCue || !selected || confirmed) return
 
-    const isCorrect = selected === activeCue.correta
+    const isCorrect = selected === activeCue.correct
     const newCorrectCount = correctCount + (isCorrect ? 1 : 0)
 
     setConfirmed(true)
@@ -91,13 +91,13 @@ export function InteractiveVideoBlock({ item, blockIndex }: { item: Block; block
   }
 
   const options = questionOptions(activeCue ?? undefined)
-  const answeredCurrentCorrectly = confirmed && selected === activeCue?.correta
+  const answeredCurrentCorrectly = confirmed && selected === activeCue?.correct
 
   return (
     <div className="mb-4 w-full space-y-3">
-      {item.videoTitulo && (
+      {item.videoTitle && (
         <h4 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-          {item.videoTitulo}
+          {item.videoTitle}
         </h4>
       )}
 
@@ -142,12 +142,12 @@ export function InteractiveVideoBlock({ item, blockIndex }: { item: Block; block
             <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-gray-400">
               Pergunta em {formatTime(activeCue.seconds)}
             </p>
-            <p className="mb-4 text-base font-medium text-white">{activeCue.pergunta}</p>
+            <p className="mb-4 text-base font-medium text-white">{activeCue.question}</p>
 
             <div className="space-y-2">
               {options.map((option) => {
                 const chosen = selected === option.letter
-                const correct = option.letter === activeCue.correta
+                const correct = option.letter === activeCue.correct
 
                 const style = !confirmed
                   ? chosen

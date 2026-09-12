@@ -39,9 +39,9 @@ export function ManageUnitsModal({ open, onOpenChange, units }: ManageUnitsModal
 
   const handleAdd = async () => {
     const newUnit = {
-      titulo: `Nova Unidade ${localUnits.length + 1}`,
-      descricao: 'Descrição da unidade',
-      conteudo: [],
+      title: `Nova Unidade ${localUnits.length + 1}`,
+      description: 'Descrição da unidade',
+      blocks: [],
     }
     setPending(true)
     try {
@@ -57,8 +57,8 @@ export function ManageUnitsModal({ open, onOpenChange, units }: ManageUnitsModal
 
     setPending(true)
     try {
-      await updateUnit(id, { titulo: newTitle })
-      setLocalUnits((prev) => prev.map((u) => (u.id === id ? { ...u, titulo: newTitle } : u)))
+      await updateUnit(id, { title: newTitle })
+      setLocalUnits((prev) => prev.map((u) => (u.id === id ? { ...u, title: newTitle } : u)))
     } finally {
       setPending(false)
     }

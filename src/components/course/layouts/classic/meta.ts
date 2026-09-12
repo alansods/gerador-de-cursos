@@ -1,7 +1,7 @@
 import type { LayoutMeta } from '../types'
 
 export const classicMeta: LayoutMeta = {
-  id: 'classico',
+  id: 'classic',
   name: 'Clássico',
   description: 'Navbar fixa, menu lateral e navegação por unidades — o modelo padrão do curso.',
   blockTheme: {

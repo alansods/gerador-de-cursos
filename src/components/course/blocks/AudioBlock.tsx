@@ -27,7 +27,7 @@ export function AudioBlock({ item }: { item: Block }) {
           <Music className="h-4 w-4" />
         </span>
         <p className="flex-1 font-medium text-gray-900 dark:text-gray-100">
-          {item.audioTitulo || 'Áudio'}
+          {item.audioTitle || 'Áudio'}
         </p>
         <button
           type="button"
@@ -44,14 +44,14 @@ export function AudioBlock({ item }: { item: Block }) {
         Seu navegador não reproduz áudio.
       </audio>
 
-      {item.transcricao && (
+      {item.transcript && (
         <details className="mt-3">
           <summary className="cursor-pointer text-sm font-medium text-(--block-accent,#2563eb)">
             Transcrição
           </summary>
           <div
             className="mt-2 text-sm text-gray-700 dark:text-gray-300 leading-relaxed"
-            dangerouslySetInnerHTML={{ __html: item.transcricao }}
+            dangerouslySetInnerHTML={{ __html: item.transcript }}
           />
         </details>
       )}

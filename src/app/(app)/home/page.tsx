@@ -62,85 +62,85 @@ export default function HomePage() {
   // Mapear tipo de atividade para ícone e cor
   const getActivityIconAndColor = (type: string) => {
     switch (type) {
-      case 'curso_criado':
+      case 'course_created':
         return {
           icon: CheckCircle2,
           iconBg: 'bg-green-500/10',
           iconColor: '#22c55e',
         }
-      case 'curso_editado':
+      case 'course_updated':
         return {
           icon: Edit,
           iconBg: 'bg-blue-500/10',
           iconColor: '#3b82f6',
         }
-      case 'curso_deletado':
+      case 'course_deleted':
         return {
           icon: Trash2,
           iconBg: 'bg-red-500/10',
           iconColor: '#ef4444',
         }
-      case 'usuario_criado':
+      case 'user_created':
         return {
           icon: UserPlus,
           iconBg: 'bg-emerald-500/10',
           iconColor: '#10b981',
         }
-      case 'usuario_editado':
+      case 'user_updated':
         return {
           icon: Edit,
           iconBg: 'bg-indigo-500/10',
           iconColor: '#6366f1',
         }
-      case 'usuario_deletado':
+      case 'user_deleted':
         return {
           icon: Trash2,
           iconBg: 'bg-orange-500/10',
           iconColor: '#f97316',
         }
-      case 'acesso_solicitado':
+      case 'access_requested':
         return {
           icon: KeyRound,
           iconBg: 'bg-sky-500/10',
           iconColor: '#0ea5e9',
         }
-      case 'acesso_aprovado':
+      case 'access_approved':
         return {
           icon: UserCheck,
           iconBg: 'bg-emerald-500/10',
           iconColor: '#10b981',
         }
-      case 'acesso_negado':
+      case 'access_denied':
         return {
           icon: UserX,
           iconBg: 'bg-red-500/10',
           iconColor: '#ef4444',
         }
-      case 'acesso_revogado':
+      case 'access_revoked':
         return {
           icon: ShieldOff,
           iconBg: 'bg-orange-500/10',
           iconColor: '#f97316',
         }
-      case 'curso_enviado_revisao':
+      case 'course_submitted_for_review':
         return {
           icon: Send,
           iconBg: 'bg-amber-500/10',
           iconColor: '#f59e0b',
         }
-      case 'curso_aprovado':
+      case 'course_approved':
         return {
           icon: BadgeCheck,
           iconBg: 'bg-emerald-500/10',
           iconColor: '#10b981',
         }
-      case 'curso_reprovado':
+      case 'course_rejected':
         return {
           icon: XCircle,
           iconBg: 'bg-red-500/10',
           iconColor: '#ef4444',
         }
-      case 'curso_comentado':
+      case 'course_commented':
         return {
           icon: MessageSquare,
           iconBg: 'bg-violet-500/10',

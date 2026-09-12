@@ -38,10 +38,10 @@ export function SidebarNavbar({
     <>
       <div className="px-2 pb-5">
         <h2 className="text-sm font-extrabold tracking-tight text-gray-900 dark:text-gray-50 line-clamp-2">
-          {course.titulo}
+          {course.title}
         </h2>
         <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-          Curso · {course.unidades.length} unidade{course.unidades.length === 1 ? '' : 's'}
+          Curso · {course.units.length} unidade{course.units.length === 1 ? '' : 's'}
         </p>
 
         <div className="mt-3.5 flex flex-col gap-1">
@@ -90,7 +90,7 @@ export function SidebarNavbar({
         Unidades
       </p>
       <nav className="flex flex-col gap-0.5">
-        {course.unidades.map((unit, index) => {
+        {course.units.map((unit, index) => {
           const isActive = unit.id === currentUnitId
           const completed = completedUnits?.[index] ?? false
 
@@ -118,7 +118,7 @@ export function SidebarNavbar({
               >
                 {completed && !isActive ? <Check className="w-3 h-3" strokeWidth={3} /> : index + 1}
               </span>
-              <span className="line-clamp-2">{unit.titulo}</span>
+              <span className="line-clamp-2">{unit.title}</span>
             </button>
           )
         })}

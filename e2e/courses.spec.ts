@@ -52,12 +52,12 @@ const lines = (page: Page) => page.locator('tbody tr')
 async function createCourse(page: Page, title: string) {
   const response = await page.request.post('/api/courses', {
     data: {
-      titulo: title,
-      descricao: 'Curso criado pelo teste E2E da listagem de cursos.',
-      cargaHoraria: '40',
-      modalidade: 'Online',
-      categoria: 'Tecnologia',
-      unidades: [],
+      title: title,
+      description: 'Curso criado pelo teste E2E da listagem de cursos.',
+      workload: '40',
+      modality: 'Online',
+      category: 'Tecnologia',
+      units: [],
     },
   })
 

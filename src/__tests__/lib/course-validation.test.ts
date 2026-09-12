@@ -11,11 +11,11 @@ import {
 } from '@/lib/course-validation'
 
 const validData: ManualCourseData = {
-  titulo: 'Fundamentos de Automação Industrial',
-  categoria: 'Tecnologia',
-  descricao: 'Ao final o aluno será capaz de identificar componentes e configurar um CLP básico.',
-  cargaHoraria: '40',
-  modalidade: 'Online',
+  title: 'Fundamentos de Automação Industrial',
+  category: 'Tecnologia',
+  description: 'Ao final o aluno será capaz de identificar componentes e configurar um CLP básico.',
+  workload: '40',
+  modality: 'Online',
 }
 
 function repeat(caracteres: number): string {
@@ -81,25 +81,25 @@ describe('validarCursoManual', () => {
 
   it('acusa todos os campos vazios de uma vez', () => {
     const errors = validateManualCourse({
-      titulo: '',
-      categoria: '',
-      descricao: '',
-      cargaHoraria: '',
-      modalidade: '',
+      title: '',
+      category: '',
+      description: '',
+      workload: '',
+      modality: '',
     })
 
     expect(Object.keys(errors).sort()).toEqual([
-      'cargaHoraria',
-      'categoria',
-      'descricao',
-      'modalidade',
-      'titulo',
+      'category',
+      'description',
+      'modality',
+      'title',
+      'workload',
     ])
   })
 
   it('valida campo a campo pela mesma regra', () => {
-    expect(validateField('categoria', '')).toBe('Selecione uma categoria')
-    expect(validateField('categoria', 'Design')).toBe('')
+    expect(validateField('category', '')).toBe('Selecione uma categoria')
+    expect(validateField('category', 'Design')).toBe('')
   })
 })
 

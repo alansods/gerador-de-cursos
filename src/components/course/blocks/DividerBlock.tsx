@@ -1,11 +1,11 @@
 import { Block } from '@/types/course'
 
 export function DividerBlock({ item }: { item: Block }) {
-  if (item.estiloSeparador === 'espaco') {
+  if (item.dividerStyle === 'space') {
     return <div className="h-12" aria-hidden="true" />
   }
 
-  if (item.estiloSeparador === 'linha-icone') {
+  if (item.dividerStyle === 'line-icon') {
     return (
       <div className="my-8 flex items-center gap-4" aria-hidden="true">
         <span className="h-px flex-1 bg-gray-200 dark:bg-gray-700" />

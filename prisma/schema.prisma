@@ -70,7 +70,7 @@ model Course {
   workload       String                @map("carga_horaria")
   modality       String                @map("modalidade")
   category       String                @map("categoria")
-  layout         String                @default("classico")
+  layout         String                @default("classic")
   bannerVideoUrl String?               @map("banner_video_url")
   units          Json                  @default("[]") @map("unidades")
   status         CourseStatus          @default(IN_PROGRESS)

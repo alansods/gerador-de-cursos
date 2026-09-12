@@ -38,7 +38,7 @@ export function CourseEditorProvider({ children }: { children: React.ReactNode }
   )
 
   const createCourse = useCallback(
-    async (course: Omit<Course, 'id' | 'dataCriacao' | 'dataModificacao'>) => {
+    async (course: Omit<Course, 'id' | 'createdAt' | 'updatedAt'>) => {
       const created = await create.mutateAsync(course)
       setSelectedCourse(created.id)
       return created.id
@@ -67,34 +67,34 @@ export function CourseEditorProvider({ children }: { children: React.ReactNode }
   const saveUnits = useCallback(
     (units: Unit[] | undefined) => {
       if (!currentCourse) return Promise.resolve()
-      return updateCourse(currentCourse.id, { unidades: units })
+      return updateCourse(currentCourse.id, { units })
     },
     [currentCourse, updateCourse]
   )
 
   const addUnit = useCallback(
-    (unit: Omit<Unit, 'id' | 'ordem'>) => {
+    (unit: Omit<Unit, 'id' | 'order'>) => {
       if (!currentCourse) return Promise.resolve()
 
       const newUnit: Unit = {
         ...unit,
         id: Date.now().toString(),
-        ordem: currentCourse.unidades?.length || 0,
+        order: currentCourse.units?.length || 0,
       }
 
-      return saveUnits([...(currentCourse.unidades || []), newUnit])
+      return saveUnits([...(currentCourse.units || []), newUnit])
     },
     [currentCourse, saveUnits]
   )
 
   const updateUnit = useCallback(
     (unitId: string, data: Partial<Unit>) =>
-      saveUnits(currentCourse?.unidades?.map((u) => (u.id === unitId ? { ...u, ...data } : u))),
+      saveUnits(currentCourse?.units?.map((u) => (u.id === unitId ? { ...u, ...data } : u))),
     [currentCourse, saveUnits]
   )
 
   const deleteUnit = useCallback(
-    (unitId: string) => saveUnits(currentCourse?.unidades?.filter((u) => u.id !== unitId)),
+    (unitId: string) => saveUnits(currentCourse?.units?.filter((u) => u.id !== unitId)),
     [currentCourse, saveUnits]
   )
 
@@ -102,22 +102,20 @@ export function CourseEditorProvider({ children }: { children: React.ReactNode }
 
   const mapUnit = useCallback(
     (unitId: string, transform: (unit: Unit) => Unit) =>
-      saveUnits(
-        currentCourse?.unidades?.map((unit) => (unit.id === unitId ? transform(unit) : unit))
-      ),
+      saveUnits(currentCourse?.units?.map((unit) => (unit.id === unitId ? transform(unit) : unit))),
     [currentCourse, saveUnits]
   )
 
   const addBlock = useCallback(
-    (unitId: string, content: Omit<Block, 'id' | 'ordem'>) =>
+    (unitId: string, content: Omit<Block, 'id' | 'order'>) =>
       mapUnit(unitId, (unit) => {
         const newBlock: Block = {
           ...content,
           id: Date.now().toString(),
-          ordem: unit.conteudo?.length || 0,
+          order: unit.blocks?.length || 0,
         }
 
-        return { ...unit, conteudo: [...(unit.conteudo || []), newBlock] }
+        return { ...unit, blocks: [...(unit.blocks || []), newBlock] }
       }),
     [mapUnit]
   )
@@ -126,7 +124,7 @@ export function CourseEditorProvider({ children }: { children: React.ReactNode }
     (unitId: string, blockId: string, data: Partial<Block>) => {
       mapUnit(unitId, (unit) => ({
         ...unit,
-        conteudo: unit.conteudo?.map((c) => (c.id === blockId ? { ...c, ...data } : c)),
+        blocks: unit.blocks?.map((c) => (c.id === blockId ? { ...c, ...data } : c)),
       }))
     },
     [mapUnit]
@@ -136,7 +134,7 @@ export function CourseEditorProvider({ children }: { children: React.ReactNode }
     (unitId: string, blockId: string) => {
       mapUnit(unitId, (unit) => ({
         ...unit,
-        conteudo: unit.conteudo?.filter((c) => c.id !== blockId),
+        blocks: unit.blocks?.filter((c) => c.id !== blockId),
       }))
     },
     [mapUnit]
@@ -144,7 +142,7 @@ export function CourseEditorProvider({ children }: { children: React.ReactNode }
 
   const reorderBlocks = useCallback(
     (unitId: string, blocks: Block[]) => {
-      mapUnit(unitId, (unit) => ({ ...unit, conteudo: blocks }))
+      mapUnit(unitId, (unit) => ({ ...unit, blocks }))
     },
     [mapUnit]
   )

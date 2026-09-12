@@ -3,12 +3,12 @@ import type { Course } from '@/types/course'
 
 const course: Course = {
   id: 'curso-1',
-  titulo: 'Segurança do Trabalho',
-  descricao: '',
-  cargaHoraria: '8 horas',
-  modalidade: 'Online',
-  categoria: 'Gestão',
-  unidades: [],
+  title: 'Segurança do Trabalho',
+  description: '',
+  workload: '8 horas',
+  modality: 'Online',
+  category: 'Gestão',
+  units: [],
 }
 
 describe('generateManifest', () => {
@@ -21,7 +21,7 @@ describe('generateManifest', () => {
   })
 
   it('escapa o título do curso no XML', () => {
-    const manifesto = generateManifest({ ...course, titulo: 'NR-6 & EPI' }, ['index.html'])
+    const manifesto = generateManifest({ ...course, title: 'NR-6 & EPI' }, ['index.html'])
 
     expect(manifesto).toContain('<title>NR-6 &amp; EPI</title>')
   })

@@ -94,11 +94,11 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
     ])
 
     await logActivity({
-      type: 'acesso_revogado',
+      type: 'access_revoked',
       title: 'Acesso revogado',
       description: `${collaborator.user.name} em "${course.title}"`,
       entityId: id,
-      entityType: 'curso',
+      entityType: 'course',
       userId: authResult.user.id,
     })
 

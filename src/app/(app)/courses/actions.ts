@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma'
 import { getServerUser } from '@/lib/auth-server'
 import { getCoursePermissions, type CourseStatus } from '@/lib/permissions'
 import type { Course } from '@/types/course'
+import { upgradeUnits } from '@/lib/legacy-course'
 
 export interface FetchCoursesParams {
   cursor?: string // ID do último curso da página anterior
@@ -131,12 +132,12 @@ export async function fetchCourses({
       (course): Course => ({
         id: course.id,
         slug: course.slug || course.id,
-        titulo: course.title,
-        descricao: course.description,
-        categoria: course.category,
-        modalidade: course.modality,
-        cargaHoraria: course.workload,
-        unidades: course.units as unknown as Course['unidades'],
+        title: course.title,
+        description: course.description,
+        category: course.category,
+        modality: course.modality,
+        workload: course.workload,
+        units: upgradeUnits(course.units) as unknown as Course['units'],
         status: course.status,
         version: course.version,
         ownerId: course.ownerId ?? undefined,
@@ -147,8 +148,8 @@ export async function fetchCourses({
           collaborationByCourse.get(course.id) ?? null
         ),
         hasPendingRequest: pendingRequestByCourse.has(course.id),
-        dataCriacao: course.createdAt,
-        dataModificacao: course.updatedAt,
+        createdAt: course.createdAt,
+        updatedAt: course.updatedAt,
       })
     )
 

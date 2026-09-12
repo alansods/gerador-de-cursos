@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { RotateCcw } from 'lucide-react'
 
 interface FlipCardProps {
-  frontType: 'imagem' | 'imagem-titulo' | 'titulo'
+  frontType: 'image' | 'image-title' | 'title'
   frontImage?: string
   frontTitle?: string
   backContent: string
@@ -24,7 +24,7 @@ export function FlipCard({
 
   const height = cardHeight || '300px'
   const numero = typeof index === 'number' ? String(index).padStart(2, '0') : null
-  const withImage = frontType === 'imagem' || frontType === 'imagem-titulo'
+  const withImage = frontType === 'image' || frontType === 'image-title'
   const title = frontTitle || (withImage ? '' : 'Card')
 
   return (
@@ -33,7 +33,7 @@ export function FlipCard({
         <div className="fc-face fc-frente">
           {withImage ? (
             <>
-              <div className="fc-band" style={frontType === 'imagem' ? { flex: 1 } : undefined}>
+              <div className="fc-band" style={frontType === 'image' ? { flex: 1 } : undefined}>
                 {frontImage && (
                   <img
                     src={frontImage}

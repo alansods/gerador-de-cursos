@@ -23,9 +23,9 @@ describe('documento de exemplo', () => {
         SAMPLE_DOCUMENT_TEXT.match(new RegExp(`\\b${meta.marker}_INICIO\\b`, 'g')) ?? []
       const closings = SAMPLE_DOCUMENT_TEXT.match(new RegExp(`\\b${meta.marker}_FIM\\b`, 'g')) ?? []
 
-      expect({ tipo: meta.type, aberturas: openings.length }).toEqual({
-        tipo: meta.type,
-        aberturas: closings.length,
+      expect({ type: meta.type, openings: openings.length }).toEqual({
+        type: meta.type,
+        openings: closings.length,
       })
     }
   })

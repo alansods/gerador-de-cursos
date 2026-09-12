@@ -6,11 +6,11 @@ import { StepInformation } from '@/components/course/new/StepInformation'
 import type { ManualCourseData } from '@/lib/course-validation'
 
 const emptyData: ManualCourseData = {
-  titulo: '',
-  categoria: '',
-  descricao: '',
-  cargaHoraria: '',
-  modalidade: 'Online',
+  title: '',
+  category: '',
+  description: '',
+  workload: '',
+  modality: 'Online',
 }
 
 describe('StepMetodo', () => {
@@ -63,7 +63,7 @@ describe('StepInformacoes', () => {
     return render(
       <StepInformation
         data={emptyData}
-        errors={{ titulo: 'Informe o título do curso', categoria: 'Selecione uma categoria' }}
+        errors={{ title: 'Informe o título do curso', category: 'Selecione uma categoria' }}
         showError={() => true}
         onChange={jest.fn()}
         onBlur={jest.fn()}
@@ -94,21 +94,21 @@ describe('StepInformacoes', () => {
 
   it('navega pelas categorias com as setas', async () => {
     const onChange = jest.fn()
-    renderComponent({ data: { ...emptyData, categoria: 'Tecnologia' }, onChange })
+    renderComponent({ data: { ...emptyData, category: 'Tecnologia' }, onChange })
 
     screen.getByRole('radio', { name: 'Tecnologia' }).focus()
     await userEvent.keyboard('{ArrowRight}')
 
-    expect(onChange).toHaveBeenCalledWith('categoria', 'Marketing')
+    expect(onChange).toHaveBeenCalledWith('category', 'Marketing')
   })
 
   it('volta para a última categoria com End e Home', async () => {
     const onChange = jest.fn()
-    renderComponent({ data: { ...emptyData, categoria: 'Tecnologia' }, onChange })
+    renderComponent({ data: { ...emptyData, category: 'Tecnologia' }, onChange })
 
     screen.getByRole('radio', { name: 'Tecnologia' }).focus()
     await userEvent.keyboard('{End}')
 
-    expect(onChange).toHaveBeenCalledWith('categoria', 'Idiomas')
+    expect(onChange).toHaveBeenCalledWith('category', 'Idiomas')
   })
 })

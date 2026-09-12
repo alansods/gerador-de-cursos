@@ -56,21 +56,21 @@ const mockFetchCourses = fetchCourses as jest.MockedFunction<typeof fetchCourses
 const coursesMock = [
   {
     id: '1',
-    titulo: 'JavaScript Básico',
-    descricao: 'Aprenda JavaScript do zero',
-    cargaHoraria: '40h',
-    modalidade: 'Online',
-    categoria: 'Tecnologia',
-    unidades: [{ id: '1', titulo: 'Unidade 1' }],
+    title: 'JavaScript Básico',
+    description: 'Aprenda JavaScript do zero',
+    workload: '40h',
+    modality: 'Online',
+    category: 'Tecnologia',
+    units: [{ id: '1', title: 'Unidade 1' }],
   },
   {
     id: '2',
-    titulo: 'React Avançado',
-    descricao: 'Domine React',
-    cargaHoraria: '60h',
-    modalidade: 'Online',
-    categoria: 'Tecnologia',
-    unidades: [{ id: '1', titulo: 'Unidade 1' }],
+    title: 'React Avançado',
+    description: 'Domine React',
+    workload: '60h',
+    modality: 'Online',
+    category: 'Tecnologia',
+    units: [{ id: '1', title: 'Unidade 1' }],
   },
 ]
 

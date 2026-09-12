@@ -91,11 +91,11 @@ async function preloadImages(course: CourseSummary): Promise<Map<string, LoadedI
   const map = new Map<string, LoadedImage | null>()
   const tasks: Promise<void>[] = []
 
-  for (const unit of course.unidades || []) {
-    for (const item of unit.conteudo || []) {
-      if (item.tipo === 'imagem' && item.conteudo) {
+  for (const unit of course.units || []) {
+    for (const item of unit.blocks || []) {
+      if (item.type === 'image' && item.content) {
         tasks.push(
-          loadImage(item.conteudo).then((img) => {
+          loadImage(item.content).then((img) => {
             map.set(item.id, img)
           })
         )
@@ -349,7 +349,7 @@ export async function generateCoursePDF(course: CourseSummary, filename?: string
     drawHexGrid(doc, PAGE_WIDTH - 85, -15, 9, 6, 9)
 
     let y = 110
-    const title = course.titulo || 'Curso'
+    const title = course.title || 'Curso'
     const titleSize = title.length > 40 ? 26 : 32
     y = renderText(title, y, {
       fontSize: titleSize,
@@ -358,9 +358,9 @@ export async function generateCoursePDF(course: CourseSummary, filename?: string
       maxWidth: CONTENT_WIDTH,
     })
 
-    if (course.descricao) {
+    if (course.description) {
       y = addSpace(y, 6)
-      renderText(course.descricao, y, {
+      renderText(course.description, y, {
         fontSize: 13,
         fontStyle: 'light',
         color: THEME.colors.white,
@@ -373,7 +373,7 @@ export async function generateCoursePDF(course: CourseSummary, filename?: string
     doc.setLineWidth(0.5)
     doc.line(MARGIN, footerY, PAGE_WIDTH - MARGIN, footerY)
 
-    const metaParts = [course.categoria, course.cargaHoraria, course.modalidade].filter(Boolean)
+    const metaParts = [course.category, course.workload, course.modality].filter(Boolean)
     renderText(metaParts.join('   ·   '), footerY + 6, {
       fontSize: 10,
       color: THEME.colors.accent,
@@ -387,7 +387,7 @@ export async function generateCoursePDF(course: CourseSummary, filename?: string
   const renderTitlePage = () => {
     doc.addPage()
     const y = PAGE_HEIGHT / 2 - 20
-    renderText(course.titulo || 'Curso', y, {
+    renderText(course.title || 'Curso', y, {
       fontSize: THEME.fonts.h1,
       fontStyle: 'light',
       color: THEME.colors.primary,
@@ -407,12 +407,12 @@ export async function generateCoursePDF(course: CourseSummary, filename?: string
     y = addSpace(y, 8)
 
     const infos = [
-      { label: 'Categoria', value: course.categoria },
-      { label: 'Carga Horária', value: course.cargaHoraria },
-      { label: 'Modalidade', value: course.modalidade },
+      { label: 'Categoria', value: course.category },
+      { label: 'Carga Horária', value: course.workload },
+      { label: 'Modalidade', value: course.modality },
       {
         label: 'Data de Criação',
-        value: course.dataCriacao ? new Date(course.dataCriacao).toLocaleDateString('pt-BR') : '',
+        value: course.createdAt ? new Date(course.createdAt).toLocaleDateString('pt-BR') : '',
       },
     ].filter((info) => info.value)
 
@@ -533,7 +533,7 @@ export async function generateCoursePDF(course: CourseSummary, filename?: string
     })
     y = addSpace(y, 4)
 
-    y = renderText(unit.titulo, y, {
+    y = renderText(unit.title, y, {
       fontSize: THEME.fonts.h1,
       fontStyle: 'bold',
       color: THEME.colors.white,
@@ -541,8 +541,8 @@ export async function generateCoursePDF(course: CourseSummary, filename?: string
     })
     y = addSpace(y, 10)
 
-    if (unit.descricao) {
-      renderText(unit.descricao, y, {
+    if (unit.description) {
+      renderText(unit.description, y, {
         fontSize: 12,
         fontStyle: 'light',
         color: THEME.colors.white,
@@ -561,22 +561,22 @@ export async function generateCoursePDF(course: CourseSummary, filename?: string
   // ROTEADOR DE BLOCOS DE CONTEÚDO
   // ========================================================================
   const renderContentItem = (item: Block, y: number): number => {
-    switch (item.tipo) {
-      case 'titulo':
-        return renderText(item.conteudo, y, {
+    switch (item.type) {
+      case 'heading':
+        return renderText(item.content, y, {
           fontSize: THEME.fonts.h2,
           fontStyle: 'bold',
           color: THEME.colors.primary,
         })
 
-      case 'subtitulo':
-        return renderText(item.conteudo, y, {
+      case 'subheading':
+        return renderText(item.content, y, {
           fontSize: THEME.fonts.h3,
           fontStyle: 'bold',
           color: THEME.colors.primary,
         })
 
-      case 'imagem':
+      case 'image':
         return renderImageBox(item, y)
 
       case 'accordion':
@@ -585,8 +585,8 @@ export async function generateCoursePDF(course: CourseSummary, filename?: string
       case 'flipcard':
         return renderFlipcards(item, y)
 
-      case 'lista':
-        return renderList(item.itensLista || [], item.tipoLista, y)
+      case 'list':
+        return renderList(item.listItems || [], item.listType, y)
 
       case 'quiz':
         if (!item.quizData) {
@@ -604,11 +604,11 @@ export async function generateCoursePDF(course: CourseSummary, filename?: string
           info: 'Informação',
           curiosidade: 'Curiosidade',
         }
-        const title = item.tituloInfoBox || labels[item.tipoInfoBox || 'info'] || 'Saiba Mais'
+        const title = item.infoBoxTitle || labels[item.infoBoxType || 'info'] || 'Saiba Mais'
         return renderBoxV2(
           y,
           (yPos) =>
-            renderText(item.conteudo, yPos, {
+            renderText(item.content, yPos, {
               fontSize: THEME.fonts.bodySize,
               color: THEME.colors.text,
               x: MARGIN + THEME.layout.boxPadding,
@@ -624,7 +624,7 @@ export async function generateCoursePDF(course: CourseSummary, filename?: string
         return renderBoxV2(
           y,
           (yPos) => {
-            let boxY = renderText(item.videoTitulo || 'Vídeo', yPos, {
+            let boxY = renderText(item.videoTitle || 'Vídeo', yPos, {
               fontSize: THEME.fonts.bodySize,
               fontStyle: 'bold',
               color: THEME.colors.primary,
@@ -649,12 +649,12 @@ export async function generateCoursePDF(course: CourseSummary, filename?: string
           'Vídeo disponível online'
         )
 
-      case 'objetivos-aprendizagem':
+      case 'learning-objectives':
         return renderBoxV2(
           y,
           (yPos) => {
             let boxY = yPos
-            ;(item.itensObjetivos || []).forEach((objective, idx) => {
+            ;(item.objectiveItems || []).forEach((objective, idx) => {
               boxY = checkPageBreak(boxY, 8)
               renderText(String(idx + 1).padStart(2, '0'), boxY, {
                 fontSize: THEME.fonts.bodySize,
@@ -662,7 +662,7 @@ export async function generateCoursePDF(course: CourseSummary, filename?: string
                 color: THEME.colors.accent,
                 x: MARGIN + THEME.layout.boxPadding,
               })
-              boxY = renderText(objective.texto, boxY, {
+              boxY = renderText(objective.text, boxY, {
                 fontSize: THEME.fonts.bodySize,
                 color: THEME.colors.text,
                 x: MARGIN + THEME.layout.boxPadding + 12,
@@ -684,10 +684,10 @@ export async function generateCoursePDF(course: CourseSummary, filename?: string
           direita: 'right',
           justificado: 'justify',
         }
-        const customColor = item.corTexto && hexToRgb(item.corTexto) ? item.corTexto : undefined
-        return renderText(item.conteudo, y, {
+        const customColor = item.textColor && hexToRgb(item.textColor) ? item.textColor : undefined
+        return renderText(item.content, y, {
           fontSize: THEME.fonts.bodySize,
-          align: item.alinhamento ? alignMap[item.alinhamento] || 'justify' : 'justify',
+          align: item.alignment ? alignMap[item.alignment] || 'justify' : 'justify',
           color: customColor || THEME.colors.text,
           isHtml: true,
         })
@@ -705,14 +705,14 @@ export async function generateCoursePDF(course: CourseSummary, filename?: string
     if (!loaded) {
       return renderBoxV2(y, (yPos) => {
         let boxY = yPos
-        boxY = renderText(`[ Imagem: ${item.legenda || 'sem legenda'} ]`, boxY, {
+        boxY = renderText(`[ Imagem: ${item.caption || 'sem legenda'} ]`, boxY, {
           fontSize: THEME.fonts.bodySize,
           fontStyle: 'italic',
           align: 'center',
           color: THEME.colors.textMuted,
         })
-        if (item.fonte) {
-          boxY = renderText(`Fonte: ${item.fonte}`, boxY, {
+        if (item.source) {
+          boxY = renderText(`Fonte: ${item.source}`, boxY, {
             fontSize: THEME.fonts.caption,
             align: 'center',
             color: THEME.colors.textMuted,
@@ -723,7 +723,7 @@ export async function generateCoursePDF(course: CourseSummary, filename?: string
     }
 
     figureCounter++
-    const widthRatio = item.tamanho === 'pequena' ? 0.5 : item.tamanho === 'media' ? 0.7 : 0.85
+    const widthRatio = item.size === 'small' ? 0.5 : item.size === 'medium' ? 0.7 : 0.85
     let drawW = CONTENT_WIDTH * widthRatio
     let drawH = loaded.height * (drawW / loaded.width)
 
@@ -740,15 +740,15 @@ export async function generateCoursePDF(course: CourseSummary, filename?: string
     doc.addImage(loaded.dataUrl, 'JPEG', x, newY, drawW, drawH)
     newY += drawH + 3
 
-    if (item.legenda) {
-      newY = renderText(`Figura ${figureCounter} – ${item.legenda}`, newY, {
+    if (item.caption) {
+      newY = renderText(`Figura ${figureCounter} – ${item.caption}`, newY, {
         fontSize: THEME.fonts.caption,
         align: 'center',
         color: THEME.colors.textMuted,
       })
     }
-    if (item.fonte) {
-      newY = renderText(`Fonte: ${item.fonte}`, newY, {
+    if (item.source) {
+      newY = renderText(`Fonte: ${item.source}`, newY, {
         fontSize: THEME.fonts.caption,
         align: 'center',
         color: THEME.colors.textMuted,
@@ -777,7 +777,7 @@ export async function generateCoursePDF(course: CourseSummary, filename?: string
         doc.rect(MARGIN, currentY + 1.3, 1.8, 1.8, 'F')
       }
 
-      currentY = renderText(item.texto, currentY, {
+      currentY = renderText(item.text, currentY, {
         fontSize: THEME.fonts.bodySize,
         color: THEME.colors.text,
         x: MARGIN + indent,
@@ -797,7 +797,7 @@ export async function generateCoursePDF(course: CourseSummary, filename?: string
         if (index > 0) {
           boxY = addSpace(boxY, 3)
         }
-        boxY = renderText(item.titulo, boxY, {
+        boxY = renderText(item.title, boxY, {
           fontSize: THEME.fonts.h3,
           fontStyle: 'bold',
           color: THEME.colors.primary,
@@ -805,7 +805,7 @@ export async function generateCoursePDF(course: CourseSummary, filename?: string
           maxWidth: CONTENT_WIDTH - THEME.layout.boxPadding * 2,
         })
         boxY = addSpace(boxY, 2)
-        boxY = renderText(item.conteudo, boxY, {
+        boxY = renderText(item.content, boxY, {
           fontSize: THEME.fonts.bodySize,
           color: THEME.colors.text,
           x: MARGIN + THEME.layout.boxPadding,
@@ -825,8 +825,8 @@ export async function generateCoursePDF(course: CourseSummary, filename?: string
   }
 
   const renderFlipcardBox = (card: FlipcardItem, y: number): number => {
-    const frontText = card.tituloFrente || ''
-    const backText = card.conteudoVerso || ''
+    const frontText = card.frontTitle || ''
+    const backText = card.backContent || ''
     const shortEnough = frontText.split(/\s+/).length < 40 && backText.split(/\s+/).length < 40
 
     return renderBoxV2(y, (yPos) => {
@@ -909,14 +909,14 @@ export async function generateCoursePDF(course: CourseSummary, filename?: string
         quiz.questions?.forEach((question, qIdx) => {
           boxY = checkPageBreak(boxY, 25)
 
-          boxY = renderText(`${qIdx + 1}. ${question.pergunta}`, boxY, {
+          boxY = renderText(`${qIdx + 1}. ${question.question}`, boxY, {
             fontSize: THEME.fonts.h3,
             fontStyle: 'bold',
             color: THEME.colors.primary,
           })
           boxY = addSpace(boxY, 2)
 
-          question.opcoes.forEach((option, oIdx) => {
+          question.options.forEach((option, oIdx) => {
             const letter = String.fromCharCode(65 + oIdx)
             boxY = checkPageBreak(boxY, 8)
             renderText(`${letter})`, boxY, {
@@ -925,7 +925,7 @@ export async function generateCoursePDF(course: CourseSummary, filename?: string
               color: THEME.colors.accent,
               x: MARGIN + 4,
             })
-            boxY = renderText(option.texto, boxY, {
+            boxY = renderText(option.text, boxY, {
               fontSize: THEME.fonts.bodySize,
               color: THEME.colors.text,
               x: MARGIN + 12,
@@ -933,9 +933,9 @@ export async function generateCoursePDF(course: CourseSummary, filename?: string
             })
           })
 
-          if (question.dica) {
+          if (question.hint) {
             boxY = addSpace(boxY, 1)
-            boxY = renderText(`Dica: ${question.dica}`, boxY, {
+            boxY = renderText(`Dica: ${question.hint}`, boxY, {
               fontSize: THEME.fonts.caption,
               fontStyle: 'italic',
               color: THEME.colors.textMuted,
@@ -943,7 +943,7 @@ export async function generateCoursePDF(course: CourseSummary, filename?: string
           }
 
           if (!measuring) {
-            const correctIdx = question.opcoes.findIndex((o) => o.isCorrect)
+            const correctIdx = question.options.findIndex((o) => o.isCorrect)
             quizAnswerKey.push({
               question: `Questão ${qIdx + 1}`,
               answer: correctIdx >= 0 ? String.fromCharCode(65 + correctIdx) : '-',
@@ -980,7 +980,7 @@ export async function generateCoursePDF(course: CourseSummary, filename?: string
   // INÍCIO DA EXECUÇÃO
   // ========================================================================
 
-  const units = course.unidades || []
+  const units = course.units || []
 
   renderCoverPage()
   renderTitlePage()
@@ -992,14 +992,14 @@ export async function generateCoursePDF(course: CourseSummary, filename?: string
   units.forEach((unit, index) => {
     quizAnswerKey = []
     const openerPage = renderUnitOpener(unit, index)
-    tocEntries.push({ title: unit.titulo, page: openerPage })
+    tocEntries.push({ title: unit.title, page: openerPage })
 
     doc.addPage()
     let y: number = CONTENT_TOP
 
-    ;(unit.conteudo || [])
+    ;(unit.blocks || [])
       .slice()
-      .sort((a, b) => a.ordem - b.ordem)
+      .sort((a, b) => a.order - b.order)
       .forEach((item) => {
         y = renderContentItem(item, y)
         y = addSpace(y, 5)
@@ -1028,7 +1028,7 @@ export async function generateCoursePDF(course: CourseSummary, filename?: string
   if (filename) {
     fileName = filename.endsWith('.pdf') ? filename : `${filename}.pdf`
   } else {
-    fileName = `${(course.titulo || 'curso').replace(/[^a-z0-9]/gi, '_')}.pdf`
+    fileName = `${(course.title || 'curso').replace(/[^a-z0-9]/gi, '_')}.pdf`
   }
   doc.save(fileName)
 }

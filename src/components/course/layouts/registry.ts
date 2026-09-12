@@ -4,7 +4,7 @@ import { classicMeta } from './classic/meta'
 import { SidebarPlayer } from './sidebar/SidebarPlayer'
 import { sidebarMeta } from './sidebar/meta'
 
-export const DEFAULT_LAYOUT_ID = 'classico'
+export const DEFAULT_LAYOUT_ID = 'classic'
 
 export const layoutRegistry: Record<string, LayoutDefinition> = {
   classico: { Player: ClassicPlayer, meta: classicMeta },

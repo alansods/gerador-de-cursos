@@ -3,14 +3,14 @@ import { Block } from '@/types/course'
 export function ListBlock({ item }: { item: Block }) {
   return (
     <div className="mb-4">
-      {item.itensLista && item.itensLista.length > 0 ? (
+      {item.listItems && item.listItems.length > 0 ? (
         <ul className="space-y-3">
-          {item.itensLista.map((listItem, idx) => (
+          {item.listItems.map((listItem, idx) => (
             <li
               key={listItem.id || idx}
               className="flex items-center gap-4 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-4"
             >
-              {item.tipoLista === 'check' ? (
+              {item.listType === 'check' ? (
                 <span className="flex items-center justify-center w-9 h-9 rounded-lg bg-green-50 dark:bg-green-900/30 text-green-600 dark:text-green-400 shrink-0">
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path
@@ -21,7 +21,7 @@ export function ListBlock({ item }: { item: Block }) {
                     />
                   </svg>
                 </span>
-              ) : item.tipoLista === 'nao-ordenada' ? (
+              ) : item.listType === 'unordered' ? (
                 <span className="flex items-center justify-center w-9 h-9 rounded-lg bg-(--block-accent,#2563eb)/10 shrink-0">
                   <span className="w-2 h-2 rounded-full bg-(--block-accent,#2563eb)" />
                 </span>
@@ -33,7 +33,7 @@ export function ListBlock({ item }: { item: Block }) {
               <span
                 className="flex-1 text-gray-700 dark:text-gray-300 leading-relaxed"
                 dangerouslySetInnerHTML={{
-                  __html: listItem.texto,
+                  __html: listItem.text,
                 }}
               />
             </li>

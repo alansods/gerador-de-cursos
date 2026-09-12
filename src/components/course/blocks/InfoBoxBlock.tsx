@@ -4,11 +4,11 @@ import { Block } from '@/types/course'
 export function InfoBoxBlock({ item }: { item: Block }) {
   return (
     <div className="mb-4 w-full">
-      {item.tipoInfoBox ? (
-        <InfoBox type={item.tipoInfoBox} title={item.tituloInfoBox} className="w-full">
+      {item.infoBoxType ? (
+        <InfoBox type={item.infoBoxType} title={item.infoBoxTitle} className="w-full">
           <div
             dangerouslySetInnerHTML={{
-              __html: item.conteudo || '',
+              __html: item.content || '',
             }}
           />
         </InfoBox>

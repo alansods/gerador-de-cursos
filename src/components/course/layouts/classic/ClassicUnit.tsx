@@ -12,7 +12,7 @@ interface ClassicUnitProps {
 }
 
 export function ClassicUnit({ course, unitId, onNavigate }: ClassicUnitProps) {
-  const unit = course.unidades?.find((u) => u.id === unitId)
+  const unit = course.units?.find((u) => u.id === unitId)
 
   if (!unit) {
     return (
@@ -32,11 +32,11 @@ export function ClassicUnit({ course, unitId, onNavigate }: ClassicUnitProps) {
     )
   }
 
-  const unitIndex = course.unidades.findIndex((u) => u.id === unitId)
-  const previousUnit = unitIndex > 0 ? course.unidades[unitIndex - 1] : null
-  const nextUnit = unitIndex < course.unidades.length - 1 ? course.unidades[unitIndex + 1] : null
+  const unitIndex = course.units.findIndex((u) => u.id === unitId)
+  const previousUnit = unitIndex > 0 ? course.units[unitIndex - 1] : null
+  const nextUnit = unitIndex < course.units.length - 1 ? course.units[unitIndex + 1] : null
 
-  const title = unit.titulo.replace(/^UNIDADE\s+\d+[:\s]*/i, '').trim()
+  const title = unit.title.replace(/^UNIDADE\s+\d+[:\s]*/i, '').trim()
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pt-16">
@@ -100,7 +100,7 @@ export function ClassicUnit({ course, unitId, onNavigate }: ClassicUnitProps) {
           {/* Unit Counter */}
           <div className="flex-1 text-center">
             <span className="text-sm text-gray-600 dark:text-gray-400">
-              {unitIndex + 1} de {course.unidades.length}
+              {unitIndex + 1} de {course.units.length}
             </span>
           </div>
 

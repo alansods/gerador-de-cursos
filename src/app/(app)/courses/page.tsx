@@ -410,8 +410,8 @@ export default function CoursesPage() {
                       <TableRow key={course.id}>
                         <TableCell>
                           <div className="flex items-center gap-2">
-                            <span className="font-medium text-foreground">{course.titulo}</span>
-                            {isNewCourse(course.dataCriacao) && (
+                            <span className="font-medium text-foreground">{course.title}</span>
+                            {isNewCourse(course.createdAt) && (
                               <Badge
                                 variant="secondary"
                                 className="bg-linear-to-r from-emerald-500 to-green-500 text-white border-0 gap-1"
@@ -422,7 +422,7 @@ export default function CoursesPage() {
                             )}
                           </div>
                         </TableCell>
-                        <TableCell className="text-muted-foreground">{course.categoria}</TableCell>
+                        <TableCell className="text-muted-foreground">{course.category}</TableCell>
                         <TableCell>
                           {course.status && (
                             <Badge
@@ -437,9 +437,9 @@ export default function CoursesPage() {
                           {course.ownerName || '—'}
                         </TableCell>
                         <TableCell className="text-muted-foreground whitespace-nowrap">
-                          {course.cargaHoraria}
+                          {course.workload}
                         </TableCell>
-                        <TableCell className="text-muted-foreground">{course.modalidade}</TableCell>
+                        <TableCell className="text-muted-foreground">{course.modality}</TableCell>
                         <TableCell className="text-right">
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
@@ -482,7 +482,7 @@ export default function CoursesPage() {
                               {permissions?.canRequestAccess && (
                                 <DropdownMenuItem
                                   disabled={accessRequested}
-                                  onClick={() => handleRequestAccess(course.id, course.titulo)}
+                                  onClick={() => handleRequestAccess(course.id, course.title)}
                                 >
                                   {accessRequested ? (
                                     <>
@@ -591,7 +591,7 @@ export default function CoursesPage() {
               }
             }
           }}
-          courseName={selectedCourseForExport?.titulo || 'Curso'}
+          courseName={selectedCourseForExport?.title || 'Curso'}
           courseId={selectedCourseForExport?.id}
           isGeneratingPDF={isGeneratingPDF}
           isGeneratingSCORM={isGeneratingSCORM}

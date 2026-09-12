@@ -21,11 +21,11 @@ beforeEach(() => {
 function question(extra: Partial<VideoQuestion>): VideoQuestion {
   return {
     id: 'pv-1',
-    tempo: '00:05',
-    pergunta: 'O que prende o capacete?',
-    opcaoA: 'O casco',
-    opcaoB: 'A jugular',
-    correta: 'B',
+    time: '00:05',
+    question: 'O que prende o capacete?',
+    optionA: 'O casco',
+    optionB: 'A jugular',
+    correct: 'B',
     feedback: 'A jugular é obrigatória em trabalho em altura.',
     ...extra,
   }
@@ -34,12 +34,12 @@ function question(extra: Partial<VideoQuestion>): VideoQuestion {
 function mount(videoQuestions: VideoQuestion[], recordQuiz = jest.fn(), duration?: number) {
   const item = {
     id: 'b-1',
-    tipo: 'video-interativo',
-    conteudo: '',
-    ordem: 0,
+    type: 'interactive-video',
+    content: '',
+    order: 0,
     videoUrl: 'https://b.com/aula.mp4',
-    videoTitulo: 'Uso do capacete',
-    perguntasVideo: videoQuestions,
+    videoTitle: 'Uso do capacete',
+    videoQuestions,
   } as Block
 
   const { container } = render(
@@ -80,7 +80,7 @@ function mount(videoQuestions: VideoQuestion[], recordQuiz = jest.fn(), duration
 
 describe('VideoInterativoBlock', () => {
   it('avisa quando não há vídeo ou pergunta aproveitável', () => {
-    mount([question({ tempo: 'nao é tempo' })])
+    mount([question({ time: 'nao é tempo' })])
 
     expect(screen.getByText(/incompleto ou sem perguntas/i)).toBeInTheDocument()
   })
@@ -154,8 +154,8 @@ describe('VideoInterativoBlock', () => {
   it('dispara os marcos em ordem de tempo, acumulando a nota', async () => {
     const user = userEvent.setup()
     const { advanceTo, recordQuiz } = mount([
-      question({ id: 'pv-2', tempo: '00:12', pergunta: 'Segunda?' }),
-      question({ id: 'pv-1', tempo: '00:05' }),
+      question({ id: 'pv-2', time: '00:12', question: 'Segunda?' }),
+      question({ id: 'pv-1', time: '00:05' }),
     ])
 
     advanceTo(5)
@@ -182,12 +182,12 @@ describe('fonte deduzida da URL', () => {
   function renderWithoutField(videoUrl: string) {
     const item = {
       id: 'b-1',
-      tipo: 'video-interativo',
-      conteudo: '',
-      ordem: 0,
+      type: 'interactive-video',
+      content: '',
+      order: 0,
       videoUrl,
-      videoTitulo: 'Aula',
-      perguntasVideo: [question({})],
+      videoTitle: 'Aula',
+      videoQuestions: [question({})],
     } as Block
 
     const { container } = render(
@@ -211,13 +211,13 @@ describe('fonte deduzida da URL', () => {
   it('ignora fonteVideo arquivo quando a URL é inequivocamente do YouTube', () => {
     const item = {
       id: 'b-2',
-      tipo: 'video-interativo',
-      conteudo: '',
-      ordem: 0,
-      fonteVideo: 'arquivo',
+      type: 'interactive-video',
+      content: '',
+      order: 0,
+      videoSource: 'file',
       videoUrl: 'https://youtu.be/dQw4w9WgXcQ',
-      videoTitulo: 'Aula',
-      perguntasVideo: [question({})],
+      videoTitle: 'Aula',
+      videoQuestions: [question({})],
     } as Block
 
     const { container } = render(
@@ -233,7 +233,7 @@ describe('fonte deduzida da URL', () => {
 describe('marcadores na linha do tempo', () => {
   it('posiciona um pino por pergunta, proporcional à duração', () => {
     const { marcadores: markers } = mount(
-      [question({}), question({ id: 'pv-2', tempo: '00:25', pergunta: 'Segunda?' })],
+      [question({}), question({ id: 'pv-2', time: '00:25', question: 'Segunda?' })],
       jest.fn(),
       100
     )
@@ -266,7 +266,7 @@ describe('marcadores na linha do tempo', () => {
   it('trava o avanço da barra na próxima pergunta pendente', async () => {
     const user = userEvent.setup()
     const { video, advanceTo } = mount(
-      [question({}), question({ id: 'pv-2', tempo: '00:25', pergunta: 'Segunda?' })],
+      [question({}), question({ id: 'pv-2', time: '00:25', question: 'Segunda?' })],
       jest.fn(),
       100
     )
@@ -287,7 +287,7 @@ describe('marcadores na linha do tempo', () => {
   })
 
   it('deixa o aluno voltar livremente a um trecho já assistido', () => {
-    const { video, advanceTo } = mount([question({ tempo: '00:50' })], jest.fn(), 100)
+    const { video, advanceTo } = mount([question({ time: '00:50' })], jest.fn(), 100)
 
     advanceTo(30)
     fireEvent.keyDown(screen.getByRole('slider', { name: /linha do tempo/i }), { key: 'Home' })

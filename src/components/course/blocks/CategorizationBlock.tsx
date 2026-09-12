@@ -5,14 +5,14 @@ import { Block } from '@/types/course'
 import { InteractiveAssignment } from './InteractiveAssignment'
 
 export function CategorizationBlock({ item, blockIndex }: { item: Block; blockIndex?: number }) {
-  const categories = useMemo(() => item.categorias ?? [], [item.categorias])
+  const categories = useMemo(() => item.categories ?? [], [item.categories])
 
   const chips = useMemo(
     () =>
       categories.flatMap((category) =>
-        (category.itens ?? []).map((input) => ({
+        (category.items ?? []).map((input) => ({
           id: input.id,
-          text: input.texto,
+          text: input.text,
           correctTarget: category.id,
         }))
       ),
@@ -20,7 +20,7 @@ export function CategorizationBlock({ item, blockIndex }: { item: Block; blockIn
   )
 
   const targets = useMemo(
-    () => categories.map((category) => ({ id: category.id, label: category.nome })),
+    () => categories.map((category) => ({ id: category.id, label: category.name })),
     [categories]
   )
 

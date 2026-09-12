@@ -97,11 +97,11 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     })
 
     await logActivity({
-      type: 'acesso_solicitado',
+      type: 'access_requested',
       title: 'Acesso solicitado',
       description: `${authResult.user.name} pediu acesso a "${course.title}"`,
       entityId: id,
-      entityType: 'curso',
+      entityType: 'course',
       userId: authResult.user.id,
     })
 

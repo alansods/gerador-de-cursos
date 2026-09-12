@@ -42,10 +42,10 @@ describe('detectarMarcadores', () => {
 
     expect(detection.total).toBe(6)
     expect(detection.byType.quiz).toBe(2)
-    expect(detection.byType['objetivos-aprendizagem']).toBe(1)
+    expect(detection.byType['learning-objectives']).toBe(1)
     expect(detection.byType['info-box']).toBe(1)
-    expect(detection.byType.lista).toBe(1)
-    expect(detection.byType.imagem).toBeUndefined()
+    expect(detection.byType.list).toBe(1)
+    expect(detection.byType.image).toBeUndefined()
     expect(detection.byType.video).toBeUndefined()
   })
 

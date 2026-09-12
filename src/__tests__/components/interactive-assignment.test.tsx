@@ -7,23 +7,23 @@ import type { Block } from '@/types/course'
 
 const matching: Block = {
   id: 'b1',
-  ordem: 0,
-  tipo: 'associacao',
-  conteudo: '',
-  paresAssociacao: [
-    { id: 'par-1', esquerda: 'NR-6', direita: 'EPI' },
-    { id: 'par-2', esquerda: 'NR-5', direita: 'CIPA' },
+  order: 0,
+  type: 'matching',
+  content: '',
+  matchingPairs: [
+    { id: 'par-1', left: 'NR-6', right: 'EPI' },
+    { id: 'par-2', left: 'NR-5', right: 'CIPA' },
   ],
 }
 
 const categorization: Block = {
   id: 'b2',
-  ordem: 0,
-  tipo: 'categorizacao',
-  conteudo: '',
-  categorias: [
-    { id: 'cat-1', nome: 'Cabeça', itens: [{ id: 'i1', texto: 'Capacete' }] },
-    { id: 'cat-2', nome: 'Membros', itens: [{ id: 'i2', texto: 'Luva' }] },
+  order: 0,
+  type: 'categorization',
+  content: '',
+  categories: [
+    { id: 'cat-1', name: 'Cabeça', items: [{ id: 'i1', text: 'Capacete' }] },
+    { id: 'cat-2', name: 'Membros', items: [{ id: 'i2', text: 'Luva' }] },
   ],
 }
 

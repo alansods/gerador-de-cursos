@@ -18,7 +18,7 @@ jest.mock('sonner', () => ({ toast: { error: jest.fn(), success: jest.fn(), info
 const mockFetch = jest.fn()
 global.fetch = mockFetch
 
-const COURSE = { id: 'c1', titulo: 'Curso', version: 3, unidades: [] }
+const COURSE = { id: 'c1', title: 'Curso', version: 3, units: [] }
 
 const courseApiResponse = (course: object = COURSE) => ({
   ok: true,
@@ -84,14 +84,14 @@ describe('GeradorCursoContext sobre o cache', () => {
       headers: { get: () => 'application/json' },
       json: async () => ({ success: false }),
     })
-    mockFetch.mockResolvedValue(courseApiResponse({ ...COURSE, version: 4, titulo: 'Do servidor' }))
+    mockFetch.mockResolvedValue(courseApiResponse({ ...COURSE, version: 4, title: 'Do servidor' }))
 
     await act(async () => {
-      await expect(result.current.updateCourse('c1', { titulo: 'Meu' })).rejects.toThrow()
+      await expect(result.current.updateCourse('c1', { title: 'Meu' })).rejects.toThrow()
     })
 
     await waitFor(() => expect(result.current.state.currentCourse?.version).toBe(4))
-    expect(result.current.state.currentCourse?.titulo).toBe('Do servidor')
+    expect(result.current.state.currentCourse?.title).toBe('Do servidor')
   })
 
   it('manda a versão conhecida do curso no PUT, para o servidor detectar conflito', async () => {
@@ -103,10 +103,10 @@ describe('GeradorCursoContext sobre o cache', () => {
     await waitFor(() => expect(result.current.state.currentCourse?.version).toBe(3))
 
     await act(async () => {
-      await result.current.updateCourse('c1', { titulo: 'Novo' })
+      await result.current.updateCourse('c1', { title: 'Novo' })
     })
 
     const put = mockFetch.mock.calls.find((c) => c[1]?.method === 'PUT')
-    expect(JSON.parse(put[1].body)).toMatchObject({ id: 'c1', titulo: 'Novo', version: 3 })
+    expect(JSON.parse(put[1].body)).toMatchObject({ id: 'c1', title: 'Novo', version: 3 })
   })
 })
