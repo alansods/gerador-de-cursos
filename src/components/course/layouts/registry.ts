@@ -7,7 +7,7 @@ import { sidebarMeta } from './sidebar/meta'
 export const DEFAULT_LAYOUT_ID = 'classic'
 
 export const layoutRegistry: Record<string, LayoutDefinition> = {
-  classico: { Player: ClassicPlayer, meta: classicMeta },
+  classic: { Player: ClassicPlayer, meta: classicMeta },
   sidebar: { Player: SidebarPlayer, meta: sidebarMeta },
 }
 

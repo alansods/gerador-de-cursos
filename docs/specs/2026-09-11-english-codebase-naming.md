@@ -557,8 +557,17 @@ Escopo aplicado:
 - Seed, fixtures de E2E e testes convertidos; as fixtures que exercitam o formato antigo
   continuam em português, de propósito, passando por `upgradeBlock`.
 
+Dois bugs que só o E2E pegou, ambos do tipo "o compilador não liga":
+
+- `layoutRegistry` continuou com a chave `classico` enquanto `DEFAULT_LAYOUT_ID` virou
+  `'classic'`. Como o fallback usa a mesma chave, `resolveLayout` devolvia `undefined` e o
+  player quebrava ao desestruturar `{ Player }` — todo curso com layout `classic` abria em
+  branco no pacote SCORM, sem sessão no LMS.
+- `useScormProgress.navigate` montava `{ ...state, visitadas: visited }`: propriedade a mais
+  num spread não é checada, então a unidade visitada nunca era gravada no `suspend_data`.
+
 Estado: `tsc` nos mesmos 26 erros pré-existentes da baseline, `pnpm test` 375/375 verde,
-`pnpm build` limpo.
+`pnpm build` limpo, `pnpm test:e2e --project=chromium` 36 passando (1 skipped).
 
 Pendente da fase: rodar `scripts/migrate-course-json.ts` (dry-run e execução real, com
 backup do Neon antes) e `prisma migrate deploy`.

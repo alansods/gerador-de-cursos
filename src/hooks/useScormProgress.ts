@@ -136,7 +136,7 @@ export function useScormProgress(course: Course) {
         if (index >= 0 && !stateRef.current.visited[index]) {
           const visited = [...stateRef.current.visited]
           visited[index] = true
-          const next = { ...stateRef.current, visitadas: visited }
+          const next = { ...stateRef.current, visited }
           setState(next)
           saveState(next)
           return
