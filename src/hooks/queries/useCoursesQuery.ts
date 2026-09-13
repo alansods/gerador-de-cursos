@@ -42,3 +42,23 @@ export function useDeleteCourseMutation() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.courses.all }),
   })
 }
+
+export function useBulkDeleteCoursesMutation() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (ids: string[]) => {
+      const response = await fetch('/api/courses', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ids }),
+      })
+      const data = await response.json()
+
+      if (!data.success) throw new Error(data.error || 'Erro ao deletar cursos')
+
+      return data as { deleted: number; notFound: string[] }
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.courses.all }),
+  })
+}

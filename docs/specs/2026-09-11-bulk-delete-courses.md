@@ -2,9 +2,7 @@
 
 ## Status
 
-**Não implementada.** Escrita em 11/09/2026, antes da padronização da nomenclatura;
-os nomes abaixo foram atualizados em 13/09/2026 para os atuais, mas nenhum código desta
-spec existe ainda.
+**Implementada em 13/09/2026.**
 
 ## Descrição
 

@@ -225,4 +225,109 @@ describe('Integration - Courses page', () => {
       expect(String(call[0])).not.toContain('/api/courses')
     })
   })
+
+  describe('bulk selection and delete', () => {
+    const deletableCoursesMock = [
+      {
+        ...coursesMock[0],
+        permissions: { canDelete: true },
+      },
+      {
+        ...coursesMock[1],
+        permissions: { canDelete: false },
+      },
+    ]
+
+    const deletableResponse = {
+      courses: deletableCoursesMock,
+      nextCursor: null,
+      hasMore: false,
+      total: deletableCoursesMock.length,
+    }
+
+    it('does not render the selection column when no course is deletable', async () => {
+      renderCoursesPage()
+      await waitForLoad()
+
+      expect(screen.queryByLabelText('Selecionar todos')).not.toBeInTheDocument()
+    })
+
+    it('disables the checkbox for a row without canDelete', async () => {
+      mockFetchCourses.mockResolvedValue(deletableResponse as never)
+      renderCoursesPage()
+      await waitForLoad()
+
+      expect(screen.getByLabelText('Selecionar JavaScript Básico')).not.toBeDisabled()
+      expect(screen.getByLabelText('Selecionar React Avançado')).toBeDisabled()
+    })
+
+    it('selects only the deletable courses via "select all" and shows the bulk bar', async () => {
+      mockFetchCourses.mockResolvedValue(deletableResponse as never)
+      const user = userEvent.setup()
+      renderCoursesPage()
+      await waitForLoad()
+
+      await user.click(screen.getByLabelText('Selecionar todos'))
+
+      expect(screen.getByLabelText('Selecionar JavaScript Básico')).toBeChecked()
+      expect(screen.getByText('1 curso selecionado')).toBeInTheDocument()
+    })
+
+    it('clears the selection when a filter changes', async () => {
+      mockFetchCourses.mockResolvedValue(deletableResponse as never)
+      const user = userEvent.setup()
+      renderCoursesPage()
+      await waitForLoad()
+
+      await user.click(screen.getByLabelText('Selecionar JavaScript Básico'))
+      expect(screen.getByText('1 curso selecionado')).toBeInTheDocument()
+
+      const categorySelector = screen
+        .getAllByRole('combobox')
+        .find((el) => /categoria/i.test(el.textContent || ''))!
+      await user.click(categorySelector)
+      await user.click(await screen.findByRole('option', { name: 'Tecnologia' }))
+
+      await waitFor(() => {
+        expect(screen.queryByText('1 curso selecionado')).not.toBeInTheDocument()
+      })
+    })
+
+    it('confirms the bulk delete, calls the API with the selected ids and clears the selection', async () => {
+      mockFetchCourses.mockResolvedValue(deletableResponse as never)
+      mockFetch.mockImplementation((url: string) => {
+        if (String(url) === '/api/courses') {
+          return Promise.resolve({
+            ok: true,
+            json: async () => ({ success: true, deleted: 1, notFound: [] }),
+          })
+        }
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({ success: true, authenticated: false, user: null }),
+        })
+      })
+      const user = userEvent.setup()
+      renderCoursesPage()
+      await waitForLoad()
+
+      await user.click(screen.getByLabelText('Selecionar JavaScript Básico'))
+      await user.click(screen.getByRole('button', { name: /excluir selecionados/i }))
+      await user.click(screen.getByRole('button', { name: /excluir 1 curso/i }))
+
+      await waitFor(() => {
+        expect(mockFetch).toHaveBeenCalledWith(
+          '/api/courses',
+          expect.objectContaining({
+            method: 'DELETE',
+            body: JSON.stringify({ ids: ['1'] }),
+          })
+        )
+      })
+
+      await waitFor(() => {
+        expect(screen.queryByText('1 curso selecionado')).not.toBeInTheDocument()
+      })
+    })
+  })
 })

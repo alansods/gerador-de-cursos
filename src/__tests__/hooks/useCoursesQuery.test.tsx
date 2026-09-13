@@ -7,7 +7,11 @@
 import { renderHook, waitFor, act } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { fetchCourses } from '@/app/(app)/courses/actions'
-import { useCoursesQuery, useDeleteCourseMutation } from '@/hooks/queries/useCoursesQuery'
+import {
+  useCoursesQuery,
+  useDeleteCourseMutation,
+  useBulkDeleteCoursesMutation,
+} from '@/hooks/queries/useCoursesQuery'
 
 jest.mock('@/app/(app)/courses/actions', () => ({ fetchCourses: jest.fn() }))
 
@@ -99,5 +103,46 @@ describe('useCoursesQuery', () => {
     const mutation = renderHook(() => useDeleteCourseMutation(), { wrapper: createWrapper() })
 
     await expect(mutation.result.current.mutateAsync('curso-1')).rejects.toThrow('Sem permissão')
+  })
+
+  describe('useBulkDeleteCoursesMutation', () => {
+    it('sends the ids in the body and invalidates the cached list', async () => {
+      mockFetch.mockResolvedValue({
+        ok: true,
+        json: async () => ({ success: true, deleted: 2, notFound: [] }),
+      })
+      const wrapper = createWrapper()
+
+      const list = renderHook(() => useCoursesQuery(FILTERS), { wrapper })
+      await waitFor(() => expect(list.result.current.isLoading).toBe(false))
+      expect(mockFetchCourses).toHaveBeenCalledTimes(1)
+
+      const mutation = renderHook(() => useBulkDeleteCoursesMutation(), { wrapper })
+      await act(async () => {
+        await mutation.result.current.mutateAsync(['curso-1', 'curso-2'])
+      })
+
+      expect(mockFetch).toHaveBeenCalledWith('/api/courses', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ids: ['curso-1', 'curso-2'] }),
+      })
+      await waitFor(() => expect(mockFetchCourses).toHaveBeenCalledTimes(2))
+    })
+
+    it('propagates the API error to the caller', async () => {
+      mockFetch.mockResolvedValue({
+        ok: false,
+        json: async () => ({ success: false, error: 'Sem permissão' }),
+      })
+
+      const mutation = renderHook(() => useBulkDeleteCoursesMutation(), {
+        wrapper: createWrapper(),
+      })
+
+      await expect(mutation.result.current.mutateAsync(['curso-1'])).rejects.toThrow(
+        'Sem permissão'
+      )
+    })
   })
 })

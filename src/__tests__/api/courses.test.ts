@@ -648,5 +648,136 @@ describe('API - Courses', () => {
       expect(data.success).toBe(false)
       expect(mockPrisma.course.delete).not.toHaveBeenCalled()
     })
+
+    describe('bulk delete via body { ids }', () => {
+      function makeCourse(id: string, ownerId: string = '1') {
+        return {
+          id,
+          title: `Curso ${id}`,
+          description: 'Desc',
+          workload: '40h',
+          modality: 'Online',
+          category: 'Tecnologia',
+          units: [],
+          layout: 'classic',
+          slug: null,
+          status: 'IN_PROGRESS',
+          version: 0,
+          ownerId,
+          reviewedById: null,
+          reviewedAt: null,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        }
+      }
+
+      it('deletes every course when the user can delete all of them, logging one activity each', async () => {
+        const token = await createAuthToken('1', 'ADMIN')
+        const courses = [makeCourse('1'), makeCourse('2')]
+        mockPrisma.course.findMany.mockResolvedValue(courses as never)
+        mockPrisma.course.deleteMany.mockResolvedValue({ count: 2 } as never)
+
+        const request = new NextRequest('http://localhost:3000/api/courses', {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json', Cookie: `auth-token=${token}` },
+          body: JSON.stringify({ ids: ['1', '2'] }),
+        })
+
+        const response = await deleteCursoHandler(request)
+        const data = await response.json()
+
+        expect(response.status).toBe(200)
+        expect(data.success).toBe(true)
+        expect(data.deleted).toBe(2)
+        expect(data.notFound).toEqual([])
+        expect(mockPrisma.course.deleteMany).toHaveBeenCalledWith({
+          where: { id: { in: ['1', '2'] } },
+        })
+        expect(mockPrisma.activity.create).toHaveBeenCalledTimes(2)
+      })
+
+      it('deletes nothing and returns 403 when one course cannot be deleted', async () => {
+        const token = await createAuthToken('1', 'CONTENT_AUTHOR')
+        mockPrisma.user.findUnique.mockResolvedValue({
+          ...authenticatedUser,
+          role: 'CONTENT_AUTHOR',
+        } as never)
+        const ownCourse = makeCourse('1', '1')
+        const otherCourse = makeCourse('2', 'other-user')
+        mockPrisma.course.findMany.mockResolvedValue([ownCourse, otherCourse] as never)
+
+        const request = new NextRequest('http://localhost:3000/api/courses', {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json', Cookie: `auth-token=${token}` },
+          body: JSON.stringify({ ids: ['1', '2'] }),
+        })
+
+        const response = await deleteCursoHandler(request)
+        const data = await response.json()
+
+        expect(response.status).toBe(403)
+        expect(data.success).toBe(false)
+        expect(mockPrisma.course.deleteMany).not.toHaveBeenCalled()
+        expect(mockPrisma.activity.create).not.toHaveBeenCalled()
+      })
+
+      it('reports missing ids in notFound instead of failing', async () => {
+        const token = await createAuthToken('1', 'ADMIN')
+        const courses = [makeCourse('1')]
+        mockPrisma.course.findMany.mockResolvedValue(courses as never)
+        mockPrisma.course.deleteMany.mockResolvedValue({ count: 1 } as never)
+
+        const request = new NextRequest('http://localhost:3000/api/courses', {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json', Cookie: `auth-token=${token}` },
+          body: JSON.stringify({ ids: ['1', 'does-not-exist'] }),
+        })
+
+        const response = await deleteCursoHandler(request)
+        const data = await response.json()
+
+        expect(response.status).toBe(200)
+        expect(data.deleted).toBe(1)
+        expect(data.notFound).toEqual(['does-not-exist'])
+      })
+
+      it.each([
+        ['an empty array', []],
+        ['a non-array value', 'not-an-array'],
+      ])('returns 400 for %s', async (_label, ids) => {
+        const token = await createAuthToken('1', 'ADMIN')
+
+        const request = new NextRequest('http://localhost:3000/api/courses', {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json', Cookie: `auth-token=${token}` },
+          body: JSON.stringify({ ids }),
+        })
+
+        const response = await deleteCursoHandler(request)
+        const data = await response.json()
+
+        expect(response.status).toBe(400)
+        expect(data.success).toBe(false)
+        expect(mockPrisma.course.deleteMany).not.toHaveBeenCalled()
+      })
+
+      it('returns 400 when the batch exceeds the maximum size', async () => {
+        const token = await createAuthToken('1', 'ADMIN')
+        const ids = Array.from({ length: 101 }, (_, i) => `id-${i}`)
+
+        const request = new NextRequest('http://localhost:3000/api/courses', {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json', Cookie: `auth-token=${token}` },
+          body: JSON.stringify({ ids }),
+        })
+
+        const response = await deleteCursoHandler(request)
+        const data = await response.json()
+
+        expect(response.status).toBe(400)
+        expect(data.success).toBe(false)
+        expect(mockPrisma.course.findMany).not.toHaveBeenCalled()
+      })
+    })
   })
 })

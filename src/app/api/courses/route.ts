@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requireAuth, createErrorResponse, createSuccessResponse } from '@/lib/auth'
-import { assertCan, ForbiddenError, getCoursePermissions } from '@/lib/permissions'
+import { assertCan, can, ForbiddenError, getCoursePermissions } from '@/lib/permissions'
 import { fetchCollaboration } from '@/lib/course-access'
 import { Course, Unit } from '@/types/course'
 import { logActivity } from '@/lib/activity-logger'
@@ -424,9 +424,11 @@ export async function PUT(req: NextRequest) {
   }
 }
 
+const MAX_BULK_DELETE_IDS = 100
+
 /**
  * DELETE /api/cursos
- * Deleta um curso
+ * Deleta um curso (via ?id=) ou vários (via body { ids: string[] })
  */
 export async function DELETE(req: NextRequest) {
   const authResult = await requireAuth(req)
@@ -439,37 +441,87 @@ export async function DELETE(req: NextRequest) {
     const { searchParams } = new URL(req.url)
     const id = searchParams.get('id')
 
-    if (!id) {
+    if (id) {
+      // Check that the course exists
+      const existingCourse = await prisma.course.findUnique({
+        where: { id },
+      })
+
+      if (!existingCourse) {
+        return createErrorResponse('Curso não encontrado', 404)
+      }
+
+      assertCan(authResult.user, 'course:delete', { course: existingCourse })
+
+      // Delete the course
+      await prisma.course.delete({
+        where: { id },
+      })
+
+      // Log the activity
+      await logActivity({
+        type: 'course_deleted',
+        title: 'Curso deletado',
+        description: existingCourse.title,
+        entityId: id,
+        entityType: 'course',
+        userId: authResult.user.id,
+      })
+
+      return createSuccessResponse({ message: 'Curso deletado com sucesso' })
+    }
+
+    const body = await req.json().catch(() => null)
+    const ids: unknown = body?.ids
+
+    if (!Array.isArray(ids) || ids.length === 0 || !ids.every((v) => typeof v === 'string')) {
       return createErrorResponse('ID do curso é obrigatório', 400)
     }
 
-    // Check that the course exists
-    const existingCourse = await prisma.course.findUnique({
-      where: { id },
-    })
+    const uniqueIds = Array.from(new Set(ids))
 
-    if (!existingCourse) {
-      return createErrorResponse('Curso não encontrado', 404)
+    if (uniqueIds.length > MAX_BULK_DELETE_IDS) {
+      return createErrorResponse(
+        `É possível excluir no máximo ${MAX_BULK_DELETE_IDS} cursos por vez`,
+        400
+      )
     }
 
-    assertCan(authResult.user, 'course:delete', { course: existingCourse })
-
-    // Delete the course
-    await prisma.course.delete({
-      where: { id },
+    const foundCourses = await prisma.course.findMany({
+      where: { id: { in: uniqueIds } },
     })
 
-    // Log the activity
-    await logActivity({
-      type: 'course_deleted',
-      title: 'Curso deletado',
-      description: existingCourse.title,
-      entityId: id,
-      entityType: 'course',
-      userId: authResult.user.id,
-    })
+    const foundIds = new Set(foundCourses.map((c) => c.id))
+    const notFound = uniqueIds.filter((courseId) => !foundIds.has(courseId))
 
-    return createSuccessResponse({ message: 'Curso deletado com sucesso' })
+    const forbiddenCourses = foundCourses.filter(
+      (course) => !can(authResult.user, 'course:delete', { course })
+    )
+
+    if (forbiddenCourses.length > 0) {
+      return createErrorResponse(
+        `Sem permissão para excluir: ${forbiddenCourses.map((c) => c.title).join(', ')}`,
+        403
+      )
+    }
+
+    await prisma.$transaction([
+      prisma.course.deleteMany({ where: { id: { in: foundCourses.map((c) => c.id) } } }),
+      ...foundCourses.map((course) =>
+        prisma.activity.create({
+          data: {
+            type: 'course_deleted',
+            title: 'Curso deletado',
+            description: course.title,
+            entityId: course.id,
+            entityType: 'course',
+            userId: authResult.user.id,
+          },
+        })
+      ),
+    ])
+
+    return createSuccessResponse({ deleted: foundCourses.length, notFound })
   } catch (error) {
     if (error instanceof ForbiddenError) {
       return createErrorResponse(error.message, 403)

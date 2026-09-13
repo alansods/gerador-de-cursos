@@ -6,7 +6,11 @@ export const dynamic = 'error'
 import { usePreview } from '@/hooks/usePreview'
 import { usePDF } from '@/hooks/usePDF'
 import { useSCORM } from '@/hooks/useSCORM'
-import { useCoursesQuery, useDeleteCourseMutation } from '@/hooks/queries/useCoursesQuery'
+import {
+  useCoursesQuery,
+  useDeleteCourseMutation,
+  useBulkDeleteCoursesMutation,
+} from '@/hooks/queries/useCoursesQuery'
 import { ExportModal } from '@/components/ExportModal'
 import { PageTransition } from '@/components/PageTransition'
 import { InfiniteScrollTrigger } from '@/components/InfiniteScrollTrigger'
@@ -35,6 +39,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { FormField } from '@/components/ui/form-field'
+import { Checkbox } from '@/components/ui/checkbox'
 import { toast } from 'sonner'
 import type { Course } from '@/types/course'
 import type { CourseStatus } from '@/lib/permissions'
@@ -82,12 +87,15 @@ const isNewCourse = (createdAt?: Date | string) => {
 
 export default function CoursesPage() {
   const deleteCourse = useDeleteCourseMutation()
+  const bulkDeleteCourses = useBulkDeleteCoursesMutation()
   const { openPreview } = usePreview()
   const { generatePDF, isGenerating: isGeneratingPDF } = usePDF()
   const { generateSCORM, isGeneratingSCORM } = useSCORM()
   const router = useRouter()
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(null)
   const [isDeletingCourse, setIsDeletingCourse] = useState(false)
+  const [showBulkDeleteConfirm, setShowBulkDeleteConfirm] = useState(false)
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
   const [exportModalOpen, setExportModalOpen] = useState(false)
   const [selectedCourseForExport, setSelectedCourseForExport] = useState<Course | null>(null)
   const [requestedAccesses, setRequestedAccesses] = useState<Set<string>>(new Set())
@@ -134,6 +142,57 @@ export default function CoursesPage() {
     setSelectedFormat('Todas Modalidades')
     setSelectedStatus('all')
   }
+
+  const updateSearchTerm = (value: string) => {
+    setSearchTerm(value)
+    setSelectedIds(new Set())
+  }
+  const updateCategory = (value: string) => {
+    setSelectedCategory(value)
+    setSelectedIds(new Set())
+  }
+  const updateFormat = (value: string) => {
+    setSelectedFormat(value)
+    setSelectedIds(new Set())
+  }
+  const updateStatus = (value: CourseStatus | 'all') => {
+    setSelectedStatus(value)
+    setSelectedIds(new Set())
+  }
+
+  const deletableCourses = paginatedCourses.filter((c) => c.permissions?.canDelete)
+  const canBulkDelete = deletableCourses.length > 0
+  const selectedCount = selectedIds.size
+  const allDeletableSelected =
+    deletableCourses.length > 0 && deletableCourses.every((c) => selectedIds.has(c.id))
+  const someDeletableSelected = deletableCourses.some((c) => selectedIds.has(c.id))
+
+  const toggleSelectAll = () => {
+    setSelectedIds((prev) => {
+      if (allDeletableSelected) {
+        const next = new Set(prev)
+        deletableCourses.forEach((c) => next.delete(c.id))
+        return next
+      }
+      const next = new Set(prev)
+      deletableCourses.forEach((c) => next.add(c.id))
+      return next
+    })
+  }
+
+  const toggleSelectOne = (id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev)
+      if (next.has(id)) {
+        next.delete(id)
+      } else {
+        next.add(id)
+      }
+      return next
+    })
+  }
+
+  const selectedTitles = paginatedCourses.filter((c) => selectedIds.has(c.id)).map((c) => c.title)
 
   const handleRequestAccess = async (courseId: string, title: string) => {
     try {
@@ -259,7 +318,7 @@ export default function CoursesPage() {
                 <span className="text-xs text-muted-foreground pl-1">Buscar</span>
                 <SearchInput
                   value={searchTerm}
-                  onChange={setSearchTerm}
+                  onChange={updateSearchTerm}
                   placeholder="Título, descrição ou categoria..."
                 />
               </div>
@@ -269,7 +328,7 @@ export default function CoursesPage() {
                 {/* Filtro por Categoria */}
                 <FormField label="Categoria" compact className="flex-1">
                   {(props) => (
-                    <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                    <Select value={selectedCategory} onValueChange={updateCategory}>
                       <SelectTrigger id={props.id} className="w-full">
                         <SelectValue placeholder="Categoria" />
                       </SelectTrigger>
@@ -287,7 +346,7 @@ export default function CoursesPage() {
                 {/* Filtro por Modalidade */}
                 <FormField label="Modalidade" compact className="flex-1">
                   {(props) => (
-                    <Select value={selectedFormat} onValueChange={setSelectedFormat}>
+                    <Select value={selectedFormat} onValueChange={updateFormat}>
                       <SelectTrigger id={props.id} className="w-full">
                         <SelectValue placeholder="Modalidade" />
                       </SelectTrigger>
@@ -307,7 +366,7 @@ export default function CoursesPage() {
                   {(props) => (
                     <Select
                       value={selectedStatus}
-                      onValueChange={(value) => setSelectedStatus(value as CourseStatus | 'all')}
+                      onValueChange={(value) => updateStatus(value as CourseStatus | 'all')}
                     >
                       <SelectTrigger id={props.id} className="w-full">
                         <SelectValue placeholder="Status" />
@@ -335,6 +394,30 @@ export default function CoursesPage() {
                     Limpar Filtros
                   </Button>
                 )}
+              </div>
+            </div>
+          )}
+
+          {/* Barra de ações em lote */}
+          {!showError && selectedCount > 0 && (
+            <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-lg border border-border bg-secondary px-4 py-3">
+              <span className="text-sm font-medium text-foreground">
+                {selectedCount === 1
+                  ? '1 curso selecionado'
+                  : `${selectedCount} cursos selecionados`}
+              </span>
+              <div className="flex gap-2">
+                <Button variant="ghost" onClick={() => setSelectedIds(new Set())}>
+                  Limpar seleção
+                </Button>
+                <Button
+                  variant="destructive"
+                  className="gap-2"
+                  onClick={() => setShowBulkDeleteConfirm(true)}
+                >
+                  <Trash2 className="h-4 w-4" />
+                  Excluir selecionados
+                </Button>
               </div>
             </div>
           )}
@@ -387,6 +470,21 @@ export default function CoursesPage() {
               <Table className="min-w-[860px]">
                 <TableHeader>
                   <TableRow>
+                    {canBulkDelete && (
+                      <TableHead className="w-10">
+                        <Checkbox
+                          checked={
+                            allDeletableSelected
+                              ? true
+                              : someDeletableSelected
+                                ? 'indeterminate'
+                                : false
+                          }
+                          onCheckedChange={toggleSelectAll}
+                          aria-label="Selecionar todos"
+                        />
+                      </TableHead>
+                    )}
                     <TableHead>Curso</TableHead>
                     <TableHead>Categoria</TableHead>
                     <TableHead>Status</TableHead>
@@ -408,6 +506,21 @@ export default function CoursesPage() {
 
                     return (
                       <TableRow key={course.id}>
+                        {canBulkDelete && (
+                          <TableCell>
+                            <Checkbox
+                              checked={selectedIds.has(course.id)}
+                              onCheckedChange={() => toggleSelectOne(course.id)}
+                              disabled={!permissions?.canDelete}
+                              title={
+                                permissions?.canDelete
+                                  ? undefined
+                                  : 'Você não tem permissão para excluir este curso'
+                              }
+                              aria-label={`Selecionar ${course.title}`}
+                            />
+                          </TableCell>
+                        )}
                         <TableCell>
                           <div className="flex items-center gap-2">
                             <span className="font-medium text-foreground">{course.title}</span>
@@ -571,6 +684,58 @@ export default function CoursesPage() {
               >
                 {isDeletingCourse && <Loader2 className="h-4 w-4 animate-spin" />}
                 {isDeletingCourse ? 'Excluindo...' : 'Excluir'}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Modal de Confirmação de Exclusão em Lote */}
+        <Dialog open={showBulkDeleteConfirm} onOpenChange={setShowBulkDeleteConfirm}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle>Excluir {selectedCount} cursos?</DialogTitle>
+              <DialogDescription>
+                {selectedTitles.slice(0, 5).join(', ')}
+                {selectedTitles.length > 5 && ` e mais ${selectedTitles.length - 5}`}
+                {'. '}
+                Esta ação não pode ser desfeita.
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter className="flex-col sm:flex-row gap-2">
+              <Button
+                variant="outline"
+                onClick={() => setShowBulkDeleteConfirm(false)}
+                className="w-full sm:w-auto"
+                disabled={bulkDeleteCourses.isPending}
+              >
+                Cancelar
+              </Button>
+              <Button
+                onClick={async () => {
+                  try {
+                    const result = await bulkDeleteCourses.mutateAsync(Array.from(selectedIds))
+                    toast.success(
+                      result.deleted === 1
+                        ? '1 curso excluído'
+                        : `${result.deleted} cursos excluídos`
+                    )
+                    if (result.notFound.length > 0) {
+                      toast.info(`${result.notFound.length} já tinham sido excluídos`)
+                    }
+                    setSelectedIds(new Set())
+                    setShowBulkDeleteConfirm(false)
+                  } catch (error) {
+                    console.error('Failed to bulk delete courses:', error)
+                    const errorMessage =
+                      error instanceof Error ? error.message : 'Erro ao excluir cursos'
+                    toast.error(errorMessage)
+                  }
+                }}
+                className="w-full sm:w-auto bg-destructive hover:bg-destructive/90 text-destructive-foreground gap-2"
+                disabled={bulkDeleteCourses.isPending}
+              >
+                {bulkDeleteCourses.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
+                {bulkDeleteCourses.isPending ? 'Excluindo...' : `Excluir ${selectedCount} cursos`}
               </Button>
             </DialogFooter>
           </DialogContent>
