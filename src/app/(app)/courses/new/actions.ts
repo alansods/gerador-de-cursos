@@ -77,7 +77,7 @@ async function readJson<T>(response: Response, defaultMessage: string): Promise<
 
   if (!type?.includes('application/json')) {
     const body = await response.text()
-    console.error('Resposta não-JSON da API:', body.substring(0, 200))
+    console.error('Non-JSON response from the API:', body.substring(0, 200))
     throw new Error(defaultMessage)
   }
 

@@ -1,6 +1,6 @@
 'use client'
 
-// Esta página não deve ser exportada estaticamente
+// This page must not be exported statically
 export const dynamic = 'error'
 
 import { PageTransition } from '@/components/PageTransition'

@@ -18,7 +18,7 @@ function denyUnlessCanManage(user: JWTPayload) {
   return createErrorResponse('Você não tem permissão para gerenciar usuários', 403)
 }
 
-// GET: Listar usuários com paginação e filtros
+// GET: list users with pagination and filters
 const VALID_EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
 export async function GET(request: NextRequest) {
@@ -98,7 +98,7 @@ export async function GET(request: NextRequest) {
       },
     })
   } catch (error) {
-    console.error('Erro ao listar usuários:', error)
+    console.error('Failed to list the users:', error)
     return NextResponse.json(
       { success: false, error: 'Erro interno ao buscar usuários' },
       { status: 500 }
@@ -106,7 +106,7 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// POST: Criar usuário
+// POST: create a user
 export async function POST(request: NextRequest) {
   const authResult = await requireAuth(request)
 
@@ -162,17 +162,17 @@ export async function POST(request: NextRequest) {
 
     // Registrar atividade
     await logActivity({
-      type: 'usuario_criado',
+      type: 'user_created',
       title: 'Novo usuário criado',
       description: name,
       entityId: user.id,
-      entityType: 'usuario',
+      entityType: 'user',
       userId: authResult.user.id,
     })
 
     return NextResponse.json({ success: true, user })
   } catch (error) {
-    console.error('Erro ao criar usuário:', error)
+    console.error('Failed to create the user:', error)
     return NextResponse.json(
       { success: false, error: 'Erro interno ao criar usuário' },
       { status: 500 }
@@ -180,7 +180,7 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// PUT: Atualizar usuário
+// PUT: update a user
 export async function PUT(request: NextRequest) {
   const authResult = await requireAuth(request)
 
@@ -237,17 +237,17 @@ export async function PUT(request: NextRequest) {
 
     // Registrar atividade
     await logActivity({
-      type: 'usuario_editado',
+      type: 'user_updated',
       title: 'Usuário editado',
       description: user.name,
       entityId: user.id,
-      entityType: 'usuario',
+      entityType: 'user',
       userId: authResult.user.id,
     })
 
     return NextResponse.json({ success: true, user })
   } catch (error) {
-    console.error('Erro ao atualizar usuário:', error)
+    console.error('Failed to update the user:', error)
     // Verificar erro de duplicidade (P2002)
     if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
       return NextResponse.json(
@@ -262,7 +262,7 @@ export async function PUT(request: NextRequest) {
   }
 }
 
-// DELETE: Deletar usuário
+// DELETE: delete a user
 export async function DELETE(request: NextRequest) {
   const authResult = await requireAuth(request)
 
@@ -284,7 +284,7 @@ export async function DELETE(request: NextRequest) {
       )
     }
 
-    // Buscar usuário antes de deletar para obter o nome
+    // Read the user before deleting, to keep the name
     const existingUser = await prisma.user.findUnique({
       where: { id },
       select: { name: true },
@@ -296,17 +296,17 @@ export async function DELETE(request: NextRequest) {
 
     // Registrar atividade
     await logActivity({
-      type: 'usuario_deletado',
+      type: 'user_deleted',
       title: 'Usuário deletado',
       description: existingUser?.name || 'Usuário',
       entityId: id,
-      entityType: 'usuario',
+      entityType: 'user',
       userId: authResult.user.id,
     })
 
     return NextResponse.json({ success: true })
   } catch (error) {
-    console.error('Erro ao deletar usuário:', error)
+    console.error('Failed to delete the user:', error)
     return NextResponse.json(
       { success: false, error: 'Erro interno ao deletar usuário' },
       { status: 500 }

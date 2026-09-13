@@ -4,11 +4,11 @@ const RULES = VALIDATION_RULES.NEW_COURSE
 const IDEAL_DOCUMENT_SIZE = 5 * 1024 * 1024
 
 export interface ManualCourseData {
-  titulo: string
-  categoria: string
-  descricao: string
-  cargaHoraria: string
-  modalidade: string
+  title: string
+  category: string
+  description: string
+  workload: string
+  modality: string
 }
 
 export type ManualCourseField = keyof ManualCourseData
@@ -53,11 +53,11 @@ export function validateModality(value: string): string {
 }
 
 const VALIDATORS: Record<ManualCourseField, (value: string) => string> = {
-  titulo: validateTitle,
-  categoria: validateCategory,
-  descricao: validateDescription,
-  cargaHoraria: validateWorkload,
-  modalidade: validateModality,
+  title: validateTitle,
+  category: validateCategory,
+  description: validateDescription,
+  workload: validateWorkload,
+  modality: validateModality,
 }
 
 export function validateField(field: ManualCourseField, value: string): string {

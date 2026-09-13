@@ -91,7 +91,7 @@ export function QuizContent({ quizData, isEditing = false, onResult }: QuizConte
   const calculateResults = () => {
     let correctAnswers = 0
     quizData.questions.forEach((question) => {
-      const opt = question.opcoes.find((o) => o.id === selectedOptions[question.id])
+      const opt = question.options.find((o) => o.id === selectedOptions[question.id])
       if (opt?.isCorrect) correctAnswers++
     })
     const total = quizData.questions.length
@@ -105,7 +105,7 @@ export function QuizContent({ quizData, isEditing = false, onResult }: QuizConte
 
   const totalQuestions = quizData.questions.length
 
-  // ── Tela de resultados ────────────────────────────────────────────────────
+  // ── Results screen ────────────────────────────────────────────────────────
   if (showResults && !isEditing) {
     const { correctAnswers, total, pct } = calculateResults()
     const perfect = pct === 100
@@ -175,7 +175,7 @@ export function QuizContent({ quizData, isEditing = false, onResult }: QuizConte
         const qShowFeedback = showFeedbacks[qId] || false
         const qShowHint = showHints[qId] || false
         const qSelectedOptionData = qSelectedOption
-          ? question.opcoes.find((opt) => opt.id === qSelectedOption)
+          ? question.options.find((opt) => opt.id === qSelectedOption)
           : null
         const qIsCorrect = qSelectedOptionData?.isCorrect || false
 
@@ -212,12 +212,12 @@ export function QuizContent({ quizData, isEditing = false, onResult }: QuizConte
               {/* Pergunta */}
               <p className="text-base font-medium text-gray-900 dark:text-gray-100 leading-relaxed">
                 <span className="text-(--block-accent,#2563eb) mr-1">{questionIndex + 1}.</span>
-                {question.pergunta}
+                {question.question}
               </p>
 
               {/* Opções */}
               <div className="space-y-2">
-                {question.opcoes.map((option, index) => {
+                {question.options.map((option, index) => {
                   const isSelected = qSelectedOption === option.id
                   const showAsCorrect = qShowFeedback && option.isCorrect
                   const showAsIncorrect = qShowFeedback && isSelected && !option.isCorrect
@@ -266,7 +266,7 @@ export function QuizContent({ quizData, isEditing = false, onResult }: QuizConte
                                   : 'text-gray-800 dark:text-gray-200'
                             }`}
                           >
-                            {option.texto}
+                            {option.text}
                           </p>
                         </div>
 
@@ -297,11 +297,11 @@ export function QuizContent({ quizData, isEditing = false, onResult }: QuizConte
               </div>
 
               {/* Dica expandida — acima dos botões */}
-              {question.dica && !isEditing && qShowHint && (
+              {question.hint && !isEditing && qShowHint && (
                 <div className="flex items-start gap-2 px-3 py-2.5 rounded-lg bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800">
                   <Lightbulb className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
                   <p className="text-xs text-amber-800 dark:text-amber-300 leading-relaxed">
-                    {question.dica}
+                    {question.hint}
                   </p>
                 </div>
               )}
@@ -322,7 +322,7 @@ export function QuizContent({ quizData, isEditing = false, onResult }: QuizConte
 
                   <div className="flex items-center gap-2">
                     {/* Botão de dica */}
-                    {question.dica && !qShowFeedback && (
+                    {question.hint && !qShowFeedback && (
                       <button
                         onClick={() => toggleHint(qId)}
                         className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium border transition-colors ${

@@ -12,7 +12,7 @@ test.describe('Landing Page', () => {
     await page.goto('/landingpage')
   })
 
-  test('a raiz redireciona para o login', async ({ page }) => {
+  test('the root redirects to the login', async ({ page }) => {
     await page.goto('/')
 
     await expect(page).toHaveURL(/\/login$/)
@@ -31,7 +31,7 @@ test.describe('Landing Page', () => {
     await expect(page.locator('#faq')).toBeVisible()
   })
 
-  test('navigates to cadastro when clicking CTA', async ({ page }) => {
+  test('navigates to the signup when clicking the CTA', async ({ page }) => {
     await page.getByRole('link', { name: 'Começar Grátis' }).first().click()
 
     await expect(page).toHaveURL(/.*signup/)
@@ -63,7 +63,7 @@ test.describe('Landing Page', () => {
     await expect(navigation.getByRole('link', { name: 'Começar Grátis' })).toBeVisible()
   })
 
-  test('alterna o tema pela navbar', async ({ page }) => {
+  test('toggles the theme from the navbar', async ({ page }) => {
     const root = page.locator('html')
     const wasDark = await root.evaluate((el) => el.classList.contains('dark'))
 

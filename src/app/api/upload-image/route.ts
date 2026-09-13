@@ -44,7 +44,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ success: true, url: blob.url })
   } catch (error) {
-    console.error('Erro no upload de imagem:', error)
+    console.error('Image upload failed:', error)
     return NextResponse.json(
       { success: false, error: 'Erro ao fazer upload da imagem' },
       { status: 500 }

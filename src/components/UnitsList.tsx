@@ -51,7 +51,7 @@ function SortableUnitItem({
   onCancelEdit: () => void
   disabled?: boolean
 }) {
-  const [editValue, setEditValue] = useState(unit.titulo)
+  const [editValue, setEditValue] = useState(unit.title)
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: unit.id,
   })
@@ -70,15 +70,15 @@ function SortableUnitItem({
   }
 
   const handleCancelEdit = () => {
-    setEditValue(unit.titulo)
+    setEditValue(unit.title)
     onCancelEdit()
   }
 
   React.useEffect(() => {
     if (isEditing) {
-      setEditValue(unit.titulo)
+      setEditValue(unit.title)
     }
-  }, [isEditing, unit.titulo])
+  }, [isEditing, unit.title])
 
   return (
     <div
@@ -128,7 +128,7 @@ function SortableUnitItem({
           </div>
         ) : (
           <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
-            {unit.titulo}
+            {unit.title}
           </p>
         )}
       </div>

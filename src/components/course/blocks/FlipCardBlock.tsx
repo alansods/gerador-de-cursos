@@ -28,11 +28,11 @@ export function FlipCardBlock({ item }: { item: Block }) {
         <FlipCard
           key={card.id}
           index={index + 1}
-          frontType={card.tipoFrente}
-          frontImage={card.imagemFrente}
-          frontTitle={card.tituloFrente}
-          backContent={card.conteudoVerso}
-          cardHeight={item.alturaCard}
+          frontType={card.frontType}
+          frontImage={card.frontImage}
+          frontTitle={card.frontTitle}
+          backContent={card.backContent}
+          cardHeight={item.cardHeight}
         />
       ))}
     </div>

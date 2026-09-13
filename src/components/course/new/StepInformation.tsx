@@ -28,14 +28,14 @@ export function StepInformation({
   onBlur,
   submitted = false,
 }: StepInformationProps) {
-  const caracteres = data.descricao.trim().length
+  const caracteres = data.description.trim().length
   const container = useRef<HTMLDivElement>(null)
 
-  const categories = useRadioGroup(COURSE_CATEGORIES, data.categoria || null, (category) =>
-    onChange('categoria', category)
+  const categories = useRadioGroup(COURSE_CATEGORIES, data.category || null, (category) =>
+    onChange('category', category)
   )
-  const modalities = useRadioGroup(COURSE_MODALITIES, data.modalidade || null, (modality) =>
-    onChange('modalidade', modality)
+  const modalities = useRadioGroup(COURSE_MODALITIES, data.modality || null, (modality) =>
+    onChange('modality', modality)
   )
 
   useEffect(() => {
@@ -45,21 +45,21 @@ export function StepInformation({
 
   return (
     <div ref={container} className="flex max-w-3xl flex-col gap-6">
-      <FormField label="Título do curso" error={errors.titulo} showError={showError('titulo')}>
+      <FormField label="Título do curso" error={errors.title} showError={showError('title')}>
         {(props) => (
           <Input
             {...props}
-            value={data.titulo}
+            value={data.title}
             maxLength={VALIDATION_RULES.NEW_COURSE.TITLE_MAX}
-            onChange={(e) => onChange('titulo', e.target.value)}
-            onBlur={() => onBlur('titulo')}
+            onChange={(e) => onChange('title', e.target.value)}
+            onBlur={() => onBlur('title')}
             placeholder="Ex.: Fundamentos de Automação Industrial"
-            className={cn('h-11', showError('titulo') && 'border-destructive')}
+            className={cn('h-11', showError('title') && 'border-destructive')}
           />
         )}
       </FormField>
 
-      <FormField label="Categoria" error={errors.categoria} showError={showError('categoria')}>
+      <FormField label="Categoria" error={errors.category} showError={showError('category')}>
         {(props) => (
           <div
             id={props.id}
@@ -70,7 +70,7 @@ export function StepInformation({
             className="flex flex-wrap gap-2"
           >
             {COURSE_CATEGORIES.map((category, index) => {
-              const selected = data.categoria === category
+              const selected = data.category === category
               return (
                 <button
                   key={category}
@@ -80,7 +80,7 @@ export function StepInformation({
                   aria-checked={selected}
                   tabIndex={categories.tabIndex(index)}
                   onKeyDown={(event) => categories.onKeyDown(event, index)}
-                  onClick={() => onChange('categoria', category)}
+                  onClick={() => onChange('category', category)}
                   className={cn(
                     'h-9 rounded-full border px-4 text-sm font-medium transition-colors',
                     'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
@@ -99,8 +99,8 @@ export function StepInformation({
 
       <FormField
         label="Descrição"
-        error={errors.descricao}
-        showError={showError('descricao')}
+        error={errors.description}
+        showError={showError('description')}
         counter={`${caracteres} / ${DESCRIPTION_LIMIT}`}
         counterExceeded={caracteres > DESCRIPTION_LIMIT}
       >
@@ -108,32 +108,28 @@ export function StepInformation({
           <Textarea
             {...props}
             rows={4}
-            value={data.descricao}
-            onChange={(e) => onChange('descricao', e.target.value)}
-            onBlur={() => onBlur('descricao')}
+            value={data.description}
+            onChange={(e) => onChange('description', e.target.value)}
+            onBlur={() => onBlur('description')}
             placeholder="O que o aluno será capaz de fazer ao concluir este curso?"
-            className={cn(showError('descricao') && 'border-destructive')}
+            className={cn(showError('description') && 'border-destructive')}
           />
         )}
       </FormField>
 
       <div className="grid gap-6 sm:grid-cols-2">
-        <FormField
-          label="Carga horária"
-          error={errors.cargaHoraria}
-          showError={showError('cargaHoraria')}
-        >
+        <FormField label="Carga horária" error={errors.workload} showError={showError('workload')}>
           {(props) => (
             <div className="relative">
               <Input
                 {...props}
                 inputMode="numeric"
                 maxLength={4}
-                value={data.cargaHoraria}
-                onChange={(e) => onChange('cargaHoraria', e.target.value)}
-                onBlur={() => onBlur('cargaHoraria')}
+                value={data.workload}
+                onChange={(e) => onChange('workload', e.target.value)}
+                onBlur={() => onBlur('workload')}
                 placeholder="40"
-                className={cn('pr-16', showError('cargaHoraria') && 'border-destructive')}
+                className={cn('pr-16', showError('workload') && 'border-destructive')}
               />
               <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">
                 horas
@@ -142,7 +138,7 @@ export function StepInformation({
           )}
         </FormField>
 
-        <FormField label="Modalidade" error={errors.modalidade} showError={showError('modalidade')}>
+        <FormField label="Modalidade" error={errors.modality} showError={showError('modality')}>
           {(props) => (
             <div
               id={props.id}
@@ -151,7 +147,7 @@ export function StepInformation({
               className="flex gap-1 rounded-lg bg-muted p-1"
             >
               {COURSE_MODALITIES.map((modality, index) => {
-                const selected = data.modalidade === modality
+                const selected = data.modality === modality
                 return (
                   <button
                     key={modality}
@@ -161,7 +157,7 @@ export function StepInformation({
                     aria-checked={selected}
                     tabIndex={modalities.tabIndex(index)}
                     onKeyDown={(event) => modalities.onKeyDown(event, index)}
-                    onClick={() => onChange('modalidade', modality)}
+                    onClick={() => onChange('modality', modality)}
                     className={cn(
                       'h-8 flex-1 rounded-md text-sm font-medium transition-colors',
                       'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',

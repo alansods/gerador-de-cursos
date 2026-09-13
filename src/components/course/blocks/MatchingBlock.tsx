@@ -5,17 +5,14 @@ import { Block } from '@/types/course'
 import { InteractiveAssignment } from './InteractiveAssignment'
 
 export function MatchingBlock({ item, blockIndex }: { item: Block; blockIndex?: number }) {
-  const pairs = useMemo(() => item.paresAssociacao ?? [], [item.paresAssociacao])
+  const pairs = useMemo(() => item.matchingPairs ?? [], [item.matchingPairs])
 
   const chips = useMemo(
-    () => pairs.map((pair) => ({ id: pair.id, text: pair.direita, correctTarget: pair.id })),
+    () => pairs.map((pair) => ({ id: pair.id, text: pair.right, correctTarget: pair.id })),
     [pairs]
   )
 
-  const targets = useMemo(
-    () => pairs.map((pair) => ({ id: pair.id, label: pair.esquerda })),
-    [pairs]
-  )
+  const targets = useMemo(() => pairs.map((pair) => ({ id: pair.id, label: pair.left })), [pairs])
 
   if (pairs.length === 0) {
     return (

@@ -37,7 +37,7 @@ export function usePendingAccessRequests() {
     enabled: isAuthenticated && canRespond,
     refetchInterval: ACCESS_REQUESTS_POLLING_INTERVAL,
     refetchIntervalInBackground: false,
-    // um indicador não deve incomodar quando a rede falha
+    // a badge should never nag when the network fails
     retry: false,
   })
 

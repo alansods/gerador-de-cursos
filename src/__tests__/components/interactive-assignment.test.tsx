@@ -7,23 +7,23 @@ import type { Block } from '@/types/course'
 
 const matching: Block = {
   id: 'b1',
-  ordem: 0,
-  tipo: 'associacao',
-  conteudo: '',
-  paresAssociacao: [
-    { id: 'par-1', esquerda: 'NR-6', direita: 'EPI' },
-    { id: 'par-2', esquerda: 'NR-5', direita: 'CIPA' },
+  order: 0,
+  type: 'matching',
+  content: '',
+  matchingPairs: [
+    { id: 'par-1', left: 'NR-6', right: 'EPI' },
+    { id: 'par-2', left: 'NR-5', right: 'CIPA' },
   ],
 }
 
 const categorization: Block = {
   id: 'b2',
-  ordem: 0,
-  tipo: 'categorizacao',
-  conteudo: '',
-  categorias: [
-    { id: 'cat-1', nome: 'Cabeça', itens: [{ id: 'i1', texto: 'Capacete' }] },
-    { id: 'cat-2', nome: 'Membros', itens: [{ id: 'i2', texto: 'Luva' }] },
+  order: 0,
+  type: 'categorization',
+  content: '',
+  categories: [
+    { id: 'cat-1', name: 'Cabeça', items: [{ id: 'i1', text: 'Capacete' }] },
+    { id: 'cat-2', name: 'Membros', items: [{ id: 'i2', text: 'Luva' }] },
   ],
 }
 
@@ -32,8 +32,8 @@ async function assign(user: ReturnType<typeof userEvent.setup>, chip: string, ta
   await user.click(screen.getByRole('button', { name: target }))
 }
 
-describe('associação', () => {
-  it('permite associar sem arrastar, só com clique e teclado', async () => {
+describe('matching', () => {
+  it('matches without dragging, by click and keyboard alone', async () => {
     const user = userEvent.setup()
     render(<MatchingBlock item={matching} />)
 
@@ -44,7 +44,7 @@ describe('associação', () => {
     expect(screen.getByText('2 de 2 corretos')).toBeInTheDocument()
   })
 
-  it('só libera a verificação depois de atribuir todas as fichas', async () => {
+  it('unlocks the check only once every token is assigned', async () => {
     const user = userEvent.setup()
     render(<MatchingBlock item={matching} />)
 
@@ -57,7 +57,7 @@ describe('associação', () => {
     expect(screen.getByRole('button', { name: 'Verificar' })).toBeEnabled()
   })
 
-  it('conta o erro quando os lados são trocados', async () => {
+  it('counts a mistake when the sides are swapped', async () => {
     const user = userEvent.setup()
     render(<MatchingBlock item={matching} />)
 
@@ -68,7 +68,7 @@ describe('associação', () => {
     expect(screen.getByText('0 de 2 corretos')).toBeInTheDocument()
   })
 
-  it('devolve o ocupante ao banco quando o alvo já está preenchido', async () => {
+  it('returns the occupant to the pool when the target is taken', async () => {
     const user = userEvent.setup()
     render(<MatchingBlock item={matching} />)
 
@@ -79,8 +79,8 @@ describe('associação', () => {
   })
 })
 
-describe('categorização', () => {
-  it('aceita mais de um item por categoria e apura o resultado', async () => {
+describe('categorization', () => {
+  it('accepts more than one item per category and scores the result', async () => {
     const user = userEvent.setup()
     render(<CategorizationBlock item={categorization} />)
 
@@ -91,7 +91,7 @@ describe('categorização', () => {
     expect(screen.getByText('2 de 2 corretos')).toBeInTheDocument()
   })
 
-  it('reabre a atividade ao tentar novamente', async () => {
+  it('reopens the activity on retry', async () => {
     const user = userEvent.setup()
     render(<CategorizationBlock item={categorization} />)
 

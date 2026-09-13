@@ -7,9 +7,9 @@ import { fetchCourseWithCollaboration } from '@/lib/course-access'
 import { logActivity, type ActivityType } from '@/lib/activity-logger'
 
 const ACTIVITY_BY_STATUS: Partial<Record<CourseStatus, ActivityType>> = {
-  IN_REVIEW: 'curso_enviado_revisao',
-  APPROVED: 'curso_aprovado',
-  REJECTED: 'curso_reprovado',
+  IN_REVIEW: 'course_submitted_for_review',
+  APPROVED: 'course_approved',
+  REJECTED: 'course_rejected',
 }
 
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -42,7 +42,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       )
     }
 
-    // Enviar para revisão é de quem edita; aprovar e reprovar são do revisor
+    // Sending to review belongs to whoever edits; approving and rejecting belong to the reviewer
     const action = newStatus === 'IN_REVIEW' ? 'course:submitForReview' : 'course:approve'
     const ctx = newStatus === 'IN_REVIEW' ? { course, collaboration } : {}
 
@@ -83,7 +83,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
         title: `Curso ${COURSE_STATUS_LABELS[newStatus].toLowerCase()}`,
         description: course.title,
         entityId: id,
-        entityType: 'curso',
+        entityType: 'course',
         userId: authResult.user.id,
       })
     }
@@ -97,7 +97,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       },
     })
   } catch (error) {
-    console.error('Erro ao alterar status do curso:', error)
+    console.error('Failed to change the course status:', error)
     return createErrorResponse('Erro ao alterar status do curso', 500, error)
   }
 }

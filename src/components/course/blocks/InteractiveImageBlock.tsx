@@ -46,7 +46,7 @@ export function InteractiveImageBlock({ item }: { item: Block }) {
     }
   }, [isOpen])
 
-  if (!item.imagemBase) {
+  if (!item.baseImage) {
     return (
       <div className="text-gray-500 dark:text-gray-400 text-sm italic mb-4">
         Imagem interativa sem imagem de fundo
@@ -60,8 +60,8 @@ export function InteractiveImageBlock({ item }: { item: Block }) {
     <div className="mb-4 space-y-3">
       <div className="relative inline-block max-w-full">
         <img
-          src={item.imagemBase}
-          alt={item.legenda || 'Imagem interativa'}
+          src={item.baseImage}
+          alt={item.caption || 'Imagem interativa'}
           className="h-auto max-w-full rounded-lg"
         />
 
@@ -75,7 +75,7 @@ export function InteractiveImageBlock({ item }: { item: Block }) {
             data-hotspot
             onClick={() => setIsOpen(isOpen === hotspot.id ? null : hotspot.id)}
             aria-expanded={isOpen === hotspot.id}
-            aria-label={`Ponto ${index + 1}: ${hotspot.titulo}`}
+            aria-label={`Ponto ${index + 1}: ${hotspot.title}`}
             style={{ left: `${hotspot.x}%`, top: `${hotspot.y}%` }}
             className={`absolute flex h-7 w-7 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border-2 border-white text-xs font-bold text-white shadow-lg transition-transform hover:scale-110 focus:scale-110 focus:outline-none focus:ring-2 focus:ring-white ${
               isOpen === hotspot.id
@@ -100,7 +100,7 @@ export function InteractiveImageBlock({ item }: { item: Block }) {
                 id={`titulo-${selected.id}`}
                 className="font-semibold text-gray-900 dark:text-gray-100"
               >
-                {selected.titulo}
+                {selected.title}
               </h4>
               <button
                 type="button"
@@ -112,18 +112,18 @@ export function InteractiveImageBlock({ item }: { item: Block }) {
               </button>
             </div>
 
-            {selected.conteudo && (
+            {selected.content && (
               <div
                 className="mt-1 text-sm leading-relaxed text-gray-700 dark:text-gray-300"
-                dangerouslySetInnerHTML={{ __html: selected.conteudo }}
+                dangerouslySetInnerHTML={{ __html: selected.content }}
               />
             )}
           </div>
         )}
       </div>
 
-      {item.legenda && (
-        <p className="text-sm italic text-gray-600 dark:text-gray-400">{item.legenda}</p>
+      {item.caption && (
+        <p className="text-sm italic text-gray-600 dark:text-gray-400">{item.caption}</p>
       )}
     </div>
   )

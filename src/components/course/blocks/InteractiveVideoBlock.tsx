@@ -27,11 +27,11 @@ export function InteractiveVideoBlock({ item, blockIndex }: { item: Block; block
   const [confirmed, setConfirmed] = useState(false)
 
   const cues = useMemo<Cue[]>(() => {
-    return (item.perguntasVideo ?? [])
-      .map((question) => ({ ...question, seconds: timeToSeconds(question.tempo) }))
+    return (item.videoQuestions ?? [])
+      .map((question) => ({ ...question, seconds: timeToSeconds(question.time) }))
       .filter((cue): cue is Cue => cue.seconds !== null)
       .sort((a, b) => a.seconds - b.seconds)
-  }, [item.perguntasVideo])
+  }, [item.videoQuestions])
 
   const nextPending = cues.find((cue) => !answered[cue.id])
   const fromYouTube = videoSource(item) === 'youtube'
@@ -42,8 +42,8 @@ export function InteractiveVideoBlock({ item, blockIndex }: { item: Block; block
     ceilingSeconds: nextPending?.seconds ?? null,
   })
 
-  // A pergunta dispara pelo tempo publicado pelo reprodutor, e não por evento do
-  // elemento — é o que faz o YouTube e o arquivo seguirem o mesmo caminho.
+  // The question fires on the time published by the player, not on an element event —
+  // that is what makes YouTube and a file follow the same path.
   useEffect(() => {
     if (activeCue || !nextPending) return
     if (nextPending.seconds > state.time + TOLERANCE_SECONDS) return
@@ -74,7 +74,7 @@ export function InteractiveVideoBlock({ item, blockIndex }: { item: Block; block
   const confirm = () => {
     if (!activeCue || !selected || confirmed) return
 
-    const isCorrect = selected === activeCue.correta
+    const isCorrect = selected === activeCue.correct
     const newCorrectCount = correctCount + (isCorrect ? 1 : 0)
 
     setConfirmed(true)
@@ -91,13 +91,13 @@ export function InteractiveVideoBlock({ item, blockIndex }: { item: Block; block
   }
 
   const options = questionOptions(activeCue ?? undefined)
-  const answeredCurrentCorrectly = confirmed && selected === activeCue?.correta
+  const answeredCurrentCorrectly = confirmed && selected === activeCue?.correct
 
   return (
     <div className="mb-4 w-full space-y-3">
-      {item.videoTitulo && (
+      {item.videoTitle && (
         <h4 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-          {item.videoTitulo}
+          {item.videoTitle}
         </h4>
       )}
 
@@ -106,8 +106,8 @@ export function InteractiveVideoBlock({ item, blockIndex }: { item: Block; block
         className="relative aspect-video w-full overflow-hidden rounded-lg bg-black shadow-lg"
       >
         {fromYouTube ? (
-          // O YT.Player troca este div por um iframe; a variante arbitrária é o que
-          // faz esse iframe ocupar o quadro.
+          // YT.Player swaps this div for an iframe; the arbitrary variant is what makes
+          // that iframe fill the frame.
           <div className="h-full w-full [&_iframe]:h-full [&_iframe]:w-full">
             <div ref={youTubeMountRef} />
           </div>
@@ -142,12 +142,12 @@ export function InteractiveVideoBlock({ item, blockIndex }: { item: Block; block
             <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-gray-400">
               Pergunta em {formatTime(activeCue.seconds)}
             </p>
-            <p className="mb-4 text-base font-medium text-white">{activeCue.pergunta}</p>
+            <p className="mb-4 text-base font-medium text-white">{activeCue.question}</p>
 
             <div className="space-y-2">
               {options.map((option) => {
                 const chosen = selected === option.letter
-                const correct = option.letter === activeCue.correta
+                const correct = option.letter === activeCue.correct
 
                 const style = !confirmed
                   ? chosen

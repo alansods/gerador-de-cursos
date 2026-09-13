@@ -1,11 +1,7 @@
-import { ReactNode } from "react";
-import { ThemeProvider } from "@/components/ThemeProvider";
+import { ReactNode } from 'react'
+import { ThemeProvider } from '@/components/ThemeProvider'
 
-export default function SCORMPreviewLayout({
-  children,
-}: {
-  children: ReactNode;
-}) {
+export default function SCORMPreviewLayout({ children }: { children: ReactNode }) {
   return (
     <ThemeProvider>
       {/* SCORM API Wrapper - será incluído no build */}
@@ -13,7 +9,7 @@ export default function SCORMPreviewLayout({
         dangerouslySetInnerHTML={{
           __html: `
             (function() {
-              console.log('📦 [SCORM-PLAYER] Carregando SCORM API Wrapper...');
+              console.log('📦 [SCORM-PLAYER] Loading the SCORM API wrapper...');
               var SCORM = (function(){
                 var API = null, findAPITries = 0, _debug = true;
                 function log(msg) { if (_debug) { console.log('📦 [SCORM-PLAYER] ' + msg); } }
@@ -80,25 +76,25 @@ export default function SCORMPreviewLayout({
                   }
                 };
               })();
-              console.log('📦 [SCORM-PLAYER] SCORM Wrapper carregado com sucesso.');
+              console.log('📦 [SCORM-PLAYER] SCORM wrapper loaded.');
               
               if (typeof window !== 'undefined') {
                 window.SCORM = SCORM;
-                console.log('[SCORM-PLAYER] window.SCORM definido');
+                console.log('[SCORM-PLAYER] window.SCORM is set');
                 if (SCORM.init()) {
-                  console.log('✅ SCORM inicializado com sucesso');
+                  console.log('✅ SCORM initialized');
                   try {
                     var studentName = SCORM.getStudentName();
-                    console.log('[SCORM-PLAYER] Nome do aluno:', studentName);
+                    console.log('[SCORM-PLAYER] Learner name:', studentName);
                   } catch (e) {
-                    console.warn('[SCORM-PLAYER] Erro ao buscar nome do aluno:', e);
+                    console.warn('[SCORM-PLAYER] Failed to read the learner name:', e);
                   }
                 } else {
-                  console.warn('⚠️ SCORM não inicializado (modo offline)');
+                  console.warn('⚠️ SCORM not initialized (offline mode)');
                 }
               }
               
-              // === DETECÇÃO AUTOMÁTICA DA UNIDADE ATUAL ===
+              // === CURRENT UNIT DETECTION ===
               (function() {
                 function getCurrentUnitId() {
                   var path = window.location.pathname;
@@ -117,21 +113,21 @@ export default function SCORMPreviewLayout({
                 var currentUnitId = getCurrentUnitId();
                 if (currentUnitId) {
                   window.__SCORM_CURRENT_UNIT_ID__ = currentUnitId;
-                  console.log('[SCORM] ✅ Unidade atual:', currentUnitId);
+                  console.log('[SCORM] ✅ Current unit:', currentUnitId);
                 } else {
                   window.__SCORM_CURRENT_UNIT_ID__ = null;
-                  console.log('[SCORM] 📄 Página inicial');
+                  console.log('[SCORM] 📄 Home page');
                 }
               })();
               
-              // === NAVEGAÇÃO SPA PARA SCORM ESTÁTICO ===
+              // === SPA NAVIGATION FOR THE STATIC SCORM PACKAGE ===
               (function() {
                 function initSPANavigation() {
-                  // ✅ Navegação agora usa target="_top" nos links
-                  // Não precisamos interceptar cliques - o navegador faz a navegação diretamente
-                  // Isso permite navegação livre, quebrando o controle do LMS sobre iframes
+                  // Links carry target="_top"
+                  // No need to intercept clicks: the browser navigates on its own
+                  // That frees the navigation from the LMS iframe control
                   
-                  console.log('[SCORM-NAV] ✅ Navegação livre habilitada (target="_top")');
+                  console.log('[SCORM-NAV] ✅ Free navigation enabled (target="_top")');
                 }
                 
                 if (document.readyState === 'loading') {
@@ -146,5 +142,5 @@ export default function SCORMPreviewLayout({
       />
       {children}
     </ThemeProvider>
-  );
+  )
 }

@@ -2,10 +2,10 @@
  * @jest-environment node
  */
 /**
- * Guarda estrutural: o middleware roda no edge e só enxerga o papel do token,
- * que vive 24h. A trava autoritativa é o `layout.tsx` de cada rota de página,
- * que relê o papel do banco. Este teste falha se alguém adicionar uma rota
- * protegida sem esse layout — o modo de falha seria silencioso em produção.
+ * Structural guard: the middleware runs on the edge and only sees the token role,
+ * which lives for 24h. The authoritative lock is the `layout.tsx` of each page route,
+ * which re-reads the role from the database. This test fails if someone adds a
+ * protected route without that layout — the failure would be silent in production.
  */
 
 import fs from 'fs'
@@ -14,8 +14,8 @@ import { PROTECTED_ROUTES, routeRule, matchesPrefix } from '@/lib/protected-rout
 
 const appRoot = path.join(process.cwd(), 'src', 'app')
 
-// Route groups — `(app)` e afins — não aparecem na URL, então o prefixo da rota
-// pode morar na raiz de `app/` ou dentro de qualquer um deles.
+// Route groups — `(app)` and friends — never show up in the URL, so the route prefix
+// may live at the root of `app/` or inside any of them.
 const routeRoots = [
   appRoot,
   ...fs
@@ -24,17 +24,17 @@ const routeRoots = [
     .map((e) => path.join(appRoot, e.name)),
 ]
 
-function acharLayout(prefix: string) {
+function findLayout(prefix: string) {
   return routeRoots
     .map((root) => path.join(root, prefix, 'layout.tsx'))
     .find((filePath) => fs.existsSync(filePath))
 }
 
-describe('Rotas protegidas', () => {
-  it('toda rota de página protegida tem layout.tsx chamando exigirPermissao com a ação certa', () => {
+describe('protected routes', () => {
+  it('gives every protected page route a layout.tsx calling requirePermission with the right action', () => {
     for (const { prefixes, action } of PROTECTED_ROUTES) {
       for (const prefix of prefixes.filter((p) => !p.startsWith('/api'))) {
-        const layout = acharLayout(prefix)
+        const layout = findLayout(prefix)
 
         expect({ prefixo: prefix, existe: layout !== undefined }).toEqual({
           prefixo: prefix,
@@ -48,13 +48,13 @@ describe('Rotas protegidas', () => {
     }
   })
 
-  it('casaPrefixo aceita a rota exata e filhos, mas não prefixos parciais', () => {
+  it('matchesPrefix accepts the exact route and its children, but not partial prefixes', () => {
     expect(matchesPrefix('/login', '/login')).toBe(true)
     expect(matchesPrefix('/scorm-preview/unidade/1', '/scorm-preview')).toBe(true)
     expect(matchesPrefix('/loginfalso', '/login')).toBe(false)
   })
 
-  it('regraDaRota casa o prefixo exato e os filhos, não prefixos parciais', () => {
+  it('routeRule matches the exact prefix and its children, not partial prefixes', () => {
     expect(routeRule('/users')?.action).toBe('user:manage')
     expect(routeRule('/users/123')?.action).toBe('user:manage')
     expect(routeRule('/api/users')?.action).toBe('user:manage')

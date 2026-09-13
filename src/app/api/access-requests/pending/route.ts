@@ -36,7 +36,7 @@ export async function GET(req: NextRequest) {
 
     return createSuccessResponse({ accessRequests, total: accessRequests.length })
   } catch (error) {
-    console.error('Erro ao buscar solicitações pendentes:', error)
+    console.error('Failed to fetch the pending access requests:', error)
     return createErrorResponse('Erro ao buscar solicitações pendentes', 500, error)
   }
 }

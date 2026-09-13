@@ -37,27 +37,23 @@ interface ContentBlockDrawerProps {
   onOpenChange: (open: boolean) => void
   mode: 'add' | 'edit'
   blockData: Partial<Block> | null
-  onSave: (data: Omit<Block, 'id' | 'ordem'>) => void
+  onSave: (data: Omit<Block, 'id' | 'order'>) => void
   onCancel: () => void
 }
 
 function prepareForm(blockData: Partial<Block> | null): Partial<Block> {
   const form: Partial<Block> = {
-    ...createEmptyBlock(blockData?.tipo || 'paragrafo'),
+    ...createEmptyBlock(blockData?.type || 'paragraph'),
     ...blockData,
   }
 
-  // Bloco salvo antes de `fonteVideo` existir abriria com o seletor na fonte errada.
-  if (form.tipo === 'video' || form.tipo === 'video-interativo') {
-    form.fonteVideo = videoSource(form, form.tipo === 'video' ? 'youtube' : 'arquivo')
+  // A block saved before `videoSource` existed would open with the picker on the wrong source.
+  if (form.type === 'video' || form.type === 'interactive-video') {
+    form.videoSource = videoSource(form, form.type === 'video' ? 'youtube' : 'file')
   }
 
-  if (form.tipo === 'flipcard') {
-    form.itensFlipcard = cardsFlipcard(form)
-    delete form.tipoFrente
-    delete form.imagemFrente
-    delete form.tituloFrente
-    delete form.conteudoVerso
+  if (form.type === 'flipcard') {
+    form.flipcardItems = cardsFlipcard(form)
   }
 
   return form
@@ -69,12 +65,12 @@ const BLOCK_WIDTHS: { columns: 6 | 12; label: string }[] = [
 ]
 
 const CAROUSEL_DISPLAY_MODES: {
-  value: NonNullable<Block['modoCarrossel']>
+  value: NonNullable<Block['carouselMode']>
   label: string
   icon: typeof GalleryHorizontal
 }[] = [
-  { value: 'carrossel', label: 'Carrossel', icon: GalleryHorizontal },
-  { value: 'grade', label: 'Grade', icon: LayoutGrid },
+  { value: 'carousel', label: 'Carrossel', icon: GalleryHorizontal },
+  { value: 'grid', label: 'Grade', icon: LayoutGrid },
 ]
 
 function FileField({
@@ -334,7 +330,7 @@ function CategoryEditor({
           variant="outline"
           size="sm"
           onClick={() =>
-            onChange([...categories, { id: `cat-${Date.now()}`, nome: '', itens: [] }])
+            onChange([...categories, { id: `cat-${Date.now()}`, name: '', items: [] }])
           }
           className="text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-800 hover:bg-blue-50 dark:hover:bg-blue-950/20"
         >
@@ -363,23 +359,21 @@ function CategoryEditor({
               </div>
 
               <Input
-                value={category.nome}
-                onChange={(e) => update(category.id, { nome: e.target.value })}
+                value={category.name}
+                onChange={(e) => update(category.id, { name: e.target.value })}
                 placeholder="Nome da categoria..."
                 className="text-sm"
               />
 
               <div className="mt-3 space-y-2">
-                {category.itens.map((input) => (
+                {category.items.map((input) => (
                   <div key={input.id} className="flex items-center gap-2">
                     <Input
-                      value={input.texto}
+                      value={input.text}
                       onChange={(e) =>
                         update(category.id, {
-                          itens: category.itens.map((another) =>
-                            another.id === input.id
-                              ? { ...another, texto: e.target.value }
-                              : another
+                          items: category.items.map((another) =>
+                            another.id === input.id ? { ...another, text: e.target.value } : another
                           ),
                         })
                       }
@@ -392,7 +386,7 @@ function CategoryEditor({
                       size="sm"
                       onClick={() =>
                         update(category.id, {
-                          itens: category.itens.filter((another) => another.id !== input.id),
+                          items: category.items.filter((another) => another.id !== input.id),
                         })
                       }
                       className="text-red-600 dark:text-red-400"
@@ -408,7 +402,7 @@ function CategoryEditor({
                   size="sm"
                   onClick={() =>
                     update(category.id, {
-                      itens: [...category.itens, { id: `item-${Date.now()}`, texto: '' }],
+                      items: [...category.items, { id: `item-${Date.now()}`, text: '' }],
                     })
                   }
                 >
@@ -444,7 +438,7 @@ function HotspotEditor({
     const area = event.currentTarget.getBoundingClientRect()
     const x = Math.round(((event.clientX - area.left) / area.width) * 100)
     const y = Math.round(((event.clientY - area.top) / area.height) * 100)
-    onChange([...hotspots, { id: `hotspot-${Date.now()}`, x, y, titulo: '', conteudo: '' }])
+    onChange([...hotspots, { id: `hotspot-${Date.now()}`, x, y, title: '', content: '' }])
   }
 
   return (
@@ -461,7 +455,7 @@ function HotspotEditor({
             onClick={() =>
               onChange([
                 ...hotspots,
-                { id: `hotspot-${Date.now()}`, x: 50, y: 50, titulo: '', conteudo: '' },
+                { id: `hotspot-${Date.now()}`, x: 50, y: 50, title: '', content: '' },
               ])
             }
             className="text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-800 hover:bg-blue-50 dark:hover:bg-blue-950/20"
@@ -544,14 +538,14 @@ function HotspotEditor({
                 </div>
 
                 <Input
-                  value={hotspot.titulo}
-                  onChange={(e) => update(hotspot.id, { titulo: e.target.value })}
+                  value={hotspot.title}
+                  onChange={(e) => update(hotspot.id, { title: e.target.value })}
                   placeholder="Título do ponto..."
                   className="text-sm"
                 />
                 <Textarea
-                  value={hotspot.conteudo}
-                  onChange={(e) => update(hotspot.id, { conteudo: e.target.value })}
+                  value={hotspot.content}
+                  onChange={(e) => update(hotspot.id, { content: e.target.value })}
                   placeholder="Descrição exibida ao clicar..."
                   rows={3}
                   className="text-sm"
@@ -573,7 +567,7 @@ export function ContentBlockDrawer({
   onSave,
   onCancel,
 }: ContentBlockDrawerProps) {
-  const [selectedType, setSelectedType] = useState<Block['tipo'] | null>(blockData?.tipo || null)
+  const [selectedType, setSelectedType] = useState<Block['type'] | null>(blockData?.type || null)
 
   const [formData, setFormData] = useState<Partial<Block>>(prepareForm(blockData))
   const [isUploadingImage, setIsUploadingImage] = useState(false)
@@ -581,10 +575,10 @@ export function ContentBlockDrawer({
 
   useEffect(() => {
     if (open) {
-      setSelectedType(blockData?.tipo || null)
+      setSelectedType(blockData?.type || null)
       setFormData(prepareForm(blockData))
-      if (blockData?.conteudo && blockData?.tipo === 'imagem') {
-        setImagePreviewUrl(blockData.conteudo)
+      if (blockData?.content && blockData?.type === 'image') {
+        setImagePreviewUrl(blockData.content)
       }
     }
   }, [open, blockData])
@@ -594,13 +588,13 @@ export function ContentBlockDrawer({
 
     if (!validateForm()) return
 
-    onSave(formData as Omit<Block, 'id' | 'ordem'>)
+    onSave(formData as Omit<Block, 'id' | 'order'>)
     onOpenChange(false)
   }
 
   const handleCancel = () => {
     setSelectedType(null)
-    setFormData(createEmptyBlock('paragrafo'))
+    setFormData(createEmptyBlock('paragraph'))
     setImagePreviewUrl(null)
     onCancel()
   }
@@ -623,7 +617,7 @@ export function ContentBlockDrawer({
     try {
       const { url, warning } = await uploadFile(file, 'image')
 
-      setFormData({ ...formData, conteudo: url })
+      setFormData({ ...formData, content: url })
       setImagePreviewUrl(url)
       if (warning) toast.warning(warning)
       else toast.success('Imagem enviada')
@@ -637,8 +631,8 @@ export function ContentBlockDrawer({
   const handleAddAccordionItem = () => {
     const newItem: AccordionItem = {
       id: `accordion-item-${Date.now()}`,
-      titulo: '',
-      conteudo: '',
+      title: '',
+      content: '',
     }
     setFormData({
       ...formData,
@@ -663,26 +657,26 @@ export function ContentBlockDrawer({
   const handleAddListItem = () => {
     const newItem: ListItem = {
       id: `list-item-${Date.now()}`,
-      texto: '',
+      text: '',
     }
     setFormData({
       ...formData,
-      itensLista: [...(formData.itensLista || []), newItem],
+      listItems: [...(formData.listItems || []), newItem],
     })
   }
 
   const handleRemoveListItem = (id: string) => {
     setFormData({
       ...formData,
-      itensLista: formData.itensLista?.filter((item) => item.id !== id),
+      listItems: formData.listItems?.filter((item) => item.id !== id),
     })
   }
 
   const handleUpdateListItem = (id: string, value: string) => {
     setFormData({
       ...formData,
-      itensLista: formData.itensLista?.map((item) =>
-        item.id === id ? { ...item, texto: value } : item
+      listItems: formData.listItems?.map((item) =>
+        item.id === id ? { ...item, text: value } : item
       ),
     })
   }
@@ -690,26 +684,26 @@ export function ContentBlockDrawer({
   const handleAddObjective = () => {
     const newItem: ListItem = {
       id: `objetivo-${Date.now()}`,
-      texto: '',
+      text: '',
     }
     setFormData({
       ...formData,
-      itensObjetivos: [...(formData.itensObjetivos || []), newItem],
+      objectiveItems: [...(formData.objectiveItems || []), newItem],
     })
   }
 
   const handleRemoveObjective = (id: string) => {
     setFormData({
       ...formData,
-      itensObjetivos: formData.itensObjetivos?.filter((item) => item.id !== id),
+      objectiveItems: formData.objectiveItems?.filter((item) => item.id !== id),
     })
   }
 
   const handleUpdateObjective = (id: string, value: string) => {
     setFormData({
       ...formData,
-      itensObjetivos: formData.itensObjetivos?.map((item) =>
-        item.id === id ? { ...item, texto: value } : item
+      objectiveItems: formData.objectiveItems?.map((item) =>
+        item.id === id ? { ...item, text: value } : item
       ),
     })
   }
@@ -724,8 +718,8 @@ export function ContentBlockDrawer({
     }
 
     switch (selectedType) {
-      case 'titulo':
-      case 'subtitulo':
+      case 'heading':
+      case 'subheading':
         return (
           <div className="space-y-4">
             <FormField
@@ -736,16 +730,16 @@ export function ContentBlockDrawer({
               }
             >
               <Input
-                value={formData.conteudo || ''}
-                onChange={(e) => setFormData({ ...formData, conteudo: e.target.value })}
-                placeholder={`Digite o ${selectedType === 'titulo' ? 'título' : 'subtítulo'}...`}
+                value={formData.content || ''}
+                onChange={(e) => setFormData({ ...formData, content: e.target.value })}
+                placeholder={`Digite o ${selectedType === 'heading' ? 'título' : 'subtítulo'}...`}
                 autoFocus
               />
             </FormField>
           </div>
         )
 
-      case 'paragrafo':
+      case 'paragraph':
         return (
           <div className="space-y-4">
             <FormField
@@ -756,8 +750,8 @@ export function ContentBlockDrawer({
               }
             >
               <RichTextEditor
-                value={formData.conteudo || ''}
-                onChange={(value) => setFormData({ ...formData, conteudo: value })}
+                value={formData.content || ''}
+                onChange={(value) => setFormData({ ...formData, content: value })}
                 placeholder="Digite o texto..."
                 autoFocus
               />
@@ -765,7 +759,7 @@ export function ContentBlockDrawer({
           </div>
         )
 
-      case 'imagem':
+      case 'image':
         return (
           <div className="space-y-4">
             <FormField
@@ -825,9 +819,9 @@ export function ContentBlockDrawer({
 
                 <div>
                   <Input
-                    value={formData.conteudo || ''}
+                    value={formData.content || ''}
                     onChange={(e) => {
-                      setFormData({ ...formData, conteudo: e.target.value })
+                      setFormData({ ...formData, content: e.target.value })
                       if (e.target.value.startsWith('http')) {
                         setImagePreviewUrl(e.target.value)
                       } else {
@@ -838,10 +832,10 @@ export function ContentBlockDrawer({
                   />
                 </div>
 
-                {(imagePreviewUrl || formData.conteudo) && (
+                {(imagePreviewUrl || formData.content) && (
                   <div className="mt-3 flex justify-center">
                     <Image
-                      src={imagePreviewUrl || formData.conteudo || ''}
+                      src={imagePreviewUrl || formData.content || ''}
                       alt="Preview"
                       width={300}
                       height={160}
@@ -861,11 +855,11 @@ export function ContentBlockDrawer({
               }
             >
               <Select
-                value={formData.tamanho || ''}
+                value={formData.size || ''}
                 onValueChange={(value) =>
                   setFormData({
                     ...formData,
-                    tamanho: value as 'pequena' | 'media' | 'grande',
+                    size: value as 'small' | 'medium' | 'large',
                   })
                 }
               >
@@ -873,9 +867,9 @@ export function ContentBlockDrawer({
                   <SelectValue placeholder="Selecione o tamanho" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="pequena">Pequena (25%)</SelectItem>
-                  <SelectItem value="media">Média (50%)</SelectItem>
-                  <SelectItem value="grande">Grande (100%)</SelectItem>
+                  <SelectItem value="small">Pequena (25%)</SelectItem>
+                  <SelectItem value="medium">Média (50%)</SelectItem>
+                  <SelectItem value="large">Grande (100%)</SelectItem>
                 </SelectContent>
               </Select>
             </FormField>
@@ -888,8 +882,8 @@ export function ContentBlockDrawer({
               }
             >
               <Input
-                value={formData.legenda || ''}
-                onChange={(e) => setFormData({ ...formData, legenda: e.target.value })}
+                value={formData.caption || ''}
+                onChange={(e) => setFormData({ ...formData, caption: e.target.value })}
                 placeholder="Digite a legenda da imagem..."
               />
             </FormField>
@@ -902,8 +896,8 @@ export function ContentBlockDrawer({
               }
             >
               <Input
-                value={formData.fonte || ''}
-                onChange={(e) => setFormData({ ...formData, fonte: e.target.value })}
+                value={formData.source || ''}
+                onChange={(e) => setFormData({ ...formData, source: e.target.value })}
                 placeholder="Digite a fonte da imagem..."
               />
             </FormField>
@@ -911,9 +905,9 @@ export function ContentBlockDrawer({
         )
 
       case 'video': {
-        // Sem seletor de fonte: enviar arquivo e colar link são o mesmo campo, e a URL
-        // é que diz qual player usar.
-        const fromFile = videoSource(formData, 'youtube') === 'arquivo'
+        // No source picker: uploading a file and pasting a link share one field, and the URL
+        // decides which player to use.
+        const fromFile = videoSource(formData, 'youtube') === 'file'
 
         return (
           <div className="space-y-4">
@@ -925,8 +919,8 @@ export function ContentBlockDrawer({
               }
             >
               <Input
-                value={formData.videoTitulo || ''}
-                onChange={(e) => setFormData({ ...formData, videoTitulo: e.target.value })}
+                value={formData.videoTitle || ''}
+                onChange={(e) => setFormData({ ...formData, videoTitle: e.target.value })}
                 placeholder="Digite o título do vídeo..."
                 autoFocus
               />
@@ -940,7 +934,7 @@ export function ContentBlockDrawer({
                 setFormData({
                   ...formData,
                   videoUrl,
-                  fonteVideo: videoSource({ videoUrl }, 'youtube'),
+                  videoSource: videoSource({ videoUrl }, 'youtube'),
                 })
               }
               placeholderUrl="ou cole o link do YouTube aqui..."
@@ -973,7 +967,7 @@ export function ContentBlockDrawer({
         )
       }
 
-      case 'video-interativo': {
+      case 'interactive-video': {
         const ofYouTube = videoSource(formData) === 'youtube'
 
         return (
@@ -986,8 +980,8 @@ export function ContentBlockDrawer({
               }
             >
               <Input
-                value={formData.videoTitulo || ''}
-                onChange={(e) => setFormData({ ...formData, videoTitulo: e.target.value })}
+                value={formData.videoTitle || ''}
+                onChange={(e) => setFormData({ ...formData, videoTitle: e.target.value })}
                 placeholder="Digite o título do vídeo..."
                 autoFocus
               />
@@ -998,7 +992,7 @@ export function ContentBlockDrawer({
               label="Vídeo"
               url={formData.videoUrl || ''}
               onUrl={(videoUrl) =>
-                setFormData({ ...formData, videoUrl, fonteVideo: videoSource({ videoUrl }) })
+                setFormData({ ...formData, videoUrl, videoSource: videoSource({ videoUrl }) })
               }
               placeholderUrl="ou cole o link do YouTube aqui..."
               hint="Envie um MP4/WebM (ideal até 25 MB) ou cole um link do YouTube."
@@ -1039,49 +1033,47 @@ export function ContentBlockDrawer({
               label="Perguntas"
               itemLabel="Pergunta"
               emptyText="Nenhuma pergunta adicionada ainda."
-              items={formData.perguntasVideo || []}
+              items={formData.videoQuestions || []}
               createItem={() => ({
                 id: `pv-${Date.now()}`,
-                tempo: '',
-                pergunta: '',
-                opcaoA: '',
-                opcaoB: '',
-                correta: 'A' as const,
+                time: '',
+                question: '',
+                optionA: '',
+                optionB: '',
+                correct: 'A' as const,
               })}
-              onChange={(videoQuestions) =>
-                setFormData({ ...formData, perguntasVideo: videoQuestions })
-              }
+              onChange={(videoQuestions) => setFormData({ ...formData, videoQuestions })}
               fields={[
                 {
-                  key: 'tempo',
+                  key: 'time',
                   label: 'Tempo do vídeo',
                   required: true,
                   placeholder: 'mm:ss — ex.: 02:30',
                 },
                 {
-                  key: 'pergunta',
+                  key: 'question',
                   label: 'Enunciado',
                   required: true,
                   type: 'multiline',
                   placeholder: 'O que o aluno precisa responder...',
                 },
                 {
-                  key: 'opcaoA',
+                  key: 'optionA',
                   label: 'Alternativa A',
                   required: true,
                   placeholder: 'A...',
                 },
                 {
-                  key: 'opcaoB',
+                  key: 'optionB',
                   label: 'Alternativa B',
                   required: true,
                   placeholder: 'B...',
                 },
-                { key: 'opcaoC', label: 'Alternativa C', placeholder: 'C... (opcional)' },
-                { key: 'opcaoD', label: 'Alternativa D', placeholder: 'D... (opcional)' },
-                { key: 'opcaoE', label: 'Alternativa E', placeholder: 'E... (opcional)' },
+                { key: 'optionC', label: 'Alternativa C', placeholder: 'C... (opcional)' },
+                { key: 'optionD', label: 'Alternativa D', placeholder: 'D... (opcional)' },
+                { key: 'optionE', label: 'Alternativa E', placeholder: 'E... (opcional)' },
                 {
-                  key: 'correta',
+                  key: 'correct',
                   label: 'Alternativa correta',
                   required: true,
                   type: 'select',
@@ -1152,7 +1144,7 @@ export function ContentBlockDrawer({
                         compact
                       >
                         <Input
-                          value={item.titulo}
+                          value={item.title}
                           onChange={(e) =>
                             handleUpdateAccordionItem(item.id, 'titulo', e.target.value)
                           }
@@ -1169,7 +1161,7 @@ export function ContentBlockDrawer({
                         compact
                       >
                         <Textarea
-                          value={item.conteudo}
+                          value={item.content}
                           onChange={(e) =>
                             handleUpdateAccordionItem(item.id, 'conteudo', e.target.value)
                           }
@@ -1191,7 +1183,7 @@ export function ContentBlockDrawer({
           </div>
         )
 
-      case 'lista':
+      case 'list':
         return (
           <div className="space-y-4">
             <FormField
@@ -1202,11 +1194,11 @@ export function ContentBlockDrawer({
               }
             >
               <Select
-                value={formData.tipoLista || 'nao-ordenada'}
+                value={formData.listType || 'nao-ordenada'}
                 onValueChange={(value) =>
                   setFormData({
                     ...formData,
-                    tipoLista: value as 'ordenada' | 'nao-ordenada' | 'check',
+                    listType: value as 'ordered' | 'unordered' | 'check',
                   })
                 }
               >
@@ -1214,8 +1206,8 @@ export function ContentBlockDrawer({
                   <SelectValue placeholder="Selecione o tipo" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="nao-ordenada">Não Ordenada (Bullets)</SelectItem>
-                  <SelectItem value="ordenada">Ordenada (Numerada)</SelectItem>
+                  <SelectItem value="unordered">Não Ordenada (Bullets)</SelectItem>
+                  <SelectItem value="ordered">Ordenada (Numerada)</SelectItem>
                   <SelectItem value="check">Com Check</SelectItem>
                 </SelectContent>
               </Select>
@@ -1237,15 +1229,15 @@ export function ContentBlockDrawer({
               </Button>
             </div>
 
-            {formData.itensLista && formData.itensLista.length > 0 ? (
+            {formData.listItems && formData.listItems.length > 0 ? (
               <div className="space-y-2 max-h-[400px] overflow-y-auto">
-                {formData.itensLista.map((item, index) => (
+                {formData.listItems.map((item, index) => (
                   <div key={item.id} className="flex items-center gap-2">
                     <span className="text-sm font-medium text-gray-500 dark:text-gray-400 w-6">
                       {index + 1}.
                     </span>
                     <Input
-                      value={item.texto}
+                      value={item.text}
                       onChange={(e) => handleUpdateListItem(item.id, e.target.value)}
                       placeholder="Texto do item..."
                       className="flex-1"
@@ -1271,7 +1263,7 @@ export function ContentBlockDrawer({
           </div>
         )
 
-      case 'objetivos-aprendizagem':
+      case 'learning-objectives':
         return (
           <div className="space-y-4">
             <div className="flex items-center justify-between">
@@ -1290,15 +1282,15 @@ export function ContentBlockDrawer({
               </Button>
             </div>
 
-            {formData.itensObjetivos && formData.itensObjetivos.length > 0 ? (
+            {formData.objectiveItems && formData.objectiveItems.length > 0 ? (
               <div className="space-y-2 max-h-[400px] overflow-y-auto">
-                {formData.itensObjetivos.map((item, index) => (
+                {formData.objectiveItems.map((item, index) => (
                   <div key={item.id} className="flex items-center gap-2">
                     <span className="text-sm font-medium text-gray-500 dark:text-gray-400 w-6">
                       {index + 1}.
                     </span>
                     <Input
-                      value={item.texto}
+                      value={item.text}
                       onChange={(e) => handleUpdateObjective(item.id, e.target.value)}
                       placeholder="Descreva o objetivo de aprendizagem..."
                       className="flex-1"
@@ -1337,11 +1329,11 @@ export function ContentBlockDrawer({
               }
             >
               <Select
-                value={formData.tipoInfoBox || 'info'}
+                value={formData.infoBoxType || 'info'}
                 onValueChange={(value) =>
                   setFormData({
                     ...formData,
-                    tipoInfoBox: value as 'atencao' | 'saiba_mais' | 'info' | 'curiosidade',
+                    infoBoxType: value as 'warning' | 'learn-more' | 'info' | 'fun-fact',
                   })
                 }
               >
@@ -1350,17 +1342,17 @@ export function ContentBlockDrawer({
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="info">Informação</SelectItem>
-                  <SelectItem value="atencao">Atenção</SelectItem>
-                  <SelectItem value="saiba_mais">Saiba Mais</SelectItem>
-                  <SelectItem value="curiosidade">Curiosidade</SelectItem>
+                  <SelectItem value="warning">Atenção</SelectItem>
+                  <SelectItem value="learn-more">Saiba Mais</SelectItem>
+                  <SelectItem value="fun-fact">Curiosidade</SelectItem>
                 </SelectContent>
               </Select>
             </FormField>
 
             <FormField label="Título (opcional)">
               <Input
-                value={formData.tituloInfoBox || ''}
-                onChange={(e) => setFormData({ ...formData, tituloInfoBox: e.target.value })}
+                value={formData.infoBoxTitle || ''}
+                onChange={(e) => setFormData({ ...formData, infoBoxTitle: e.target.value })}
                 placeholder="Digite o título..."
               />
             </FormField>
@@ -1373,8 +1365,8 @@ export function ContentBlockDrawer({
               }
             >
               <Textarea
-                value={formData.conteudo || ''}
-                onChange={(e) => setFormData({ ...formData, conteudo: e.target.value })}
+                value={formData.content || ''}
+                onChange={(e) => setFormData({ ...formData, content: e.target.value })}
                 placeholder="Digite o conteúdo do destaque..."
                 className="resize-none"
                 rows={6}
@@ -1406,45 +1398,43 @@ export function ContentBlockDrawer({
               label="Flipcards"
               itemLabel="Card"
               emptyText="Nenhum flipcard adicionado ainda."
-              items={formData.itensFlipcard || []}
+              items={formData.flipcardItems || []}
               createItem={() => ({
                 id: `flip-${Date.now()}`,
-                tipoFrente: 'titulo' as const,
-                imagemFrente: '',
-                tituloFrente: '',
-                conteudoVerso: '',
+                frontType: 'title' as const,
+                frontImage: '',
+                frontTitle: '',
+                backContent: '',
               })}
-              onChange={(flipcardItems) =>
-                setFormData({ ...formData, itensFlipcard: flipcardItems })
-              }
+              onChange={(flipcardItems) => setFormData({ ...formData, flipcardItems })}
               fields={[
                 {
-                  key: 'tipoFrente',
+                  key: 'frontType',
                   label: 'Tipo de frente',
                   required: true,
                   type: 'select',
                   options: [
-                    { value: 'titulo', label: 'Apenas título centralizado' },
-                    { value: 'imagem', label: 'Apenas imagem' },
-                    { value: 'imagem-titulo', label: 'Imagem com título no rodapé' },
+                    { value: 'title', label: 'Apenas título centralizado' },
+                    { value: 'image', label: 'Apenas imagem' },
+                    { value: 'image-title', label: 'Imagem com título no rodapé' },
                   ],
                 },
                 {
-                  key: 'imagemFrente',
+                  key: 'frontImage',
                   label: 'Imagem da frente',
                   required: true,
                   type: 'image',
-                  visibleIf: (card) => card.tipoFrente !== 'titulo',
+                  visibleIf: (card) => card.frontType !== 'title',
                 },
                 {
-                  key: 'tituloFrente',
+                  key: 'frontTitle',
                   label: 'Título da frente',
                   required: true,
                   placeholder: 'Digite o título...',
-                  visibleIf: (card) => card.tipoFrente !== 'imagem',
+                  visibleIf: (card) => card.frontType !== 'image',
                 },
                 {
-                  key: 'conteudoVerso',
+                  key: 'backContent',
                   label: 'Conteúdo do verso',
                   required: true,
                   type: 'multiline',
@@ -1455,8 +1445,8 @@ export function ContentBlockDrawer({
 
             <FormField label="Altura dos cards">
               <Input
-                value={formData.alturaCard || '300px'}
-                onChange={(e) => setFormData({ ...formData, alturaCard: e.target.value })}
+                value={formData.cardHeight || '300px'}
+                onChange={(e) => setFormData({ ...formData, cardHeight: e.target.value })}
                 placeholder="Ex: 300px, 20vh"
               />
               <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
@@ -1466,15 +1456,15 @@ export function ContentBlockDrawer({
           </div>
         )
 
-      case 'separador':
+      case 'divider':
         return (
           <FormField label="Estilo">
             <Select
-              value={formData.estiloSeparador || 'linha'}
+              value={formData.dividerStyle || 'linha'}
               onValueChange={(value) =>
                 setFormData({
                   ...formData,
-                  estiloSeparador: value as Block['estiloSeparador'],
+                  dividerStyle: value as Block['dividerStyle'],
                 })
               }
             >
@@ -1482,9 +1472,9 @@ export function ContentBlockDrawer({
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="linha">Linha</SelectItem>
-                <SelectItem value="linha-icone">Linha com ícone</SelectItem>
-                <SelectItem value="espaco">Apenas espaço</SelectItem>
+                <SelectItem value="line">Linha</SelectItem>
+                <SelectItem value="line-icon">Linha com ícone</SelectItem>
+                <SelectItem value="space">Apenas espaço</SelectItem>
               </SelectContent>
             </Select>
           </FormField>
@@ -1496,18 +1486,18 @@ export function ContentBlockDrawer({
             label="Abas"
             itemLabel="Aba"
             emptyText="Nenhuma aba adicionada ainda."
-            items={formData.itensTabs || []}
-            createItem={() => ({ id: `tab-${Date.now()}`, titulo: '', conteudo: '' })}
-            onChange={(tabItems) => setFormData({ ...formData, itensTabs: tabItems })}
+            items={formData.tabItems || []}
+            createItem={() => ({ id: `tab-${Date.now()}`, title: '', content: '' })}
+            onChange={(tabItems) => setFormData({ ...formData, tabItems })}
             fields={[
               {
-                key: 'titulo',
+                key: 'title',
                 label: 'Título',
                 required: true,
                 placeholder: 'Título da aba...',
               },
               {
-                key: 'conteudo',
+                key: 'content',
                 label: 'Conteúdo',
                 required: true,
                 type: 'multiline',
@@ -1517,16 +1507,16 @@ export function ContentBlockDrawer({
           />
         )
 
-      case 'linha-do-tempo':
+      case 'timeline':
         return (
           <div className="space-y-5">
             <FormField label="Orientação">
               <Select
-                value={formData.orientacaoTimeline || 'vertical'}
+                value={formData.timelineOrientation || 'vertical'}
                 onValueChange={(value) =>
                   setFormData({
                     ...formData,
-                    orientacaoTimeline: value as Block['orientacaoTimeline'],
+                    timelineOrientation: value as Block['timelineOrientation'],
                   })
                 }
               >
@@ -1544,26 +1534,24 @@ export function ContentBlockDrawer({
               label="Eventos"
               itemLabel="Evento"
               emptyText="Nenhum evento adicionado ainda."
-              items={formData.itensTimeline || []}
+              items={formData.timelineItems || []}
               createItem={() => ({
-                id: `evento-${Date.now()}`,
-                data: '',
-                titulo: '',
-                descricao: '',
+                id: `timeline-${Date.now()}`,
+                date: '',
+                title: '',
+                description: '',
               })}
-              onChange={(timelineItems) =>
-                setFormData({ ...formData, itensTimeline: timelineItems })
-              }
+              onChange={(timelineItems) => setFormData({ ...formData, timelineItems })}
               fields={[
-                { key: 'data', label: 'Data', placeholder: 'Ex.: 1990 ou Março/2024' },
+                { key: 'date', label: 'Data', placeholder: 'Ex.: 1990 ou Março/2024' },
                 {
-                  key: 'titulo',
+                  key: 'title',
                   label: 'Título',
                   required: true,
                   placeholder: 'Título do evento...',
                 },
                 {
-                  key: 'descricao',
+                  key: 'description',
                   label: 'Descrição',
                   type: 'multiline',
                   placeholder: 'Descrição do evento...',
@@ -1573,13 +1561,13 @@ export function ContentBlockDrawer({
           </div>
         )
 
-      case 'carrossel':
+      case 'carousel':
         return (
           <div className="space-y-5">
             <FormField label="Exibição">
               <div className="grid grid-cols-2 gap-2">
                 {CAROUSEL_DISPLAY_MODES.map((mode) => {
-                  const active = (formData.modoCarrossel || 'carrossel') === mode.value
+                  const active = (formData.carouselMode || 'carrossel') === mode.value
                   const Icon = mode.icon
 
                   return (
@@ -1587,7 +1575,7 @@ export function ContentBlockDrawer({
                       key={mode.value}
                       type="button"
                       variant={active ? 'default' : 'outline'}
-                      onClick={() => setFormData({ ...formData, modoCarrossel: mode.value })}
+                      onClick={() => setFormData({ ...formData, carouselMode: mode.value })}
                       className="h-auto flex-col gap-1.5 py-3"
                     >
                       <Icon className="h-5 w-5" />
@@ -1602,11 +1590,9 @@ export function ContentBlockDrawer({
               label="Imagens"
               itemLabel="Imagem"
               emptyText="Nenhuma imagem adicionada ainda."
-              items={formData.itensCarrossel || []}
-              createItem={() => ({ id: `img-${Date.now()}`, url: '', legenda: '', fonte: '' })}
-              onChange={(carouselItems) =>
-                setFormData({ ...formData, itensCarrossel: carouselItems })
-              }
+              items={formData.carouselItems || []}
+              createItem={() => ({ id: `img-${Date.now()}`, url: '', caption: '', source: '' })}
+              onChange={(carouselItems) => setFormData({ ...formData, carouselItems })}
               fields={[
                 {
                   key: 'url',
@@ -1615,13 +1601,13 @@ export function ContentBlockDrawer({
                   type: 'image',
                 },
                 {
-                  key: 'legenda',
+                  key: 'caption',
                   label: 'Legenda',
                   required: true,
                   placeholder: 'Legenda da imagem...',
                 },
                 {
-                  key: 'fonte',
+                  key: 'source',
                   label: 'Fonte',
                   required: true,
                   placeholder: 'Fonte da imagem...',
@@ -1649,16 +1635,16 @@ export function ContentBlockDrawer({
               }
             >
               <Input
-                value={formData.audioTitulo || ''}
-                onChange={(e) => setFormData({ ...formData, audioTitulo: e.target.value })}
+                value={formData.audioTitle || ''}
+                onChange={(e) => setFormData({ ...formData, audioTitle: e.target.value })}
                 placeholder="Título do áudio..."
               />
             </FormField>
 
             <FormField label="Transcrição">
               <Textarea
-                value={formData.transcricao || ''}
-                onChange={(e) => setFormData({ ...formData, transcricao: e.target.value })}
+                value={formData.transcript || ''}
+                onChange={(e) => setFormData({ ...formData, transcript: e.target.value })}
                 placeholder="Transcrição do áudio (recomendada para acessibilidade)..."
                 rows={5}
               />
@@ -1684,8 +1670,8 @@ export function ContentBlockDrawer({
               }
             >
               <Input
-                value={formData.pdfTitulo || ''}
-                onChange={(e) => setFormData({ ...formData, pdfTitulo: e.target.value })}
+                value={formData.pdfTitle || ''}
+                onChange={(e) => setFormData({ ...formData, pdfTitle: e.target.value })}
                 placeholder="Título do documento..."
               />
             </FormField>
@@ -1693,10 +1679,8 @@ export function ContentBlockDrawer({
             <label className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
               <input
                 type="checkbox"
-                checked={formData.permitirDownloadPdf !== false}
-                onChange={(e) =>
-                  setFormData({ ...formData, permitirDownloadPdf: e.target.checked })
-                }
+                checked={formData.allowPdfDownload !== false}
+                onChange={(e) => setFormData({ ...formData, allowPdfDownload: e.target.checked })}
                 className="h-4 w-4"
               />
               Permitir download do arquivo
@@ -1704,52 +1688,50 @@ export function ContentBlockDrawer({
           </div>
         )
 
-      case 'imagem-interativa':
+      case 'interactive-image':
         return (
           <div className="space-y-5">
             <FileField
               category="image"
               label="Imagem de fundo"
-              url={formData.imagemBase || ''}
-              onUrl={(baseImage) => setFormData({ ...formData, imagemBase: baseImage })}
+              url={formData.baseImage || ''}
+              onUrl={(baseImage) => setFormData({ ...formData, baseImage })}
             />
 
             <HotspotEditor
-              baseImage={formData.imagemBase || ''}
+              baseImage={formData.baseImage || ''}
               hotspots={formData.hotspots || []}
               onChange={(hotspots) => setFormData({ ...formData, hotspots })}
             />
 
             <FormField label="Legenda">
               <Input
-                value={formData.legenda || ''}
-                onChange={(e) => setFormData({ ...formData, legenda: e.target.value })}
+                value={formData.caption || ''}
+                onChange={(e) => setFormData({ ...formData, caption: e.target.value })}
                 placeholder="Legenda da imagem..."
               />
             </FormField>
           </div>
         )
 
-      case 'associacao':
+      case 'matching':
         return (
           <ItemEditor
             label="Pares"
             itemLabel="Par"
             emptyText="Nenhum par adicionado ainda."
-            items={formData.paresAssociacao || []}
-            createItem={() => ({ id: `par-${Date.now()}`, esquerda: '', direita: '' })}
-            onChange={(matchingPairs) =>
-              setFormData({ ...formData, paresAssociacao: matchingPairs })
-            }
+            items={formData.matchingPairs || []}
+            createItem={() => ({ id: `par-${Date.now()}`, left: '', right: '' })}
+            onChange={(matchingPairs) => setFormData({ ...formData, matchingPairs })}
             fields={[
               {
-                key: 'esquerda',
+                key: 'left',
                 label: 'Item fixo',
                 required: true,
                 placeholder: 'Ex.: Água',
               },
               {
-                key: 'direita',
+                key: 'right',
                 label: 'Correspondente',
                 required: true,
                 placeholder: 'Ex.: H₂O',
@@ -1758,11 +1740,11 @@ export function ContentBlockDrawer({
           />
         )
 
-      case 'categorizacao':
+      case 'categorization':
         return (
           <CategoryEditor
-            categories={formData.categorias || []}
-            onChange={(categories) => setFormData({ ...formData, categorias: categories })}
+            categories={formData.categories || []}
+            onChange={(categories) => setFormData({ ...formData, categories })}
           />
         )
 
@@ -1802,8 +1784,8 @@ export function ContentBlockDrawer({
                   <Button
                     key={width.columns}
                     type="button"
-                    variant={(formData.colunas ?? 12) === width.columns ? 'default' : 'outline'}
-                    onClick={() => setFormData({ ...formData, colunas: width.columns })}
+                    variant={(formData.columns ?? 12) === width.columns ? 'default' : 'outline'}
+                    onClick={() => setFormData({ ...formData, columns: width.columns })}
                   >
                     {width.label}
                   </Button>

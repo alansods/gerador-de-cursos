@@ -3,16 +3,16 @@ import type { Course } from '@/types/course'
 
 const course: Course = {
   id: 'curso-1',
-  titulo: 'Segurança do Trabalho',
-  descricao: '',
-  cargaHoraria: '8 horas',
-  modalidade: 'Online',
-  categoria: 'Gestão',
-  unidades: [],
+  title: 'Segurança do Trabalho',
+  description: '',
+  workload: '8 horas',
+  modality: 'Online',
+  category: 'Gestão',
+  units: [],
 }
 
 describe('generateManifest', () => {
-  it('lista exatamente os arquivos que foram para o ZIP', () => {
+  it('lists exactly the files that went into the ZIP', () => {
     const manifesto = generateManifest(course, ['index.html', 'assets/app.js'])
 
     expect(manifesto).toContain('<file href="index.html"/>')
@@ -20,15 +20,15 @@ describe('generateManifest', () => {
     expect(manifesto).not.toContain('scorm_api_wrapper.js')
   })
 
-  it('escapa o título do curso no XML', () => {
-    const manifesto = generateManifest({ ...course, titulo: 'NR-6 & EPI' }, ['index.html'])
+  it('escapes the course title in the XML', () => {
+    const manifesto = generateManifest({ ...course, title: 'NR-6 & EPI' }, ['index.html'])
 
     expect(manifesto).toContain('<title>NR-6 &amp; EPI</title>')
   })
 })
 
 describe('generateSCORMFromPlayerDist', () => {
-  it('falha com mensagem acionável quando o player não foi buildado', async () => {
+  it('fails with an actionable message when the player was not built', async () => {
     const cwd = jest.spyOn(process, 'cwd').mockReturnValue('/tmp/sem-player-dist')
 
     await expect(generateSCORMFromPlayerDist(course)).rejects.toThrow(

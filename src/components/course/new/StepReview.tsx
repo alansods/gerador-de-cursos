@@ -46,8 +46,8 @@ export function StepReview({ method, data, layout, file, markers, onEdit }: Step
         }
       : {
           label: 'Curso',
-          value: data.titulo || '—',
-          detail: [data.categoria, `${data.cargaHoraria} horas`, data.modalidade]
+          value: data.title || '—',
+          detail: [data.category, `${data.workload} horas`, data.modality]
             .filter(Boolean)
             .join(' · '),
           step: 2,
@@ -61,7 +61,7 @@ export function StepReview({ method, data, layout, file, markers, onEdit }: Step
   ]
 
   if (!isAi) {
-    lines.push({ label: 'Descrição', value: data.descricao || '—', step: 2 })
+    lines.push({ label: 'Descrição', value: data.description || '—', step: 2 })
   }
 
   return (

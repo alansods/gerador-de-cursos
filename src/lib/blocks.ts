@@ -36,7 +36,7 @@ import type {
 import { timeToSeconds } from '@/lib/video-time'
 import { isValidYouTubeUrl } from '@/lib/youtube'
 
-export type BlockType = Block['tipo']
+export type BlockType = Block['type']
 
 export type BlockCategory = 'texto' | 'midia' | 'interativo' | 'avaliativo'
 
@@ -80,12 +80,12 @@ export interface BlockMeta {
   adjustableWidth?: boolean
 }
 
-const LIST_TYPES = ['ordenada', 'nao-ordenada', 'check'] as const
-const INFO_BOX_TYPES = ['atencao', 'saiba_mais', 'info', 'curiosidade'] as const
-const FRONT_TYPES = ['imagem', 'imagem-titulo', 'titulo'] as const
-const DIVIDER_STYLES = ['linha', 'espaco', 'linha-icone'] as const
+const LIST_TYPES = ['ordered', 'unordered', 'check'] as const
+const INFO_BOX_TYPES = ['warning', 'learn-more', 'info', 'fun-fact'] as const
+const FRONT_TYPES = ['image', 'image-title', 'title'] as const
+const DIVIDER_STYLES = ['line', 'space', 'line-icon'] as const
 const TIMELINE_ORIENTATIONS = ['vertical', 'horizontal'] as const
-const CAROUSEL_MODES = ['carrossel', 'grade'] as const
+const CAROUSEL_MODES = ['carousel', 'grid'] as const
 
 const MIN_PAIRS = 2
 const MIN_CATEGORIES = 2
@@ -107,7 +107,7 @@ export function questionOptions(
 
   return OPTION_LETTERS.map((letter) => ({
     letter,
-    text: (question[`opcao${letter}` as keyof VideoQuestion] as string | undefined) ?? '',
+    text: (question[`option${letter}` as keyof VideoQuestion] as string | undefined) ?? '',
   })).filter((option) => hasText(option.text))
 }
 
@@ -124,10 +124,10 @@ export function questionOptions(
  */
 export function videoSource(
   block: Partial<Block>,
-  legacyDefault: 'youtube' | 'arquivo' = 'arquivo'
-): 'youtube' | 'arquivo' {
+  legacyDefault: 'youtube' | 'file' = 'file'
+): 'youtube' | 'file' {
   if (isValidYouTubeUrl(block.videoUrl ?? '')) return 'youtube'
-  if (block.fonteVideo === 'arquivo' || block.fonteVideo === 'youtube') return block.fonteVideo
+  if (block.videoSource === 'file' || block.videoSource === 'youtube') return block.videoSource
   return legacyDefault
 }
 
@@ -135,10 +135,10 @@ function isUsableVideoQuestion(question?: Partial<VideoQuestion>): boolean {
   const options = questionOptions(question)
 
   return (
-    timeToSeconds(question?.tempo) !== null &&
-    hasText(question?.pergunta) &&
+    timeToSeconds(question?.time) !== null &&
+    hasText(question?.question) &&
     options.length >= MIN_OPTIONS &&
-    options.some((option) => option.letter === question?.correta)
+    options.some((option) => option.letter === question?.correct)
   )
 }
 
@@ -148,42 +148,26 @@ function isUsableVideoQuestion(question?: Partial<VideoQuestion>): boolean {
  * renderização, formulário, PDF e SCORM — leia sempre a mesma forma.
  */
 export function cardsFlipcard(block: Partial<Block>): FlipcardItem[] {
-  const rawItems: Partial<FlipcardItem>[] = block.itensFlipcard?.length
-    ? block.itensFlipcard
-    : hasText(block.conteudoVerso) || hasText(block.tituloFrente) || hasText(block.imagemFrente)
-      ? [
-          {
-            tipoFrente: block.tipoFrente,
-            imagemFrente: block.imagemFrente,
-            tituloFrente: block.tituloFrente,
-            conteudoVerso: block.conteudoVerso,
-          },
-        ]
-      : []
+  const rawItems: Partial<FlipcardItem>[] = block.flipcardItems ?? []
 
   return rawItems.map((card, index) => ({
     id: hasText(card?.id) ? (card.id as string) : `flip-${index + 1}`,
-    tipoFrente: FRONT_TYPES.includes(card?.tipoFrente as never)
-      ? (card.tipoFrente as FlipcardItem['tipoFrente'])
-      : 'titulo',
-    imagemFrente: card?.imagemFrente ?? '',
-    tituloFrente: card?.tituloFrente ?? '',
-    conteudoVerso: card?.conteudoVerso ?? '',
+    frontType: FRONT_TYPES.includes(card?.frontType as never)
+      ? (card.frontType as FlipcardItem['frontType'])
+      : 'title',
+    frontImage: card?.frontImage ?? '',
+    frontTitle: card?.frontTitle ?? '',
+    backContent: card?.backContent ?? '',
   }))
 }
 
 function flipcardBlock(base: Partial<Block>, cards: FlipcardItem[]): Block {
   const block = { ...base } as Block
 
-  delete block.tipoFrente
-  delete block.imagemFrente
-  delete block.tituloFrente
-  delete block.conteudoVerso
-
   return {
     ...block,
-    colunas: 12,
-    itensFlipcard: cards.map((card, index) => ({ ...card, id: `flip-${index + 1}` })),
+    columns: 12,
+    flipcardItems: cards.map((card, index) => ({ ...card, id: `flip-${index + 1}` })),
   }
 }
 
@@ -198,14 +182,14 @@ export function mergeAdjacentFlipcards(content: Block[]): Block[] {
   const merged: Block[] = []
 
   for (const block of content) {
-    if (block.tipo !== 'flipcard') {
+    if (block.type !== 'flipcard') {
       merged.push(block)
       continue
     }
 
     const previous = merged[merged.length - 1]
 
-    if (previous?.tipo === 'flipcard') {
+    if (previous?.type === 'flipcard') {
       merged[merged.length - 1] = flipcardBlock(previous, [
         ...cardsFlipcard(previous),
         ...cardsFlipcard(block),
@@ -216,99 +200,99 @@ export function mergeAdjacentFlipcards(content: Block[]): Block[] {
     merged.push(flipcardBlock(block, cardsFlipcard(block)))
   }
 
-  return merged.map((block, order) => (block.ordem === order ? block : { ...block, ordem: order }))
+  return merged.map((block, order) => (block.order === order ? block : { ...block, order }))
 }
 
 function isUsableFlipcardCard(card: FlipcardItem): boolean {
-  return (hasText(card.tituloFrente) || isUrl(card.imagemFrente)) && hasText(card.conteudoVerso)
+  return (hasText(card.frontTitle) || isUrl(card.frontImage)) && hasText(card.backContent)
 }
 
 function validateFlipcardCard(card: FlipcardItem): string | null {
-  const needsImage = card.tipoFrente === 'imagem' || card.tipoFrente === 'imagem-titulo'
-  const needsTitle = card.tipoFrente === 'titulo' || card.tipoFrente === 'imagem-titulo'
-  if (needsImage && !hasText(card.imagemFrente)) return 'adicione uma imagem para a frente'
-  if (needsTitle && !hasText(card.tituloFrente)) return 'adicione um título para a frente'
-  if (!hasText(card.conteudoVerso)) return 'adicione o conteúdo do verso'
+  const needsImage = card.frontType === 'image' || card.frontType === 'image-title'
+  const needsTitle = card.frontType === 'title' || card.frontType === 'image-title'
+  if (needsImage && !hasText(card.frontImage)) return 'adicione uma imagem para a frente'
+  if (needsTitle && !hasText(card.frontTitle)) return 'adicione um título para a frente'
+  if (!hasText(card.backContent)) return 'adicione o conteúdo do verso'
   return null
 }
 
 export const BLOCK_CATALOG: Record<BlockType, BlockMeta> = {
-  titulo: {
-    type: 'titulo',
+  heading: {
+    type: 'heading',
     label: 'Título',
     pluralLabel: 'títulos',
     marker: null,
     aiGeneratable: true,
     requiresDocumentMedia: false,
-    validate: (b) => hasText(b.conteudo),
+    validate: (b) => hasText(b.content),
     icon: Heading2,
     description: 'Cabeçalho de seção',
     category: 'texto',
-    defaults: () => ({ conteudo: '' }),
-    validateForm: (b) => (hasText(b.conteudo) ? null : 'Preencha o conteúdo'),
+    defaults: () => ({ content: '' }),
+    validateForm: (b) => (hasText(b.content) ? null : 'Preencha o conteúdo'),
   },
-  subtitulo: {
-    type: 'subtitulo',
+  subheading: {
+    type: 'subheading',
     label: 'Subtítulo',
     pluralLabel: 'subtítulos',
     marker: null,
     aiGeneratable: true,
     requiresDocumentMedia: false,
-    validate: (b) => hasText(b.conteudo),
+    validate: (b) => hasText(b.content),
     icon: Heading3,
     description: 'Cabeçalho de subseção',
     category: 'texto',
-    defaults: () => ({ conteudo: '' }),
-    validateForm: (b) => (hasText(b.conteudo) ? null : 'Preencha o conteúdo'),
+    defaults: () => ({ content: '' }),
+    validateForm: (b) => (hasText(b.content) ? null : 'Preencha o conteúdo'),
   },
-  paragrafo: {
-    type: 'paragrafo',
+  paragraph: {
+    type: 'paragraph',
     label: 'Parágrafo',
     pluralLabel: 'parágrafos',
     marker: null,
     aiGeneratable: true,
     requiresDocumentMedia: false,
-    validate: (b) => hasText(b.conteudo),
+    validate: (b) => hasText(b.content),
     icon: Type,
     description: 'Parágrafo de conteúdo',
     category: 'texto',
-    defaults: () => ({ conteudo: '', corTexto: '#000000', alinhamento: 'esquerda' }),
-    validateForm: (b) => (hasText(b.conteudo) ? null : 'Preencha o conteúdo'),
+    defaults: () => ({ content: '', textColor: '#000000', alignment: 'left' }),
+    validateForm: (b) => (hasText(b.content) ? null : 'Preencha o conteúdo'),
     adjustableWidth: true,
   },
-  lista: {
-    type: 'lista',
+  list: {
+    type: 'list',
     label: 'Lista',
     pluralLabel: 'listas',
     marker: 'LISTA',
     aiGeneratable: true,
     requiresDocumentMedia: false,
-    validate: (b) => !!b.itensLista?.some((item) => hasText(item.texto)),
+    validate: (b) => !!b.listItems?.some((item) => hasText(item.text)),
     icon: List,
     description: 'Itens ou passos',
     category: 'texto',
-    defaults: () => ({ itensLista: [], tipoLista: 'nao-ordenada' }),
+    defaults: () => ({ listItems: [], listType: 'unordered' }),
     validateForm: (b) => {
-      if (!b.itensLista?.length) return 'Adicione pelo menos um item à lista'
-      if (b.itensLista.some((item) => !hasText(item.texto))) return 'Todos os itens devem ter texto'
+      if (!b.listItems?.length) return 'Adicione pelo menos um item à lista'
+      if (b.listItems.some((item) => !hasText(item.text))) return 'Todos os itens devem ter texto'
       return null
     },
   },
-  'objetivos-aprendizagem': {
-    type: 'objetivos-aprendizagem',
+  'learning-objectives': {
+    type: 'learning-objectives',
     label: 'Objetivos',
     pluralLabel: 'blocos de objetivos',
     marker: 'OBJETIVOS',
     aiGeneratable: true,
     requiresDocumentMedia: false,
-    validate: (b) => !!b.itensObjetivos?.some((item) => hasText(item.texto)),
+    validate: (b) => !!b.objectiveItems?.some((item) => hasText(item.text)),
     icon: Target,
     description: 'Objetivos de aprendizagem',
     category: 'texto',
-    defaults: () => ({ itensObjetivos: [] }),
+    defaults: () => ({ objectiveItems: [] }),
     validateForm: (b) => {
-      if (!b.itensObjetivos?.length) return 'Adicione pelo menos um objetivo de aprendizagem'
-      if (b.itensObjetivos.some((item) => !hasText(item.texto)))
+      if (!b.objectiveItems?.length) return 'Adicione pelo menos um objetivo de aprendizagem'
+      if (b.objectiveItems.some((item) => !hasText(item.text)))
         return 'Todos os objetivos devem ter texto'
       return null
     },
@@ -320,12 +304,12 @@ export const BLOCK_CATALOG: Record<BlockType, BlockMeta> = {
     marker: 'INFOBOX',
     aiGeneratable: true,
     requiresDocumentMedia: false,
-    validate: (b) => hasText(b.conteudo),
+    validate: (b) => hasText(b.content),
     icon: AlertTriangle,
     description: 'Cards de informação',
     category: 'texto',
-    defaults: () => ({ conteudo: '', tipoInfoBox: 'info', tituloInfoBox: '' }),
-    validateForm: (b) => (hasText(b.conteudo) ? null : 'Preencha o conteúdo do destaque'),
+    defaults: () => ({ content: '', infoBoxType: 'info', infoBoxTitle: '' }),
+    validateForm: (b) => (hasText(b.content) ? null : 'Preencha o conteúdo do destaque'),
   },
   accordion: {
     type: 'accordion',
@@ -334,14 +318,14 @@ export const BLOCK_CATALOG: Record<BlockType, BlockMeta> = {
     marker: 'ACCORDION',
     aiGeneratable: true,
     requiresDocumentMedia: false,
-    validate: (b) => !!b.items?.some((item) => hasText(item.titulo) && hasText(item.conteudo)),
+    validate: (b) => !!b.items?.some((item) => hasText(item.title) && hasText(item.content)),
     icon: ChevronDown,
     description: 'Perguntas expansíveis',
     category: 'interativo',
     defaults: () => ({ items: [] }),
     validateForm: (b) => {
       if (!b.items?.length) return 'Adicione pelo menos um item ao accordion'
-      if (b.items.some((item) => !hasText(item.titulo) || !hasText(item.conteudo)))
+      if (b.items.some((item) => !hasText(item.title) || !hasText(item.content)))
         return 'Todos os itens devem ter título e conteúdo'
       return null
     },
@@ -357,7 +341,7 @@ export const BLOCK_CATALOG: Record<BlockType, BlockMeta> = {
     icon: RotateCcw,
     description: 'Cartões de revisão',
     category: 'interativo',
-    defaults: () => ({ itensFlipcard: [], alturaCard: '300px' }),
+    defaults: () => ({ flipcardItems: [], cardHeight: '300px' }),
     validateForm: (b) => {
       const cards = cardsFlipcard(b)
       if (cards.length === 0) return 'Adicione ao menos um flipcard'
@@ -367,11 +351,11 @@ export const BLOCK_CATALOG: Record<BlockType, BlockMeta> = {
       }
       return null
     },
-    extractMedia: (b) => cardsFlipcard(b).map((card) => card.imagemFrente),
+    extractMedia: (b) => cardsFlipcard(b).map((card) => card.frontImage),
     rewriteMedia: (b, mapper) => ({
-      itensFlipcard: cardsFlipcard(b).map((card) => ({
+      flipcardItems: cardsFlipcard(b).map((card) => ({
         ...card,
-        imagemFrente: mapper(card.imagemFrente) ?? card.imagemFrente,
+        frontImage: mapper(card.frontImage) ?? card.frontImage,
       })),
     }),
   },
@@ -390,33 +374,33 @@ export const BLOCK_CATALOG: Record<BlockType, BlockMeta> = {
     validateForm: (b) =>
       b.quizData?.questions?.length ? null : 'O quiz deve ter pelo menos uma pergunta',
   },
-  imagem: {
-    type: 'imagem',
+  image: {
+    type: 'image',
     label: 'Imagem',
     pluralLabel: 'imagens',
     marker: 'IMAGEM',
     aiGeneratable: true,
     requiresDocumentMedia: true,
-    validate: (b) => isUrl(b.conteudo),
+    validate: (b) => isUrl(b.content),
     icon: ImageIcon,
     description: 'Foto com legenda',
     category: 'midia',
     defaults: () => ({
-      conteudo: '',
-      tamanho: 'media',
-      legenda: '',
-      fonte: '',
-      alinhamento: 'esquerda',
+      content: '',
+      size: 'medium',
+      caption: '',
+      source: '',
+      alignment: 'left',
     }),
     validateForm: (b) => {
-      if (!hasText(b.conteudo)) return 'Adicione uma imagem'
-      if (!b.tamanho) return 'Selecione o tamanho da imagem'
-      if (!hasText(b.legenda)) return 'Adicione uma legenda'
-      if (!hasText(b.fonte)) return 'Adicione a fonte da imagem'
+      if (!hasText(b.content)) return 'Adicione uma imagem'
+      if (!b.size) return 'Selecione o tamanho da imagem'
+      if (!hasText(b.caption)) return 'Adicione uma legenda'
+      if (!hasText(b.source)) return 'Adicione a fonte da imagem'
       return null
     },
-    extractMedia: (b) => [b.conteudo],
-    rewriteMedia: (b, mapper) => ({ conteudo: mapper(b.conteudo) ?? b.conteudo }),
+    extractMedia: (b) => [b.content],
+    rewriteMedia: (b, mapper) => ({ content: mapper(b.content) ?? b.content }),
     adjustableWidth: true,
   },
   video: {
@@ -430,68 +414,68 @@ export const BLOCK_CATALOG: Record<BlockType, BlockMeta> = {
     icon: Video,
     description: 'YouTube ou arquivo enviado',
     category: 'midia',
-    defaults: () => ({ fonteVideo: 'youtube', videoUrl: '', videoTitulo: '' }),
+    defaults: () => ({ videoSource: 'youtube', videoUrl: '', videoTitle: '' }),
     validateForm: (b) => {
       if (!hasText(b.videoUrl)) return 'Envie o arquivo de vídeo ou cole o link do YouTube'
-      if (!hasText(b.videoTitulo)) return 'Adicione um título para o vídeo'
+      if (!hasText(b.videoTitle)) return 'Adicione um título para o vídeo'
       return null
     },
-    // Só o vídeo enviado vira arquivo no ZIP; o do YouTube é página de streaming.
-    extractMedia: (b) => (videoSource(b, 'youtube') === 'arquivo' ? [b.videoUrl] : []),
+    // Only an uploaded video becomes a file in the ZIP; a YouTube one is a streaming page.
+    extractMedia: (b) => (videoSource(b, 'youtube') === 'file' ? [b.videoUrl] : []),
     rewriteMedia: (b, mapper) =>
-      videoSource(b, 'youtube') === 'arquivo' ? { videoUrl: mapper(b.videoUrl) ?? b.videoUrl } : {},
+      videoSource(b, 'youtube') === 'file' ? { videoUrl: mapper(b.videoUrl) ?? b.videoUrl } : {},
   },
-  'video-interativo': {
-    type: 'video-interativo',
+  'interactive-video': {
+    type: 'interactive-video',
     label: 'Vídeo interativo',
     pluralLabel: 'vídeos interativos',
     marker: 'VIDEOINTERATIVO',
     aiGeneratable: true,
     requiresDocumentMedia: true,
-    validate: (b) => isUrl(b.videoUrl) && (b.perguntasVideo ?? []).some(isUsableVideoQuestion),
+    validate: (b) => isUrl(b.videoUrl) && (b.videoQuestions ?? []).some(isUsableVideoQuestion),
     icon: MonitorPlay,
     description: 'Vídeo com perguntas no meio',
     category: 'avaliativo',
     defaults: () => ({
-      fonteVideo: 'arquivo',
+      videoSource: 'file',
       videoUrl: '',
-      videoTitulo: '',
-      perguntasVideo: [],
+      videoTitle: '',
+      videoQuestions: [],
     }),
     validateForm: (b) => {
       if (!hasText(b.videoUrl)) return 'Envie o arquivo de vídeo ou cole o link do YouTube'
-      if (!hasText(b.videoTitulo)) return 'Adicione um título para o vídeo'
+      if (!hasText(b.videoTitle)) return 'Adicione um título para o vídeo'
 
-      const questions = b.perguntasVideo ?? []
+      const questions = b.videoQuestions ?? []
       if (questions.length === 0) return 'Adicione pelo menos uma pergunta'
 
       const tempos = new Set<number>()
 
       for (const [index, question] of questions.entries()) {
         const label = `Pergunta ${index + 1}`
-        const seconds = timeToSeconds(question?.tempo)
+        const seconds = timeToSeconds(question?.time)
 
         if (seconds === null) return `${label}: informe o tempo no formato mm:ss`
         if (tempos.has(seconds)) return `${label}: já existe uma pergunta neste tempo`
         tempos.add(seconds)
 
-        if (!hasText(question.pergunta)) return `${label}: escreva o enunciado`
+        if (!hasText(question.question)) return `${label}: escreva o enunciado`
 
         const options = questionOptions(question)
         if (options.length < MIN_OPTIONS)
           return `${label}: preencha pelo menos ${MIN_OPTIONS} alternativas`
-        if (!options.some((option) => option.letter === question.correta))
+        if (!options.some((option) => option.letter === question.correct))
           return `${label}: a alternativa marcada como correta está vazia`
       }
 
       return null
     },
-    extractMedia: (b) => (videoSource(b) === 'arquivo' ? [b.videoUrl] : []),
+    extractMedia: (b) => (videoSource(b) === 'file' ? [b.videoUrl] : []),
     rewriteMedia: (b, mapper) =>
-      videoSource(b) === 'arquivo' ? { videoUrl: mapper(b.videoUrl) ?? b.videoUrl } : {},
+      videoSource(b) === 'file' ? { videoUrl: mapper(b.videoUrl) ?? b.videoUrl } : {},
   },
-  separador: {
-    type: 'separador',
+  divider: {
+    type: 'divider',
     label: 'Separador',
     pluralLabel: 'separadores',
     marker: 'SEPARADOR',
@@ -501,7 +485,7 @@ export const BLOCK_CATALOG: Record<BlockType, BlockMeta> = {
     icon: Minus,
     description: 'Divisória entre seções',
     category: 'texto',
-    defaults: () => ({ estiloSeparador: 'linha' }),
+    defaults: () => ({ dividerStyle: 'line' }),
     validateForm: () => null,
   },
   tabs: {
@@ -511,62 +495,62 @@ export const BLOCK_CATALOG: Record<BlockType, BlockMeta> = {
     marker: 'TABS',
     aiGeneratable: true,
     requiresDocumentMedia: false,
-    validate: (b) => !!b.itensTabs?.some((item) => hasText(item.titulo) && hasText(item.conteudo)),
+    validate: (b) => !!b.tabItems?.some((item) => hasText(item.title) && hasText(item.content)),
     icon: PanelTop,
     description: 'Conteúdo em abas',
     category: 'interativo',
-    defaults: () => ({ itensTabs: [] }),
+    defaults: () => ({ tabItems: [] }),
     validateForm: (b) => {
-      if (!b.itensTabs?.length) return 'Adicione pelo menos uma aba'
-      if (b.itensTabs.some((item) => !hasText(item.titulo) || !hasText(item.conteudo)))
+      if (!b.tabItems?.length) return 'Adicione pelo menos uma aba'
+      if (b.tabItems.some((item) => !hasText(item.title) || !hasText(item.content)))
         return 'Todas as abas devem ter título e conteúdo'
       return null
     },
   },
-  'linha-do-tempo': {
-    type: 'linha-do-tempo',
+  timeline: {
+    type: 'timeline',
     label: 'Linha do tempo',
     pluralLabel: 'linhas do tempo',
     marker: 'TIMELINE',
     aiGeneratable: true,
     requiresDocumentMedia: false,
-    validate: (b) => !!b.itensTimeline?.some((item) => hasText(item.titulo)),
+    validate: (b) => !!b.timelineItems?.some((item) => hasText(item.title)),
     icon: Milestone,
     description: 'Eventos em ordem cronológica',
     category: 'interativo',
-    defaults: () => ({ itensTimeline: [], orientacaoTimeline: 'vertical' }),
+    defaults: () => ({ timelineItems: [], timelineOrientation: 'vertical' }),
     validateForm: (b) => {
-      if (!b.itensTimeline?.length) return 'Adicione pelo menos um evento'
-      if (b.itensTimeline.some((item) => !hasText(item.titulo)))
+      if (!b.timelineItems?.length) return 'Adicione pelo menos um evento'
+      if (b.timelineItems.some((item) => !hasText(item.title)))
         return 'Todos os eventos devem ter título'
       return null
     },
   },
-  carrossel: {
-    type: 'carrossel',
+  carousel: {
+    type: 'carousel',
     label: 'Carrossel',
     pluralLabel: 'carrosséis',
     marker: 'CARROSSEL',
     aiGeneratable: true,
     requiresDocumentMedia: true,
-    validate: (b) => !!b.itensCarrossel?.some((item) => isUrl(item.url)),
+    validate: (b) => !!b.carouselItems?.some((item) => isUrl(item.url)),
     icon: GalleryHorizontal,
     description: 'Galeria de imagens',
     category: 'midia',
-    defaults: () => ({ itensCarrossel: [], modoCarrossel: 'carrossel' }),
+    defaults: () => ({ carouselItems: [], carouselMode: 'carousel' }),
     validateForm: (b) => {
-      if (!b.itensCarrossel?.length) return 'Adicione pelo menos uma imagem'
-      if (b.itensCarrossel.some((item) => !hasText(item.url)))
+      if (!b.carouselItems?.length) return 'Adicione pelo menos uma imagem'
+      if (b.carouselItems.some((item) => !hasText(item.url)))
         return 'Todas as imagens devem ter URL'
-      if (b.itensCarrossel.some((item) => !hasText(item.legenda)))
+      if (b.carouselItems.some((item) => !hasText(item.caption)))
         return 'Todas as imagens devem ter legenda'
-      if (b.itensCarrossel.some((item) => !hasText(item.fonte)))
+      if (b.carouselItems.some((item) => !hasText(item.source)))
         return 'Todas as imagens devem ter fonte'
       return null
     },
-    extractMedia: (b) => (b.itensCarrossel ?? []).map((i) => i.url),
+    extractMedia: (b) => (b.carouselItems ?? []).map((i) => i.url),
     rewriteMedia: (b, mapper) => ({
-      itensCarrossel: (b.itensCarrossel ?? []).map((i) => ({ ...i, url: mapper(i.url) ?? i.url })),
+      carouselItems: (b.carouselItems ?? []).map((i) => ({ ...i, url: mapper(i.url) ?? i.url })),
     }),
   },
   audio: {
@@ -580,10 +564,10 @@ export const BLOCK_CATALOG: Record<BlockType, BlockMeta> = {
     icon: Music,
     description: 'Narração ou podcast',
     category: 'midia',
-    defaults: () => ({ audioUrl: '', audioTitulo: '', transcricao: '' }),
+    defaults: () => ({ audioUrl: '', audioTitle: '', transcript: '' }),
     validateForm: (b) => {
       if (!hasText(b.audioUrl)) return 'Adicione o arquivo ou a URL do áudio'
-      if (!hasText(b.audioTitulo)) return 'Adicione um título para o áudio'
+      if (!hasText(b.audioTitle)) return 'Adicione um título para o áudio'
       return null
     },
     extractMedia: (b) => [b.audioUrl],
@@ -600,75 +584,75 @@ export const BLOCK_CATALOG: Record<BlockType, BlockMeta> = {
     icon: FileText,
     description: 'Documento para leitura',
     category: 'midia',
-    defaults: () => ({ pdfUrl: '', pdfTitulo: '', permitirDownloadPdf: true }),
+    defaults: () => ({ pdfUrl: '', pdfTitle: '', allowPdfDownload: true }),
     validateForm: (b) => {
       if (!hasText(b.pdfUrl)) return 'Adicione o arquivo ou a URL do PDF'
-      if (!hasText(b.pdfTitulo)) return 'Adicione um título para o documento'
+      if (!hasText(b.pdfTitle)) return 'Adicione um título para o documento'
       return null
     },
     extractMedia: (b) => [b.pdfUrl],
     rewriteMedia: (b, mapper) => ({ pdfUrl: mapper(b.pdfUrl) ?? b.pdfUrl }),
   },
-  'imagem-interativa': {
-    type: 'imagem-interativa',
+  'interactive-image': {
+    type: 'interactive-image',
     label: 'Imagem interativa',
     pluralLabel: 'imagens interativas',
     marker: 'HOTSPOT',
     aiGeneratable: true,
     requiresDocumentMedia: true,
-    validate: (b) => isUrl(b.imagemBase) && !!b.hotspots?.some((h) => hasText(h.titulo)),
+    validate: (b) => isUrl(b.baseImage) && !!b.hotspots?.some((h) => hasText(h.title)),
     icon: MousePointerClick,
     description: 'Imagem com pontos clicáveis',
     category: 'interativo',
-    defaults: () => ({ imagemBase: '', hotspots: [] }),
+    defaults: () => ({ baseImage: '', hotspots: [] }),
     validateForm: (b) => {
-      if (!hasText(b.imagemBase)) return 'Adicione a imagem de fundo'
+      if (!hasText(b.baseImage)) return 'Adicione a imagem de fundo'
       if (!b.hotspots?.length) return 'Adicione pelo menos um ponto na imagem'
-      if (b.hotspots.some((h) => !hasText(h.titulo))) return 'Todos os pontos devem ter um título'
+      if (b.hotspots.some((h) => !hasText(h.title))) return 'Todos os pontos devem ter um título'
       return null
     },
-    extractMedia: (b) => [b.imagemBase],
-    rewriteMedia: (b, mapper) => ({ imagemBase: mapper(b.imagemBase) ?? b.imagemBase }),
+    extractMedia: (b) => [b.baseImage],
+    rewriteMedia: (b, mapper) => ({ baseImage: mapper(b.baseImage) ?? b.baseImage }),
   },
-  associacao: {
-    type: 'associacao',
+  matching: {
+    type: 'matching',
     label: 'Associação',
     pluralLabel: 'associações',
     marker: 'ASSOCIACAO',
     aiGeneratable: true,
     requiresDocumentMedia: false,
     validate: (b) =>
-      (b.paresAssociacao ?? []).filter((p) => hasText(p.esquerda) && hasText(p.direita)).length >=
+      (b.matchingPairs ?? []).filter((p) => hasText(p.left) && hasText(p.right)).length >=
       MIN_PAIRS,
     icon: ArrowLeftRight,
     description: 'Relacionar colunas',
     category: 'avaliativo',
-    defaults: () => ({ paresAssociacao: [] }),
+    defaults: () => ({ matchingPairs: [] }),
     validateForm: (b) => {
-      if ((b.paresAssociacao?.length ?? 0) < MIN_PAIRS)
+      if ((b.matchingPairs?.length ?? 0) < MIN_PAIRS)
         return `Adicione pelo menos ${MIN_PAIRS} pares`
-      if (b.paresAssociacao?.some((p) => !hasText(p.esquerda) || !hasText(p.direita)))
+      if (b.matchingPairs?.some((p) => !hasText(p.left) || !hasText(p.right)))
         return 'Todos os pares devem ter os dois lados preenchidos'
       return null
     },
   },
-  categorizacao: {
-    type: 'categorizacao',
+  categorization: {
+    type: 'categorization',
     label: 'Categorização',
     pluralLabel: 'categorizações',
     marker: 'CATEGORIZACAO',
     aiGeneratable: true,
     requiresDocumentMedia: false,
-    validate: (b) => validCategories(b.categorias).length >= MIN_CATEGORIES,
+    validate: (b) => validCategories(b.categories).length >= MIN_CATEGORIES,
     icon: Boxes,
     description: 'Agrupar itens em categorias',
     category: 'avaliativo',
-    defaults: () => ({ categorias: [] }),
+    defaults: () => ({ categories: [] }),
     validateForm: (b) => {
-      if ((b.categorias?.length ?? 0) < MIN_CATEGORIES)
+      if ((b.categories?.length ?? 0) < MIN_CATEGORIES)
         return `Adicione pelo menos ${MIN_CATEGORIES} categorias`
-      if (b.categorias?.some((c) => !hasText(c.nome))) return 'Todas as categorias devem ter nome'
-      if (b.categorias?.some((c) => !c.itens?.some((i) => hasText(i.texto))))
+      if (b.categories?.some((c) => !hasText(c.name))) return 'Todas as categorias devem ter nome'
+      if (b.categories?.some((c) => !c.items?.some((i) => hasText(i.text))))
         return 'Cada categoria precisa de pelo menos um item'
       return null
     },
@@ -677,43 +661,43 @@ export const BLOCK_CATALOG: Record<BlockType, BlockMeta> = {
 
 function baseBlock(): Partial<Block> {
   return {
-    conteudo: '',
-    colunas: 12,
-    tamanho: 'media',
-    legenda: '',
-    fonte: '',
-    corTexto: '#000000',
-    alinhamento: 'esquerda',
+    content: '',
+    columns: 12,
+    size: 'medium',
+    caption: '',
+    source: '',
+    textColor: '#000000',
+    alignment: 'left',
     items: [],
-    itensLista: [],
-    tipoLista: 'nao-ordenada',
-    itensObjetivos: [],
+    listItems: [],
+    listType: 'unordered',
+    objectiveItems: [],
     quizData: undefined,
-    tipoInfoBox: 'info',
-    tituloInfoBox: '',
-    fonteVideo: 'youtube',
+    infoBoxType: 'info',
+    infoBoxTitle: '',
+    videoSource: 'youtube',
     videoUrl: '',
-    videoTitulo: '',
+    videoTitle: '',
   }
 }
 
-export type DraftBlock = Omit<Block, 'id' | 'ordem'>
+export type DraftBlock = Omit<Block, 'id' | 'order'>
 
 export function extractBlockMedia(block: Block): string[] {
-  const meta = BLOCK_CATALOG[block.tipo]
+  const meta = BLOCK_CATALOG[block.type]
   if (!meta?.extractMedia) return []
   return meta.extractMedia(block).filter((url): url is string => isUrl(url))
 }
 
 export function rewriteBlockMedia(block: Block, lookup: Map<string, string>): Block {
-  const meta = BLOCK_CATALOG[block.tipo]
+  const meta = BLOCK_CATALOG[block.type]
   if (!meta?.rewriteMedia) return block
   const mapper = (url: string | undefined) => (url ? lookup.get(url) : undefined)
   return { ...block, ...meta.rewriteMedia(block, mapper) }
 }
 
 export function createEmptyBlock(type: BlockType): DraftBlock {
-  return { ...baseBlock(), tipo: type, ...BLOCK_CATALOG[type].defaults() } as DraftBlock
+  return { ...baseBlock(), type, ...BLOCK_CATALOG[type].defaults() } as DraftBlock
 }
 
 export const BLOCK_TYPES = Object.keys(BLOCK_CATALOG) as BlockType[]
@@ -742,39 +726,39 @@ export function normalizeCourse(course: Course): {
   const discarded: DiscardedBlock[] = []
   const byType: Partial<Record<BlockType, number>> = {}
 
-  const rawUnits = Array.isArray(course.unidades) ? course.unidades : []
+  const rawUnits = Array.isArray(course.units) ? course.units : []
 
   const units: Unit[] = rawUnits.map((unit, unitIndex) => {
-    const rawContent = Array.isArray(unit?.conteudo) ? unit.conteudo : []
-    const unitTitle = hasText(unit?.titulo) ? unit.titulo : `Unidade ${unitIndex + 1}`
+    const rawContent = Array.isArray(unit?.blocks) ? unit.blocks : []
+    const unitTitle = hasText(unit?.title) ? unit.title : `Unidade ${unitIndex + 1}`
 
     const salvaged = rawContent
       .map((block) => normalizeBlock(block, unitTitle, discarded))
       .filter((block): block is Block => block !== null)
 
     const content = mergeAdjacentFlipcards(salvaged).map((block, blockIdx) => {
-      byType[block.tipo] = (byType[block.tipo] ?? 0) + 1
+      byType[block.type] = (byType[block.type] ?? 0) + 1
       return {
         ...block,
         id: hasText(block.id) ? block.id : `bloco-${unitIndex + 1}-${blockIdx + 1}`,
-        ordem: blockIdx,
+        order: blockIdx,
       }
     })
 
     return {
       ...unit,
       id: hasText(unit?.id) ? unit.id : `unidade-${unitIndex + 1}`,
-      titulo: unitTitle,
-      descricao: hasText(unit?.descricao) ? unit.descricao : '',
-      conteudo: content,
-      ordem: unitIndex,
+      title: unitTitle,
+      description: hasText(unit?.description) ? unit.description : '',
+      blocks: content,
+      order: unitIndex,
     }
   })
 
-  const blocks = units.reduce((total, unit) => total + unit.conteudo.length, 0)
+  const blocks = units.reduce((total, unit) => total + unit.blocks.length, 0)
 
   return {
-    course: { ...course, unidades: units },
+    course: { ...course, units },
     summary: { units: units.length, blocks, byType, discarded },
   }
 }
@@ -784,7 +768,7 @@ function normalizeBlock(
   unitTitle: string,
   discarded: DiscardedBlock[]
 ): Block | null {
-  const type = block?.tipo
+  const type = block?.type
   const meta = type ? BLOCK_CATALOG[type] : undefined
 
   if (!meta) {
@@ -811,123 +795,119 @@ function normalizeBlock(
 }
 
 function repairBlock(block: Block): Block {
-  const content = typeof block.conteudo === 'string' ? block.conteudo : ''
-  const repaired: Block = { ...block, conteudo: content }
+  const content = typeof block.content === 'string' ? block.content : ''
+  const repaired: Block = { ...block, content }
 
-  if (repaired.tipo === 'lista') {
-    const items = validItems(repaired.itensLista) ?? extractItemsFromHtml(content)
-    repaired.itensLista = items
-    repaired.tipoLista = LIST_TYPES.includes(repaired.tipoLista as never)
-      ? repaired.tipoLista
-      : 'nao-ordenada'
-    if (items.length > 0 && isListOnly(content)) repaired.conteudo = ''
+  if (repaired.type === 'list') {
+    const items = validItems(repaired.listItems) ?? extractItemsFromHtml(content)
+    repaired.listItems = items
+    repaired.listType = LIST_TYPES.includes(repaired.listType as never)
+      ? repaired.listType
+      : 'unordered'
+    if (items.length > 0 && isListOnly(content)) repaired.content = ''
   }
 
-  if (repaired.tipo === 'objetivos-aprendizagem') {
-    repaired.itensObjetivos = validItems(repaired.itensObjetivos) ?? extractItemsFromHtml(content)
-    if (repaired.itensObjetivos.length > 0 && isListOnly(content)) repaired.conteudo = ''
+  if (repaired.type === 'learning-objectives') {
+    repaired.objectiveItems = validItems(repaired.objectiveItems) ?? extractItemsFromHtml(content)
+    if (repaired.objectiveItems.length > 0 && isListOnly(content)) repaired.content = ''
   }
 
-  if (repaired.tipo === 'info-box') {
-    repaired.tipoInfoBox = INFO_BOX_TYPES.includes(repaired.tipoInfoBox as never)
-      ? repaired.tipoInfoBox
+  if (repaired.type === 'info-box') {
+    repaired.infoBoxType = INFO_BOX_TYPES.includes(repaired.infoBoxType as never)
+      ? repaired.infoBoxType
       : 'info'
   }
 
-  if (repaired.tipo === 'flipcard') {
-    repaired.itensFlipcard = cardsFlipcard(repaired).filter(isUsableFlipcardCard)
-    delete repaired.tipoFrente
-    delete repaired.imagemFrente
-    delete repaired.tituloFrente
-    delete repaired.conteudoVerso
+  if (repaired.type === 'flipcard') {
+    repaired.flipcardItems = cardsFlipcard(repaired).filter(isUsableFlipcardCard)
   }
 
-  if (repaired.tipo === 'accordion') {
+  if (repaired.type === 'accordion') {
     repaired.items = (repaired.items ?? [])
-      .filter((item) => hasText(item?.titulo) && hasText(item?.conteudo))
+      .filter((item) => hasText(item?.title) && hasText(item?.content))
       .map((item, index) => ({ ...item, id: hasText(item.id) ? item.id : `item-${index + 1}` }))
   }
 
-  if (repaired.tipo === 'separador') {
-    repaired.estiloSeparador = DIVIDER_STYLES.includes(repaired.estiloSeparador as never)
-      ? repaired.estiloSeparador
-      : 'linha'
+  if (repaired.type === 'divider') {
+    repaired.dividerStyle = DIVIDER_STYLES.includes(repaired.dividerStyle as never)
+      ? repaired.dividerStyle
+      : 'line'
   }
 
-  if (repaired.tipo === 'tabs') {
-    repaired.itensTabs = (repaired.itensTabs ?? [])
-      .filter((item) => hasText(item?.titulo) && hasText(item?.conteudo))
+  if (repaired.type === 'tabs') {
+    repaired.tabItems = (repaired.tabItems ?? [])
+      .filter((item) => hasText(item?.title) && hasText(item?.content))
       .map((item, index) => ({ ...item, id: hasText(item.id) ? item.id : `tab-${index + 1}` }))
   }
 
-  if (repaired.tipo === 'linha-do-tempo') {
-    repaired.itensTimeline = (repaired.itensTimeline ?? [])
-      .filter((item) => hasText(item?.titulo))
+  if (repaired.type === 'timeline') {
+    repaired.timelineItems = (repaired.timelineItems ?? [])
+      .filter((item) => hasText(item?.title))
       .map((item, index) => ({
         ...item,
-        id: hasText(item.id) ? item.id : `evento-${index + 1}`,
-        data: typeof item.data === 'string' ? item.data : '',
-        descricao: typeof item.descricao === 'string' ? item.descricao : '',
+        id: hasText(item.id) ? item.id : `timeline-${index + 1}`,
+        date: typeof item.date === 'string' ? item.date : '',
+        description: typeof item.description === 'string' ? item.description : '',
       }))
-    repaired.orientacaoTimeline = TIMELINE_ORIENTATIONS.includes(
-      repaired.orientacaoTimeline as never
+    repaired.timelineOrientation = TIMELINE_ORIENTATIONS.includes(
+      repaired.timelineOrientation as never
     )
-      ? repaired.orientacaoTimeline
+      ? repaired.timelineOrientation
       : 'vertical'
   }
 
-  if (repaired.tipo === 'carrossel') {
-    repaired.itensCarrossel = (repaired.itensCarrossel ?? [])
+  if (repaired.type === 'carousel') {
+    repaired.carouselItems = (repaired.carouselItems ?? [])
       .filter((item) => isUrl(item?.url))
       .map((item, index) => ({ ...item, id: hasText(item.id) ? item.id : `img-${index + 1}` }))
-    repaired.modoCarrossel = CAROUSEL_MODES.includes(repaired.modoCarrossel as never)
-      ? repaired.modoCarrossel
-      : 'carrossel'
+    repaired.carouselMode = CAROUSEL_MODES.includes(repaired.carouselMode as never)
+      ? repaired.carouselMode
+      : 'carousel'
   }
 
-  if (repaired.tipo === 'pdf') {
-    repaired.permitirDownloadPdf = repaired.permitirDownloadPdf !== false
+  if (repaired.type === 'pdf') {
+    repaired.allowPdfDownload = repaired.allowPdfDownload !== false
   }
 
-  if (repaired.tipo === 'imagem-interativa') {
+  if (repaired.type === 'interactive-image') {
     repaired.hotspots = (repaired.hotspots ?? [])
-      .filter((h) => hasText(h?.titulo))
+      .filter((h) => hasText(h?.title))
       .map((h, index) => ({
         ...h,
         id: hasText(h.id) ? h.id : `hotspot-${index + 1}`,
         x: asPercentage(h.x),
         y: asPercentage(h.y),
-        conteudo: typeof h.conteudo === 'string' ? h.conteudo : '',
+        content: typeof h.content === 'string' ? h.content : '',
       }))
   }
 
-  if (repaired.tipo === 'associacao') {
-    repaired.paresAssociacao = (repaired.paresAssociacao ?? [])
-      .filter((p) => hasText(p?.esquerda) && hasText(p?.direita))
+  if (repaired.type === 'matching') {
+    repaired.matchingPairs = (repaired.matchingPairs ?? [])
+      .filter((p) => hasText(p?.left) && hasText(p?.right))
       .map((p, index) => ({ ...p, id: hasText(p.id) ? p.id : `par-${index + 1}` }))
   }
 
-  if (repaired.tipo === 'categorizacao') {
-    repaired.categorias = validCategories(repaired.categorias)
+  if (repaired.type === 'categorization') {
+    repaired.categories = validCategories(repaired.categories)
   }
 
-  if (repaired.tipo === 'video') {
-    repaired.fonteVideo = videoSource(repaired, 'youtube')
+  if (repaired.type === 'video') {
+    repaired.videoSource = videoSource(repaired, 'youtube')
   }
 
-  if (repaired.tipo === 'video-interativo') {
-    repaired.fonteVideo = videoSource(repaired)
-    repaired.perguntasVideo = (repaired.perguntasVideo ?? [])
+  if (repaired.type === 'interactive-video') {
+    repaired.videoSource = videoSource(repaired)
+    repaired.videoQuestions = (repaired.videoQuestions ?? [])
       .filter(isUsableVideoQuestion)
       .map((question, index) => ({
         ...question,
         id: hasText(question.id) ? question.id : `pv-${index + 1}`,
         feedback: typeof question.feedback === 'string' ? question.feedback : '',
       }))
-      .sort((a, b) => (timeToSeconds(a.tempo) ?? 0) - (timeToSeconds(b.tempo) ?? 0))
+      .sort((a, b) => (timeToSeconds(a.time) ?? 0) - (timeToSeconds(b.time) ?? 0))
   }
 
-  if (repaired.tipo === 'quiz') {
+  if (repaired.type === 'quiz') {
     const questions = (repaired.quizData?.questions ?? [])
       .map(repairQuestion)
       .filter((question): question is QuizQuestion => question !== null)
@@ -938,9 +918,9 @@ function repairBlock(block: Block): Block {
 }
 
 function repairQuestion(question: QuizQuestion, index: number): QuizQuestion | null {
-  if (!hasText(question?.pergunta)) return null
+  if (!hasText(question?.question)) return null
 
-  const options = (question.opcoes ?? []).filter((option) => hasText(option?.texto))
+  const options = (question.options ?? []).filter((option) => hasText(option?.text))
   const correctOptions = options.filter((option) => option.isCorrect)
 
   if (correctOptions.length === 0 || options.length < OPTIONS_PER_QUESTION) return null
@@ -957,7 +937,7 @@ function repairQuestion(question: QuizQuestion, index: number): QuizQuestion | n
   return {
     ...question,
     id: hasText(question.id) ? question.id : `q-${index + 1}`,
-    opcoes: selectedOptions.map((option, position) => ({
+    options: selectedOptions.map((option, position) => ({
       ...option,
       id: hasText(option.id) ? option.id : `op-${position + 1}`,
       isCorrect: option === correct,
@@ -968,9 +948,9 @@ function repairQuestion(question: QuizQuestion, index: number): QuizQuestion | n
 
 function isValidQuestion(question: QuizQuestion): boolean {
   return (
-    hasText(question?.pergunta) &&
-    question.opcoes?.length === OPTIONS_PER_QUESTION &&
-    question.opcoes.filter((option) => option.isCorrect).length === 1
+    hasText(question?.question) &&
+    question.options?.length === OPTIONS_PER_QUESTION &&
+    question.options.filter((option) => option.isCorrect).length === 1
   )
 }
 
@@ -982,31 +962,31 @@ function invalidReason(type: BlockType): string {
       return 'sem itens com título e conteúdo'
     case 'flipcard':
       return 'sem cards válidos'
-    case 'lista':
+    case 'list':
       return 'sem itens'
-    case 'objetivos-aprendizagem':
+    case 'learning-objectives':
       return 'sem objetivos'
-    case 'imagem':
+    case 'image':
       return 'sem URL de imagem válida'
     case 'video':
       return 'sem URL de vídeo válida'
-    case 'video-interativo':
+    case 'interactive-video':
       return 'sem arquivo de vídeo ou sem pergunta com tempo e alternativas'
     case 'tabs':
       return 'sem abas com título e conteúdo'
-    case 'linha-do-tempo':
+    case 'timeline':
       return 'sem eventos com título'
-    case 'carrossel':
+    case 'carousel':
       return 'sem imagens com URL válida'
     case 'audio':
       return 'sem URL de áudio válida'
     case 'pdf':
       return 'sem URL de PDF válida'
-    case 'imagem-interativa':
+    case 'interactive-image':
       return 'sem imagem de fundo ou sem pontos com título'
-    case 'associacao':
+    case 'matching':
       return `com menos de ${MIN_PAIRS} pares completos`
-    case 'categorizacao':
+    case 'categorization':
       return `com menos de ${MIN_CATEGORIES} categorias com nome e itens`
     default:
       return 'sem conteúdo'
@@ -1015,12 +995,12 @@ function invalidReason(type: BlockType): string {
 
 function validCategories(categories?: CategoryItem[]): CategoryItem[] {
   return (categories ?? [])
-    .filter((c) => hasText(c?.nome) && !!c?.itens?.some((i) => hasText(i?.texto)))
+    .filter((c) => hasText(c?.name) && !!c?.items?.some((i) => hasText(i?.text)))
     .map((c, index) => ({
       ...c,
       id: hasText(c.id) ? c.id : `cat-${index + 1}`,
-      itens: c.itens
-        .filter((i) => hasText(i?.texto))
+      items: c.items
+        .filter((i) => hasText(i?.text))
         .map((i, position) => ({
           ...i,
           id: hasText(i.id) ? i.id : `cat-${index + 1}-item-${position + 1}`,
@@ -1036,7 +1016,7 @@ function asPercentage(value: unknown): number {
 function validItems(items?: ListItem[]): ListItem[] | null {
   if (!Array.isArray(items)) return null
   const filtered = items
-    .filter((item) => hasText(item?.texto))
+    .filter((item) => hasText(item?.text))
     .map((item, index) => ({ ...item, id: hasText(item.id) ? item.id : `li-${index + 1}` }))
   return filtered.length > 0 ? filtered : null
 }
@@ -1046,7 +1026,7 @@ function extractItemsFromHtml(html: string): ListItem[] {
   return found
     .map((item) => stripTags(item).trim())
     .filter((text) => text.length > 0)
-    .map((text, index) => ({ id: `li-${index + 1}`, texto: text }))
+    .map((text, index) => ({ id: `li-${index + 1}`, text }))
 }
 
 function isListOnly(html: string): boolean {

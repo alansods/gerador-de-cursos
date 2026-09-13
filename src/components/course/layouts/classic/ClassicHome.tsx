@@ -29,7 +29,7 @@ export function ClassicHome({ course, onNavigate, completedUnits }: ClassicHomeP
           {/* Category Badge */}
           <div className={bannerVideoId ? 'mb-4 lg:col-start-1 lg:row-start-1' : 'mb-4'}>
             <Badge className="bg-white/20 text-white border-white/30 hover:bg-white/30">
-              {course.categoria}
+              {course.category}
             </Badge>
           </div>
 
@@ -41,7 +41,7 @@ export function ClassicHome({ course, onNavigate, completedUnits }: ClassicHomeP
                 : 'text-3xl md:text-5xl font-bold mb-4'
             }
           >
-            {course.titulo}
+            {course.title}
           </h1>
 
           {/* Banner Video — no mobile fica entre o título e a descrição */}
@@ -49,7 +49,7 @@ export function ClassicHome({ course, onNavigate, completedUnits }: ClassicHomeP
             <div className="aspect-video w-full rounded-xl overflow-hidden shadow-2xl bg-black/30 mb-8 lg:mb-0 lg:col-start-2 lg:row-start-1 lg:row-span-4 lg:self-center">
               <iframe
                 src={`https://www.youtube.com/embed/${bannerVideoId}`}
-                title={course.titulo}
+                title={course.title}
                 className="w-full h-full"
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                 allowFullScreen
@@ -65,7 +65,7 @@ export function ClassicHome({ course, onNavigate, completedUnits }: ClassicHomeP
                 : 'text-lg md:text-xl text-blue-100 mb-8 max-w-3xl'
             }
           >
-            {course.descricao}
+            {course.description}
           </p>
 
           {/* Course Metadata */}
@@ -78,11 +78,11 @@ export function ClassicHome({ course, onNavigate, completedUnits }: ClassicHomeP
           >
             <div className="flex items-center gap-2">
               <Clock className="w-5 h-5 text-blue-300" />
-              <span className="text-blue-100">{course.cargaHoraria}</span>
+              <span className="text-blue-100">{course.workload}</span>
             </div>
             <div className="flex items-center gap-2">
               <GraduationCap className="w-5 h-5 text-blue-300" />
-              <span className="text-blue-100">{course.modalidade}</span>
+              <span className="text-blue-100">{course.modality}</span>
             </div>
           </div>
         </div>
@@ -95,14 +95,14 @@ export function ClassicHome({ course, onNavigate, completedUnits }: ClassicHomeP
         </h2>
 
         <div className="space-y-6">
-          {course.unidades && course.unidades.length === 0 ? (
+          {course.units && course.units.length === 0 ? (
             <Card>
               <CardContent className="py-12 text-center text-gray-500 dark:text-gray-400">
                 <p>Nenhuma unidade criada ainda.</p>
               </CardContent>
             </Card>
           ) : (
-            course.unidades.map((unit, unitIndex) => {
+            course.units.map((unit, unitIndex) => {
               const completed = completedUnits?.[unitIndex] ?? false
 
               return (
@@ -154,12 +154,12 @@ export function ClassicHome({ course, onNavigate, completedUnits }: ClassicHomeP
 
                           {/* Unit Title */}
                           <h3 className="text-xl md:text-2xl font-bold text-gray-900 dark:text-gray-100 leading-tight">
-                            {unit.titulo}
+                            {unit.title}
                           </h3>
 
                           {/* Unit Description */}
                           <p className="text-gray-600 dark:text-gray-400 text-base leading-relaxed my-2">
-                            {unit.descricao}
+                            {unit.description}
                           </p>
                         </div>
 

@@ -1,64 +1,65 @@
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient } from '@prisma/client'
 
-const globalForPrisma = global as unknown as { prisma: PrismaClient };
+const globalForPrisma = global as unknown as { prisma: PrismaClient }
 
-// Função para criar uma nova instância do Prisma com reconexão automática
+// Builds a Prisma client that reconnects on its own
 function createPrismaClient() {
   return new PrismaClient({
     log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
-  });
+  })
 }
 
-export const prisma = globalForPrisma.prisma || createPrismaClient();
+export const prisma = globalForPrisma.prisma || createPrismaClient()
 
 if (process.env.NODE_ENV !== 'production') {
-  globalForPrisma.prisma = prisma;
+  globalForPrisma.prisma = prisma
 }
 
-// Helper para garantir conexão ativa antes de operações
+// Ensures the connection is live before running an operation
 export async function ensureConnection() {
   try {
-    // Verificar se DATABASE_URL está configurado
+    // Check that DATABASE_URL is set
     if (!process.env.DATABASE_URL) {
-      throw new Error('DATABASE_URL não está configurado no .env.local');
+      throw new Error('DATABASE_URL não está configurado no .env.local')
     }
 
-    // Tentar conectar
-    await prisma.$connect();
-    
-    // Verificar se a conexão está ativa fazendo uma query simples
-    await prisma.$queryRaw`SELECT 1`;
+    // Try to connect
+    await prisma.$connect()
+
+    // Probe the connection with a trivial query
+    await prisma.$queryRaw`SELECT 1`
   } catch (error) {
-    // Se a conexão estiver fechada, reconectar
+    // Reconnect when the connection is closed
     if (error instanceof Error && error.message.includes('Closed')) {
-      console.log('[Prisma] Reconectando ao banco de dados...');
+      console.log('[Prisma] Reconnecting to the database...')
       try {
-        await prisma.$disconnect();
-        await prisma.$connect();
-        // Verificar novamente após reconectar
-        await prisma.$queryRaw`SELECT 1`;
+        await prisma.$disconnect()
+        await prisma.$connect()
+        // Probe again after reconnecting
+        await prisma.$queryRaw`SELECT 1`
       } catch (reconnectError) {
-        console.error('[Prisma] Erro ao reconectar:', reconnectError);
-        throw reconnectError;
+        console.error('[Prisma] Reconnection failed:', reconnectError)
+        throw reconnectError
       }
     } else if (error instanceof Error && error.message.includes('DATABASE_URL')) {
-      // Erro de configuração
-      throw error;
+      // Configuration error
+      throw error
     } else {
-      // Outros erros de conexão
-      console.error('[Prisma] Erro ao conectar ao banco de dados:', error);
-      throw new Error(`Erro ao conectar ao banco de dados: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
+      // Any other connection error
+      console.error('[Prisma] Failed to connect to the database:', error)
+      throw new Error(
+        `Erro ao conectar ao banco de dados: ${error instanceof Error ? error.message : 'Erro desconhecido'}`
+      )
     }
   }
 }
 
-// Garantir que a conexão seja fechada adequadamente ao encerrar
+// Close the connection cleanly on shutdown
 if (typeof window === 'undefined') {
   // Apenas no servidor
   process.on('beforeExit', async () => {
-    await prisma.$disconnect();
-  });
+    await prisma.$disconnect()
+  })
 }
 
-export default prisma;
-
+export default prisma

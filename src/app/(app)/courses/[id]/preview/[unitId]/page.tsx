@@ -1,16 +1,16 @@
 'use client'
 
-// Esta página não deve ser exportada estaticamente (usa context e hooks client-side)
-// O Next.js deve ignorar esta página durante build estático
+// This page must not be exported statically (it uses context and client-side hooks)
+// Next.js must skip it during the static build
 export const dynamic = 'error'
 
 import { useEffect } from 'react'
 import { useParams, useRouter, usePathname } from 'next/navigation'
 import { Loader2 } from 'lucide-react'
 
-// A navegação entre unidades no preview agora é feita pelo CoursePlayer (estado interno,
-// igual ao player exportado), então esta rota só existe para redirecionar links antigos
-// para `/cursos/[id]/preview`, de onde a unidade é acessada normalmente.
+// Unit navigation in the preview now lives in CoursePlayer (internal state, just like
+// the exported player), so this route only exists to redirect old links to
+// `/courses/[id]/preview`, where the unit is reached normally.
 export default function PreviewUnitPage() {
   const params = useParams()
   const router = useRouter()

@@ -54,7 +54,7 @@ test.describe('E2E - Login Flow', () => {
     await page.goto('/login')
   })
 
-  test('deve renderizar a página de login', async ({ page }) => {
+  test('renders the login page', async ({ page }) => {
     // Assert
     await expect(page.getByText('Bem-vindo', { exact: true })).toBeVisible()
     await expect(page.getByLabel('E-mail')).toBeVisible()
@@ -63,7 +63,7 @@ test.describe('E2E - Login Flow', () => {
     await expect(page.getByRole('button', { name: 'Entrar como Convidado' })).toBeVisible()
   })
 
-  test('deve fazer login com sucesso e verificar requisições', async ({ page }) => {
+  test('logs in and checks the requests', async ({ page }) => {
     // Arrange - Monitorar requisições de rede
     const apiRequests: string[] = []
 
@@ -101,7 +101,7 @@ test.describe('E2E - Login Flow', () => {
     expect(loginRequests).toHaveLength(1)
   })
 
-  test('deve entrar como convidado sem preencher o formulário', async ({ page }) => {
+  test('signs in as a guest without filling the form', async ({ page }) => {
     // Arrange
     const bodies: unknown[] = []
 
@@ -128,7 +128,7 @@ test.describe('E2E - Login Flow', () => {
     expect(bodies).toEqual([{ email: 'convidado@senai.br', password: 'convidado' }])
   })
 
-  test('deve mostrar erro com credenciais inválidas', async ({ page }) => {
+  test('shows an error for invalid credentials', async ({ page }) => {
     // Arrange
     await page.route('**/api/auth/login', async (route) => {
       await route.fulfill({
@@ -151,7 +151,7 @@ test.describe('E2E - Login Flow', () => {
     await expect(page).toHaveURL('/login') // Não redireciona
   })
 
-  test('deve validar campos obrigatórios', async ({ page }) => {
+  test('validates the required fields', async ({ page }) => {
     // Act - Tentar submeter sem preencher
     await loginButton(page).click()
 
@@ -160,7 +160,7 @@ test.describe('E2E - Login Flow', () => {
     await expect(page.getByText('Senha é obrigatória')).toBeVisible()
   })
 
-  test('deve mostrar/ocultar senha', async ({ page }) => {
+  test('toggles the password visibility', async ({ page }) => {
     // Arrange - o botão do olho é o único dentro do campo de senha
     const passwordInput = page.getByLabel('Senha')
     const togglePassword = page.locator('#login-senha').locator('..').getByRole('button')
@@ -181,7 +181,7 @@ test.describe('E2E - Login Flow', () => {
     await expect(passwordInput).toHaveAttribute('type', 'password')
   })
 
-  test('mostra o carregamento global enquanto autentica', async ({ page }) => {
+  test('shows the global loader while authenticating', async ({ page }) => {
     // Arrange - Simular requisição lenta
     const markLoggedIn = await mockSessionOnlyAfterLogin(page)
 

@@ -41,13 +41,13 @@ function createWrapper() {
 
 const callUrl = (index: number) => String(mockFetch.mock.calls[index][0])
 
-describe('useUsuariosQuery', () => {
+describe('useUsersQuery', () => {
   beforeEach(() => {
     jest.clearAllMocks()
     mockFetch.mockResolvedValue(usersResponse(1))
   })
 
-  it('refaz a busca quando a página muda', async () => {
+  it('refetches when the page changes', async () => {
     const wrapper = createWrapper()
     const { result, rerender } = renderHook(
       ({ page }) => useUsersQuery({ page, limit: 10, search: '' }),
@@ -64,7 +64,7 @@ describe('useUsuariosQuery', () => {
     expect(callUrl(1)).toContain('page=2')
   })
 
-  it('manda os filtros opcionais só quando preenchidos', async () => {
+  it('sends the optional filters only when they are filled in', async () => {
     const wrapper = createWrapper()
     renderHook(() => useUsersQuery({ page: 1, limit: 10, search: 'ana', role: 'ADMIN' }), {
       wrapper,
@@ -79,7 +79,7 @@ describe('useUsuariosQuery', () => {
     expect(url).not.toContain('endDate')
   })
 
-  it('deletar um usuário invalida a listagem em cache', async () => {
+  it('invalidates the cached list when a user is deleted', async () => {
     const wrapper = createWrapper()
 
     const list = renderHook(() => useUsersQuery({ page: 1, limit: 10, search: '' }), {

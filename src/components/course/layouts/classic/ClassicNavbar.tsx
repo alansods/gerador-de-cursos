@@ -80,7 +80,7 @@ export function ClassicNavbar({
               <div className="flex flex-row items-start gap-3">
                 <div className="flex-1">
                   <SheetTitle className="text-[15px] font-semibold text-foreground line-clamp-2">
-                    {course.titulo}
+                    {course.title}
                   </SheetTitle>
                 </div>
                 <Button
@@ -124,7 +124,7 @@ export function ClassicNavbar({
               </div>
 
               {/* Units List */}
-              {(course.unidades || []).map((u, index) => {
+              {(course.units || []).map((u, index) => {
                 const isActive = currentUnitId ? u.id === currentUnitId : false
                 const completed = completedUnits?.[index] ?? false
 
@@ -154,7 +154,7 @@ export function ClassicNavbar({
                       />
                     )}
                     <span className="line-clamp-2">
-                      {index + 1}. {u.titulo}
+                      {index + 1}. {u.title}
                     </span>
                   </a>
                 )
@@ -167,7 +167,7 @@ export function ClassicNavbar({
       {/* Course Title in Navbar (desktop only) */}
       <div className="hidden sm:block ml-4 flex-1">
         <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 line-clamp-1">
-          {course.titulo}
+          {course.title}
         </h2>
       </div>
 

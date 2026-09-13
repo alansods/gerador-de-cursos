@@ -1,7 +1,7 @@
 'use client'
 
-// Esta página não deve ser exportada estaticamente (usa context e hooks client-side)
-// O Next.js deve ignorar esta página durante build estático
+// This page must not be exported statically (it uses context and client-side hooks)
+// Next.js must skip it during the static build
 export const dynamic = 'error'
 
 import React, { useState, useEffect, useRef } from 'react'
@@ -100,8 +100,8 @@ import { uploadFile } from '@/lib/client-upload'
 /** Rótulo curto do bloco para o toast do outro usuário */
 const PENDING_BLOCK_ID = '__bloco-pendente__'
 
-function blockTitle(block: { titulo?: string; conteudo?: string; tipo?: string }) {
-  return block.titulo?.trim() || block.conteudo?.trim().slice(0, 40) || block.tipo
+function blockTitle(block: { title?: string; content?: string; type?: string }) {
+  return block.title?.trim() || block.content?.trim().slice(0, 40) || block.type
 }
 
 function CourseEditor() {
@@ -137,40 +137,48 @@ function CourseEditor() {
   const [editingBlock, setEditingBlock] = useState<{
     unitId: string
     blockId: string
-    tipo:
-      | 'paragrafo'
-      | 'subtitulo'
-      | 'titulo'
-      | 'imagem'
+    type:
+      | 'paragraph'
+      | 'subheading'
+      | 'heading'
+      | 'image'
       | 'video'
       | 'accordion'
       | 'flipcard'
-      | 'lista'
+      | 'list'
       | 'quiz'
       | 'info-box'
-    conteudo: string
-    tamanho?: 'pequena' | 'media' | 'grande'
-    legenda?: string
-    fonte?: string
-    corTexto?: string
-    alinhamento?: 'esquerda' | 'centro' | 'direita' | 'justificado'
-    colunas?: 6 | 12
-    items?: Array<{ id: string; titulo: string; conteudo: string }>
-    tipoFrente?: 'imagem' | 'imagem-titulo' | 'titulo'
-    imagemFrente?: string
-    tituloFrente?: string
-    conteudoVerso?: string
-    alturaCard?: string
-    itensLista?: Array<{ id: string; texto: string }>
-    tipoLista?: 'ordenada' | 'nao-ordenada' | 'check'
+    content: string
+    size?: 'small' | 'medium' | 'large'
+    caption?: string
+    source?: string
+    textColor?: string
+    alignment?: 'left' | 'center' | 'right' | 'justify'
+    columns?: 6 | 12
+    items?: Array<{ id: string; title: string; content: string }>
+    frontType?: 'image' | 'image-title' | 'title'
+    frontImage?: string
+    frontTitle?: string
+    backContent?: string
+    cardHeight?: string
+    listItems?: Array<{ id: string; text: string }>
+    listType?: 'ordered' | 'unordered' | 'check'
     quizData?: QuizData
-    tipoInfoBox?: 'atencao' | 'saiba_mais' | 'info' | 'curiosidade'
-    tituloInfoBox?: string
+    infoBoxType?: 'warning' | 'learn-more' | 'info' | 'fun-fact'
+    infoBoxTitle?: string
     videoUrl?: string
-    videoTitulo?: string
+    videoTitle?: string
   } | null>(null)
-  const [tempBlock, setTempBlock] = useState({
-    ...createEmptyBlock('paragrafo'),
+  const [tempBlock, setTempBlock] = useState<
+    ReturnType<typeof createEmptyBlock> & {
+      unitId: string
+      frontType?: 'image' | 'image-title' | 'title'
+      frontImage?: string
+      frontTitle?: string
+      backContent?: string
+    }
+  >({
+    ...createEmptyBlock('paragraph'),
     unitId: '',
   })
   const [addUnitModal, setAddUnitModal] = useState(false)
@@ -185,7 +193,7 @@ function CourseEditor() {
   const [pendingBlock, setPendingBlock] = useState<{
     unitId: string
     index: number
-    type: Block['tipo']
+    type: Block['type']
     columns?: number
   } | null>(null)
   const pendingInsert = useRef<{ unitId: string; targetIndex: number } | null>(null)
@@ -215,7 +223,7 @@ function CourseEditor() {
 
   const courseId = params.id as string
 
-  // Selecionar o curso ao carregar a página (busca do servidor se necessário)
+  // Select the course on mount (fetching from the server when needed)
   useEffect(() => {
     if (!courseId || state.loading) return
 
@@ -231,14 +239,14 @@ function CourseEditor() {
     selectCourse(courseId)
   }, [courseId, state.loading, state.currentCourse?.id, state.currentCourse?.slug, selectCourse])
 
-  // Atualizar isFetchingCurso quando o curso for carregado
+  // Refresh isFetchingCourse once the course has loaded
   useEffect(() => {
     if (state.currentCourse?.id === courseId || state.currentCourse?.slug === courseId) {
       setIsFetchingCourse(false)
     }
   }, [state.currentCourse, courseId])
 
-  // Bloquear a edição para quem não tem permissão no curso
+  // Block editing for anyone without permission on the course
   useEffect(() => {
     const course = state.currentCourse
     const isThisCourse = course?.id === courseId || course?.slug === courseId
@@ -249,11 +257,11 @@ function CourseEditor() {
     }
   }, [state.currentCourse, courseId, router])
 
-  // Atualizar preview da imagem ao editar conteúdo
+  // Refresh the image preview when editing content
   useEffect(() => {
-    if (editingBlock?.tipo === 'imagem' && editingBlock.conteudo) {
-      if (editingBlock.conteudo.startsWith('http')) {
-        setImagePreviewUrl(editingBlock.conteudo)
+    if (editingBlock?.type === 'image' && editingBlock.content) {
+      if (editingBlock.content.startsWith('http')) {
+        setImagePreviewUrl(editingBlock.content)
       } else {
         setImagePreviewUrl(null)
       }
@@ -262,55 +270,55 @@ function CourseEditor() {
     }
   }, [editingBlock])
 
-  // Atualizar preview da imagem ao adicionar conteúdo
+  // Refresh the image preview when adding content
   useEffect(() => {
-    if (tempBlock.tipo === 'imagem' && tempBlock.conteudo) {
-      if (tempBlock.conteudo.startsWith('http')) {
-        setImagePreviewUrl(tempBlock.conteudo)
+    if (tempBlock.type === 'image' && tempBlock.content) {
+      if (tempBlock.content.startsWith('http')) {
+        setImagePreviewUrl(tempBlock.content)
       }
-    } else if (tempBlock.tipo !== 'imagem') {
+    } else if (tempBlock.type !== 'image') {
       setImagePreviewUrl(null)
     }
-  }, [tempBlock.tipo, tempBlock.conteudo])
+  }, [tempBlock.type, tempBlock.content])
 
   useEffect(() => {
     if (editCourseModal && state.currentCourse) {
-      setEditedTitle(state.currentCourse.titulo)
-      setEditedDescription(state.currentCourse.descricao)
-      setEditedWorkload(state.currentCourse.cargaHoraria)
-      setEditedModality(state.currentCourse.modalidade)
-      setEditedCategory(state.currentCourse.categoria)
+      setEditedTitle(state.currentCourse.title)
+      setEditedDescription(state.currentCourse.description)
+      setEditedWorkload(state.currentCourse.workload)
+      setEditedModality(state.currentCourse.modality)
+      setEditedCategory(state.currentCourse.category)
     }
   }, [editCourseModal, state.currentCourse])
 
-  // Rolar para o topo ao mudar de unidade
+  // Scroll to the top when the unit changes
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }, [activeUnitIndex])
 
-  // Reordenar item recém-adicionado para a posição correta após o state atualizar
+  // Move a freshly added item into place once the state settles
   useEffect(() => {
     if (pendingInsert.current) {
       const { unitId, targetIndex } = pendingInsert.current
-      const unit = state.currentCourse?.unidades?.find((u) => u.id === unitId)
+      const unit = state.currentCourse?.units?.find((u) => u.id === unitId)
       if (unit) {
-        const c = [...(unit.conteudo || [])]
-        console.log('🔍 useEffect reordenamento - c.length:', c.length, 'targetIndex:', targetIndex)
+        const c = [...(unit.blocks || [])]
+        console.log('🔍 reorder effect - c.length:', c.length, 'targetIndex:', targetIndex)
         console.log(
-          '🔍 Array ANTES do arrayMove:',
-          c.map((item, i) => `[${i}] ${item.tipo} ordem:${item.ordem}`)
+          '🔍 Array BEFORE arrayMove:',
+          c.map((item, i) => `[${i}] ${item.type} order:${item.order}`)
         )
 
         if (c.length > 0 && targetIndex < c.length) {
           pendingInsert.current = null
           const reord = arrayMove(c, c.length - 1, targetIndex)
-          reord.forEach((item, i) => (item.ordem = i))
+          reord.forEach((item, i) => (item.order = i))
 
           console.log(
-            '🔍 Array DEPOIS do arrayMove:',
-            reord.map((item, i) => `[${i}] ${item.tipo} ordem:${item.ordem}`)
+            '🔍 Array AFTER arrayMove:',
+            reord.map((item, i) => `[${i}] ${item.type} order:${item.order}`)
           )
-          updateUnit(unitId, { conteudo: reord })
+          updateUnit(unitId, { blocks: reord })
           return
         }
       }
@@ -321,28 +329,28 @@ function CourseEditor() {
       toast.success('Conteúdo adicionado')
       notify('added', 'block', authorName)
       setTempBlock({
-        tipo: 'paragrafo',
-        conteudo: '',
+        type: 'paragraph',
+        content: '',
         unitId: '',
-        tamanho: 'media',
-        legenda: '',
-        fonte: '',
-        corTexto: '#000000',
-        alinhamento: 'esquerda',
-        colunas: 12,
+        size: 'medium',
+        caption: '',
+        source: '',
+        textColor: '#000000',
+        alignment: 'left',
+        columns: 12,
         items: [],
-        tipoFrente: 'titulo',
-        imagemFrente: '',
-        tituloFrente: '',
-        conteudoVerso: '',
-        alturaCard: '300px',
-        itensLista: [],
+        frontType: 'title',
+        frontImage: '',
+        frontTitle: '',
+        backContent: '',
+        cardHeight: '300px',
+        listItems: [],
         videoUrl: '',
-        videoTitulo: '',
-        tipoLista: 'nao-ordenada',
+        videoTitle: '',
+        listType: 'unordered',
         quizData: undefined,
-        tipoInfoBox: 'info',
-        tituloInfoBox: '',
+        infoBoxType: 'info',
+        infoBoxTitle: '',
       })
     }
     if (shouldCloseDeleteModal.current) {
@@ -353,7 +361,7 @@ function CourseEditor() {
       setConfirmDeleteBlock(false)
       setBlockToDelete(null)
     }
-  }, [state.currentCourse?.unidades, updateUnit])
+  }, [state.currentCourse?.units, updateUnit])
 
   const handleBack = () => router.push('/courses')
 
@@ -364,11 +372,11 @@ function CourseEditor() {
   }
 
   const openEditUnitModal = (unitId: string) => {
-    const unit = state.currentCourse?.unidades?.find((u) => u.id === unitId)
+    const unit = state.currentCourse?.units?.find((u) => u.id === unitId)
     if (unit) {
       setUnitToEdit(unitId)
-      setEditingUnitTitle(unit.titulo)
-      setEditingUnitDescription(unit.descricao)
+      setEditingUnitTitle(unit.title)
+      setEditingUnitDescription(unit.description)
       setEditUnitModal(true)
     }
   }
@@ -391,28 +399,28 @@ function CourseEditor() {
 
   const closeAddBlockModal = () => {
     setTempBlock({
-      tipo: 'paragrafo',
-      conteudo: '',
+      type: 'paragraph',
+      content: '',
       unitId: '',
-      tamanho: 'media',
-      legenda: '',
-      fonte: '',
-      corTexto: '#000000',
-      alinhamento: 'esquerda',
-      colunas: 12,
+      size: 'medium',
+      caption: '',
+      source: '',
+      textColor: '#000000',
+      alignment: 'left',
+      columns: 12,
       items: [],
-      tipoFrente: 'titulo',
-      imagemFrente: '',
-      tituloFrente: '',
-      conteudoVerso: '',
-      alturaCard: '300px',
-      itensLista: [],
+      frontType: 'title',
+      frontImage: '',
+      frontTitle: '',
+      backContent: '',
+      cardHeight: '300px',
+      listItems: [],
       videoUrl: '',
-      videoTitulo: '',
-      tipoLista: 'nao-ordenada',
+      videoTitle: '',
+      listType: 'unordered',
       quizData: undefined,
-      tipoInfoBox: 'info',
-      tituloInfoBox: '',
+      infoBoxType: 'info',
+      infoBoxTitle: '',
     })
   }
 
@@ -424,14 +432,14 @@ function CourseEditor() {
     if (state.currentCourse) {
       try {
         await updateCourse(state.currentCourse.id, {
-          titulo: editedTitle,
-          descricao: editedDescription,
-          cargaHoraria: editedWorkload,
-          modalidade: editedModality,
-          categoria: editedCategory,
+          title: editedTitle,
+          description: editedDescription,
+          workload: editedWorkload,
+          modality: editedModality,
+          category: editedCategory,
         })
       } catch (error) {
-        console.error('Erro ao salvar edição do curso:', error)
+        console.error('Failed to save the course edit:', error)
       }
     }
   }
@@ -439,9 +447,9 @@ function CourseEditor() {
   const handleAddUnit = () => {
     if (newUnit.trim() && newUnitDescription.trim()) {
       addUnit({
-        titulo: newUnit.trim(),
-        descricao: newUnitDescription.trim(),
-        conteudo: [],
+        title: newUnit.trim(),
+        description: newUnitDescription.trim(),
+        blocks: [],
       })
       toast.success('Unidade adicionada')
       notify('added', 'unit', authorName, newUnit.trim())
@@ -454,8 +462,8 @@ function CourseEditor() {
   const handleSaveUnitEdit = () => {
     if (unitToEdit && editingUnitTitle.trim() && editingUnitDescription.trim()) {
       updateUnit(unitToEdit, {
-        titulo: editingUnitTitle.trim(),
-        descricao: editingUnitDescription.trim(),
+        title: editingUnitTitle.trim(),
+        description: editingUnitDescription.trim(),
       })
       toast.success('Unidade atualizada')
       notify('updated', 'unit', authorName, editingUnitTitle.trim())
@@ -478,38 +486,38 @@ function CourseEditor() {
       if (warning) toast.warning(warning)
       const data = { url: uploadedUrl }
 
-      // Atualizar URL da imagem no estado correto
+      // Store the image URL in the right piece of state
       if (forFlipcard) {
-        // Para flipcard, atualizar imagemFrente
+        // A flipcard updates frontImage
         if (forEdit && editingBlock) {
           setEditingBlock({
             ...editingBlock,
-            imagemFrente: data.url,
+            frontImage: data.url,
           })
         } else {
           setTempBlock({
             ...tempBlock,
-            imagemFrente: data.url,
+            frontImage: data.url,
           })
         }
       } else if (forEdit && editingBlock) {
         setEditingBlock({
           ...editingBlock,
-          conteudo: data.url,
+          content: data.url,
         })
       } else {
         setTempBlock({
           ...tempBlock,
-          conteudo: data.url,
+          content: data.url,
         })
       }
 
-      // Mostrar preview
+      // Show the preview
       setImagePreviewUrl(data.url)
 
       toast.success('Imagem enviada')
     } catch (error) {
-      console.error('Erro ao fazer upload:', error)
+      console.error('Upload failed:', error)
       toast.error('Erro ao enviar imagem')
     } finally {
       setIsUploadingImage(false)
@@ -521,11 +529,11 @@ function CourseEditor() {
     setAddBlockModal(true)
   }
 
-  const handleSelectBlockType = (type: Block['tipo'], unitId: string) => {
+  const handleSelectBlockType = (type: Block['type'], unitId: string) => {
     setAddBlockModal(false)
     setContentDrawerUnitId(unitId)
     setContentDrawerMode('add')
-    setContentDrawerBlockData({ tipo: type })
+    setContentDrawerBlockData({ type })
     setContentDrawerOpen(true)
   }
 
@@ -536,24 +544,24 @@ function CourseEditor() {
     setContentDrawerOpen(true)
   }
 
-  const handleSaveContentFromDrawer = async (data: Omit<Block, 'id' | 'ordem'>) => {
+  const handleSaveContentFromDrawer = async (data: Omit<Block, 'id' | 'order'>) => {
     console.log('🔍 handleSaveContentFromDrawer - mode:', contentDrawerMode, 'data:', data)
     console.log('🔍 insertAtIndex.current:', insertAtIndex.current)
 
     if (contentDrawerMode === 'add') {
       if (insertAtIndex.current) {
         const { unitId, index } = insertAtIndex.current
-        console.log('🔍 Adicionando conteúdo - unidadeId:', unitId, 'index:', index)
+        console.log('🔍 Adding content - unitId:', unitId, 'index:', index)
 
-        const unit = state.currentCourse?.unidades?.find((u) => u.id === unitId)
-        const contentLength = unit?.conteudo?.length || 0
-        console.log('🔍 Tamanho atual do conteúdo:', contentLength)
+        const unit = state.currentCourse?.units?.find((u) => u.id === unitId)
+        const contentLength = unit?.blocks?.length || 0
+        console.log('🔍 Current content length:', contentLength)
 
         setPendingBlock({
           unitId,
           index: Math.min(index, contentLength),
-          type: data.tipo,
-          columns: data.colunas,
+          type: data.type,
+          columns: data.columns,
         })
 
         try {
@@ -563,10 +571,10 @@ function CourseEditor() {
         }
 
         if (index < contentLength) {
-          console.log('🔍 Precisa reordenar - index:', index, '< conteudoLength:', contentLength)
+          console.log('🔍 Reorder needed - index:', index, '< contentLength:', contentLength)
           pendingInsert.current = { unitId, targetIndex: index }
         } else {
-          console.log('🔍 NÃO precisa reordenar - adicionar no final')
+          console.log('🔍 No reorder needed - appending at the end')
         }
       }
       toast.success('Conteúdo adicionado')
@@ -589,57 +597,57 @@ function CourseEditor() {
   }
 
   const handleSaveBlock = () => {
-    if (tempBlock.tipo === 'accordion') {
-      // Validar accordion
+    if (tempBlock.type === 'accordion') {
+      // Validate the accordion
       if (!tempBlock.items || tempBlock.items.length === 0) {
         alert('Adicione pelo menos um item ao accordion.')
         return
       }
-      // Verificar se todos os itens têm título e conteúdo
+      // Every item needs a title and content
       const invalidItems = tempBlock.items.some(
-        (item) => !item.titulo.trim() || !item.conteudo.trim()
+        (item) => !item.title.trim() || !item.content.trim()
       )
       if (invalidItems) {
         alert('Todos os itens do accordion devem ter título e conteúdo preenchidos.')
         return
       }
-    } else if (tempBlock.tipo === 'flipcard') {
-      // Validar flipcard
-      if (!tempBlock.tipoFrente) {
+    } else if (tempBlock.type === 'flipcard') {
+      // Validate the flipcard
+      if (!tempBlock.frontType) {
         alert('Selecione o tipo de frente do flipcard.')
         return
       }
-      if (tempBlock.tipoFrente === 'imagem' && !tempBlock.imagemFrente?.trim()) {
+      if (tempBlock.frontType === 'image' && !tempBlock.frontImage?.trim()) {
         alert('Adicione uma imagem para a frente do flipcard.')
         return
       }
       if (
-        tempBlock.tipoFrente === 'imagem-titulo' &&
-        (!tempBlock.imagemFrente?.trim() || !tempBlock.tituloFrente?.trim())
+        tempBlock.frontType === 'image-title' &&
+        (!tempBlock.frontImage?.trim() || !tempBlock.frontTitle?.trim())
       ) {
         alert('Adicione uma imagem e um título para a frente do flipcard.')
         return
       }
-      if (tempBlock.tipoFrente === 'titulo' && !tempBlock.tituloFrente?.trim()) {
+      if (tempBlock.frontType === 'title' && !tempBlock.frontTitle?.trim()) {
         alert('Adicione um título para a frente do flipcard.')
         return
       }
-      if (!tempBlock.conteudoVerso?.trim()) {
+      if (!tempBlock.backContent?.trim()) {
         alert('Adicione o conteúdo do verso do flipcard.')
         return
       }
-    } else if (tempBlock.tipo === 'lista') {
-      // Validar lista
-      if (!tempBlock.itensLista || tempBlock.itensLista.length === 0) {
+    } else if (tempBlock.type === 'list') {
+      // Validate the list
+      if (!tempBlock.listItems || tempBlock.listItems.length === 0) {
         alert('Adicione pelo menos um item à lista.')
         return
       }
-      if (tempBlock.itensLista.some((item) => !item.texto.trim())) {
+      if (tempBlock.listItems.some((item) => !item.text.trim())) {
         alert('Todos os itens da lista devem ter texto preenchido.')
         return
       }
-    } else if (tempBlock.tipo === 'quiz') {
-      // Validar quiz
+    } else if (tempBlock.type === 'quiz') {
+      // Validate the quiz
       if (
         !tempBlock.quizData ||
         !tempBlock.quizData.questions ||
@@ -649,77 +657,73 @@ function CourseEditor() {
         return
       }
 
-      // Validar cada pergunta
+      // Validate each question
       for (const question of tempBlock.quizData.questions) {
-        if (!question.pergunta.trim()) {
+        if (!question.question.trim()) {
           alert('Todas as perguntas devem ter um texto preenchido.')
           return
         }
-        if (!question.opcoes || question.opcoes.length !== 5) {
+        if (!question.options || question.options.length !== 5) {
           alert('Cada pergunta deve ter exatamente 5 opções de resposta.')
           return
         }
-        if (question.opcoes.some((option) => !option.texto.trim())) {
+        if (question.options.some((option) => !option.text.trim())) {
           alert('Todas as opções de resposta devem ter texto preenchido.')
           return
         }
-        if (question.opcoes.every((option) => !option.isCorrect)) {
+        if (question.options.every((option) => !option.isCorrect)) {
           alert('Cada pergunta deve ter exatamente uma resposta correta marcada.')
           return
         }
-        const correctCount = question.opcoes.filter((option) => option.isCorrect).length
+        const correctCount = question.options.filter((option) => option.isCorrect).length
         if (correctCount !== 1) {
           alert('Cada pergunta deve ter exatamente uma resposta correta.')
           return
         }
-        if (question.opcoes.some((option) => !option.feedback.trim())) {
+        if (question.options.some((option) => !option.feedback.trim())) {
           alert('Todas as opções de resposta devem ter um feedback preenchido.')
           return
         }
       }
-    } else if (tempBlock.tipo === 'info-box') {
-      // Validar info-box
-      if (!tempBlock.tipoInfoBox) {
+    } else if (tempBlock.type === 'info-box') {
+      // Validate the info box
+      if (!tempBlock.infoBoxType) {
         alert('Selecione o tipo do Info Box.')
         return
       }
-      if (!tempBlock.conteudo.trim()) {
+      if (!tempBlock.content.trim()) {
         alert('O texto do corpo do Info Box é obrigatório.')
         return
       }
-    } else if (tempBlock.tipo === 'imagem') {
-      if (!tempBlock.tamanho || !tempBlock.legenda || !tempBlock.fonte) {
+    } else if (tempBlock.type === 'image') {
+      if (!tempBlock.size || !tempBlock.caption || !tempBlock.source) {
         alert('Por favor, preencha todos os campos obrigatórios para a imagem.')
         return
       }
     } else {
-      if (!tempBlock.conteudo.trim()) {
+      if (!tempBlock.content.trim()) {
         return
       }
     }
 
     addBlock(tempBlock.unitId, {
-      tipo: tempBlock.tipo,
-      conteudo: tempBlock.conteudo || '',
-      tamanho: tempBlock.tamanho,
-      legenda: tempBlock.legenda,
-      fonte: tempBlock.fonte,
-      corTexto: tempBlock.corTexto,
-      alinhamento: tempBlock.alinhamento,
-      colunas: tempBlock.colunas,
+      type: tempBlock.type,
+      content: tempBlock.content || '',
+      size: tempBlock.size,
+      caption: tempBlock.caption,
+      source: tempBlock.source,
+      textColor: tempBlock.textColor,
+      alignment: tempBlock.alignment,
+      columns: tempBlock.columns,
       items: tempBlock.items,
-      tipoFrente: tempBlock.tipoFrente,
-      imagemFrente: tempBlock.imagemFrente,
-      tituloFrente: tempBlock.tituloFrente,
-      conteudoVerso: tempBlock.conteudoVerso,
-      alturaCard: tempBlock.alturaCard,
-      itensLista: tempBlock.itensLista,
-      tipoLista: tempBlock.tipoLista,
+      cardHeight: tempBlock.cardHeight,
+      listItems: tempBlock.listItems,
+      listType: tempBlock.listType,
       quizData: tempBlock.quizData,
-      tipoInfoBox: tempBlock.tipoInfoBox,
-      tituloInfoBox: tempBlock.tituloInfoBox,
+      infoBoxType: tempBlock.infoBoxType,
+      infoBoxTitle: tempBlock.infoBoxTitle,
     })
-    // Se foi solicitada inserção em posição específica, registrar para reordenar após state atualizar
+    // When a specific position was requested, remember it and reorder after the state settles
     if (insertAtIndex.current && insertAtIndex.current.unitId === tempBlock.unitId) {
       pendingInsert.current = {
         unitId: tempBlock.unitId,
@@ -733,70 +737,66 @@ function CourseEditor() {
     unitId: string,
     blockId: string,
     type:
-      | 'paragrafo'
-      | 'subtitulo'
-      | 'titulo'
-      | 'imagem'
+      | 'paragraph'
+      | 'subheading'
+      | 'heading'
+      | 'image'
       | 'video'
       | 'accordion'
       | 'flipcard'
-      | 'lista'
+      | 'list'
       | 'quiz'
       | 'info-box',
     content: string,
-    size?: 'pequena' | 'media' | 'grande',
+    size?: 'small' | 'medium' | 'large',
     caption?: string,
     source?: string,
     textColor?: string,
-    alignment?: 'esquerda' | 'centro' | 'direita' | 'justificado',
+    alignment?: 'left' | 'center' | 'right' | 'justify',
     columns?: 6 | 12,
-    items?: Array<{ id: string; titulo: string; conteudo: string }>,
-    frontType?: 'imagem' | 'imagem-titulo' | 'titulo',
+    items?: Array<{ id: string; title: string; content: string }>,
+    frontType?: 'image' | 'image-title' | 'title',
     frontImage?: string,
     frontTitle?: string,
     backContent?: string,
     cardHeight?: string,
-    listItems?: Array<{ id: string; texto: string }>,
-    listType?: 'ordenada' | 'nao-ordenada' | 'check',
+    listItems?: Array<{ id: string; text: string }>,
+    listType?: 'ordered' | 'unordered' | 'check',
     quizData?: QuizData,
-    infoBoxType?: 'atencao' | 'saiba_mais' | 'info' | 'curiosidade',
+    infoBoxType?: 'warning' | 'learn-more' | 'info' | 'fun-fact',
     infoBoxTitle?: string,
     videoUrl?: string,
     videoTitle?: string
   ) => {
     updateBlock(unitId, blockId, {
-      tipo: type,
-      conteudo: content,
-      tamanho: size,
-      legenda: caption,
-      fonte: source,
-      corTexto: textColor,
-      alinhamento: alignment,
-      colunas: columns,
+      type,
+      content,
+      size,
+      caption,
+      source,
+      textColor,
+      alignment,
+      columns,
       items,
-      tipoFrente: frontType,
-      imagemFrente: frontImage,
-      tituloFrente: frontTitle,
-      conteudoVerso: backContent,
-      alturaCard: cardHeight,
-      itensLista: listItems,
-      tipoLista: listType,
+      cardHeight,
+      listItems,
+      listType,
       quizData,
-      tipoInfoBox: infoBoxType,
-      tituloInfoBox: infoBoxTitle,
+      infoBoxType,
+      infoBoxTitle,
       videoUrl,
-      videoTitulo: videoTitle,
+      videoTitle,
     })
     toast.success('Conteúdo atualizado')
     setEditingBlock(null)
   }
 
-  // Funções para gerenciar itens do accordion
+  // Accordion item handlers
   const handleAddAccordionItem = () => {
     const newItem = {
       id: `accordion-item-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
-      titulo: '',
-      conteudo: '',
+      title: '',
+      content: '',
     }
     setTempBlock({
       ...tempBlock,
@@ -813,7 +813,7 @@ function CourseEditor() {
 
   const handleUpdateAccordionItem = (
     itemId: string,
-    field: 'titulo' | 'conteudo',
+    field: 'heading' | 'conteudo',
     value: string
   ) => {
     setTempBlock({
@@ -824,45 +824,45 @@ function CourseEditor() {
     })
   }
 
-  // Funções para gerenciar itens da lista
+  // List item handlers
   const handleAddListItem = () => {
     const newItem = {
       id: `lista-item-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
-      texto: '',
+      text: '',
     }
     setTempBlock({
       ...tempBlock,
-      itensLista: [...(tempBlock.itensLista || []), newItem],
+      listItems: [...(tempBlock.listItems || []), newItem],
     })
   }
 
   const handleRemoveListItem = (itemId: string) => {
     setTempBlock({
       ...tempBlock,
-      itensLista: tempBlock.itensLista?.filter((item) => item.id !== itemId) || [],
+      listItems: tempBlock.listItems?.filter((item) => item.id !== itemId) || [],
     })
   }
 
   const handleUpdateListItem = (itemId: string, value: string) => {
     setTempBlock({
       ...tempBlock,
-      itensLista:
-        tempBlock.itensLista?.map((item) =>
-          item.id === itemId ? { ...item, texto: value } : item
+      listItems:
+        tempBlock.listItems?.map((item) =>
+          item.id === itemId ? { ...item, text: value } : item
         ) || [],
     })
   }
 
-  // Funções para gerenciar quiz
+  // Quiz handlers
   const handleAddQuizQuestion = () => {
     if (!tempBlock.quizData) return
     const newQuestion: QuizQuestion = {
       id: `question-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
-      pergunta: '',
-      dica: '',
-      opcoes: Array.from({ length: 5 }, (_, i) => ({
+      question: '',
+      hint: '',
+      options: Array.from({ length: 5 }, (_, i) => ({
         id: `opcao-${Date.now()}-${i}-${Math.random().toString(36).substring(2, 9)}`,
-        texto: '',
+        text: '',
         isCorrect: i === 0,
         feedback: '',
       })),
@@ -922,7 +922,7 @@ function CourseEditor() {
           q.id === questionId
             ? {
                 ...q,
-                opcoes: q.opcoes.map((option) =>
+                options: q.options.map((option) =>
                   option.id === optionId ? { ...option, [field]: value } : option
                 ),
               }
@@ -942,7 +942,7 @@ function CourseEditor() {
           q.id === questionId
             ? {
                 ...q,
-                opcoes: q.opcoes.map((option) => ({
+                options: q.options.map((option) => ({
                   ...option,
                   isCorrect: option.id === optionId,
                 })),
@@ -960,32 +960,32 @@ function CourseEditor() {
 
   const handleStartNewBlock = (
     type:
-      | 'titulo'
-      | 'subtitulo'
-      | 'paragrafo'
-      | 'imagem'
+      | 'heading'
+      | 'subheading'
+      | 'paragraph'
+      | 'image'
       | 'accordion'
       | 'flipcard'
-      | 'lista'
+      | 'list'
       | 'quiz'
       | 'info-box',
     unitId?: string,
     columns: 6 | 12 = 12
   ) => {
     if (unitId) {
-      // Inicializar quizData com uma pergunta vazia se for quiz
+      // Seed quizData with an empty question for a quiz
       const quizDataInitial: QuizData | undefined =
         type === 'quiz'
           ? {
               questions: [
                 {
                   id: `question-${Date.now()}`,
-                  pergunta: '',
-                  dica: '',
-                  opcoes: Array.from({ length: 5 }, (_, i) => ({
+                  question: '',
+                  hint: '',
+                  options: Array.from({ length: 5 }, (_, i) => ({
                     id: `opcao-${Date.now()}-${i}`,
-                    texto: '',
-                    isCorrect: i === 0, // primeira opção como correta por padrão
+                    text: '',
+                    isCorrect: i === 0, // first option correct by default
                     feedback: '',
                   })),
                 },
@@ -994,33 +994,33 @@ function CourseEditor() {
           : undefined
 
       setTempBlock({
-        tipo: type,
-        conteudo: '',
+        type,
+        content: '',
         unitId,
-        tamanho: 'media',
-        legenda: '',
-        fonte: '',
-        corTexto: '#000000',
-        alinhamento: 'esquerda',
-        colunas: columns,
+        size: 'medium',
+        caption: '',
+        source: '',
+        textColor: '#000000',
+        alignment: 'left',
+        columns,
         items: type === 'accordion' ? [] : [],
-        tipoFrente: type === 'flipcard' ? 'titulo' : 'titulo',
-        imagemFrente: type === 'flipcard' ? '' : '',
-        tituloFrente: type === 'flipcard' ? '' : '',
-        conteudoVerso: type === 'flipcard' ? '' : '',
-        alturaCard: type === 'flipcard' ? '300px' : '300px',
-        itensLista: type === 'lista' ? [] : [],
-        tipoLista: type === 'lista' ? 'nao-ordenada' : 'nao-ordenada',
+        frontType: type === 'flipcard' ? 'title' : 'title',
+        frontImage: type === 'flipcard' ? '' : '',
+        frontTitle: type === 'flipcard' ? '' : '',
+        backContent: type === 'flipcard' ? '' : '',
+        cardHeight: type === 'flipcard' ? '300px' : '300px',
+        listItems: type === 'list' ? [] : [],
+        listType: 'unordered',
         quizData: quizDataInitial,
-        tipoInfoBox: type === 'info-box' ? 'info' : 'info',
-        tituloInfoBox: type === 'info-box' ? '' : '',
+        infoBoxType: type === 'info-box' ? 'info' : 'info',
+        infoBoxTitle: type === 'info-box' ? '' : '',
         videoUrl: '',
-        videoTitulo: '',
+        videoTitle: '',
       })
     }
   }
 
-  // handleMoverUnidadeAcima e handleMoverUnidadeAbaixo removidos — reordenação via drag-and-drop na sidebar
+  // The move-up/move-down handlers are gone — reordering happens by drag-and-drop in the sidebar
 
   const handlePreview = () => {
     if (state.currentCourse) {
@@ -1033,18 +1033,18 @@ function CourseEditor() {
   const handleBlockDragEnd = (event: DragEndEvent, unitId: string) => {
     const { active, over } = event
     if (!over || active.id === over.id) return
-    const unit = state.currentCourse?.unidades?.find((u) => u.id === unitId)
+    const unit = state.currentCourse?.units?.find((u) => u.id === unitId)
     if (!unit) return
-    const content = [...(unit.conteudo || [])]
+    const content = [...(unit.blocks || [])]
     const oldIndex = content.findIndex((c) => c.id === active.id)
     const newIndex = content.findIndex((c) => c.id === over.id)
     const newBlock = arrayMove(content, oldIndex, newIndex)
-    newBlock.forEach((c, i) => (c.ordem = i))
-    updateUnit(unitId, { conteudo: newBlock })
+    newBlock.forEach((c, i) => (c.order = i))
+    updateUnit(unitId, { blocks: newBlock })
     notify('reordered', 'block', authorName)
   }
 
-  // Verificar se está carregando ou se o curso não foi encontrado
+  // Loading, or the course was not found
   if (state.loading || isFetchingCourse || !state.currentCourse) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#F5F7FA] dark:bg-gray-950">
@@ -1074,10 +1074,10 @@ function CourseEditor() {
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <h1 className="text-lg font-semibold text-gray-900 dark:text-gray-100 truncate max-w-[120px] sm:max-w-[190px] md:max-w-[290px] cursor-default">
-                        {state.currentCourse.titulo}
+                        {state.currentCourse.title}
                       </h1>
                     </TooltipTrigger>
-                    <TooltipContent side="bottom">{state.currentCourse.titulo}</TooltipContent>
+                    <TooltipContent side="bottom">{state.currentCourse.title}</TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
               </div>
@@ -1110,7 +1110,7 @@ function CourseEditor() {
               {/* Centro - Dropdown de Unidades */}
               <div className="order-3 md:order-2 w-full md:w-auto md:flex-1 flex justify-center">
                 <UnitsDropdown
-                  units={state.currentCourse.unidades}
+                  units={state.currentCourse.units}
                   activeUnitIndex={activeUnitIndex}
                   onSelectUnit={setActiveUnitIndex}
                   onOpenManageModal={() => setManageUnitsModalOpen(true)}
@@ -1136,11 +1136,11 @@ function CourseEditor() {
                             <BookOpen className="h-8 w-8 text-white" />
                           </div>
                           <CardTitle className="text-3xl md:text-4xl font-bold leading-tight">
-                            {state.currentCourse.titulo}
+                            {state.currentCourse.title}
                           </CardTitle>
                         </div>
                         <p className="text-blue-50 text-lg leading-relaxed max-w-4xl">
-                          {state.currentCourse.descricao}
+                          {state.currentCourse.description}
                         </p>
                       </div>
                       <div className="shrink-0">
@@ -1166,7 +1166,7 @@ function CourseEditor() {
                         <div className="flex-1">
                           <p className="text-sm font-medium text-blue-200 mb-1">Carga Horária</p>
                           <p className="text-xl font-bold text-white">
-                            {state.currentCourse.cargaHoraria}
+                            {state.currentCourse.workload}
                           </p>
                         </div>
                       </div>
@@ -1178,7 +1178,7 @@ function CourseEditor() {
                         <div className="flex-1">
                           <p className="text-sm font-medium text-blue-200 mb-1">Modalidade</p>
                           <p className="text-xl font-bold text-white">
-                            {state.currentCourse.modalidade}
+                            {state.currentCourse.modality}
                           </p>
                         </div>
                       </div>
@@ -1191,14 +1191,14 @@ function CourseEditor() {
                         className="bg-white/20 backdrop-blur-sm text-white border-white/30 px-4 py-2 text-sm font-semibold shadow-md hover:bg-white/25 transition-all"
                       >
                         <Layers className="h-4 w-4 mr-2" />
-                        {state.currentCourse.unidades?.length || 0}{' '}
-                        {state.currentCourse.unidades?.length === 1 ? 'Unidade' : 'Unidades'}
+                        {state.currentCourse.units?.length || 0}{' '}
+                        {state.currentCourse.units?.length === 1 ? 'Unidade' : 'Unidades'}
                       </Badge>
                       <Badge
                         variant="secondary"
                         className="bg-white/20 backdrop-blur-sm text-white border-white/30 px-4 py-2 text-sm font-semibold shadow-md hover:bg-white/25 transition-all"
                       >
-                        {state.currentCourse.categoria}
+                        {state.currentCourse.category}
                       </Badge>
                     </div>
                   </CardContent>
@@ -1206,10 +1206,10 @@ function CourseEditor() {
 
                 {/* Lista de Unidades */}
                 <div className="space-y-8">
-                  {(state.currentCourse.unidades || []).map((unit, unitIndex) => {
+                  {(state.currentCourse.units || []).map((unit, unitIndex) => {
                     const safeIndex = Math.min(
                       activeUnitIndex,
-                      (state.currentCourse?.unidades || []).length - 1
+                      (state.currentCourse?.units || []).length - 1
                     )
                     if (unitIndex !== safeIndex) return null
                     return (
@@ -1245,17 +1245,17 @@ function CourseEditor() {
                               Unidade {unitIndex + 1}
                             </div>
                             <h3 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">
-                              {unit.titulo}
+                              {unit.title}
                             </h3>
                             <p className="text-gray-600 dark:text-gray-400 text-sm">
-                              {unit.descricao}
+                              {unit.description}
                             </p>
                           </div>
                         </EditableCard>
 
                         <div>
                           {/* Lista de Conteúdo */}
-                          {(unit.conteudo || []).length === 0 ? null : (
+                          {(unit.blocks || []).length === 0 ? null : (
                             <BlockThemeProvider theme={editorBlockTheme}>
                               <DndContext
                                 sensors={dndSensors}
@@ -1263,24 +1263,24 @@ function CourseEditor() {
                                 onDragEnd={(e) => handleBlockDragEnd(e, unit.id)}
                               >
                                 <SortableContext
-                                  items={(unit.conteudo || [])
-                                    .sort((a, b) => a.ordem - b.ordem)
+                                  items={(unit.blocks || [])
+                                    .sort((a, b) => a.order - b.order)
                                     .map((c) => c.id)}
                                   strategy={verticalListSortingStrategy}
                                 >
                                   <div className="grid grid-cols-12 gap-1">
                                     {(() => {
-                                      const savedBlocks = (unit.conteudo || []).sort(
-                                        (a, b) => a.ordem - b.ordem
+                                      const savedBlocks = (unit.blocks || []).sort(
+                                        (a, b) => a.order - b.order
                                       )
 
                                       const skeleton =
                                         pendingBlock?.unitId === unit.id
                                           ? ({
                                               id: PENDING_BLOCK_ID,
-                                              tipo: pendingBlock.type,
-                                              ordem: pendingBlock.index,
-                                              colunas: pendingBlock.columns,
+                                              type: pendingBlock.type,
+                                              order: pendingBlock.index,
+                                              columns: pendingBlock.columns,
                                             } as Block)
                                           : null
 
@@ -1293,17 +1293,17 @@ function CourseEditor() {
                                         : savedBlocks
 
                                       console.log(
-                                        `🔍 Unidade ${unit.titulo} - Total de conteúdos:`,
+                                        `🔍 Unit ${unit.title} - total blocks:`,
                                         blocks.length
                                       )
                                       blocks.forEach((c, i) => {
                                         console.log(
-                                          `  [${i}] ${c.tipo} - ordem: ${c.ordem} - id: ${c.id}`,
-                                          c.videoTitulo || c.conteudo?.substring(0, 30)
+                                          `  [${i}] ${c.type} - order: ${c.order} - id: ${c.id}`,
+                                          c.videoTitle || c.content?.substring(0, 30)
                                         )
                                       })
 
-                                      // Agrupar itens em linhas
+                                      // Group the items into rows
                                       type RowInfo = {
                                         startIndex: number
                                         endIndex: number
@@ -1313,7 +1313,7 @@ function CourseEditor() {
                                       let rStart = 0,
                                         rSum = 0
                                       blocks.forEach((it, i) => {
-                                        const cols = it.colunas || 12
+                                        const cols = it.columns || 12
                                         if (i > 0 && rSum + cols > 12) {
                                           rows.push({
                                             startIndex: rStart,
@@ -1333,7 +1333,7 @@ function CourseEditor() {
                                           totalCols: rSum,
                                         })
 
-                                      console.log('🟣 ROWS calculadas:', rows)
+                                      console.log('🟣 Computed rows:', rows)
                                       rows.forEach((r, i) => {
                                         console.log(
                                           `  Row ${i}: startIndex=${r.startIndex}, endIndex=${r.endIndex}, totalCols=${r.totalCols}`
@@ -1360,7 +1360,7 @@ function CourseEditor() {
                                               onClick={(e) => {
                                                 e?.stopPropagation()
                                                 console.log(
-                                                  '🔵 CLIQUE no botão inserir - posição:',
+                                                  '🔵 CLICK on the insert button - position:',
                                                   targetPosition
                                                 )
                                                 handleOpenAddContentDrawer(unit.id, targetPosition)
@@ -1418,7 +1418,7 @@ function CourseEditor() {
                                                   <div
                                                     key={PENDING_BLOCK_ID}
                                                     className={`col-span-12 ${
-                                                      item.colunas === 6
+                                                      item.columns === 6
                                                         ? 'md:col-span-6'
                                                         : 'md:col-span-12'
                                                     }`}
@@ -1426,7 +1426,7 @@ function CourseEditor() {
                                                     <div className="flex min-h-[120px] flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-blue-300 dark:border-blue-700 bg-blue-50/50 dark:bg-blue-950/20 p-6 text-blue-600 dark:text-blue-400">
                                                       <Loader2 className="h-5 w-5 animate-spin" />
                                                       <span className="text-sm font-medium">
-                                                        Adicionando {BLOCK_CATALOG[item.tipo].label}
+                                                        Adicionando {BLOCK_CATALOG[item.type].label}
                                                         ...
                                                       </span>
                                                     </div>
@@ -1435,21 +1435,21 @@ function CourseEditor() {
                                               }
 
                                               console.log(
-                                                `🔍 Renderizando conteúdo [${row.startIndex + itemIndex}]:`,
-                                                item.tipo,
+                                                `🔍 Rendering block [${row.startIndex + itemIndex}]:`,
+                                                item.type,
                                                 item.id,
-                                                item.videoTitulo || item.conteudo?.substring(0, 50)
+                                                item.videoTitle || item.content?.substring(0, 50)
                                               )
                                               return (
                                                 <SortableBlockWrapper
                                                   key={item.id}
                                                   id={item.id}
-                                                  columns={item.colunas}
+                                                  columns={item.columns}
                                                 >
                                                   {(dragHandle) => (
                                                     <EditableCard
                                                       flex
-                                                      label={BLOCK_CATALOG[item.tipo].label}
+                                                      label={BLOCK_CATALOG[item.type].label}
                                                       actions={
                                                         <>
                                                           {dragHandle}
@@ -1480,15 +1480,15 @@ function CourseEditor() {
                                                       }
                                                     >
                                                       <div className="flex-1 min-w-0 mt-1">
-                                                        {item.tipo === 'titulo' ? (
+                                                        {item.type === 'heading' ? (
                                                           <h3 className="font-bold text-lg text-gray-900 dark:text-gray-100">
-                                                            {item.conteudo}
+                                                            {item.content}
                                                           </h3>
-                                                        ) : item.tipo === 'subtitulo' ? (
+                                                        ) : item.type === 'subheading' ? (
                                                           <h4 className="font-semibold text-gray-900 dark:text-gray-100">
-                                                            {item.conteudo}
+                                                            {item.content}
                                                           </h4>
-                                                        ) : item.tipo === 'flipcard' ? (
+                                                        ) : item.type === 'flipcard' ? (
                                                           <div className="grid grid-cols-2 gap-2">
                                                             {cardsFlipcard(item).length === 0 ? (
                                                               <p className="text-xs text-gray-400 italic col-span-2">
@@ -1500,11 +1500,11 @@ function CourseEditor() {
                                                                   key={card.id}
                                                                   className="border border-[#e5e7eb] dark:border-gray-700 rounded-lg p-3 bg-linear-to-br from-(--block-accent,#2563eb)/8 to-(--block-accent,#2563eb)/15 text-center min-h-[72px] flex flex-col items-center justify-center gap-2"
                                                                 >
-                                                                  {card.imagemFrente && (
+                                                                  {card.frontImage && (
                                                                     <>
                                                                       {/* eslint-disable-next-line @next/next/no-img-element */}
                                                                       <img
-                                                                        src={card.imagemFrente}
+                                                                        src={card.frontImage}
                                                                         alt=""
                                                                         className="max-h-14 mx-auto object-contain rounded"
                                                                         onError={(e) => {
@@ -1514,12 +1514,12 @@ function CourseEditor() {
                                                                       />
                                                                     </>
                                                                   )}
-                                                                  {card.tituloFrente ? (
+                                                                  {card.frontTitle ? (
                                                                     <p className="font-semibold text-sm text-gray-800 dark:text-gray-200">
-                                                                      {card.tituloFrente}
+                                                                      {card.frontTitle}
                                                                     </p>
                                                                   ) : (
-                                                                    !card.imagemFrente && (
+                                                                    !card.frontImage && (
                                                                       <p className="text-xs text-gray-400 italic">
                                                                         Sem conteúdo na frente
                                                                       </p>
@@ -1529,7 +1529,7 @@ function CourseEditor() {
                                                               ))
                                                             )}
                                                           </div>
-                                                        ) : item.tipo === 'accordion' ? (
+                                                        ) : item.type === 'accordion' ? (
                                                           <div className="border border-[#e5e7eb] dark:border-gray-700 rounded-lg overflow-hidden">
                                                             {(item.items || []).length === 0 ? (
                                                               <p className="text-xs text-gray-400 italic p-3">
@@ -1542,41 +1542,41 @@ function CourseEditor() {
                                                                   className="flex items-center justify-between gap-2 px-3 py-2 bg-gray-50 dark:bg-gray-800 border-b border-[#e5e7eb] dark:border-gray-700 last:border-b-0"
                                                                 >
                                                                   <span className="text-sm text-gray-700 dark:text-gray-300 truncate min-w-0 flex-1">
-                                                                    {acc.titulo}
+                                                                    {acc.title}
                                                                   </span>
                                                                   <ChevronDown className="h-3.5 w-3.5 text-gray-400 shrink-0" />
                                                                 </div>
                                                               ))
                                                             )}
                                                           </div>
-                                                        ) : item.tipo === 'imagem' ? (
+                                                        ) : item.type === 'image' ? (
                                                           <div className="space-y-2">
-                                                            {item.fonte && (
+                                                            {item.source && (
                                                               <p className="text-xs text-gray-500 dark:text-gray-400 text-center">
-                                                                Fonte: {item.fonte}
+                                                                Fonte: {item.source}
                                                               </p>
                                                             )}
                                                             {/* eslint-disable-next-line @next/next/no-img-element */}
                                                             <img
-                                                              src={item.conteudo}
-                                                              alt={item.legenda || 'Imagem'}
-                                                              className={`h-auto object-contain border border-[#e5e7eb] dark:border-gray-700 rounded-md mx-auto ${larguraMaximaImagem(item.tamanho)}`}
+                                                              src={item.content}
+                                                              alt={item.caption || 'Imagem'}
+                                                              className={`h-auto object-contain border border-[#e5e7eb] dark:border-gray-700 rounded-md mx-auto ${larguraMaximaImagem(item.size)}`}
                                                               onError={(e) => {
                                                                 e.currentTarget.style.display =
                                                                   'none'
                                                               }}
                                                             />
-                                                            {item.legenda && (
+                                                            {item.caption && (
                                                               <p className="text-sm text-gray-600 dark:text-gray-400 italic text-center">
-                                                                {item.legenda}
+                                                                {item.caption}
                                                               </p>
                                                             )}
                                                           </div>
-                                                        ) : item.tipo === 'video' ? (
+                                                        ) : item.type === 'video' ? (
                                                           <div className="space-y-2">
-                                                            {item.videoTitulo && (
+                                                            {item.videoTitle && (
                                                               <p className="text-sm font-semibold text-gray-700 dark:text-gray-300">
-                                                                {item.videoTitulo}
+                                                                {item.videoTitle}
                                                               </p>
                                                             )}
                                                             <div className="aspect-video w-full rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-800 border border-[#e5e7eb] dark:border-gray-700">
@@ -1593,27 +1593,26 @@ function CourseEditor() {
                                                               </p>
                                                             )}
                                                           </div>
-                                                        ) : item.tipo === 'lista' ? (
+                                                        ) : item.type === 'list' ? (
                                                           <div className="space-y-1">
-                                                            {(item.itensLista || []).length ===
-                                                            0 ? (
+                                                            {(item.listItems || []).length === 0 ? (
                                                               <p className="text-xs text-gray-400 italic">
                                                                 Nenhum item
                                                               </p>
                                                             ) : (
-                                                              (item.itensLista || []).map(
+                                                              (item.listItems || []).map(
                                                                 (listItem, idx) => (
                                                                   <div
                                                                     key={listItem.id || idx}
                                                                     className="flex items-start gap-2 text-sm text-gray-700 dark:text-gray-300"
                                                                   >
                                                                     <span className="shrink-0 mt-0.5">
-                                                                      {item.tipoLista ===
-                                                                      'ordenada' ? (
+                                                                      {item.listType ===
+                                                                      'ordered' ? (
                                                                         <span className="flex items-center justify-center w-4 h-4 bg-(--block-accent,#2563eb) text-white rounded-full text-xs font-semibold">
                                                                           {idx + 1}
                                                                         </span>
-                                                                      ) : item.tipoLista ===
+                                                                      ) : item.listType ===
                                                                         'check' ? (
                                                                         <span className="flex items-center justify-center w-4 h-4 bg-green-500 text-white rounded">
                                                                           <svg
@@ -1635,23 +1634,22 @@ function CourseEditor() {
                                                                       )}
                                                                     </span>
                                                                     <span className="line-clamp-1">
-                                                                      {listItem.texto}
+                                                                      {listItem.text}
                                                                     </span>
                                                                   </div>
                                                                 )
                                                               )
                                                             )}
                                                           </div>
-                                                        ) : item.tipo ===
-                                                          'objetivos-aprendizagem' ? (
+                                                        ) : item.type === 'learning-objectives' ? (
                                                           <div className="space-y-1">
-                                                            {(item.itensObjetivos || []).length ===
+                                                            {(item.objectiveItems || []).length ===
                                                             0 ? (
                                                               <p className="text-xs text-gray-400 italic">
                                                                 Nenhum objetivo
                                                               </p>
                                                             ) : (
-                                                              (item.itensObjetivos || []).map(
+                                                              (item.objectiveItems || []).map(
                                                                 (objective, idx) => (
                                                                   <div
                                                                     key={objective.id || idx}
@@ -1661,14 +1659,14 @@ function CourseEditor() {
                                                                       {idx + 1}
                                                                     </span>
                                                                     <span className="line-clamp-2">
-                                                                      {objective.texto}
+                                                                      {objective.text}
                                                                     </span>
                                                                   </div>
                                                                 )
                                                               )
                                                             )}
                                                           </div>
-                                                        ) : item.tipo === 'quiz' ? (
+                                                        ) : item.type === 'quiz' ? (
                                                           item.quizData ? (
                                                             <QuizContent
                                                               quizData={item.quizData}
@@ -1679,24 +1677,24 @@ function CourseEditor() {
                                                               Sem perguntas
                                                             </p>
                                                           )
-                                                        ) : item.tipo === 'info-box' ? (
-                                                          item.tipoInfoBox ? (
+                                                        ) : item.type === 'info-box' ? (
+                                                          item.infoBoxType ? (
                                                             <InfoBox
-                                                              type={item.tipoInfoBox}
-                                                              title={item.tituloInfoBox}
+                                                              type={item.infoBoxType}
+                                                              title={item.infoBoxTitle}
                                                             >
                                                               <div
                                                                 dangerouslySetInnerHTML={{
-                                                                  __html: item.conteudo || '',
+                                                                  __html: item.content || '',
                                                                 }}
                                                               />
                                                             </InfoBox>
                                                           ) : null
-                                                        ) : item.tipo === 'paragrafo' ? (
+                                                        ) : item.type === 'paragraph' ? (
                                                           <div
-                                                            className={`conteudo-paragrafo text-gray-700 dark:text-gray-300 ${item.alinhamento === 'centro' ? 'text-center' : item.alinhamento === 'direita' ? 'text-right' : item.alinhamento === 'justificado' ? 'text-justify' : 'text-left'}`}
+                                                            className={`conteudo-paragrafo text-gray-700 dark:text-gray-300 ${item.alignment === 'center' ? 'text-center' : item.alignment === 'right' ? 'text-right' : item.alignment === 'justify' ? 'text-justify' : 'text-left'}`}
                                                             dangerouslySetInnerHTML={{
-                                                              __html: item.conteudo,
+                                                              __html: item.content,
                                                             }}
                                                           />
                                                         ) : (
@@ -1723,7 +1721,7 @@ function CourseEditor() {
                           <div className="mt-8">
                             <button
                               onClick={() => {
-                                const lastIndex = (unit.conteudo || []).length
+                                const lastIndex = (unit.blocks || []).length
                                 handleOpenAddContentDrawer(unit.id, lastIndex)
                               }}
                               className="w-full px-6 py-4 bg-white dark:bg-gray-800 border-2 border-dashed border-blue-500 dark:border-blue-400 text-blue-600 dark:text-blue-400 rounded-xl hover:bg-blue-50 dark:hover:bg-blue-950/20 transition-all flex items-center justify-center gap-2 font-semibold text-sm"
@@ -1736,14 +1734,14 @@ function CourseEditor() {
                           {/* Botões inline removidos — adicionados na barra fixa abaixo */}
                           <div className="hidden">
                             <div className="grid grid-cols-1 gap-3">
-                              <Button onClick={() => handleStartNewBlock('titulo', unit.id)}>
+                              <Button onClick={() => handleStartNewBlock('heading', unit.id)}>
                                 Título
                               </Button>
 
                               <Button
                                 variant="outline"
                                 size="sm"
-                                onClick={() => handleStartNewBlock('imagem', unit.id)}
+                                onClick={() => handleStartNewBlock('image', unit.id)}
                                 className="h-auto py-4 px-3 flex flex-col items-center gap-2 bg-white dark:bg-gray-900 hover:bg-green-50 dark:hover:bg-green-900/30 hover:border-green-400 dark:hover:border-green-500 hover:shadow-md transition-all border-2 border-green-200 dark:border-green-800 group"
                               >
                                 <div className="p-2 bg-green-100 dark:bg-green-900/50 rounded-lg group-hover:bg-green-200 dark:group-hover:bg-green-800 transition-colors">
@@ -1786,7 +1784,7 @@ function CourseEditor() {
                               <Button
                                 variant="outline"
                                 size="sm"
-                                onClick={() => handleStartNewBlock('lista', unit.id)}
+                                onClick={() => handleStartNewBlock('list', unit.id)}
                                 className="h-auto py-4 px-3 flex flex-col items-center gap-2 bg-white dark:bg-gray-900 hover:bg-purple-50 dark:hover:bg-purple-900/30 hover:border-purple-400 dark:hover:border-purple-500 hover:shadow-md transition-all border-2 border-purple-200 dark:border-purple-800 group"
                               >
                                 <div className="p-2 bg-purple-100 dark:bg-purple-900/50 rounded-lg group-hover:bg-purple-200 dark:group-hover:bg-purple-800 transition-colors">
@@ -1833,7 +1831,7 @@ function CourseEditor() {
                 </div>
 
                 {/* Navegação entre unidades */}
-                {(state.currentCourse.unidades || []).length > 0 && (
+                {(state.currentCourse.units || []).length > 0 && (
                   <div className="mt-12 mb-8">
                     {/* Divisor */}
                     <div className="mb-6">
@@ -1855,9 +1853,7 @@ function CourseEditor() {
                       {/* Botão Próxima */}
                       <button
                         onClick={() => setActiveUnitIndex(activeUnitIndex + 1)}
-                        disabled={
-                          activeUnitIndex >= (state.currentCourse.unidades || []).length - 1
-                        }
+                        disabled={activeUnitIndex >= (state.currentCourse.units || []).length - 1}
                         className="group flex items-center justify-center gap-1 px-8 py-2.5 rounded-lg bg-blue-600 dark:bg-blue-600 text-white hover:bg-blue-700 dark:hover:bg-blue-700 transition-all disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-blue-600 dark:disabled:hover:bg-blue-600"
                       >
                         <span className="text-sm font-medium">Próxima</span>
@@ -1867,7 +1863,7 @@ function CourseEditor() {
                   </div>
                 )}
 
-                {(state.currentCourse.unidades || []).length === 0 && (
+                {(state.currentCourse.units || []).length === 0 && (
                   <Card>
                     <CardContent className="text-center py-12">
                       <div className="mx-auto w-24 h-24 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mb-6">
@@ -2064,47 +2060,47 @@ function CourseEditor() {
         {/* Modal para adicionar conteúdo */}
         <Dialog open={!!tempBlock.unitId} onOpenChange={closeAddBlockModal}>
           <DialogContent
-            className={`${tempBlock.tipo === 'quiz' ? 'sm:max-w-4xl max-h-[90vh]' : 'sm:max-w-2xl'}`}
+            className={`${tempBlock.type === 'quiz' ? 'sm:max-w-4xl max-h-[90vh]' : 'sm:max-w-2xl'}`}
           >
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2">
-                {tempBlock.tipo === 'titulo' ? (
+                {tempBlock.type === 'heading' ? (
                   <>
                     <Heading2 className="h-5 w-5 text-blue-600" />
                     Adicionar Título
                   </>
-                ) : tempBlock.tipo === 'subtitulo' ? (
+                ) : tempBlock.type === 'subheading' ? (
                   <>
                     <Heading3 className="h-5 w-5 text-blue-600" />
                     Adicionar Subtítulo
                   </>
-                ) : tempBlock.tipo === 'imagem' ? (
+                ) : tempBlock.type === 'image' ? (
                   <>
                     {/* eslint-disable-next-line jsx-a11y/alt-text */}
                     <Image className="h-5 w-5 text-blue-600" />
                     Adicionar Imagem
                   </>
-                ) : tempBlock.tipo === 'accordion' ? (
+                ) : tempBlock.type === 'accordion' ? (
                   <>
                     <ChevronDown className="h-5 w-5 text-blue-600" />
                     Adicionar Accordion
                   </>
-                ) : tempBlock.tipo === 'flipcard' ? (
+                ) : tempBlock.type === 'flipcard' ? (
                   <>
                     <RotateCcw className="h-5 w-5 text-blue-600" />
                     Adicionar FlipCard
                   </>
-                ) : tempBlock.tipo === 'lista' ? (
+                ) : tempBlock.type === 'list' ? (
                   <>
                     <List className="h-5 w-5 text-blue-600" />
                     Adicionar Lista
                   </>
-                ) : tempBlock.tipo === 'quiz' ? (
+                ) : tempBlock.type === 'quiz' ? (
                   <>
                     <HelpCircle className="h-5 w-5 text-blue-600" />
                     Adicionar Quiz
                   </>
-                ) : tempBlock.tipo === 'info-box' ? (
+                ) : tempBlock.type === 'info-box' ? (
                   <>
                     <AlertTriangle className="h-5 w-5 text-blue-600" />
                     Adicionar Info Box
@@ -2118,7 +2114,7 @@ function CourseEditor() {
               </DialogTitle>
             </DialogHeader>
             <div className="space-y-4 py-4">
-              {tempBlock.tipo === 'imagem' ? (
+              {tempBlock.type === 'image' ? (
                 <div className="space-y-4">
                   {/* Upload ou URL */}
                   <FormField
@@ -2183,11 +2179,11 @@ function CourseEditor() {
                       {/* Input de URL */}
                       <div>
                         <Input
-                          value={tempBlock.conteudo}
+                          value={tempBlock.content}
                           onChange={(e) => {
                             setTempBlock({
                               ...tempBlock,
-                              conteudo: e.target.value,
+                              content: e.target.value,
                             })
                             // Atualizar preview se for URL válida
                             if (e.target.value.startsWith('http')) {
@@ -2201,11 +2197,11 @@ function CourseEditor() {
                       </div>
 
                       {/* Preview da Imagem */}
-                      {(imagePreviewUrl || tempBlock.conteudo) && (
+                      {(imagePreviewUrl || tempBlock.content) && (
                         <div className="mt-3">
                           {/* eslint-disable-next-line @next/next/no-img-element */}
                           <img
-                            src={imagePreviewUrl || tempBlock.conteudo}
+                            src={imagePreviewUrl || tempBlock.content}
                             alt="Preview"
                             className="h-auto rounded-lg border border-gray-300 dark:border-gray-600 max-h-40 object-contain bg-gray-50 dark:bg-gray-800 mx-auto"
                             onError={() => setImagePreviewUrl(null)}
@@ -2223,19 +2219,19 @@ function CourseEditor() {
                     }
                   >
                     <select
-                      value={tempBlock.tamanho || ''}
+                      value={tempBlock.size || ''}
                       onChange={(e) =>
                         setTempBlock({
                           ...tempBlock,
-                          tamanho: e.target.value as 'pequena' | 'media' | 'grande',
+                          size: e.target.value as 'small' | 'medium' | 'large',
                         })
                       }
                       className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
                     >
                       <option value="">Selecione o tamanho</option>
-                      <option value="pequena">Pequena (25%)</option>
-                      <option value="media">Média (50%)</option>
-                      <option value="grande">Grande (100%)</option>
+                      <option value="small">Pequena (25%)</option>
+                      <option value="medium">Média (50%)</option>
+                      <option value="large">Grande (100%)</option>
                     </select>
                   </FormField>
 
@@ -2247,11 +2243,11 @@ function CourseEditor() {
                     }
                   >
                     <Input
-                      value={tempBlock.legenda || ''}
+                      value={tempBlock.caption || ''}
                       onChange={(e) =>
                         setTempBlock({
                           ...tempBlock,
-                          legenda: e.target.value,
+                          caption: e.target.value,
                         })
                       }
                       placeholder="Digite a legenda da imagem..."
@@ -2266,18 +2262,18 @@ function CourseEditor() {
                     }
                   >
                     <Input
-                      value={tempBlock.fonte || ''}
+                      value={tempBlock.source || ''}
                       onChange={(e) =>
                         setTempBlock({
                           ...tempBlock,
-                          fonte: e.target.value,
+                          source: e.target.value,
                         })
                       }
                       placeholder="Digite a fonte da imagem..."
                     />
                   </FormField>
                 </div>
-              ) : tempBlock.tipo === 'accordion' ? (
+              ) : tempBlock.type === 'accordion' ? (
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
                     <span className="text-sm font-medium text-foreground">
@@ -2323,9 +2319,9 @@ function CourseEditor() {
                               compact
                             >
                               <Input
-                                value={item.titulo}
+                                value={item.title}
                                 onChange={(e) =>
-                                  handleUpdateAccordionItem(item.id, 'titulo', e.target.value)
+                                  handleUpdateAccordionItem(item.id, 'heading', e.target.value)
                                 }
                                 placeholder="Título do item..."
                                 className="text-sm"
@@ -2340,7 +2336,7 @@ function CourseEditor() {
                               compact
                             >
                               <textarea
-                                value={item.conteudo}
+                                value={item.content}
                                 onChange={(e) =>
                                   handleUpdateAccordionItem(item.id, 'conteudo', e.target.value)
                                 }
@@ -2362,7 +2358,7 @@ function CourseEditor() {
                     </div>
                   )}
                 </div>
-              ) : tempBlock.tipo === 'flipcard' ? (
+              ) : tempBlock.type === 'flipcard' ? (
                 <div className="space-y-4">
                   {/* Tipo de Frente */}
                   <FormField
@@ -2373,24 +2369,23 @@ function CourseEditor() {
                     }
                   >
                     <select
-                      value={tempBlock.tipoFrente || 'titulo'}
+                      value={tempBlock.frontType || 'heading'}
                       onChange={(e) =>
                         setTempBlock({
                           ...tempBlock,
-                          tipoFrente: e.target.value as 'imagem' | 'imagem-titulo' | 'titulo',
+                          frontType: e.target.value as 'image' | 'image-title' | 'title',
                         })
                       }
                       className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     >
-                      <option value="imagem">Apenas Imagem</option>
-                      <option value="imagem-titulo">Imagem com Título no Rodapé</option>
-                      <option value="titulo">Apenas Título Centralizado</option>
+                      <option value="image">Apenas Imagem</option>
+                      <option value="image-title">Imagem com Título no Rodapé</option>
+                      <option value="title">Apenas Título Centralizado</option>
                     </select>
                   </FormField>
 
                   {/* Imagem (se necessário) */}
-                  {(tempBlock.tipoFrente === 'imagem' ||
-                    tempBlock.tipoFrente === 'imagem-titulo') && (
+                  {(tempBlock.frontType === 'image' || tempBlock.frontType === 'image-title') && (
                     <FormField
                       label={
                         <>
@@ -2448,22 +2443,22 @@ function CourseEditor() {
 
                         {/* Input de URL */}
                         <Input
-                          value={tempBlock.imagemFrente || ''}
+                          value={tempBlock.frontImage || ''}
                           onChange={(e) =>
                             setTempBlock({
                               ...tempBlock,
-                              imagemFrente: e.target.value,
+                              frontImage: e.target.value,
                             })
                           }
                           placeholder="Cole a URL da imagem..."
                         />
 
                         {/* Preview da Imagem */}
-                        {(imagePreviewUrl || tempBlock.imagemFrente) && (
+                        {(imagePreviewUrl || tempBlock.frontImage) && (
                           <div className="mt-3">
                             {/* eslint-disable-next-line @next/next/no-img-element */}
                             <img
-                              src={imagePreviewUrl || tempBlock.imagemFrente}
+                              src={imagePreviewUrl || tempBlock.frontImage}
                               alt="Preview"
                               className="h-auto rounded-lg border border-gray-300 max-h-40 object-contain bg-gray-50 mx-auto"
                               onError={() => setImagePreviewUrl(null)}
@@ -2475,8 +2470,7 @@ function CourseEditor() {
                   )}
 
                   {/* Título (se necessário) */}
-                  {(tempBlock.tipoFrente === 'imagem-titulo' ||
-                    tempBlock.tipoFrente === 'titulo') && (
+                  {(tempBlock.frontType === 'image-title' || tempBlock.frontType === 'title') && (
                     <FormField
                       label={
                         <>
@@ -2485,11 +2479,11 @@ function CourseEditor() {
                       }
                     >
                       <Input
-                        value={tempBlock.tituloFrente || ''}
+                        value={tempBlock.frontTitle || ''}
                         onChange={(e) =>
                           setTempBlock({
                             ...tempBlock,
-                            tituloFrente: e.target.value,
+                            frontTitle: e.target.value,
                           })
                         }
                         placeholder="Digite o título da frente do card..."
@@ -2506,11 +2500,11 @@ function CourseEditor() {
                     }
                   >
                     <textarea
-                      value={tempBlock.conteudoVerso || ''}
+                      value={tempBlock.backContent || ''}
                       onChange={(e) =>
                         setTempBlock({
                           ...tempBlock,
-                          conteudoVerso: e.target.value,
+                          backContent: e.target.value,
                         })
                       }
                       placeholder="Digite o conteúdo do verso do card..."
@@ -2522,11 +2516,11 @@ function CourseEditor() {
                   {/* Altura do Card */}
                   <FormField label="Altura do Card (opcional)">
                     <Input
-                      value={tempBlock.alturaCard || '300px'}
+                      value={tempBlock.cardHeight || '300px'}
                       onChange={(e) =>
                         setTempBlock({
                           ...tempBlock,
-                          alturaCard: e.target.value,
+                          cardHeight: e.target.value,
                         })
                       }
                       placeholder="Ex: 300px, 400px, 50vh"
@@ -2537,7 +2531,7 @@ function CourseEditor() {
                     </p>
                   </FormField>
                 </div>
-              ) : tempBlock.tipo === 'lista' ? (
+              ) : tempBlock.type === 'list' ? (
                 <div className="space-y-4">
                   {/* Tipo de Lista */}
                   <FormField
@@ -2548,17 +2542,17 @@ function CourseEditor() {
                     }
                   >
                     <select
-                      value={tempBlock.tipoLista || 'nao-ordenada'}
+                      value={tempBlock.listType || 'unordered'}
                       onChange={(e) =>
                         setTempBlock({
                           ...tempBlock,
-                          tipoLista: e.target.value as 'ordenada' | 'nao-ordenada' | 'check',
+                          listType: e.target.value as 'ordered' | 'unordered' | 'check',
                         })
                       }
                       className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     >
-                      <option value="nao-ordenada">Não Ordenada (Bullets)</option>
-                      <option value="ordenada">Ordenada (Numerada)</option>
+                      <option value="unordered">Não Ordenada (Bullets)</option>
+                      <option value="ordered">Ordenada (Numerada)</option>
                       <option value="check">Com Ícone de Check</option>
                     </select>
                   </FormField>
@@ -2580,9 +2574,9 @@ function CourseEditor() {
                     </Button>
                   </div>
 
-                  {tempBlock.itensLista && tempBlock.itensLista.length > 0 ? (
+                  {tempBlock.listItems && tempBlock.listItems.length > 0 ? (
                     <div className="space-y-3 max-h-[400px] overflow-y-auto">
-                      {tempBlock.itensLista.map((item, index) => (
+                      {tempBlock.listItems.map((item, index) => (
                         <Card key={item.id} className="p-4">
                           <div className="flex items-center justify-between mb-3">
                             <span className="text-sm font-semibold text-gray-700">
@@ -2607,7 +2601,7 @@ function CourseEditor() {
                             compact
                           >
                             <Input
-                              value={item.texto}
+                              value={item.text}
                               onChange={(e) => handleUpdateListItem(item.id, e.target.value)}
                               placeholder="Digite o texto do item..."
                               className="text-sm"
@@ -2625,7 +2619,7 @@ function CourseEditor() {
                     </div>
                   )}
                 </div>
-              ) : tempBlock.tipo === 'quiz' ? (
+              ) : tempBlock.type === 'quiz' ? (
                 <div className="space-y-6">
                   {/* Botão Adicionar Pergunta */}
                   <div className="flex items-center justify-between">
@@ -2685,7 +2679,7 @@ function CourseEditor() {
                               }
                             >
                               <textarea
-                                value={question.pergunta}
+                                value={question.question}
                                 onChange={(e) =>
                                   handleUpdateQuizQuestion(question.id, 'pergunta', e.target.value)
                                 }
@@ -2707,7 +2701,7 @@ function CourseEditor() {
                               }
                             >
                               <textarea
-                                value={question.dica || ''}
+                                value={question.hint || ''}
                                 onChange={(e) =>
                                   handleUpdateQuizQuestion(question.id, 'dica', e.target.value)
                                 }
@@ -2729,7 +2723,7 @@ function CourseEditor() {
                               }
                             >
                               <div className="space-y-4">
-                                {question.opcoes.map((option, index) => (
+                                {question.options.map((option, index) => (
                                   <Card
                                     key={option.id}
                                     className={`p-4 border-2 ${
@@ -2764,7 +2758,7 @@ function CourseEditor() {
                                           compact
                                         >
                                           <Input
-                                            value={option.texto}
+                                            value={option.text}
                                             onChange={(e) =>
                                               handleUpdateQuizOption(
                                                 question.id,
@@ -2841,7 +2835,7 @@ function CourseEditor() {
                     </div>
                   )}
                 </div>
-              ) : tempBlock.tipo === 'info-box' ? (
+              ) : tempBlock.type === 'info-box' ? (
                 <div className="space-y-4">
                   {/* Tipo do Info Box */}
                   <FormField
@@ -2852,23 +2846,23 @@ function CourseEditor() {
                     }
                   >
                     <select
-                      value={tempBlock.tipoInfoBox || 'info'}
+                      value={tempBlock.infoBoxType || 'info'}
                       onChange={(e) =>
                         setTempBlock({
                           ...tempBlock,
-                          tipoInfoBox: e.target.value as
-                            | 'atencao'
-                            | 'saiba_mais'
+                          infoBoxType: e.target.value as
+                            | 'warning'
+                            | 'learn-more'
                             | 'info'
-                            | 'curiosidade',
+                            | 'fun-fact',
                         })
                       }
                       className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     >
-                      <option value="atencao">Atenção</option>
-                      <option value="saiba_mais">Saiba mais</option>
+                      <option value="warning">Atenção</option>
+                      <option value="learn-more">Saiba mais</option>
                       <option value="info">Informação</option>
-                      <option value="curiosidade">Curiosidade</option>
+                      <option value="fun-fact">Curiosidade</option>
                     </select>
                   </FormField>
 
@@ -2881,11 +2875,11 @@ function CourseEditor() {
                     }
                   >
                     <Input
-                      value={tempBlock.tituloInfoBox || ''}
+                      value={tempBlock.infoBoxTitle || ''}
                       onChange={(e) =>
                         setTempBlock({
                           ...tempBlock,
-                          tituloInfoBox: e.target.value,
+                          infoBoxTitle: e.target.value,
                         })
                       }
                       placeholder="Digite o título do Info Box (opcional)..."
@@ -2904,11 +2898,11 @@ function CourseEditor() {
                     }
                   >
                     <textarea
-                      value={tempBlock.conteudo}
+                      value={tempBlock.content}
                       onChange={(e) =>
                         setTempBlock({
                           ...tempBlock,
-                          conteudo: e.target.value,
+                          content: e.target.value,
                         })
                       }
                       placeholder="Digite o texto do corpo do Info Box..."
@@ -2925,7 +2919,7 @@ function CourseEditor() {
                     </>
                   }
                 >
-                  {tempBlock.tipo === 'paragrafo' ? (
+                  {tempBlock.type === 'paragraph' ? (
                     <div className="space-y-3">
                       <div>
                         <span className="text-sm font-medium text-foreground">
@@ -2934,9 +2928,9 @@ function CourseEditor() {
                         <div className="flex gap-2">
                           <button
                             type="button"
-                            onClick={() => setTempBlock({ ...tempBlock, colunas: 12 })}
+                            onClick={() => setTempBlock({ ...tempBlock, columns: 12 })}
                             className={`flex-1 py-2 px-3 rounded-lg border text-sm font-medium transition-colors ${
-                              (tempBlock.colunas ?? 12) === 12
+                              (tempBlock.columns ?? 12) === 12
                                 ? 'border-blue-500 bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300'
                                 : 'border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400 hover:border-gray-400'
                             }`}
@@ -2945,9 +2939,9 @@ function CourseEditor() {
                           </button>
                           <button
                             type="button"
-                            onClick={() => setTempBlock({ ...tempBlock, colunas: 6 })}
+                            onClick={() => setTempBlock({ ...tempBlock, columns: 6 })}
                             className={`flex-1 py-2 px-3 rounded-lg border text-sm font-medium transition-colors ${
-                              tempBlock.colunas === 6
+                              tempBlock.columns === 6
                                 ? 'border-blue-500 bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300'
                                 : 'border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400 hover:border-gray-400'
                             }`}
@@ -2957,23 +2951,23 @@ function CourseEditor() {
                         </div>
                       </div>
                       <RichTextEditor
-                        value={tempBlock.conteudo}
-                        onChange={(html) => setTempBlock({ ...tempBlock, conteudo: html })}
+                        value={tempBlock.content}
+                        onChange={(html) => setTempBlock({ ...tempBlock, content: html })}
                         placeholder="Digite o parágrafo..."
                         autoFocus
                       />
                     </div>
                   ) : (
                     <Input
-                      value={tempBlock.conteudo}
+                      value={tempBlock.content}
                       onChange={(e) =>
                         setTempBlock({
                           ...tempBlock,
-                          conteudo: e.target.value,
+                          content: e.target.value,
                         })
                       }
                       placeholder={`Digite o ${
-                        tempBlock.tipo === 'titulo' ? 'título' : 'subtítulo'
+                        tempBlock.type === 'heading' ? 'título' : 'subtítulo'
                       }...`}
                     />
                   )}
@@ -2993,43 +2987,43 @@ function CourseEditor() {
                 className="bg-blue-600 hover:bg-blue-700 min-w-[100px]"
                 disabled={
                   isSavingBlock ||
-                  (tempBlock.tipo === 'accordion'
+                  (tempBlock.type === 'accordion'
                     ? !tempBlock.items ||
                       tempBlock.items.length === 0 ||
-                      tempBlock.items.some((item) => !item.titulo.trim() || !item.conteudo.trim())
-                    : tempBlock.tipo === 'flipcard'
-                      ? !tempBlock.tipoFrente ||
-                        !tempBlock.conteudoVerso?.trim() ||
-                        (tempBlock.tipoFrente === 'imagem' && !tempBlock.imagemFrente?.trim()) ||
-                        (tempBlock.tipoFrente === 'imagem-titulo' &&
-                          (!tempBlock.imagemFrente?.trim() || !tempBlock.tituloFrente?.trim())) ||
-                        (tempBlock.tipoFrente === 'titulo' && !tempBlock.tituloFrente?.trim())
-                      : tempBlock.tipo === 'lista'
-                        ? !tempBlock.itensLista ||
-                          tempBlock.itensLista.length === 0 ||
-                          tempBlock.itensLista.some((item) => !item.texto.trim())
-                        : tempBlock.tipo === 'quiz'
+                      tempBlock.items.some((item) => !item.title.trim() || !item.content.trim())
+                    : tempBlock.type === 'flipcard'
+                      ? !tempBlock.frontType ||
+                        !tempBlock.backContent?.trim() ||
+                        (tempBlock.frontType === 'image' && !tempBlock.frontImage?.trim()) ||
+                        (tempBlock.frontType === 'image-title' &&
+                          (!tempBlock.frontImage?.trim() || !tempBlock.frontTitle?.trim())) ||
+                        (tempBlock.frontType === 'title' && !tempBlock.frontTitle?.trim())
+                      : tempBlock.type === 'list'
+                        ? !tempBlock.listItems ||
+                          tempBlock.listItems.length === 0 ||
+                          tempBlock.listItems.some((item) => !item.text.trim())
+                        : tempBlock.type === 'quiz'
                           ? !tempBlock.quizData ||
                             !tempBlock.quizData.questions ||
                             tempBlock.quizData.questions.length === 0 ||
-                            tempBlock.quizData.questions.some((q) => !q.pergunta.trim()) ||
+                            tempBlock.quizData.questions.some((q) => !q.question.trim()) ||
                             tempBlock.quizData.questions.some(
-                              (q) => !q.opcoes || q.opcoes.length !== 5
+                              (q) => !q.options || q.options.length !== 5
                             ) ||
                             tempBlock.quizData.questions.some((q) =>
-                              q.opcoes.some((option) => !option.texto.trim())
+                              q.options.some((option) => !option.text.trim())
                             ) ||
                             tempBlock.quizData.questions.some(
-                              (q) => q.opcoes.filter((option) => option.isCorrect).length !== 1
+                              (q) => q.options.filter((option) => option.isCorrect).length !== 1
                             ) ||
                             tempBlock.quizData.questions.some((q) =>
-                              q.opcoes.some((option) => !option.feedback.trim())
+                              q.options.some((option) => !option.feedback.trim())
                             )
-                          : tempBlock.tipo === 'info-box'
-                            ? !tempBlock.tipoInfoBox || !tempBlock.conteudo.trim()
-                            : !tempBlock.conteudo.trim()) ||
-                  (tempBlock.tipo === 'imagem' &&
-                    (!tempBlock.tamanho || !tempBlock.legenda || !tempBlock.fonte))
+                          : tempBlock.type === 'info-box'
+                            ? !tempBlock.infoBoxType || !tempBlock.content.trim()
+                            : !tempBlock.content.trim()) ||
+                  (tempBlock.type === 'image' &&
+                    (!tempBlock.size || !tempBlock.caption || !tempBlock.source))
                 }
               >
                 {isSavingBlock ? (
@@ -3205,58 +3199,58 @@ function CourseEditor() {
         </Dialog>
 
         {/* Modal para editar conteúdo */}
-        <Dialog open={!!editingBlock && !!editingBlock.tipo} onOpenChange={closeEditBlockModal}>
+        <Dialog open={!!editingBlock && !!editingBlock.type} onOpenChange={closeEditBlockModal}>
           {editingBlock && (
             <DialogContent
-              className={`${editingBlock.tipo === 'quiz' ? 'sm:max-w-4xl max-h-[90vh] overflow-y-auto' : 'sm:max-w-2xl max-h-[90vh] overflow-y-auto'}`}
+              className={`${editingBlock.type === 'quiz' ? 'sm:max-w-4xl max-h-[90vh] overflow-y-auto' : 'sm:max-w-2xl max-h-[90vh] overflow-y-auto'}`}
             >
               <DialogHeader>
                 <DialogTitle className="flex items-center gap-2">
-                  {editingBlock.tipo === 'titulo' ? (
+                  {editingBlock.type === 'heading' ? (
                     <Heading2 className="h-5 w-5 text-blue-600" />
-                  ) : editingBlock.tipo === 'subtitulo' ? (
+                  ) : editingBlock.type === 'subheading' ? (
                     <Heading3 className="h-5 w-5 text-blue-600" />
-                  ) : editingBlock.tipo === 'imagem' ? (
+                  ) : editingBlock.type === 'image' ? (
                     <>
                       {/* eslint-disable-next-line jsx-a11y/alt-text */}
                       <Image className="h-5 w-5 text-blue-600" />
                     </>
-                  ) : editingBlock.tipo === 'accordion' ? (
+                  ) : editingBlock.type === 'accordion' ? (
                     <ChevronDown className="h-5 w-5 text-blue-600" />
-                  ) : editingBlock.tipo === 'flipcard' ? (
+                  ) : editingBlock.type === 'flipcard' ? (
                     <RotateCcw className="h-5 w-5 text-blue-600" />
-                  ) : editingBlock.tipo === 'lista' ? (
+                  ) : editingBlock.type === 'list' ? (
                     <List className="h-5 w-5 text-blue-600" />
-                  ) : editingBlock.tipo === 'quiz' ? (
+                  ) : editingBlock.type === 'quiz' ? (
                     <HelpCircle className="h-5 w-5 text-blue-600" />
-                  ) : editingBlock.tipo === 'info-box' ? (
+                  ) : editingBlock.type === 'info-box' ? (
                     <AlertTriangle className="h-5 w-5 text-blue-600" />
                   ) : (
                     <Type className="h-5 w-5 text-blue-600" />
                   )}
                   Editar{' '}
-                  {editingBlock.tipo === 'titulo'
+                  {editingBlock.type === 'heading'
                     ? 'Título'
-                    : editingBlock.tipo === 'subtitulo'
+                    : editingBlock.type === 'subheading'
                       ? 'Subtítulo'
-                      : editingBlock.tipo === 'imagem'
+                      : editingBlock.type === 'image'
                         ? 'Imagem'
-                        : editingBlock.tipo === 'accordion'
+                        : editingBlock.type === 'accordion'
                           ? 'Accordion'
-                          : editingBlock.tipo === 'flipcard'
+                          : editingBlock.type === 'flipcard'
                             ? 'FlipCard'
-                            : editingBlock.tipo === 'lista'
+                            : editingBlock.type === 'list'
                               ? 'Lista'
-                              : editingBlock.tipo === 'quiz'
+                              : editingBlock.type === 'quiz'
                                 ? 'Quiz'
-                                : editingBlock.tipo === 'info-box'
+                                : editingBlock.type === 'info-box'
                                   ? 'Info Box'
                                   : 'Parágrafo'}
                 </DialogTitle>
                 <DialogDescription>Atualize o conteúdo abaixo</DialogDescription>
               </DialogHeader>
               <div className="space-y-4 py-4">
-                {editingBlock?.tipo === 'quiz' ? (
+                {editingBlock?.type === 'quiz' ? (
                   <div className="space-y-6">
                     {/* Botão Adicionar Pergunta */}
                     <div className="flex items-center justify-between">
@@ -3275,11 +3269,11 @@ function CourseEditor() {
                                 questions: [
                                   {
                                     id: `question-${Date.now()}`,
-                                    pergunta: '',
-                                    dica: '',
-                                    opcoes: Array.from({ length: 5 }, (_, i) => ({
+                                    question: '',
+                                    hint: '',
+                                    options: Array.from({ length: 5 }, (_, i) => ({
                                       id: `opcao-${Date.now()}-${i}`,
-                                      texto: '',
+                                      text: '',
                                       isCorrect: i === 0,
                                       feedback: '',
                                     })),
@@ -3291,11 +3285,11 @@ function CourseEditor() {
                           }
                           const newQuestion: QuizQuestion = {
                             id: `question-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
-                            pergunta: '',
-                            dica: '',
-                            opcoes: Array.from({ length: 5 }, (_, i) => ({
+                            question: '',
+                            hint: '',
+                            options: Array.from({ length: 5 }, (_, i) => ({
                               id: `opcao-${Date.now()}-${i}-${Math.random().toString(36).substring(2, 9)}`,
-                              texto: '',
+                              text: '',
                               isCorrect: i === 0,
                               feedback: '',
                             })),
@@ -3377,12 +3371,12 @@ function CourseEditor() {
                                 }
                               >
                                 <textarea
-                                  value={question.pergunta}
+                                  value={question.question}
                                   onChange={(e) => {
                                     const novasQuestions = editingBlock.quizData?.questions.map(
                                       (q) =>
                                         q.id === question.id
-                                          ? { ...q, pergunta: e.target.value }
+                                          ? { ...q, question: e.target.value }
                                           : q
                                     )
                                     setEditingBlock({
@@ -3410,11 +3404,11 @@ function CourseEditor() {
                                 }
                               >
                                 <textarea
-                                  value={question.dica || ''}
+                                  value={question.hint || ''}
                                   onChange={(e) => {
                                     const novasQuestions = editingBlock.quizData?.questions.map(
                                       (q) =>
-                                        q.id === question.id ? { ...q, dica: e.target.value } : q
+                                        q.id === question.id ? { ...q, hint: e.target.value } : q
                                     )
                                     setEditingBlock({
                                       ...editingBlock,
@@ -3444,7 +3438,7 @@ function CourseEditor() {
                                 }
                               >
                                 <div className="space-y-4">
-                                  {question.opcoes.map((option, index) => (
+                                  {question.options.map((option, index) => (
                                     <Card
                                       key={option.id}
                                       className={`p-4 border-2 ${
@@ -3480,16 +3474,16 @@ function CourseEditor() {
                                             compact
                                           >
                                             <Input
-                                              value={option.texto}
+                                              value={option.text}
                                               onChange={(e) => {
                                                 const novasQuestions =
                                                   editingBlock.quizData?.questions.map((q) =>
                                                     q.id === question.id
                                                       ? {
                                                           ...q,
-                                                          opcoes: q.opcoes.map((opt) =>
+                                                          options: q.options.map((opt) =>
                                                             opt.id === option.id
-                                                              ? { ...opt, texto: e.target.value }
+                                                              ? { ...opt, text: e.target.value }
                                                               : opt
                                                           ),
                                                         }
@@ -3527,7 +3521,7 @@ function CourseEditor() {
                                                     q.id === question.id
                                                       ? {
                                                           ...q,
-                                                          opcoes: q.opcoes.map((opt) =>
+                                                          options: q.options.map((opt) =>
                                                             opt.id === option.id
                                                               ? { ...opt, feedback: e.target.value }
                                                               : opt
@@ -3563,7 +3557,7 @@ function CourseEditor() {
                                                     q.id === question.id
                                                       ? {
                                                           ...q,
-                                                          opcoes: q.opcoes.map((opt) => ({
+                                                          options: q.options.map((opt) => ({
                                                             ...opt,
                                                             isCorrect: opt.id === option.id,
                                                           })),
@@ -3609,7 +3603,7 @@ function CourseEditor() {
                       </div>
                     )}
                   </div>
-                ) : editingBlock?.tipo === 'imagem' ? (
+                ) : editingBlock?.type === 'image' ? (
                   <div className="space-y-4">
                     {/* Upload ou URL */}
                     <FormField
@@ -3674,11 +3668,11 @@ function CourseEditor() {
                         {/* Input de URL */}
                         <div>
                           <Input
-                            value={editingBlock.conteudo}
+                            value={editingBlock.content}
                             onChange={(e) => {
                               setEditingBlock({
                                 ...editingBlock,
-                                conteudo: e.target.value,
+                                content: e.target.value,
                               })
                               // Atualizar preview se for URL válida
                               if (e.target.value.startsWith('http')) {
@@ -3692,11 +3686,11 @@ function CourseEditor() {
                         </div>
 
                         {/* Preview da Imagem */}
-                        {(imagePreviewUrl || editingBlock.conteudo) && (
+                        {(imagePreviewUrl || editingBlock.content) && (
                           <div className="mt-3">
                             {/* eslint-disable-next-line @next/next/no-img-element */}
                             <img
-                              src={imagePreviewUrl || editingBlock.conteudo}
+                              src={imagePreviewUrl || editingBlock.content}
                               alt="Preview"
                               className="h-auto rounded-lg border border-gray-300 max-h-40 object-contain bg-gray-50 mx-auto"
                               onError={() => setImagePreviewUrl(null)}
@@ -3714,19 +3708,19 @@ function CourseEditor() {
                       }
                     >
                       <select
-                        value={editingBlock.tamanho || ''}
+                        value={editingBlock.size || ''}
                         onChange={(e) =>
                           setEditingBlock({
                             ...editingBlock,
-                            tamanho: e.target.value as 'pequena' | 'media' | 'grande',
+                            size: e.target.value as 'small' | 'medium' | 'large',
                           })
                         }
                         className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                       >
                         <option value="">Selecione o tamanho</option>
-                        <option value="pequena">Pequena (25%)</option>
-                        <option value="media">Média (50%)</option>
-                        <option value="grande">Grande (100%)</option>
+                        <option value="small">Pequena (25%)</option>
+                        <option value="medium">Média (50%)</option>
+                        <option value="large">Grande (100%)</option>
                       </select>
                     </FormField>
 
@@ -3738,11 +3732,11 @@ function CourseEditor() {
                       }
                     >
                       <Input
-                        value={editingBlock.legenda || ''}
+                        value={editingBlock.caption || ''}
                         onChange={(e) =>
                           setEditingBlock({
                             ...editingBlock,
-                            legenda: e.target.value,
+                            caption: e.target.value,
                           })
                         }
                         placeholder="Digite a legenda da imagem..."
@@ -3757,18 +3751,18 @@ function CourseEditor() {
                       }
                     >
                       <Input
-                        value={editingBlock.fonte || ''}
+                        value={editingBlock.source || ''}
                         onChange={(e) =>
                           setEditingBlock({
                             ...editingBlock,
-                            fonte: e.target.value,
+                            source: e.target.value,
                           })
                         }
                         placeholder="Digite a fonte da imagem..."
                       />
                     </FormField>
                   </div>
-                ) : editingBlock?.tipo === 'accordion' ? (
+                ) : editingBlock?.type === 'accordion' ? (
                   <div className="space-y-4">
                     <div className="flex items-center justify-between">
                       <span className="text-sm font-medium text-foreground">
@@ -3784,8 +3778,8 @@ function CourseEditor() {
                               id: `accordion-item-${Date.now()}-${Math.random()
                                 .toString(36)
                                 .substring(2, 9)}`,
-                              titulo: '',
-                              conteudo: '',
+                              title: '',
+                              content: '',
                             }
                             setEditingBlock({
                               ...editingBlock,
@@ -3836,14 +3830,14 @@ function CourseEditor() {
                                 compact
                               >
                                 <Input
-                                  value={item.titulo}
+                                  value={item.title}
                                   onChange={(e) => {
                                     if (editingBlock) {
                                       setEditingBlock({
                                         ...editingBlock,
                                         items:
                                           editingBlock.items?.map((i) =>
-                                            i.id === item.id ? { ...i, titulo: e.target.value } : i
+                                            i.id === item.id ? { ...i, title: e.target.value } : i
                                           ) || [],
                                       })
                                     }
@@ -3861,16 +3855,14 @@ function CourseEditor() {
                                 compact
                               >
                                 <textarea
-                                  value={item.conteudo}
+                                  value={item.content}
                                   onChange={(e) => {
                                     if (editingBlock) {
                                       setEditingBlock({
                                         ...editingBlock,
                                         items:
                                           editingBlock.items?.map((i) =>
-                                            i.id === item.id
-                                              ? { ...i, conteudo: e.target.value }
-                                              : i
+                                            i.id === item.id ? { ...i, content: e.target.value } : i
                                           ) || [],
                                       })
                                     }
@@ -3893,7 +3885,7 @@ function CourseEditor() {
                       </div>
                     )}
                   </div>
-                ) : editingBlock?.tipo === 'flipcard' ? (
+                ) : editingBlock?.type === 'flipcard' ? (
                   <div className="space-y-4">
                     {/* Tipo de Frente */}
                     <FormField
@@ -3904,25 +3896,25 @@ function CourseEditor() {
                       }
                     >
                       <select
-                        value={editingBlock.tipoFrente || 'titulo'}
+                        value={editingBlock.frontType || 'heading'}
                         onChange={(e) =>
                           editingBlock &&
                           setEditingBlock({
                             ...editingBlock,
-                            tipoFrente: e.target.value as 'imagem' | 'imagem-titulo' | 'titulo',
+                            frontType: e.target.value as 'image' | 'image-title' | 'title',
                           })
                         }
                         className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                       >
-                        <option value="imagem">Apenas Imagem</option>
-                        <option value="imagem-titulo">Imagem com Título no Rodapé</option>
-                        <option value="titulo">Apenas Título Centralizado</option>
+                        <option value="image">Apenas Imagem</option>
+                        <option value="image-title">Imagem com Título no Rodapé</option>
+                        <option value="title">Apenas Título Centralizado</option>
                       </select>
                     </FormField>
 
                     {/* Imagem (se necessário) */}
-                    {(editingBlock.tipoFrente === 'imagem' ||
-                      editingBlock.tipoFrente === 'imagem-titulo') && (
+                    {(editingBlock.frontType === 'image' ||
+                      editingBlock.frontType === 'image-title') && (
                       <FormField
                         label={
                           <>
@@ -3980,23 +3972,23 @@ function CourseEditor() {
 
                           {/* Input de URL */}
                           <Input
-                            value={editingBlock.imagemFrente || ''}
+                            value={editingBlock.frontImage || ''}
                             onChange={(e) =>
                               editingBlock &&
                               setEditingBlock({
                                 ...editingBlock,
-                                imagemFrente: e.target.value,
+                                frontImage: e.target.value,
                               })
                             }
                             placeholder="Cole a URL da imagem..."
                           />
 
                           {/* Preview da Imagem */}
-                          {(imagePreviewUrl || editingBlock.imagemFrente) && (
+                          {(imagePreviewUrl || editingBlock.frontImage) && (
                             <div className="mt-3">
                               {/* eslint-disable-next-line @next/next/no-img-element */}
                               <img
-                                src={imagePreviewUrl || editingBlock.imagemFrente}
+                                src={imagePreviewUrl || editingBlock.frontImage}
                                 alt="Preview"
                                 className="h-auto rounded-lg border border-gray-300 max-h-40 object-contain bg-gray-50 mx-auto"
                                 onError={() => setImagePreviewUrl(null)}
@@ -4008,8 +4000,8 @@ function CourseEditor() {
                     )}
 
                     {/* Título (se necessário) */}
-                    {(editingBlock.tipoFrente === 'imagem-titulo' ||
-                      editingBlock.tipoFrente === 'titulo') && (
+                    {(editingBlock.frontType === 'image-title' ||
+                      editingBlock.frontType === 'title') && (
                       <FormField
                         label={
                           <>
@@ -4018,12 +4010,12 @@ function CourseEditor() {
                         }
                       >
                         <Input
-                          value={editingBlock.tituloFrente || ''}
+                          value={editingBlock.frontTitle || ''}
                           onChange={(e) =>
                             editingBlock &&
                             setEditingBlock({
                               ...editingBlock,
-                              tituloFrente: e.target.value,
+                              frontTitle: e.target.value,
                             })
                           }
                           placeholder="Digite o título da frente do card..."
@@ -4040,12 +4032,12 @@ function CourseEditor() {
                       }
                     >
                       <textarea
-                        value={editingBlock.conteudoVerso || ''}
+                        value={editingBlock.backContent || ''}
                         onChange={(e) =>
                           editingBlock &&
                           setEditingBlock({
                             ...editingBlock,
-                            conteudoVerso: e.target.value,
+                            backContent: e.target.value,
                           })
                         }
                         placeholder="Digite o conteúdo do verso do card..."
@@ -4057,12 +4049,12 @@ function CourseEditor() {
                     {/* Altura do Card */}
                     <FormField label="Altura do Card (opcional)">
                       <Input
-                        value={editingBlock.alturaCard || '300px'}
+                        value={editingBlock.cardHeight || '300px'}
                         onChange={(e) =>
                           editingBlock &&
                           setEditingBlock({
                             ...editingBlock,
-                            alturaCard: e.target.value,
+                            cardHeight: e.target.value,
                           })
                         }
                         placeholder="Ex: 300px, 400px, 50vh"
@@ -4073,7 +4065,7 @@ function CourseEditor() {
                       </p>
                     </FormField>
                   </div>
-                ) : editingBlock?.tipo === 'lista' ? (
+                ) : editingBlock?.type === 'list' ? (
                   <div className="space-y-4">
                     {/* Tipo de Lista */}
                     <FormField
@@ -4084,18 +4076,18 @@ function CourseEditor() {
                       }
                     >
                       <select
-                        value={editingBlock.tipoLista || 'nao-ordenada'}
+                        value={editingBlock.listType || 'unordered'}
                         onChange={(e) =>
                           editingBlock &&
                           setEditingBlock({
                             ...editingBlock,
-                            tipoLista: e.target.value as 'ordenada' | 'nao-ordenada' | 'check',
+                            listType: e.target.value as 'ordered' | 'unordered' | 'check',
                           })
                         }
                         className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                       >
-                        <option value="nao-ordenada">Não Ordenada (Bullets)</option>
-                        <option value="ordenada">Ordenada (Numerada)</option>
+                        <option value="unordered">Não Ordenada (Bullets)</option>
+                        <option value="ordered">Ordenada (Numerada)</option>
                         <option value="check">Com Ícone de Check</option>
                       </select>
                     </FormField>
@@ -4115,11 +4107,11 @@ function CourseEditor() {
                               id: `lista-item-${Date.now()}-${Math.random()
                                 .toString(36)
                                 .substring(2, 9)}`,
-                              texto: '',
+                              text: '',
                             }
                             setEditingBlock({
                               ...editingBlock,
-                              itensLista: [...(editingBlock.itensLista || []), newItem],
+                              listItems: [...(editingBlock.listItems || []), newItem],
                             })
                           }
                         }}
@@ -4130,9 +4122,9 @@ function CourseEditor() {
                       </Button>
                     </div>
 
-                    {editingBlock.itensLista && editingBlock.itensLista.length > 0 ? (
+                    {editingBlock.listItems && editingBlock.listItems.length > 0 ? (
                       <div className="space-y-3 max-h-[400px] overflow-y-auto">
-                        {editingBlock.itensLista.map((item, index) => (
+                        {editingBlock.listItems.map((item, index) => (
                           <Card key={item.id} className="p-4">
                             <div className="flex items-center justify-between mb-3">
                               <span className="text-sm font-semibold text-gray-700">
@@ -4146,8 +4138,8 @@ function CourseEditor() {
                                   if (editingBlock) {
                                     setEditingBlock({
                                       ...editingBlock,
-                                      itensLista:
-                                        editingBlock.itensLista?.filter((i) => i.id !== item.id) ||
+                                      listItems:
+                                        editingBlock.listItems?.filter((i) => i.id !== item.id) ||
                                         [],
                                     })
                                   }
@@ -4166,14 +4158,14 @@ function CourseEditor() {
                               compact
                             >
                               <Input
-                                value={item.texto}
+                                value={item.text}
                                 onChange={(e) => {
                                   if (editingBlock) {
                                     setEditingBlock({
                                       ...editingBlock,
-                                      itensLista:
-                                        editingBlock.itensLista?.map((i) =>
-                                          i.id === item.id ? { ...i, texto: e.target.value } : i
+                                      listItems:
+                                        editingBlock.listItems?.map((i) =>
+                                          i.id === item.id ? { ...i, text: e.target.value } : i
                                         ) || [],
                                     })
                                   }
@@ -4194,7 +4186,7 @@ function CourseEditor() {
                       </div>
                     )}
                   </div>
-                ) : editingBlock?.tipo === 'info-box' ? (
+                ) : editingBlock?.type === 'info-box' ? (
                   <div className="space-y-4">
                     {/* Tipo do Info Box */}
                     <FormField
@@ -4205,24 +4197,24 @@ function CourseEditor() {
                       }
                     >
                       <select
-                        value={editingBlock.tipoInfoBox || 'info'}
+                        value={editingBlock.infoBoxType || 'info'}
                         onChange={(e) =>
                           editingBlock &&
                           setEditingBlock({
                             ...editingBlock,
-                            tipoInfoBox: e.target.value as
-                              | 'atencao'
-                              | 'saiba_mais'
+                            infoBoxType: e.target.value as
+                              | 'warning'
+                              | 'learn-more'
                               | 'info'
-                              | 'curiosidade',
+                              | 'fun-fact',
                           })
                         }
                         className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                       >
-                        <option value="atencao">Atenção</option>
-                        <option value="saiba_mais">Saiba mais</option>
+                        <option value="warning">Atenção</option>
+                        <option value="learn-more">Saiba mais</option>
                         <option value="info">Informação</option>
-                        <option value="curiosidade">Curiosidade</option>
+                        <option value="fun-fact">Curiosidade</option>
                       </select>
                     </FormField>
 
@@ -4235,12 +4227,12 @@ function CourseEditor() {
                       }
                     >
                       <Input
-                        value={editingBlock.tituloInfoBox || ''}
+                        value={editingBlock.infoBoxTitle || ''}
                         onChange={(e) =>
                           editingBlock &&
                           setEditingBlock({
                             ...editingBlock,
-                            tituloInfoBox: e.target.value,
+                            infoBoxTitle: e.target.value,
                           })
                         }
                         placeholder="Digite o título do Info Box (opcional)..."
@@ -4259,12 +4251,12 @@ function CourseEditor() {
                       }
                     >
                       <textarea
-                        value={editingBlock.conteudo || ''}
+                        value={editingBlock.content || ''}
                         onChange={(e) =>
                           editingBlock &&
                           setEditingBlock({
                             ...editingBlock,
-                            conteudo: e.target.value,
+                            content: e.target.value,
                           })
                         }
                         placeholder="Digite o texto do corpo do Info Box..."
@@ -4281,27 +4273,27 @@ function CourseEditor() {
                       </>
                     }
                   >
-                    {editingBlock?.tipo === 'paragrafo' ? (
+                    {editingBlock?.type === 'paragraph' ? (
                       <RichTextEditor
                         key={editingBlock.blockId}
-                        value={editingBlock.conteudo}
+                        value={editingBlock.content}
                         onChange={(html) =>
-                          editingBlock && setEditingBlock({ ...editingBlock, conteudo: html })
+                          editingBlock && setEditingBlock({ ...editingBlock, content: html })
                         }
                         placeholder="Digite o parágrafo..."
                       />
                     ) : (
                       <Input
-                        value={editingBlock?.conteudo || ''}
+                        value={editingBlock?.content || ''}
                         onChange={(e) =>
                           editingBlock &&
                           setEditingBlock({
                             ...editingBlock,
-                            conteudo: e.target.value,
+                            content: e.target.value,
                           })
                         }
                         placeholder={`Digite o ${
-                          editingBlock?.tipo === 'titulo' ? 'título' : 'subtítulo'
+                          editingBlock?.type === 'heading' ? 'título' : 'subtítulo'
                         }...`}
                       />
                     )}
@@ -4318,75 +4310,74 @@ function CourseEditor() {
                       handleEditBlock(
                         editingBlock.unitId,
                         editingBlock.blockId,
-                        editingBlock.tipo,
-                        editingBlock.conteudo || '',
-                        editingBlock.tamanho,
-                        editingBlock.legenda,
-                        editingBlock.fonte,
-                        editingBlock.corTexto,
-                        editingBlock.alinhamento,
-                        editingBlock.colunas,
+                        editingBlock.type,
+                        editingBlock.content || '',
+                        editingBlock.size,
+                        editingBlock.caption,
+                        editingBlock.source,
+                        editingBlock.textColor,
+                        editingBlock.alignment,
+                        editingBlock.columns,
                         editingBlock.items,
-                        editingBlock.tipoFrente,
-                        editingBlock.imagemFrente,
-                        editingBlock.tituloFrente,
-                        editingBlock.conteudoVerso,
-                        editingBlock.alturaCard,
-                        editingBlock.itensLista,
-                        editingBlock.tipoLista,
+                        editingBlock.frontType,
+                        editingBlock.frontImage,
+                        editingBlock.frontTitle,
+                        editingBlock.backContent,
+                        editingBlock.cardHeight,
+                        editingBlock.listItems,
+                        editingBlock.listType,
                         editingBlock.quizData,
-                        editingBlock.tipoInfoBox,
-                        editingBlock.tituloInfoBox,
+                        editingBlock.infoBoxType,
+                        editingBlock.infoBoxTitle,
                         editingBlock.videoUrl,
-                        editingBlock.videoTitulo
+                        editingBlock.videoTitle
                       )
                       closeEditBlockModal()
                     }
                   }}
                   className="bg-blue-600 hover:bg-blue-700"
                   disabled={
-                    (editingBlock?.tipo === 'accordion'
+                    (editingBlock?.type === 'accordion'
                       ? !editingBlock.items ||
                         editingBlock.items.length === 0 ||
                         editingBlock.items.some(
-                          (item) => !item.titulo.trim() || !item.conteudo.trim()
+                          (item) => !item.title.trim() || !item.content.trim()
                         )
-                      : editingBlock?.tipo === 'flipcard'
-                        ? !editingBlock.tipoFrente ||
-                          !editingBlock.conteudoVerso?.trim() ||
-                          (editingBlock.tipoFrente === 'imagem' &&
-                            !editingBlock.imagemFrente?.trim()) ||
-                          (editingBlock.tipoFrente === 'imagem-titulo' &&
-                            (!editingBlock.imagemFrente?.trim() ||
-                              !editingBlock.tituloFrente?.trim())) ||
-                          (editingBlock.tipoFrente === 'titulo' &&
-                            !editingBlock.tituloFrente?.trim())
-                        : editingBlock?.tipo === 'lista'
-                          ? !editingBlock.itensLista ||
-                            editingBlock.itensLista.length === 0 ||
-                            editingBlock.itensLista.some((item) => !item.texto.trim())
-                          : editingBlock?.tipo === 'quiz'
+                      : editingBlock?.type === 'flipcard'
+                        ? !editingBlock.frontType ||
+                          !editingBlock.backContent?.trim() ||
+                          (editingBlock.frontType === 'image' &&
+                            !editingBlock.frontImage?.trim()) ||
+                          (editingBlock.frontType === 'image-title' &&
+                            (!editingBlock.frontImage?.trim() ||
+                              !editingBlock.frontTitle?.trim())) ||
+                          (editingBlock.frontType === 'title' && !editingBlock.frontTitle?.trim())
+                        : editingBlock?.type === 'list'
+                          ? !editingBlock.listItems ||
+                            editingBlock.listItems.length === 0 ||
+                            editingBlock.listItems.some((item) => !item.text.trim())
+                          : editingBlock?.type === 'quiz'
                             ? !editingBlock.quizData ||
                               !editingBlock.quizData.questions ||
                               editingBlock.quizData.questions.length === 0 ||
-                              editingBlock.quizData.questions.some((q) => !q.pergunta.trim()) ||
+                              editingBlock.quizData.questions.some((q) => !q.question.trim()) ||
                               editingBlock.quizData.questions.some(
-                                (q) => !q.opcoes || q.opcoes.length !== 5
+                                (q) => !q.options || q.options.length !== 5
                               ) ||
                               editingBlock.quizData.questions.some((q) =>
-                                q.opcoes.some((option) => !option.texto.trim())
+                                q.options.some((option) => !option.text.trim())
                               ) ||
                               editingBlock.quizData.questions.some(
-                                (q) => q.opcoes.filter((option) => option.isCorrect).length !== 1
+                                (q) => q.options.filter((option) => option.isCorrect).length !== 1
                               ) ||
                               editingBlock.quizData.questions.some((q) =>
-                                q.opcoes.some((option) => !option.feedback.trim())
+                                q.options.some((option) => !option.feedback.trim())
                               )
-                            : editingBlock?.tipo === 'info-box'
-                              ? !editingBlock.tipoInfoBox || !editingBlock.conteudo?.trim()
-                              : !editingBlock?.conteudo?.trim()) ||
-                    (editingBlock?.tipo === 'imagem' &&
-                      (!editingBlock.tamanho || !editingBlock.legenda || !editingBlock.fonte))
+                            : editingBlock?.type === 'info-box'
+                              ? !editingBlock.infoBoxType || !editingBlock.content?.trim()
+                              : !editingBlock?.content?.trim()) ||
+                    (editingBlock?.type === 'image' &&
+                      (!editingBlock.size || !editingBlock.caption || !editingBlock.source))
                   }
                 >
                   Salvar
@@ -4406,30 +4397,30 @@ function CourseEditor() {
               setExportModalOpen(false)
             } catch (error) {
               // Erro já foi tratado no hook, modal permanece aberto
-              console.error('Erro ao gerar PDF:', error)
+              console.error('PDF generation failed:', error)
             }
           }}
           onExportSCORM={async (filename) => {
             try {
-              console.log('🔄 [Export] Iniciando exportação SCORM...')
-              console.log('📦 [Export] Curso atual:', state.currentCourse)
+              console.log('🔄 [Export] Starting the SCORM export...')
+              console.log('📦 [Export] Current course:', state.currentCourse)
               console.log('📝 [Export] Filename:', filename)
 
               if (state.currentCourse) {
-                console.log('✅ [Export] Curso encontrado, chamando generateSCORM...')
+                console.log('✅ [Export] Course found, calling generateSCORM...')
                 await generateSCORM(state.currentCourse, filename)
-                console.log('✅ [Export] generateSCORM concluído')
+                console.log('✅ [Export] generateSCORM finished')
                 setExportModalOpen(false)
               } else {
-                console.error('❌ [Export] state.cursoAtual é null/undefined')
+                console.error('❌ [Export] state.currentCourse is null/undefined')
                 toast.error('Erro: Curso não encontrado')
               }
             } catch (error) {
               // Erro já foi tratado no hook, modal permanece aberto
-              console.error('❌ [Export] Erro ao gerar SCORM:', error)
+              console.error('❌ [Export] SCORM generation failed:', error)
             }
           }}
-          courseName={state.currentCourse?.titulo || 'Curso'}
+          courseName={state.currentCourse?.title || 'Curso'}
           courseId={state.currentCourse?.id}
           isGeneratingPDF={isGeneratingPDF}
           isGeneratingSCORM={isGeneratingSCORM}
@@ -4442,21 +4433,21 @@ function CourseEditor() {
           open={settingsDrawerOpen}
           onOpenChange={setSettingsDrawerOpen}
           courseData={{
-            titulo: state.currentCourse.titulo,
-            descricao: state.currentCourse.descricao || '',
-            categoria: state.currentCourse.categoria || undefined,
-            cargaHoraria: state.currentCourse.cargaHoraria,
+            title: state.currentCourse.title,
+            description: state.currentCourse.description || '',
+            category: state.currentCourse.category || undefined,
+            workload: state.currentCourse.workload,
             layout: state.currentCourse.layout,
             bannerVideoUrl: state.currentCourse.bannerVideoUrl,
           }}
-          units={state.currentCourse.unidades || []}
+          units={state.currentCourse.units || []}
           onSave={async (courseData, units) => {
             if (state.currentCourse) {
               await updateCourse(state.currentCourse.id, {
-                titulo: courseData.titulo,
-                descricao: courseData.descricao,
-                categoria: courseData.categoria || '',
-                cargaHoraria: courseData.cargaHoraria,
+                title: courseData.title,
+                description: courseData.description,
+                category: courseData.category || '',
+                workload: courseData.workload,
                 layout: courseData.layout,
                 bannerVideoUrl: courseData.bannerVideoUrl ?? '',
               })
@@ -4469,7 +4460,7 @@ function CourseEditor() {
         <ManageUnitsModal
           open={manageUnitsModalOpen}
           onOpenChange={setManageUnitsModalOpen}
-          units={state.currentCourse.unidades || []}
+          units={state.currentCourse.units || []}
         />
 
         <ContentBlockDrawer
@@ -4486,7 +4477,7 @@ function CourseEditor() {
 }
 
 function BlockPreview({ item }: { item: Block }) {
-  const BlockComponent = blockRegistry[item.tipo]
+  const BlockComponent = blockRegistry[item.type]
   if (!BlockComponent) return null
 
   return (

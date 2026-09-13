@@ -18,7 +18,7 @@ jest.mock('sonner', () => ({ toast: { error: jest.fn(), success: jest.fn(), info
 const mockFetch = jest.fn()
 global.fetch = mockFetch
 
-const COURSE = { id: 'c1', titulo: 'Curso', version: 3, unidades: [] }
+const COURSE = { id: 'c1', title: 'Curso', version: 3, units: [] }
 
 const courseApiResponse = (course: object = COURSE) => ({
   ok: true,
@@ -41,13 +41,13 @@ function createWrapper() {
   }
 }
 
-describe('GeradorCursoContext sobre o cache', () => {
+describe('CourseEditorContext over the cache', () => {
   beforeEach(() => {
     jest.clearAllMocks()
     mockFetch.mockResolvedValue(courseApiResponse())
   })
 
-  it('não fica em loading enquanto nenhum curso está selecionado', () => {
+  it('never sits on loading while no course is selected', () => {
     const { result } = renderHook(() => useCourseEditor(), { wrapper: createWrapper() })
 
     expect(result.current.state.loading).toBe(false)
@@ -55,7 +55,7 @@ describe('GeradorCursoContext sobre o cache', () => {
     expect(mockFetch).not.toHaveBeenCalled()
   })
 
-  it('mantém selecionarCurso estável depois de o curso carregar', async () => {
+  it('keeps selectCourse stable after the course loads', async () => {
     const { result } = renderHook(() => useCourseEditor(), { wrapper: createWrapper() })
 
     const selectInitial = result.current.selectCourse
@@ -66,11 +66,11 @@ describe('GeradorCursoContext sobre o cache', () => {
 
     await waitFor(() => expect(result.current.state.currentCourse?.id).toBe('c1'))
 
-    // se a identidade mudasse, o efeito que a chama se realimentaria
+    // if the identity changed, the effect calling it would feed itself
     expect(result.current.selectCourse).toBe(selectInitial)
   })
 
-  it('no conflito 409 recarrega a versão do servidor e propaga o erro', async () => {
+  it('reloads the server version on a 409 and propagates the error', async () => {
     const { result } = renderHook(() => useCourseEditor(), { wrapper: createWrapper() })
 
     act(() => {
@@ -84,17 +84,17 @@ describe('GeradorCursoContext sobre o cache', () => {
       headers: { get: () => 'application/json' },
       json: async () => ({ success: false }),
     })
-    mockFetch.mockResolvedValue(courseApiResponse({ ...COURSE, version: 4, titulo: 'Do servidor' }))
+    mockFetch.mockResolvedValue(courseApiResponse({ ...COURSE, version: 4, title: 'Do servidor' }))
 
     await act(async () => {
-      await expect(result.current.updateCourse('c1', { titulo: 'Meu' })).rejects.toThrow()
+      await expect(result.current.updateCourse('c1', { title: 'Meu' })).rejects.toThrow()
     })
 
     await waitFor(() => expect(result.current.state.currentCourse?.version).toBe(4))
-    expect(result.current.state.currentCourse?.titulo).toBe('Do servidor')
+    expect(result.current.state.currentCourse?.title).toBe('Do servidor')
   })
 
-  it('manda a versão conhecida do curso no PUT, para o servidor detectar conflito', async () => {
+  it('sends the known course version on PUT so the server can detect a conflict', async () => {
     const { result } = renderHook(() => useCourseEditor(), { wrapper: createWrapper() })
 
     act(() => {
@@ -103,10 +103,10 @@ describe('GeradorCursoContext sobre o cache', () => {
     await waitFor(() => expect(result.current.state.currentCourse?.version).toBe(3))
 
     await act(async () => {
-      await result.current.updateCourse('c1', { titulo: 'Novo' })
+      await result.current.updateCourse('c1', { title: 'Novo' })
     })
 
     const put = mockFetch.mock.calls.find((c) => c[1]?.method === 'PUT')
-    expect(JSON.parse(put[1].body)).toMatchObject({ id: 'c1', titulo: 'Novo', version: 3 })
+    expect(JSON.parse(put[1].body)).toMatchObject({ id: 'c1', title: 'Novo', version: 3 })
   })
 })

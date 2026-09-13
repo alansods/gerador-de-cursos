@@ -1,27 +1,27 @@
 import { prisma } from './prisma'
 
 export type ActivityType =
-  | 'curso_criado'
-  | 'curso_editado'
-  | 'curso_deletado'
-  | 'usuario_criado'
-  | 'usuario_editado'
-  | 'usuario_deletado'
-  | 'acesso_solicitado'
-  | 'acesso_aprovado'
-  | 'acesso_negado'
-  | 'acesso_revogado'
-  | 'curso_enviado_revisao'
-  | 'curso_aprovado'
-  | 'curso_reprovado'
-  | 'curso_comentado'
+  | 'course_created'
+  | 'course_updated'
+  | 'course_deleted'
+  | 'user_created'
+  | 'user_updated'
+  | 'user_deleted'
+  | 'access_requested'
+  | 'access_approved'
+  | 'access_denied'
+  | 'access_revoked'
+  | 'course_submitted_for_review'
+  | 'course_approved'
+  | 'course_rejected'
+  | 'course_commented'
 
 export interface LogActivityParams {
   type: ActivityType
   title: string
   description?: string
   entityId?: string
-  entityType?: 'curso' | 'usuario'
+  entityType?: 'course' | 'user'
   userId?: string
 }
 
@@ -41,7 +41,7 @@ export async function logActivity(params: LogActivityParams) {
       },
     })
   } catch (error) {
-    console.error('Erro ao registrar atividade:', error)
-    // Não propagar o erro para não afetar a operação principal
+    console.error('Failed to log the activity:', error)
+    // Swallow the error so it never breaks the main operation
   }
 }

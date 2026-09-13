@@ -68,7 +68,7 @@ export function RichTextEditor({
     },
   })
 
-  // Sincronizar valor externo (ex: ao abrir o modal com conteúdo existente)
+  // Sync the external value (for example, opening the modal with existing content)
   const syncContent = useCallback(() => {
     if (!editor) return
     const current = editor.getHTML()

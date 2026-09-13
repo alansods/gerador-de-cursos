@@ -38,7 +38,7 @@ enum AccessRequestStatus {
   @@map("StatusSolicitacao")
 }
 
-// Modelo de Usuário
+// User account
 model User {
   id                      String                @id @default(cuid())
   name                    String                @map("nome")
@@ -61,7 +61,7 @@ model User {
   @@map("users")
 }
 
-// Modelo de Cursos (adaptado do sistema existente)
+// Course, with the unit tree stored as JSON
 model Course {
   id             String                @id @default(cuid())
   title          String                @map("titulo")
@@ -70,7 +70,7 @@ model Course {
   workload       String                @map("carga_horaria")
   modality       String                @map("modalidade")
   category       String                @map("categoria")
-  layout         String                @default("classico")
+  layout         String                @default("classic")
   bannerVideoUrl String?               @map("banner_video_url")
   units          Json                  @default("[]") @map("unidades")
   status         CourseStatus          @default(IN_PROGRESS)
@@ -93,7 +93,7 @@ model Course {
   @@map("cursos")
 }
 
-// Acesso concedido a um curso de terceiro
+// Edit access granted on someone else's course
 model CourseCollaborator {
   id          String   @id @default(cuid())
   courseId    String   @map("curso_id")
@@ -109,7 +109,7 @@ model CourseCollaborator {
   @@map("curso_colaboradores")
 }
 
-// Pedido de acesso a um curso de terceiro
+// Request for edit access on someone else's course
 model CourseAccessRequest {
   id            String              @id @default(cuid())
   courseId      String              @map("curso_id")
@@ -130,7 +130,7 @@ model CourseAccessRequest {
   @@map("curso_access_requests")
 }
 
-// Thread única de comentários por curso
+// Single review thread per course
 model CourseComment {
   id        String   @id @default(cuid())
   courseId  String   @map("curso_id")
@@ -145,15 +145,15 @@ model CourseComment {
   @@map("curso_comentarios")
 }
 
-// Modelo de Atividades (log de ações dos usuários)
+// Activity log
 model Activity {
   id          String   @id @default(cuid())
-  type        String   @map("tipo") // 'curso_criado', 'curso_editado', 'curso_deletado', 'usuario_criado', 'usuario_editado', 'usuario_deletado'
-  title       String   @map("titulo") // título descritivo da atividade
-  description String?  @map("descricao") // descrição adicional (ex: nome do curso ou usuário)
-  entityId    String?  @map("entity_id") // ID da entidade afetada (curso ou usuário)
-  entityType  String?  @map("entity_type") // 'curso' ou 'usuario'
-  userId      String?  @map("user_id") // ID do usuário que realizou a ação
+  type        String   @map("tipo") // 'course_created', 'course_updated', 'course_deleted', 'user_created', 'user_updated', 'user_deleted'
+  title       String   @map("titulo") // human-readable activity title
+  description String?  @map("descricao") // extra detail, such as the course or user name
+  entityId    String?  @map("entity_id") // affected entity id
+  entityType  String?  @map("entity_type") // 'course' or 'user'
+  userId      String?  @map("user_id") // user who performed the action
   user        User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
   createdAt   DateTime @default(now()) @map("created_at")
 
@@ -163,15 +163,15 @@ model Activity {
   @@map("activities")
 }
 
-// Modelo de Jobs de Geração SCORM
+// SCORM export job queue
 model SCORMJob {
   id          String    @id @default(cuid())
   courseId    String    @map("curso_id")
   courseTitle String    @map("curso_titulo")
   status      String // 'pending', 'building', 'completed', 'failed'
-  progress    String? // mensagem de progresso atual
-  error       String? // mensagem de erro se falhar
-  zipData     Bytes?    @map("zip_data") // dados do ZIP (Buffer) quando completado
+  progress    String? // current progress message
+  error       String? // error message when it fails
+  zipData     Bytes?    @map("zip_data") // ZIP payload once completed
   createdAt   DateTime  @default(now()) @map("created_at")
   completedAt DateTime? @map("completed_at")
 

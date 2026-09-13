@@ -32,8 +32,8 @@ async function fillInformation(page: Page, title: string) {
   await page.getByLabel('Carga horária').fill('40')
 }
 
-test.describe('E2E - Novo Curso', () => {
-  test('percorre as quatro etapas e cria um curso manual', async ({ page }) => {
+test.describe('E2E - New course', () => {
+  test('walks the four steps and creates a manual course', async ({ page }) => {
     await logIn(page, EMAIL, PASSWORD)
     await page.goto('/courses/new')
 
@@ -67,7 +67,7 @@ test.describe('E2E - Novo Curso', () => {
     await expect(page.getByText(title)).toBeVisible({ timeout: 15000 })
   })
 
-  test('não avança com campos inválidos e destaca o que falta', async ({ page }) => {
+  test('does not advance with invalid fields and highlights what is missing', async ({ page }) => {
     await logIn(page, EMAIL, PASSWORD)
     await page.goto('/courses/new')
 
@@ -91,7 +91,7 @@ test.describe('E2E - Novo Curso', () => {
     await expect(page.getByText('Use apenas números, sem letras ou símbolos')).toBeVisible()
   })
 
-  test('aceita o documento de exemplo e segue para a geração', async ({ page }) => {
+  test('accepts the sample document and moves on to the generation', async ({ page }) => {
     await logIn(page, EMAIL, PASSWORD)
 
     const response = await page.request.get('/api/sample-document')
@@ -115,7 +115,7 @@ test.describe('E2E - Novo Curso', () => {
     await expect(page.getByRole('heading', { name: 'Escolha o layout do curso' })).toBeVisible()
   })
 
-  test('convidado consegue abrir o wizard e criar curso', async ({ page }) => {
+  test('lets a guest open the wizard and create a course', async ({ page }) => {
     await logIn(page, GUEST_EMAIL, GUEST_PASSWORD)
     await page.goto('/courses/new')
 
@@ -136,7 +136,7 @@ test.describe('E2E - Novo Curso', () => {
     })
   })
 
-  test('bloqueia o revisor, que não cria cursos', async ({ page }) => {
+  test('blocks the reviewer, who creates no courses', async ({ page }) => {
     test.skip(!EMAIL_REVISOR, 'defina E2E_EMAIL_REVISOR/E2E_SENHA_REVISOR para rodar')
 
     await logIn(page, EMAIL_REVISOR as string, REVIEWER_PASSWORD as string)
@@ -145,7 +145,7 @@ test.describe('E2E - Novo Curso', () => {
     await expect(page).not.toHaveURL(/\/courses\/new/)
   })
 
-  test('mantém o rascunho ao recarregar a página', async ({ page }) => {
+  test('keeps the draft across a page reload', async ({ page }) => {
     await logIn(page, EMAIL, PASSWORD)
     await page.goto('/courses/new')
 

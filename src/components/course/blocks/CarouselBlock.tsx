@@ -5,7 +5,7 @@ import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { Block } from '@/types/course'
 
 export function CarouselBlock({ item }: { item: Block }) {
-  const items = item.itensCarrossel ?? []
+  const items = item.carouselItems ?? []
   const [current, setCurrent] = useState(0)
 
   if (items.length === 0) {
@@ -14,23 +14,23 @@ export function CarouselBlock({ item }: { item: Block }) {
     )
   }
 
-  if (item.modoCarrossel === 'grade') {
+  if (item.carouselMode === 'grid') {
     return (
       <div className="mb-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {items.map((image, idx) => (
           <figure key={image.id || idx} className="space-y-2">
             <img
               src={image.url}
-              alt={image.legenda || `Imagem ${idx + 1}`}
+              alt={image.caption || `Imagem ${idx + 1}`}
               className="w-full h-48 object-cover rounded-lg border border-gray-200 dark:border-gray-700"
             />
-            {image.legenda && (
+            {image.caption && (
               <figcaption className="text-sm text-gray-600 dark:text-gray-400 italic">
-                {image.legenda}
+                {image.caption}
               </figcaption>
             )}
-            {image.fonte && (
-              <p className="text-xs text-gray-500 dark:text-gray-400">Fonte: {image.fonte}</p>
+            {image.source && (
+              <p className="text-xs text-gray-500 dark:text-gray-400">Fonte: {image.source}</p>
             )}
           </figure>
         ))}
@@ -65,7 +65,7 @@ export function CarouselBlock({ item }: { item: Block }) {
               >
                 <img
                   src={slide.url}
-                  alt={slide.legenda || `Imagem ${idx + 1} de ${items.length}`}
+                  alt={slide.caption || `Imagem ${idx + 1} de ${items.length}`}
                   className="mx-auto h-auto max-h-96 max-w-full object-contain rounded-lg"
                 />
               </div>
@@ -96,11 +96,11 @@ export function CarouselBlock({ item }: { item: Block }) {
       </div>
 
       <div aria-live="polite" className="mt-2 space-y-1 text-center">
-        {image.legenda && (
-          <p className="text-sm text-gray-600 dark:text-gray-400 italic">{image.legenda}</p>
+        {image.caption && (
+          <p className="text-sm text-gray-600 dark:text-gray-400 italic">{image.caption}</p>
         )}
-        {image.fonte && (
-          <p className="text-xs text-gray-500 dark:text-gray-400">Fonte: {image.fonte}</p>
+        {image.source && (
+          <p className="text-xs text-gray-500 dark:text-gray-400">Fonte: {image.source}</p>
         )}
         {items.length > 1 && (
           <p className="text-xs text-gray-500 dark:text-gray-400 tabular-nums">

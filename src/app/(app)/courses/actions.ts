@@ -4,9 +4,10 @@ import { prisma } from '@/lib/prisma'
 import { getServerUser } from '@/lib/auth-server'
 import { getCoursePermissions, type CourseStatus } from '@/lib/permissions'
 import type { Course } from '@/types/course'
+import { upgradeUnits } from '@/lib/legacy-course'
 
 export interface FetchCoursesParams {
-  cursor?: string // ID do último curso da página anterior
+  cursor?: string // id of the last course on the previous page
   limit?: number
   search?: string
   category?: string
@@ -41,7 +42,7 @@ export async function fetchCourses({
       return { courses: [], nextCursor: null, hasMore: false, total: 0 }
     }
 
-    // Construir filtros dinâmicos
+    // Build the dynamic filters
     const where: {
       OR?: Array<{
         title?: { contains: string; mode: 'insensitive' }
@@ -58,7 +59,7 @@ export async function fetchCourses({
       where.ownerId = user.id
     }
 
-    // Filtro de busca (título, descrição ou categoria)
+    // Search filter (title, description or category)
     if (search && search.trim()) {
       where.OR = [
         { title: { contains: search, mode: 'insensitive' } },
@@ -67,50 +68,50 @@ export async function fetchCourses({
       ]
     }
 
-    // Filtro de categoria
+    // Category filter
     if (category && category !== 'Todas Categorias') {
       where.category = category
     }
 
-    // Filtro de modalidade
+    // Modality filter
     if (modality && modality !== 'Todas Modalidades') {
       where.modality = modality
     }
 
-    // Filtro de status editorial
+    // Editorial status filter
     if (status) {
       where.status = status
     }
 
-    // Buscar total de cursos (para mostrar contador)
+    // Total course count, for the counter
     const total = await prisma.course.count({ where })
 
-    // Buscar cursos com cursor pagination
+    // Fetch the courses with cursor pagination
     const courses = await prisma.course.findMany({
       where,
       include: { owner: { select: { id: true, name: true } } },
-      take: limit + 1, // Pegar 1 a mais para saber se há próxima página
+      take: limit + 1, // one extra row tells us whether there is a next page
       ...(cursor
         ? {
-            skip: 1, // Pular o cursor atual
+            skip: 1, // skip the cursor row itself
             cursor: { id: cursor },
           }
         : {}),
       orderBy: [
         { createdAt: 'desc' },
-        { id: 'desc' }, // Fallback para garantir ordem estável
+        { id: 'desc' }, // fallback that keeps the order stable
       ],
     })
 
-    // Verificar se há mais cursos
+    // Check whether more courses remain
     const hasMore = courses.length > limit
     const returnedCourses = hasMore ? courses.slice(0, limit) : courses
     const nextCursor = hasMore ? returnedCourses[returnedCourses.length - 1].id : null
 
     const courseIds = returnedCourses.map((c) => c.id)
 
-    // Colaborações do usuário nos cursos listados, numa consulta só, para que
-    // um colaborador apareça com permissão de edição na listagem
+    // The user's collaborations on the listed courses, in a single query, so that
+    // a collaborator shows up with edit permission in the list
     const collaborations = await prisma.courseCollaborator.findMany({
       where: { userId: user.id, courseId: { in: courseIds } },
       select: { courseId: true },
@@ -119,24 +120,24 @@ export async function fetchCourses({
       collaborations.map((c) => [c.courseId, { granted: true as const }])
     )
 
-    // Solicitações de acesso pendentes do usuário, para exibir "Aguardando acesso"
+    // The user's pending access requests, to show "Aguardando acesso"
     const pendingAccessRequests = await prisma.courseAccessRequest.findMany({
       where: { requesterId: user.id, courseId: { in: courseIds }, status: 'PENDING' },
       select: { courseId: true },
     })
     const pendingRequestByCourse = new Set(pendingAccessRequests.map((s) => s.courseId))
 
-    // Transformar para o formato CursoGerado
+    // Map to the API course shape
     const formattedCourses: Course[] = returnedCourses.map(
       (course): Course => ({
         id: course.id,
         slug: course.slug || course.id,
-        titulo: course.title,
-        descricao: course.description,
-        categoria: course.category,
-        modalidade: course.modality,
-        cargaHoraria: course.workload,
-        unidades: course.units as unknown as Course['unidades'],
+        title: course.title,
+        description: course.description,
+        category: course.category,
+        modality: course.modality,
+        workload: course.workload,
+        units: upgradeUnits(course.units) as unknown as Course['units'],
         status: course.status,
         version: course.version,
         ownerId: course.ownerId ?? undefined,
@@ -147,8 +148,8 @@ export async function fetchCourses({
           collaborationByCourse.get(course.id) ?? null
         ),
         hasPendingRequest: pendingRequestByCourse.has(course.id),
-        dataCriacao: course.createdAt,
-        dataModificacao: course.updatedAt,
+        createdAt: course.createdAt,
+        updatedAt: course.updatedAt,
       })
     )
 
@@ -159,8 +160,8 @@ export async function fetchCourses({
       total,
     }
   } catch (error) {
-    console.error('[buscarCursos] Erro ao buscar cursos:', error)
-    console.error('[buscarCursos] Stack:', error instanceof Error ? error.stack : 'No stack')
+    console.error('[fetchCourses] Failed to fetch courses:', error)
+    console.error('[fetchCourses] Stack:', error instanceof Error ? error.stack : 'No stack')
     throw error
   }
 }

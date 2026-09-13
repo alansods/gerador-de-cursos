@@ -1,7 +1,7 @@
 import { describeMarkers, detectMarkers } from '@/lib/markers'
 
-describe('detectarMarcadores', () => {
-  it('usa modo auto quando o texto não tem marcadores', () => {
+describe('detectMarkers', () => {
+  it('falls back to auto mode when the text has no markers', () => {
     const detection = detectMarkers('Texto comum de uma apostila sobre automação.')
 
     expect(detection.found).toBe(false)
@@ -10,7 +10,7 @@ describe('detectarMarcadores', () => {
     expect(detection.byType).toEqual({})
   })
 
-  it('usa modo markers quando há ao menos um par completo', () => {
+  it('uses markers mode when at least one pair is complete', () => {
     const detection = detectMarkers(`
       QUIZ_INICIO
       Pergunta: Qual a função do CLP?
@@ -22,14 +22,14 @@ describe('detectarMarcadores', () => {
     expect(detection.byType.quiz).toBe(1)
   })
 
-  it('ignora marcador aberto sem fechamento', () => {
+  it('ignores a marker opened but never closed', () => {
     const detection = detectMarkers('ACCORDION_INICIO\nTítulo do Item 1: Sem fim')
 
     expect(detection.found).toBe(false)
     expect(detection.mode).toBe('auto')
   })
 
-  it('conta pares por tipo em documento misto', () => {
+  it('counts the pairs per type in a mixed document', () => {
     const detection = detectMarkers(`
       OBJETIVOS_INICIO Objetivo: A OBJETIVOS_FIM
       QUIZ_INICIO q1 QUIZ_FIM
@@ -42,38 +42,38 @@ describe('detectarMarcadores', () => {
 
     expect(detection.total).toBe(6)
     expect(detection.byType.quiz).toBe(2)
-    expect(detection.byType['objetivos-aprendizagem']).toBe(1)
+    expect(detection.byType['learning-objectives']).toBe(1)
     expect(detection.byType['info-box']).toBe(1)
-    expect(detection.byType.lista).toBe(1)
-    expect(detection.byType.imagem).toBeUndefined()
+    expect(detection.byType.list).toBe(1)
+    expect(detection.byType.image).toBeUndefined()
     expect(detection.byType.video).toBeUndefined()
   })
 
-  it('conta pares mesmo com aberturas e fechamentos desbalanceados', () => {
+  it('counts the pairs even when openings and closings are unbalanced', () => {
     const detection = detectMarkers('QUIZ_INICIO a QUIZ_INICIO b QUIZ_FIM')
 
     expect(detection.byType.quiz).toBe(1)
   })
 
-  it('não confunde marcador com palavra que o contém', () => {
+  it('never mistakes a word containing a marker for the marker', () => {
     const detection = detectMarkers('MEUQUIZ_INICIO ... MEUQUIZ_FIM')
 
     expect(detection.found).toBe(false)
   })
 
-  it('aceita texto vazio', () => {
+  it('accepts empty text', () => {
     expect(detectMarkers('').mode).toBe('auto')
   })
 })
 
-describe('descreverMarcadores', () => {
-  it('descreve um único tipo no singular', () => {
+describe('describeMarkers', () => {
+  it('describes a single type in the singular', () => {
     const text = describeMarkers(detectMarkers('QUIZ_INICIO a QUIZ_FIM'))
 
     expect(text).toBe('1 quiz')
   })
 
-  it('descreve vários tipos com plural e conector', () => {
+  it('describes several types with plurals and a connector', () => {
     const text = describeMarkers(
       detectMarkers(`
         QUIZ_INICIO a QUIZ_FIM
@@ -89,7 +89,7 @@ describe('descreverMarcadores', () => {
     expect(text).toContain(' e ')
   })
 
-  it('devolve string vazia sem marcadores', () => {
+  it('returns an empty string when there is no marker', () => {
     expect(describeMarkers(detectMarkers('texto'))).toBe('')
   })
 })

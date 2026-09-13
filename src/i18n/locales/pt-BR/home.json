@@ -45,12 +45,12 @@
       "weeksAgo_plural": "há {{count}} semanas"
     },
     "types": {
-      "curso_criado": "Curso criado",
-      "curso_editado": "Curso editado",
-      "curso_deletado": "Curso deletado",
-      "usuario_criado": "Usuário criado",
-      "usuario_editado": "Usuário editado",
-      "usuario_deletado": "Usuário deletado",
+      "course_created": "Curso criado",
+      "course_updated": "Curso editado",
+      "course_deleted": "Curso deletado",
+      "user_created": "Usuário criado",
+      "user_updated": "Usuário editado",
+      "user_deleted": "Usuário deletado",
       "scorm_gerado": "SCORM gerado"
     }
   }

@@ -48,7 +48,7 @@ export function InfiniteScrollTrigger({
     }
   }, [onLoadMore, hasMore, isLoading])
 
-  // Não renderizar se não houver mais itens
+  // Render nothing once no item is left
   if (!hasMore) return null
 
   return (

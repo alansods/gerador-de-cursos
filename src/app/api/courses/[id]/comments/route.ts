@@ -34,7 +34,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       })),
     })
   } catch (error) {
-    console.error('Erro ao listar comentários:', error)
+    console.error('Failed to list the comments:', error)
     return createErrorResponse('Erro ao listar comentários', 500, error)
   }
 }
@@ -76,11 +76,11 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     })
 
     await logActivity({
-      type: 'curso_comentado',
+      type: 'course_commented',
       title: 'Comentário em curso',
       description: course.title,
       entityId: id,
-      entityType: 'curso',
+      entityType: 'course',
       userId: authResult.user.id,
     })
 
@@ -97,7 +97,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       201
     )
   } catch (error) {
-    console.error('Erro ao criar comentário:', error)
+    console.error('Failed to create the comment:', error)
     return createErrorResponse('Erro ao criar comentário', 500, error)
   }
 }
@@ -135,7 +135,7 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
 
     return createSuccessResponse({ id: commentId })
   } catch (error) {
-    console.error('Erro ao excluir comentário:', error)
+    console.error('Failed to delete the comment:', error)
     return createErrorResponse('Erro ao excluir comentário', 500, error)
   }
 }

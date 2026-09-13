@@ -15,15 +15,15 @@ jest.mock('@/components/course/LayoutSelector', () => ({
 
 const baseCourse: Course = {
   id: 'curso-1',
-  titulo: 'Fundamentos de Cozinha Italiana',
-  descricao: 'Massas frescas, molhos-mãe e risotos clássicos.',
-  cargaHoraria: '20 horas',
-  modalidade: 'Presencial',
-  categoria: 'Gastronomia',
-  layout: 'classico',
-  dataCriacao: new Date(),
-  dataModificacao: new Date(),
-  unidades: [],
+  title: 'Fundamentos de Cozinha Italiana',
+  description: 'Massas frescas, molhos-mãe e risotos clássicos.',
+  workload: '20 horas',
+  modality: 'Presencial',
+  category: 'Gastronomia',
+  layout: 'classic',
+  createdAt: new Date(),
+  updatedAt: new Date(),
+  units: [],
 }
 
 function openDrawer(bannerVideoUrl = '', onSave = jest.fn()) {
@@ -32,11 +32,11 @@ function openDrawer(bannerVideoUrl = '', onSave = jest.fn()) {
       open
       onOpenChange={jest.fn()}
       courseData={{
-        titulo: baseCourse.titulo,
-        descricao: baseCourse.descricao,
-        categoria: baseCourse.categoria,
-        cargaHoraria: baseCourse.cargaHoraria,
-        layout: 'classico',
+        title: baseCourse.title,
+        description: baseCourse.description,
+        category: baseCourse.category,
+        workload: baseCourse.workload,
+        layout: 'classic',
         bannerVideoUrl,
       }}
       units={[]}
@@ -46,8 +46,8 @@ function openDrawer(bannerVideoUrl = '', onSave = jest.fn()) {
   return onSave
 }
 
-describe('campo de vídeo do banner', () => {
-  it('salva o link válido colado pelo autor', async () => {
+describe('banner video field', () => {
+  it('saves a valid link pasted by the author', async () => {
     const onSave = openDrawer()
     const field = screen.getByPlaceholderText('https://www.youtube.com/watch?v=...')
 
@@ -60,7 +60,7 @@ describe('campo de vídeo do banner', () => {
     )
   })
 
-  it('bloqueia o salvamento e avisa quando o link não é do YouTube', async () => {
+  it('blocks the save and warns when the link is not from YouTube', async () => {
     const onSave = openDrawer()
 
     await userEvent.type(
@@ -73,7 +73,7 @@ describe('campo de vídeo do banner', () => {
     expect(onSave).not.toHaveBeenCalled()
   })
 
-  it('mostra a pré-visualização quando o link é válido', async () => {
+  it('shows the preview when the link is valid', async () => {
     openDrawer()
     expect(document.querySelector('iframe')).toBeNull()
 
@@ -88,7 +88,7 @@ describe('campo de vídeo do banner', () => {
     )
   })
 
-  it('não mostra pré-visualização de link inválido', async () => {
+  it('shows no preview for an invalid link', async () => {
     openDrawer()
 
     await userEvent.type(
@@ -99,7 +99,7 @@ describe('campo de vídeo do banner', () => {
     expect(document.querySelector('iframe')).toBeNull()
   })
 
-  it('permite limpar o campo para remover o vídeo', async () => {
+  it('lets the field be cleared to drop the video', async () => {
     const onSave = openDrawer('https://youtu.be/dQw4w9WgXcQ')
 
     await userEvent.clear(screen.getByPlaceholderText('https://www.youtube.com/watch?v=...'))
@@ -109,13 +109,13 @@ describe('campo de vídeo do banner', () => {
   })
 })
 
-describe('banner do layout clássico', () => {
-  it('não renderiza iframe quando o curso não tem vídeo', () => {
+describe('classic layout banner', () => {
+  it('renders no iframe when the course has no video', () => {
     const { container } = render(<ClassicHome course={baseCourse} onNavigate={jest.fn()} />)
     expect(container.querySelector('iframe')).toBeNull()
   })
 
-  it('embute o vídeo do YouTube quando o curso tem link', () => {
+  it('embeds the YouTube video when the course has a link', () => {
     const { container } = render(
       <ClassicHome
         course={{ ...baseCourse, bannerVideoUrl: 'https://youtu.be/dQw4w9WgXcQ' }}
@@ -125,10 +125,10 @@ describe('banner do layout clássico', () => {
 
     const iframe = container.querySelector('iframe')
     expect(iframe).toHaveAttribute('src', 'https://www.youtube.com/embed/dQw4w9WgXcQ')
-    expect(iframe).toHaveAttribute('title', baseCourse.titulo)
+    expect(iframe).toHaveAttribute('title', baseCourse.title)
   })
 
-  it('ignora link que não é do YouTube em vez de embutir url inválida', () => {
+  it('ignores a non-YouTube link instead of embedding an invalid url', () => {
     const { container } = render(
       <ClassicHome
         course={{ ...baseCourse, bannerVideoUrl: 'https://vimeo.com/123456' }}

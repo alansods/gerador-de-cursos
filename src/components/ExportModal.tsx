@@ -20,7 +20,7 @@ interface ExportModalProps {
   onExportPDF: (filename: string) => Promise<void> | void
   onExportSCORM?: (filename: string) => Promise<void> | void
   courseName: string
-  courseId?: string // ID do curso para SCORM
+  courseId?: string // course id, for SCORM
   isGeneratingPDF?: boolean
   isGeneratingSCORM?: boolean
 }
@@ -39,7 +39,7 @@ export function ExportModal({
   const [selectedType, setSelectedType] = useState<ExportType>(null)
   const [filename, setFilename] = useState('')
 
-  // Resetar estado quando o modal fechar
+  // Reset the state when the modal closes
   useEffect(() => {
     if (!isOpen) {
       // Use setTimeout to avoid synchronous setState in effect
@@ -50,7 +50,7 @@ export function ExportModal({
     }
   }, [isOpen])
 
-  // Definir nome padrão quando selecionar um tipo
+  // Set the default name when a type is selected
   useEffect(() => {
     if (selectedType) {
       const sanitizedName = courseName
@@ -73,18 +73,18 @@ export function ExportModal({
   }, [selectedType, courseName])
 
   const handleExport = async () => {
-    console.log('🔄 [ExportModal] handleExport chamado')
+    console.log('🔄 [ExportModal] handleExport called')
     console.log('📝 [ExportModal] Filename:', filename)
     console.log('📋 [ExportModal] Selected type:', selectedType)
 
     if (!filename.trim()) {
-      console.warn('⚠️ [ExportModal] Filename vazio, abortando')
+      console.warn('⚠️ [ExportModal] Empty filename, aborting')
       return
     }
 
     let finalFilename = filename
 
-    // Para SCORM, garantir que sempre tenha o prefixo "scorm-"
+    // SCORM files always carry the "scorm-" prefix
     if (selectedType === 'scorm' && !finalFilename.startsWith('scorm-')) {
       finalFilename = 'scorm-' + finalFilename
     }
@@ -93,27 +93,27 @@ export function ExportModal({
 
     try {
       if (selectedType === 'pdf') {
-        console.log('📄 [ExportModal] Exportando PDF...')
+        console.log('📄 [ExportModal] Exporting PDF...')
         await onExportPDF(finalFilename)
       } else if (selectedType === 'scorm' && onExportSCORM) {
-        console.log('📦 [ExportModal] Exportando SCORM...')
-        console.log('📦 [ExportModal] onExportSCORM existe:', !!onExportSCORM)
+        console.log('📦 [ExportModal] Exporting SCORM...')
+        console.log('📦 [ExportModal] onExportSCORM present:', !!onExportSCORM)
         await onExportSCORM(finalFilename)
-        console.log('✅ [ExportModal] onExportSCORM concluído')
+        console.log('✅ [ExportModal] onExportSCORM finished')
       } else if (selectedType === 'scorm') {
-        // SCORM desabilitado temporariamente
-        console.error('❌ [ExportModal] SCORM desabilitado - onExportSCORM não fornecido')
+        // SCORM temporarily disabled
+        console.error('❌ [ExportModal] SCORM disabled - onExportSCORM was not provided')
         toast.error('Exportação SCORM temporariamente indisponível')
         return
       }
 
-      // Fechar modal e resetar apenas após sucesso
+      // Close and reset only after a successful export
       onClose()
       setSelectedType(null)
       setFilename('')
     } catch (error) {
-      // Erro já foi tratado no hook, apenas manter o modal aberto
-      console.error('Erro ao exportar:', error)
+      // The hook already handled the error; just keep the modal open
+      console.error('Export failed:', error)
     }
   }
 
@@ -121,7 +121,7 @@ export function ExportModal({
     setSelectedType(null)
     setFilename('')
   }
-  // Não permitir fechar o modal durante o loading
+  // Do not let the modal close while loading
   const handleClose = () => {
     if (!isGeneratingPDF && !isGeneratingSCORM) {
       onClose()

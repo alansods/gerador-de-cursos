@@ -23,7 +23,7 @@ export const useSCORM = () => {
     setError(null)
 
     try {
-      console.log('🌐 [useSCORM] Fazendo requisição para /api/generate-scorm-v2...')
+      console.log('🌐 [useSCORM] Requesting /api/generate-scorm-v2...')
 
       // Iniciar job de build
       const response = await fetch('/api/generate-scorm-v2', {
@@ -44,19 +44,19 @@ export const useSCORM = () => {
       const { jobId } = await response.json()
       console.log(`✅ [useSCORM] Job criado: ${jobId}`)
 
-      // Redirecionar para página de progresso (sem toasts - tela mostra tudo)
+      // Redirect to the progress screen (no toasts — the screen shows everything)
       router.push(`/scorm-build/${jobId}`)
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Erro desconhecido'
-      console.error('Erro no useSCORM:', err)
+      console.error('useSCORM failed:', err)
       setError(errorMessage)
       toast.error('Erro ao Iniciar Build', {
         description: errorMessage,
       })
       setIsGenerating(false)
     }
-    // Nota: não setamos setIsGenerating(false) em caso de sucesso
-    // porque o usuário será redirecionado
+    // Note: setIsGenerating(false) is never called on success
+    // because the user is redirected away
   }
 
   return {

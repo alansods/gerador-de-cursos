@@ -21,11 +21,11 @@ export function BlockRenderer({ block: content, theme }: BlockRendererProps) {
     <BlockThemeProvider theme={theme}>
       <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
         {content.map((item, index) => {
-          const BlockComponent = blockRegistry[item.tipo] || ParagraphBlock
+          const BlockComponent = blockRegistry[item.type] || ParagraphBlock
           return (
             <div
               key={item.id}
-              className={`${item.colunas === 6 ? 'md:col-span-6' : 'md:col-span-12'}`}
+              className={`${item.columns === 6 ? 'md:col-span-6' : 'md:col-span-12'}`}
             >
               <BlockComponent item={item} blockIndex={index} />
             </div>

@@ -16,29 +16,29 @@ function insertAtPosition(
   return arrayMove(withNew, withNew.length - 1, targetPosition)
 }
 
-describe('posição do bloco recém-adicionado', () => {
+describe('position of a newly added block', () => {
   const existentes = ['A', 'B', 'C']
 
-  it('insere no topo pelo divisor acima do primeiro bloco', () => {
+  it('inserts at the top through the divider above the first block', () => {
     expect(insertAtPosition(existentes, 'NOVO', 0)).toEqual(['NOVO', 'A', 'B', 'C'])
   })
 
-  it('insere entre dois blocos pelo divisor da linha', () => {
+  it('inserts between two blocks through the row divider', () => {
     expect(insertAtPosition(existentes, 'NOVO', 2)).toEqual(['A', 'B', 'NOVO', 'C'])
   })
 
-  it('insere no fim pelo botão "Adicionar conteúdo"', () => {
+  it('inserts at the end through the "Adicionar conteúdo" button', () => {
     expect(insertAtPosition(existentes, 'NOVO', existentes.length)).toEqual(['A', 'B', 'C', 'NOVO'])
   })
 
-  it('insere após o último bloco da linha pelo slot vazio ao lado dele', () => {
-    // Slot vazio ao lado do bloco de índice 1 => posição de destino 2
+  it('inserts after the last block of the row through the empty slot beside it', () => {
+    // Empty slot beside the block at index 1 => target position 2
     expect(insertAtPosition(existentes, 'NOVO', 1 + 1)).toEqual(['A', 'B', 'NOVO', 'C'])
   })
 
-  it('índice negativo mandaria o bloco para o fim — regressão do divisor do topo', () => {
-    // Documenta por que o divisor superior não pode passar -1: arrayMove trata
-    // destino negativo como contagem a partir do fim.
+  it('a negative index would send the block to the end — top divider regression', () => {
+    // Documents why the top divider must never pass -1: arrayMove reads a negative
+    // target as a count from the end.
     expect(insertAtPosition(existentes, 'NOVO', -1)).toEqual(['A', 'B', 'C', 'NOVO'])
   })
 })

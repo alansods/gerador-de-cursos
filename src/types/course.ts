@@ -1,210 +1,205 @@
-// Tipos para o gerador de cursos
+// Course content types
 import type { CoursePermissions, CourseStatus } from '@/lib/permissions'
 
 export type { CoursePermissions, CourseStatus }
 
 export interface AccordionItem {
   id: string
-  titulo: string
-  conteudo: string
+  title: string
+  content: string
 }
 
 export interface ListItem {
   id: string
-  texto: string
+  text: string
 }
 
 export interface TabItem {
   id: string
-  titulo: string
-  conteudo: string
+  title: string
+  content: string
 }
 
 export interface TimelineItem {
   id: string
-  data: string
-  titulo: string
-  descricao: string
+  date: string
+  title: string
+  description: string
 }
 
 export interface CarouselItem {
   id: string
   url: string
-  legenda?: string
-  fonte?: string
+  caption?: string
+  source?: string
 }
 
 export interface FlipcardItem {
   id: string
-  tipoFrente: 'imagem' | 'imagem-titulo' | 'titulo'
-  imagemFrente?: string
-  tituloFrente?: string
-  conteudoVerso: string
+  frontType: 'image' | 'image-title' | 'title'
+  frontImage?: string
+  frontTitle?: string
+  backContent: string
 }
 
 export interface HotspotItem {
   id: string
   x: number
   y: number
-  titulo: string
-  conteudo: string
+  title: string
+  content: string
 }
 
 export interface MatchingPair {
   id: string
-  esquerda: string
-  direita: string
+  left: string
+  right: string
 }
 
 export interface CategorizedItem {
   id: string
-  texto: string
+  text: string
 }
 
 export interface CategoryItem {
   id: string
-  nome: string
-  itens: CategorizedItem[]
+  name: string
+  items: CategorizedItem[]
 }
 
 export interface QuizItem {
   id: string
-  texto: string // texto da opção de resposta
-  isCorrect: boolean // se esta é a resposta correta
-  feedback: string // feedback específico para esta resposta
+  text: string // answer option text
+  isCorrect: boolean // whether this is the correct answer
+  feedback: string // feedback shown for this answer
 }
 
 export interface QuizQuestion {
-  id: string // ID único para a pergunta
-  pergunta: string // pergunta do quiz
-  dica?: string // dica opcional para a pergunta
-  opcoes: QuizItem[] // array com exatamente 5 opções
+  id: string // unique question id
+  question: string // quiz question
+  hint?: string // optional hint
+  options: QuizItem[] // exactly five options
 }
 
 export interface QuizData {
-  questions: QuizQuestion[] // Array de perguntas do quiz
+  questions: QuizQuestion[] // quiz questions
 }
 
 export type OptionLetter = 'A' | 'B' | 'C' | 'D' | 'E'
 
 export interface VideoQuestion {
   id: string
-  tempo: string // "mm:ss" ou "hh:mm:ss", como o autor digita
-  pergunta: string
-  opcaoA: string
-  opcaoB: string
-  opcaoC?: string
-  opcaoD?: string
-  opcaoE?: string
-  correta: OptionLetter
+  time: string // "mm:ss" or "hh:mm:ss", as the author types it
+  question: string
+  optionA: string
+  optionB: string
+  optionC?: string
+  optionD?: string
+  optionE?: string
+  correct: OptionLetter
   feedback?: string
 }
 
 export interface Block {
   id: string
-  tipo:
-    | 'titulo'
-    | 'paragrafo'
-    | 'subtitulo'
-    | 'imagem'
+  type:
+    | 'heading'
+    | 'paragraph'
+    | 'subheading'
+    | 'image'
     | 'accordion'
     | 'flipcard'
-    | 'lista'
+    | 'list'
     | 'quiz'
     | 'info-box'
     | 'video'
-    | 'objetivos-aprendizagem'
-    | 'separador'
+    | 'learning-objectives'
+    | 'divider'
     | 'tabs'
-    | 'linha-do-tempo'
-    | 'carrossel'
+    | 'timeline'
+    | 'carousel'
     | 'audio'
     | 'pdf'
-    | 'imagem-interativa'
-    | 'associacao'
-    | 'categorizacao'
-    | 'video-interativo'
-  conteudo: string
-  ordem: number
-  // Propriedades específicas para imagens
-  tamanho?: 'pequena' | 'media' | 'grande'
-  legenda?: string
-  fonte?: string
-  // Propriedades específicas para parágrafos
-  corTexto?: string
-  alinhamento?: 'esquerda' | 'centro' | 'direita' | 'justificado'
-  // Propriedades de layout
-  colunas?: 6 | 12
-  // Propriedades específicas para accordion
+    | 'interactive-image'
+    | 'matching'
+    | 'categorization'
+    | 'interactive-video'
+  content: string
+  order: number
+  // image-specific
+  size?: 'small' | 'medium' | 'large'
+  caption?: string
+  source?: string
+  // paragraph-specific
+  textColor?: string
+  alignment?: 'left' | 'center' | 'right' | 'justify'
+  // layout
+  columns?: 6 | 12
+  // accordion-specific
   items?: AccordionItem[]
-  // Propriedades específicas para flipcard
-  itensFlipcard?: FlipcardItem[]
-  alturaCard?: string // altura compartilhada por todos os cards da grade
-  // Campos legados de flipcard de card único — migrados para itensFlipcard em corrigirBloco()
-  tipoFrente?: 'imagem' | 'imagem-titulo' | 'titulo'
-  imagemFrente?: string
-  tituloFrente?: string
-  conteudoVerso?: string
-  // Propriedades específicas para lista
-  itensLista?: ListItem[]
-  tipoLista?: 'ordenada' | 'nao-ordenada' | 'check' // lista ordenada (numerada), não ordenada (bullets) ou com ícone de check
-  // Propriedades específicas para quiz
+  // flipcard-specific
+  flipcardItems?: FlipcardItem[]
+  cardHeight?: string // height shared by every card in the grid
+  // list-specific
+  listItems?: ListItem[]
+  listType?: 'ordered' | 'unordered' | 'check' // numbered, bulleted or check-icon list
+  // quiz-specific
   quizData?: QuizData
-  // Propriedades específicas para info-box
-  tipoInfoBox?: 'atencao' | 'saiba_mais' | 'info' | 'curiosidade'
-  tituloInfoBox?: string
-  // Propriedades específicas para video
-  fonteVideo?: 'youtube' | 'arquivo'
+  // info-box-specific
+  infoBoxType?: 'warning' | 'learn-more' | 'info' | 'fun-fact'
+  infoBoxTitle?: string
+  // video-specific
+  videoSource?: 'youtube' | 'file'
   videoUrl?: string
-  videoTitulo?: string
-  // Propriedades específicas para video-interativo
-  perguntasVideo?: VideoQuestion[]
-  // Propriedades específicas para objetivos-aprendizagem
-  itensObjetivos?: ListItem[]
-  // Propriedades específicas para separador
-  estiloSeparador?: 'linha' | 'espaco' | 'linha-icone'
-  // Propriedades específicas para tabs
-  itensTabs?: TabItem[]
-  // Propriedades específicas para linha-do-tempo
-  itensTimeline?: TimelineItem[]
-  orientacaoTimeline?: 'vertical' | 'horizontal'
-  // Propriedades específicas para carrossel
-  itensCarrossel?: CarouselItem[]
-  modoCarrossel?: 'carrossel' | 'grade'
-  // Propriedades específicas para audio
+  videoTitle?: string
+  // interactive-video-specific
+  videoQuestions?: VideoQuestion[]
+  // learning-objectives-specific
+  objectiveItems?: ListItem[]
+  // divider-specific
+  dividerStyle?: 'line' | 'space' | 'line-icon'
+  // tabs-specific
+  tabItems?: TabItem[]
+  // timeline-specific
+  timelineItems?: TimelineItem[]
+  timelineOrientation?: 'vertical' | 'horizontal'
+  // carousel-specific
+  carouselItems?: CarouselItem[]
+  carouselMode?: 'carousel' | 'grid'
+  // audio-specific
   audioUrl?: string
-  audioTitulo?: string
-  transcricao?: string
-  // Propriedades específicas para pdf
+  audioTitle?: string
+  transcript?: string
+  // pdf-specific
   pdfUrl?: string
-  pdfTitulo?: string
-  permitirDownloadPdf?: boolean
-  // Propriedades específicas para imagem-interativa
-  imagemBase?: string
+  pdfTitle?: string
+  allowPdfDownload?: boolean
+  // interactive-image-specific
+  baseImage?: string
   hotspots?: HotspotItem[]
-  // Propriedades específicas para associacao
-  paresAssociacao?: MatchingPair[]
-  // Propriedades específicas para categorizacao
-  categorias?: CategoryItem[]
+  // matching-specific
+  matchingPairs?: MatchingPair[]
+  // categorization-specific
+  categories?: CategoryItem[]
 }
 
 export interface Unit {
   id: string
   slug?: string
-  titulo: string
-  descricao: string
-  conteudo: Block[]
-  ordem: number
+  title: string
+  description: string
+  blocks: Block[]
+  order: number
 }
 
 export interface Course {
   id: string
   slug?: string
-  titulo: string
-  descricao: string
-  cargaHoraria: string
-  modalidade: string
-  categoria: string
+  title: string
+  description: string
+  workload: string
+  modality: string
+  category: string
   layout?: string
   bannerVideoUrl?: string
   status?: CourseStatus
@@ -213,9 +208,9 @@ export interface Course {
   ownerName?: string
   permissions?: CoursePermissions
   hasPendingRequest?: boolean
-  dataCriacao: Date
-  dataModificacao: Date
-  unidades: Unit[]
+  createdAt: Date
+  updatedAt: Date
+  units: Unit[]
 }
 
 export interface CourseEditorState {
@@ -226,15 +221,15 @@ export interface CourseEditorState {
 
 export interface CourseEditorContextType {
   state: CourseEditorState
-  createCourse: (course: Omit<Course, 'id' | 'dataCriacao' | 'dataModificacao'>) => Promise<string>
+  createCourse: (course: Omit<Course, 'id' | 'createdAt' | 'updatedAt'>) => Promise<string>
   updateCourse: (id: string, course: Partial<Course>) => void
   deleteCourse: (id: string) => void
   selectCourse: (id: string, forceRefresh?: boolean) => void
-  addUnit: (unit: Omit<Unit, 'id' | 'ordem'>) => Promise<void>
+  addUnit: (unit: Omit<Unit, 'id' | 'order'>) => Promise<void>
   updateUnit: (id: string, unit: Partial<Unit>) => Promise<void>
   deleteUnit: (id: string) => Promise<void>
   reorderUnits: (units: Unit[]) => Promise<void>
-  addBlock: (unitId: string, content: Omit<Block, 'id' | 'ordem'>) => Promise<void>
+  addBlock: (unitId: string, content: Omit<Block, 'id' | 'order'>) => Promise<void>
   updateBlock: (unitId: string, blockId: string, content: Partial<Block>) => void
   deleteBlock: (unitId: string, blockId: string) => void
   reorderBlocks: (unitId: string, content: Block[]) => void

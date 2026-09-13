@@ -12,42 +12,43 @@ import {
 import type { BlockType } from '@/lib/blocks'
 import { blockRegistry } from '@/components/course/blocks/registry'
 import type { Block, Course, FlipcardItem, VideoQuestion } from '@/types/course'
+import { upgradeBlock } from '@/lib/legacy-course'
 
-function courseWith(content: Partial<Block>[]): Course {
+function courseWith(blocks: Partial<Block>[]): Course {
   return {
-    titulo: 'Curso',
-    descricao: 'Descrição',
-    unidades: [{ titulo: 'Unidade 1', descricao: '', conteudo: content }],
+    title: 'Curso',
+    description: 'Descrição',
+    units: [{ title: 'Unidade 1', description: '', blocks }],
   } as unknown as Course
 }
 
 function options(correctAt: number, total = 5) {
   return Array.from({ length: total }, (_, i) => ({
     id: `op-${i + 1}`,
-    texto: `Opção ${i + 1}`,
+    text: `Opção ${i + 1}`,
     isCorrect: i === correctAt,
     feedback: 'feedback',
   }))
 }
 
-describe('catálogo de blocos', () => {
-  it('cobre exatamente os tipos que o editor sabe renderizar', () => {
+describe('block catalog', () => {
+  it('covers exactly the types the editor can render', () => {
     expect(BLOCK_TYPES.sort()).toEqual(Object.keys(blockRegistry).sort())
   })
 
-  it('deixa fora da geração por IA apenas o separador', () => {
-    expect(BLOCK_TYPES.filter((type) => !BLOCK_CATALOG[type].aiGeneratable)).toEqual(['separador'])
+  it('excludes only the divider from AI generation', () => {
+    expect(BLOCK_TYPES.filter((type) => !BLOCK_CATALOG[type].aiGeneratable)).toEqual(['divider'])
   })
 
-  it('não repete marcadores entre tipos', () => {
+  it('never reuses a marker across types', () => {
     const markers = BLOCK_TYPES.map((type) => BLOCK_CATALOG[type].marker).filter(Boolean)
 
     expect(new Set(markers).size).toBe(markers.length)
   })
 
-  it('tem rótulo próprio para todo tipo, sem cair em texto genérico', () => {
-    // O card do editor lê CATALOGO_BLOCOS[tipo].rotulo. Enquanto isso era uma cadeia
-    // de ternários com fallback 'Conteúdo', bloco novo aparecia sem nome.
+  it('gives every type its own label, never a generic one', () => {
+    // The editor card reads BLOCK_CATALOG[type].label. While that was a chain of
+    // ternaries falling back to 'Conteúdo', a new block showed up unnamed.
     for (const type of BLOCK_TYPES) {
       const label = BLOCK_CATALOG[type].label
       expect(label.trim()).not.toBe('')
@@ -58,7 +59,7 @@ describe('catálogo de blocos', () => {
     expect(new Set(labels).size).toBe(labels.length)
   })
 
-  it('declara ícone, descrição e categoria conhecida para todo tipo', () => {
+  it('declares an icon, a description and a known category for every type', () => {
     const categories = BLOCK_CATEGORIES.map((c) => c.id)
 
     for (const type of BLOCK_TYPES) {
@@ -69,7 +70,7 @@ describe('catálogo de blocos', () => {
     }
   })
 
-  it('não deixa nenhum tipo fora das categorias exibidas no modal', () => {
+  it('leaves no type out of the categories shown in the modal', () => {
     const grouped = BLOCK_CATEGORIES.flatMap((category) =>
       BLOCK_TYPES.filter((type) => BLOCK_CATALOG[type].category === category.id)
     )
@@ -78,38 +79,38 @@ describe('catálogo de blocos', () => {
   })
 })
 
-describe('criarBlocoVazio', () => {
-  it('devolve o tipo pedido e os campos base para todo tipo', () => {
+describe('createEmptyBlock', () => {
+  it('returns the requested type and the base fields for every type', () => {
     for (const type of BLOCK_TYPES) {
       const block = createEmptyBlock(type)
 
-      expect(block.tipo).toBe(type)
-      expect(block.conteudo).toBe('')
-      expect(block.colunas).toBe(12)
+      expect(block.type).toBe(type)
+      expect(block.content).toBe('')
+      expect(block.columns).toBe(12)
     }
   })
 
-  it('aplica os padrões declarados no catálogo', () => {
-    expect(createEmptyBlock('lista').tipoLista).toBe('nao-ordenada')
-    expect(createEmptyBlock('info-box').tipoInfoBox).toBe('info')
-    expect(createEmptyBlock('flipcard').alturaCard).toBe('300px')
-    expect(createEmptyBlock('flipcard').itensFlipcard).toEqual([])
-    expect(createEmptyBlock('imagem').tamanho).toBe('media')
+  it('applies the defaults declared in the catalog', () => {
+    expect(createEmptyBlock('list').listType).toBe('unordered')
+    expect(createEmptyBlock('info-box').infoBoxType).toBe('info')
+    expect(createEmptyBlock('flipcard').cardHeight).toBe('300px')
+    expect(createEmptyBlock('flipcard').flipcardItems).toEqual([])
+    expect(createEmptyBlock('image').size).toBe('medium')
   })
 
-  it('devolve coleções novas a cada chamada, sem estado compartilhado', () => {
+  it('returns fresh collections on every call, with no shared state', () => {
     const a = createEmptyBlock('accordion')
     const b = createEmptyBlock('accordion')
 
-    a.items?.push({ id: 'x', titulo: 't', conteudo: 'c' })
+    a.items?.push({ id: 'x', title: 't', content: 'c' })
 
     expect(b.items).toEqual([])
   })
 })
 
-describe('validarFormulario', () => {
-  it('recusa bloco recém-criado e explica o motivo', () => {
-    const withoutOwnContent: BlockType[] = ['separador']
+describe('validateForm', () => {
+  it('rejects a freshly created block and explains why', () => {
+    const withoutOwnContent: BlockType[] = ['divider']
 
     for (const type of BLOCK_TYPES.filter((t) => !withoutOwnContent.includes(t))) {
       const error = BLOCK_CATALOG[type].validateForm(createEmptyBlock(type))
@@ -119,115 +120,113 @@ describe('validarFormulario', () => {
     }
   })
 
-  it('aceita o separador sem preenchimento, por não ter conteúdo próprio', () => {
-    expect(BLOCK_CATALOG.separador.validateForm(createEmptyBlock('separador'))).toBeNull()
+  it('accepts an empty divider, which has no content of its own', () => {
+    expect(BLOCK_CATALOG.divider.validateForm(createEmptyBlock('divider'))).toBeNull()
   })
 
-  it('pede arquivo ou link sem obrigar a escolher a fonte', () => {
+  it('asks for a file or a link without forcing a source choice', () => {
     // Não há mais seletor de fonte: enviar e colar link são o mesmo campo.
-    for (const type of ['video', 'video-interativo'] as const) {
+    for (const type of ['video', 'interactive-video'] as const) {
       expect(BLOCK_CATALOG[type].validateForm(createEmptyBlock(type))).toBe(
         'Envie o arquivo de vídeo ou cole o link do YouTube'
       )
     }
   })
 
-  it('cobra tempo, enunciado e alternativas em cada pergunta do vídeo interativo', () => {
-    const meta = BLOCK_CATALOG['video-interativo']
+  it('requires time, prompt and options on every interactive video question', () => {
+    const meta = BLOCK_CATALOG['interactive-video']
     const base = {
-      ...createEmptyBlock('video-interativo'),
+      ...createEmptyBlock('interactive-video'),
       videoUrl: 'https://blob.com/aula.mp4',
-      videoTitulo: 'Aula',
+      videoTitle: 'Aula',
     }
     const question = (extra: Partial<VideoQuestion>): VideoQuestion => ({
       id: 'pv-1',
-      tempo: '01:00',
-      pergunta: 'Pergunta?',
-      opcaoA: 'A',
-      opcaoB: 'B',
-      correta: 'A',
+      time: '01:00',
+      question: 'Pergunta?',
+      optionA: 'A',
+      optionB: 'B',
+      correct: 'A',
       ...extra,
     })
 
     expect(meta.validateForm(base)).toBe('Adicione pelo menos uma pergunta')
-    expect(meta.validateForm({ ...base, perguntasVideo: [question({ tempo: 'x' })] })).toBe(
+    expect(meta.validateForm({ ...base, videoQuestions: [question({ time: 'x' })] })).toBe(
       'Pergunta 1: informe o tempo no formato mm:ss'
     )
-    expect(meta.validateForm({ ...base, perguntasVideo: [question({ pergunta: '' })] })).toBe(
+    expect(meta.validateForm({ ...base, videoQuestions: [question({ question: '' })] })).toBe(
       'Pergunta 1: escreva o enunciado'
     )
-    expect(meta.validateForm({ ...base, perguntasVideo: [question({ opcaoB: '' })] })).toBe(
+    expect(meta.validateForm({ ...base, videoQuestions: [question({ optionB: '' })] })).toBe(
       'Pergunta 1: preencha pelo menos 2 alternativas'
     )
-    expect(meta.validateForm({ ...base, perguntasVideo: [question({ correta: 'C' })] })).toBe(
+    expect(meta.validateForm({ ...base, videoQuestions: [question({ correct: 'C' })] })).toBe(
       'Pergunta 1: a alternativa marcada como correta está vazia'
     )
     expect(
       meta.validateForm({
         ...base,
-        perguntasVideo: [question({}), question({ id: 'pv-2', tempo: '1:00' })],
+        videoQuestions: [question({}), question({ id: 'pv-2', time: '1:00' })],
       })
     ).toBe('Pergunta 2: já existe uma pergunta neste tempo')
-    expect(meta.validateForm({ ...base, perguntasVideo: [question({})] })).toBeNull()
+    expect(meta.validateForm({ ...base, videoQuestions: [question({})] })).toBeNull()
   })
 
-  it('exige legenda e fonte na imagem, além da URL', () => {
-    const meta = BLOCK_CATALOG.imagem
-    const base = { ...createEmptyBlock('imagem'), conteudo: 'https://exemplo.com/a.png' }
+  it('requires caption and source on an image, on top of the URL', () => {
+    const meta = BLOCK_CATALOG.image
+    const base = { ...createEmptyBlock('image'), content: 'https://exemplo.com/a.png' }
 
     expect(meta.validateForm(base)).toBe('Adicione uma legenda')
-    expect(meta.validateForm({ ...base, legenda: 'Legenda' })).toBe('Adicione a fonte da imagem')
-    expect(meta.validateForm({ ...base, legenda: 'Legenda', fonte: 'SENAI' })).toBeNull()
+    expect(meta.validateForm({ ...base, caption: 'Legenda' })).toBe('Adicione a fonte da imagem')
+    expect(meta.validateForm({ ...base, caption: 'Legenda', source: 'SENAI' })).toBeNull()
   })
 
-  it('cobra imagem e título conforme o tipo de frente de cada card', () => {
+  it('requires image and title according to each card front type', () => {
     const meta = BLOCK_CATALOG.flipcard
     const card = (extra: Partial<FlipcardItem>): FlipcardItem => ({
       id: 'c-1',
-      tipoFrente: 'titulo',
-      conteudoVerso: 'verso',
+      frontType: 'title',
+      backContent: 'verso',
       ...extra,
     })
     const block = (...flipcardItems: FlipcardItem[]) => ({
       ...createEmptyBlock('flipcard'),
-      itensFlipcard: flipcardItems,
+      flipcardItems,
     })
 
     expect(meta.validateForm(createEmptyBlock('flipcard'))).toBe('Adicione ao menos um flipcard')
-    expect(meta.validateForm(block(card({ tipoFrente: 'titulo' })))).toBe(
+    expect(meta.validateForm(block(card({ frontType: 'title' })))).toBe(
       'Card 1: adicione um título para a frente'
     )
-    expect(meta.validateForm(block(card({ tipoFrente: 'imagem' })))).toBe(
+    expect(meta.validateForm(block(card({ frontType: 'image' })))).toBe(
       'Card 1: adicione uma imagem para a frente'
     )
-    expect(meta.validateForm(block(card({ tipoFrente: 'imagem-titulo', imagemFrente: 'x' })))).toBe(
+    expect(meta.validateForm(block(card({ frontType: 'image-title', frontImage: 'x' })))).toBe(
       'Card 1: adicione um título para a frente'
     )
-    expect(meta.validateForm(block(card({ tituloFrente: 'Frente' }), card({ id: 'c-2' })))).toBe(
+    expect(meta.validateForm(block(card({ frontTitle: 'Frente' }), card({ id: 'c-2' })))).toBe(
       'Card 2: adicione um título para a frente'
     )
-    expect(meta.validateForm(block(card({ tituloFrente: 'Frente' })))).toBeNull()
+    expect(meta.validateForm(block(card({ frontTitle: 'Frente' })))).toBeNull()
   })
 
-  it('exige o verso de cada card', () => {
+  it('requires the back of every card', () => {
     const meta = BLOCK_CATALOG.flipcard
 
     expect(
       meta.validateForm({
         ...createEmptyBlock('flipcard'),
-        itensFlipcard: [
-          { id: 'c-1', tipoFrente: 'titulo', tituloFrente: 'Frente', conteudoVerso: '' },
-        ],
+        flipcardItems: [{ id: 'c-1', frontType: 'title', frontTitle: 'Frente', backContent: '' }],
       })
     ).toBe('Card 1: adicione o conteúdo do verso')
   })
 
-  it('é mais estrito que a aceitação de bloco vindo da IA', () => {
+  it('is stricter than the acceptance of an AI-generated block', () => {
     const partialAccordion = {
       ...createEmptyBlock('accordion'),
       items: [
-        { id: '1', titulo: 'ok', conteudo: 'ok' },
-        { id: '2', titulo: '', conteudo: '' },
+        { id: '1', title: 'ok', content: 'ok' },
+        { id: '2', title: '', content: '' },
       ],
     }
 
@@ -238,153 +237,155 @@ describe('validarFormulario', () => {
   })
 })
 
-describe('blocos da fase 1', () => {
-  it('descarta abas sem título ou sem conteúdo', () => {
+describe('phase 1 blocks', () => {
+  it('drops tabs with no title or no content', () => {
     const { course } = normalizeCourse(
       courseWith([
         {
-          tipo: 'tabs',
-          conteudo: '',
-          itensTabs: [
-            { id: 't1', titulo: 'Válida', conteudo: 'Conteúdo' },
-            { id: 't2', titulo: 'Sem conteúdo', conteudo: '' },
+          type: 'tabs',
+          content: '',
+          tabItems: [
+            { id: 't1', title: 'Válida', content: 'Conteúdo' },
+            { id: 't2', title: 'Sem conteúdo', content: '' },
           ],
         },
       ])
     )
 
-    expect(course.unidades[0].conteudo[0].itensTabs).toHaveLength(1)
+    expect(course.units[0].blocks[0].tabItems).toHaveLength(1)
   })
 
-  it('preenche id e campos ausentes dos eventos da linha do tempo', () => {
+  it('fills in missing ids and fields on timeline events', () => {
     const { course } = normalizeCourse(
       courseWith([
         {
-          tipo: 'linha-do-tempo',
-          conteudo: '',
-          itensTimeline: [{ id: '', data: '', titulo: 'Marco', descricao: '' }],
+          type: 'timeline',
+          content: '',
+          timelineItems: [{ id: '', date: '', title: 'Marco', description: '' }],
         },
       ])
     )
 
-    expect(course.unidades[0].conteudo[0].itensTimeline?.[0]).toMatchObject({
-      id: 'evento-1',
-      titulo: 'Marco',
-      data: '',
-      descricao: '',
+    expect(course.units[0].blocks[0].timelineItems?.[0]).toMatchObject({
+      id: 'timeline-1',
+      title: 'Marco',
+      date: '',
+      description: '',
     })
   })
 
-  it('corrige orientação e modo inválidos', () => {
+  it('fixes an invalid orientation and mode', () => {
     const { course } = normalizeCourse(
       courseWith([
         {
-          tipo: 'linha-do-tempo',
-          conteudo: '',
-          orientacaoTimeline: 'diagonal' as never,
-          itensTimeline: [{ id: 'e1', data: '', titulo: 'Marco', descricao: '' }],
+          type: 'timeline',
+          content: '',
+          timelineOrientation: 'diagonal' as never,
+          timelineItems: [{ id: 'e1', date: '', title: 'Marco', description: '' }],
         },
         {
-          tipo: 'carrossel',
-          conteudo: '',
-          modoCarrossel: 'mosaico' as never,
-          itensCarrossel: [{ id: 'i1', url: 'https://exemplo.com/a.png' }],
+          type: 'carousel',
+          content: '',
+          carouselMode: 'mosaico' as never,
+          carouselItems: [{ id: 'i1', url: 'https://exemplo.com/a.png' }],
         },
       ])
     )
 
-    expect(course.unidades[0].conteudo[0].orientacaoTimeline).toBe('vertical')
-    expect(course.unidades[0].conteudo[1].modoCarrossel).toBe('carrossel')
+    expect(course.units[0].blocks[0].timelineOrientation).toBe('vertical')
+    expect(course.units[0].blocks[1].carouselMode).toBe('carousel')
   })
 
-  it('descarta imagens do carrossel sem URL válida', () => {
+  it('drops carousel images without a valid URL', () => {
     const { course, summary } = normalizeCourse(
       courseWith([
         {
-          tipo: 'carrossel',
-          conteudo: '',
-          itensCarrossel: [
+          type: 'carousel',
+          content: '',
+          carouselItems: [
             { id: 'i1', url: 'https://exemplo.com/a.png' },
             { id: 'i2', url: 'nao-e-url' },
           ],
         },
-        { tipo: 'carrossel', conteudo: '', itensCarrossel: [{ id: 'i3', url: 'x' }] },
+        { type: 'carousel', content: '', carouselItems: [{ id: 'i3', url: 'x' }] },
       ])
     )
 
-    expect(course.unidades[0].conteudo).toHaveLength(1)
-    expect(course.unidades[0].conteudo[0].itensCarrossel).toHaveLength(1)
+    expect(course.units[0].blocks).toHaveLength(1)
+    expect(course.units[0].blocks[0].carouselItems).toHaveLength(1)
     expect(summary.discarded[0]).toMatchObject({
-      type: 'carrossel',
+      type: 'carousel',
       reason: 'sem imagens com URL válida',
     })
   })
 
-  it('mantém o separador mesmo sem conteúdo e normaliza o estilo', () => {
+  it('keeps the divider even when empty and normalizes its style', () => {
     const { course } = normalizeCourse(
-      courseWith([{ tipo: 'separador', conteudo: '', estiloSeparador: 'pontilhado' as never }])
+      courseWith([{ type: 'divider', content: '', dividerStyle: 'pontilhado' as never }])
     )
 
-    expect(course.unidades[0].conteudo).toHaveLength(1)
-    expect(course.unidades[0].conteudo[0].estiloSeparador).toBe('linha')
+    expect(course.units[0].blocks).toHaveLength(1)
+    expect(course.units[0].blocks[0].dividerStyle).toBe('line')
   })
 })
 
 describe('cardsFlipcard', () => {
-  it('converte o formato legado de card único', () => {
+  it('converts the legacy single-card format', () => {
     expect(
-      cardsFlipcard({
-        tipo: 'flipcard',
-        tipoFrente: 'imagem-titulo',
-        imagemFrente: 'https://x.com/a.png',
-        tituloFrente: 'Frente',
-        conteudoVerso: 'Verso',
-      })
+      cardsFlipcard(
+        upgradeBlock({
+          tipo: 'flipcard',
+          tipoFrente: 'imagem-titulo',
+          imagemFrente: 'https://x.com/a.png',
+          tituloFrente: 'Frente',
+          conteudoVerso: 'Verso',
+        }) as Partial<Block>
+      )
     ).toEqual([
       {
         id: 'flip-1',
-        tipoFrente: 'imagem-titulo',
-        imagemFrente: 'https://x.com/a.png',
-        tituloFrente: 'Frente',
-        conteudoVerso: 'Verso',
+        frontType: 'image-title',
+        frontImage: 'https://x.com/a.png',
+        frontTitle: 'Frente',
+        backContent: 'Verso',
       },
     ])
   })
 
-  it('ignora os campos legados quando já existe a lista de cards', () => {
-    const cards = cardsFlipcard({
-      tipo: 'flipcard',
-      tituloFrente: 'Antiga',
-      conteudoVerso: 'Antigo',
-      itensFlipcard: [
-        { id: 'c-1', tipoFrente: 'titulo', tituloFrente: 'Nova', conteudoVerso: 'Novo' },
-      ],
-    })
+  it('ignores the legacy fields once the card list exists', () => {
+    const cards = cardsFlipcard(
+      upgradeBlock({
+        tipo: 'flipcard',
+        tituloFrente: 'Antiga',
+        conteudoVerso: 'Antigo',
+        itensFlipcard: [
+          { id: 'c-1', tipoFrente: 'titulo', tituloFrente: 'Nova', conteudoVerso: 'Novo' },
+        ],
+      }) as Partial<Block>
+    )
 
     expect(cards).toHaveLength(1)
-    expect(cards[0].tituloFrente).toBe('Nova')
+    expect(cards[0].frontTitle).toBe('Nova')
   })
 
-  it('normaliza tipo de frente inválido e id ausente', () => {
+  it('normalizes an invalid front type and a missing id', () => {
     const cards = cardsFlipcard({
-      tipo: 'flipcard',
-      itensFlipcard: [
-        { tipoFrente: 'inexistente', conteudoVerso: 'v' },
-      ] as unknown as FlipcardItem[],
+      type: 'flipcard',
+      flipcardItems: [{ frontType: 'inexistente', backContent: 'v' }] as unknown as FlipcardItem[],
     })
 
-    expect(cards[0].tipoFrente).toBe('titulo')
+    expect(cards[0].frontType).toBe('title')
     expect(cards[0].id).toBe('flip-1')
   })
 
-  it('devolve lista vazia para um bloco sem cards', () => {
+  it('returns an empty list for a block with no cards', () => {
     expect(cardsFlipcard(createEmptyBlock('flipcard'))).toEqual([])
   })
 })
 
-describe('mesclarFlipcardsAdjacentes', () => {
+describe('mergeAdjacentFlipcards', () => {
   const legacyFlipcard = (id: string, title: string, order: number): Block =>
-    ({
+    upgradeBlock({
       id,
       tipo: 'flipcard',
       conteudo: '',
@@ -393,9 +394,9 @@ describe('mesclarFlipcardsAdjacentes', () => {
       tipoFrente: 'titulo',
       tituloFrente: title,
       conteudoVerso: `Verso de ${title}`,
-    }) as Block
+    }) as unknown as Block
 
-  it('junta flipcards vizinhos num bloco só, com ids de card únicos', () => {
+  it('merges neighbouring flipcards into one block, with unique card ids', () => {
     const result = mergeAdjacentFlipcards([
       legacyFlipcard('c-57', 'Flexbox', 0),
       legacyFlipcard('c-58', 'CSS Grid', 1),
@@ -403,78 +404,78 @@ describe('mesclarFlipcardsAdjacentes', () => {
 
     expect(result).toHaveLength(1)
     expect(result[0].id).toBe('c-57')
-    expect(result[0].colunas).toBe(12)
-    expect(result[0].itensFlipcard?.map((c) => c.tituloFrente)).toEqual(['Flexbox', 'CSS Grid'])
-    expect(result[0].itensFlipcard?.map((c) => c.id)).toEqual(['flip-1', 'flip-2'])
-    expect(result[0].tituloFrente).toBeUndefined()
+    expect(result[0].columns).toBe(12)
+    expect(result[0].flipcardItems?.map((c) => c.frontTitle)).toEqual(['Flexbox', 'CSS Grid'])
+    expect(result[0].flipcardItems?.map((c) => c.id)).toEqual(['flip-1', 'flip-2'])
+    expect((result[0] as unknown as Record<string, unknown>).frontTitle).toBeUndefined()
   })
 
-  it('não junta flipcards separados por outro bloco', () => {
+  it('does not merge flipcards separated by another block', () => {
     const result = mergeAdjacentFlipcards([
       legacyFlipcard('c-1', 'A', 0),
-      { id: 'p-1', tipo: 'paragrafo', conteudo: 'Texto', ordem: 1 } as Block,
+      { id: 'p-1', type: 'paragraph', content: 'Texto', order: 1 } as Block,
       legacyFlipcard('c-2', 'B', 2),
     ])
 
-    expect(result.map((b) => b.tipo)).toEqual(['flipcard', 'paragrafo', 'flipcard'])
-    expect(result.map((b) => b.ordem)).toEqual([0, 1, 2])
+    expect(result.map((b) => b.type)).toEqual(['flipcard', 'paragraph', 'flipcard'])
+    expect(result.map((b) => b.order)).toEqual([0, 1, 2])
   })
 
-  it('renumera a ordem depois de mesclar', () => {
+  it('renumbers the order after merging', () => {
     const result = mergeAdjacentFlipcards([
       legacyFlipcard('c-1', 'A', 0),
       legacyFlipcard('c-2', 'B', 1),
-      { id: 'p-1', tipo: 'paragrafo', conteudo: 'Texto', ordem: 2 } as Block,
+      { id: 'p-1', type: 'paragraph', content: 'Texto', order: 2 } as Block,
     ])
 
-    expect(result.map((b) => b.ordem)).toEqual([0, 1])
+    expect(result.map((b) => b.order)).toEqual([0, 1])
   })
 
-  it('preserva blocos que já estão no formato de grade', () => {
+  it('preserves blocks already in the grid format', () => {
     const block = {
       id: 'f-1',
-      tipo: 'flipcard',
-      conteudo: '',
-      ordem: 0,
-      colunas: 12,
-      itensFlipcard: [
-        { id: 'flip-1', tipoFrente: 'titulo', tituloFrente: 'A', conteudoVerso: 'a' },
-        { id: 'flip-2', tipoFrente: 'titulo', tituloFrente: 'B', conteudoVerso: 'b' },
+      type: 'flipcard',
+      content: '',
+      order: 0,
+      columns: 12,
+      flipcardItems: [
+        { id: 'flip-1', frontType: 'title', frontTitle: 'A', backContent: 'a' },
+        { id: 'flip-2', frontType: 'title', frontTitle: 'B', backContent: 'b' },
       ],
     } as Block
 
-    expect(mergeAdjacentFlipcards([block])[0].itensFlipcard).toHaveLength(2)
+    expect(mergeAdjacentFlipcards([block])[0].flipcardItems).toHaveLength(2)
   })
 
-  it('deixa o conteúdo sem flipcard intacto', () => {
+  it('leaves content without flipcards untouched', () => {
     const content = [
-      { id: 'p-1', tipo: 'paragrafo', conteudo: 'A', ordem: 0 },
-      { id: 'p-2', tipo: 'paragrafo', conteudo: 'B', ordem: 1 },
+      { id: 'p-1', type: 'paragraph', content: 'A', order: 0 },
+      { id: 'p-2', type: 'paragraph', content: 'B', order: 1 },
     ] as Block[]
 
     expect(mergeAdjacentFlipcards(content)).toEqual(content)
   })
 })
 
-describe('extrairMidiasDoBloco', () => {
-  it('coleta a URL de cada bloco de mídia', () => {
-    const cases: [Block['tipo'], Partial<Block>, string[]][] = [
-      ['imagem', { conteudo: 'https://x.com/a.png' }, ['https://x.com/a.png']],
+describe('extractBlockMedia', () => {
+  it('collects the URL of every media block', () => {
+    const cases: [Block['type'], Partial<Block>, string[]][] = [
+      ['image', { content: 'https://x.com/a.png' }, ['https://x.com/a.png']],
       [
         'flipcard',
         {
-          itensFlipcard: [
+          flipcardItems: [
             {
               id: 'c-1',
-              tipoFrente: 'imagem',
-              imagemFrente: 'https://x.com/f.png',
-              conteudoVerso: 'v',
+              frontType: 'image',
+              frontImage: 'https://x.com/f.png',
+              backContent: 'v',
             },
             {
               id: 'c-2',
-              tipoFrente: 'imagem',
-              imagemFrente: 'https://x.com/g.png',
-              conteudoVerso: 'v',
+              frontType: 'image',
+              frontImage: 'https://x.com/g.png',
+              backContent: 'v',
             },
           ],
         },
@@ -483,9 +484,9 @@ describe('extrairMidiasDoBloco', () => {
       ['audio', { audioUrl: 'https://x.com/a.mp3' }, ['https://x.com/a.mp3']],
       ['pdf', { pdfUrl: 'https://x.com/d.pdf' }, ['https://x.com/d.pdf']],
       [
-        'carrossel',
+        'carousel',
         {
-          itensCarrossel: [
+          carouselItems: [
             { id: '1', url: 'https://x.com/1.png' },
             { id: '2', url: 'nao-url' },
           ],
@@ -500,13 +501,13 @@ describe('extrairMidiasDoBloco', () => {
     }
   })
 
-  it('não devolve nada para blocos sem mídia', () => {
-    expect(extractBlockMedia(createEmptyBlock('paragrafo') as Block)).toEqual([])
+  it('returns nothing for blocks without media', () => {
+    expect(extractBlockMedia(createEmptyBlock('paragraph') as Block)).toEqual([])
     expect(extractBlockMedia(createEmptyBlock('tabs') as Block)).toEqual([])
   })
 
-  it('cobre todo bloco que exige mídia do documento', () => {
-    // Sem extrairMidias a URL remota sobrevive no pacote e quebra o curso em LMS sem
+  it('covers every block that requires media from the document', () => {
+    // Without extractMedia the remote URL survives in the package and breaks the course
     // internet.
     const withoutExtractor = BLOCK_TYPES.filter(
       (type) => BLOCK_CATALOG[type].requiresDocumentMedia && !BLOCK_CATALOG[type].extractMedia
@@ -515,10 +516,10 @@ describe('extrairMidiasDoBloco', () => {
     expect(withoutExtractor).toEqual([])
   })
 
-  it('não embute vídeo do YouTube no pacote, por ser streaming externo', () => {
+  it('does not bundle a YouTube video, which is external streaming', () => {
     const block = {
       ...createEmptyBlock('video'),
-      fonteVideo: 'youtube',
+      videoSource: 'youtube',
       videoUrl: 'https://www.youtube.com/watch?v=abc',
     } as Block
 
@@ -528,10 +529,10 @@ describe('extrairMidiasDoBloco', () => {
     ).toBe('https://www.youtube.com/watch?v=abc')
   })
 
-  it('embute o vídeo enviado como arquivo', () => {
+  it('bundles a video uploaded as a file', () => {
     const block = {
       ...createEmptyBlock('video'),
-      fonteVideo: 'arquivo',
+      videoSource: 'file',
       videoUrl: 'https://blob.com/aula.mp4',
     } as Block
 
@@ -541,48 +542,48 @@ describe('extrairMidiasDoBloco', () => {
     ).toBe('images/aula.mp4')
   })
 
-  it('deduz a fonte pela URL quando o campo não veio', () => {
-    // Cobre curso salvo antes de fonteVideo existir e bloco da IA que omitiu o campo.
-    const withoutField = (type: 'video' | 'video-interativo', videoUrl: string) => {
+  it('infers the source from the URL when the field is missing', () => {
+    // Covers a course saved before videoSource existed and an AI block that omitted it.
+    const withoutField = (type: 'video' | 'interactive-video', videoUrl: string) => {
       const block = { ...createEmptyBlock(type), videoUrl } as Block
-      delete (block as Partial<Block>).fonteVideo
+      delete (block as Partial<Block>).videoSource
       return block
     }
 
-    expect(extractBlockMedia(withoutField('video-interativo', 'https://b.com/aula.mp4'))).toEqual([
+    expect(extractBlockMedia(withoutField('interactive-video', 'https://b.com/aula.mp4'))).toEqual([
       'https://b.com/aula.mp4',
     ])
     expect(
-      extractBlockMedia(withoutField('video-interativo', 'https://youtu.be/abc12345678'))
+      extractBlockMedia(withoutField('interactive-video', 'https://youtu.be/abc12345678'))
     ).toEqual([])
-    // No bloco `video` sem o campo, o padrão legado é YouTube: antes de `fonteVideo`
-    // existir o formulário só aceitava link do YouTube, então não há .mp4 legado ali.
+    // On a `video` block without the field the legacy default is YouTube: before
+    // `videoSource` existed the form only took YouTube links, so no legacy .mp4 exists.
     expect(extractBlockMedia(withoutField('video', 'https://youtu.be/abc12345678'))).toEqual([])
     expect(extractBlockMedia(withoutField('video', 'https://b.com/aula.mp4'))).toEqual([])
 
-    // Com o campo declarado, o arquivo é embutido normalmente.
+    // With the field declared, the file is bundled as usual.
     const declared = {
       ...createEmptyBlock('video'),
-      fonteVideo: 'arquivo',
+      videoSource: 'file',
       videoUrl: 'https://b.com/aula.mp4',
     } as Block
     expect(extractBlockMedia(declared)).toEqual(['https://b.com/aula.mp4'])
   })
 
-  it('a URL do YouTube vence o campo declarado como arquivo', () => {
-    // Link do YouTube dentro de um <video> nunca toca; a URL é o fato.
+  it('lets a YouTube URL win over a source declared as file', () => {
+    // A YouTube link inside a <video> never plays; the URL is the fact.
     const block = {
-      ...createEmptyBlock('video-interativo'),
-      fonteVideo: 'arquivo',
+      ...createEmptyBlock('interactive-video'),
+      videoSource: 'file',
       videoUrl: 'https://youtu.be/abc12345678',
     } as Block
 
     expect(extractBlockMedia(block)).toEqual([])
   })
 
-  it('embute o vídeo do bloco interativo', () => {
+  it('bundles the video of the interactive block', () => {
     const block = {
-      ...createEmptyBlock('video-interativo'),
+      ...createEmptyBlock('interactive-video'),
       videoUrl: 'https://blob.com/aula.mp4',
     } as Block
 
@@ -593,75 +594,75 @@ describe('extrairMidiasDoBloco', () => {
   })
 })
 
-describe('blocos da fase 2', () => {
-  it('descarta áudio e PDF sem URL válida', () => {
+describe('phase 2 blocks', () => {
+  it('drops audio and PDF without a valid URL', () => {
     const { course, summary } = normalizeCourse(
       courseWith([
-        { tipo: 'audio', conteudo: '', audioUrl: 'nao-url' },
-        { tipo: 'pdf', conteudo: '', pdfUrl: '' },
-        { tipo: 'audio', conteudo: '', audioUrl: 'https://x.com/ok.mp3' },
+        { type: 'audio', content: '', audioUrl: 'nao-url' },
+        { type: 'pdf', content: '', pdfUrl: '' },
+        { type: 'audio', content: '', audioUrl: 'https://x.com/ok.mp3' },
       ])
     )
 
-    expect(course.unidades[0].conteudo).toHaveLength(1)
+    expect(course.units[0].blocks).toHaveLength(1)
     expect(summary.discarded.map((d) => d.reason)).toEqual([
       'sem URL de áudio válida',
       'sem URL de PDF válida',
     ])
   })
 
-  it('assume download permitido quando o campo vem ausente', () => {
+  it('assumes download is allowed when the field is missing', () => {
     const { course } = normalizeCourse(
-      courseWith([{ tipo: 'pdf', conteudo: '', pdfUrl: 'https://x.com/a.pdf' }])
+      courseWith([{ type: 'pdf', content: '', pdfUrl: 'https://x.com/a.pdf' }])
     )
 
-    expect(course.unidades[0].conteudo[0].permitirDownloadPdf).toBe(true)
+    expect(course.units[0].blocks[0].allowPdfDownload).toBe(true)
   })
 })
 
-describe('blocos da fase 3', () => {
-  it('descarta imagem interativa sem imagem de fundo ou sem ponto com título', () => {
+describe('phase 3 blocks', () => {
+  it('drops an interactive image with no base image or no titled hotspot', () => {
     const { course, summary } = normalizeCourse(
       courseWith([
-        { tipo: 'imagem-interativa', conteudo: '', imagemBase: 'nao-url', hotspots: [] },
+        { type: 'interactive-image', content: '', baseImage: 'nao-url', hotspots: [] },
         {
-          tipo: 'imagem-interativa',
-          conteudo: '',
-          imagemBase: 'https://x.com/a.png',
-          hotspots: [{ id: '', x: 10, y: 20, titulo: '', conteudo: '' }],
+          type: 'interactive-image',
+          content: '',
+          baseImage: 'https://x.com/a.png',
+          hotspots: [{ id: '', x: 10, y: 20, title: '', content: '' }],
         },
         {
-          tipo: 'imagem-interativa',
-          conteudo: '',
-          imagemBase: 'https://x.com/a.png',
-          hotspots: [{ id: '', x: 10, y: 20, titulo: 'Casco', conteudo: '' }],
+          type: 'interactive-image',
+          content: '',
+          baseImage: 'https://x.com/a.png',
+          hotspots: [{ id: '', x: 10, y: 20, title: 'Casco', content: '' }],
         },
       ])
     )
 
-    expect(course.unidades[0].conteudo).toHaveLength(1)
+    expect(course.units[0].blocks).toHaveLength(1)
     expect(summary.discarded.map((d) => d.reason)).toEqual([
       'sem imagem de fundo ou sem pontos com título',
       'sem imagem de fundo ou sem pontos com título',
     ])
   })
 
-  it('prende as coordenadas do hotspot na faixa de 0 a 100', () => {
+  it('clamps hotspot coordinates to the 0-100 range', () => {
     const { course } = normalizeCourse(
       courseWith([
         {
-          tipo: 'imagem-interativa',
-          conteudo: '',
-          imagemBase: 'https://x.com/a.png',
+          type: 'interactive-image',
+          content: '',
+          baseImage: 'https://x.com/a.png',
           hotspots: [
-            { id: '', x: -30, y: 480, titulo: 'A', conteudo: '' },
-            { id: '', x: NaN as unknown as number, y: 40, titulo: 'B', conteudo: '' },
+            { id: '', x: -30, y: 480, title: 'A', content: '' },
+            { id: '', x: NaN as unknown as number, y: 40, title: 'B', content: '' },
           ],
         },
       ])
     )
 
-    const hotspots = course.unidades[0].conteudo[0].hotspots!
+    const hotspots = course.units[0].blocks[0].hotspots!
     expect(hotspots.map((h) => [h.x, h.y])).toEqual([
       [0, 100],
       [50, 40],
@@ -669,59 +670,56 @@ describe('blocos da fase 3', () => {
     expect(hotspots.map((h) => h.id)).toEqual(['hotspot-1', 'hotspot-2'])
   })
 
-  it('exige dois pares completos na associação', () => {
+  it('requires two complete pairs in a matching block', () => {
     const { course, summary } = normalizeCourse(
       courseWith([
         {
-          tipo: 'associacao',
-          conteudo: '',
-          paresAssociacao: [
-            { id: '', esquerda: 'NR-6', direita: 'EPI' },
-            { id: '', esquerda: 'NR-5', direita: '' },
+          type: 'matching',
+          content: '',
+          matchingPairs: [
+            { id: '', left: 'NR-6', right: 'EPI' },
+            { id: '', left: 'NR-5', right: '' },
           ],
         },
         {
-          tipo: 'associacao',
-          conteudo: '',
-          paresAssociacao: [
-            { id: '', esquerda: 'NR-6', direita: 'EPI' },
-            { id: '', esquerda: 'NR-5', direita: 'CIPA' },
+          type: 'matching',
+          content: '',
+          matchingPairs: [
+            { id: '', left: 'NR-6', right: 'EPI' },
+            { id: '', left: 'NR-5', right: 'CIPA' },
           ],
         },
       ])
     )
 
-    expect(course.unidades[0].conteudo).toHaveLength(1)
+    expect(course.units[0].blocks).toHaveLength(1)
     expect(summary.discarded[0].reason).toBe('com menos de 2 pares completos')
-    expect(course.unidades[0].conteudo[0].paresAssociacao!.map((p) => p.id)).toEqual([
-      'par-1',
-      'par-2',
-    ])
+    expect(course.units[0].blocks[0].matchingPairs!.map((p) => p.id)).toEqual(['par-1', 'par-2'])
   })
 
-  it('descarta categoria sem nome ou sem item e exige duas restantes', () => {
+  it('drops a category with no name or no item and requires two to remain', () => {
     const { course, summary } = normalizeCourse(
       courseWith([
         {
-          tipo: 'categorizacao',
-          conteudo: '',
-          categorias: [
-            { id: '', nome: 'Cabeça', itens: [{ id: '', texto: 'Capacete' }] },
-            { id: '', nome: '', itens: [{ id: '', texto: 'Luva' }] },
-            { id: '', nome: 'Vazia', itens: [] },
+          type: 'categorization',
+          content: '',
+          categories: [
+            { id: '', name: 'Cabeça', items: [{ id: '', text: 'Capacete' }] },
+            { id: '', name: '', items: [{ id: '', text: 'Luva' }] },
+            { id: '', name: 'Vazia', items: [] },
           ],
         },
         {
-          tipo: 'categorizacao',
-          conteudo: '',
-          categorias: [
-            { id: '', nome: 'Cabeça', itens: [{ id: '', texto: 'Capacete' }] },
+          type: 'categorization',
+          content: '',
+          categories: [
+            { id: '', name: 'Cabeça', items: [{ id: '', text: 'Capacete' }] },
             {
               id: '',
-              nome: 'Membros',
-              itens: [
-                { id: '', texto: 'Luva' },
-                { id: '', texto: '' },
+              name: 'Membros',
+              items: [
+                { id: '', text: 'Luva' },
+                { id: '', text: '' },
               ],
             },
           ],
@@ -729,208 +727,210 @@ describe('blocos da fase 3', () => {
       ])
     )
 
-    expect(course.unidades[0].conteudo).toHaveLength(1)
+    expect(course.units[0].blocks).toHaveLength(1)
     expect(summary.discarded[0].reason).toBe('com menos de 2 categorias com nome e itens')
 
-    const categories = course.unidades[0].conteudo[0].categorias!
+    const categories = course.units[0].blocks[0].categories!
     expect(categories.map((c) => c.id)).toEqual(['cat-1', 'cat-2'])
-    expect(categories[1].itens.map((i) => i.texto)).toEqual(['Luva'])
-    expect(categories[1].itens[0].id).toBe('cat-2-item-1')
+    expect(categories[1].items.map((i) => i.text)).toEqual(['Luva'])
+    expect(categories[1].items[0].id).toBe('cat-2-item-1')
   })
 })
 
-describe('normalizarCursoGerado', () => {
-  it('reindexa ordem e preenche ids ausentes', () => {
+describe('normalizeCourse', () => {
+  it('reindexes the order and fills in missing ids', () => {
     const { course } = normalizeCourse(
       courseWith([
-        { tipo: 'paragrafo', conteudo: '<p>A</p>' },
-        { tipo: 'paragrafo', conteudo: '<p>B</p>' },
+        { type: 'paragraph', content: '<p>A</p>' },
+        { type: 'paragraph', content: '<p>B</p>' },
       ])
     )
 
-    const blocks = course.unidades[0].conteudo
-    expect(blocks.map((b) => b.ordem)).toEqual([0, 1])
+    const blocks = course.units[0].blocks
+    expect(blocks.map((b) => b.order)).toEqual([0, 1])
     expect(blocks.every((b) => b.id.length > 0)).toBe(true)
-    expect(course.unidades[0].id).toBe('unidade-1')
+    expect(course.units[0].id).toBe('unidade-1')
   })
 
-  it('descarta bloco de tipo desconhecido', () => {
+  it('drops a block of an unknown type', () => {
     const { course, summary } = normalizeCourse(
-      courseWith([{ tipo: 'tipo-que-nao-existe' as Block['tipo'], conteudo: 'x' }])
+      courseWith([{ type: 'tipo-que-nao-existe' as Block['type'], content: 'x' }])
     )
 
-    expect(course.unidades[0].conteudo).toHaveLength(0)
+    expect(course.units[0].blocks).toHaveLength(0)
     expect(summary.discarded[0]).toMatchObject({
       type: 'tipo-que-nao-existe',
       reason: 'tipo desconhecido',
     })
   })
 
-  it('descarta quiz com menos de cinco opções', () => {
+  it('drops a quiz with fewer than five options', () => {
     const { course, summary } = normalizeCourse(
       courseWith([
         {
-          tipo: 'quiz',
-          conteudo: '',
-          quizData: { questions: [{ id: 'q-1', pergunta: 'P?', opcoes: options(0, 4) }] },
+          type: 'quiz',
+          content: '',
+          quizData: { questions: [{ id: 'q-1', question: 'P?', options: options(0, 4) }] },
         },
       ])
     )
 
-    expect(course.unidades[0].conteudo).toHaveLength(0)
+    expect(course.units[0].blocks).toHaveLength(0)
     expect(summary.discarded[0].type).toBe('quiz')
   })
 
-  it('mantém apenas uma alternativa correta quando a IA marca duas', () => {
+  it('keeps a single correct option when the AI marks two', () => {
     const twoCorrect = options(0).map((o, i) => ({ ...o, isCorrect: i === 0 || i === 2 }))
     const { course } = normalizeCourse(
       courseWith([
         {
-          tipo: 'quiz',
-          conteudo: '',
-          quizData: { questions: [{ id: 'q-1', pergunta: 'P?', opcoes: twoCorrect }] },
+          type: 'quiz',
+          content: '',
+          quizData: { questions: [{ id: 'q-1', question: 'P?', options: twoCorrect }] },
         },
       ])
     )
 
-    const question = course.unidades[0].conteudo[0].quizData!.questions[0]
-    expect(question.opcoes).toHaveLength(5)
-    expect(question.opcoes.filter((o) => o.isCorrect)).toHaveLength(1)
+    const question = course.units[0].blocks[0].quizData!.questions[0]
+    expect(question.options).toHaveLength(5)
+    expect(question.options.filter((o) => o.isCorrect)).toHaveLength(1)
   })
 
-  it('corta opções extras preservando a correta', () => {
+  it('trims the extra options while keeping the correct one', () => {
     const sixWithCorrectLast = options(5, 6)
     const { course } = normalizeCourse(
       courseWith([
         {
-          tipo: 'quiz',
-          conteudo: '',
-          quizData: { questions: [{ id: 'q-1', pergunta: 'P?', opcoes: sixWithCorrectLast }] },
+          type: 'quiz',
+          content: '',
+          quizData: { questions: [{ id: 'q-1', question: 'P?', options: sixWithCorrectLast }] },
         },
       ])
     )
 
-    const question = course.unidades[0].conteudo[0].quizData!.questions[0]
-    expect(question.opcoes).toHaveLength(5)
-    expect(question.opcoes.filter((o) => o.isCorrect)).toHaveLength(1)
-    expect(question.opcoes.find((o) => o.isCorrect)?.texto).toBe('Opção 6')
+    const question = course.units[0].blocks[0].quizData!.questions[0]
+    expect(question.options).toHaveLength(5)
+    expect(question.options.filter((o) => o.isCorrect)).toHaveLength(1)
+    expect(question.options.find((o) => o.isCorrect)?.text).toBe('Opção 6')
   })
 
-  it('descarta accordion sem itens completos', () => {
+  it('drops an accordion without complete items', () => {
     const { course } = normalizeCourse(
       courseWith([
-        { tipo: 'accordion', conteudo: '', items: [{ id: 'i-1', titulo: 'T', conteudo: '' }] },
+        { type: 'accordion', content: '', items: [{ id: 'i-1', title: 'T', content: '' }] },
       ])
     )
 
-    expect(course.unidades[0].conteudo).toHaveLength(0)
+    expect(course.units[0].blocks).toHaveLength(0)
   })
 
-  it('descarta flipcard sem verso', () => {
+  it('drops a flipcard without a back', () => {
     const { course } = normalizeCourse(
-      courseWith([{ tipo: 'flipcard', conteudo: '', tituloFrente: 'Frente' }])
+      courseWith([
+        upgradeBlock({ tipo: 'flipcard', conteudo: '', tituloFrente: 'Frente' }) as Partial<Block>,
+      ])
     )
 
-    expect(course.unidades[0].conteudo).toHaveLength(0)
+    expect(course.units[0].blocks).toHaveLength(0)
   })
 
-  it('descarta apenas os cards inaproveitáveis de um flipcard', () => {
+  it('drops only the unusable cards of a flipcard', () => {
     const { course } = normalizeCourse(
       courseWith([
         {
-          tipo: 'flipcard',
-          conteudo: '',
-          itensFlipcard: [
-            { id: 'c-1', tipoFrente: 'titulo', tituloFrente: 'Frente', conteudoVerso: 'Verso' },
-            { id: 'c-2', tipoFrente: 'titulo', tituloFrente: 'Só frente', conteudoVerso: '' },
+          type: 'flipcard',
+          content: '',
+          flipcardItems: [
+            { id: 'c-1', frontType: 'title', frontTitle: 'Frente', backContent: 'Verso' },
+            { id: 'c-2', frontType: 'title', frontTitle: 'Só frente', backContent: '' },
           ],
         },
       ])
     )
 
-    expect(course.unidades[0].conteudo[0].itensFlipcard).toHaveLength(1)
-    expect(course.unidades[0].conteudo[0].itensFlipcard?.[0].tituloFrente).toBe('Frente')
+    expect(course.units[0].blocks[0].flipcardItems).toHaveLength(1)
+    expect(course.units[0].blocks[0].flipcardItems?.[0].frontTitle).toBe('Frente')
   })
 
-  it('migra flipcard de card único para a lista de cards', () => {
+  it('migrates a single-card flipcard into the card list', () => {
     const { course } = normalizeCourse(
       courseWith([
-        {
+        upgradeBlock({
           tipo: 'flipcard',
           conteudo: '',
           tipoFrente: 'titulo',
           tituloFrente: 'Frente antiga',
           conteudoVerso: 'Verso antigo',
-        },
+        }) as Partial<Block>,
       ])
     )
 
-    const block = course.unidades[0].conteudo[0]
+    const block = course.units[0].blocks[0]
 
-    expect(block.itensFlipcard).toHaveLength(1)
-    expect(block.itensFlipcard?.[0]).toMatchObject({
-      tipoFrente: 'titulo',
-      tituloFrente: 'Frente antiga',
-      conteudoVerso: 'Verso antigo',
+    expect(block.flipcardItems).toHaveLength(1)
+    expect(block.flipcardItems?.[0]).toMatchObject({
+      frontType: 'title',
+      frontTitle: 'Frente antiga',
+      backContent: 'Verso antigo',
     })
-    expect(block.tituloFrente).toBeUndefined()
-    expect(block.conteudoVerso).toBeUndefined()
+    expect((block as unknown as Record<string, unknown>).frontTitle).toBeUndefined()
+    expect((block as unknown as Record<string, unknown>).backContent).toBeUndefined()
   })
 
-  it('converte lista em HTML para itensLista', () => {
+  it('converts an HTML list into listItems', () => {
     const { course } = normalizeCourse(
-      courseWith([{ tipo: 'lista', conteudo: '<ul><li>Multímetro</li><li>Chave</li></ul>' }])
+      courseWith([{ type: 'list', content: '<ul><li>Multímetro</li><li>Chave</li></ul>' }])
     )
 
-    const block = course.unidades[0].conteudo[0]
-    expect(block.itensLista?.map((i) => i.texto)).toEqual(['Multímetro', 'Chave'])
-    expect(block.conteudo).toBe('')
-    expect(block.tipoLista).toBe('nao-ordenada')
+    const block = course.units[0].blocks[0]
+    expect(block.listItems?.map((i) => i.text)).toEqual(['Multímetro', 'Chave'])
+    expect(block.content).toBe('')
+    expect(block.listType).toBe('unordered')
   })
 
-  it('corrige tipoLista e tipoInfoBox inválidos', () => {
+  it('fixes an invalid listType and infoBoxType', () => {
     const { course } = normalizeCourse(
       courseWith([
         {
-          tipo: 'lista',
-          conteudo: '',
-          tipoLista: 'bullets' as Block['tipoLista'],
-          itensLista: [{ id: 'li-1', texto: 'Item' }],
+          type: 'list',
+          content: '',
+          listType: 'bullets' as Block['listType'],
+          listItems: [{ id: 'li-1', text: 'Item' }],
         },
         {
-          tipo: 'info-box',
-          conteudo: '<p>Atenção</p>',
-          tipoInfoBox: 'alerta' as Block['tipoInfoBox'],
+          type: 'info-box',
+          content: '<p>Atenção</p>',
+          infoBoxType: 'alerta' as Block['infoBoxType'],
         },
       ])
     )
 
-    expect(course.unidades[0].conteudo[0].tipoLista).toBe('nao-ordenada')
-    expect(course.unidades[0].conteudo[1].tipoInfoBox).toBe('info')
+    expect(course.units[0].blocks[0].listType).toBe('unordered')
+    expect(course.units[0].blocks[1].infoBoxType).toBe('info')
   })
 
-  it('descarta imagem e vídeo sem URL válida', () => {
+  it('drops image and video without a valid URL', () => {
     const { course, summary } = normalizeCourse(
       courseWith([
-        { tipo: 'imagem', conteudo: 'painel.png' },
-        { tipo: 'video', conteudo: '', videoUrl: 'não informado' },
-        { tipo: 'imagem', conteudo: 'https://exemplo.com/painel.png' },
+        { type: 'image', content: 'painel.png' },
+        { type: 'video', content: '', videoUrl: 'não informado' },
+        { type: 'image', content: 'https://exemplo.com/painel.png' },
       ])
     )
 
-    expect(course.unidades[0].conteudo).toHaveLength(1)
+    expect(course.units[0].blocks).toHaveLength(1)
     expect(summary.discarded).toHaveLength(2)
   })
 
-  it('resume unidades, blocos e contagem por tipo', () => {
+  it('summarizes units, blocks and the count per type', () => {
     const { summary } = normalizeCourse(
       courseWith([
-        { tipo: 'paragrafo', conteudo: '<p>A</p>' },
-        { tipo: 'paragrafo', conteudo: '<p>B</p>' },
+        { type: 'paragraph', content: '<p>A</p>' },
+        { type: 'paragraph', content: '<p>B</p>' },
         {
-          tipo: 'objetivos-aprendizagem',
-          conteudo: '',
-          itensObjetivos: [{ id: 'o-1', texto: 'Objetivo' }],
+          type: 'learning-objectives',
+          content: '',
+          objectiveItems: [{ id: 'o-1', text: 'Objetivo' }],
         },
       ])
     )
@@ -938,21 +938,21 @@ describe('normalizarCursoGerado', () => {
     expect(summary).toMatchObject({
       units: 1,
       blocks: 3,
-      byType: { paragrafo: 2, 'objetivos-aprendizagem': 1 },
+      byType: { paragraph: 2, 'learning-objectives': 1 },
       discarded: [],
     })
   })
 
-  it('tolera unidades ausentes ou fora do formato', () => {
-    const { course, summary } = normalizeCourse({ titulo: 'C', descricao: 'D' } as Course)
+  it('tolerates missing or malformed units', () => {
+    const { course, summary } = normalizeCourse({ title: 'C', description: 'D' } as Course)
 
-    expect(course.unidades).toEqual([])
+    expect(course.units).toEqual([])
     expect(summary.blocks).toBe(0)
   })
 })
 
-describe('reescreverMidiasDoBloco', () => {
-  it('troca a URL remota pelo caminho local em cada bloco de mídia', () => {
+describe('rewriteBlockMedia', () => {
+  it('swaps the remote URL for the local path in every media block', () => {
     const lookup = new Map([
       ['https://x.com/a.png', 'images/a.png'],
       ['https://x.com/f.png', 'images/f.png'],
@@ -963,26 +963,26 @@ describe('reescreverMidiasDoBloco', () => {
     ])
 
     const image = rewriteBlockMedia(
-      { ...createEmptyBlock('imagem'), conteudo: 'https://x.com/a.png' } as Block,
+      { ...createEmptyBlock('image'), content: 'https://x.com/a.png' } as Block,
       lookup
     )
-    expect(image.conteudo).toBe('images/a.png')
+    expect(image.content).toBe('images/a.png')
 
     const flipcard = rewriteBlockMedia(
       {
         ...createEmptyBlock('flipcard'),
-        itensFlipcard: [
+        flipcardItems: [
           {
             id: 'c-1',
-            tipoFrente: 'imagem',
-            imagemFrente: 'https://x.com/f.png',
-            conteudoVerso: 'v',
+            frontType: 'image',
+            frontImage: 'https://x.com/f.png',
+            backContent: 'v',
           },
         ],
       } as Block,
       lookup
     )
-    expect(flipcard.itensFlipcard?.[0].imagemFrente).toBe('images/f.png')
+    expect(flipcard.flipcardItems?.[0].frontImage).toBe('images/f.png')
 
     const audio = rewriteBlockMedia(
       { ...createEmptyBlock('audio'), audioUrl: 'https://x.com/a.mp3' } as Block,
@@ -998,34 +998,34 @@ describe('reescreverMidiasDoBloco', () => {
 
     const carousel = rewriteBlockMedia(
       {
-        ...createEmptyBlock('carrossel'),
-        itensCarrossel: [{ id: '1', url: 'https://x.com/1.png' }],
+        ...createEmptyBlock('carousel'),
+        carouselItems: [{ id: '1', url: 'https://x.com/1.png' }],
       } as Block,
       lookup
     )
-    expect(carousel.itensCarrossel?.[0].url).toBe('images/1.png')
+    expect(carousel.carouselItems?.[0].url).toBe('images/1.png')
 
     const interactive = rewriteBlockMedia(
       {
-        ...createEmptyBlock('imagem-interativa'),
-        imagemBase: 'https://x.com/base.png',
+        ...createEmptyBlock('interactive-image'),
+        baseImage: 'https://x.com/base.png',
       } as Block,
       lookup
     )
-    expect(interactive.imagemBase).toBe('images/base.png')
+    expect(interactive.baseImage).toBe('images/base.png')
   })
 
-  it('preserva a URL quando o download falhou e ela não está no mapa', () => {
+  it('keeps the URL when the download failed and it is not in the map', () => {
     const block = {
-      ...createEmptyBlock('imagem'),
-      conteudo: 'https://x.com/z.png',
+      ...createEmptyBlock('image'),
+      content: 'https://x.com/z.png',
     } as Block
-    expect(rewriteBlockMedia(block, new Map()).conteudo).toBe('https://x.com/z.png')
+    expect(rewriteBlockMedia(block, new Map()).content).toBe('https://x.com/z.png')
   })
 
-  it('todo bloco que declara extrairMidias também sabe reescrever', () => {
-    // Sem a contraparte, o arquivo é embutido no ZIP mas o bloco continua apontando
-    // para a URL remota — foi exatamente o bug do `imagem-interativa` no LMS.
+  it('every block declaring extractMedia can also rewrite it', () => {
+    // Without the counterpart the file is bundled but the block keeps pointing at the
+    // remote URL — exactly the `interactive-image` bug seen in the LMS.
     const withoutRewrite = BLOCK_TYPES.filter(
       (type) => BLOCK_CATALOG[type].extractMedia && !BLOCK_CATALOG[type].rewriteMedia
     )

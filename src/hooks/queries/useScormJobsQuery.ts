@@ -73,7 +73,7 @@ export function useScormJobStatusQuery(jobId: string) {
       return response.json()
     },
     enabled: Boolean(jobId),
-    // um job terminado não muda mais: o polling se desliga sozinho
+    // a finished job never changes again: the polling switches itself off
     refetchInterval: ({ state }) =>
       jobFinished(state.data?.status) ? false : JOB_POLLING_INTERVAL,
     refetchIntervalInBackground: false,

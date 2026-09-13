@@ -348,8 +348,8 @@ curso — bug anterior a esta mudança, não tratado.
    com backup (branch do Neon) antes da execução real.
 4. **IA**: esquema JSON dos três modos do prompt em `generate-course-from-text/route.ts` com as
    chaves novas. O normalizador cobre resposta da IA que ainda venha no formato antigo.
-5. **Progresso SCORM**: `EstadoProgresso` → `ProgressState` (`visitadas` → `visited`); a leitura
-   de `suspend_data` aceita os dois formatos, com teste.
+5. **Progresso SCORM**: `ProgressState.visitadas` → `visited` e `QuizResult.acertos` → `correct`, só
+   em código — o `suspend_data` é posicional e não muda (ver tabela abaixo).
 6. **Activity**: migration SQL `UPDATE activities SET tipo = ...` para os valores novos (esta sim
    gera SQL, porque é valor e não nome de coluna), `entityType` idem; chaves de i18n de
    `home.json` nos dois idiomas.
@@ -362,6 +362,116 @@ Ordem de deploy: normalizador em produção **antes** do script rodar, para que 
 concorrente no formato antigo seja lida corretamente. O normalizador de chaves antigas pode ser
 removido numa limpeza posterior; o de `suspend_data`, não.
 
+#### Tabela de mapeamento (levantada em 11/09/2026)
+
+Onde cada chave vive define o custo da troca:
+
+- **JSON `Course.units` no banco** — migração de dados (script + normalizador de leitura).
+- **Campos do topo do curso** (`titulo`, `descricao`…) — as colunas já têm nome em inglês no
+  Prisma desde a Fase 2; em português resta só o formato `Course` que circula na API, no editor,
+  no pacote SCORM, na resposta da IA e no rascunho do wizard. É troca de contrato, sem migração.
+- **`suspend_data`** — o formato gravado no LMS é posicional (`v1|hash|bitmap|quizzes`, com
+  `acertos/total` só como números); nenhum nome de campo sai para o LMS. Renomear
+  `ProgressState.visitadas` e `QuizResult.acertos` é só código, e a regra de ler "as chaves antigas
+  para sempre" da seção Decisões não se aplica.
+- **Valores em colunas** (`Activity.type`, `Activity.entityType`, `Course.layout`) — migration SQL
+  com `UPDATE`.
+
+**Curso** (contrato `Course` e `ManualCourseData` do wizard)
+
+| Atual             | Novo          |
+| ----------------- | ------------- |
+| `titulo`          | `title`       |
+| `descricao`       | `description` |
+| `cargaHoraria`    | `workload`    |
+| `modalidade`      | `modality`    |
+| `categoria`       | `category`    |
+| `dataCriacao`     | `createdAt`   |
+| `dataModificacao` | `updatedAt`   |
+| `unidades`        | `units`       |
+
+O rascunho do wizard muda de formato; a chave do `sessionStorage` passa a
+`new-course:draft:v2`, para descartar rascunhos antigos em vez de lê-los com as chaves erradas.
+
+**Unidade**
+
+| Atual       | Novo          |
+| ----------- | ------------- |
+| `titulo`    | `title`       |
+| `descricao` | `description` |
+| `conteudo`  | `blocks`      |
+| `ordem`     | `order`       |
+
+**Bloco** — chaves comuns a todos os tipos: `tipo` → `type`, `conteudo` → `content`, `ordem` →
+`order`, `colunas` → `columns`. Os valores de `type` seguem a tabela "Tipos de bloco" acima.
+
+| Atual                 | Novo                  | Valores                                                                                                      |
+| --------------------- | --------------------- | ------------------------------------------------------------------------------------------------------------ |
+| `tamanho`             | `size`                | `'pequena' \| 'media' \| 'grande'` → `'small' \| 'medium' \| 'large'`                                        |
+| `legenda`             | `caption`             |                                                                                                              |
+| `fonte`               | `source`              |                                                                                                              |
+| `corTexto`            | `textColor`           |                                                                                                              |
+| `alinhamento`         | `alignment`           | `'esquerda' \| 'centro' \| 'direita' \| 'justificado'` → `'left' \| 'center' \| 'right' \| 'justify'`        |
+| `itensFlipcard`       | `flipcardItems`       |                                                                                                              |
+| `alturaCard`          | `cardHeight`          |                                                                                                              |
+| `itensLista`          | `listItems`           |                                                                                                              |
+| `tipoLista`           | `listType`            | `'ordenada' \| 'nao-ordenada' \| 'check'` → `'ordered' \| 'unordered' \| 'check'`                            |
+| `tipoInfoBox`         | `infoBoxType`         | `'atencao' \| 'saiba_mais' \| 'info' \| 'curiosidade'` → `'warning' \| 'learn-more' \| 'info' \| 'fun-fact'` |
+| `tituloInfoBox`       | `infoBoxTitle`        |                                                                                                              |
+| `fonteVideo`          | `videoSource`         | `'youtube' \| 'arquivo'` → `'youtube' \| 'file'`                                                             |
+| `videoTitulo`         | `videoTitle`          |                                                                                                              |
+| `perguntasVideo`      | `videoQuestions`      |                                                                                                              |
+| `itensObjetivos`      | `objectiveItems`      |                                                                                                              |
+| `estiloSeparador`     | `dividerStyle`        | `'linha' \| 'espaco' \| 'linha-icone'` → `'line' \| 'space' \| 'line-icon'`                                  |
+| `itensTabs`           | `tabItems`            |                                                                                                              |
+| `itensTimeline`       | `timelineItems`       |                                                                                                              |
+| `orientacaoTimeline`  | `timelineOrientation` | valores sem mudança                                                                                          |
+| `itensCarrossel`      | `carouselItems`       |                                                                                                              |
+| `modoCarrossel`       | `carouselMode`        | `'carrossel' \| 'grade'` → `'carousel' \| 'grid'`                                                            |
+| `audioTitulo`         | `audioTitle`          |                                                                                                              |
+| `transcricao`         | `transcript`          |                                                                                                              |
+| `pdfTitulo`           | `pdfTitle`            |                                                                                                              |
+| `permitirDownloadPdf` | `allowPdfDownload`    |                                                                                                              |
+| `imagemBase`          | `baseImage`           |                                                                                                              |
+| `paresAssociacao`     | `matchingPairs`       |                                                                                                              |
+| `categorias`          | `categories`          |                                                                                                              |
+
+Sem mudança: `id`, `items` (accordion), `quizData`, `videoUrl`, `audioUrl`, `pdfUrl`, `hotspots`.
+Os campos legados de flipcard de card único no próprio bloco (`tipoFrente`, `imagemFrente`,
+`tituloFrente`, `conteudoVerso`) não ganham nome novo: o normalizador já os converte numa lista de
+cards e passa a gravar `flipcardItems`.
+
+**Itens dos blocos**
+
+| Tipo                                      | Atual → Novo                                                                                                                                                                                                  |
+| ----------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `AccordionItem`, `TabItem`, `HotspotItem` | `titulo` → `title`, `conteudo` → `content`                                                                                                                                                                    |
+| `ListItem`, `CategorizedItem`, `QuizItem` | `texto` → `text`                                                                                                                                                                                              |
+| `TimelineItem`                            | `data` → `date`, `titulo` → `title`, `descricao` → `description`                                                                                                                                              |
+| `CarouselItem`                            | `legenda` → `caption`, `fonte` → `source`                                                                                                                                                                     |
+| `FlipcardItem`                            | `tipoFrente` → `frontType` (`'imagem' \| 'imagem-titulo' \| 'titulo'` → `'image' \| 'image-title' \| 'title'`), `imagemFrente` → `frontImage`, `tituloFrente` → `frontTitle`, `conteudoVerso` → `backContent` |
+| `MatchingPair`                            | `esquerda` → `left`, `direita` → `right`                                                                                                                                                                      |
+| `CategoryItem`                            | `nome` → `name`, `itens` → `items`                                                                                                                                                                            |
+| `QuizQuestion`                            | `pergunta` → `question`, `dica` → `hint`, `opcoes` → `options` (`questions`, `isCorrect` e `feedback` já em inglês)                                                                                           |
+| `VideoQuestion`                           | `tempo` → `time`, `pergunta` → `question`, `opcaoA`…`opcaoE` → `optionA`…`optionE`, `correta` → `correct` (valores `'A'`–`'E'` sem mudança)                                                                   |
+
+**Valores em colunas do banco**
+
+| Coluna                | Atual → Novo                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| --------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Course.layout`       | `'classico'` → `'classic'`, inclusive o default do schema; `'sidebar'` sem mudança                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| `Activity.type`       | `curso_criado` → `course_created`, `curso_editado` → `course_updated`, `curso_deletado` → `course_deleted`, `usuario_criado` → `user_created`, `usuario_editado` → `user_updated`, `usuario_deletado` → `user_deleted`, `acesso_solicitado` → `access_requested`, `acesso_aprovado` → `access_approved`, `acesso_negado` → `access_denied`, `acesso_revogado` → `access_revoked`, `curso_enviado_revisao` → `course_submitted_for_review`, `curso_aprovado` → `course_approved`, `curso_reprovado` → `course_rejected`, `curso_comentado` → `course_commented` |
+| `Activity.entityType` | `'curso'` → `'course'`, `'usuario'` → `'user'`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+
+Os tipos de atividade também são chave de tradução em `home.json` (pt-BR e en): a troca das
+chaves de i18n vai junto com a migration.
+
+**Só código, sem dado**: `ProgressState.visitadas` → `visited`, `QuizResult.acertos` → `correct`.
+
+**Fica como está**: os valores de slug `unidade-N` e os prefixos de id gerados (`unidade-…`,
+`conteudo-…`) — identificadores opacos já gravados e usados nas URLs do pacote —, os marcadores e
+rótulos do `.docx` e todo o conteúdo digitado pelo autor.
+
 ### Fase 4 — Textos de desenvolvedor e documentação
 
 - Descrições de teste (`describe`/`it`/`test`), mensagens de `console.*`, comentários e JSDoc,
@@ -369,7 +479,7 @@ removido numa limpeza posterior; o de `suspend_data`, não.
 - Mensagens de erro que só aparecem em log.
 - `CLAUDE.md`: seção "Como Criar um Novo Tipo de Conteúdo" e demais referências a nomes antigos
   (`CATALOGO_BLOCOS`, `blocos.ts`, `corrigirBloco`, `POLITICA_MIDIAS`, `EditorDeItens`…).
-- `README.md` e `docs/permissoes-usuarios.md` (documentação viva; o nome do arquivo também:
+- `README.md` e `docs/user-permissions.md` (documentação viva; o nome do arquivo também:
   `docs/user-permissions.md`). Specs antigas ficam como estão.
 - `package.json`: `"name": "my-app"` → nome do projeto.
 
@@ -417,3 +527,90 @@ Específico:
 - Mudar marcadores e rótulos do documento `.docx`.
 - Qualquer refatoração além do rename (extrair função, mudar estrutura de pasta, remover código
   morto) — se aparecer, vira tarefa separada.
+
+## Execução da Fase 3 (12/09/2026)
+
+Branch: `refactor/english-naming-phase-3`.
+
+Escopo aplicado:
+
+- `src/types/course.ts` — todas as chaves de dado e os valores dos unions em inglês
+  (`type: 'paragraph'`, `blocks`, `listItems`, `flipcardItems`, `videoQuestions`,
+  `'small' | 'medium' | 'large'`, `'left' | 'center' | 'right' | 'justify'`, …). Os campos
+  legados de flipcard de card único saíram do tipo.
+- `src/lib/legacy-course.ts` (novo) — conversor por nível (`upgradeCourse`, `upgradeUnit`,
+  `upgradeUnits`, `upgradeBlock`) das chaves e valores antigos, idempotente (a chave nova
+  vence) e cobrindo o flipcard de card único, que vira `flipcardItems`. 15 testes em
+  `src/__tests__/lib/legacy-course.test.ts`.
+- Conversor aplicado em toda entrada de dado: `GET/PUT /api/courses/[id]`,
+  `GET/POST/PUT /api/courses`, `courses/actions.ts` e `generate-course-from-text`.
+- `prisma/migrations/20260911210000_english_activity_and_layout_values/migration.sql` —
+  valores de coluna (`activities.tipo`, `activities.entity_type`, `cursos.layout`) e o
+  `DEFAULT` de `layout` passam para inglês.
+- `scripts/migrate-course-json.ts` (novo) — reescreve o JSON de `cursos.unidades` com
+  `upgradeUnits`, em lotes, com `--dry-run`.
+- Corrigidos no caminho: `PUT /api/courses` gravava `titulo`/`descricao`/… (objeto montado
+  por spread não é checado pelo TS — bug em produção), `questionOptions` lia
+  `` `opcao${letra}` ``, `rewriteMedia` do flipcard escrevia `imagemFrente`,
+  `validCategories` devolvia `itens` e `repairBlock` gravava `data`/`descricao` nos itens de
+  timeline.
+- Seed, fixtures de E2E e testes convertidos; as fixtures que exercitam o formato antigo
+  continuam em português, de propósito, passando por `upgradeBlock`.
+
+Dois bugs que só o E2E pegou, ambos do tipo "o compilador não liga":
+
+- `layoutRegistry` continuou com a chave `classico` enquanto `DEFAULT_LAYOUT_ID` virou
+  `'classic'`. Como o fallback usa a mesma chave, `resolveLayout` devolvia `undefined` e o
+  player quebrava ao desestruturar `{ Player }` — todo curso com layout `classic` abria em
+  branco no pacote SCORM, sem sessão no LMS.
+- `useScormProgress.navigate` montava `{ ...state, visitadas: visited }`: propriedade a mais
+  num spread não é checada, então a unidade visitada nunca era gravada no `suspend_data`.
+
+Estado: `tsc` nos mesmos 26 erros pré-existentes da baseline, `pnpm test` 375/375 verde,
+`pnpm build` limpo, `pnpm test:e2e --project=chromium` 36 passando (1 skipped).
+
+Pendente da fase: rodar `scripts/migrate-course-json.ts` (dry-run e execução real, com
+backup do Neon antes) e `prisma migrate deploy`.
+
+## Execução da Fase 4 (12/09/2026)
+
+Última fase: o que o compilador nunca leu.
+
+- **Descrições de teste** — as ~450 chamadas de `describe`/`it`/`test` passaram para inglês,
+  em todos os 33 arquivos de Jest e nos 6 specs do Playwright. Os `describe` que citavam o
+  nome da função sob teste foram corrigidos para o nome atual (`criarBlocoVazio` →
+  `createEmptyBlock`, `permissoesDoCurso` → `getCoursePermissions`, `hashCurso` →
+  `hashCourse`, `transicaoValida` → `isValidTransition`, entre outros).
+- **Comentários** — os ~330 comentários em português foram reescritos, incluindo os
+  cabeçalhos de seção do `pdf-service.ts`, os blocos explicativos do `scorm-build-service.ts`,
+  do `liveblocks-auth` e do `useVideoPlayer`, e os comentários do `schema.prisma`.
+- **Logs** — as ~300 mensagens de `console.*` do app, dos scripts e do seed. Mensagens que o
+  usuário final lê (`toast.error`, `alert`, textos de erro devolvidos pela API) continuam em
+  pt-BR, pela regra de fronteira.
+- **Documentação e metadados** — `docs/permissoes-usuarios.md` → `docs/user-permissions.md`,
+  `docs/specs/2026-09-07-novos-blocos-conteudo.md` → `...-new-content-blocks.md`,
+  `package.json` com `"name": "course-generator"`, e as referências no README, no CLAUDE.md e
+  nas specs que apontavam para os nomes antigos.
+
+Ficam em português, de propósito: o nome físico da coluna `instrutor` citada num script de
+migração, o título do curso de exemplo, o segmento `/unidade-N` das rotas do player e as
+fixtures de teste que exercitam o formato legado.
+
+Estado: `tsc` nos mesmos 26 erros de baseline, `pnpm test` 375/375, `pnpm build` limpo,
+`pnpm test:e2e --project=chromium` verde.
+
+## Remoção do fallback de JWT (13/09/2026)
+
+A Fase 2 deixou um fallback temporário para os tokens emitidos antes dela: `resolveTokenRole`
+derivava o papel do antigo `cargo` e aceitava os valores em português (`CONTEUDISTA`,
+`GESTOR`…), e `verifyAuth` lia `payload.name ?? payload.nome`. O prazo era 24 h depois do
+deploy de 11/09; com ele vencido, os dois saíram.
+
+`resolveTokenRole(role)` agora devolve `UserRole | null` e **falha fechado**: token cujo papel
+não está no enum atual não vira sessão — o middleware trata como não autenticado e o
+`verifyAuth` recusa o token. Antes, um papel irreconhecível caía silenciosamente em
+`CONTENT_AUTHOR`.
+
+`mapJobTitleToRole` foi removida junto, com o teste correspondente trocado por um de
+`resolveTokenRole`. Os fixtures de teste perderam o campo `cargo`, e o mock de sessão do
+`e2e/scorm-jobs.spec.ts` passou a devolver `name` — devolvia `nome`, que a navbar nunca lê.

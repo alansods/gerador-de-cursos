@@ -5,13 +5,13 @@ import { Block } from '@/types/course'
 export function VideoBlock({ item }: { item: Block }) {
   return (
     <div className="mb-4 w-full">
-      {item.videoUrl && item.videoTitulo ? (
+      {item.videoUrl && item.videoTitle ? (
         <div className="space-y-3">
           <h4 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-            {item.videoTitulo}
+            {item.videoTitle}
           </h4>
           <div className="aspect-video w-full rounded-lg overflow-hidden shadow-lg bg-gray-100 dark:bg-gray-800">
-            {videoSource(item, 'youtube') === 'arquivo' ? (
+            {videoSource(item, 'youtube') === 'file' ? (
               // Sem autoplay: navegadores bloqueiam mídia automática dentro do iframe do LMS
               <video controls preload="metadata" className="w-full h-full" src={item.videoUrl}>
                 Seu navegador não reproduz vídeo.
@@ -19,7 +19,7 @@ export function VideoBlock({ item }: { item: Block }) {
             ) : (
               <iframe
                 src={`https://www.youtube.com/embed/${extractYouTubeId(item.videoUrl)}`}
-                title={item.videoTitulo}
+                title={item.videoTitle}
                 className="w-full h-full"
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                 allowFullScreen

@@ -12,7 +12,7 @@ interface SidebarUnitProps {
 }
 
 export function SidebarUnit({ course, unitId, onNavigate }: SidebarUnitProps) {
-  const unit = course.unidades?.find((u) => u.id === unitId)
+  const unit = course.units?.find((u) => u.id === unitId)
 
   if (!unit) {
     return (
@@ -39,9 +39,9 @@ export function SidebarUnit({ course, unitId, onNavigate }: SidebarUnitProps) {
     )
   }
 
-  const unitIndex = course.unidades.findIndex((u) => u.id === unitId)
-  const previousUnit = unitIndex > 0 ? course.unidades[unitIndex - 1] : null
-  const nextUnit = unitIndex < course.unidades.length - 1 ? course.unidades[unitIndex + 1] : null
+  const unitIndex = course.units.findIndex((u) => u.id === unitId)
+  const previousUnit = unitIndex > 0 ? course.units[unitIndex - 1] : null
+  const nextUnit = unitIndex < course.units.length - 1 ? course.units[unitIndex + 1] : null
 
   return (
     <div className="flex-1 flex flex-col">
@@ -49,10 +49,10 @@ export function SidebarUnit({ course, unitId, onNavigate }: SidebarUnitProps) {
         <div className="max-w-5xl mx-auto">
           <div className="flex items-center gap-2 text-xs font-extrabold tracking-wider uppercase text-violet-600 dark:text-violet-400 mb-2.5">
             <span className="w-[5px] h-[5px] rounded-full bg-violet-600 dark:bg-violet-400" />
-            Unidade {unitIndex + 1} de {course.unidades.length}
+            Unidade {unitIndex + 1} de {course.units.length}
           </div>
           <h1 className="text-[28px] font-extrabold tracking-tight text-gray-900 dark:text-gray-50">
-            {unit.titulo}
+            {unit.title}
           </h1>
         </div>
       </div>
@@ -76,7 +76,7 @@ export function SidebarUnit({ course, unitId, onNavigate }: SidebarUnitProps) {
 
         <span className="text-xs font-bold text-gray-400 dark:text-gray-500 text-center">
           <span className="hidden lg:inline">Unidade </span>
-          {unitIndex + 1} de {course.unidades.length}
+          {unitIndex + 1} de {course.units.length}
         </span>
 
         <Button

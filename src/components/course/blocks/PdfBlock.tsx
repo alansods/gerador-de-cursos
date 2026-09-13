@@ -6,7 +6,7 @@ export function PdfBlock({ item }: { item: Block }) {
     return <div className="text-gray-500 dark:text-gray-400 text-sm italic mb-4">PDF vazio</div>
   }
 
-  const title = item.pdfTitulo || 'Documento'
+  const title = item.pdfTitle || 'Documento'
 
   return (
     <div className="mb-4 overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700">
@@ -15,7 +15,7 @@ export function PdfBlock({ item }: { item: Block }) {
           <FileText className="h-4 w-4" />
         </span>
         <p className="flex-1 font-medium text-gray-900 dark:text-gray-100">{title}</p>
-        {item.permitirDownloadPdf !== false && (
+        {item.allowPdfDownload !== false && (
           <a
             href={item.pdfUrl}
             download

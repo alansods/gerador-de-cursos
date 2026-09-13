@@ -42,7 +42,7 @@ describe('useScormJobStatusQuery', () => {
     jest.useRealTimers()
   })
 
-  it('continua consultando enquanto o job está em andamento', async () => {
+  it('keeps polling while the job is running', async () => {
     respondWithStatus('building')
 
     const { result } = renderHook(() => useScormJobStatusQuery('job-1'), {
@@ -59,7 +59,7 @@ describe('useScormJobStatusQuery', () => {
     await waitFor(() => expect(mockFetch).toHaveBeenCalledTimes(2))
   })
 
-  it('para de consultar assim que o job conclui', async () => {
+  it('stops polling as soon as the job completes', async () => {
     respondWithStatus('completed')
 
     const { result } = renderHook(() => useScormJobStatusQuery('job-1'), {
@@ -76,7 +76,7 @@ describe('useScormJobStatusQuery', () => {
     expect(mockFetch).toHaveBeenCalledTimes(1)
   })
 
-  it('não consulta sem jobId', () => {
+  it('never queries without a jobId', () => {
     respondWithStatus('pending')
 
     renderHook(() => useScormJobStatusQuery(''), { wrapper: createWrapper() })
@@ -90,7 +90,7 @@ describe('useScormJobsQuery', () => {
     jest.clearAllMocks()
   })
 
-  it('pede a página solicitada e devolve a paginação da API', async () => {
+  it('requests the given page and returns the API pagination', async () => {
     mockFetch.mockResolvedValue({
       ok: true,
       json: async () => ({

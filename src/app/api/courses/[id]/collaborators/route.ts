@@ -38,7 +38,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 
     return createSuccessResponse({ collaborators })
   } catch (error) {
-    console.error('Erro ao listar colaboradores:', error)
+    console.error('Failed to list the collaborators:', error)
     return createErrorResponse('Erro ao listar colaboradores', 500, error)
   }
 }
@@ -94,17 +94,17 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
     ])
 
     await logActivity({
-      type: 'acesso_revogado',
+      type: 'access_revoked',
       title: 'Acesso revogado',
       description: `${collaborator.user.name} em "${course.title}"`,
       entityId: id,
-      entityType: 'curso',
+      entityType: 'course',
       userId: authResult.user.id,
     })
 
     return createSuccessResponse({ userId })
   } catch (error) {
-    console.error('Erro ao revogar acesso:', error)
+    console.error('Failed to revoke the access:', error)
     return createErrorResponse('Erro ao revogar acesso', 500, error)
   }
 }

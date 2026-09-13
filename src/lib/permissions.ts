@@ -54,31 +54,13 @@ export class ForbiddenError extends Error {
   }
 }
 
-export function mapJobTitleToRole(cargo?: string | null): UserRole {
-  if (cargo === 'Administrador') return 'ADMIN'
-  if (cargo === 'Convidado') return 'GUEST'
-  return 'CONTENT_AUTHOR'
-}
-
-const LEGACY_ROLES: Record<string, UserRole> = {
-  GESTOR: 'MANAGER',
-  CONTEUDISTA: 'CONTENT_AUTHOR',
-  REVISOR: 'REVIEWER',
-  CONVIDADO: 'GUEST',
-}
-
 /**
- * Tokens emitidos antes da introdução de roles não carregam o campo `role`, e sim
- * o antigo `cargo`. A coluna `cargo` não existe mais, mas esses tokens seguem
- * válidos por até 24h depois do deploy, então o papel ainda é derivado do `cargo`
- * que veio dentro do próprio token enquanto eles expiram.
+ * A token carries the role it was issued with. Anything the current enum does not
+ * name is no role at all, and the session is refused: the legacy shapes it used to
+ * accept expired 24h after the 11/09/2026 deploy.
  */
-export function resolveTokenRole(role: unknown, cargo?: string | null): UserRole {
-  if (typeof role === 'string') {
-    if (ROLES.includes(role as UserRole)) return role as UserRole
-    if (LEGACY_ROLES[role]) return LEGACY_ROLES[role]
-  }
-  return mapJobTitleToRole(cargo)
+export function resolveTokenRole(role: unknown): UserRole | null {
+  return typeof role === 'string' && ROLES.includes(role as UserRole) ? (role as UserRole) : null
 }
 
 function isOwner(user: PermissionUser, course?: PermissionCourse | null) {

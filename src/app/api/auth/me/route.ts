@@ -4,10 +4,10 @@ import { prisma } from '@/lib/prisma'
 
 export async function GET(request: NextRequest) {
   try {
-    // Verificar autenticação
+    // Check the authentication
     const payload = await verifyAuth(request)
 
-    // Buscar usuário no banco para garantir que ainda existe
+    // Look the user up to confirm they still exist
     const user = await prisma.user.findUnique({
       where: { id: payload.id },
       select: {

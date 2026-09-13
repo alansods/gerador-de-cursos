@@ -7,10 +7,10 @@ import type { Course } from '@/types/course'
 import { CoursePlayer } from '@/components/course/CoursePlayer'
 import fs from 'fs/promises'
 
-// Forçar geração estática completa (sem RSC fetches)
+// Force a fully static build (no RSC fetches)
 export const dynamic = 'force-static'
 
-// Função para carregar dados do curso durante o build
+// Loads the course data during the build
 async function getCourseData(): Promise<Course | null> {
   if (process.env.SCORM_BUILD_COURSE_FILE) {
     try {
@@ -18,7 +18,7 @@ async function getCourseData(): Promise<Course | null> {
       const courseData = await fs.readFile(courseFile, 'utf-8')
       return JSON.parse(courseData) as Course
     } catch (error) {
-      console.error('[scorm-preview] Erro ao carregar curso:', error)
+      console.error('[scorm-preview] Failed to load the course:', error)
     }
   }
   return null

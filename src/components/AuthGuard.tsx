@@ -16,12 +16,12 @@ export function AuthGuard({ children }: AuthGuardProps) {
   const { isAuthenticated, loading } = useAuth()
   const [loadingTimeout, setLoadingTimeout] = useState(false)
 
-  // Detectar se o loading está demorando muito (possível problema após build SCORM)
+  // Detect a loading state that drags on (a known symptom after a SCORM build)
   useEffect(() => {
     if (loading) {
       const timeoutId = setTimeout(() => {
         setLoadingTimeout(true)
-      }, 5000) // 5 segundos
+      }, 5000) // 5 seconds
 
       return () => clearTimeout(timeoutId)
     } else {
@@ -29,55 +29,55 @@ export function AuthGuard({ children }: AuthGuardProps) {
     }
   }, [loading])
 
-  // Rotas públicas que não exigem autenticação e não mostram sidebar
+  // Public routes: no authentication, no sidebar
   const publicRoutes = [
     '/preview',
     '/pdf-preview',
-    '/scorm-preview', // Para SCORM packages (standalone)
-    '/landingpage', // Landing page pública
+    '/scorm-preview', // SCORM packages (standalone)
+    '/landingpage', // public landing page
   ]
 
-  // Rotas autenticadas que ocultam a sidebar do app (modo imersivo)
+  // Authenticated routes that hide the app sidebar (immersive mode)
   const noSidebarRoutes = ['/edit']
 
-  // Rotas de autenticação (login/cadastro)
+  // Authentication routes (login/signup)
   const authRoutes = ['/login', '/signup']
   const isAuthRoute = authRoutes.some((route) => pathname?.includes(route))
 
-  // Detectar ambiente SCORM: pathname inclui scorm-preview OU window.SCORM existe
+  // Detect the SCORM environment: scorm-preview in the pathname OR window.SCORM present
   const isScormEnvironment = typeof window !== 'undefined' && 'SCORM' in window
 
-  // Verificar se é uma rota pública
+  // Check whether this is a public route
   const isPublicRoute =
     publicRoutes.some((route) => pathname?.includes(route)) || isScormEnvironment
 
-  // Durante build SCORM, tratar como rota pública para evitar loading
+  // During a SCORM build, treat it as public so it never sits on loading
   const isScormBuild = typeof process !== 'undefined' && process.env.SCORM_BUILD_COURSE_FILE
 
-  // Redirecionar para login se não autenticado e não for rota pública
+  // Send to login when unauthenticated on a private route
   useEffect(() => {
     if (isScormBuild) return
     if (!loading && !isAuthenticated && !isPublicRoute && !isAuthRoute) {
-      console.log('[AuthGuard] 🚫 Acesso negado, redirecionando para login')
+      console.log('[AuthGuard] 🚫 Access denied, redirecting to login')
       router.push('/login')
     }
   }, [isScormBuild, loading, isAuthenticated, isPublicRoute, isAuthRoute, router])
 
-  // Redirecionar usuários autenticados que tentam acessar login/cadastro
+  // Send authenticated users away from login/signup
   useEffect(() => {
     if (isScormBuild) return
     if (!loading && isAuthenticated && isAuthRoute) {
-      console.log('[AuthGuard] ℹ️ Usuário já autenticado, redirecionando para home')
+      console.log('[AuthGuard] ℹ️ Already authenticated, redirecting to home')
       router.push('/home')
     }
   }, [isScormBuild, loading, isAuthenticated, isAuthRoute, router])
 
   if (isScormBuild) {
-    // Durante build SCORM, não mostrar loading, apenas retornar children
+    // During a SCORM build, skip the loading state and render the children
     return <>{children}</>
   }
 
-  // Se ainda está carregando, mostrar loading
+  // Still loading
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -106,35 +106,35 @@ export function AuthGuard({ children }: AuthGuardProps) {
     )
   }
 
-  // BLOQUEAR renderização de login/cadastro se já autenticado
+  // Block login/signup rendering when already authenticated
   if (isAuthenticated && isAuthRoute) {
-    // Não renderizar nada, useEffect já está redirecionando
+    // Render nothing: the effect is already redirecting
     return null
   }
 
-  // Se for rota de autenticação (login/cadastro) e NÃO autenticado, renderizar sem sidebar
+  // Authentication route and unauthenticated: render without the sidebar
   if (isAuthRoute) {
     return <>{children}</>
   }
 
-  // Se for rota pública (preview, pdf-preview), renderizar sem sidebar
+  // Public route (preview, pdf-preview): render without the sidebar
   if (isPublicRoute) {
     return <>{children}</>
   }
 
-  // Se não autenticado neste ponto, não renderizar nada (useEffect já redirecionou)
+  // Unauthenticated at this point: render nothing, the effect already redirected
   if (!isAuthenticated) {
     return null
   }
 
   const isNoSidebarRoute = noSidebarRoutes.some((route) => pathname?.includes(route))
 
-  // Autenticado em rota imersiva - sem sidebar do app
+  // Authenticated on an immersive route: no app sidebar
   if (isNoSidebarRoute) {
     return <>{children}</>
   }
 
-  // Autenticado - mostrar sidebar e conteúdo
+  // Authenticated: sidebar plus content
   return (
     <div className="flex h-screen bg-background overflow-hidden">
       <MobileNavbar />

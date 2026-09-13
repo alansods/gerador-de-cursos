@@ -8,22 +8,22 @@ config({ path: resolve(process.cwd(), '.env.local') })
 const prisma = new PrismaClient()
 
 async function main() {
-  console.log('🔄 Removendo campo instrutor do banco de dados...\n')
+  console.log('🔄 Dropping the instructor field from the database...\n')
 
   try {
-    // 1. Apagar todos os cursos
-    console.log('🗑️  Apagando todos os cursos...')
+    // 1. Delete every course
+    console.log('🗑️  Deleting every course...')
     const deleted = await prisma.$executeRaw`DELETE FROM cursos`
-    console.log(`✅ ${deleted} curso(s) apagado(s)\n`)
+    console.log(`✅ ${deleted} course(s) deleted\n`)
 
     // 2. Remover a coluna instrutor
-    console.log('🔧 Removendo coluna instrutor da tabela cursos...')
+    console.log('🔧 Dropping the instrutor column from the cursos table...')
     await prisma.$executeRaw`ALTER TABLE cursos DROP COLUMN IF EXISTS instrutor`
-    console.log('✅ Coluna instrutor removida com sucesso!\n')
+    console.log('✅ Column dropped\n')
 
-    console.log('✨ Processo concluído!')
+    console.log('✨ Done!')
   } catch (error) {
-    console.error('❌ Erro ao processar:', error)
+    console.error('❌ Failed:', error)
     throw error
   }
 }

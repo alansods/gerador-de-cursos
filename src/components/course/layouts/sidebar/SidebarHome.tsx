@@ -14,26 +14,26 @@ export function SidebarHome({ course, onNavigate, completedUnits }: SidebarHomeP
     <div className="flex-1">
       <section className="px-7 lg:px-14 pt-7 lg:pt-14 pb-10 border-b border-[#e6e4f0] dark:border-[#2c2839] bg-gradient-to-br from-violet-50 dark:from-violet-950/20 to-transparent">
         <Badge className="mb-4 bg-white dark:bg-[#1a1725] border border-violet-200 dark:border-violet-900 text-violet-600 dark:text-violet-400 hover:bg-white dark:hover:bg-[#1a1725]">
-          {course.categoria}
+          {course.category}
         </Badge>
         <h1 className="text-4xl font-extrabold tracking-tight text-gray-900 dark:text-gray-50 max-w-2xl mb-3">
-          {course.titulo}
+          {course.title}
         </h1>
         <p className="text-base text-gray-600 dark:text-gray-300 max-w-xl leading-relaxed mb-6">
-          {course.descricao}
+          {course.description}
         </p>
         <div className="flex flex-wrap gap-7">
           <div className="flex items-center gap-2 text-sm font-bold text-gray-900 dark:text-gray-100">
             <Clock className="w-[17px] h-[17px] text-violet-600 dark:text-violet-400" />
-            {course.cargaHoraria}
+            {course.workload}
           </div>
           <div className="flex items-center gap-2 text-sm font-bold text-gray-900 dark:text-gray-100">
             <GraduationCap className="w-[17px] h-[17px] text-violet-600 dark:text-violet-400" />
-            {course.modalidade}
+            {course.modality}
           </div>
           <div className="flex items-center gap-2 text-sm font-bold text-gray-900 dark:text-gray-100">
             <Layers className="w-[17px] h-[17px] text-violet-600 dark:text-violet-400" />
-            {course.unidades.length} unidade{course.unidades.length === 1 ? '' : 's'}
+            {course.units.length} unidade{course.units.length === 1 ? '' : 's'}
           </div>
         </div>
       </section>
@@ -43,13 +43,13 @@ export function SidebarHome({ course, onNavigate, completedUnits }: SidebarHomeP
           Unidades do curso
         </h2>
 
-        {course.unidades.length === 0 ? (
+        {course.units.length === 0 ? (
           <p className="text-sm text-gray-500 dark:text-gray-400 py-8 text-center">
             Nenhuma unidade criada ainda.
           </p>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {course.unidades.map((unit, index) => {
+            {course.units.map((unit, index) => {
               const completed = completedUnits?.[index] ?? false
 
               return (
@@ -81,10 +81,10 @@ export function SidebarHome({ course, onNavigate, completedUnits }: SidebarHomeP
                     )}
                   </div>
                   <h3 className="text-base font-bold text-gray-900 dark:text-gray-50 leading-snug">
-                    {unit.titulo}
+                    {unit.title}
                   </h3>
                   <p className="text-[13px] text-gray-500 dark:text-gray-400 leading-relaxed flex-1">
-                    {unit.descricao}
+                    {unit.description}
                   </p>
                   <span
                     className={`flex items-center gap-1.5 text-[13px] font-bold ${

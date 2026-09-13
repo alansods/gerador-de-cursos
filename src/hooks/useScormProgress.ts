@@ -39,8 +39,8 @@ function getScorm(): WrapperScorm | null {
 }
 
 export function useScormProgress(course: Course) {
-  const units = useMemo(() => course.unidades ?? [], [course.unidades])
-  const hash = useMemo(() => hashCourse({ id: course.id, unidades: units }), [course.id, units])
+  const units = useMemo(() => course.units ?? [], [course.units])
+  const hash = useMemo(() => hashCourse({ id: course.id, units }), [course.id, units])
 
   const [currentUnit, setCurrentUnit] = useState<string | null>(null)
   const [state, setState] = useState<ProgressState>(() => createEmptyState(units.length))
@@ -133,10 +133,10 @@ export function useScormProgress(course: Course) {
 
       if (unitId) {
         const index = units.findIndex((u) => u.id === unitId)
-        if (index >= 0 && !stateRef.current.visitadas[index]) {
-          const visited = [...stateRef.current.visitadas]
+        if (index >= 0 && !stateRef.current.visited[index]) {
+          const visited = [...stateRef.current.visited]
           visited[index] = true
-          const next = { ...stateRef.current, visitadas: visited }
+          const next = { ...stateRef.current, visited }
           setState(next)
           saveState(next)
           return
@@ -158,7 +158,7 @@ export function useScormProgress(course: Course) {
         ...stateRef.current,
         quizzes: {
           ...stateRef.current.quizzes,
-          [quizKey(unitIndex, blockIndex)]: { acertos: correctCount, total },
+          [quizKey(unitIndex, blockIndex)]: { correct: correctCount, total },
         },
       }
       setState(next)

@@ -89,7 +89,7 @@ function checkError(api: SCORMAPIType): void {
   const code = is12(api) ? api.LMSGetLastError() : api.GetLastError()
   if (code !== '0' && code !== '') {
     const msg = is12(api) ? api.LMSGetErrorString(code) : api.GetErrorString(code)
-    console.warn(`[SCORM] Erro ${code}: ${msg}`)
+    console.warn(`[SCORM] Error ${code}: ${msg}`)
   }
 }
 
@@ -121,7 +121,7 @@ function createSCORMWrapper(): SCORMWrapper {
   if (API) {
     console.log('[SCORM-PLAYER] ✅ API encontrada:', is12(API) ? 'SCORM 1.2' : 'SCORM 2004')
   } else {
-    console.warn('[SCORM-PLAYER] ⚠️ API não encontrada — modo offline')
+    console.warn('[SCORM-PLAYER] ⚠️ API not found — offline mode')
   }
 
   return {

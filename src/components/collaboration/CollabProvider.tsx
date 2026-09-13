@@ -62,8 +62,8 @@ function EventBridge({ broadcastRef }: Pick<CollabState, 'broadcastRef'>) {
   useEventListener(({ event }) => {
     if (event.type !== 'content') return
     toast.info(message(event))
-    // invalidar em vez de avisar o editor por ref: o cache sabe qual curso está
-    // aberto, e o callback antigo capturava um id que podia estar velho
+    // invalidate instead of poking the editor through a ref: the cache knows which
+    // course is open, and the old callback captured an id that could be stale
     queryClient.invalidateQueries({ queryKey: queryKeys.courses.all })
   })
 
@@ -96,7 +96,7 @@ function ErrorMonitor({ onError }: { onError: (message: string) => void }) {
           ? 'A sala de colaboração está cheia. Recursos em tempo real desativados.'
           : 'Colaboração em tempo real indisponível. O editor continua funcionando normalmente.'
 
-    console.warn('[colab] erro do Liveblocks:', code, error)
+    console.warn('[collab] Liveblocks error:', code, error)
     onError(message)
   })
 
@@ -117,8 +117,8 @@ export function CollabProvider({ courseId, children }: Props) {
   const [canonicalCourseId, setCanonicalCourseId] = useState<string | null>(null)
   const broadcastRef = useRef<Broadcast | null>(null)
 
-  // Só monta o RoomProvider depois que o endpoint de auth confirmar que dá:
-  // assim uma cota estourada ou chave ausente nunca chega a montar a camada
+  // Mount RoomProvider only after the auth endpoint confirms it is possible:
+  // that way a blown quota or a missing key never mounts the layer at all
   useEffect(() => {
     if (!COLLAB_ENABLED) {
       setAuthorized(false)

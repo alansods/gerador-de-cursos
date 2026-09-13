@@ -14,13 +14,13 @@ export function AccordionBlock({ item }: { item: Block }) {
           {item.items.map((accordionItem, idx) => (
             <AccordionItem key={accordionItem.id || idx} value={`item-${idx}`}>
               <AccordionTrigger className="text-left font-semibold">
-                {accordionItem.titulo}
+                {accordionItem.title}
               </AccordionTrigger>
               <AccordionContent>
                 <div
                   className="text-gray-700 dark:text-gray-300 leading-relaxed"
                   dangerouslySetInnerHTML={{
-                    __html: accordionItem.conteudo,
+                    __html: accordionItem.content,
                   }}
                 />
               </AccordionContent>

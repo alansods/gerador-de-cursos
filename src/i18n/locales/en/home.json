@@ -45,12 +45,12 @@
       "weeksAgo_plural": "{{count}} weeks ago"
     },
     "types": {
-      "curso_criado": "Course created",
-      "curso_editado": "Course edited",
-      "curso_deletado": "Course deleted",
-      "usuario_criado": "User created",
-      "usuario_editado": "User edited",
-      "usuario_deletado": "User deleted",
+      "course_created": "Course created",
+      "course_updated": "Course edited",
+      "course_deleted": "Course deleted",
+      "user_created": "User created",
+      "user_updated": "User edited",
+      "user_deleted": "User deleted",
       "scorm_gerado": "SCORM generated"
     }
   }

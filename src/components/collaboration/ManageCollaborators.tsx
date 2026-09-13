@@ -25,7 +25,7 @@ export function ManageCollaborators({ courseId, canManage }: Props) {
 
   const respond = async (id: string, action: 'approve' | 'deny') => {
     try {
-      // aprovar move a pessoa de pendente para colaborador: a mutation invalida os dois
+      // approving moves the person from pending to collaborator: the mutation invalidates both
       await respondAccessRequest.mutateAsync({ id, action })
       toast.success(action === 'approve' ? 'Acesso concedido' : 'Solicitação negada')
     } catch (error) {

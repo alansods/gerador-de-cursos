@@ -7,7 +7,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const { name, email, password } = body
 
-    // Validação
+    // Validation
     if (!name || !email || !password) {
       return NextResponse.json(
         { success: false, error: 'Nome, e-mail e senha são obrigatórios' },
@@ -15,7 +15,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // O e-mail é o login: normalizar evita que Maria@x.com e maria@x.com
+    // The email is the login: normalizing keeps Maria@x.com and maria@x.com
     // virem duas contas distintas
     const normalizedEmail = String(email).trim().toLowerCase()
 
@@ -31,10 +31,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, error: 'E-mail já cadastrado' }, { status: 409 })
     }
 
-    // Hash da senha
+    // Hash the password
     const hashedPassword = await bcrypt.hash(password, 10)
 
-    // Criar usuário
+    // Create the user
     const user = await prisma.user.create({
       data: {
         name: name.trim(),
@@ -60,7 +60,7 @@ export async function POST(request: NextRequest) {
       },
     })
   } catch (error) {
-    console.error('Erro no cadastro:', error)
+    console.error('Signup failed:', error)
     return NextResponse.json({ success: false, error: 'Erro interno do servidor' }, { status: 500 })
   }
 }

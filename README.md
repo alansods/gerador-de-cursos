@@ -228,7 +228,7 @@ generate-scorm-isolated.mjs     # Isolated SCORM build script
 
 ## Documentation
 
-- [`docs/permissoes-usuarios.md`](docs/permissoes-usuarios.md) — user roles and permissions reference
+- [`docs/user-permissions.md`](docs/user-permissions.md) — user roles and permissions reference
 - [`docs/specs/`](docs/specs/) — spec-driven development history: one file per implemented feature
 
 ---

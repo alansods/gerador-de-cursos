@@ -27,7 +27,7 @@ export function SidebarPlayer({ course }: SidebarPlayerProps) {
           currentUnitId={currentUnit || undefined}
           onNavigate={handleNavigate}
           progress={progress}
-          completedUnits={state.visitadas}
+          completedUnits={state.visited}
         />
 
         <div className="flex-1 min-w-0 pt-16 md:pt-0">
@@ -37,7 +37,7 @@ export function SidebarPlayer({ course }: SidebarPlayerProps) {
             <SidebarHome
               course={course}
               onNavigate={handleNavigate}
-              completedUnits={state.visitadas}
+              completedUnits={state.visited}
             />
           )}
         </div>

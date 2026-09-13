@@ -76,17 +76,17 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     ])
 
     await logActivity({
-      type: approved ? 'acesso_aprovado' : 'acesso_negado',
+      type: approved ? 'access_approved' : 'access_denied',
       title: approved ? 'Acesso concedido' : 'Acesso negado',
       description: `${accessRequest.requester.name} em "${accessRequest.course.title}"`,
       entityId: accessRequest.courseId,
-      entityType: 'curso',
+      entityType: 'course',
       userId: authResult.user.id,
     })
 
     return createSuccessResponse({ id, status: approved ? 'APPROVED' : 'DENIED' })
   } catch (error) {
-    console.error('Erro ao responder solicitação:', error)
+    console.error('Failed to answer the access request:', error)
     return createErrorResponse('Erro ao responder solicitação', 500, error)
   }
 }

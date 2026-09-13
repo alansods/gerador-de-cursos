@@ -3,7 +3,7 @@ import { jwtVerify } from 'jose'
 import { prisma, ensureConnection } from '@/lib/prisma'
 import { type JWTPayload } from '@/lib/auth'
 
-// Validar que JWT_SECRET está definido
+// Require JWT_SECRET
 if (!process.env.JWT_SECRET) {
   throw new Error(
     '❌ JWT_SECRET não está definido! Configure a variável de ambiente JWT_SECRET no .env.local'
@@ -30,10 +30,10 @@ export async function getServerUser(): Promise<JWTPayload | null> {
     try {
       const { payload } = await jwtVerify(token, JWT_SECRET)
 
-      // Garantir conexão com banco antes de buscar usuário
+      // Make sure the database connection is live before the lookup
       await ensureConnection()
 
-      // Buscar usuário no banco para garantir que ainda existe
+      // Look the user up to confirm they still exist
       const user = await prisma.user.findUnique({
         where: { id: payload.id as string },
         select: { id: true, name: true, email: true, role: true },
@@ -43,7 +43,7 @@ export async function getServerUser(): Promise<JWTPayload | null> {
         return null
       }
 
-      // O papel vem do banco para que mudanças de role valham sem re-login
+      // The role comes from the database so a role change applies without a new login
       return {
         id: user.id,
         email: user.email,
@@ -51,11 +51,11 @@ export async function getServerUser(): Promise<JWTPayload | null> {
         role: user.role,
       }
     } catch (error) {
-      // Se houver erro de conexão ou token inválido, retornar null
+      // Connection error or invalid token: no user
       return null
     }
   } catch (error) {
-    // Se houver erro ao ler cookies, retornar null
+    // Failure to read the cookies: no user
     return null
   }
 }

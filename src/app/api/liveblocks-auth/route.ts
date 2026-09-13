@@ -11,8 +11,8 @@ const key = process.env.LIVEBLOCKS_SECRET_KEY
 const liveblocks = key ? new Liveblocks({ secret: key }) : null
 
 export async function POST(req: NextRequest) {
-  // Sem chave configurada a colaboração simplesmente não existe; o editor
-  // continua funcionando porque o CollabProvider trata este 503
+  // With no key configured collaboration simply does not exist; the editor keeps
+  // working because CollabProvider handles this 503
   if (!liveblocks) {
     return createErrorResponse('Colaboração em tempo real não está configurada', 503)
   }
@@ -31,7 +31,7 @@ export async function POST(req: NextRequest) {
       return createErrorResponse('Sala inválida', 400)
     }
 
-    // A sala vem do segmento da URL do editor, que pode ser o id ou o slug
+    // The room comes from the editor URL segment, which may be the id or the slug
     const reference = await prisma.course.findFirst({
       where: { OR: [{ id: courseId }, { slug: courseId }] },
       select: { id: true },
@@ -50,16 +50,16 @@ export async function POST(req: NextRequest) {
       return createErrorResponse('Curso não encontrado', 404)
     }
 
-    // A sala é sempre ancorada no id canônico: slug muda ao renomear o curso e
-    // dois clientes que chegaram por formatos de URL diferentes (id vs slug)
-    // acabariam em salas distintas, sem se enxergar
+    // The room is always anchored to the canonical id: a slug changes when the course
+    // is renamed, and two clients arriving through different URL shapes (id vs slug)
+    // would end up in separate rooms, invisible to each other
     const roomId = COURSE_ROOM(reference.id)
     const canEdit = canEditCourse(authResult.user, course, collaboration)
 
-    // Limite do plano gratuito: recusa o terceiro participante, mas quem já
-    // está na sala pode reconectar sem ser barrado. A sala só passa a existir na
-    // primeira conexão; até lá getActiveUsers responde 404, o que aqui significa
-    // sala vazia
+    // Free plan limit: the third participant is refused, but whoever is already in
+    // the room can reconnect freely. The room only exists after the first
+    // connection; until then getActiveUsers answers 404, which here means an empty
+    // room
     const activeUsers = await liveblocks
       .getActiveUsers(roomId)
       .then(({ data }) => data)
@@ -71,8 +71,8 @@ export async function POST(req: NextRequest) {
     const roomFull =
       distinct.size >= MAX_CONCURRENT_COLLABORATORS && !distinct.has(authResult.user.id)
 
-    // Pré-check do CollabProvider: só resolve o id canônico da sala e diz se dá
-    // pra entrar, sem emitir token do Liveblocks
+    // CollabProvider pre-check: resolves the canonical room id and says whether
+    // joining is possible, without issuing a Liveblocks token
     if (resolver) {
       if (roomFull) {
         return NextResponse.json(
@@ -111,7 +111,7 @@ export async function POST(req: NextRequest) {
     const { status, body } = await session.authorize()
     return new Response(body, { status })
   } catch (error) {
-    console.error('Erro na autenticação do Liveblocks:', error)
+    console.error('Liveblocks authentication failed:', error)
     return createErrorResponse('Erro ao autenticar colaboração', 500, error)
   }
 }

@@ -55,7 +55,7 @@ export async function GET(req: NextRequest) {
       activities: activitiesFormatted,
     })
   } catch (error) {
-    console.error('Erro ao listar atividades:', error)
+    console.error('Failed to list the activities:', error)
     return createErrorResponse('Erro ao listar atividades', 500, error)
   }
 }

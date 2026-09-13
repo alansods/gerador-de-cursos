@@ -1,6 +1,6 @@
 'use client'
 
-// Esta página não deve ser exportada estaticamente (usa context e API)
+// This page must not be exported statically (it uses context and the API)
 export const dynamic = 'error'
 
 import { usePreview } from '@/hooks/usePreview'
@@ -92,13 +92,13 @@ export default function CoursesPage() {
   const [selectedCourseForExport, setSelectedCourseForExport] = useState<Course | null>(null)
   const [requestedAccesses, setRequestedAccesses] = useState<Set<string>>(new Set())
 
-  // Estados de busca e filtros
+  // Search and filter state
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedCategory, setSelectedCategory] = useState<string>('Todas Categorias')
   const [selectedFormat, setSelectedFormat] = useState<string>('Todas Modalidades')
   const [selectedStatus, setSelectedStatus] = useState<CourseStatus | 'all'>('all')
 
-  // Debounce do searchTerm para evitar múltiplas requisições
+  // Debounce searchTerm to avoid firing several requests
   const debouncedSearchTerm = useDebounce(searchTerm, 500)
 
   const {
@@ -158,7 +158,7 @@ export default function CoursesPage() {
   const handleCreateCourse = () => router.push('/courses/new')
   const handleEditCourse = (id: string) => router.push(`/courses/${id}/edit`)
   const handlePreviewCourse = (id: string) => {
-    // Buscar o curso nos cursos paginados atuais
+    // Look the course up in the pages loaded so far
     const course = fetchedCourses.find((c) => c.id === id)
     if (course) {
       openPreview(course)
@@ -181,7 +181,7 @@ export default function CoursesPage() {
         await generatePDF(selectedCourseForExport, filename)
         setExportModalOpen(false)
       } catch (error) {
-        console.error('Erro ao gerar PDF:', error)
+        console.error('PDF generation failed:', error)
       }
     }
   }
@@ -410,8 +410,8 @@ export default function CoursesPage() {
                       <TableRow key={course.id}>
                         <TableCell>
                           <div className="flex items-center gap-2">
-                            <span className="font-medium text-foreground">{course.titulo}</span>
-                            {isNewCourse(course.dataCriacao) && (
+                            <span className="font-medium text-foreground">{course.title}</span>
+                            {isNewCourse(course.createdAt) && (
                               <Badge
                                 variant="secondary"
                                 className="bg-linear-to-r from-emerald-500 to-green-500 text-white border-0 gap-1"
@@ -422,7 +422,7 @@ export default function CoursesPage() {
                             )}
                           </div>
                         </TableCell>
-                        <TableCell className="text-muted-foreground">{course.categoria}</TableCell>
+                        <TableCell className="text-muted-foreground">{course.category}</TableCell>
                         <TableCell>
                           {course.status && (
                             <Badge
@@ -437,9 +437,9 @@ export default function CoursesPage() {
                           {course.ownerName || '—'}
                         </TableCell>
                         <TableCell className="text-muted-foreground whitespace-nowrap">
-                          {course.cargaHoraria}
+                          {course.workload}
                         </TableCell>
-                        <TableCell className="text-muted-foreground">{course.modalidade}</TableCell>
+                        <TableCell className="text-muted-foreground">{course.modality}</TableCell>
                         <TableCell className="text-right">
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
@@ -482,7 +482,7 @@ export default function CoursesPage() {
                               {permissions?.canRequestAccess && (
                                 <DropdownMenuItem
                                   disabled={accessRequested}
-                                  onClick={() => handleRequestAccess(course.id, course.titulo)}
+                                  onClick={() => handleRequestAccess(course.id, course.title)}
                                 >
                                   {accessRequested ? (
                                     <>
@@ -557,7 +557,7 @@ export default function CoursesPage() {
                       toast.success('Curso excluído com sucesso')
                     }
                   } catch (error) {
-                    console.error('Erro ao deletar curso:', error)
+                    console.error('Failed to delete the course:', error)
                     const errorMessage =
                       error instanceof Error ? error.message : 'Erro ao excluir curso'
                     toast.error(errorMessage)
@@ -587,11 +587,11 @@ export default function CoursesPage() {
                 await generateSCORM(selectedCourseForExport, filename)
                 setExportModalOpen(false)
               } catch (error) {
-                console.error('Erro ao gerar SCORM:', error)
+                console.error('SCORM generation failed:', error)
               }
             }
           }}
-          courseName={selectedCourseForExport?.titulo || 'Curso'}
+          courseName={selectedCourseForExport?.title || 'Curso'}
           courseId={selectedCourseForExport?.id}
           isGeneratingPDF={isGeneratingPDF}
           isGeneratingSCORM={isGeneratingSCORM}

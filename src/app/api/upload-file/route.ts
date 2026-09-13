@@ -6,8 +6,8 @@ import { MEDIA_POLICY, isMediaCategory } from '@/lib/media'
 export async function POST(request: NextRequest) {
   const body = (await request.json()) as HandleUploadBody
 
-  // A confirmação de upload é uma chamada servidor-a-servidor do Vercel Blob, sem o
-  // cookie do usuário; sua autenticidade é verificada pela assinatura em handleUpload.
+  // The upload confirmation is a server-to-server call from Vercel Blob, without the
+  // user cookie; handleUpload verifies its authenticity through the signature.
   if (body.type !== 'blob.upload-completed') {
     const auth = await requireAuth(request)
     if (auth instanceof NextResponse) return auth
@@ -33,9 +33,9 @@ export async function POST(request: NextRequest) {
           tokenPayload: category,
         }
       },
-      // Sem onUploadCompleted: nada precisa acontecer no servidor após o upload, e
-      // registrá-lo faria o Blob tentar um webhook para uma URL inalcançável em
-      // desenvolvimento local.
+      // No onUploadCompleted: nothing has to happen on the server after the upload, and
+      // registering one would make Blob attempt a webhook against a URL unreachable in
+      // local development.
     })
 
     return NextResponse.json(result)

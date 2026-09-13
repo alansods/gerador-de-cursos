@@ -14,9 +14,9 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 
 interface Unit {
   id: string
-  titulo: string
-  descricao?: string
-  conteudo?: unknown[]
+  title: string
+  description?: string
+  blocks?: unknown[]
 }
 
 interface UnitsDropdownProps {
@@ -35,7 +35,7 @@ export function UnitsDropdown({
   const activeUnit = units[activeUnitIndex]
 
   const fullActiveTitle = activeUnit
-    ? `Unidade ${activeUnitIndex + 1} - ${activeUnit.titulo}`
+    ? `Unidade ${activeUnitIndex + 1} - ${activeUnit.title}`
     : 'Selecione uma unidade'
 
   return (
@@ -93,11 +93,11 @@ export function UnitsDropdown({
                         : 'text-gray-700 dark:text-gray-300'
                     }`}
                   >
-                    {unit.titulo}
+                    {unit.title}
                   </span>
                 </DropdownMenuItem>
               </TooltipTrigger>
-              <TooltipContent side="right">{unit.titulo}</TooltipContent>
+              <TooltipContent side="right">{unit.title}</TooltipContent>
             </Tooltip>
           </TooltipProvider>
         ))}

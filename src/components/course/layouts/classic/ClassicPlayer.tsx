@@ -28,17 +28,13 @@ export function ClassicPlayer({ course }: ClassicPlayerProps) {
           showMenu={true}
           onNavigate={handleNavigate}
           progress={progress}
-          completedUnits={state.visitadas}
+          completedUnits={state.visited}
         />
 
         {currentUnit ? (
           <ClassicUnit course={course} unitId={currentUnit} onNavigate={handleNavigate} />
         ) : (
-          <ClassicHome
-            course={course}
-            onNavigate={handleNavigate}
-            completedUnits={state.visitadas}
-          />
+          <ClassicHome course={course} onNavigate={handleNavigate} completedUnits={state.visited} />
         )}
       </div>
     </ScormProgressProvider>
