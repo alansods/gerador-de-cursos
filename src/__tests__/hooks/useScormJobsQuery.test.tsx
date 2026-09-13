@@ -8,6 +8,7 @@ import { renderHook, waitFor, act } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import {
   JOB_POLLING_INTERVAL,
+  useRestartBuildMutation,
   useScormJobStatusQuery,
   useScormJobsQuery,
   type SCORMJob,
@@ -19,7 +20,7 @@ global.fetch = mockFetch
 const respondWithStatus = (status: SCORMJob['status']) =>
   mockFetch.mockResolvedValue({
     ok: true,
-    json: async () => ({ id: 'job-1', cursoId: 'c1', cursoTitulo: 'Curso', status }),
+    json: async () => ({ id: 'job-1', courseId: 'c1', courseTitle: 'Curso', status }),
   })
 
 function createWrapper() {
@@ -94,7 +95,7 @@ describe('useScormJobsQuery', () => {
     mockFetch.mockResolvedValue({
       ok: true,
       json: async () => ({
-        jobs: [{ id: 'job-1', cursoId: 'c1', cursoTitulo: 'Curso', status: 'completed' }],
+        jobs: [{ id: 'job-1', courseId: 'c1', courseTitle: 'Curso', status: 'completed' }],
         pagination: { page: 2, limit: 10, total: 24, totalPages: 3 },
       }),
     })
@@ -107,5 +108,31 @@ describe('useScormJobsQuery', () => {
 
     expect(mockFetch).toHaveBeenCalledWith('/api/scorm-jobs?page=2&limit=10')
     expect(result.current.pagination).toEqual({ page: 2, limit: 10, total: 24, totalPages: 3 })
+  })
+})
+
+describe('useRestartBuildMutation', () => {
+  beforeEach(() => {
+    jest.clearAllMocks()
+  })
+
+  it('unwraps the course from the API envelope before asking for a build', async () => {
+    const course = { id: 'c1', title: 'Curso', units: [] }
+    mockFetch
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ success: true, course }) })
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ jobId: 'job-9' }) })
+
+    const { result } = renderHook(() => useRestartBuildMutation(), { wrapper: createWrapper() })
+
+    let jobId: string | undefined
+    await act(async () => {
+      jobId = await result.current.mutateAsync('c1')
+    })
+
+    expect(jobId).toBe('job-9')
+
+    const [url, init] = mockFetch.mock.calls[1]
+    expect(url).toBe('/api/generate-scorm-v2')
+    expect(JSON.parse((init as RequestInit).body as string)).toEqual({ course })
   })
 })

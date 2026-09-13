@@ -133,7 +133,7 @@ export function useRestartBuildMutation() {
       const courseResponse = await fetch(`/api/courses/${courseId}`)
       if (!courseResponse.ok) throw new Error('Curso não encontrado')
 
-      const course = await courseResponse.json()
+      const { course } = await courseResponse.json()
 
       const buildResponse = await fetch('/api/generate-scorm-v2', {
         method: 'POST',
