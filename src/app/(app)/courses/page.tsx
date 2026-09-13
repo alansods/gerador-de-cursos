@@ -487,7 +487,7 @@ export default function CoursesPage() {
                     )}
                     <TableHead>Curso</TableHead>
                     <TableHead>Categoria</TableHead>
-                    <TableHead>Status</TableHead>
+                    <TableHead className="whitespace-nowrap">Status</TableHead>
                     <TableHead>Dono</TableHead>
                     <TableHead>Carga</TableHead>
                     <TableHead>Modalidade</TableHead>
@@ -540,7 +540,7 @@ export default function CoursesPage() {
                           {course.status && (
                             <Badge
                               variant="secondary"
-                              className={`border-0 ${COURSE_STATUS_CLASSES[course.status]}`}
+                              className={`border-0 whitespace-nowrap ${COURSE_STATUS_CLASSES[course.status]}`}
                             >
                               {COURSE_STATUS_LABELS[course.status]}
                             </Badge>
