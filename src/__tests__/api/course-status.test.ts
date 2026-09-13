@@ -34,7 +34,6 @@ async function cookieFrom(userId: string, role: string) {
     id: userId,
     email: 'testuser@senai.br',
     name: 'Test User',
-    cargo: 'Usuário',
     role,
   })
     .setProtectedHeader({ alg: 'HS256' })
@@ -50,7 +49,6 @@ function dbUser(id: string, role: string) {
     email: 'testuser@senai.br',
     password: 'hashed',
     name: 'Test User',
-    cargo: 'Usuário',
     role,
     createdAt: new Date(),
     updatedAt: new Date(),

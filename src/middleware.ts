@@ -25,7 +25,8 @@ async function readSession(req: NextRequest): Promise<MiddlewareSession | null> 
 
   try {
     const { payload } = await jwtVerify(token, JWT_SECRET)
-    const role = resolveTokenRole(payload.role, payload.cargo as string | undefined)
+    const role = resolveTokenRole(payload.role)
+    if (!role) return null
 
     return { id: payload.id as string, role }
   } catch {

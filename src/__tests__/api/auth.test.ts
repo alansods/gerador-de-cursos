@@ -34,7 +34,6 @@ describe('API - Authentication', () => {
         email: 'testuser@senai.br',
         password: hashedPassword,
         name: 'Test User',
-        cargo: 'Desenvolvedor',
         role: 'CONTENT_AUTHOR',
         createdAt: new Date(),
       }
@@ -107,7 +106,6 @@ describe('API - Authentication', () => {
         email: 'testuser@senai.br',
         password: hashedPassword,
         name: 'Test User',
-        cargo: 'Desenvolvedor',
         role: 'CONTENT_AUTHOR',
         createdAt: new Date(),
       }
@@ -167,17 +165,21 @@ describe('API - Authentication', () => {
         email: 'testuser@senai.br',
         password: 'hashed',
         name: 'Test User',
-        cargo: 'Desenvolvedor',
         role: 'CONTENT_AUTHOR',
         createdAt: new Date(),
       }
 
       mockPrisma.user.findUnique.mockResolvedValue(mockUser)
 
-      // Criar um token válido
+      // A valid token, in the shape the login route issues
       const { SignJWT } = await import('jose')
       const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET)
-      const token = await new SignJWT({ id: '1' })
+      const token = await new SignJWT({
+        id: '1',
+        email: 'testuser@senai.br',
+        name: 'Test User',
+        role: 'CONTENT_AUTHOR',
+      })
         .setProtectedHeader({ alg: 'HS256' })
         .setExpirationTime('24h')
         .sign(JWT_SECRET)

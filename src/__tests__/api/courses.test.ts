@@ -33,7 +33,6 @@ async function createAuthToken(userId: string = '1', role: string = 'ADMIN') {
     id: userId,
     email: 'testuser@senai.br',
     name: 'Test User',
-    cargo: 'Administrador',
     role,
   })
     .setProtectedHeader({ alg: 'HS256' })
@@ -53,7 +52,6 @@ const authenticatedUser = {
   email: 'testuser@senai.br',
   password: 'hashed',
   name: 'Test User',
-  cargo: 'Administrador',
   role: 'ADMIN',
   createdAt: new Date(),
   updatedAt: new Date(),
@@ -261,7 +259,6 @@ describe('API - Courses', () => {
         email: 'testuser@senai.br',
         password: 'hashed',
         name: 'Test User',
-        cargo: 'Desenvolvedor',
         role: 'ADMIN',
         createdAt: new Date(),
       }
@@ -418,7 +415,6 @@ describe('API - Courses', () => {
         email: 'testuser@senai.br',
         password: 'hashed',
         name: 'Test User',
-        cargo: 'Desenvolvedor',
         role: 'ADMIN',
         createdAt: new Date(),
       }
@@ -528,7 +524,6 @@ describe('API - Courses', () => {
         email: 'testuser@senai.br',
         password: 'hashed',
         name: 'Test User',
-        cargo: 'Desenvolvedor',
         role: 'ADMIN',
         createdAt: new Date(),
       }
@@ -614,7 +609,6 @@ describe('API - Courses', () => {
         email: 'testuser@senai.br',
         password: 'hashed',
         name: 'Test User',
-        cargo: 'Desenvolvedor',
         role: 'ADMIN',
         createdAt: new Date(),
       }

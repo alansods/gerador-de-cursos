@@ -50,7 +50,6 @@ const loginOkResponse = {
       id: '1',
       email: 'testuser@senai.br',
       name: 'Test User',
-      cargo: 'Desenvolvedor',
       role: 'CONTENT_AUTHOR',
     },
   }),

@@ -598,3 +598,19 @@ fixtures de teste que exercitam o formato legado.
 
 Estado: `tsc` nos mesmos 26 erros de baseline, `pnpm test` 375/375, `pnpm build` limpo,
 `pnpm test:e2e --project=chromium` verde.
+
+## Remoção do fallback de JWT (13/09/2026)
+
+A Fase 2 deixou um fallback temporário para os tokens emitidos antes dela: `resolveTokenRole`
+derivava o papel do antigo `cargo` e aceitava os valores em português (`CONTEUDISTA`,
+`GESTOR`…), e `verifyAuth` lia `payload.name ?? payload.nome`. O prazo era 24 h depois do
+deploy de 11/09; com ele vencido, os dois saíram.
+
+`resolveTokenRole(role)` agora devolve `UserRole | null` e **falha fechado**: token cujo papel
+não está no enum atual não vira sessão — o middleware trata como não autenticado e o
+`verifyAuth` recusa o token. Antes, um papel irreconhecível caía silenciosamente em
+`CONTENT_AUTHOR`.
+
+`mapJobTitleToRole` foi removida junto, com o teste correspondente trocado por um de
+`resolveTokenRole`. Os fixtures de teste perderam o campo `cargo`, e o mock de sessão do
+`e2e/scorm-jobs.spec.ts` passou a devolver `name` — devolvia `nome`, que a navbar nunca lê.

@@ -35,7 +35,7 @@ async function mockSession(page: Page) {
       body: JSON.stringify({
         success: true,
         authenticated: true,
-        user: { id: '1', email: 'admin@senai.br', nome: 'Admin', role: 'ADMIN' },
+        user: { id: '1', email: 'admin@senai.br', name: 'Admin', role: 'ADMIN' },
       }),
     })
   })

@@ -4,7 +4,7 @@ import {
   canEditCourse,
   canDeleteCourse,
   getCoursePermissions,
-  mapJobTitleToRole,
+  resolveTokenRole,
   ForbiddenError,
   type UserRole,
   type Action,
@@ -14,16 +14,21 @@ const user = (role: UserRole, id = 'u1') => ({ id, role })
 
 const courseOf = (ownerId: string | null) => ({ id: 'c1', ownerId })
 
-describe('mapJobTitleToRole', () => {
+describe('resolveTokenRole', () => {
   it.each([
-    ['Administrador', 'ADMIN'],
-    ['Convidado', 'GUEST'],
-    ['Analista', 'CONTENT_AUTHOR'],
-    [null, 'CONTENT_AUTHOR'],
-    [undefined, 'CONTENT_AUTHOR'],
-  ])('mapeia %s para %s', (cargo, expected) => {
-    expect(mapJobTitleToRole(cargo as string | null)).toBe(expected)
+    ['ADMIN', 'ADMIN'],
+    ['CONTENT_AUTHOR', 'CONTENT_AUTHOR'],
+    ['GUEST', 'GUEST'],
+  ])('keeps %s', (role, expected) => {
+    expect(resolveTokenRole(role)).toBe(expected)
   })
+
+  it.each([['CONTEUDISTA'], ['Administrador'], [''], [null], [undefined], [42]])(
+    'refuses %s',
+    (role) => {
+      expect(resolveTokenRole(role)).toBeNull()
+    }
+  )
 })
 
 describe('can - global actions', () => {
