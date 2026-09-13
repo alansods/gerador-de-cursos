@@ -614,3 +614,21 @@ não está no enum atual não vira sessão — o middleware trata como não aute
 `mapJobTitleToRole` foi removida junto, com o teste correspondente trocado por um de
 `resolveTokenRole`. Os fixtures de teste perderam o campo `cargo`, e o mock de sessão do
 `e2e/scorm-jobs.spec.ts` passou a devolver `name` — devolvia `nome`, que a navbar nunca lê.
+
+## Publicação (13/09/2026)
+
+As quatro fases foram mescladas na `main` (`a4b777ae`) e publicadas. No banco de produção,
+nesta ordem:
+
+1. Backup do JSON dos 58 cursos para fora do banco, antes de qualquer escrita.
+2. `scripts/migrate-course-json.ts` — 58 lidos, **10 reescritos**; o dry-run seguinte acusa
+   `0 would change`, o que confirma a idempotência do conversor.
+3. `prisma migrate deploy` — aplicou `20260911210000_english_activity_and_layout_values`.
+
+Conferência depois da migração: `activities.tipo` só com valores em inglês
+(`course_updated` 382, `course_created` 83, `course_deleted` 25, …), `entity_type` em
+`course`/`user`, `cursos.layout` em `classic` (40) e `sidebar` (18), e o `DEFAULT` da coluna
+como `'classic'`.
+
+O conversor de leitura (`src/lib/legacy-course.ts`) fica: é a rede que cobre qualquer curso
+antigo restaurado de backup ou importado depois desta data.
