@@ -38,7 +38,7 @@ export function SidebarHome({ course, onNavigate, completedUnits }: SidebarHomeP
         </div>
       </section>
 
-      <section className="px-7 lg:px-14 py-9">
+      <section className="px-7 lg:px-14 pt-9 pb-28 lg:pb-9">
         <h2 className="text-xl font-extrabold text-gray-900 dark:text-gray-50 mb-5">
           Unidades do curso
         </h2>

@@ -81,7 +81,7 @@ export function ClassicUnit({ course, unitId, onNavigate }: ClassicUnitProps) {
           </div>
         </div>
       </div>
-      <div className="max-w-5xl mx-auto px-7 lg:px-14 py-8">
+      <div className="max-w-5xl mx-auto px-7 lg:px-14 pt-8 pb-28 lg:pb-8">
         {/* Unit Content */}
         <UnitContent unit={unit} theme={classicMeta.blockTheme} />
 

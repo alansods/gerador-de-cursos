@@ -89,7 +89,7 @@ export function ClassicHome({ course, onNavigate, completedUnits }: ClassicHomeP
       </div>
 
       {/* Units Section */}
-      <div className="max-w-7xl mx-auto px-7 lg:px-14 py-12">
+      <div className="max-w-7xl mx-auto px-7 lg:px-14 pt-12 pb-28 lg:pb-12">
         <h2 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-8 text-center">
           Unidades do Curso
         </h2>

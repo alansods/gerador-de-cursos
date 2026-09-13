@@ -63,7 +63,7 @@ export function SidebarUnit({ course, unitId, onNavigate }: SidebarUnitProps) {
         </div>
       </div>
 
-      <div className="border-t border-[#e6e4f0] dark:border-[#2c2839] bg-white dark:bg-[#1a1725] px-7 lg:px-14 py-4 flex items-center justify-between gap-2 lg:gap-4">
+      <div className="border-t border-[#e6e4f0] dark:border-[#2c2839] bg-white dark:bg-[#1a1725] px-7 lg:px-14 pt-4 pb-20 lg:py-4 flex items-center justify-between gap-2 lg:gap-4">
         <Button
           variant="outline"
           disabled={!previousUnit}
