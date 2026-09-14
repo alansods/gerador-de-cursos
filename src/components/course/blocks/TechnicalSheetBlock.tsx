@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { Package } from 'lucide-react'
 import { Block, SheetMaterial } from '@/types/course'
+import { illustrationCardStyle } from '@/lib/illustration-paths'
 
 function MaterialCard({ material }: { material: SheetMaterial }) {
   const [broken, setBroken] = useState(false)
@@ -10,7 +11,10 @@ function MaterialCard({ material }: { material: SheetMaterial }) {
 
   return (
     <li className="flex flex-col overflow-hidden rounded-lg border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-900">
-      <div className="flex aspect-square items-center justify-center bg-white p-3">
+      <div
+        className="flex aspect-square items-center justify-center bg-white p-3"
+        style={showImage ? illustrationCardStyle(material.image) : undefined}
+      >
         {showImage ? (
           <img
             src={material.image}

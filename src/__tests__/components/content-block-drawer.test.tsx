@@ -1,6 +1,7 @@
 import '@testing-library/jest-dom'
 import { fireEvent, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { ContentBlockDrawer } from '@/components/ContentBlockDrawer'
 import { blockRegistry } from '@/components/course/blocks'
 import { BLOCK_CATALOG, BLOCK_TYPES, createEmptyBlock } from '@/lib/blocks'
@@ -380,6 +381,61 @@ describe('ContentBlockDrawer', () => {
         ],
       })
     )
+  })
+
+  it('fills an image field from the illustration library', async () => {
+    const user = userEvent.setup()
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        version: 1,
+        themes: [{ id: 'culinary', title: 'Culinária' }],
+        categories: [{ id: 'ingredients', theme: 'culinary', title: 'Ingredientes' }],
+        items: [
+          {
+            id: 'culinary-ingredients-coconut',
+            title: 'Coco',
+            theme: 'culinary',
+            category: 'ingredients',
+            file: 'culinary/ingredients/coconut.svg',
+            tags: ['coco'],
+            width: 64,
+            height: 64,
+            set: 'original',
+            license: 'original',
+            author: 'Gerador de Cursos',
+          },
+        ],
+      }),
+    })
+    render(
+      <QueryClientProvider client={new QueryClient()}>
+        <ContentBlockDrawer
+          open
+          onOpenChange={jest.fn()}
+          mode="add"
+          blockData={{ type: 'technical-sheet' }}
+          onSave={jest.fn()}
+          onCancel={jest.fn()}
+        />
+      </QueryClientProvider>
+    )
+
+    await user.click(screen.getAllByRole('button', { name: /adicionar/i })[0])
+    await user.click(screen.getByRole('button', { name: 'Escolher do acervo' }))
+    await user.click(await screen.findByRole('button', { name: 'Coco' }))
+    await user.click(screen.getByRole('button', { name: 'Usar ilustração' }))
+
+    expect(
+      screen.getByDisplayValue('/illustrations/culinary/ingredients/coconut.svg')
+    ).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Usar ilustração' })).not.toBeInTheDocument()
+  })
+
+  it('offers the library only for image fields', () => {
+    mount('audio')
+
+    expect(screen.queryByRole('button', { name: 'Escolher do acervo' })).not.toBeInTheDocument()
   })
 
   it('creates a technical sheet with an optional material image and reopens it', async () => {

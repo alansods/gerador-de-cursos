@@ -18,6 +18,7 @@ import {
   HelpCircle,
   Upload,
   Loader2,
+  Images,
   Plus,
   Trash2,
   GalleryHorizontal,
@@ -46,6 +47,8 @@ import { uploadFile } from '@/lib/client-upload'
 import { extractYouTubeId } from '@/lib/youtube'
 import { cleanDistractors, fillBlanksAnswers } from '@/lib/fill-blanks'
 import { RichTextEditor } from './RichTextEditor'
+import { IllustrationPicker } from './IllustrationPicker'
+import { ILLUSTRATION_CARD_COLOR, isIllustrationSource } from '@/lib/illustration-paths'
 import { toast } from 'sonner'
 
 interface ContentBlockDrawerProps {
@@ -110,6 +113,7 @@ function FileField({
 }) {
   const [sending, setSending] = useState(false)
   const [previewBroken, setPreviewBroken] = useState(false)
+  const [pickerOpen, setPickerOpen] = useState(false)
   const fileInput = React.useRef<HTMLInputElement>(null)
   const policy = MEDIA_POLICY[category]
 
@@ -154,6 +158,12 @@ function FileField({
           )}
           {sending ? 'Enviando...' : 'Escolher arquivo'}
         </Button>
+        {category === 'image' && (
+          <Button type="button" variant="outline" size="sm" onClick={() => setPickerOpen(true)}>
+            <Images className="h-4 w-4 mr-2" />
+            Escolher do acervo
+          </Button>
+        )}
         <input
           ref={fileInput}
           type="file"
@@ -180,10 +190,22 @@ function FileField({
           alt=""
           onError={() => setPreviewBroken(true)}
           className="max-h-40 w-auto rounded-md border border-border object-contain"
+          style={
+            isIllustrationSource(url) ? { backgroundColor: ILLUSTRATION_CARD_COLOR } : undefined
+          }
         />
       )}
 
       <p className="text-xs text-muted-foreground">{hint ?? policy.sizeHint}</p>
+
+      {category === 'image' && (
+        <IllustrationPicker
+          open={pickerOpen}
+          onOpenChange={setPickerOpen}
+          value={url}
+          onSelect={onUrl}
+        />
+      )}
     </FormField>
   )
 }

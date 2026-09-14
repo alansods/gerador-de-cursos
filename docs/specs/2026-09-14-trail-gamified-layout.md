@@ -828,13 +828,42 @@ Stage 20 record (done):
 
 #### Stage 21 — Illustration picker
 
-- [ ] `IllustrationPicker`: thumbnail grid with titles, filters by theme, category and set,
+- [x] `IllustrationPicker`: thumbnail grid with titles, filters by theme, category and set,
       search on title and tags, larger preview, confirm.
-- [ ] Available in `ItemEditor` image fields and in `FileField`, next to upload.
-- [ ] Library illustrations rendered on a cream card in both themes.
-- [ ] Tests for filtering, search and selection.
+- [x] Available in `ItemEditor` image fields and in `FileField`, next to upload.
+- [x] Library illustrations rendered on a cream card in both themes.
+- [x] Tests for filtering, search and selection.
 - **Done when:** common criteria pass, including `pnpm build`. Commit:
   `feat: pick illustrations from the library`.
+
+Stage 21 record (done):
+
+- Pure helpers in `src/lib/illustration-catalog.ts`: manifest types (moved from
+  `illustration-library.ts`, which re-exports them), `illustrationPath(item)` and
+  `filterIllustrations(items, { theme, category, set, query })`. The search ignores case and
+  accents and needs every typed word in the title or in a tag. `isIllustrationSource(src)` in
+  `illustration-paths.ts` is true for a library path and for its packaged name
+  (`images/illustration-*.svg`), so the cream card survives the export.
+- Data: the picker reads `/illustrations/manifest.json` with `useIllustrationManifestQuery`
+  (`queryKeys.illustrations.manifest`, `staleTime: Infinity`, since the file only changes with a
+  deploy). The query runs only while the picker is open, so the drawer keeps working where no
+  `QueryProvider` exists.
+- `IllustrationPicker` (`src/components/IllustrationPicker.tsx`): a dialog with search, native
+  selects for theme, category (limited to the chosen theme) and set, a result count, a grid of
+  thumbnail buttons with the title under each (`aria-pressed` on the chosen one), and a preview
+  with a larger image, tags, set and license. "Usar ilustração" is enabled after a choice and
+  writes the `/illustrations/...` path; opening again preselects the current path.
+- `FileField` with category `image` gets an "Escolher do acervo" button next to the upload
+  button, which covers every `ItemEditor` image field too. The URL input and the preview stay.
+- Cream card (`#FBF4E6`, same in both themes, rounded) behind library illustrations in `image`,
+  `carousel` (both modes), `flipcard` front image, `matching` item image, `interactive-image`
+  base image (background only, no padding, so hotspot positions do not move), `scenario` avatar
+  and `technical-sheet` materials. Uploaded images keep their current look.
+- `repairBlock` is not changed: it only runs on AI output, which never contains library paths.
+- Checked: react-query stays out of `/scorm-preview` and of the Vite player bundle. A course
+  using library SVGs in `image`, `flipcard`, `matching` and `scenario`, exported through the
+  real pipeline, showed the cream card in Clássico (light) and Trail (dark, 390 px). The picker
+  dialog itself is covered by component tests but was not opened in a running editor.
 
 #### Stage 22 — Third-party sets
 

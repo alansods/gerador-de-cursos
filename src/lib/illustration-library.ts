@@ -1,30 +1,11 @@
 import * as fs from 'fs/promises'
 import * as path from 'path'
+import type { IllustrationItem, IllustrationManifest } from './illustration-catalog'
 import { isLibraryIllustrationPath } from './illustration-paths'
 
+export type { IllustrationItem, IllustrationManifest } from './illustration-catalog'
+
 export { isLibraryIllustrationPath, libraryPackageFileName } from './illustration-paths'
-
-export interface IllustrationItem {
-  id: string
-  title: string
-  theme: string
-  category: string
-  file: string
-  tags: string[]
-  width: number
-  height: number
-  set: string
-  license: string
-  author: string
-  source?: string
-}
-
-export interface IllustrationManifest {
-  version: number
-  themes: { id: string; title: string }[]
-  categories: { id: string; theme: string; title: string }[]
-  items: IllustrationItem[]
-}
 
 export const ORIGINAL_SET = 'original'
 

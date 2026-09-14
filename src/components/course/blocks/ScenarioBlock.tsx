@@ -3,6 +3,7 @@
 import { useEffect, useId, useRef, useState } from 'react'
 import { CheckCircle2, RotateCcw, UserRound, XCircle } from 'lucide-react'
 import { Block } from '@/types/course'
+import { illustrationCardStyle, isIllustrationSource } from '@/lib/illustration-paths'
 import { useRegistrarQuiz } from '@/components/course/ScormProgressContext'
 
 export function ScenarioBlock({ item, blockIndex }: { item: Block; blockIndex?: number }) {
@@ -64,7 +65,12 @@ export function ScenarioBlock({ item, blockIndex }: { item: Block; blockIndex?: 
                 src={item.scenarioAvatar}
                 alt=""
                 onError={() => setAvatarBroken(true)}
-                className="h-14 w-14 rounded-full border-2 border-(--block-accent,#2563eb) bg-white object-cover"
+                className={`h-14 w-14 rounded-full border-2 border-(--block-accent,#2563eb) bg-white ${
+                  isIllustrationSource(item.scenarioAvatar)
+                    ? 'object-contain p-1.5'
+                    : 'object-cover'
+                }`}
+                style={illustrationCardStyle(item.scenarioAvatar)}
               />
             ) : (
               <span

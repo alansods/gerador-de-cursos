@@ -18,6 +18,7 @@ import {
 } from '@dnd-kit/core'
 import { Check, RotateCcw, X } from 'lucide-react'
 import { useRegistrarQuiz } from '@/components/course/ScormProgressContext'
+import { illustrationCardStyle } from '@/lib/illustration-paths'
 
 export interface AssignmentChip {
   id: string
@@ -146,6 +147,7 @@ function Zone({
             src={image}
             alt=""
             className="mb-2 h-28 w-full rounded-md bg-white object-contain p-1"
+            style={illustrationCardStyle(image)}
           />
         )}
         {label}

@@ -10,6 +10,7 @@ import {
 } from 'react'
 import { Check, X } from 'lucide-react'
 import { Block, HotspotItem } from '@/types/course'
+import { illustrationCardStyle } from '@/lib/illustration-paths'
 import { useRegistrarQuiz } from '@/components/course/ScormProgressContext'
 import { maxImageWidth } from './ImageBlock'
 
@@ -227,6 +228,7 @@ export function InteractiveImageBlock({ item, blockIndex }: { item: Block; block
           src={item.baseImage}
           alt={item.caption || 'Imagem interativa'}
           className="h-auto max-w-full rounded-lg"
+          style={illustrationCardStyle(item.baseImage)}
         />
 
         {findMode ? (

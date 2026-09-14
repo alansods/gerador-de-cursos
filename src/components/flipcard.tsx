@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { RotateCcw } from 'lucide-react'
+import { illustrationCardStyle, isIllustrationSource } from '@/lib/illustration-paths'
 
 interface FlipCardProps {
   frontType: 'image' | 'image-title' | 'title'
@@ -33,10 +34,21 @@ export function FlipCard({
         <div className="fc-face fc-frente">
           {withImage ? (
             <>
-              <div className="fc-band" style={frontType === 'image' ? { flex: 1 } : undefined}>
+              <div
+                className="fc-band"
+                style={{
+                  ...(frontType === 'image' ? { flex: 1 } : {}),
+                  ...illustrationCardStyle(frontImage),
+                }}
+              >
                 {frontImage && (
                   <img
                     src={frontImage}
+                    style={
+                      isIllustrationSource(frontImage)
+                        ? { objectFit: 'contain', padding: '12px' }
+                        : undefined
+                    }
                     alt={frontTitle || 'Capa do card'}
                     onError={(e) => {
                       e.currentTarget.style.display = 'none'
