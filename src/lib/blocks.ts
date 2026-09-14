@@ -604,7 +604,7 @@ export const BLOCK_CATALOG: Record<BlockType, BlockMeta> = {
     icon: MousePointerClick,
     description: 'Imagem com pontos clicáveis',
     category: 'interativo',
-    defaults: () => ({ baseImage: '', hotspots: [], size: 'large' }),
+    defaults: () => ({ baseImage: '', hotspots: [], size: 'large', hotspotMode: 'explore' }),
     validateForm: (b) => {
       if (!hasText(b.baseImage)) return 'Adicione a imagem de fundo'
       if (!b.hotspots?.length) return 'Adicione pelo menos um ponto na imagem'
@@ -870,6 +870,7 @@ function repairBlock(block: Block): Block {
   }
 
   if (repaired.type === 'interactive-image') {
+    repaired.hotspotMode = repaired.hotspotMode === 'find' ? 'find' : 'explore'
     repaired.hotspots = (repaired.hotspots ?? [])
       .filter((h) => hasText(h?.title))
       .map((h, index) => ({

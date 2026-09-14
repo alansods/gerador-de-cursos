@@ -95,6 +95,7 @@ export const SAMPLE_DOCUMENT_LINES: string[] = [
   'HOTSPOT_INICIO',
   'URL: https://upload.wikimedia.org/wikipedia/commons/thumb/6/6a/Safety_helmet.jpg/640px-Safety_helmet.jpg',
   'Legenda: Partes do capacete de segurança',
+  'Modo: explorar',
   'X do Ponto 1: 50',
   'Y do Ponto 1: 20',
   'Título do Ponto 1: Casco',

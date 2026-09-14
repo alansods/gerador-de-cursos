@@ -52,12 +52,13 @@ export function applyQuizResult(
   state: ProgressState,
   key: string,
   correct: number,
-  total: number
+  total: number,
+  firstTryOverride?: boolean
 ): ProgressState {
   if (total <= 0) return state
 
   const previous = state.quizzes[key]
-  const firstTry = previous ? previous.firstTry === true : correct === total
+  const firstTry = previous ? previous.firstTry === true : (firstTryOverride ?? correct === total)
   const result: QuizResult = firstTry ? { correct, total, firstTry: true } : { correct, total }
 
   return { ...state, quizzes: { ...state.quizzes, [key]: result } }

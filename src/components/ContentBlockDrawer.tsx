@@ -456,6 +456,69 @@ function ImageSizeField({
   )
 }
 
+const HOTSPOT_MODES: {
+  value: NonNullable<Block['hotspotMode']>
+  label: string
+  description: string
+}[] = [
+  {
+    value: 'explore',
+    label: 'Explorar',
+    description: 'Os pontos ficam visíveis e o aluno clica para ler cada um.',
+  },
+  {
+    value: 'find',
+    label: 'Encontrar',
+    description:
+      'Os pontos ficam escondidos até o aluno tocar no lugar certo. Vale como atividade avaliada.',
+  },
+]
+
+function HotspotModeField({
+  value,
+  onChange,
+}: {
+  value: Block['hotspotMode']
+  onChange: (mode: NonNullable<Block['hotspotMode']>) => void
+}) {
+  const current = value ?? 'explore'
+
+  return (
+    <fieldset className="space-y-2">
+      <legend className="text-sm font-medium text-gray-900 dark:text-gray-100">Modo</legend>
+      <div className="grid gap-2 sm:grid-cols-2">
+        {HOTSPOT_MODES.map((mode) => (
+          <label
+            key={mode.value}
+            className={`flex cursor-pointer items-start gap-2 rounded-lg border p-3 text-sm transition-colors has-focus-visible:ring-2 has-focus-visible:ring-blue-600 ${
+              current === mode.value
+                ? 'border-blue-600 bg-blue-50 dark:bg-blue-950/40'
+                : 'border-gray-200 hover:border-blue-300 dark:border-gray-700'
+            }`}
+          >
+            <input
+              type="radio"
+              name="hotspot-mode"
+              value={mode.value}
+              checked={current === mode.value}
+              onChange={() => onChange(mode.value)}
+              className="mt-0.5 accent-blue-600"
+            />
+            <span>
+              <span className="block font-medium text-gray-900 dark:text-gray-100">
+                {mode.label}
+              </span>
+              <span className="block text-xs text-gray-600 dark:text-gray-400">
+                {mode.description}
+              </span>
+            </span>
+          </label>
+        ))}
+      </div>
+    </fieldset>
+  )
+}
+
 function HotspotEditor({
   baseImage,
   hotspots,
@@ -1727,6 +1790,11 @@ export function ContentBlockDrawer({
               preview={false}
               url={formData.baseImage || ''}
               onUrl={(baseImage) => setFormData({ ...formData, baseImage })}
+            />
+
+            <HotspotModeField
+              value={formData.hotspotMode}
+              onChange={(hotspotMode) => setFormData({ ...formData, hotspotMode })}
             />
 
             <HotspotEditor

@@ -231,6 +231,16 @@ describe('applyQuizResult', () => {
     expect(calculateScore(perfectFirst)).toBe(33)
   })
 
+  it('lets the block decide the first-attempt flag on the first result only', () => {
+    const tooManyMisses = applyQuizResult(createEmptyState(1), '0-1', 3, 3, false)
+    const withinAllowance = applyQuizResult(createEmptyState(1), '0-1', 3, 3, true)
+    const later = applyQuizResult(tooManyMisses, '0-1', 3, 3, true)
+
+    expect(tooManyMisses.quizzes['0-1']).toEqual({ correct: 3, total: 3 })
+    expect(withinAllowance.quizzes['0-1']).toEqual({ correct: 3, total: 3, firstTry: true })
+    expect(later.quizzes['0-1']).toEqual({ correct: 3, total: 3 })
+  })
+
   it('ignores results with no questions', () => {
     const state = createEmptyState(1)
 

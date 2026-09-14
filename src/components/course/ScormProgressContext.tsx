@@ -4,7 +4,13 @@ import { createContext, useContext } from 'react'
 
 interface ScormProgressContextValue {
   unitId: string | null
-  recordQuiz: (unitId: string, blockIndex: number, correctCount: number, total: number) => void
+  recordQuiz: (
+    unitId: string,
+    blockIndex: number,
+    correctCount: number,
+    total: number,
+    firstTry?: boolean
+  ) => void
 }
 
 const ScormProgressContext = createContext<ScormProgressContextValue | null>(null)
@@ -22,8 +28,12 @@ export function ScormProgressProvider({
 export function useRegistrarQuiz(blockIndex: number | undefined) {
   const ctx = useContext(ScormProgressContext)
 
-  return (result: { acertos: number; total: number }) => {
+  return (result: { acertos: number; total: number; firstTry?: boolean }) => {
     if (!ctx?.unitId || blockIndex === undefined) return
-    ctx.recordQuiz(ctx.unitId, blockIndex, result.acertos, result.total)
+    if (result.firstTry === undefined) {
+      ctx.recordQuiz(ctx.unitId, blockIndex, result.acertos, result.total)
+      return
+    }
+    ctx.recordQuiz(ctx.unitId, blockIndex, result.acertos, result.total, result.firstTry)
   }
 }

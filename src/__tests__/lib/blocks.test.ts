@@ -647,6 +647,20 @@ describe('phase 3 blocks', () => {
     ])
   })
 
+  it('keeps the find mode and defaults any other mode to explore', () => {
+    const image = (hotspotMode?: string) => ({
+      type: 'interactive-image' as const,
+      content: '',
+      baseImage: 'https://x.com/a.png',
+      hotspots: [{ id: 'h1', x: 10, y: 20, title: 'Casco', content: '' }],
+      ...(hotspotMode ? { hotspotMode: hotspotMode as 'find' } : {}),
+    })
+    const { course } = normalizeCourse(courseWith([image('find'), image('hunt'), image()]))
+
+    expect(course.units[0].blocks.map((b) => b.hotspotMode)).toEqual(['find', 'explore', 'explore'])
+    expect(createEmptyBlock('interactive-image').hotspotMode).toBe('explore')
+  })
+
   it('clamps hotspot coordinates to the 0-100 range', () => {
     const { course } = normalizeCourse(
       courseWith([

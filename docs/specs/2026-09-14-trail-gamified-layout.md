@@ -587,13 +587,25 @@ Files: `src/app/(app)/courses/new/actions.ts`, `src/app/api/generate-course-from
 
 #### Stage 11 — Interactive image `find` mode
 
-- [ ] Mode field on `interactive-image` with `explore` (current) as default.
-- [ ] `trail-progress.ts` scored detection includes `interactive-image` in `find` mode.
-- [ ] `find`: hotspots hidden until found; misses shown briefly; progress counter.
-- [ ] Records `found / total` at the end; first-attempt bit when every error was found with at
-      most 2 misses.
-- [ ] Drawer: mode select; catalog, `repairBlock`, `invalidReason`, prompt and marker updated.
-- [ ] Tests in `interactive-image.test.tsx`, `blocks.test.ts`, `content-block-drawer.test.tsx`.
+- [x] `hotspotMode?: 'explore' | 'find'` on `interactive-image`, with `explore` (current) as the
+      catalog default; `repairBlock` keeps `find` and turns anything else into `explore`.
+      `validate`, `validateForm` and `invalidReason` keep the same rule in both modes.
+- [x] `trail-progress.ts` scored detection includes `interactive-image` in `find` mode.
+- [x] `find`: hotspots hidden until found; a miss shows an X for 900 ms; counter "x de N
+      encontrados". A tap hits when it lands within 7% of the image width (never less than
+      28 px) of a hotspot, measured with the image ratio. Keyboard: arrows move a crosshair in
+      5% steps, Enter or Space marks. Found hotspots become buttons that open the same popup.
+      While a popup is open, a tap that hits no hotspot only closes it and is not a miss.
+      Checked in the Vite player with screenshots (light desktop, dark 390 px).
+- [x] Records `found / total` once, when every hotspot is found. The first-attempt bit is set
+      when there were at most `FIND_MISS_ALLOWANCE` (2) misses: `applyQuizResult`,
+      `recordQuiz` and `useRegistrarQuiz` take an optional first-attempt override, still
+      honoured only on the first result of the activity.
+- [x] Drawer: "Modo" with Explorar / Encontrar radios; catalog, `repairBlock`, prompt schema,
+      marker conversion (`Modo: explorar | encontrar`) and sample document updated. The `auto`
+      mode keeps forbidding the block.
+- [x] Tests in `interactive-image.test.tsx`, `blocks.test.ts`, `content-block-drawer.test.tsx`,
+      `scorm-progress.test.ts`, `trail-progress.test.ts`, `use-scorm-progress.test.tsx`.
 - **Done when:** common criteria pass, including `pnpm build`. Commit:
   `feat: add find mode to the interactive image block`.
 

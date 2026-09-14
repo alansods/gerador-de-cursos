@@ -158,7 +158,13 @@ export function useScormProgress(course: Course) {
   )
 
   const recordQuiz = useCallback(
-    (unitId: string, blockIndex: number, correctCount: number, total: number) => {
+    (
+      unitId: string,
+      blockIndex: number,
+      correctCount: number,
+      total: number,
+      firstTry?: boolean
+    ) => {
       const unitIndex = units.findIndex((u) => u.id === unitId)
       if (unitIndex < 0 || total <= 0) return
 
@@ -166,7 +172,8 @@ export function useScormProgress(course: Course) {
         stateRef.current,
         quizKey(unitIndex, blockIndex),
         correctCount,
-        total
+        total,
+        firstTry
       )
       setState(next)
       saveState(next)

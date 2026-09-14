@@ -315,6 +315,33 @@ describe('ContentBlockDrawer', () => {
     expect(screen.getByRole('combobox')).toHaveTextContent('Grande (100%)')
   })
 
+  it('starts the interactive image in explore mode and saves the find mode', async () => {
+    const user = userEvent.setup()
+    const onSave = jest.fn()
+    render(
+      <ContentBlockDrawer
+        open
+        onOpenChange={jest.fn()}
+        mode="edit"
+        blockData={{
+          type: 'interactive-image',
+          baseImage: 'https://exemplo.com/a.png',
+          hotspots: [{ id: 'h1', x: 10, y: 10, title: 'Casco', content: '' }],
+        }}
+        onSave={onSave}
+        onCancel={jest.fn()}
+      />
+    )
+
+    expect(screen.getByRole('radio', { name: /Explorar/ })).toBeChecked()
+
+    await user.click(screen.getByRole('radio', { name: /Encontrar/ }))
+    await user.click(screen.getByRole('button', { name: /salvar/i }))
+
+    expect(screen.getByRole('radio', { name: /Encontrar/ })).toBeChecked()
+    expect(onSave).toHaveBeenCalledWith(expect.objectContaining({ hotspotMode: 'find' }))
+  })
+
   it('shows the interactive base image only once, inside the hotspot editor', () => {
     render(
       <ContentBlockDrawer

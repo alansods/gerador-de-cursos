@@ -345,6 +345,7 @@ Cada Unidade:
   "content": "",
   "baseImage": "https://exemplo.com/equipamento.png",
   "caption": "Legenda da imagem",
+  "hotspotMode": "explore" | "find",
   "hotspots": [
     {
       "id": "hotspot-1",
@@ -355,6 +356,8 @@ Cada Unidade:
     }
   ]
 }
+- "explore": os pontos ficam visíveis e o aluno clica para ler cada um
+- "find": os pontos ficam escondidos e o aluno precisa encontrá-los na imagem (ex.: achar os erros)
 
 ### 19. matching
 {
@@ -474,6 +477,7 @@ ${sharedStructure}
   - "X do Ponto N:" → hotspots[N].x; "Y do Ponto N:" → hotspots[N].y (números de 0 a 100)
   - "Título do Ponto N:" → hotspots[N].title
   - "Conteúdo do Ponto N:" → hotspots[N].content (em HTML)
+  - "Modo:" → hotspotMode (explorar → "explore", encontrar → "find"; use "explore" se ausente)
   - Nunca invente URL de imagem nem coordenadas: sem URL, o bloco não existe
 - Bloco ASSOCIACAO_INICIO...ASSOCIACAO_FIM → type "matching"
   - "Item N:" → matchingPairs[N].left

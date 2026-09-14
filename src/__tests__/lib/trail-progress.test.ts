@@ -97,6 +97,11 @@ describe('isScoredBlock', () => {
     expect(isScoredBlock(block('interactive-image'))).toBe(false)
     expect(isScoredBlock(block('paragraph'))).toBe(false)
   })
+
+  it('scores the interactive image only in find mode', () => {
+    expect(isScoredBlock({ ...block('interactive-image'), hotspotMode: 'find' })).toBe(true)
+    expect(isScoredBlock({ ...block('interactive-image'), hotspotMode: 'explore' })).toBe(false)
+  })
 })
 
 describe('step state', () => {

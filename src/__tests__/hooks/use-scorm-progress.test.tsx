@@ -168,6 +168,19 @@ describe('useScormProgress', () => {
     expect(scorm.suspendData).not.toContain('0-1:2/2!')
   })
 
+  it('stores the first-attempt flag decided by the block', () => {
+    const scorm = createScorm()
+    install(scorm)
+    const { result } = renderHook(({ course }) => useScormProgress(course), {
+      initialProps: { course: makeCourse('trail') },
+    })
+
+    act(() => result.current.recordQuiz('u1', 1, 3, 3, false))
+
+    expect(result.current.state.quizzes['0-1']).toEqual({ correct: 3, total: 3 })
+    expect(scorm.suspendData).not.toContain('0-1:3/3!')
+  })
+
   it('resumes steps from suspend_data and does not report completion twice', () => {
     const course = makeCourse('trail')
     const hash = hashCourse({ id: course.id, units: course.units })

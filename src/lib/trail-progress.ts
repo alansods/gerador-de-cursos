@@ -92,6 +92,7 @@ export function reviewTrailSteps(unit: Unit): TrailStepReview {
 }
 
 export function isScoredBlock(block: Block): boolean {
+  if (block.type === 'interactive-image') return block.hotspotMode === 'find'
   return BLOCK_CATALOG[block.type]?.category === 'avaliativo'
 }
 

@@ -177,6 +177,7 @@ export interface Block {
   // interactive-image-specific
   baseImage?: string
   hotspots?: HotspotItem[]
+  hotspotMode?: 'explore' | 'find'
   // matching-specific
   matchingPairs?: MatchingPair[]
   // categorization-specific
