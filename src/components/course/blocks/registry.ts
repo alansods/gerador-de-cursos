@@ -23,6 +23,7 @@ import { CategorizationBlock } from './CategorizationBlock'
 import { InteractiveVideoBlock } from './InteractiveVideoBlock'
 import { TrueFalseBlock } from './TrueFalseBlock'
 import { SequenceBlock } from './SequenceBlock'
+import { FillBlanksBlock } from './FillBlanksBlock'
 
 export interface BlockProps {
   item: Block
@@ -53,4 +54,5 @@ export const blockRegistry: Record<Block['type'], ComponentType<BlockProps>> = {
   'interactive-video': InteractiveVideoBlock,
   'true-false': TrueFalseBlock,
   sequence: SequenceBlock,
+  'fill-blanks': FillBlanksBlock,
 }

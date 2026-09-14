@@ -16,6 +16,7 @@ import {
   MousePointerClick,
   RotateCcw,
   Target,
+  TextCursorInput,
   Minus,
   MonitorPlay,
   Music,
@@ -38,6 +39,7 @@ import type {
   Unit,
 } from '@/types/course'
 import { timeToSeconds } from '@/lib/video-time'
+import { cleanDistractors, fillBlanksAnswers } from '@/lib/fill-blanks'
 import { isValidYouTubeUrl } from '@/lib/youtube'
 
 export type BlockType = Block['type']
@@ -712,6 +714,27 @@ export const BLOCK_CATALOG: Record<BlockType, BlockMeta> = {
       return null
     },
   },
+  'fill-blanks': {
+    type: 'fill-blanks',
+    label: 'Completar lacunas',
+    pluralLabel: 'blocos de completar lacunas',
+    marker: 'LACUNAS',
+    aiGeneratable: true,
+    requiresDocumentMedia: false,
+    validate: (b) => fillBlanksAnswers(b.fillBlanksText).some(hasText),
+    icon: TextCursorInput,
+    description: 'Texto com lacunas para completar com palavras',
+    category: 'avaliativo',
+    defaults: () => ({ fillBlanksText: '', fillBlanksDistractors: [] }),
+    validateForm: (b) => {
+      if (!hasText(b.fillBlanksText)) return 'Escreva o texto com as lacunas'
+      const answers = fillBlanksAnswers(b.fillBlanksText)
+      if (answers.length === 0) return 'Marque cada lacuna entre colchetes, como [palavra]'
+      if (answers.some((answer) => !hasText(answer)))
+        return 'Há uma lacuna vazia: escreva a palavra entre os colchetes'
+      return null
+    },
+  },
 }
 
 function baseBlock(): Partial<Block> {
@@ -962,6 +985,15 @@ function repairBlock(block: Block): Block {
     repaired.sequenceItems = validSequenceItems(repaired.sequenceItems)
   }
 
+  if (repaired.type === 'fill-blanks') {
+    const text = hasText(repaired.fillBlanksText) ? repaired.fillBlanksText!.trim() : ''
+    repaired.fillBlanksText = text.replace(/\[\s*\]/g, '')
+    repaired.fillBlanksDistractors = cleanDistractors(
+      repaired.fillBlanksDistractors,
+      fillBlanksAnswers(repaired.fillBlanksText)
+    )
+  }
+
   if (repaired.type === 'video') {
     repaired.videoSource = videoSource(repaired, 'youtube')
   }
@@ -1063,6 +1095,8 @@ function invalidReason(type: BlockType): string {
       return 'sem afirmações com resposta verdadeira ou falsa'
     case 'sequence':
       return `com menos de ${MIN_SEQUENCE_ITEMS} passos com texto`
+    case 'fill-blanks':
+      return 'sem lacunas marcadas entre colchetes'
     default:
       return 'sem conteúdo'
   }

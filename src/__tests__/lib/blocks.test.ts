@@ -620,6 +620,43 @@ describe('phase 2 blocks', () => {
   })
 })
 
+describe('fill-blanks block', () => {
+  it('keeps the text, removes empty brackets and cleans the AI distractors', () => {
+    const { course } = normalizeCourse(
+      courseWith([
+        {
+          type: 'fill-blanks',
+          content: '',
+          fillBlanksText: ' Use [luvas] e [ ] sempre ',
+          fillBlanksDistractors: 'botas, Luvas, , botas' as never,
+        },
+      ])
+    )
+    const block = course.units[0].blocks[0]
+
+    expect(block.fillBlanksText).toBe('Use [luvas] e  sempre')
+    expect(block.fillBlanksDistractors).toEqual(['botas'])
+  })
+
+  it('discards text with no blank and validates the form', () => {
+    const { summary } = normalizeCourse(
+      courseWith([{ type: 'fill-blanks', content: '', fillBlanksText: 'Sem lacunas' }])
+    )
+    const form = (fillBlanksText: string) =>
+      BLOCK_CATALOG['fill-blanks'].validateForm({
+        ...createEmptyBlock('fill-blanks'),
+        fillBlanksText,
+      } as Block)
+
+    expect(summary.discarded[0].reason).toBe('sem lacunas marcadas entre colchetes')
+    expect(form('')).toBe('Escreva o texto com as lacunas')
+    expect(form('Sem lacunas')).toBe('Marque cada lacuna entre colchetes, como [palavra]')
+    expect(form('Use [ ] aqui')).toBe('Há uma lacuna vazia: escreva a palavra entre os colchetes')
+    expect(form('Use [luvas]')).toBeNull()
+    expect(BLOCK_CATALOG['fill-blanks'].category).toBe('avaliativo')
+  })
+})
+
 describe('sequence block', () => {
   it('keeps the author order, trims the steps and drops empty ones', () => {
     const { course } = normalizeCourse(

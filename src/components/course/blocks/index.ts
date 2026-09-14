@@ -27,3 +27,4 @@ export { CategorizationBlock as CategorizacaoBlock } from './CategorizationBlock
 export { InteractiveVideoBlock as VideoInterativoBlock } from './InteractiveVideoBlock'
 export { TrueFalseBlock } from './TrueFalseBlock'
 export { SequenceBlock } from './SequenceBlock'
+export { FillBlanksBlock } from './FillBlanksBlock'

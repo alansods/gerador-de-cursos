@@ -40,6 +40,7 @@ import { BLOCK_CATALOG, cardsFlipcard, createEmptyBlock, videoSource } from '@/l
 import { MEDIA_POLICY, type MediaCategory } from '@/lib/media'
 import { uploadFile } from '@/lib/client-upload'
 import { extractYouTubeId } from '@/lib/youtube'
+import { cleanDistractors, fillBlanksAnswers } from '@/lib/fill-blanks'
 import { RichTextEditor } from './RichTextEditor'
 import { toast } from 'sonner'
 
@@ -566,6 +567,79 @@ function HotspotModeField({
         ))}
       </div>
     </fieldset>
+  )
+}
+
+function FillBlanksFields({
+  text,
+  distractors,
+  onChange,
+}: {
+  text: string
+  distractors: string[]
+  onChange: (change: Pick<Block, 'fillBlanksText' | 'fillBlanksDistractors'>) => void
+}) {
+  const [rawDistractors, setRawDistractors] = useState(distractors.join(', '))
+  const answers = fillBlanksAnswers(text)
+
+  return (
+    <div className="space-y-5">
+      <FormField
+        label={
+          <>
+            Texto com lacunas <span className="text-destructive">*</span>
+          </>
+        }
+        description="Escreva entre colchetes cada palavra que o aluno deve completar. Ex.: Lave as mãos por [20] segundos com [sabão]."
+      >
+        {(field) => (
+          <Textarea
+            {...field}
+            value={text}
+            rows={5}
+            onChange={(e) =>
+              onChange({
+                fillBlanksText: e.target.value,
+                fillBlanksDistractors: cleanDistractors(
+                  rawDistractors,
+                  fillBlanksAnswers(e.target.value)
+                ),
+              })
+            }
+            placeholder="Lave as mãos por [20] segundos com [sabão]."
+          />
+        )}
+      </FormField>
+
+      <p className="text-xs text-muted-foreground" aria-live="polite">
+        {answers.length === 0
+          ? 'Nenhuma lacuna marcada ainda.'
+          : `${answers.length} ${answers.length === 1 ? 'lacuna' : 'lacunas'}: ${answers
+              .map((answer) => answer || '(vazia)')
+              .join(', ')}`}
+      </p>
+
+      <FormField
+        label="Palavras extras"
+        optional
+        description="Palavras erradas, mas plausíveis, separadas por vírgula. Aparecem junto das respostas."
+      >
+        {(field) => (
+          <Input
+            {...field}
+            value={rawDistractors}
+            onChange={(e) => {
+              setRawDistractors(e.target.value)
+              onChange({
+                fillBlanksText: text,
+                fillBlanksDistractors: cleanDistractors(e.target.value, answers),
+              })
+            }}
+            placeholder="Ex.: 10, álcool"
+          />
+        )}
+      </FormField>
+    </div>
   )
 }
 
@@ -1904,6 +1978,15 @@ export function ContentBlockDrawer({
           <CategoryEditor
             categories={formData.categories || []}
             onChange={(categories) => setFormData({ ...formData, categories })}
+          />
+        )
+
+      case 'fill-blanks':
+        return (
+          <FillBlanksFields
+            text={formData.fillBlanksText || ''}
+            distractors={formData.fillBlanksDistractors || []}
+            onChange={(change) => setFormData({ ...formData, ...change })}
           />
         )
 

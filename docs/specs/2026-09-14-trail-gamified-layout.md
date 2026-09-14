@@ -681,6 +681,24 @@ Stage 14 record (`sequence`, done):
 - Checked in the Vite player in Clássico (light), Sidebar (dark) and Trail (390 px, after
   checking).
 
+Stage 15 record (`fill-blanks`, done):
+
+- Data: `fillBlanksText` with each answer between square brackets (`Lave por [20] segundos`) and
+  `fillBlanksDistractors: string[]`. Parsing lives in `src/lib/fill-blanks.ts`. `repairBlock`
+  removes empty brackets and cleans distractors (accepts a list or comma separated text, drops
+  repeats and words equal to an answer). Marker `LACUNAS` (`Texto:`, `Distratores:`); `auto`
+  mode may turn a key definition into 2 to 5 blanks with 2 distractors; the Trail prompt lists
+  it as a scored activity.
+- Player: blanks are buttons inline with the text; the selected blank is highlighted; tapping a
+  word fills it and selects the next empty blank; tapping a filled blank returns the word. Words
+  are compared ignoring case and surrounding spaces. "Verificar" (enabled when every blank is
+  filled) marks each blank, shows the right word next to wrong ones and records
+  `right blanks / total` once per attempt.
+- Drawer: text area with a live list of the blanks found, and a comma separated distractors
+  field that keeps what the author types.
+- Checked in the Vite player in Clássico (light), Sidebar (dark, after checking) and Trail
+  (390 px).
+
 #### Stage 19 — Manifest `set` field and consistency test
 
 - [ ] `set` added to every manifest item (`original` for the first set).

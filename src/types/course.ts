@@ -139,6 +139,7 @@ export interface Block {
     | 'interactive-video'
     | 'true-false'
     | 'sequence'
+    | 'fill-blanks'
   content: string
   order: number
   // image-specific
@@ -199,6 +200,8 @@ export interface Block {
   categories?: CategoryItem[]
   trueFalseItems?: TrueFalseItem[]
   sequenceItems?: SequenceItem[]
+  fillBlanksText?: string
+  fillBlanksDistractors?: string[]
 }
 
 export interface Unit {

@@ -382,6 +382,42 @@ describe('ContentBlockDrawer', () => {
     )
   })
 
+  it('creates a fill-blanks block, listing the blanks, and reopens it', async () => {
+    const user = userEvent.setup()
+    const onSave = mount('fill-blanks')
+
+    expect(screen.getByText('Nenhuma lacuna marcada ainda.')).toBeInTheDocument()
+
+    const text = screen.getByLabelText(/Texto com lacunas/)
+    await user.click(text)
+    await user.paste('Lave por [20] segundos com [sabão].')
+    expect(screen.getByText('2 lacunas: 20, sabão')).toBeInTheDocument()
+
+    await user.type(screen.getByLabelText(/Palavras extras/), '10, álcool, sabão,')
+    expect(screen.getByLabelText(/Palavras extras/)).toHaveValue('10, álcool, sabão,')
+    await user.click(screen.getByRole('button', { name: /salvar/i }))
+
+    const saved = onSave.mock.calls[0][0]
+    expect(saved).toEqual(
+      expect.objectContaining({
+        fillBlanksText: 'Lave por [20] segundos com [sabão].',
+        fillBlanksDistractors: ['10', 'álcool'],
+      })
+    )
+
+    render(
+      <ContentBlockDrawer
+        open
+        onOpenChange={jest.fn()}
+        mode="edit"
+        blockData={saved}
+        onSave={jest.fn()}
+        onCancel={jest.fn()}
+      />
+    )
+    expect(screen.getAllByDisplayValue('10, álcool')).toHaveLength(1)
+  })
+
   it('creates a sequence, reorders its steps and reopens it in that order', async () => {
     const user = userEvent.setup()
     const onSave = mount('sequence')

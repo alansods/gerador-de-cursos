@@ -410,6 +410,16 @@ Cada Unidade:
   ]
 }
 
+### 23. fill-blanks — cada lacuna é a palavra correta entre colchetes
+{
+  "title": "string",
+  "type": "fill-blanks",
+  "content": "",
+  "fillBlanksText": "Lave as mãos por [20] segundos com água e [sabão].",
+  "fillBlanksDistractors": ["10", "álcool"]
+}
+- Os distratores são palavras erradas, mas plausíveis, que aparecem junto das respostas
+
 ## Regras gerais
 
 - Na Unidade, os blocos ficam SEMPRE em "blocks". "content" é campo do Bloco, nunca da Unidade
@@ -523,6 +533,9 @@ ${sharedStructure}
 - Bloco SEQUENCIA_INICIO...SEQUENCIA_FIM → type "sequence" (UM único bloco com todos os passos)
   - "Passo N:" → sequenceItems[N-1].text, mantendo a ordem de N
   - São necessários no mínimo 2 passos
+- Bloco LACUNAS_INICIO...LACUNAS_FIM → type "fill-blanks"
+  - "Texto:" → fillBlanksText, mantendo os colchetes exatamente como estão
+  - "Distratores:" → fillBlanksDistractors (separe por vírgula; use [] se ausente)
 - Conteúdo fora de marcadores → use title, subtitulo, paragrafo ou lista conforme adequado
 
 ## Texto para analisar
@@ -542,6 +555,7 @@ ${sharedStructure}
 - "Objetivos", "ao final desta unidade você será capaz de" → learning-objectives
 - Lista de ingredientes, materiais, características → list (listType: "unordered")
 - Passos numerados de um processo → list (listType: "ordered")
+- Definição ou regra com termos-chave (valores, nomes técnicos, prazos) → UM bloco fill-blanks com 1 a 3 frases copiadas do texto, de 2 a 5 lacunas no total e 2 distratores plausíveis
 - Procedimento em que a ordem é o que se aprende (montagem, preparo, sequência de segurança), com 3 a 8 passos → depois da lista, UM bloco sequence com os mesmos passos resumidos, na ordem correta
 - Requisitos, critérios verificáveis → list (listType: "check")
 - 3 ou mais tópicos relacionados com subconteúdo → accordion
