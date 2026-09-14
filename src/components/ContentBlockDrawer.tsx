@@ -235,7 +235,7 @@ function ItemEditor<T extends { id: string }>({
       </div>
 
       {items.length > 0 ? (
-        <div className="space-y-3 max-h-[400px] overflow-y-auto">
+        <div className="space-y-3 sm:max-h-[400px] sm:overflow-y-auto">
           {items.map((item, index) => (
             <Card key={item.id} className="p-4">
               <div className="flex items-center justify-between mb-3">
@@ -340,7 +340,7 @@ function CategoryEditor({
       </div>
 
       {categories.length > 0 ? (
-        <div className="space-y-3 max-h-[400px] overflow-y-auto">
+        <div className="space-y-3 sm:max-h-[400px] sm:overflow-y-auto">
           {categories.map((category, index) => (
             <Card key={category.id} className="p-4">
               <div className="flex items-center justify-between mb-3">
@@ -494,7 +494,7 @@ function HotspotEditor({
       </div>
 
       {hotspots.length > 0 && (
-        <div className="space-y-3 max-h-[300px] overflow-y-auto">
+        <div className="space-y-3 sm:max-h-[300px] sm:overflow-y-auto">
           {hotspots.map((hotspot, index) => (
             <Card key={hotspot.id} className="p-4">
               <div className="flex items-center justify-between mb-3">
@@ -1117,7 +1117,7 @@ export function ContentBlockDrawer({
             </div>
 
             {formData.items && formData.items.length > 0 ? (
-              <div className="space-y-3 max-h-[400px] overflow-y-auto">
+              <div className="space-y-3 sm:max-h-[400px] sm:overflow-y-auto">
                 {formData.items.map((item, index) => (
                   <Card key={item.id} className="p-4">
                     <div className="flex items-center justify-between mb-3">
@@ -1230,7 +1230,7 @@ export function ContentBlockDrawer({
             </div>
 
             {formData.listItems && formData.listItems.length > 0 ? (
-              <div className="space-y-2 max-h-[400px] overflow-y-auto">
+              <div className="space-y-2 sm:max-h-[400px] sm:overflow-y-auto">
                 {formData.listItems.map((item, index) => (
                   <div key={item.id} className="flex items-center gap-2">
                     <span className="text-sm font-medium text-gray-500 dark:text-gray-400 w-6">
@@ -1283,7 +1283,7 @@ export function ContentBlockDrawer({
             </div>
 
             {formData.objectiveItems && formData.objectiveItems.length > 0 ? (
-              <div className="space-y-2 max-h-[400px] overflow-y-auto">
+              <div className="space-y-2 sm:max-h-[400px] sm:overflow-y-auto">
                 {formData.objectiveItems.map((item, index) => (
                   <div key={item.id} className="flex items-center gap-2">
                     <span className="text-sm font-medium text-gray-500 dark:text-gray-400 w-6">
@@ -1758,8 +1758,8 @@ export function ContentBlockDrawer({
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="flex flex-col p-0 !w-[480px] !max-w-[480px] bg-white dark:bg-gray-900">
-        <SheetHeader className="pb-4 border-b border-gray-200 dark:border-gray-700 px-6 pt-6">
+      <SheetContent className="flex flex-col p-0 w-full max-w-full! sm:max-w-[480px]! bg-white dark:bg-gray-900">
+        <SheetHeader className="pb-4 border-b border-gray-200 dark:border-gray-700 px-4 sm:px-6 pt-6">
           <div className="flex items-center gap-3">
             {Icon && (
               <div className="p-3 bg-blue-50 dark:bg-blue-950/20 rounded-lg">
@@ -1775,7 +1775,7 @@ export function ContentBlockDrawer({
           </div>
         </SheetHeader>
 
-        <div className="flex-1 overflow-y-auto px-6 py-6 space-y-5">
+        <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-6 space-y-5">
           {renderForm()}
           {meta?.adjustableWidth && (
             <FormField label="Largura do bloco">
@@ -1798,7 +1798,7 @@ export function ContentBlockDrawer({
           )}
         </div>
 
-        <SheetFooter className="border-t border-gray-200 dark:border-gray-700 px-6 py-4 flex justify-end gap-3">
+        <SheetFooter className="border-t border-gray-200 dark:border-gray-700 px-4 sm:px-6 py-4 flex justify-end gap-3">
           <Button variant="outline" onClick={handleCancel}>
             Cancelar
           </Button>
