@@ -90,6 +90,16 @@ describe('illustration manifest', () => {
     expect(incomplete.map((item) => item.id)).toEqual([])
   })
 
+  it('ships the license text of every third-party set, used by the credits file', () => {
+    const thirdPartySets = [...new Set(manifest.items.map((item) => item.set))].filter(
+      (set) => set !== 'original'
+    )
+
+    expect(
+      thirdPartySets.filter((set) => !fs.existsSync(path.join(root, 'licenses', `${set}.txt`)))
+    ).toEqual([])
+  })
+
   it('keeps every SVG free of scripts and event handlers', () => {
     const unsafe = listSvgs(root).filter((file) => {
       const source = fs.readFileSync(path.join(root, file), 'utf8').trim()

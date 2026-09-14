@@ -867,10 +867,52 @@ Stage 21 record (done):
 
 #### Stage 22 — Third-party sets
 
-- [ ] License review recorded in this spec before adding files.
-- [ ] Files added under the same structure with their `set`, `license` and `author`.
+- [x] License review recorded in this spec before adding files.
+- [x] Files added under the same structure with their `set`, `license` and `author`.
 - **Done when:** manifest test green and credits file verified in an export. Commit:
   `feat: add <set> illustrations`.
+
+Stage 22 license review (2026-09-14, read from the repositories, before adding any file):
+
+- **Fluent Emoji** (`github.com/microsoft/fluentui-emoji`): MIT License, "Copyright (c)
+  Microsoft Corporation". Each emoji folder has `3D` (PNG, excluded), `Color`, `Flat` and
+  `High Contrast` SVGs plus a `metadata.json` with English keywords. The README has no trademark
+  or usage restriction beyond the license. Condition: keep the copyright and license text with
+  copies, met by `licenses/fluent-emoji.txt` and the credits file. Sample `Flat` SVG is plain
+  paths, no script. Use the `Flat` style only (closest to the original set).
+- **Noto Emoji** (`github.com/googlefonts/noto-emoji`): the repository root `LICENSE` is SIL OFL
+  1.1 and covers the fonts; the `svg/` folder has its own `LICENSE`, Apache 2.0, "Copyright 2013
+  Google, Inc.". Flags under `third_party/region-flags` have another status and are excluded.
+  No `NOTICE` file exists, so Apache 2.0 section 4 asks for the license text and the retained
+  notices, met the same way. The SVGs start with an XML declaration and an Illustrator comment;
+  removing that comment is a modification, which Apache 2.0 allows if the change is stated, so
+  the credits text would say "comentários do editor removidos". Only files from `svg/`.
+- Both are allowed by this spec (no share-alike). Pending the author's choice of which set(s)
+  and which illustrations enter the library; titles and tags are written in pt-BR by hand, since
+  the upstream keywords are English.
+
+Stage 22 record (done):
+
+- Author's choice: **Fluent Emoji only**, `Flat` style, a curated cut for SENAI courses. Noto is
+  not added. No people emoji (they come in skin tone variants).
+- 80 files in four new themes: `workplace-safety` (Segurança do trabalho) with `ppe` (EPI, 6)
+  and `signs` (Sinalização e riscos, 13); `industry` (Indústria e manutenção) with `tools`
+  (Ferramentas, 16), `electrical` (Elétrica, 5) and `production` (Produção e logística, 9);
+  `health` (Saúde) with `care` (Cuidados e laboratório, 16); `office` (Escritório e gestão) with
+  `objects` (Objetos de escritório, 15).
+- Files keep the upstream SVG unchanged, renamed to `<english-kebab-name>.svg`. Manifest items:
+  `set: "fluent-emoji"`, `license: "MIT"`, `author: "Microsoft"`,
+  `source: "https://github.com/microsoft/fluentui-emoji"`, width and height from the `viewBox`,
+  titles and tags in pt-BR. `public/illustrations/licenses/fluent-emoji.txt` holds the MIT text.
+- The 80 downloads were checked before entering the repository: each starts with `<svg`, has a
+  `viewBox`, no script, no event handler and no external reference; a contact sheet confirmed
+  every drawing matches its pt-BR title (the helmet is a rescue helmet, titled "Capacete de
+  resgate").
+- The manifest test gained a rule: every third-party set needs `licenses/<set>.txt`.
+- Credits verified in a real export (`downloadAndUpdateImages` then
+  `generateSCORMFromPlayerDist`) with two Fluent illustrations and one original: the ZIP had
+  the three SVGs under `images/` and `illustration-credits.txt`, listed in `imsmanifest.xml`,
+  naming only the two Fluent titles and carrying the full MIT text.
 
 #### Later — `procedure-simulation`
 
