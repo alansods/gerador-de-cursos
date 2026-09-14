@@ -109,4 +109,35 @@ describe('CourseEditorContext over the cache', () => {
     const put = mockFetch.mock.calls.find((c) => c[1]?.method === 'PUT')
     expect(JSON.parse(put[1].body)).toMatchObject({ id: 'c1', title: 'Novo', version: 3 })
   })
+  it('saves the trail badge of a unit and drops it when cleared', async () => {
+    const unit = { id: 'u1', title: 'Unidade', description: 'D', order: 0, blocks: [] }
+    mockFetch.mockResolvedValue(courseApiResponse({ ...COURSE, units: [unit] }))
+    const { result } = renderHook(() => useCourseEditor(), { wrapper: createWrapper() })
+
+    act(() => {
+      result.current.selectCourse('c1')
+    })
+    await waitFor(() => expect(result.current.state.currentCourse?.units).toHaveLength(1))
+
+    await act(async () => {
+      await result.current.updateUnit('u1', { badgeName: 'Mãos limpas', badgeIcon: 'sparkles' })
+    })
+
+    const firstPut = mockFetch.mock.calls.filter((c) => c[1]?.method === 'PUT').at(-1)
+    expect(JSON.parse(firstPut[1].body).units[0]).toMatchObject({
+      id: 'u1',
+      badgeName: 'Mãos limpas',
+      badgeIcon: 'sparkles',
+    })
+
+    await act(async () => {
+      await result.current.updateUnit('u1', { badgeName: undefined, badgeIcon: undefined })
+    })
+
+    const lastUnit = JSON.parse(
+      mockFetch.mock.calls.filter((c) => c[1]?.method === 'PUT').at(-1)[1].body
+    ).units[0]
+    expect(lastUnit).not.toHaveProperty('badgeName')
+    expect(lastUnit).not.toHaveProperty('badgeIcon')
+  })
 })

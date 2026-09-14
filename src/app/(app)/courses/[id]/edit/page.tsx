@@ -73,6 +73,7 @@ import { CourseSettingsDrawer } from '@/components/CourseSettingsDrawer'
 import { ContentBlockDrawer } from '@/components/ContentBlockDrawer'
 import { UnitsDropdown } from '@/components/UnitsDropdown'
 import { ManageUnitsModal } from '@/components/ManageUnitsModal'
+import { TrailBadgeFields } from '@/components/course/TrailBadgeFields'
 import { SortableBlockWrapper } from '@/components/SortableBlockWrapper'
 import {
   DndContext,
@@ -186,6 +187,8 @@ function CourseEditor() {
   const [unitToEdit, setUnitToEdit] = useState<string | null>(null)
   const [exportModalOpen, setExportModalOpen] = useState(false)
   const [editingUnitTitle, setEditingUnitTitle] = useState('')
+  const [editingUnitBadgeName, setEditingUnitBadgeName] = useState('')
+  const [editingUnitBadgeIcon, setEditingUnitBadgeIcon] = useState('')
   const [isUploadingImage, setIsUploadingImage] = useState(false)
   const [imagePreviewUrl, setImagePreviewUrl] = useState<string | null>(null)
   const [isFetchingCourse, setIsFetchingCourse] = useState(false)
@@ -377,6 +380,8 @@ function CourseEditor() {
       setUnitToEdit(unitId)
       setEditingUnitTitle(unit.title)
       setEditingUnitDescription(unit.description)
+      setEditingUnitBadgeName(unit.badgeName ?? '')
+      setEditingUnitBadgeIcon(unit.badgeIcon ?? '')
       setEditUnitModal(true)
     }
   }
@@ -386,6 +391,8 @@ function CourseEditor() {
     setUnitToEdit(null)
     setEditingUnitTitle('')
     setEditingUnitDescription('')
+    setEditingUnitBadgeName('')
+    setEditingUnitBadgeIcon('')
   }
 
   const closeConfirmDeleteBlockModal = () => {
@@ -464,6 +471,8 @@ function CourseEditor() {
       updateUnit(unitToEdit, {
         title: editingUnitTitle.trim(),
         description: editingUnitDescription.trim(),
+        badgeName: editingUnitBadgeName.trim() || undefined,
+        badgeIcon: editingUnitBadgeIcon || undefined,
       })
       toast.success('Unidade atualizada')
       notify('updated', 'unit', authorName, editingUnitTitle.trim())
@@ -3101,7 +3110,7 @@ function CourseEditor() {
 
         {/* Drawer para editar unidade */}
         <Sheet open={editUnitModal && !!unitToEdit} onOpenChange={() => setEditUnitModal(false)}>
-          <SheetContent>
+          <SheetContent className="overflow-y-auto">
             <SheetHeader>
               <SheetTitle className="flex items-center">
                 <Edit className="h-5 w-5 text-blue-600" />
@@ -3140,6 +3149,18 @@ function CourseEditor() {
                   required
                 />
               </FormField>
+
+              <TrailBadgeFields
+                layout={state.currentCourse?.layout}
+                unitIndex={Math.max(
+                  0,
+                  state.currentCourse?.units?.findIndex((u) => u.id === unitToEdit) ?? 0
+                )}
+                name={editingUnitBadgeName}
+                icon={editingUnitBadgeIcon}
+                onNameChange={setEditingUnitBadgeName}
+                onIconChange={setEditingUnitBadgeIcon}
+              />
             </div>
             <SheetFooter>
               <Button variant="outline" onClick={closeEditUnitModal}>

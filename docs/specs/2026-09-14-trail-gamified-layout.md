@@ -509,15 +509,31 @@ Files: `e2e/scorm-progress.spec.ts`, new `e2e/scorm-fixtures/trail-course.ts`.
 - **Done when:** `pnpm exec playwright test e2e/scorm-progress.spec.ts --project=chromium` green
   (after `pnpm build:player`). Commit: `test: cover trail layout scorm progress`.
 
-#### Stage 8 — Badge fields in the unit form
+#### Stage 8 — Badge fields in the unit form _(done)_
 
-Files: `src/types/course.ts` (`Unit`), `src/components/ManageUnitsModal.tsx`, unit validation
-and `legacy-course.ts` if needed.
+Files: new `src/components/course/TrailBadgeFields.tsx`,
+`src/components/course/layouts/trail/badge-icons.tsx`, `src/app/(app)/courses/[id]/edit/page.tsx`,
+tests in `src/__tests__/components/trail-badge-fields.test.tsx`,
+`src/__tests__/hooks/course-editor-context.test.tsx`, `src/__tests__/lib/legacy-course.test.ts`.
 
-- [ ] `badgeName` and `badgeIcon` optional on `Unit`.
-- [ ] Fields shown only when the course layout is `trail`; icon grid of about 24 lucide icons.
-- [ ] Empty values keep the fallback; values persist through save and reload.
-- [ ] Tests for the form and for persistence.
+- [x] `badgeName` and `badgeIcon` on `Unit` (added in stage 2).
+- [x] "The unit form" is the "Editar Unidade" sheet in the editor page (title and description).
+      `ManageUnitsModal` only renames units inline, so the fields went to the sheet.
+- [x] `TrailBadgeFields` renders nothing unless the course layout is `trail`, so the rule lives in
+      a testable component and the 4400-line editor page only wires state. It has a name field
+      (max 40 characters, default name as placeholder) and a toggle-button grid with "Padrão" plus
+      the 24 `BADGE_ICONS`, each with a pt-BR label (`BADGE_ICON_LABELS`) and `aria-pressed`.
+- [x] Saving sends `badgeName` and `badgeIcon`; empty values are sent as `undefined`, which JSON
+      drops, so the unit goes back to the default badge.
+- [x] The sheet got `overflow-y-auto`: with the badge grid, its fixed height hid the Save button
+      on short screens.
+- [x] Persistence checked along the save path: `updateUnit` merges into the unit and the PUT body
+      carries the fields (and omits them after clearing); `upgradeUnits` keeps them; the API
+      routes spread each unit.
+- [x] Tests: hidden outside Trail, placeholder by position, name and icon editing, default option,
+      icon count, and the persistence cases above.
+- [ ] Not verified visually in the running editor (needs login and database); covered by component
+      tests. To check during the manual pass of the branch.
 - **Done when:** common criteria pass. Commit: `feat: edit trail badges in the unit form`.
 
 #### Stage 9 — Step count, warnings and layout switch notice
