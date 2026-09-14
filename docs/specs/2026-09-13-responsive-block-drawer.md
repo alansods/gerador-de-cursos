@@ -2,8 +2,8 @@
 
 ## Status
 
-**Implementada em 13/09/2026.** Pendente só a checagem manual do RF5 (teclado virtual)
-no Simulador iOS.
+**Implementada em 13/09/2026.** Pendentes a conferência visual no desktop (RF2) e a
+checagem do teclado virtual no Simulador iOS (RF5).
 
 ## Descrição
 
@@ -82,20 +82,20 @@ tiram espaço dos campos.
 
 ## Implementação
 
-- [ ] **Largura** — linha 1761: trocar `!w-[480px] !max-w-[480px]` por
+- [x] **Largura** — linha 1761: trocar `!w-[480px] !max-w-[480px]` por
       `w-full max-w-full! sm:max-w-[480px]!`. → RF1, RF2, RN1
-- [ ] **Espaçamento** — cabeçalho, corpo e rodapé: `px-6` → `px-4 sm:px-6`. → RF3
-- [ ] **Scroll aninhado** — nas seis listas, prefixar com `sm:` a altura máxima e a
+- [x] **Espaçamento** — cabeçalho, corpo e rodapé: `px-6` → `px-4 sm:px-6`. → RF3
+- [x] **Scroll aninhado** — nas seis listas, prefixar com `sm:` a altura máxima e a
       rolagem (`sm:max-h-[400px] sm:overflow-y-auto`; `sm:max-h-[300px]` nos hotspots).
       → RF4
-- [ ] **Revisão visual de todos os tipos** — capturar o drawer em modo adicionar e em modo
-      editar para cada tipo do `BLOCK_CATALOG`, a 360×740 e a 390×844, e corrigir o que for
-      encontrado. Cada correção fica registrada numa seção "Decisões tomadas na
-      implementação" desta spec. → RF3
+- [x] **Revisão visual de todos os tipos** — drawer de cada tipo do `BLOCK_CATALOG` a
+      360×740 e a 390×844, com correção do que fosse encontrado. Feita **só em modo
+      adicionar**, com itens criados no estado local para as listas aparecerem; o modo
+      editar não foi capturado. Detalhes em "Decisões tomadas na implementação". → RF3
 - [ ] **Rodapé com teclado virtual** — confirmar no Simulador iOS que o rodapé fica
       alcançável com o teclado aberto; se não ficar, ajustar a altura do `SheetContent`
-      para a viewport dinâmica (`h-dvh`). → RF5
-- [ ] **Teste de regressão** — o `SheetContent` do drawer tem `w-full` e
+      para a viewport dinâmica (`h-dvh`). **Pendente.** → RF5
+- [x] **Teste de regressão** — o `SheetContent` do drawer tem `w-full` e
       `sm:max-w-[480px]!`, e nenhuma das listas tem `max-h-[` sem prefixo `sm:`. Mesmo
       raciocínio do `touch-drag-handles.test.tsx`: jsdom não aplica media query, então se
       trava a classe que causou o defeito.
@@ -130,10 +130,14 @@ conferir em produção se o selo "Powered by Liveblocks" continua visível ali.
 
 ## Verificação
 
-1. `pnpm test` verde e `pnpm build` limpo.
-2. Capturas da revisão visual antes e depois, a 360px e 390px, conferidas tipo a tipo
-   (RF1, RF3).
-3. Desktop a 1280px: o drawer abre com 480px e o visual segue idêntico ao de hoje (RF2).
-4. Simulador iOS com Safari: abrir o drawer de um bloco com lista longa (accordion com 8
-   itens), rolar até o último campo, focar um campo e confirmar que Salvar segue
-   alcançável com o teclado aberto (RF4, RF5).
+1. ✅ `pnpm test` verde (400 testes) e `pnpm build` limpo.
+2. ✅ Revisão visual a 360px e 390px, conferida tipo a tipo por medição automática e pelas
+   capturas dos formulários mais densos (RF1, RF3). Só há capturas **depois** da correção:
+   o defeito de largura foi confirmado pelo código (`!w-[480px]` numa tela de 360px), não
+   por captura do estado anterior.
+3. ⏳ **Pendente:** desktop a 1280px — o drawer abre com 480px e o visual segue idêntico ao
+   de hoje (RF2). As classes garantem os 480px a partir de `sm`, mas não houve conferência
+   visual.
+4. ⏳ **Pendente:** Simulador iOS com Safari — abrir o drawer de um bloco com lista longa
+   (accordion com 8 itens), rolar até o último campo, focar um campo e confirmar que
+   Salvar segue alcançável com o teclado aberto (RF4, RF5).
