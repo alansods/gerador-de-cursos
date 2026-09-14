@@ -8,7 +8,7 @@ export function ListBlock({ item }: { item: Block }) {
           {item.listItems.map((listItem, idx) => (
             <li
               key={listItem.id || idx}
-              className="flex items-center gap-4 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-4"
+              className="block-surface flex items-center gap-4 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-4"
             >
               {item.listType === 'check' ? (
                 <span className="flex items-center justify-center w-9 h-9 rounded-lg bg-green-50 dark:bg-green-900/30 text-green-600 dark:text-green-400 shrink-0">

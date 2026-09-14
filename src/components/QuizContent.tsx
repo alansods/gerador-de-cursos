@@ -129,7 +129,7 @@ export function QuizContent({ quizData, isEditing = false, onResult }: QuizConte
           : 'Revise o conteúdo e tente novamente.'
 
     return (
-      <div className="w-full rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 overflow-hidden">
+      <div className="block-surface w-full rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 overflow-hidden">
         <div className="p-8 flex flex-col items-center gap-6 text-center">
           <div
             className={`w-14 h-14 rounded-full flex items-center justify-center ${
@@ -184,7 +184,7 @@ export function QuizContent({ quizData, isEditing = false, onResult }: QuizConte
         return (
           <div
             key={question.id}
-            className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 overflow-hidden"
+            className="block-surface rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 overflow-hidden"
           >
             {/* Header */}
             <div className="px-5 py-3 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between gap-4">

@@ -9,7 +9,7 @@ export function PdfBlock({ item }: { item: Block }) {
   const title = item.pdfTitle || 'Documento'
 
   return (
-    <div className="mb-4 overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700">
+    <div className="block-surface mb-4 overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700">
       <div className="flex items-center gap-3 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 px-4 py-3">
         <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-(--block-accent,#2563eb)/10 text-(--block-accent,#2563eb)">
           <FileText className="h-4 w-4" />

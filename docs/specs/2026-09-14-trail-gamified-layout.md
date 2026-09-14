@@ -387,15 +387,29 @@ Files: `src/hooks/useScormProgress.ts`, new `src/__tests__/hooks/use-scorm-progr
 --project=chromium` stays green for the classic fixture, after `pnpm build:player` (the E2E
   packages `player/dist`). Commit: `feat: track trail steps in scorm progress`.
 
-#### Stage 4 — Block theme surface tokens
+#### Stage 4 — Block theme surface tokens _(done)_
 
-Files: `src/components/course/blocks/BlockThemeProvider.tsx`, `src/styles/block-theme.css`.
+Files: `src/components/course/blocks/BlockThemeProvider.tsx`, `src/styles/block-theme.css`, block
+cards, new `src/__tests__/components/block-theme-provider.test.tsx`.
 
-- [ ] `BlockTheme` gains optional surface tokens (border width, border color, offset shadow,
-      radius), exposed as CSS variables.
-- [ ] Defaults reproduce the current look.
-- [ ] Test: provider emits default and custom variables.
-- [ ] Headless screenshot of a Clássico unit before and after: no visual difference.
+- [x] `BlockTheme` gains an optional `surface` (`radius`, `borderWidth`, `borderColor`, `shadow`,
+      `background`, plus optional dark variants that fall back to the light ones).
+- [x] Block cards use literal Tailwind classes with different radii per block, so a single token
+      with a default could not reproduce today's look. Instead:
+  - the provider sets `data-block-surface` and the `--block-surface-*` variables **only when the
+    theme has a surface**;
+  - `block-theme.css` styles `[data-block-surface] .block-surface` (and its `.dark` variant).
+    That file is imported outside Tailwind's layers, so the rule wins over the utilities when
+    active and does nothing otherwise;
+  - card containers get the `block-surface` class next to their current classes: both
+    `QuizContent` cards, list items, audio, carousel, image and PDF. Matching and categorization
+    have no outer card; Trail's visual review in stage 6 decides whether they need one.
+- [x] Tests: no attribute or variables for the default theme; every variable and the dark
+      fallbacks for a surface theme; block cards reachable by the surface rule.
+- [x] Verified in Chromium with the compiled player CSS: without a surface theme the card keeps
+      12px radius, 1px gray border and Tailwind backgrounds in light and dark; with one it takes
+      the tokens in both themes, overriding `dark:` utilities. This replaces the before/after
+      screenshot: the rule cannot apply to Clássico or Sidebar, which set no surface.
 - **Done when:** common criteria pass, including `pnpm build`. Commit:
   `feat: add surface tokens to block theme`.
 

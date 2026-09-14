@@ -18,7 +18,7 @@ export function ImageBlock({ item }: { item: Block }) {
           Fonte: {item.source}
         </p>
       )}
-      <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+      <div className="block-surface p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
         <img
           src={item.content}
           alt={item.caption || 'Imagem'}

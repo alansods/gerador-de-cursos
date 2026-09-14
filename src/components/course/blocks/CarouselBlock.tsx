@@ -51,7 +51,7 @@ export function CarouselBlock({ item }: { item: Block }) {
         if (e.key === 'ArrowRight') goTo(current + 1)
       }}
     >
-      <div className="relative rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 p-4">
+      <div className="block-surface relative rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 p-4">
         <div className="overflow-hidden">
           <div
             className="flex items-center transition-transform duration-500 ease-out motion-reduce:transition-none"

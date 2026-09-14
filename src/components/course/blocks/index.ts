@@ -2,7 +2,7 @@ export { BlockRenderer } from './BlockRenderer'
 export { blockRegistry } from './registry'
 export type { BlockProps } from './registry'
 export { BlockThemeProvider, DEFAULT_BLOCK_THEME } from './BlockThemeProvider'
-export type { BlockTheme } from './BlockThemeProvider'
+export type { BlockTheme, BlockSurface } from './BlockThemeProvider'
 
 export { HeadingBlock as TituloBlock } from './HeadingBlock'
 export { SubheadingBlock as SubtituloBlock } from './SubheadingBlock'
