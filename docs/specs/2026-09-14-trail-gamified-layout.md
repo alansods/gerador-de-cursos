@@ -1,0 +1,571 @@
+# Trail: a gamified course layout
+
+## Problem
+
+The two existing layouts (Clássico and Sidebar) are sober and corporate. We want a third
+layout, **Trail** (`trail`), focused on gamification and visible progress, with a playful
+look: the course becomes a map of missions, the learner earns XP, levels, stars and one
+badge per unit.
+
+A clickable HTML prototype ("Trilha Doces Regionais") validated the direction. It was built
+as a standalone page, outside the real architecture, so several parts of it do not transfer
+directly. This spec records how each part maps to the codebase, what is new, and what is
+out of scope.
+
+## Decisions
+
+### The layout is theme-agnostic
+
+- The prototype looked culinary because of its content, not its layout. Trail must work for
+  any SENAI course (electrical, mechanics, health, food).
+- Layout chrome (map, badges, XP, stars, level) uses only generic `lucide-react` icons. No
+  subject illustration is part of the layout.
+- Labels are neutral: "Missão", "Etapa", "Medalha". No subject-specific words in code.
+- Recipe-specific ideas become generic blocks: the recipe card becomes `technical-sheet`; the
+  cooking game becomes `procedure-simulation` (separate spec, out of scope here).
+
+### Steps inside a unit are derived from headings
+
+- The data model has no "step". In Trail, each `heading` block starts a step; blocks before
+  the first heading form step 1.
+- A unit with no `heading` is a single step titled with the unit title.
+- No database change.
+- Editor, only when the course layout is `trail`:
+  - Each unit shows "N etapas".
+  - Warning when a step has no scored activity, or when a unit has more than 8 steps.
+  - When the author switches a course to Trail, a notice explains that each Título becomes a
+    step. Nothing is changed automatically.
+
+### Step, unit and course completion
+
+- A step is completed when the learner has **answered every scored activity** of the step
+  (right or wrong) **and clicks "Concluir etapa"**. The button stays disabled until then.
+- `practice-checklist` is optional: it never blocks the button; completing it gives bonus XP.
+- A unit is completed when all its steps are completed.
+- **In Trail, the course is `completed` in the LMS when every step of every unit is
+  completed.** Clássico and Sidebar keep the current rule (every unit visited). The rule is
+  chosen by layout inside the progress calculation.
+
+### Attempts: score vs stars
+
+- **LMS score (`cmi.core.score.raw`) keeps using the last attempt**, as today, in every
+  layout. No change for published courses.
+- **Stars use the first attempt.** `recordQuiz` today overwrites the stored result on every
+  attempt, so a separate "correct on first attempt" bit is stored per scored activity and is
+  written only once.
+- "Correct on first attempt" means **100% on the first attempt**, for single-item and
+  multi-item activities alike (a quiz with 5 questions needs 5 of 5). The bit is set from the
+  first `recordQuiz` call of that activity.
+- Exploratory blocks (`flipcard`, `interactive-image` in its default mode, `tabs`,
+  `accordion`, `timeline`, `carousel`) give no XP, have no score and never block a step.
+
+### Progress: derive, do not store
+
+- `suspend_data` is limited to 4096 characters in SCORM 1.2 (`SUSPEND_DATA_LIMIT` in
+  `src/lib/scorm-progress.ts`).
+- New stored data, and nothing else:
+  - a per-unit bitmap of completed steps;
+  - a per-activity bit "correct on first attempt".
+- This bumps the encoding to `v2`; decoding `v1` keeps working.
+- XP, level, stars and badges are **computed**, never stored, by a pure module
+  `src/lib/trail-progress.ts`.
+
+### XP
+
+Fixed automatic rule, nothing for the author to configure:
+
+| Event                                                       | XP  |
+| ----------------------------------------------------------- | --- |
+| Scored activity answered correctly on the first attempt     | 20  |
+| Scored activity answered, but not 100% on the first attempt | 10  |
+| Step completed                                              | 10  |
+| `practice-checklist` fully checked                          | 30  |
+
+The course maximum XP is computed from the course structure.
+
+### Levels
+
+Five levels by percentage of the course maximum XP, so short and long courses behave the same:
+
+| Level | From | Name       |
+| ----- | ---- | ---------- |
+| 1     | 0%   | Iniciante  |
+| 2     | 20%  | Aprendiz   |
+| 3     | 40%  | Praticante |
+| 4     | 60%  | Avançado   |
+| 5     | 80%  | Mestre     |
+
+### Stars
+
+- Per unit, from first-attempt bits of its scored activities: 90%+ = 3, 60%+ = 2, else 1.
+- A unit with no scored activity gets 3 stars on completion.
+
+### Badges
+
+- Optional `badgeName` and `badgeIcon` on each unit, inside `units` (Json, no migration).
+- Edited in the existing unit form (next to title and description), shown only when the
+  course layout is `trail`. `badgeIcon` is picked from a grid of about 24 curated lucide
+  icons.
+- Empty fields fall back to an icon chosen by unit position and the name "Unidade N
+  concluída".
+
+### Unlocking
+
+- v1: free navigation. The map shows a suggested order; later units show a "recomendado"
+  hint instead of a hard lock.
+- A hard sequential lock would need a per-course setting (`layoutSettings Json?` with
+  `@map`). Deferred until requested.
+
+### End of the trail
+
+- After the last unit, a "trilha concluída" screen shows badges, stars, XP and level.
+- No certificate screen: the official certificate is issued by the LMS, and a certificate
+  inside the package could be mistaken for a valid one.
+
+### Learner name
+
+- Read `cmi.core.student_name` (SCORM 1.2) or `cmi.learner_name` (SCORM 2004) through the
+  existing wrapper.
+- If the value has a comma, it is "Last, First": use the part after the comma.
+- Show only the first name: "Olá, Alan!". Empty value: "Olá!".
+- Editor preview: first name of the logged-in user, passed to `CoursePlayer` as an optional
+  prop (today it receives only `course`).
+
+### AI generation
+
+When the course layout is `trail`, `generate-course-from-text` adds to the prompt:
+
+- one Título per step, 2 to 5 steps per unit;
+- at least one scored activity per step;
+- a short `badgeName` per unit.
+
+The content itself follows the same rules as other layouts.
+
+The wizard already picks the layout (step 3) before generating, but `createCourseWithAi` in
+`src/app/(app)/courses/new/actions.ts` sends only `{ text }`. It must send `layout` too, and
+the route must accept it.
+
+### Blocks: prototype to implementation
+
+| Prototype activity   | Implementation                                                         | Status                                     |
+| -------------------- | ---------------------------------------------------------------------- | ------------------------------------------ |
+| Quick question       | `quiz`                                                                 | exists                                     |
+| Categorization       | `categorization`                                                       | exists                                     |
+| Matching             | `matching`                                                             | exists; optional image on items (stage 12) |
+| Flipcards            | `flipcard`                                                             | exists                                     |
+| Video with questions | `interactive-video` (`videoQuestions`)                                 | exists                                     |
+| Spot the errors      | `interactive-image` with new `find` mode (hotspots hidden until found) | extension, scored                          |
+| Tips / warnings      | `info-box`                                                             | exists                                     |
+| Dish grid            | `carousel` in `grid` mode                                              | exists                                     |
+| Order the steps      | `sequence`                                                             | new, scored                                |
+| Fill in the blanks   | `fill-blanks`                                                          | new, scored                                |
+| True or false stack  | `true-false`                                                           | new, scored                                |
+| Decision scenario    | `scenario` (character, line, options, consequence)                     | new, scored                                |
+| Practice mission     | `practice-checklist`                                                   | new, not scored, optional                  |
+| Recipe card          | `technical-sheet` (materials with image and quantity, then steps)      | new, content                               |
+| Cooking game         | `procedure-simulation`                                                 | separate spec                              |
+
+- **New blocks are available in every layout**, like all current blocks. Their colors come
+  from `blockTheme` (blue in Clássico, violet in Sidebar, orange in Trail). The "sticker"
+  look is Trail's `blockTheme`, never hard-coded in a block.
+- `BlockTheme` today carries only colors. It gains optional surface tokens (border width,
+  border color, offset shadow, radius) exposed as CSS variables by `BlockThemeProvider`. Their
+  defaults reproduce the current look, so Clássico and Sidebar do not change.
+- Scored blocks (call `useRegistrarQuiz` and write the first-attempt bit): `sequence`,
+  `fill-blanks`, `true-false`, `scenario`, `interactive-image` in `find` mode, plus the
+  existing `quiz`, `matching`, `categorization`, `interactive-video`.
+- `interactive-image` in `find` mode records `found / total` when every error is found, so
+  its score is always 100% at the end. Its first-attempt bit is set when every error was
+  found with at most 2 clicks that hit no hotspot.
+- Every new block follows the CLAUDE.md checklist: union in `src/types/course.ts`,
+  `BLOCK_CATALOG` + `repairBlock()` + `invalidReason()` in `src/lib/blocks.ts`, component +
+  `registry.ts` + `index.ts`, `case` in `ContentBlockDrawer.tsx` (with `ItemEditor`), marker
+  in `sample-document.ts` + the three prompt sections in `generate-course-from-text/route.ts`,
+  `extractMedia` + `rewriteMedia` when it has media, and tests.
+- All interactions work by tap and keyboard (tap to select, tap to place), following
+  `2026-09-13-fix-touch-drag-and-drop.md`.
+
+### Illustrations
+
+#### Sources
+
+- The prototype illustrations were hand-written SVG code for that one subject. They came from
+  no repository and no AI. That does not scale by hand, so subject illustrations come from:
+  1. a curated library of SVG files vendored in the repository;
+  2. author upload, as today (`uploadFile` + `MEDIA_POLICY`).
+- No AI image generation.
+
+#### Library structure
+
+- Static files in the repository, not database rows:
+  `public/illustrations/<theme>/<category>/<id>.svg`, plus one
+  `public/illustrations/manifest.json`.
+- Folder names, file names and manifest keys are in English. Titles and search tags are in
+  pt-BR, because the author reads them.
+- `manifest.json` shape:
+  - `themes`: `{ id, title }`
+  - `categories`: `{ id, theme, title }`
+  - `items`: `{ id, title, theme, category, file, tags, width, height, set, license, author,
+source }`
+- The database stores only the chosen reference: the block field holds the path
+  `/illustrations/...` inside `units` (Json), like any image URL. No table, no migration.
+- Adding illustrations later: drop the SVG in the right folder and add one manifest entry.
+- A library that authors grow from the UI would need a table and Blob storage. Out of scope.
+
+#### Third-party sets
+
+- Stored in the same `<theme>/<category>/` folders; the `set` field tells the origin
+  (`original`, `fluent-emoji`, `noto-emoji`…). The picker can filter by set.
+- SVG only (Fluent Emoji flat is available in SVG; its 3D PNG version is excluded).
+- Only licenses without share-alike. OpenMoji (CC BY-SA 4.0) is excluded; unDraw (custom
+  license with redistribution limits) is excluded.
+- Candidates: Fluent Emoji (MIT), Noto Emoji (Apache 2.0). License re-checked at adoption.
+- MIT and Apache require keeping the license notice: when an exported package uses a
+  third-party illustration, the ZIP includes a credits file with the required notices.
+
+#### First set (done)
+
+- The prototype SVGs are exported to `public/illustrations/` with `set: "original"`,
+  `license: "original"`, `author: "Gerador de Cursos"`: 51 files.
+  - `culinary/utensils` (8), `culinary/ingredients` (23), `culinary/dishes` (8),
+    `culinary/scenes` (5)
+  - `food-safety/scenes` (7)
+- Parametric game art (stove with caramel color, cutting board states) is not exported: it
+  belongs to `procedure-simulation`.
+- Scenes keep their CSS animation, which respects `prefers-reduced-motion`. They illustrate
+  content; they do not replace real videos.
+- The manifest written with this set has no `set` field yet; stage 19 adds it.
+
+#### Picker
+
+- Thumbnail grid with the title under each item, theme and category filter, set filter,
+  search on title and tags, larger preview before confirming. SVGs are their own thumbnails.
+- Used in `ItemEditor` image fields and in `FileField`.
+
+#### Dark mode
+
+- Blocks render every library illustration on a rounded cream card in both themes, like a
+  sticker. No dark variant of any file is needed, including future ones.
+
+#### Offline LMS
+
+- A library file referenced by `/illustrations/...` must be copied into the ZIP under
+  `images/`, like remote media. `detectMediaUrls` and the `extractMedia`/`rewriteMedia` flow in
+  `src/lib/scorm-build-service.ts` must handle local paths.
+- The picker only ships together with, or after, this pipeline support; otherwise exported
+  packages would reference paths that do not exist in the LMS.
+
+### Visual system
+
+- Tokens from the prototype: ground `#FBF4E6`, paper `#FFFDF7`, ink `#2B2140`, orange
+  `#F26B3A`, teal `#14A392`, gold `#F5B82E`. "Sticker" surfaces: 2.5px ink border and a
+  solid offset shadow.
+- `blockTheme`: accent `#F26B3A`, accentSoft `#FFE3D3`, accentInk `#C24E22`, plus `*Dark`
+  variants. Dark tokens are defined in this layout because the SCORM layout has
+  `ThemeProvider`.
+- Fonts: Bricolage Grotesque (display) and Figtree (body), both SIL Open Font License.
+  Loaded with `@font-face` and woff2 files imported by the layout CSS, **not** `next/font`:
+  the layout renders through `CoursePlayer`, shared with the Vite player, which has no
+  `next/font` (see the system font stack in `player/src/styles.css`). Must be confirmed
+  inside the exported ZIP. The OFL license text ships next to the font files.
+
+### Runtime constraints
+
+- The layout renders through `CoursePlayer` → `resolveLayout`, so registering it covers the
+  editor preview, the Vite player (`player/src/App.tsx`) and the SCORM build.
+- No `next/image`. No react-query inside the layout (`QueryProvider` does not reach
+  `/scorm-preview`).
+- Videos: real sources already supported (YouTube, or file downloaded into the ZIP).
+- Layout thumbnail `trail` in `src/components/course/new/LayoutThumbnail.tsx`.
+  `LayoutSelector` already reads from the registry.
+
+## Delivery
+
+### Workflow
+
+- All work happens on the branch `feat/trail-gamified-layout`. Nothing is merged into `main`
+  and no PR is opened until the user decides.
+- **One commit per stage** listed below, made only after the stage's done criteria pass.
+- Every git command is confirmed by the user before it runs (CLAUDE.md).
+- Commit messages in English with a conventional prefix (`feat:`, `fix:`, `docs:`, `test:`).
+  No mention of Claude as author or co-author.
+- If a stage reveals a gap or a wrong assumption in this spec, the spec is updated first and
+  the change goes in the same stage commit.
+- A stage is never marked done with failing checks. If something is skipped, the commit
+  message and the stage report say so.
+
+### Done criteria common to every stage
+
+- [ ] Stage checklist complete.
+- [ ] `pnpm test` green, including the tests added by the stage.
+- [ ] `pnpm exec tsc --noEmit` clean.
+- [ ] `pnpm lint` clean on the changed files (the pre-commit hook also runs eslint and prettier).
+- [ ] Stages that touch the player, layouts, blocks or the SCORM build: `pnpm build` clean
+      (it builds the Vite player too).
+- [ ] No code comments added, new names in English, UI text in pt-BR (CLAUDE.md).
+- [ ] Clássico and Sidebar behave as before (existing tests unchanged and green).
+
+### Stages
+
+#### Stage 0 — Spec _(done, pending commit)_
+
+- [x] This document.
+- **Done when:** the user approved the decisions. Commit: `docs: add trail gamified layout spec`.
+
+#### Stage 1 — Original illustration set _(done, pending commit)_
+
+- [x] 51 SVGs in `public/illustrations/<theme>/<category>/`.
+- [x] `manifest.json` with themes, categories and items; every SVG is valid XML and renders.
+- **Done when:** files and manifest are in place. Commit: `feat: add original illustration set`.
+
+#### Stage 2 — Progress model `v2` (pure functions)
+
+Files: `src/lib/scorm-progress.ts`, new `src/lib/trail-progress.ts`, new
+`src/lib/learner-name.ts`, tests in `src/__tests__/lib/`.
+
+- [ ] `ProgressState` gains completed steps per unit and first-attempt bits per activity key.
+- [ ] `encodeSuspendData` writes `v2`; `decodeSuspendData` reads `v1` and `v2`.
+- [ ] First-attempt bit is written only on the first result of a key, and only as `true` at
+      100%.
+- [ ] `calculateProgress` receives the layout: `trail` = every step completed; others = every
+      unit visited (unchanged).
+- [ ] `trail-progress.ts`: steps derived from `heading` blocks (unit with no heading = one
+      step), scored-block detection (including `interactive-image` in `find` mode), XP table,
+      course max XP, levels by percentage, stars per unit, badge fallback.
+- [ ] `learner-name.ts`: "Last, First" → First; full name → first word; empty → empty.
+- [ ] Tests for each item above, plus a large course (many units, steps and activities)
+      encoded under 4000 characters.
+- **Done when:** common criteria pass and existing `scorm-progress.test.ts` cases pass without
+  edits. Commit: `feat: add trail progress model`.
+
+#### Stage 3 — Progress hook and context
+
+Files: `src/hooks/useScormProgress.ts`, `src/components/course/ScormProgressContext.tsx`.
+
+- [ ] `useScormProgress(course)` uses `course.layout` for the completion rule.
+- [ ] Exposes `completeStep(unitId, stepIndex)` and the completed steps.
+- [ ] `recordQuiz` writes the first-attempt bit through the pure functions.
+- [ ] LMS status: `completed` follows the layout rule; score keeps the last attempt.
+- [ ] Context value carries what Trail needs; `useRegistrarQuiz` keeps its signature.
+- [ ] Hook test covering both layouts' completion and resume from `suspend_data`.
+- **Done when:** common criteria pass and `pnpm test:e2e e2e/scorm-progress.spec.ts` stays
+  green for the classic fixture. Commit: `feat: track trail steps in scorm progress`.
+
+#### Stage 4 — Block theme surface tokens
+
+Files: `src/components/course/blocks/BlockThemeProvider.tsx`, `src/styles/block-theme.css`.
+
+- [ ] `BlockTheme` gains optional surface tokens (border width, border color, offset shadow,
+      radius), exposed as CSS variables.
+- [ ] Defaults reproduce the current look.
+- [ ] Test: provider emits default and custom variables.
+- [ ] Headless screenshot of a Clássico unit before and after: no visual difference.
+- **Done when:** common criteria pass, including `pnpm build`. Commit:
+  `feat: add surface tokens to block theme`.
+
+#### Stage 5 — Trail visual foundation
+
+Files: new `src/styles/trail.css` (imported in `src/app/globals.css` and
+`player/src/styles.css`), font files and OFL text next to them.
+
+- [ ] Light tokens and dark tokens, scoped to the Trail layout root.
+- [ ] `@font-face` for Bricolage Grotesque and Figtree (woff2, subset latin), with fallback
+      stacks.
+- [ ] OFL license text shipped with the fonts.
+- [ ] Fonts present in the Vite player build output and in an exported ZIP.
+- **Done when:** common criteria pass, including `pnpm build`, and the ZIP check is recorded
+  in the stage report. Commit: `feat: add trail layout tokens and fonts`.
+
+#### Stage 6 — Trail layout
+
+Files: `src/components/course/layouts/trail/*`, `src/components/course/layouts/registry.ts`,
+`src/components/course/new/LayoutThumbnail.tsx`, `src/components/course/CoursePlayer.tsx`,
+the editor preview page.
+
+- [ ] `meta.ts` with name, description and `blockTheme` (colors, dark variants, surface
+      tokens).
+- [ ] `TrailPlayer`, `TrailNavbar` (level, XP, badges count), `TrailHome` (greeting, map with
+      suggested order, next mission, badges), `TrailUnit` (steps list, step content through
+      `UnitContent`, "Concluir etapa" disabled until every scored activity is answered),
+      `TrailUnitComplete` (badge, stars, XP), `TrailComplete` (end of trail, no certificate).
+- [ ] Registered in `layoutRegistry`; thumbnail in `LayoutThumbnail`; selectable in the wizard
+      and in `CourseSettingsDrawer`.
+- [ ] Optional learner name prop on `CoursePlayer`; editor preview passes the logged-in user;
+      LMS reads the SCORM name.
+- [ ] Touch and keyboard: every control reachable and operable; visible focus.
+- [ ] Component tests: steps from headings, button gating, unit completion, map states.
+- [ ] Headless screenshots (desktop and 390 px, light and dark) of home, unit, unit complete
+      and end of trail, compared with the prototype.
+- **Done when:** common criteria pass, including `pnpm build`. Commit:
+  `feat: add trail course layout`.
+
+#### Stage 7 — Trail end-to-end
+
+Files: `e2e/scorm-progress.spec.ts`, `e2e/scorm-fixtures/`.
+
+- [ ] Trail fixture course with headings and scored activities.
+- [ ] Cases: complete a step, complete a unit, resume from `suspend_data`, LMS `completed`
+      only after the last step, score from last attempt.
+- **Done when:** `pnpm test:e2e e2e/scorm-progress.spec.ts` green on chromium. Commit:
+  `test: cover trail layout scorm progress`.
+
+#### Stage 8 — Badge fields in the unit form
+
+Files: `src/types/course.ts` (`Unit`), `src/components/ManageUnitsModal.tsx`, unit validation
+and `legacy-course.ts` if needed.
+
+- [ ] `badgeName` and `badgeIcon` optional on `Unit`.
+- [ ] Fields shown only when the course layout is `trail`; icon grid of about 24 lucide icons.
+- [ ] Empty values keep the fallback; values persist through save and reload.
+- [ ] Tests for the form and for persistence.
+- **Done when:** common criteria pass. Commit: `feat: edit trail badges in the unit form`.
+
+#### Stage 9 — Step count, warnings and layout switch notice
+
+Files: editor unit list, `CourseSettingsDrawer.tsx`, `src/components/course/new/StepLayout.tsx`.
+
+- [ ] "N etapas" per unit when the layout is `trail`.
+- [ ] Warnings: step with no scored activity; unit with more than 8 steps.
+- [ ] Notice when switching to Trail (wizard and settings). Nothing changes automatically.
+- [ ] Tests for count, warnings and notice.
+- **Done when:** common criteria pass. Commit: `feat: show trail steps in the editor`.
+
+#### Stage 10 — AI generation aware of Trail
+
+Files: `src/app/(app)/courses/new/actions.ts`, `src/app/api/generate-course-from-text/route.ts`.
+
+- [ ] `createCourseWithAi` sends `layout`; the route validates it.
+- [ ] Trail prompt additions: 2 to 5 headings per unit, a scored activity per step, short
+      `badgeName` per unit. Other layouts get the same prompt as before.
+- [ ] Tests: payload includes layout; prompt contains the Trail section only for `trail`.
+- [ ] Manual: one real generation with Trail, checking headings and badge names.
+- **Done when:** common criteria pass and the manual generation is recorded in the stage
+  report. Commit: `feat: tailor ai generation to the trail layout`.
+
+#### Stage 11 — Interactive image `find` mode
+
+- [ ] Mode field on `interactive-image` with `explore` (current) as default.
+- [ ] `find`: hotspots hidden until found; misses shown briefly; progress counter.
+- [ ] Records `found / total` at the end; first-attempt bit when every error was found with at
+      most 2 misses.
+- [ ] Drawer: mode select; catalog, `repairBlock`, `invalidReason`, prompt and marker updated.
+- [ ] Tests in `interactive-image.test.tsx`, `blocks.test.ts`, `content-block-drawer.test.tsx`.
+- **Done when:** common criteria pass, including `pnpm build`. Commit:
+  `feat: add find mode to the interactive image block`.
+
+#### Stage 12 — Images on matching items
+
+- [ ] Optional image per matching item, uploaded or picked later from the library.
+- [ ] `extractMedia` and `rewriteMedia` cover the new field.
+- [ ] Tests, including the media test that requires `rewriteMedia`.
+- **Done when:** common criteria pass, including `pnpm build`. Commit:
+  `feat: support images on matching items`.
+
+#### Stages 13 to 18 — New blocks, one stage each
+
+Order: 13 `true-false`, 14 `sequence`, 15 `fill-blanks`, 16 `scenario`,
+17 `practice-checklist`, 18 `technical-sheet`.
+
+Checklist for each block (from CLAUDE.md, "Como Criar um Novo Tipo de Conteúdo"):
+
+- [ ] Union and item interfaces in `src/types/course.ts`.
+- [ ] `BLOCK_CATALOG` entry (with `defaults` as a factory, lenient `validate`, strict
+      `validateForm`), `repairBlock()` and `invalidReason()`.
+- [ ] Component in `src/components/course/blocks/`, registered in `registry.ts`, re-exported in
+      `index.ts`. Colors and surfaces only from `blockTheme` variables.
+- [ ] `case` in `ContentBlockDrawer.tsx` using `ItemEditor`.
+- [ ] Marker in `sample-document.ts` and the three prompt sections.
+- [ ] `extractMedia` and `rewriteMedia` when the block has media (`scenario` avatar,
+      `technical-sheet` images).
+- [ ] Scored blocks call `useRegistrarQuiz` once per attempt; the first-attempt bit follows the
+      100% rule. `practice-checklist` reports completion for bonus XP only.
+- [ ] Tap and keyboard operation; no drag required.
+- [ ] Tests in `blocks.test.ts`, `content-block-drawer.test.tsx` and a component test.
+- [ ] Block created and reopened in the editor; rendered in Clássico, Sidebar and Trail.
+- **Done when:** common criteria pass, including `pnpm build`. Commit:
+  `feat: add <type> block`.
+
+#### Stage 19 — Manifest `set` field and consistency test
+
+- [ ] `set` added to every manifest item (`original` for the first set).
+- [ ] Test: every entry points to an existing file; every SVG in the folder is listed; ids
+      unique; themes and categories referenced exist.
+- **Done when:** common criteria pass. Commit: `test: check the illustration manifest`.
+
+#### Stage 20 — Library paths in the SCORM package
+
+Files: `src/lib/scorm-build-service.ts`, `src/lib/media.ts`.
+
+- [ ] `/illustrations/...` paths detected, copied into `images/` and rewritten.
+- [ ] Credits file added to the ZIP when a third-party set is used.
+- [ ] Tests in `media.test.ts` / `scorm-service.test.ts`.
+- [ ] Manual: exported ZIP opened offline shows the illustration.
+- **Done when:** common criteria pass, including `pnpm build`. Commit:
+  `feat: package library illustrations in scorm exports`.
+
+#### Stage 21 — Illustration picker
+
+- [ ] `IllustrationPicker`: thumbnail grid with titles, filters by theme, category and set,
+      search on title and tags, larger preview, confirm.
+- [ ] Available in `ItemEditor` image fields and in `FileField`, next to upload.
+- [ ] Library illustrations rendered on a cream card in both themes.
+- [ ] Tests for filtering, search and selection.
+- **Done when:** common criteria pass, including `pnpm build`. Commit:
+  `feat: pick illustrations from the library`.
+
+#### Stage 22 — Third-party sets
+
+- [ ] License review recorded in this spec before adding files.
+- [ ] Files added under the same structure with their `set`, `license` and `author`.
+- **Done when:** manifest test green and credits file verified in an export. Commit:
+  `feat: add <set> illustrations`.
+
+#### Later — `procedure-simulation`
+
+Separate spec.
+
+### Branch completion
+
+- [ ] Every stage above committed, or explicitly deferred by the user.
+- [ ] `pnpm build`, `pnpm test` and `pnpm test:e2e` green on the branch.
+- [ ] Manual checks from the Testing section done and reported.
+- [ ] The user decides whether to open a PR. No merge into `main` before that.
+
+## Out of scope
+
+- AI image generation.
+- Leaderboards (a SCORM package runs for one learner, isolated).
+- Hard sequential lock and per-course level names.
+- Certificate screen inside the package.
+- Subject-specific games.
+
+## Risks
+
+- `suspend_data` growth with many units, steps and scored activities: covered by a size test.
+- Third-party license notices must travel with exported packages.
+- Progress keys depend on positions: quiz results use the block index and completed steps use
+  the step index, while `hashCourse` only looks at unit ids. Editing a unit's blocks and
+  re-exporting a package already in use can misalign a learner's saved steps and first-attempt
+  bits. Same limitation that quiz results already have today; not addressed here.
+- The completion rule differs by layout: switching a published course from Clássico to Trail
+  makes completion stricter for learners who had only visited units.
+
+## Testing
+
+- `pnpm build` clean (exhaustive `blockRegistry` and `BLOCK_CATALOG`).
+- `pnpm test`:
+  - `scorm-progress.test.ts`: `v2` encode, `v1` decode, first-attempt bit written once and
+    only at 100%,
+    completion rule per layout, large course under 4000 characters.
+  - `trail-progress` unit tests: XP table, levels by percentage, stars, badge fallbacks,
+    steps derived from headings (including a unit with no heading).
+  - Learner name parsing ("Santos, Alan", "Alan Santos", empty).
+  - `blocks.test.ts` and `content-block-drawer.test.tsx` for each new block.
+  - Illustration manifest consistency.
+- `pnpm test:e2e`: extend `e2e/scorm-progress.spec.ts` for `trail` (complete a step, complete
+  a unit, resume from `suspend_data`, course completed only after every step).
+- Manual:
+  1. Create a course with Trail, generate content with AI, check steps and badge names, navigate
+     the preview.
+  2. Export SCORM, open the player with a headless screenshot at desktop and 390px.
+  3. Check fonts, illustrations and video with the network off.
