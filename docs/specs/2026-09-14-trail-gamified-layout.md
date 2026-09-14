@@ -252,7 +252,7 @@ source }`
   belongs to `procedure-simulation`.
 - Scenes keep their CSS animation, which respects `prefers-reduced-motion`. They illustrate
   content; they do not replace real videos.
-- The manifest written with this set has no `set` field yet; stage 19 adds it.
+- The manifest written with this set had no `set` field; stage 19 added it.
 
 #### Picker
 
@@ -768,9 +768,22 @@ Stage 18 record (`technical-sheet`, done):
 
 #### Stage 19 — Manifest `set` field and consistency test
 
-- [ ] `set` added to every manifest item (`original` for the first set).
-- [ ] Test: every entry points to an existing file; every SVG in the folder is listed; ids
+- [x] `set` added to every manifest item (`original` for the first set).
+- [x] Test: every entry points to an existing file; every SVG in the folder is listed; ids
       unique; themes and categories referenced exist.
+
+Stage 19 record (done):
+
+- `set` sits right after `height` in each item. The test lives in
+  `src/__tests__/lib/illustration-manifest.test.ts` and reads the files from disk.
+- Besides the checklist, it checks that `file` follows `<theme>/<category>/<name>.svg` for the
+  item's own theme and category, that category ids are unique inside a theme (`scenes` exists
+  in two themes), that every item has a title, at least one tag, positive width and height, and
+  non-empty `set`, `license` and `author`, and that every SVG starts with `<svg` and has no
+  `<script>` or `on*=` handler.
+- Checked against a broken copy of the library (missing `set`, unknown category, duplicated
+  id, missing file, unlisted SVG with an `onload` handler): five of the six tests failed as
+  expected, and all pass on the real library.
 - **Done when:** common criteria pass. Commit: `test: check the illustration manifest`.
 
 #### Stage 20 — Library paths in the SCORM package
