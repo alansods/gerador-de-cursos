@@ -666,6 +666,21 @@ Stage 13 record (`true-false`, done):
 - Visual debt, shared with the quiz: white text on `--block-accent` is below 4.5:1 in Trail dark
   (`#f47a4c`). Revisit with an on-accent token for all blocks in a later stage.
 
+Stage 14 record (`sequence`, done):
+
+- Data: `sequenceItems: { id, text }[]` stored in the correct order; the player shuffles and
+  never starts in the correct order. Lenient `validate` needs 2 steps, `validateForm` needs 3.
+  Marker `SEQUENCIA` (`Passo N:`); `auto` mode adds it after an ordered list when the order is
+  what is being learned; the Trail prompt lists it as a scored activity.
+- Player: each step has "mover para cima / para baixo" buttons (no drag); focus follows the
+  moved step and a live region announces its new position. "Verificar ordem" colors each step,
+  shows the correct position of the wrong ones and records `steps in the right position / total`
+  once per attempt.
+- Drawer: `ItemEditor` gained an opt-in `reorderable` mode (up/down per item), used only here, so
+  the author can insert a step in the middle.
+- Checked in the Vite player in Clássico (light), Sidebar (dark) and Trail (390 px, after
+  checking).
+
 #### Stage 19 — Manifest `set` field and consistency test
 
 - [ ] `set` added to every manifest item (`original` for the first set).

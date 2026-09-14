@@ -620,6 +620,46 @@ describe('phase 2 blocks', () => {
   })
 })
 
+describe('sequence block', () => {
+  it('keeps the author order, trims the steps and drops empty ones', () => {
+    const { course } = normalizeCourse(
+      courseWith([
+        {
+          type: 'sequence',
+          content: '',
+          sequenceItems: [
+            { id: '', text: ' Inspecionar ' },
+            { id: '', text: '' },
+            { id: 'x', text: 'Ajustar' },
+          ],
+        },
+      ])
+    )
+
+    expect(course.units[0].blocks[0].sequenceItems).toEqual([
+      { id: 'seq-1', text: 'Inspecionar' },
+      { id: 'x', text: 'Ajustar' },
+    ])
+  })
+
+  it('discards a sequence with fewer than two steps and asks for three in the form', () => {
+    const { summary } = normalizeCourse(
+      courseWith([{ type: 'sequence', content: '', sequenceItems: [{ id: 'a', text: 'Só um' }] }])
+    )
+    const form = (count: number, text = 'Passo') =>
+      BLOCK_CATALOG.sequence.validateForm({
+        ...createEmptyBlock('sequence'),
+        sequenceItems: Array.from({ length: count }, (_, i) => ({ id: `s${i}`, text })),
+      } as Block)
+
+    expect(summary.discarded[0].reason).toBe('com menos de 2 passos com texto')
+    expect(form(2)).toBe('Adicione pelo menos 3 passos')
+    expect(form(3, ' ')).toBe('Todos os passos devem ter texto')
+    expect(form(3)).toBeNull()
+    expect(BLOCK_CATALOG.sequence.category).toBe('avaliativo')
+  })
+})
+
 describe('true-false block', () => {
   it('reads the AI answers leniently and drops statements with no answer', () => {
     const items = [

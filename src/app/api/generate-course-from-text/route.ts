@@ -399,6 +399,17 @@ Cada Unidade:
   ]
 }
 
+### 22. sequence — os passos vão NA ORDEM CORRETA; o player embaralha
+{
+  "title": "string",
+  "type": "sequence",
+  "content": "",
+  "sequenceItems": [
+    { "id": "seq-1", "text": "Primeiro passo" },
+    { "id": "seq-2", "text": "Segundo passo" }
+  ]
+}
+
 ## Regras gerais
 
 - Na Unidade, os blocos ficam SEMPRE em "blocks". "content" é campo do Bloco, nunca da Unidade
@@ -509,6 +520,9 @@ ${sharedStructure}
   - "Resposta N:" → trueFalseItems[N-1].answer (Verdadeiro → "true", Falso → "false")
   - "Explicação N:" → trueFalseItems[N-1].explanation (use "" se ausente)
   - Descarte a afirmação sem resposta; são necessárias no mínimo 2 afirmações
+- Bloco SEQUENCIA_INICIO...SEQUENCIA_FIM → type "sequence" (UM único bloco com todos os passos)
+  - "Passo N:" → sequenceItems[N-1].text, mantendo a ordem de N
+  - São necessários no mínimo 2 passos
 - Conteúdo fora de marcadores → use title, subtitulo, paragrafo ou lista conforme adequado
 
 ## Texto para analisar
@@ -528,6 +542,7 @@ ${sharedStructure}
 - "Objetivos", "ao final desta unidade você será capaz de" → learning-objectives
 - Lista de ingredientes, materiais, características → list (listType: "unordered")
 - Passos numerados de um processo → list (listType: "ordered")
+- Procedimento em que a ordem é o que se aprende (montagem, preparo, sequência de segurança), com 3 a 8 passos → depois da lista, UM bloco sequence com os mesmos passos resumidos, na ordem correta
 - Requisitos, critérios verificáveis → list (listType: "check")
 - 3 ou mais tópicos relacionados com subconteúdo → accordion
 - 2 a 5 alternativas comparáveis do mesmo assunto (perfis, abordagens, papéis) → tabs

@@ -50,6 +50,11 @@ export interface HotspotItem {
   content: string
 }
 
+export interface SequenceItem {
+  id: string
+  text: string
+}
+
 export interface TrueFalseItem {
   id: string
   statement: string
@@ -133,6 +138,7 @@ export interface Block {
     | 'categorization'
     | 'interactive-video'
     | 'true-false'
+    | 'sequence'
   content: string
   order: number
   // image-specific
@@ -192,6 +198,7 @@ export interface Block {
   // categorization-specific
   categories?: CategoryItem[]
   trueFalseItems?: TrueFalseItem[]
+  sequenceItems?: SequenceItem[]
 }
 
 export interface Unit {

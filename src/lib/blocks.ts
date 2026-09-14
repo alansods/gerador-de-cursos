@@ -11,6 +11,7 @@ import {
   FileText,
   GalleryHorizontal,
   List,
+  ListOrdered,
   Milestone,
   MousePointerClick,
   RotateCcw,
@@ -32,6 +33,7 @@ import type {
   ListItem,
   VideoQuestion,
   QuizQuestion,
+  SequenceItem,
   TrueFalseItem,
   Unit,
 } from '@/types/course'
@@ -92,6 +94,8 @@ const CAROUSEL_MODES = ['carousel', 'grid'] as const
 const MIN_PAIRS = 2
 const MIN_CATEGORIES = 2
 const MIN_STATEMENTS = 2
+const MIN_SEQUENCE_ITEMS = 2
+const MIN_SEQUENCE_FORM_ITEMS = 3
 
 const OPTIONS_PER_QUESTION = 5
 
@@ -688,6 +692,26 @@ export const BLOCK_CATALOG: Record<BlockType, BlockMeta> = {
       return null
     },
   },
+  sequence: {
+    type: 'sequence',
+    label: 'Sequência',
+    pluralLabel: 'sequências',
+    marker: 'SEQUENCIA',
+    aiGeneratable: true,
+    requiresDocumentMedia: false,
+    validate: (b) => validSequenceItems(b.sequenceItems).length >= MIN_SEQUENCE_ITEMS,
+    icon: ListOrdered,
+    description: 'Colocar os passos na ordem certa',
+    category: 'avaliativo',
+    defaults: () => ({ sequenceItems: [] }),
+    validateForm: (b) => {
+      if ((b.sequenceItems?.length ?? 0) < MIN_SEQUENCE_FORM_ITEMS)
+        return `Adicione pelo menos ${MIN_SEQUENCE_FORM_ITEMS} passos`
+      if (b.sequenceItems?.some((item) => !hasText(item.text)))
+        return 'Todos os passos devem ter texto'
+      return null
+    },
+  },
 }
 
 function baseBlock(): Partial<Block> {
@@ -934,6 +958,10 @@ function repairBlock(block: Block): Block {
     repaired.trueFalseItems = validTrueFalseItems(repaired.trueFalseItems)
   }
 
+  if (repaired.type === 'sequence') {
+    repaired.sequenceItems = validSequenceItems(repaired.sequenceItems)
+  }
+
   if (repaired.type === 'video') {
     repaired.videoSource = videoSource(repaired, 'youtube')
   }
@@ -1033,6 +1061,8 @@ function invalidReason(type: BlockType): string {
       return `com menos de ${MIN_CATEGORIES} categorias com nome e itens`
     case 'true-false':
       return 'sem afirmações com resposta verdadeira ou falsa'
+    case 'sequence':
+      return `com menos de ${MIN_SEQUENCE_ITEMS} passos com texto`
     default:
       return 'sem conteúdo'
   }
@@ -1080,6 +1110,15 @@ function isListOnly(html: string): boolean {
 
 function stripTags(html: string): string {
   return html.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ')
+}
+
+function validSequenceItems(items?: SequenceItem[]): SequenceItem[] {
+  return (items ?? [])
+    .filter((item) => hasText(item?.text))
+    .map((item, index) => ({
+      id: hasText(item.id) ? item.id : `seq-${index + 1}`,
+      text: item.text.trim(),
+    }))
 }
 
 function trueFalseAnswer(value: unknown): TrueFalseItem['answer'] | null {

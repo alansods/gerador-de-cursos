@@ -382,6 +382,54 @@ describe('ContentBlockDrawer', () => {
     )
   })
 
+  it('creates a sequence, reorders its steps and reopens it in that order', async () => {
+    const user = userEvent.setup()
+    const onSave = mount('sequence')
+
+    for (let i = 0; i < 3; i++) await user.click(screen.getByRole('button', { name: /adicionar/i }))
+    const fields = screen.getAllByPlaceholderText(/Ajustar a carneira/)
+    await user.type(fields[0], 'Colocar')
+    await user.type(fields[1], 'Inspecionar')
+    await user.type(fields[2], 'Prender')
+
+    expect(screen.getByRole('button', { name: 'Mover passo 1 para cima' })).toBeDisabled()
+    await user.click(screen.getByRole('button', { name: 'Mover passo 2 para cima' }))
+    await user.click(screen.getByRole('button', { name: /salvar/i }))
+
+    const saved = onSave.mock.calls[0][0]
+    expect(saved.sequenceItems.map((s: { text: string }) => s.text)).toEqual([
+      'Inspecionar',
+      'Colocar',
+      'Prender',
+    ])
+
+    render(
+      <ContentBlockDrawer
+        open
+        onOpenChange={jest.fn()}
+        mode="edit"
+        blockData={saved}
+        onSave={jest.fn()}
+        onCancel={jest.fn()}
+      />
+    )
+    const reopened = screen.getAllByPlaceholderText(/Ajustar a carneira/).slice(-3)
+    expect(reopened.map((input) => (input as HTMLInputElement).value)).toEqual([
+      'Inspecionar',
+      'Colocar',
+      'Prender',
+    ])
+  })
+
+  it('keeps the other item editors without reorder buttons', async () => {
+    const user = userEvent.setup()
+    mount('tabs')
+
+    await user.click(screen.getByRole('button', { name: /adicionar/i }))
+
+    expect(screen.queryByRole('button', { name: /Mover/ })).not.toBeInTheDocument()
+  })
+
   it('creates a true-false block and reopens it with the saved answers', async () => {
     const user = userEvent.setup()
     const onSave = mount('true-false')

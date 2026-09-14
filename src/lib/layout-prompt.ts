@@ -16,11 +16,11 @@ export function layoutPromptSection(layout: string | undefined, mode: ReadMode):
   const activities =
     mode === 'markers'
       ? `- Cada etapa deve ter ao menos uma atividade avaliada. Coloque cada bloco avaliado marcado
-  no documento (quiz, matching, categorization, true-false, interactive-video) dentro da etapa do assunto
+  no documento (quiz, matching, categorization, true-false, sequence, interactive-video) dentro da etapa do assunto
   dele. Só quando uma etapa ficar sem nenhuma atividade avaliada, acrescente ao fim dela um
   quiz de 1 pergunta baseado apenas no conteúdo daquela etapa.`
       : `- Cada etapa deve terminar com ao menos uma atividade avaliada (quiz, matching,
-  categorization ou true-false) baseada apenas no conteúdo daquela etapa. Neste layout, essa regra substitui
+  categorization, true-false ou sequence) baseada apenas no conteúdo daquela etapa. Neste layout, essa regra substitui
   a de colocar o quiz só na revisão ao final da unidade.`
 
   return `

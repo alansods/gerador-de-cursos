@@ -22,6 +22,8 @@ import {
   Trash2,
   GalleryHorizontal,
   LayoutGrid,
+  ArrowUp,
+  ArrowDown,
 } from 'lucide-react'
 import Image from 'next/image'
 import {
@@ -31,6 +33,7 @@ import {
   CategoryItem,
   HotspotItem,
   MatchingPair,
+  SequenceItem,
   TrueFalseItem,
 } from '@/types/course'
 import { BLOCK_CATALOG, cardsFlipcard, createEmptyBlock, videoSource } from '@/lib/blocks'
@@ -216,6 +219,7 @@ function ItemEditor<T extends { id: string }>({
   createItem,
   onChange,
   emptyText: empty,
+  reorderable = false,
 }: {
   label: string
   itemLabel: string
@@ -224,9 +228,18 @@ function ItemEditor<T extends { id: string }>({
   createItem: () => T
   onChange: (items: T[]) => void
   emptyText: string
+  reorderable?: boolean
 }) {
   const update = (id: string, key: string, value: string) =>
     onChange(items.map((item) => (item.id === id ? { ...item, [key]: value } : item)))
+
+  const moveItem = (index: number, offset: number) => {
+    const target = index + offset
+    if (target < 0 || target >= items.length) return
+    const next = [...items]
+    ;[next[index], next[target]] = [next[target], next[index]]
+    onChange(next)
+  }
 
   return (
     <div className="space-y-4">
@@ -254,15 +267,41 @@ function ItemEditor<T extends { id: string }>({
                 <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">
                   {itemLabel} {index + 1}
                 </span>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => onChange(items.filter((another) => another.id !== item.id))}
-                  className="text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-950/20"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
+                <div className="flex items-center gap-1">
+                  {reorderable && (
+                    <>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        disabled={index === 0}
+                        aria-label={`Mover ${itemLabel.toLowerCase()} ${index + 1} para cima`}
+                        onClick={() => moveItem(index, -1)}
+                      >
+                        <ArrowUp className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        disabled={index === items.length - 1}
+                        aria-label={`Mover ${itemLabel.toLowerCase()} ${index + 1} para baixo`}
+                        onClick={() => moveItem(index, 1)}
+                      >
+                        <ArrowDown className="h-4 w-4" />
+                      </Button>
+                    </>
+                  )}
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => onChange(items.filter((another) => another.id !== item.id))}
+                    className="text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-950/20"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
               </div>
               <div className="space-y-3">
                 {fields
@@ -1865,6 +1904,27 @@ export function ContentBlockDrawer({
           <CategoryEditor
             categories={formData.categories || []}
             onChange={(categories) => setFormData({ ...formData, categories })}
+          />
+        )
+
+      case 'sequence':
+        return (
+          <ItemEditor<SequenceItem>
+            label="Passos, na ordem correta"
+            itemLabel="Passo"
+            emptyText="Nenhum passo adicionado ainda."
+            items={formData.sequenceItems || []}
+            createItem={() => ({ id: `seq-${Date.now()}`, text: '' })}
+            onChange={(sequenceItems) => setFormData({ ...formData, sequenceItems })}
+            reorderable
+            fields={[
+              {
+                key: 'text',
+                label: 'Texto do passo',
+                required: true,
+                placeholder: 'Ex.: Ajustar a carneira ao tamanho da cabeça',
+              },
+            ]}
           />
         )
 
