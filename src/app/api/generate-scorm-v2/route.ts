@@ -114,9 +114,11 @@ async function executeBuildInBackground(jobId: string, course: Course): Promise<
     })
 
     let finalCourse = course
+    let credits: string | null = null
     try {
-      const { course: courseWithImages } = await downloadAndUpdateImages(course, course.id)
-      finalCourse = courseWithImages
+      const packaged = await downloadAndUpdateImages(course, course.id)
+      finalCourse = packaged.course
+      credits = packaged.credits
       console.log(`   ✅ [Background Build] Job ${jobId}: images processed`)
     } catch (imgError) {
       // A failed image download never aborts the build — generate without them
@@ -132,7 +134,7 @@ async function executeBuildInBackground(jobId: string, course: Course): Promise<
       data: { progress: '📦 Gerando pacote SCORM...' },
     })
 
-    const zipBuffer = await generateSCORMFromPlayerDist(finalCourse, course.id)
+    const zipBuffer = await generateSCORMFromPlayerDist(finalCourse, course.id, credits)
 
     console.log(
       `✅ [Background Build] Job ${jobId}: Pacote gerado (${(zipBuffer.length / 1024).toFixed(2)} KB)`

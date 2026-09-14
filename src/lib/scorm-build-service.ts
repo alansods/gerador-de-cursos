@@ -4,6 +4,17 @@ import * as path from 'path'
 import JSZip from 'jszip'
 import type { Course } from '@/types/course'
 import { extractBlockMedia, rewriteBlockMedia } from './blocks'
+import {
+  buildIllustrationCredits,
+  findLibraryItem,
+  isLibraryIllustrationPath,
+  libraryPackageFileName,
+  libraryRoot,
+  readIllustrationManifest,
+  readLicenseTexts,
+  type IllustrationItem,
+  type IllustrationManifest,
+} from './illustration-library'
 
 /**
  * Converte caminhos absolutos (/_next/..., /favicon.ico) para caminhos relativos
@@ -40,7 +51,12 @@ export function detectMediaUrls(course: Course): string[] {
       // Driven by BLOCK_CATALOG: a new block with media declares extractMedia
       // and gets bundled into the ZIP without touching this file.
       extractBlockMedia(block).forEach((url) => {
-        if (url.startsWith('http://') || url.startsWith('https://')) urls.add(url)
+        if (
+          url.startsWith('http://') ||
+          url.startsWith('https://') ||
+          isLibraryIllustrationPath(url)
+        )
+          urls.add(url)
       })
     })
   })
@@ -80,15 +96,19 @@ async function downloadImage(url: string, outputPath: string): Promise<void> {
 export async function downloadAndUpdateImages(
   course: Course,
   courseId: string
-): Promise<{ course: Course; imageMap: Map<string, string> }> {
+): Promise<{ course: Course; imageMap: Map<string, string>; credits: string | null }> {
   console.log('🖼️ [SCORM Build] Downloading the images...')
-  const mediaUrls = detectMediaUrls(course)
+  const detected = detectMediaUrls(course)
+  const libraryPaths = detected.filter((url) => isLibraryIllustrationPath(url))
+  const mediaUrls = detected.filter((url) => !isLibraryIllustrationPath(url))
   const imageMap = new Map<string, string>()
   const publicDir = path.join(process.cwd(), 'public', 'scorm-images', courseId)
 
   console.log(`📁 [SCORM Build] Creating the image directory: ${publicDir}`)
   // Create the directory when missing
   await fs.mkdir(publicDir, { recursive: true })
+
+  const usedIllustrations = await copyLibraryIllustrations(libraryPaths, publicDir, imageMap)
 
   // Download each image
   for (let i = 0; i < mediaUrls.length; i++) {
@@ -132,7 +152,49 @@ export async function downloadAndUpdateImages(
   })
 
   console.log(`✅ [SCORM Build] ${updatedCount} image reference(s) rewritten in the course`)
-  return { course: updatedCourse, imageMap }
+  const credits = buildIllustrationCredits(
+    usedIllustrations,
+    await readLicenseTexts(usedIllustrations.map((item) => item.set))
+  )
+  return { course: updatedCourse, imageMap, credits }
+}
+
+async function copyLibraryIllustrations(
+  libraryPaths: string[],
+  outputDir: string,
+  imageMap: Map<string, string>
+): Promise<IllustrationItem[]> {
+  if (libraryPaths.length === 0) return []
+
+  let manifest: IllustrationManifest
+  try {
+    manifest = await readIllustrationManifest()
+  } catch (error) {
+    console.error('❌ [SCORM Build] Failed to read the illustration manifest:', error)
+    return []
+  }
+
+  const used: IllustrationItem[] = []
+  for (const libraryPath of libraryPaths) {
+    const item = findLibraryItem(manifest, libraryPath)
+    if (!item) {
+      console.warn(`⚠️ [SCORM Build] Illustration not in the manifest, skipped: ${libraryPath}`)
+      continue
+    }
+    const filename = libraryPackageFileName(libraryPath)
+    try {
+      await fs.copyFile(path.join(libraryRoot(), item.file), path.join(outputDir, filename))
+      imageMap.set(libraryPath, `images/${filename}`)
+      used.push(item)
+    } catch (error) {
+      console.error(`❌ [SCORM Build] Failed to copy the illustration ${libraryPath}:`, error)
+    }
+  }
+
+  console.log(
+    `✅ [SCORM Build] ${used.length}/${libraryPaths.length} library illustration(s) copied`
+  )
+  return used
 }
 
 /**

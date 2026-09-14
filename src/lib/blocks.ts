@@ -48,6 +48,7 @@ import type {
 import { timeToSeconds } from '@/lib/video-time'
 import { cleanDistractors, fillBlanksAnswers } from '@/lib/fill-blanks'
 import { isValidYouTubeUrl } from '@/lib/youtube'
+import { isLibraryIllustrationPath } from '@/lib/illustration-paths'
 
 export type BlockType = Block['type']
 
@@ -859,7 +860,9 @@ export type DraftBlock = Omit<Block, 'id' | 'order'>
 export function extractBlockMedia(block: Block): string[] {
   const meta = BLOCK_CATALOG[block.type]
   if (!meta?.extractMedia) return []
-  return meta.extractMedia(block).filter((url): url is string => isUrl(url))
+  return meta
+    .extractMedia(block)
+    .filter((url): url is string => isUrl(url) || isLibraryIllustrationPath(url))
 }
 
 export function rewriteBlockMedia(block: Block, lookup: Map<string, string>): Block {

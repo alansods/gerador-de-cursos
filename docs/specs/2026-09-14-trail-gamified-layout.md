@@ -790,10 +790,39 @@ Stage 19 record (done):
 
 Files: `src/lib/scorm-build-service.ts`, `src/lib/media.ts`.
 
-- [ ] `/illustrations/...` paths detected, copied into `images/` and rewritten.
-- [ ] Credits file added to the ZIP when a third-party set is used.
-- [ ] Tests in `media.test.ts` / `scorm-service.test.ts`.
-- [ ] Manual: exported ZIP opened offline shows the illustration.
+- [x] `/illustrations/...` paths detected, copied into `images/` and rewritten.
+- [x] Credits file added to the ZIP when a third-party set is used.
+- [x] Tests in `src/__tests__/lib/illustration-library.test.ts` (paths, credits, copy, rewrite
+      and ZIP), instead of `media.test.ts` / `scorm-service.test.ts`.
+- [x] Manual: exported ZIP opened offline shows the illustration.
+
+Stage 20 record (done):
+
+- New module `src/lib/illustration-library.ts` (server side, reads `public/illustrations`). It
+  accepts only paths matching `/illustrations/<theme>/<category>/<name>.svg` (lowercase letters,
+  digits and hyphens, so no `..` or other folders) that are listed in the manifest. The path
+  check lives in the pure `src/lib/illustration-paths.ts`, because `extractBlockMedia` in
+  `blocks.ts` runs in the browser too and must accept library paths besides http(s) URLs. `media.ts`
+  is not touched: it is the upload policy, and library files are not uploads.
+- `detectMediaUrls` returns library paths too. `downloadAndUpdateImages` copies each one from
+  disk (no HTTP) into the course images folder as `illustration-<theme>-<category>-<name>.svg`,
+  so the same file used twice is packed once, and maps it to `images/<that name>` for
+  `rewriteMedia`. A path that is not in the manifest or whose file is missing is skipped with a
+  warning and keeps its reference, like a failed download.
+- Credits: `downloadAndUpdateImages` also returns `credits`, built from the manifest items
+  actually used whose `set` is not `original`. `null` when there are none, so packages with
+  only original illustrations do not change. The text (pt-BR) groups items by set with license,
+  author, source and titles, and appends `public/illustrations/licenses/<set>.txt` when that
+  file exists (stage 22 adds the license texts). The route passes it to
+  `generateSCORMFromPlayerDist`, which writes `illustration-credits.txt` at the ZIP root and
+  lists it in `imsmanifest.xml`.
+- Deployment risk: the export reads `public/illustrations` from the function file system, as it
+  already reads `player/dist`. Confirm on a Vercel preview before merging; if the folder is not
+  in the function bundle, add it to `outputFileTracingIncludes` for the export route.
+- Checked with the real pipeline (`downloadAndUpdateImages` then `generateSCORMFromPlayerDist`)
+  on a course using three library SVGs from two themes: the ZIP served locally with every other
+  request blocked rendered the three images from `images/`, with no external request and no
+  credits file (all original).
 - **Done when:** common criteria pass, including `pnpm build`. Commit:
   `feat: package library illustrations in scorm exports`.
 
