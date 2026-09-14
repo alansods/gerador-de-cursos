@@ -6,6 +6,8 @@ export const TRAIL_XP = { firstTry: 20, retry: 10, step: 10 } as const
 
 export const MAX_RECOMMENDED_STEPS = 8
 
+export const BADGE_NAME_MAX_LENGTH = 40
+
 export const TRAIL_LEVELS = [
   { from: 0, name: 'Iniciante' },
   { from: 20, name: 'Aprendiz' },

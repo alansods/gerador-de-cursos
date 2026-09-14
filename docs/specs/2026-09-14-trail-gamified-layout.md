@@ -563,17 +563,27 @@ Files: `src/lib/trail-progress.ts`, new `src/components/course/TrailStepSummary.
 
 Files: `src/app/(app)/courses/new/actions.ts`, `src/app/api/generate-course-from-text/route.ts`.
 
-- [ ] `createCourseWithAi` sends `layout`; the route validates it.
-- [ ] Trail prompt additions: 2 to 5 headings per unit, a scored activity per step, short
+- [x] `createCourseWithAi` sends `layout`; the route validates it (optional; an unknown id
+      answers 400). The ids live in `src/lib/layout-prompt.ts` without importing the React
+      registry, with a test that keeps them equal to `layoutRegistry` keys.
+- [x] Trail prompt additions (`layoutPromptSection`, both read modes): 2 to 5 headings per unit
+      taken from sections already in the document, a scored activity per step (in `markers`
+      mode, the marked activities first; a one-question quiz only when a step has none), short
       `badgeName` per unit. Other layouts get the same prompt as before.
-- [ ] Tests: payload includes layout; prompt contains the Trail section only for `trail`.
+- [x] The route sanitizes the answer: with Trail, `badgeName` is trimmed and cut to
+      `BADGE_NAME_MAX_LENGTH` (moved to `trail-progress.ts`), and `badgeIcon` is kept only
+      when it is in `BADGE_ICONS`; with other layouts both fields are dropped.
+- [x] Tests: payload includes layout; prompt contains the Trail section only for `trail`;
+      invalid layout answers 400; badge sanitization.
 - [x] Fix found during the manual check, committed on its own before this stage: since the
       move to English keys (d619073a), the prompt asked for unit blocks under `content`, which
       `upgradeCourse` does not map, so every AI generation produced empty units. The prompt now
       asks for `blocks`, with a route test that checks the generated blocks reach the answer.
-- [ ] Manual: one real generation with Trail, checking headings and badge names.
+- [x] Manual: one real generation with Trail, checking headings and badge names.
 - **Done when:** common criteria pass and the manual generation is recorded in the stage
   report. Commit: `feat: tailor ai generation to the trail layout`.
+  Recorded: gemini-2.5-flash, two-unit sweets text, `layout: trail`; each unit came back with
+  3 headings, a quiz closing every step and badge names "Cozinha Segura" and "Mestre da Cocada".
 
 #### Stage 11 — Interactive image `find` mode
 

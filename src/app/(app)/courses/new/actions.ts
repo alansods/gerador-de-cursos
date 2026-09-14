@@ -27,7 +27,10 @@ export async function extractDocument(file: File): Promise<ExtractionResponse> {
   return data
 }
 
-export async function createCourseWithAi(text: string): Promise<GenerationResponse> {
+export async function createCourseWithAi(
+  text: string,
+  layout?: string
+): Promise<GenerationResponse> {
   const controller = new AbortController()
   const limit = setTimeout(() => controller.abort(), GENERATION_TIMEOUT)
 
@@ -35,7 +38,7 @@ export async function createCourseWithAi(text: string): Promise<GenerationRespon
     const response = await fetch('/api/generate-course-from-text', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ text }),
+      body: JSON.stringify({ text, layout }),
       signal: controller.signal,
     })
 

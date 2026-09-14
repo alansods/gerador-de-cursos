@@ -5,6 +5,7 @@
 import { NextRequest } from 'next/server'
 import { SignJWT } from 'jose'
 import { POST } from '@/app/api/generate-course-from-text/route'
+import { createCourseWithAi } from '@/app/(app)/courses/new/actions'
 import { prisma } from '@/lib/prisma'
 
 const mockGenerateContent = jest.fn()
@@ -24,6 +25,8 @@ const aiCourse = {
     {
       title: 'Higiene',
       description: '',
+      badgeName: '  Mãos limpas ',
+      badgeIcon: 'not-an-icon',
       blocks: [
         { title: 'Lavagem', type: 'heading', content: 'Lavagem das mãos' },
         { title: 'Texto', type: 'paragraph', content: '<p>Lave as mãos.</p>' },
@@ -81,5 +84,52 @@ describe('POST /api/generate-course-from-text', () => {
       'paragraph',
     ])
     expect(data.summary.blocks).toBe(2)
+  })
+
+  it('rejects an unknown layout before calling the AI', async () => {
+    const response = await callRoute({ text: 'Conteúdo', layout: 'mosaic' })
+
+    expect(response.status).toBe(400)
+    expect(mockGenerateContent).not.toHaveBeenCalled()
+  })
+
+  it('adds the trail section to the prompt and keeps the sanitized badge', async () => {
+    const response = await callRoute({ text: 'Conteúdo', layout: 'trail' })
+    const data = await response.json()
+
+    expect(response.status).toBe(200)
+    expect(sentPrompt()).toContain('## Layout Trilha')
+    expect(data.course.layout).toBe('trail')
+    expect(data.course.units[0].badgeName).toBe('Mãos limpas')
+    expect(data.course.units[0]).not.toHaveProperty('badgeIcon')
+  })
+
+  it('keeps the previous prompt and drops badges for other layouts', async () => {
+    const response = await callRoute({ text: 'Conteúdo', layout: 'classic' })
+    const data = await response.json()
+    const classicPrompt = sentPrompt()
+
+    mockGenerateContent.mockClear()
+    await callRoute({ text: 'Conteúdo' })
+
+    expect(classicPrompt).not.toContain('Layout Trilha')
+    expect(classicPrompt).toBe(sentPrompt())
+    expect(data.course.units[0]).not.toHaveProperty('badgeName')
+  })
+})
+
+describe('createCourseWithAi', () => {
+  it('sends the chosen layout with the text', async () => {
+    const fetchMock = jest.spyOn(global, 'fetch').mockResolvedValue(
+      new Response(JSON.stringify({ course: aiCourse, summary: {} }), {
+        headers: { 'content-type': 'application/json' },
+      })
+    )
+
+    await createCourseWithAi('Conteúdo', 'trail')
+
+    const [, init] = fetchMock.mock.calls[0]
+    expect(JSON.parse(String(init?.body))).toEqual({ text: 'Conteúdo', layout: 'trail' })
+    fetchMock.mockRestore()
   })
 })

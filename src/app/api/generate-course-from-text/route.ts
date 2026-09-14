@@ -5,6 +5,12 @@ import { Course } from '@/types/course'
 import { normalizeCourse, type GenerationSummary } from '@/lib/blocks'
 import { detectMarkers, type ReadMode } from '@/lib/markers'
 import { upgradeCourse } from '@/lib/legacy-course'
+import {
+  applyLayoutToGeneratedCourse,
+  isCourseLayoutId,
+  layoutPromptSection,
+  type CourseLayoutId,
+} from '@/lib/layout-prompt'
 
 export const maxDuration = 60
 
@@ -28,10 +34,14 @@ export async function POST(req: NextRequest) {
 
   try {
     const body = await req.json()
-    const { text, mode } = body as { text: string; mode?: ReadMode }
+    const { text, mode, layout } = body as { text: string; mode?: ReadMode; layout?: unknown }
 
     if (!text || typeof text !== 'string' || text.trim().length === 0) {
       return createErrorResponse('Texto não fornecido ou inválido', 400)
+    }
+
+    if (layout !== undefined && !isCourseLayoutId(layout)) {
+      return createErrorResponse('Layout do curso inválido', 400)
     }
 
     const readMode: ReadMode = mode ?? detectMarkers(text).mode
@@ -52,20 +62,21 @@ export async function POST(req: NextRequest) {
     let tokenUsage: TokenUsage | undefined
 
     if (geminiApiKey) {
-      const result = await generateWithGemini(text, geminiApiKey, readMode)
+      const result = await generateWithGemini(text, geminiApiKey, readMode, layout)
       course = result.course
       tokenUsage = result.tokenUsage
     } else if (openaiApiKey) {
-      const result = await generateWithOpenAI(text, openaiApiKey, readMode)
+      const result = await generateWithOpenAI(text, openaiApiKey, readMode, layout)
       course = result.course
       tokenUsage = result.tokenUsage
     } else {
       throw new Error('Nenhuma API de IA disponível')
     }
 
-    const { course: normalizedCourse, summary } = normalizeCourse(
+    const { course: normalized, summary } = normalizeCourse(
       upgradeCourse(course as unknown as Record<string, unknown>) as unknown as Course
     )
+    const normalizedCourse = applyLayoutToGeneratedCourse(normalized, layout)
     recordDiscards(summary)
 
     return createSuccessResponse({
@@ -98,7 +109,7 @@ function recordDiscards(summary: GenerationSummary) {
  * Inclui instruções para reconhecer os marcadores de recursos e gerar
  * o JSON correto para cada um dos tipos de bloco suportados.
  */
-function buildPrompt(text: string, mode: ReadMode = 'auto'): string {
+function buildPrompt(text: string, mode: ReadMode = 'auto', layout?: CourseLayoutId): string {
   const truncated =
     text.substring(0, 150000) + (text.length > 150000 ? '\n\n[... texto truncado ...]' : '')
 
@@ -389,7 +400,7 @@ Cada Unidade:
   na ausência de URL, o bloco simplesmente não existe
 - Use apenas as informações, exemplos e dados que foram explicitamente fornecidos no texto
 - Se o documento for curto ou superficial, o curso gerado também deve refletir isso
-- Sua função é ESTRUTURAR e ORGANIZAR o conteúdo existente, não criar conteúdo novo`
+- Sua função é ESTRUTURAR e ORGANIZAR o conteúdo existente, não criar conteúdo novo${layoutPromptSection(layout, mode)}`
 
   if (mode === 'markers') {
     return `Você é um especialista em design instrucional. Analise o texto abaixo e gere uma estrutura de curso em JSON respeitando os marcadores de recursos presentes no text.
@@ -521,11 +532,12 @@ ${truncated}`
 async function generateWithGemini(
   text: string,
   apiKey: string,
-  mode: ReadMode = 'auto'
+  mode: ReadMode = 'auto',
+  layout?: CourseLayoutId
 ): Promise<{ course: Course; tokenUsage: TokenUsage }> {
   const genAI = new GoogleGenerativeAI(apiKey)
 
-  const prompt = buildPrompt(text, mode)
+  const prompt = buildPrompt(text, mode, layout)
 
   // Try the models in order of preference (2025+ names)
   // Referência: https://ai.google.dev/models/gemini
@@ -607,12 +619,13 @@ async function generateWithGemini(
 async function generateWithOpenAI(
   text: string,
   apiKey: string,
-  mode: ReadMode = 'auto'
+  mode: ReadMode = 'auto',
+  layout?: CourseLayoutId
 ): Promise<{ course: Course; tokenUsage: TokenUsage }> {
   const { default: OpenAI } = await import('openai')
   const openai = new OpenAI({ apiKey })
 
-  const prompt = buildPrompt(text, mode)
+  const prompt = buildPrompt(text, mode, layout)
 
   try {
     const completion = await openai.chat.completions.create({

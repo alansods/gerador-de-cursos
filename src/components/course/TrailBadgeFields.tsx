@@ -3,13 +3,13 @@
 import { FormField } from '@/components/ui/form-field'
 import { Input } from '@/components/ui/input'
 import { cn } from '@/lib/utils'
-import { BADGE_ICONS, unitBadge } from '@/lib/trail-progress'
+import { BADGE_ICONS, BADGE_NAME_MAX_LENGTH, unitBadge } from '@/lib/trail-progress'
 import {
   BADGE_ICON_COMPONENTS,
   BADGE_ICON_LABELS,
 } from '@/components/course/layouts/trail/badge-icons'
 
-export const BADGE_NAME_MAX_LENGTH = 40
+export { BADGE_NAME_MAX_LENGTH }
 
 interface TrailBadgeFieldsProps {
   layout?: string
