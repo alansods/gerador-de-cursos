@@ -567,6 +567,10 @@ Files: `src/app/(app)/courses/new/actions.ts`, `src/app/api/generate-course-from
 - [ ] Trail prompt additions: 2 to 5 headings per unit, a scored activity per step, short
       `badgeName` per unit. Other layouts get the same prompt as before.
 - [ ] Tests: payload includes layout; prompt contains the Trail section only for `trail`.
+- [x] Fix found during the manual check, committed on its own before this stage: since the
+      move to English keys (d619073a), the prompt asked for unit blocks under `content`, which
+      `upgradeCourse` does not map, so every AI generation produced empty units. The prompt now
+      asks for `blocks`, with a route test that checks the generated blocks reach the answer.
 - [ ] Manual: one real generation with Trail, checking headings and badge names.
 - **Done when:** common criteria pass and the manual generation is recorded in the stage
   report. Commit: `feat: tailor ai generation to the trail layout`.

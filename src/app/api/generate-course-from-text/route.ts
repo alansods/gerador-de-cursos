@@ -123,7 +123,7 @@ Cada Unidade:
 {
   "title": "string",
   "description": "string",
-  "content": [ <array de Bloco> ]
+  "blocks": [ <array de Bloco> ]
 }
 
 ## Recursos disponíveis
@@ -371,7 +371,7 @@ Cada Unidade:
 
 ## Regras gerais
 
-- NÃO use "blocks" — use sempre "content"
+- Na Unidade, os blocos ficam SEMPRE em "blocks". "content" é campo do Bloco, nunca da Unidade
 - IDs únicos simples: "item-1", "q-1", "op-1"
 - HTML (em campos "content") apenas com: <p>, <strong>, <em>
 - Para listas, use SEMPRE o campo "listItems" — NUNCA coloque listas em HTML no campo "content"
