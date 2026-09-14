@@ -10,6 +10,8 @@ import {
   isStepCompleted,
   isUnitCompleted,
   maxCourseXp,
+  reviewTrailSteps,
+  MAX_RECOMMENDED_STEPS,
   trailCompletionRule,
   trailLevel,
   unitBadge,
@@ -242,5 +244,32 @@ describe('unitBadge', () => {
 
   it('ignores an icon outside the curated list', () => {
     expect(unitBadge(unit('U', [], { badgeIcon: 'skull' }), 1).icon).toBe(BADGE_ICONS[1])
+  })
+})
+
+describe('reviewTrailSteps', () => {
+  it('counts steps and lists the ones without a scored activity', () => {
+    const u = unit('BPF', [
+      block('heading', 'Introdução'),
+      block('paragraph'),
+      block('heading', 'Contaminação'),
+      block('categorization'),
+    ])
+
+    const review = reviewTrailSteps(u)
+
+    expect(review.stepCount).toBe(2)
+    expect(review.stepsWithoutScored.map((step) => step.title)).toEqual(['Introdução'])
+    expect(review.tooManySteps).toBe(false)
+  })
+
+  it('flags units with more steps than recommended', () => {
+    const blocks = Array.from({ length: MAX_RECOMMENDED_STEPS + 1 }, (_, i) => [
+      block('heading', `Etapa ${i + 1}`),
+      block('quiz'),
+    ]).flat()
+
+    expect(reviewTrailSteps(unit('Longa', blocks)).tooManySteps).toBe(true)
+    expect(reviewTrailSteps(unit('Longa', blocks.slice(0, -2))).tooManySteps).toBe(false)
   })
 })

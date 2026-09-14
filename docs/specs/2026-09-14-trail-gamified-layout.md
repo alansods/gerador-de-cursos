@@ -536,14 +536,27 @@ tests in `src/__tests__/components/trail-badge-fields.test.tsx`,
       tests. To check during the manual pass of the branch.
 - **Done when:** common criteria pass. Commit: `feat: edit trail badges in the unit form`.
 
-#### Stage 9 — Step count, warnings and layout switch notice
+#### Stage 9 — Step count, warnings and layout switch notice _(done)_
 
-Files: editor unit list, `CourseSettingsDrawer.tsx`, `src/components/course/new/StepLayout.tsx`.
+Files: `src/lib/trail-progress.ts`, new `src/components/course/TrailStepSummary.tsx`, new
+`src/components/course/TrailLayoutNotice.tsx`, `src/app/(app)/courses/[id]/edit/page.tsx`,
+`src/components/CourseSettingsDrawer.tsx`, `src/components/course/new/StepLayout.tsx`, tests in
+`src/__tests__/components/trail-editor-hints.test.tsx` and `src/__tests__/lib/trail-progress.test.ts`.
 
-- [ ] "N etapas" per unit when the layout is `trail`.
-- [ ] Warnings: step with no scored activity; unit with more than 8 steps.
-- [ ] Notice when switching to Trail (wizard and settings). Nothing changes automatically.
-- [ ] Tests for count, warnings and notice.
+- [x] `reviewTrailSteps(unit)` and `MAX_RECOMMENDED_STEPS = 8` in `trail-progress.ts`: step count,
+      steps without a scored activity, too many steps. Same step derivation as the player.
+- [x] `TrailStepSummary` under each unit description in the editor, only for `trail`: "N etapas no
+      layout Trilha" and warnings naming the steps without a scored activity (singular and
+      plural) and suggesting to split a unit with more than 8 steps.
+- [x] `TrailLayoutNotice`, shown only when `trail` is selected and the course did not already use
+      it: in the wizard it explains that Títulos split units into steps; in the course settings,
+      switching from another layout, it adds that nothing is changed and the Títulos should be
+      reviewed after saving.
+- [x] Nothing changes automatically.
+- [x] Tests: hidden for other layouts, count, warnings, too many steps, both notice texts, hidden
+      when already Trail, and the wizard step showing the notice only for Trail.
+- [ ] Not verified visually in the running editor (needs login and database); covered by component
+      tests. To check during the manual pass of the branch.
 - **Done when:** common criteria pass. Commit: `feat: show trail steps in the editor`.
 
 #### Stage 10 — AI generation aware of Trail

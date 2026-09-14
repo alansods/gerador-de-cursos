@@ -4,6 +4,8 @@ import { quizKey, type CompletionRule, type ProgressState } from '@/lib/scorm-pr
 
 export const TRAIL_XP = { firstTry: 20, retry: 10, step: 10 } as const
 
+export const MAX_RECOMMENDED_STEPS = 8
+
 export const TRAIL_LEVELS = [
   { from: 0, name: 'Iniciante' },
   { from: 20, name: 'Aprendiz' },
@@ -70,6 +72,21 @@ export function deriveSteps(unit: Unit): TrailStep[] {
   })
 
   return steps.length > 0 ? steps : [{ title: unit.title, blockIndices: [] }]
+}
+
+export interface TrailStepReview {
+  stepCount: number
+  stepsWithoutScored: TrailStep[]
+  tooManySteps: boolean
+}
+
+export function reviewTrailSteps(unit: Unit): TrailStepReview {
+  const steps = deriveSteps(unit)
+  return {
+    stepCount: steps.length,
+    stepsWithoutScored: steps.filter((step) => scoredBlockIndices(unit, step).length === 0),
+    tooManySteps: steps.length > MAX_RECOMMENDED_STEPS,
+  }
 }
 
 export function isScoredBlock(block: Block): boolean {

@@ -74,6 +74,7 @@ import { ContentBlockDrawer } from '@/components/ContentBlockDrawer'
 import { UnitsDropdown } from '@/components/UnitsDropdown'
 import { ManageUnitsModal } from '@/components/ManageUnitsModal'
 import { TrailBadgeFields } from '@/components/course/TrailBadgeFields'
+import { TrailStepSummary } from '@/components/course/TrailStepSummary'
 import { SortableBlockWrapper } from '@/components/SortableBlockWrapper'
 import {
   DndContext,
@@ -1259,6 +1260,7 @@ function CourseEditor() {
                             <p className="text-gray-600 dark:text-gray-400 text-sm">
                               {unit.description}
                             </p>
+                            <TrailStepSummary layout={state.currentCourse?.layout} unit={unit} />
                           </div>
                         </EditableCard>
 
