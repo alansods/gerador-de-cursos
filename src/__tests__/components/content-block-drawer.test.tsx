@@ -432,6 +432,54 @@ describe('ContentBlockDrawer', () => {
     expect(screen.queryByRole('button', { name: 'Usar ilustração' })).not.toBeInTheDocument()
   })
 
+  it('fills the image block from the illustration library', async () => {
+    const user = userEvent.setup()
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        version: 1,
+        themes: [{ id: 'workplace-safety', title: 'Segurança do trabalho' }],
+        categories: [{ id: 'ppe', theme: 'workplace-safety', title: 'EPI' }],
+        items: [
+          {
+            id: 'workplace-safety-ppe-goggles',
+            title: 'Óculos de proteção',
+            theme: 'workplace-safety',
+            category: 'ppe',
+            file: 'workplace-safety/ppe/goggles.svg',
+            tags: ['óculos'],
+            width: 32,
+            height: 32,
+            set: 'fluent-emoji',
+            license: 'MIT',
+            author: 'Microsoft',
+          },
+        ],
+      }),
+    })
+    render(
+      <QueryClientProvider client={new QueryClient()}>
+        <ContentBlockDrawer
+          open
+          onOpenChange={jest.fn()}
+          mode="add"
+          blockData={{ type: 'image' }}
+          onSave={jest.fn()}
+          onCancel={jest.fn()}
+        />
+      </QueryClientProvider>
+    )
+
+    await user.click(screen.getByRole('button', { name: 'Escolher do acervo' }))
+    await user.click(await screen.findByRole('button', { name: 'Óculos de proteção' }))
+    await user.click(screen.getByRole('button', { name: 'Usar ilustração' }))
+
+    expect(screen.getByPlaceholderText('Cole a URL da imagem...')).toHaveValue(
+      '/illustrations/workplace-safety/ppe/goggles.svg'
+    )
+    expect(screen.getByAltText('Preview')).toHaveStyle('background-color: #FBF4E6')
+  })
+
   it('offers the library only for image fields', () => {
     mount('audio')
 

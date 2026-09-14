@@ -48,7 +48,11 @@ import { extractYouTubeId } from '@/lib/youtube'
 import { cleanDistractors, fillBlanksAnswers } from '@/lib/fill-blanks'
 import { RichTextEditor } from './RichTextEditor'
 import { IllustrationPicker } from './IllustrationPicker'
-import { ILLUSTRATION_CARD_COLOR, isIllustrationSource } from '@/lib/illustration-paths'
+import {
+  ILLUSTRATION_CARD_COLOR,
+  illustrationCardStyle,
+  isIllustrationSource,
+} from '@/lib/illustration-paths'
 import { toast } from 'sonner'
 
 interface ContentBlockDrawerProps {
@@ -836,6 +840,7 @@ export function ContentBlockDrawer({
 
   const [formData, setFormData] = useState<Partial<Block>>(prepareForm(blockData))
   const [isUploadingImage, setIsUploadingImage] = useState(false)
+  const [imagePickerOpen, setImagePickerOpen] = useState(false)
   const [imagePreviewUrl, setImagePreviewUrl] = useState<string | null>(null)
 
   useEffect(() => {
@@ -1082,12 +1087,34 @@ export function ContentBlockDrawer({
                   </div>
                 </div>
 
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full"
+                  onClick={() => setImagePickerOpen(true)}
+                >
+                  <Images className="h-4 w-4 mr-2" />
+                  Escolher do acervo
+                </Button>
+                <IllustrationPicker
+                  open={imagePickerOpen}
+                  onOpenChange={setImagePickerOpen}
+                  value={formData.content || ''}
+                  onSelect={(path) => {
+                    setFormData({ ...formData, content: path })
+                    setImagePreviewUrl(path)
+                  }}
+                />
+
                 <div>
                   <Input
                     value={formData.content || ''}
                     onChange={(e) => {
                       setFormData({ ...formData, content: e.target.value })
-                      if (e.target.value.startsWith('http')) {
+                      if (
+                        e.target.value.startsWith('http') ||
+                        isIllustrationSource(e.target.value)
+                      ) {
                         setImagePreviewUrl(e.target.value)
                       } else {
                         setImagePreviewUrl(null)
@@ -1105,6 +1132,7 @@ export function ContentBlockDrawer({
                       width={300}
                       height={160}
                       className="h-auto rounded-lg border border-gray-300 dark:border-gray-600 max-h-40 object-contain bg-gray-50 dark:bg-gray-800"
+                      style={illustrationCardStyle(imagePreviewUrl || formData.content)}
                       onError={() => setImagePreviewUrl(null)}
                     />
                   </div>

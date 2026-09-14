@@ -855,6 +855,15 @@ Stage 21 record (done):
   writes the `/illustrations/...` path; opening again preselects the current path.
 - `FileField` with category `image` gets an "Escolher do acervo" button next to the upload
   button, which covers every `ItemEditor` image field too. The URL input and the preview stay.
+- Follow-up after stage 22 (found by the author in the editor): the `image` block does not use
+  `FileField`; it has its own upload area. It gets the same "Escolher do acervo" button between
+  the upload area and the URL input; choosing fills `content` and the preview, which shows the
+  illustration on the cream card.
+- Checked in the running editor (dark theme, nothing saved): the picker opened from the image
+  block, filtered by theme and previewed the chosen item at 1440 px; the choice filled the URL
+  and the cream preview. At 390 px the thumbnail grid collapsed to zero height and the footer
+  covered the preview; fixed by letting the dialog scroll instead of shrinking the grid, and by
+  a compact side-by-side preview below `md`.
 - Cream card (`#FBF4E6`, same in both themes, rounded) behind library illustrations in `image`,
   `carousel` (both modes), `flipcard` front image, `matching` item image, `interactive-image`
   base image (background only, no padding, so hotspot positions do not move), `scenario` avatar
@@ -863,7 +872,7 @@ Stage 21 record (done):
 - Checked: react-query stays out of `/scorm-preview` and of the Vite player bundle. A course
   using library SVGs in `image`, `flipcard`, `matching` and `scenario`, exported through the
   real pipeline, showed the cream card in Clássico (light) and Trail (dark, 390 px). The picker
-  dialog itself is covered by component tests but was not opened in a running editor.
+  dialog was later opened in the running editor (see the follow-up below).
 
 #### Stage 22 — Third-party sets
 

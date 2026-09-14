@@ -122,7 +122,7 @@ export function IllustrationBrowser({
   const themeTitle = (id: string) => manifest.themes.find((entry) => entry.id === id)?.title ?? id
 
   return (
-    <div className="flex min-h-0 flex-col gap-4">
+    <div className="flex flex-col gap-4">
       <div className="grid gap-3 sm:grid-cols-4">
         <label className="relative sm:col-span-4">
           <span className="sr-only">Buscar ilustração</span>
@@ -207,7 +207,7 @@ export function IllustrationBrowser({
         </p>
       </div>
 
-      <div className="grid min-h-0 gap-4 md:grid-cols-[1fr_16rem]">
+      <div className="grid gap-4 md:grid-cols-[1fr_16rem]">
         {results.length === 0 ? (
           <p className="rounded-md border border-dashed px-4 py-10 text-center text-sm text-muted-foreground">
             Nenhuma ilustração encontrada. Tente outra busca ou limpe os filtros.
@@ -215,7 +215,7 @@ export function IllustrationBrowser({
         ) : (
           <ul
             aria-label="Ilustrações"
-            className="grid max-h-[45vh] grid-cols-3 gap-2 overflow-y-auto pr-1 sm:grid-cols-4 lg:grid-cols-5"
+            className="grid max-h-[45vh] shrink-0 grid-cols-3 gap-2 overflow-y-auto pr-1 sm:grid-cols-4 lg:grid-cols-5"
           >
             {results.map((item) => {
               const isSelected = item.id === selectedId
@@ -251,11 +251,14 @@ export function IllustrationBrowser({
           </ul>
         )}
 
-        <aside aria-label="Pré-visualização" className="space-y-3 rounded-md border p-3">
+        <aside
+          aria-label="Pré-visualização"
+          className="flex items-center gap-3 rounded-md border p-3 md:block md:space-y-3"
+        >
           {selected ? (
             <>
               <div
-                className="flex aspect-square items-center justify-center rounded-xl p-4"
+                className="flex aspect-square h-20 shrink-0 items-center justify-center rounded-xl p-2 md:h-auto md:w-full md:p-4"
                 style={{ backgroundColor: ILLUSTRATION_CARD_COLOR }}
               >
                 <img
@@ -264,7 +267,7 @@ export function IllustrationBrowser({
                   className="h-full w-full object-contain"
                 />
               </div>
-              <div className="space-y-1">
+              <div className="min-w-0 space-y-1">
                 <p className="text-sm font-semibold">{selected.title}</p>
                 <p className="text-xs text-muted-foreground">
                   {themeTitle(selected.theme)} · acervo {selected.set} · licença {selected.license}
@@ -273,7 +276,7 @@ export function IllustrationBrowser({
               </div>
             </>
           ) : (
-            <p className="py-6 text-center text-sm text-muted-foreground">
+            <p className="w-full py-6 text-center text-sm text-muted-foreground">
               Selecione uma ilustração para ver maior.
             </p>
           )}
