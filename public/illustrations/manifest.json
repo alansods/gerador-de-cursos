@@ -1,0 +1,923 @@
+{
+  "version": 1,
+  "themes": [
+    {
+      "id": "culinary",
+      "title": "Culinária"
+    },
+    {
+      "id": "food-safety",
+      "title": "Segurança dos alimentos"
+    }
+  ],
+  "categories": [
+    {
+      "id": "utensils",
+      "theme": "culinary",
+      "title": "Utensílios"
+    },
+    {
+      "id": "ingredients",
+      "theme": "culinary",
+      "title": "Ingredientes"
+    },
+    {
+      "id": "dishes",
+      "theme": "culinary",
+      "title": "Pratos e doces"
+    },
+    {
+      "id": "scenes",
+      "theme": "culinary",
+      "title": "Cenas de preparo"
+    },
+    {
+      "id": "scenes",
+      "theme": "food-safety",
+      "title": "Cenas de higiene"
+    }
+  ],
+  "items": [
+    {
+      "id": "culinary-utensils-whisk",
+      "title": "Fouet",
+      "theme": "culinary",
+      "category": "utensils",
+      "file": "culinary/utensils/whisk.svg",
+      "tags": [
+        "fouet",
+        "batedor",
+        "misturar",
+        "creme"
+      ],
+      "width": 64,
+      "height": 64,
+      "license": "original",
+      "author": "Gerador de Cursos",
+      "source": "Protótipo Trilha Doces Regionais"
+    },
+    {
+      "id": "culinary-utensils-silicone-spatula",
+      "title": "Espátula de silicone (pão-duro)",
+      "theme": "culinary",
+      "category": "utensils",
+      "file": "culinary/utensils/silicone-spatula.svg",
+      "tags": [
+        "espátula",
+        "pão-duro",
+        "silicone",
+        "raspar"
+      ],
+      "width": 64,
+      "height": 64,
+      "license": "original",
+      "author": "Gerador de Cursos",
+      "source": "Protótipo Trilha Doces Regionais"
+    },
+    {
+      "id": "culinary-utensils-sieve",
+      "title": "Peneira",
+      "theme": "culinary",
+      "category": "utensils",
+      "file": "culinary/utensils/sieve.svg",
+      "tags": [
+        "peneira",
+        "peneirar",
+        "coar"
+      ],
+      "width": 64,
+      "height": 64,
+      "license": "original",
+      "author": "Gerador de Cursos",
+      "source": "Protótipo Trilha Doces Regionais"
+    },
+    {
+      "id": "culinary-utensils-blender",
+      "title": "Liquidificador",
+      "theme": "culinary",
+      "category": "utensils",
+      "file": "culinary/utensils/blender.svg",
+      "tags": [
+        "liquidificador",
+        "bater",
+        "triturar",
+        "eletrodoméstico"
+      ],
+      "width": 64,
+      "height": 64,
+      "license": "original",
+      "author": "Gerador de Cursos",
+      "source": "Protótipo Trilha Doces Regionais"
+    },
+    {
+      "id": "culinary-utensils-pot",
+      "title": "Panela",
+      "theme": "culinary",
+      "category": "utensils",
+      "file": "culinary/utensils/pot.svg",
+      "tags": [
+        "panela",
+        "cozinhar",
+        "fogão"
+      ],
+      "width": 64,
+      "height": 64,
+      "license": "original",
+      "author": "Gerador de Cursos",
+      "source": "Protótipo Trilha Doces Regionais"
+    },
+    {
+      "id": "culinary-utensils-kitchen-scale",
+      "title": "Balança de cozinha",
+      "theme": "culinary",
+      "category": "utensils",
+      "file": "culinary/utensils/kitchen-scale.svg",
+      "tags": [
+        "balança",
+        "pesar",
+        "medida",
+        "gramas"
+      ],
+      "width": 64,
+      "height": 64,
+      "license": "original",
+      "author": "Gerador de Cursos",
+      "source": "Protótipo Trilha Doces Regionais"
+    },
+    {
+      "id": "culinary-utensils-bowl",
+      "title": "Bowl (vasilha)",
+      "theme": "culinary",
+      "category": "utensils",
+      "file": "culinary/utensils/bowl.svg",
+      "tags": [
+        "bowl",
+        "vasilha",
+        "tigela",
+        "recipiente"
+      ],
+      "width": 64,
+      "height": 64,
+      "license": "original",
+      "author": "Gerador de Cursos",
+      "source": "Protótipo Trilha Doces Regionais"
+    },
+    {
+      "id": "culinary-utensils-polyethylene-spoon",
+      "title": "Colher de polietileno",
+      "theme": "culinary",
+      "category": "utensils",
+      "file": "culinary/utensils/polyethylene-spoon.svg",
+      "tags": [
+        "colher",
+        "polietileno",
+        "mexer"
+      ],
+      "width": 64,
+      "height": 64,
+      "license": "original",
+      "author": "Gerador de Cursos",
+      "source": "Protótipo Trilha Doces Regionais"
+    },
+    {
+      "id": "culinary-ingredients-rice",
+      "title": "Arroz",
+      "theme": "culinary",
+      "category": "ingredients",
+      "file": "culinary/ingredients/rice.svg",
+      "tags": [
+        "arroz",
+        "grão",
+        "pacote"
+      ],
+      "width": 64,
+      "height": 64,
+      "license": "original",
+      "author": "Gerador de Cursos",
+      "source": "Protótipo Trilha Doces Regionais"
+    },
+    {
+      "id": "culinary-ingredients-sugar",
+      "title": "Açúcar",
+      "theme": "culinary",
+      "category": "ingredients",
+      "file": "culinary/ingredients/sugar.svg",
+      "tags": [
+        "açúcar",
+        "doce",
+        "pacote"
+      ],
+      "width": 64,
+      "height": 64,
+      "license": "original",
+      "author": "Gerador de Cursos",
+      "source": "Protótipo Trilha Doces Regionais"
+    },
+    {
+      "id": "culinary-ingredients-wheat-flour",
+      "title": "Farinha de trigo",
+      "theme": "culinary",
+      "category": "ingredients",
+      "file": "culinary/ingredients/wheat-flour.svg",
+      "tags": [
+        "farinha",
+        "trigo",
+        "pacote"
+      ],
+      "width": 64,
+      "height": 64,
+      "license": "original",
+      "author": "Gerador de Cursos",
+      "source": "Protótipo Trilha Doces Regionais"
+    },
+    {
+      "id": "culinary-ingredients-baking-soda",
+      "title": "Bicarbonato de sódio",
+      "theme": "culinary",
+      "category": "ingredients",
+      "file": "culinary/ingredients/baking-soda.svg",
+      "tags": [
+        "bicarbonato",
+        "fermento",
+        "caixa"
+      ],
+      "width": 64,
+      "height": 64,
+      "license": "original",
+      "author": "Gerador de Cursos",
+      "source": "Protótipo Trilha Doces Regionais"
+    },
+    {
+      "id": "culinary-ingredients-corn-starch",
+      "title": "Amido de milho",
+      "theme": "culinary",
+      "category": "ingredients",
+      "file": "culinary/ingredients/corn-starch.svg",
+      "tags": [
+        "amido",
+        "maisena",
+        "milho",
+        "caixa"
+      ],
+      "width": 64,
+      "height": 64,
+      "license": "original",
+      "author": "Gerador de Cursos",
+      "source": "Protótipo Trilha Doces Regionais"
+    },
+    {
+      "id": "culinary-ingredients-heavy-cream",
+      "title": "Creme de leite",
+      "theme": "culinary",
+      "category": "ingredients",
+      "file": "culinary/ingredients/heavy-cream.svg",
+      "tags": [
+        "creme de leite",
+        "laticínio",
+        "caixa"
+      ],
+      "width": 64,
+      "height": 64,
+      "license": "original",
+      "author": "Gerador de Cursos",
+      "source": "Protótipo Trilha Doces Regionais"
+    },
+    {
+      "id": "culinary-ingredients-condensed-milk",
+      "title": "Leite condensado",
+      "theme": "culinary",
+      "category": "ingredients",
+      "file": "culinary/ingredients/condensed-milk.svg",
+      "tags": [
+        "leite condensado",
+        "lata",
+        "laticínio"
+      ],
+      "width": 64,
+      "height": 64,
+      "license": "original",
+      "author": "Gerador de Cursos",
+      "source": "Protótipo Trilha Doces Regionais"
+    },
+    {
+      "id": "culinary-ingredients-canned-corn",
+      "title": "Milho em conserva",
+      "theme": "culinary",
+      "category": "ingredients",
+      "file": "culinary/ingredients/canned-corn.svg",
+      "tags": [
+        "milho",
+        "conserva",
+        "lata"
+      ],
+      "width": 64,
+      "height": 64,
+      "license": "original",
+      "author": "Gerador de Cursos",
+      "source": "Protótipo Trilha Doces Regionais"
+    },
+    {
+      "id": "culinary-ingredients-milk",
+      "title": "Leite",
+      "theme": "culinary",
+      "category": "ingredients",
+      "file": "culinary/ingredients/milk.svg",
+      "tags": [
+        "leite",
+        "caixa",
+        "laticínio"
+      ],
+      "width": 64,
+      "height": 64,
+      "license": "original",
+      "author": "Gerador de Cursos",
+      "source": "Protótipo Trilha Doces Regionais"
+    },
+    {
+      "id": "culinary-ingredients-coconut-milk",
+      "title": "Leite de coco",
+      "theme": "culinary",
+      "category": "ingredients",
+      "file": "culinary/ingredients/coconut-milk.svg",
+      "tags": [
+        "leite de coco",
+        "coco",
+        "garrafa"
+      ],
+      "width": 64,
+      "height": 64,
+      "license": "original",
+      "author": "Gerador de Cursos",
+      "source": "Protótipo Trilha Doces Regionais"
+    },
+    {
+      "id": "culinary-ingredients-margarine",
+      "title": "Margarina",
+      "theme": "culinary",
+      "category": "ingredients",
+      "file": "culinary/ingredients/margarine.svg",
+      "tags": [
+        "margarina",
+        "manteiga",
+        "gordura",
+        "pote"
+      ],
+      "width": 64,
+      "height": 64,
+      "license": "original",
+      "author": "Gerador de Cursos",
+      "source": "Protótipo Trilha Doces Regionais"
+    },
+    {
+      "id": "culinary-ingredients-salt",
+      "title": "Sal",
+      "theme": "culinary",
+      "category": "ingredients",
+      "file": "culinary/ingredients/salt.svg",
+      "tags": [
+        "sal",
+        "saleiro",
+        "tempero"
+      ],
+      "width": 64,
+      "height": 64,
+      "license": "original",
+      "author": "Gerador de Cursos",
+      "source": "Protótipo Trilha Doces Regionais"
+    },
+    {
+      "id": "culinary-ingredients-water",
+      "title": "Água",
+      "theme": "culinary",
+      "category": "ingredients",
+      "file": "culinary/ingredients/water.svg",
+      "tags": [
+        "água",
+        "copo",
+        "líquido"
+      ],
+      "width": 64,
+      "height": 64,
+      "license": "original",
+      "author": "Gerador de Cursos",
+      "source": "Protótipo Trilha Doces Regionais"
+    },
+    {
+      "id": "culinary-ingredients-corn-cob",
+      "title": "Espiga de milho verde",
+      "theme": "culinary",
+      "category": "ingredients",
+      "file": "culinary/ingredients/corn-cob.svg",
+      "tags": [
+        "milho",
+        "espiga",
+        "milho verde"
+      ],
+      "width": 64,
+      "height": 64,
+      "license": "original",
+      "author": "Gerador de Cursos",
+      "source": "Protótipo Trilha Doces Regionais"
+    },
+    {
+      "id": "culinary-ingredients-coconut",
+      "title": "Coco",
+      "theme": "culinary",
+      "category": "ingredients",
+      "file": "culinary/ingredients/coconut.svg",
+      "tags": [
+        "coco",
+        "fruta"
+      ],
+      "width": 64,
+      "height": 64,
+      "license": "original",
+      "author": "Gerador de Cursos",
+      "source": "Protótipo Trilha Doces Regionais"
+    },
+    {
+      "id": "culinary-ingredients-grated-coconut",
+      "title": "Coco ralado",
+      "theme": "culinary",
+      "category": "ingredients",
+      "file": "culinary/ingredients/grated-coconut.svg",
+      "tags": [
+        "coco ralado",
+        "coco"
+      ],
+      "width": 64,
+      "height": 64,
+      "license": "original",
+      "author": "Gerador de Cursos",
+      "source": "Protótipo Trilha Doces Regionais"
+    },
+    {
+      "id": "culinary-ingredients-orange",
+      "title": "Laranja",
+      "theme": "culinary",
+      "category": "ingredients",
+      "file": "culinary/ingredients/orange.svg",
+      "tags": [
+        "laranja",
+        "fruta",
+        "casca de laranja"
+      ],
+      "width": 64,
+      "height": 64,
+      "license": "original",
+      "author": "Gerador de Cursos",
+      "source": "Protótipo Trilha Doces Regionais"
+    },
+    {
+      "id": "culinary-ingredients-cinnamon-stick",
+      "title": "Canela em pau",
+      "theme": "culinary",
+      "category": "ingredients",
+      "file": "culinary/ingredients/cinnamon-stick.svg",
+      "tags": [
+        "canela",
+        "especiaria",
+        "canela em pau"
+      ],
+      "width": 64,
+      "height": 64,
+      "license": "original",
+      "author": "Gerador de Cursos",
+      "source": "Protótipo Trilha Doces Regionais"
+    },
+    {
+      "id": "culinary-ingredients-cloves",
+      "title": "Cravo-da-índia",
+      "theme": "culinary",
+      "category": "ingredients",
+      "file": "culinary/ingredients/cloves.svg",
+      "tags": [
+        "cravo",
+        "cravo-da-índia",
+        "especiaria"
+      ],
+      "width": 64,
+      "height": 64,
+      "license": "original",
+      "author": "Gerador de Cursos",
+      "source": "Protótipo Trilha Doces Regionais"
+    },
+    {
+      "id": "culinary-ingredients-peanuts",
+      "title": "Amendoim",
+      "theme": "culinary",
+      "category": "ingredients",
+      "file": "culinary/ingredients/peanuts.svg",
+      "tags": [
+        "amendoim",
+        "grão"
+      ],
+      "width": 64,
+      "height": 64,
+      "license": "original",
+      "author": "Gerador de Cursos",
+      "source": "Protótipo Trilha Doces Regionais"
+    },
+    {
+      "id": "culinary-ingredients-eggs",
+      "title": "Ovos",
+      "theme": "culinary",
+      "category": "ingredients",
+      "file": "culinary/ingredients/eggs.svg",
+      "tags": [
+        "ovo",
+        "ovos"
+      ],
+      "width": 64,
+      "height": 64,
+      "license": "original",
+      "author": "Gerador de Cursos",
+      "source": "Protótipo Trilha Doces Regionais"
+    },
+    {
+      "id": "culinary-ingredients-coalho-cheese",
+      "title": "Queijo coalho",
+      "theme": "culinary",
+      "category": "ingredients",
+      "file": "culinary/ingredients/coalho-cheese.svg",
+      "tags": [
+        "queijo",
+        "queijo coalho",
+        "laticínio"
+      ],
+      "width": 64,
+      "height": 64,
+      "license": "original",
+      "author": "Gerador de Cursos",
+      "source": "Protótipo Trilha Doces Regionais"
+    },
+    {
+      "id": "culinary-ingredients-hominy-corn",
+      "title": "Milho para mungunzá (canjica)",
+      "theme": "culinary",
+      "category": "ingredients",
+      "file": "culinary/ingredients/hominy-corn.svg",
+      "tags": [
+        "milho",
+        "mungunzá",
+        "canjica",
+        "pacote"
+      ],
+      "width": 64,
+      "height": 64,
+      "license": "original",
+      "author": "Gerador de Cursos",
+      "source": "Protótipo Trilha Doces Regionais"
+    },
+    {
+      "id": "culinary-dishes-rice-pudding",
+      "title": "Arroz doce",
+      "theme": "culinary",
+      "category": "dishes",
+      "file": "culinary/dishes/rice-pudding.svg",
+      "tags": [
+        "arroz doce",
+        "doce",
+        "sobremesa"
+      ],
+      "width": 120,
+      "height": 90,
+      "license": "original",
+      "author": "Gerador de Cursos",
+      "source": "Protótipo Trilha Doces Regionais"
+    },
+    {
+      "id": "culinary-dishes-mungunza",
+      "title": "Mungunzá doce",
+      "theme": "culinary",
+      "category": "dishes",
+      "file": "culinary/dishes/mungunza.svg",
+      "tags": [
+        "mungunzá",
+        "munguzá",
+        "doce",
+        "milho"
+      ],
+      "width": 120,
+      "height": 90,
+      "license": "original",
+      "author": "Gerador de Cursos",
+      "source": "Protótipo Trilha Doces Regionais"
+    },
+    {
+      "id": "culinary-dishes-green-corn-canjica",
+      "title": "Canjica de milho verde",
+      "theme": "culinary",
+      "category": "dishes",
+      "file": "culinary/dishes/green-corn-canjica.svg",
+      "tags": [
+        "canjica",
+        "milho verde",
+        "doce"
+      ],
+      "width": 120,
+      "height": 90,
+      "license": "original",
+      "author": "Gerador de Cursos",
+      "source": "Protótipo Trilha Doces Regionais"
+    },
+    {
+      "id": "culinary-dishes-canned-corn-canjica",
+      "title": "Canjica de milho em conserva",
+      "theme": "culinary",
+      "category": "dishes",
+      "file": "culinary/dishes/canned-corn-canjica.svg",
+      "tags": [
+        "canjica",
+        "milho",
+        "doce"
+      ],
+      "width": 120,
+      "height": 90,
+      "license": "original",
+      "author": "Gerador de Cursos",
+      "source": "Protótipo Trilha Doces Regionais"
+    },
+    {
+      "id": "culinary-dishes-cocada",
+      "title": "Cocada baiana",
+      "theme": "culinary",
+      "category": "dishes",
+      "file": "culinary/dishes/cocada.svg",
+      "tags": [
+        "cocada",
+        "coco",
+        "doce"
+      ],
+      "width": 120,
+      "height": 90,
+      "license": "original",
+      "author": "Gerador de Cursos",
+      "source": "Protótipo Trilha Doces Regionais"
+    },
+    {
+      "id": "culinary-dishes-pe-de-moleque",
+      "title": "Pé de moleque",
+      "theme": "culinary",
+      "category": "dishes",
+      "file": "culinary/dishes/pe-de-moleque.svg",
+      "tags": [
+        "pé de moleque",
+        "amendoim",
+        "doce"
+      ],
+      "width": 120,
+      "height": 90,
+      "license": "original",
+      "author": "Gerador de Cursos",
+      "source": "Protótipo Trilha Doces Regionais"
+    },
+    {
+      "id": "culinary-dishes-corn-brigadeiro",
+      "title": "Brigadeiro de milho",
+      "theme": "culinary",
+      "category": "dishes",
+      "file": "culinary/dishes/corn-brigadeiro.svg",
+      "tags": [
+        "brigadeiro",
+        "milho",
+        "docinho"
+      ],
+      "width": 120,
+      "height": 90,
+      "license": "original",
+      "author": "Gerador de Cursos",
+      "source": "Protótipo Trilha Doces Regionais"
+    },
+    {
+      "id": "culinary-dishes-queijadinha",
+      "title": "Queijadinha",
+      "theme": "culinary",
+      "category": "dishes",
+      "file": "culinary/dishes/queijadinha.svg",
+      "tags": [
+        "queijadinha",
+        "queijo",
+        "coco",
+        "forno"
+      ],
+      "width": 120,
+      "height": 90,
+      "license": "original",
+      "author": "Gerador de Cursos",
+      "source": "Protótipo Trilha Doces Regionais"
+    },
+    {
+      "id": "culinary-scenes-caramel-sugar-water",
+      "title": "Açúcar e água na panela",
+      "theme": "culinary",
+      "category": "scenes",
+      "file": "culinary/scenes/caramel-sugar-water.svg",
+      "tags": [
+        "caramelo",
+        "açúcar",
+        "panela",
+        "fogão"
+      ],
+      "width": 400,
+      "height": 225,
+      "license": "original",
+      "author": "Gerador de Cursos",
+      "source": "Protótipo Trilha Doces Regionais"
+    },
+    {
+      "id": "culinary-scenes-caramel-no-stirring",
+      "title": "Caramelo sem mexer",
+      "theme": "culinary",
+      "category": "scenes",
+      "file": "culinary/scenes/caramel-no-stirring.svg",
+      "tags": [
+        "caramelo",
+        "ponto",
+        "fogão"
+      ],
+      "width": 400,
+      "height": 225,
+      "license": "original",
+      "author": "Gerador de Cursos",
+      "source": "Protótipo Trilha Doces Regionais"
+    },
+    {
+      "id": "culinary-scenes-caramel-add-coconut",
+      "title": "Coco ralado no caramelo",
+      "theme": "culinary",
+      "category": "scenes",
+      "file": "culinary/scenes/caramel-add-coconut.svg",
+      "tags": [
+        "caramelo",
+        "coco ralado",
+        "cocada"
+      ],
+      "width": 400,
+      "height": 225,
+      "license": "original",
+      "author": "Gerador de Cursos",
+      "source": "Protótipo Trilha Doces Regionais"
+    },
+    {
+      "id": "culinary-scenes-stirring-pot",
+      "title": "Mexendo a panela",
+      "theme": "culinary",
+      "category": "scenes",
+      "file": "culinary/scenes/stirring-pot.svg",
+      "tags": [
+        "mexer",
+        "panela",
+        "fogão",
+        "colher"
+      ],
+      "width": 400,
+      "height": 225,
+      "license": "original",
+      "author": "Gerador de Cursos",
+      "source": "Protótipo Trilha Doces Regionais"
+    },
+    {
+      "id": "culinary-scenes-sweet-in-greased-pan",
+      "title": "Doce na forma untada",
+      "theme": "culinary",
+      "category": "scenes",
+      "file": "culinary/scenes/sweet-in-greased-pan.svg",
+      "tags": [
+        "forma",
+        "esfriar",
+        "cocada"
+      ],
+      "width": 400,
+      "height": 225,
+      "license": "original",
+      "author": "Gerador de Cursos",
+      "source": "Protótipo Trilha Doces Regionais"
+    },
+    {
+      "id": "food-safety-scenes-kitchen-hygiene-errors",
+      "title": "Erros de higiene na cozinha",
+      "theme": "food-safety",
+      "category": "scenes",
+      "file": "food-safety/scenes/kitchen-hygiene-errors.svg",
+      "tags": [
+        "higiene",
+        "manipulador",
+        "touca",
+        "adornos",
+        "caça aos erros"
+      ],
+      "width": 400,
+      "height": 300,
+      "license": "original",
+      "author": "Gerador de Cursos",
+      "source": "Protótipo Trilha Doces Regionais"
+    },
+    {
+      "id": "food-safety-scenes-handwashing-wet-hands",
+      "title": "Molhar as mãos",
+      "theme": "food-safety",
+      "category": "scenes",
+      "file": "food-safety/scenes/handwashing-wet-hands.svg",
+      "tags": [
+        "lavar as mãos",
+        "água",
+        "torneira",
+        "higiene"
+      ],
+      "width": 400,
+      "height": 225,
+      "license": "original",
+      "author": "Gerador de Cursos",
+      "source": "Protótipo Trilha Doces Regionais"
+    },
+    {
+      "id": "food-safety-scenes-handwashing-soap",
+      "title": "Ensaboar palma e dorso",
+      "theme": "food-safety",
+      "category": "scenes",
+      "file": "food-safety/scenes/handwashing-soap.svg",
+      "tags": [
+        "lavar as mãos",
+        "sabonete",
+        "higiene"
+      ],
+      "width": 400,
+      "height": 225,
+      "license": "original",
+      "author": "Gerador de Cursos",
+      "source": "Protótipo Trilha Doces Regionais"
+    },
+    {
+      "id": "food-safety-scenes-handwashing-scrub",
+      "title": "Esfregar unhas, dedos e punhos",
+      "theme": "food-safety",
+      "category": "scenes",
+      "file": "food-safety/scenes/handwashing-scrub.svg",
+      "tags": [
+        "lavar as mãos",
+        "unhas",
+        "punhos",
+        "higiene"
+      ],
+      "width": 400,
+      "height": 225,
+      "license": "original",
+      "author": "Gerador de Cursos",
+      "source": "Protótipo Trilha Doces Regionais"
+    },
+    {
+      "id": "food-safety-scenes-handwashing-rinse",
+      "title": "Enxaguar as mãos",
+      "theme": "food-safety",
+      "category": "scenes",
+      "file": "food-safety/scenes/handwashing-rinse.svg",
+      "tags": [
+        "lavar as mãos",
+        "enxaguar",
+        "água",
+        "higiene"
+      ],
+      "width": 400,
+      "height": 225,
+      "license": "original",
+      "author": "Gerador de Cursos",
+      "source": "Protótipo Trilha Doces Regionais"
+    },
+    {
+      "id": "food-safety-scenes-handwashing-dry",
+      "title": "Secar com papel-toalha",
+      "theme": "food-safety",
+      "category": "scenes",
+      "file": "food-safety/scenes/handwashing-dry.svg",
+      "tags": [
+        "lavar as mãos",
+        "papel-toalha",
+        "secar",
+        "higiene"
+      ],
+      "width": 400,
+      "height": 225,
+      "license": "original",
+      "author": "Gerador de Cursos",
+      "source": "Protótipo Trilha Doces Regionais"
+    },
+    {
+      "id": "food-safety-scenes-handwashing-sanitize",
+      "title": "Álcool em gel",
+      "theme": "food-safety",
+      "category": "scenes",
+      "file": "food-safety/scenes/handwashing-sanitize.svg",
+      "tags": [
+        "álcool em gel",
+        "antisséptico",
+        "higiene"
+      ],
+      "width": 400,
+      "height": 225,
+      "license": "original",
+      "author": "Gerador de Cursos",
+      "source": "Protótipo Trilha Doces Regionais"
+    }
+  ]
+}
