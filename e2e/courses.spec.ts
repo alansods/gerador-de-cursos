@@ -173,7 +173,7 @@ test.describe('E2E - Courses page', () => {
 
     // Assert
     await expect(lines(page)).toHaveCount(1)
-    await expect(page.getByRole('cell', { name: title })).toBeVisible()
+    await expect(lines(page).getByText(title)).toBeVisible()
   })
 
   test('loads the next page through the infinite scroll', async ({ page }) => {

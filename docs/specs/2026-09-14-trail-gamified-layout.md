@@ -929,10 +929,24 @@ Separate spec.
 
 ### Branch completion
 
-- [ ] Every stage above committed, or explicitly deferred by the user.
-- [ ] `pnpm build`, `pnpm test` and `pnpm test:e2e` green on the branch.
+- [x] Every stage above committed, or explicitly deferred by the user.
+- [x] `pnpm build`, `pnpm test` and `pnpm test:e2e` green on the branch.
 - [ ] Manual checks from the Testing section done and reported.
 - [ ] The user decides whether to open a PR. No merge into `main` before that.
+
+Branch completion record:
+
+- First full `pnpm test:e2e` (chromium) reused a stale dev server on port 3000 whose `.next` had
+  been overwritten by `pnpm build`: 29 app-page failures unrelated to the code. With that
+  server stopped (user's approval) and `.next/cache/webpack` cleared: 42 passed, 1 skipped (the
+  reviewer test needs `E2E_EMAIL_REVISOR`), 1 failed.
+- The failure predates this branch: "finds a freshly created course through the search" looks
+  up `getByRole('cell', { name: title })`, which since `67ca1ed9` (bulk deletion, on `main`)
+  also matches the selection checkbox cell labelled "Selecionar <title>". The search itself
+  works (one row). Fix, as a separate commit on this branch: match the title text inside the
+  row, `lines(page).getByText(title)`, since the checkbox label is not text content.
+- After the fix, full `pnpm test:e2e` (chromium): 43 passed, 1 skipped (reviewer credentials).
+  `pnpm build` clean, `pnpm test` 605 passed, `tsc` at the 35-error baseline.
 
 ## Out of scope
 
