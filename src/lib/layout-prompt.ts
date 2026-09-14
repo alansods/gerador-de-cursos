@@ -24,6 +24,14 @@ export function layoutPromptSection(layout: string | undefined, mode: ReadMode):
   categorization, true-false, sequence, fill-blanks ou scenario) baseada apenas no conteúdo daquela etapa. Neste layout, essa regra substitui
   a de colocar o quiz só na revisão ao final da unidade.`
 
+  const practice =
+    mode === 'markers'
+      ? `- Uma missão prática (practice-checklist) marcada no documento fica na etapa do assunto dela.
+  Ela é opcional e dá bônus, mas não conta como atividade avaliada.`
+      : `- Quando o texto descrever uma tarefa prática, a unidade pode ter UMA missão prática
+  (practice-checklist) na etapa dessa tarefa. Ela é opcional e dá bônus, mas não conta como
+  atividade avaliada.`
+
   return `
 
 ## Layout Trilha (gamificado)
@@ -36,6 +44,7 @@ abre uma etapa dessa missão.
 - O texto de cada "heading" é o nome de uma seção que já existe no documento. Não invente
   seções para chegar ao mínimo: uma unidade com um único assunto pode ter um só "heading".
 ${activities}
+${practice}
 - Em cada Unidade, adicione o campo "badgeName": o nome da medalha que o aluno ganha ao
   concluir a missão. De 2 a 4 palavras, até ${BADGE_NAME_MAX_LENGTH} caracteres, ligado ao tema
   da unidade, sem emoji. Exemplo: { "title": "Higiene na cozinha", "badgeName": "Mãos limpas",

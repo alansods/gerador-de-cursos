@@ -50,6 +50,11 @@ export interface HotspotItem {
   content: string
 }
 
+export interface PracticeItem {
+  id: string
+  text: string
+}
+
 export interface ScenarioOption {
   id: string
   text: string
@@ -148,6 +153,7 @@ export interface Block {
     | 'sequence'
     | 'fill-blanks'
     | 'scenario'
+    | 'practice-checklist'
   content: string
   order: number
   // image-specific
@@ -214,6 +220,8 @@ export interface Block {
   scenarioAvatar?: string
   scenarioSituation?: string
   scenarioOptions?: ScenarioOption[]
+  practiceMission?: string
+  practiceItems?: PracticeItem[]
 }
 
 export interface Unit {

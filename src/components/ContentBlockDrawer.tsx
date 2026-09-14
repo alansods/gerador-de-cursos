@@ -34,6 +34,7 @@ import {
   HotspotItem,
   MatchingPair,
   ScenarioOption,
+  PracticeItem,
   SequenceItem,
   TrueFalseItem,
 } from '@/types/course'
@@ -2074,6 +2075,47 @@ export function ContentBlockDrawer({
             distractors={formData.fillBlanksDistractors || []}
             onChange={(change) => setFormData({ ...formData, ...change })}
           />
+        )
+
+      case 'practice-checklist':
+        return (
+          <div className="space-y-5">
+            <FormField
+              label={
+                <>
+                  Missão <span className="text-destructive">*</span>
+                </>
+              }
+              description="O que o aluno deve fazer na prática."
+            >
+              {(field) => (
+                <Textarea
+                  {...field}
+                  value={formData.practiceMission || ''}
+                  rows={3}
+                  onChange={(e) => setFormData({ ...formData, practiceMission: e.target.value })}
+                  placeholder="Ex.: Vista seus EPIs antes de entrar no canteiro"
+                />
+              )}
+            </FormField>
+
+            <ItemEditor<PracticeItem>
+              label="Itens da missão"
+              itemLabel="Item"
+              emptyText="Nenhum item adicionado ainda."
+              items={formData.practiceItems || []}
+              createItem={() => ({ id: `task-${Date.now()}`, text: '' })}
+              onChange={(practiceItems) => setFormData({ ...formData, practiceItems })}
+              fields={[
+                {
+                  key: 'text',
+                  label: 'Texto do item',
+                  required: true,
+                  placeholder: 'Ex.: Capacete com a jugular ajustada',
+                },
+              ]}
+            />
+          </div>
         )
 
       case 'sequence':

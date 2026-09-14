@@ -1,5 +1,6 @@
 import {
   applyQuizResult,
+  completePractice,
   completeStep,
   calculateScore,
   calculateProgress,
@@ -200,6 +201,57 @@ describe('suspend_data v2', () => {
 
     expect(encoded.length).toBeLessThan(4000)
     expect(decodeSuspendData(encoded, hash, 20)?.quizzes).toEqual(quizzes)
+  })
+})
+
+describe('practice missions in suspend_data', () => {
+  const hash = hashCourse(course('c1', 'u1', 'u2'))
+
+  it('round-trips completed missions in a sixth field, apart from the score', () => {
+    const state: ProgressState = {
+      visited: [true, false],
+      quizzes: { [quizKey(0, 1)]: { correct: 1, total: 2 } },
+      practices: [quizKey(0, 4), quizKey(1, 0)],
+    }
+
+    const encoded = encodeSuspendData(state, hash)
+
+    expect(encoded).toBe(`v2|${hash}|10||0-1:1/2|0-4,1-0`)
+    expect(decodeSuspendData(encoded, hash, 2)).toEqual(state)
+    expect(calculateScore(state)).toBe(50)
+    expect(calculateProgress(state).completed).toBe(false)
+  })
+
+  it('reads five-field v2 strings and ignores malformed keys', () => {
+    expect(decodeSuspendData(`v2|${hash}|11||`, hash, 2)).toEqual({
+      visited: [true, true],
+      quizzes: {},
+    })
+    expect(decodeSuspendData(`v2|${hash}|11|||0-2,x,0-2,`, hash, 2)?.practices).toEqual(['0-2'])
+  })
+
+  it('keeps completed missions when quiz results are collapsed', () => {
+    const quizzes: ProgressState['quizzes'] = {}
+    for (let u = 0; u < 200; u++) {
+      for (let b = 0; b < 10; b++) quizzes[quizKey(u, b)] = { correct: 1, total: 1 }
+    }
+    const state: ProgressState = {
+      visited: new Array(200).fill(true),
+      quizzes,
+      practices: [quizKey(199, 12)],
+    }
+
+    const decoded = decodeSuspendData(encodeSuspendData(state, hash), hash, 200)
+
+    expect(decoded?.quizzes).toEqual({})
+    expect(decoded?.practices).toEqual(['199-12'])
+  })
+
+  it('adds a mission once', () => {
+    const state = completePractice(createEmptyState(1), '0-3')
+
+    expect(state.practices).toEqual(['0-3'])
+    expect(completePractice(state, '0-3')).toBe(state)
   })
 })
 

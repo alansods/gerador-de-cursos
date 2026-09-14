@@ -717,6 +717,34 @@ Stage 16 record (`scenario`, done):
 - Checked in the Vite player in Clássico (light, with avatar), Sidebar (dark, no avatar) and
   Trail (dark, 390 px).
 
+Stage 17 record (`practice-checklist`, done):
+
+- Data: optional `practiceMission` (what the learner must do) and
+  `practiceItems: { id, text }[]`. Category `interativo`, not scored. Lenient `validate` needs
+  one item with text; `validateForm` needs the mission and 2 items. Marker `MISSAOPRATICA`
+  (`Missão:`, `Item N:`); `auto` mode creates at most one per unit, only from a hands-on task the
+  text describes; the Trail prompt allows one optional mission per unit and says it does not
+  count as a scored activity.
+- Storage: `ProgressState.practices?: string[]` holds `unit-block` keys of fully checked
+  missions. `v2` gains an optional sixth field, `v2|hash|visited|steps|quizzes|practices`
+  (keys comma separated); a five-field `v2` string still decodes. The field is kept when quiz
+  results collapse into the aggregate score. Practices never enter `calculateScore` nor the
+  completion rule.
+- Context: `ScormProgressContext` gains optional `completePractice(unitId, blockIndex)` and
+  `isPracticeCompleted(unitId, blockIndex)`; the block reads them through
+  `usePracticeCompletion(blockIndex)` and never calls `useRegistrarQuiz`. Outside a player
+  (editor card) the block works with local state only.
+- XP: `TRAIL_XP.practice = 30`, added by `unitXp` for each completed key whose block is a
+  `practice-checklist`, and by `maxCourseXp` for each such block in the course. Stars and step
+  completion ignore it.
+- Player: mission text, native checkboxes (tap, Space), counter "x de N feitos" and a progress
+  bar. Checking the last item records the completion once and shows "Missão cumprida!" through
+  a live region. A mission restored as completed starts with every item checked; unchecking
+  later does not remove the completion.
+- Checked in the Vite player in Clássico (light), Sidebar (dark) and Trail (dark, 390 px): the
+  completed mission wrote `v2|…|100|||0-2` with no LMS score, the unit result showed +40 XP
+  (step and mission), and reopening the LMS restored the checked list and the 40 XP.
+
 #### Stage 19 — Manifest `set` field and consistency test
 
 - [ ] `set` added to every manifest item (`original` for the first set).

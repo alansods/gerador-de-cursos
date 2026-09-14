@@ -435,6 +435,18 @@ Cada Unidade:
 - Pelo menos uma opção com "outcome": "correct"
 - "scenarioAvatar" só com URL de imagem presente no documento; sem URL, omita o campo
 
+### 25. practice-checklist — missão prática opcional, sem nota: o aluno marca cada item ao fazer
+{
+  "title": "string",
+  "type": "practice-checklist",
+  "content": "",
+  "practiceMission": "O que o aluno deve fazer na prática",
+  "practiceItems": [
+    { "id": "task-1", "text": "Uma ação concreta e verificável" }
+  ]
+}
+- De 2 a 8 itens; não é atividade avaliada e não substitui quiz
+
 ## Regras gerais
 
 - Na Unidade, os blocos ficam SEMPRE em "blocks". "content" é campo do Bloco, nunca da Unidade
@@ -556,6 +568,9 @@ ${sharedStructure}
   - "Situação:" → scenarioSituation
   - "Opção N:" → scenarioOptions[N-1].text; "Consequência N:" → scenarioOptions[N-1].consequence
   - "Resposta Correta:" → o número da opção correta recebe "outcome": "correct"; as demais, "incorrect"
+- Bloco MISSAOPRATICA_INICIO...MISSAOPRATICA_FIM → type "practice-checklist"
+  - "Missão:" → practiceMission
+  - "Item N:" → practiceItems[N-1].text
 - Conteúdo fora de marcadores → use title, subtitulo, paragrafo ou lista conforme adequado
 
 ## Texto para analisar
@@ -579,6 +594,7 @@ ${sharedStructure}
 - Definição ou regra com termos-chave (valores, nomes técnicos, prazos) → UM bloco fill-blanks com 1 a 3 frases copiadas do texto, de 2 a 5 lacunas no total e 2 distratores plausíveis
 - Procedimento em que a ordem é o que se aprende (montagem, preparo, sequência de segurança), com 3 a 8 passos → depois da lista, UM bloco sequence com os mesmos passos resumidos, na ordem correta
 - Requisitos, critérios verificáveis → list (listType: "check")
+- Tarefa prática que o texto pede para o aluno executar (vestir, montar, preparar, conferir) → no máximo UM bloco practice-checklist por unidade, com a missão e de 2 a 8 itens tirados do texto; nunca invente tarefa que o texto não descreva
 - 3 ou mais tópicos relacionados com subconteúdo → accordion
 - 2 a 5 alternativas comparáveis do mesmo assunto (perfis, abordagens, papéis) → tabs
 - Fatos com date, evolução histórica, cronologia de etapas → timeline

@@ -6,6 +6,7 @@ import {
   applyQuizResult,
   calculateScore,
   calculateProgress,
+  completePractice as completePracticeState,
   completeStep as completeStepState,
   quizKey,
   createEmptyState,
@@ -194,7 +195,37 @@ export function useScormProgress(course: Course) {
     [units, saveState]
   )
 
+  const completePractice = useCallback(
+    (unitId: string, blockIndex: number) => {
+      const unitIndex = units.findIndex((u) => u.id === unitId)
+      if (unitIndex < 0) return
+
+      const next = completePracticeState(stateRef.current, quizKey(unitIndex, blockIndex))
+      if (next === stateRef.current) return
+      setState(next)
+      saveState(next)
+    },
+    [units, saveState]
+  )
+
+  const isPracticeCompleted = useCallback(
+    (unitId: string, blockIndex: number) => {
+      const unitIndex = units.findIndex((u) => u.id === unitId)
+      return unitIndex >= 0 && (state.practices ?? []).includes(quizKey(unitIndex, blockIndex))
+    },
+    [units, state.practices]
+  )
+
   const progress: ProgressSummary = useMemo(() => calculateProgress(state, rule), [state, rule])
 
-  return { currentUnit, navigate, recordQuiz, completeStep, progress, state }
+  return {
+    currentUnit,
+    navigate,
+    recordQuiz,
+    completeStep,
+    completePractice,
+    isPracticeCompleted,
+    progress,
+    state,
+  }
 }

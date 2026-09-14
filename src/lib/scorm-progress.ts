@@ -8,6 +8,7 @@ export interface ProgressState {
   visited: boolean[]
   quizzes: Record<string, QuizResult>
   steps?: boolean[][]
+  practices?: string[]
 }
 
 export interface ProgressSummary {
@@ -80,6 +81,15 @@ export function completeStep(
   return { ...state, steps }
 }
 
+export function completePractice(state: ProgressState, key: string): ProgressState {
+  if (state.practices?.includes(key)) return state
+  return { ...state, practices: [...(state.practices ?? []), key] }
+}
+
+function encodePractices(practices: string[] | undefined): string {
+  return practices && practices.length > 0 ? `|${practices.join(',')}` : ''
+}
+
 function encodeQuizzes(quizzes: Record<string, QuizResult>): string {
   return Object.entries(quizzes)
     .map(([key, r]) => `${key}:${r.correct}/${r.total}${r.firstTry ? FIRST_TRY_FLAG : ''}`)
@@ -102,14 +112,15 @@ function encodeSteps(steps: boolean[][] | undefined): string {
 export function encodeSuspendData(state: ProgressState, hash: string): string {
   const bitmap = state.visited.map((v) => (v ? '1' : '0')).join('')
   const head = `${VERSION}|${hash}|${bitmap}|${encodeSteps(state.steps)}|`
-  const complete = `${head}${encodeQuizzes(state.quizzes)}`
+  const practices = encodePractices(state.practices)
+  const complete = `${head}${encodeQuizzes(state.quizzes)}${practices}`
 
   if (complete.length <= SAFE_LIMIT) return complete
 
   const score = calculateScore(state)
   const aggregate = score === null ? '' : `a:${score}`
 
-  return `${head}${aggregate}`.slice(0, SUSPEND_DATA_LIMIT)
+  return `${head}${aggregate}${practices}`.slice(0, SUSPEND_DATA_LIMIT)
 }
 
 function decodeQuizzes(raw: string): Record<string, QuizResult> {
@@ -132,6 +143,11 @@ function decodeSteps(raw: string): boolean[][] | undefined {
   if (!raw) return undefined
   const steps = raw.split(',').map((unitSteps) => [...unitSteps].map((bit) => bit === '1'))
   return steps.some((unitSteps) => unitSteps.includes(true)) ? steps : undefined
+}
+
+function decodePractices(raw: string | undefined): string[] | undefined {
+  const keys = (raw ?? '').split(',').filter((key) => /^\d+-\d+$/.test(key))
+  return keys.length > 0 ? [...new Set(keys)] : undefined
 }
 
 export function decodeSuspendData(
@@ -165,6 +181,8 @@ export function decodeSuspendData(
   const state: ProgressState = { visited, quizzes: decodeQuizzes(parts[4]) }
   const steps = decodeSteps(parts[3])
   if (steps) state.steps = steps
+  const practices = decodePractices(parts[5])
+  if (practices) state.practices = practices
   return state
 }
 
