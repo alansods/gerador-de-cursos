@@ -50,6 +50,18 @@ export interface HotspotItem {
   content: string
 }
 
+export interface SheetMaterial {
+  id: string
+  name: string
+  quantity: string
+  image?: string
+}
+
+export interface SheetStep {
+  id: string
+  text: string
+}
+
 export interface PracticeItem {
   id: string
   text: string
@@ -154,6 +166,7 @@ export interface Block {
     | 'fill-blanks'
     | 'scenario'
     | 'practice-checklist'
+    | 'technical-sheet'
   content: string
   order: number
   // image-specific
@@ -222,6 +235,9 @@ export interface Block {
   scenarioOptions?: ScenarioOption[]
   practiceMission?: string
   practiceItems?: PracticeItem[]
+  sheetSummary?: string
+  sheetMaterials?: SheetMaterial[]
+  sheetSteps?: SheetStep[]
 }
 
 export interface Unit {

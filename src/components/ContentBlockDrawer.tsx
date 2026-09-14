@@ -35,6 +35,8 @@ import {
   MatchingPair,
   ScenarioOption,
   PracticeItem,
+  SheetMaterial,
+  SheetStep,
   SequenceItem,
   TrueFalseItem,
 } from '@/types/course'
@@ -2075,6 +2077,71 @@ export function ContentBlockDrawer({
             distractors={formData.fillBlanksDistractors || []}
             onChange={(change) => setFormData({ ...formData, ...change })}
           />
+        )
+
+      case 'technical-sheet':
+        return (
+          <div className="space-y-5">
+            <FormField
+              label="Resumo"
+              optional
+              description="Uma linha com rendimento, tempo ou nível, se fizer sentido."
+            >
+              {(field) => (
+                <Input
+                  {...field}
+                  value={formData.sheetSummary || ''}
+                  onChange={(e) => setFormData({ ...formData, sheetSummary: e.target.value })}
+                  placeholder="Ex.: Rende 20 porções · 40 minutos"
+                />
+              )}
+            </FormField>
+
+            <ItemEditor<SheetMaterial>
+              label="Materiais"
+              itemLabel="Material"
+              emptyText="Nenhum material adicionado ainda."
+              items={formData.sheetMaterials || []}
+              createItem={() => ({ id: `mat-${Date.now()}`, name: '', quantity: '' })}
+              onChange={(sheetMaterials) => setFormData({ ...formData, sheetMaterials })}
+              fields={[
+                {
+                  key: 'name',
+                  label: 'Nome do material',
+                  required: true,
+                  placeholder: 'Ex.: Coco ralado',
+                },
+                {
+                  key: 'quantity',
+                  label: 'Quantidade',
+                  placeholder: 'Ex.: 500 g',
+                },
+                {
+                  key: 'image',
+                  label: 'Imagem do material',
+                  type: 'image',
+                },
+              ]}
+            />
+
+            <ItemEditor<SheetStep>
+              label="Passos"
+              itemLabel="Passo"
+              emptyText="Nenhum passo adicionado ainda."
+              items={formData.sheetSteps || []}
+              createItem={() => ({ id: `step-${Date.now()}`, text: '' })}
+              onChange={(sheetSteps) => setFormData({ ...formData, sheetSteps })}
+              fields={[
+                {
+                  key: 'text',
+                  label: 'Texto do passo',
+                  required: true,
+                  type: 'multiline',
+                  placeholder: 'Ex.: Misture o coco e o açúcar no tacho em fogo baixo',
+                },
+              ]}
+            />
+          </div>
         )
 
       case 'practice-checklist':

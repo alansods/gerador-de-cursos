@@ -5,6 +5,7 @@ import {
   CheckCheck,
   ChevronDown,
   ClipboardCheck,
+  ClipboardList,
   Heading2,
   Heading3,
   HelpCircle,
@@ -34,6 +35,8 @@ import type {
   FlipcardItem,
   OptionLetter,
   PracticeItem,
+  SheetMaterial,
+  SheetStep,
   ListItem,
   VideoQuestion,
   QuizQuestion,
@@ -778,6 +781,34 @@ export const BLOCK_CATALOG: Record<BlockType, BlockMeta> = {
     extractMedia: (b) => [b.scenarioAvatar],
     rewriteMedia: (b, mapper) => ({ scenarioAvatar: mapper(b.scenarioAvatar) ?? b.scenarioAvatar }),
   },
+  'technical-sheet': {
+    type: 'technical-sheet',
+    label: 'Ficha técnica',
+    pluralLabel: 'fichas técnicas',
+    marker: 'FICHATECNICA',
+    aiGeneratable: true,
+    requiresDocumentMedia: false,
+    validate: (b) => validSheetMaterials(b.sheetMaterials).length > 0,
+    icon: ClipboardList,
+    description: 'Materiais com quantidade e imagem, seguidos dos passos',
+    category: 'texto',
+    defaults: () => ({ sheetSummary: '', sheetMaterials: [], sheetSteps: [] }),
+    validateForm: (b) => {
+      if ((b.sheetMaterials?.length ?? 0) === 0) return 'Adicione pelo menos 1 material'
+      if (b.sheetMaterials?.some((material) => !hasText(material.name)))
+        return 'Todos os materiais devem ter nome'
+      if ((b.sheetSteps?.length ?? 0) === 0) return 'Adicione pelo menos 1 passo'
+      if (b.sheetSteps?.some((step) => !hasText(step.text)))
+        return 'Todos os passos devem ter texto'
+      return null
+    },
+    extractMedia: (b) => (b.sheetMaterials ?? []).map((material) => material.image),
+    rewriteMedia: (b, mapper) => ({
+      sheetMaterials: (b.sheetMaterials ?? []).map((material) =>
+        material.image ? { ...material, image: mapper(material.image) ?? material.image } : material
+      ),
+    }),
+  },
   'practice-checklist': {
     type: 'practice-checklist',
     label: 'Missão prática',
@@ -1058,6 +1089,12 @@ function repairBlock(block: Block): Block {
     )
   }
 
+  if (repaired.type === 'technical-sheet') {
+    repaired.sheetSummary = repaired.sheetSummary?.trim() ?? ''
+    repaired.sheetMaterials = validSheetMaterials(repaired.sheetMaterials)
+    repaired.sheetSteps = validSheetSteps(repaired.sheetSteps)
+  }
+
   if (repaired.type === 'practice-checklist') {
     repaired.practiceMission = repaired.practiceMission?.trim() ?? ''
     repaired.practiceItems = validPracticeItems(repaired.practiceItems)
@@ -1175,6 +1212,8 @@ function invalidReason(type: BlockType): string {
       return `com menos de ${MIN_SEQUENCE_ITEMS} passos com texto`
     case 'fill-blanks':
       return 'sem lacunas marcadas entre colchetes'
+    case 'technical-sheet':
+      return 'sem materiais com nome'
     case 'practice-checklist':
       return 'sem itens com texto'
     case 'scenario':
@@ -1245,6 +1284,26 @@ function validScenarioOptions(options?: ScenarioOption[]): ScenarioOption[] {
       text: option.text.trim(),
       outcome: scenarioOutcome(option.outcome),
       consequence: hasText(option.consequence) ? option.consequence.trim() : '',
+    }))
+}
+
+function validSheetMaterials(materials?: SheetMaterial[]): SheetMaterial[] {
+  return (materials ?? [])
+    .filter((material) => hasText(material?.name))
+    .map((material, index) => ({
+      id: hasText(material.id) ? material.id : `mat-${index + 1}`,
+      name: material.name.trim(),
+      quantity: hasText(material.quantity) ? material.quantity.trim() : '',
+      ...(isUrl(material.image) ? { image: material.image!.trim() } : {}),
+    }))
+}
+
+function validSheetSteps(steps?: SheetStep[]): SheetStep[] {
+  return (steps ?? [])
+    .filter((step) => hasText(step?.text))
+    .map((step, index) => ({
+      id: hasText(step.id) ? step.id : `step-${index + 1}`,
+      text: step.text.trim(),
     }))
 }
 

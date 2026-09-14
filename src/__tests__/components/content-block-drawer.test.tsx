@@ -382,6 +382,49 @@ describe('ContentBlockDrawer', () => {
     )
   })
 
+  it('creates a technical sheet with an optional material image and reopens it', async () => {
+    const user = userEvent.setup()
+    const onSave = mount('technical-sheet')
+
+    await user.click(screen.getByRole('button', { name: /salvar/i }))
+    expect(errorToast).toHaveBeenLastCalledWith('Adicione pelo menos 1 material')
+
+    const [addMaterial] = screen.getAllByRole('button', { name: /adicionar/i })
+    await user.click(addMaterial)
+    expect(screen.getByText(/Imagem do material/)).not.toHaveTextContent('*')
+    await user.type(screen.getByPlaceholderText(/Coco ralado/), 'Coco')
+    await user.type(screen.getByPlaceholderText('Ex.: 500 g'), '500 g')
+    await user.click(screen.getByRole('button', { name: /salvar/i }))
+    expect(errorToast).toHaveBeenLastCalledWith('Adicione pelo menos 1 passo')
+
+    await user.click(screen.getAllByRole('button', { name: /adicionar/i }).at(-1) as HTMLElement)
+    await user.type(screen.getByPlaceholderText(/Misture o coco/), 'Misture')
+    await user.click(screen.getByRole('button', { name: /salvar/i }))
+
+    const saved = onSave.mock.calls[0][0]
+    expect(saved.sheetMaterials).toEqual([
+      expect.objectContaining({ name: 'Coco', quantity: '500 g' }),
+    ])
+    expect(saved.sheetSteps).toEqual([expect.objectContaining({ text: 'Misture' })])
+
+    render(
+      <ContentBlockDrawer
+        open
+        onOpenChange={jest.fn()}
+        mode="edit"
+        blockData={saved}
+        onSave={jest.fn()}
+        onCancel={jest.fn()}
+      />
+    )
+    expect((screen.getAllByPlaceholderText(/Coco ralado/).at(-1) as HTMLInputElement).value).toBe(
+      'Coco'
+    )
+    expect(
+      (screen.getAllByPlaceholderText(/Misture o coco/).at(-1) as HTMLTextAreaElement).value
+    ).toBe('Misture')
+  })
+
   it('creates a practice mission and reopens it', async () => {
     const user = userEvent.setup()
     const onSave = mount('practice-checklist')

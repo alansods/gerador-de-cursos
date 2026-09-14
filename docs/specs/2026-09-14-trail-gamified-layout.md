@@ -745,6 +745,27 @@ Stage 17 record (`practice-checklist`, done):
   completed mission wrote `v2|…|100|||0-2` with no LMS score, the unit result showed +40 XP
   (step and mission), and reopening the LMS restored the checked list and the 40 XP.
 
+Stage 18 record (`technical-sheet`, done):
+
+- Data: optional `sheetSummary` (one line such as yield, time or level),
+  `sheetMaterials: { id, name, quantity, image }[]` (quantity and image optional) and
+  `sheetSteps: { id, text }[]`. Category `texto`, not scored. Lenient `validate` needs one
+  material with a name; `validateForm` needs one material and one step, all with text.
+  `repairBlock` trims the fields and keeps a material image only when it is an http(s) URL.
+  `extractMedia` and `rewriteMedia` cover every material image. Marker `FICHATECNICA`
+  (`Resumo:`, `Material N:`, `Quantidade do Material N:`, `Imagem do Material N:`, `Passo N:`);
+  `auto` mode uses it instead of two lists only when the text brings materials with quantities
+  and the steps that use them (recipe, assembly, preparation). The Trail prompt does not list
+  it, since it is content.
+- Player: summary on top; "Materiais" as a grid of cards (image on a white card, or a generic
+  icon when missing or broken; name and quantity), two columns on phones; "Passos" as a
+  numbered list in the theme accent. Nothing to operate, so no keyboard handling beyond reading
+  order.
+- Drawer: summary input, `ItemEditor` for materials (name, quantity, optional image) and for
+  steps.
+- Checked in the Vite player in Clássico (light), Sidebar (dark) and Trail (dark, 390 px), with
+  library SVGs as material images, a material without image and one with a broken image.
+
 #### Stage 19 — Manifest `set` field and consistency test
 
 - [ ] `set` added to every manifest item (`original` for the first set).

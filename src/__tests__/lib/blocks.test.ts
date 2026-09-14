@@ -620,6 +620,82 @@ describe('phase 2 blocks', () => {
   })
 })
 
+describe('technical-sheet block', () => {
+  it('normalizes AI materials and steps, keeping only real image URLs', () => {
+    const { course } = normalizeCourse(
+      courseWith([
+        {
+          type: 'technical-sheet',
+          content: '',
+          sheetSummary: ' Rende 20 porções ',
+          sheetMaterials: [
+            { id: '', name: ' Coco ', quantity: ' 500 g ', image: 'https://x.com/coco.png' },
+            { id: 'm2', name: 'Açúcar', image: 'acucar.png' },
+            { id: 'm3', name: '' },
+          ] as never,
+          sheetSteps: [
+            { id: '', text: ' Misture ' },
+            { id: 's2', text: '' },
+          ] as never,
+        },
+      ])
+    )
+
+    expect(course.units[0].blocks[0]).toMatchObject({
+      sheetSummary: 'Rende 20 porções',
+      sheetMaterials: [
+        { id: 'mat-1', name: 'Coco', quantity: '500 g', image: 'https://x.com/coco.png' },
+        { id: 'm2', name: 'Açúcar', quantity: '' },
+      ],
+      sheetSteps: [{ id: 'step-1', text: 'Misture' }],
+    })
+    expect(course.units[0].blocks[0].sheetMaterials?.[1]).not.toHaveProperty('image')
+    expect(BLOCK_CATALOG['technical-sheet'].category).toBe('texto')
+  })
+
+  it('discards a sheet without materials and validates the form', () => {
+    const { summary } = normalizeCourse(
+      courseWith([{ type: 'technical-sheet', content: '', sheetSteps: [{ id: 's', text: 'P' }] }])
+    )
+    const form = (patch: Partial<Block>) =>
+      BLOCK_CATALOG['technical-sheet'].validateForm({
+        ...createEmptyBlock('technical-sheet'),
+        ...patch,
+      } as Block)
+    const material = (name: string) => ({ id: name || 'empty', name, quantity: '' })
+    const step = (text: string) => ({ id: text || 'empty', text })
+
+    expect(summary.discarded[0].reason).toBe('sem materiais com nome')
+    expect(form({})).toBe('Adicione pelo menos 1 material')
+    expect(form({ sheetMaterials: [material('')] })).toBe('Todos os materiais devem ter nome')
+    expect(form({ sheetMaterials: [material('A')] })).toBe('Adicione pelo menos 1 passo')
+    expect(form({ sheetMaterials: [material('A')], sheetSteps: [step('')] })).toBe(
+      'Todos os passos devem ter texto'
+    )
+    expect(form({ sheetMaterials: [material('A')], sheetSteps: [step('P')] })).toBeNull()
+  })
+
+  it('bundles material images and points the block at the local copies', () => {
+    const block = {
+      ...createEmptyBlock('technical-sheet'),
+      sheetMaterials: [
+        { id: 'a', name: 'Coco', quantity: '', image: 'https://x.com/coco.png' },
+        { id: 'b', name: 'Açúcar', quantity: '' },
+      ],
+    } as Block
+
+    expect(extractBlockMedia(block)).toEqual(['https://x.com/coco.png'])
+    const rewritten = rewriteBlockMedia(
+      block,
+      new Map([['https://x.com/coco.png', 'images/coco.png']])
+    )
+    expect(rewritten.sheetMaterials?.map((material) => material.image)).toEqual([
+      'images/coco.png',
+      undefined,
+    ])
+  })
+})
+
 describe('practice-checklist block', () => {
   it('normalizes AI items and keeps the block out of the scored activities', () => {
     const { course } = normalizeCourse(

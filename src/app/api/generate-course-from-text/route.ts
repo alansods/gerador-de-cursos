@@ -447,6 +447,21 @@ Cada Unidade:
 }
 - De 2 a 8 itens; não é atividade avaliada e não substitui quiz
 
+### 26. technical-sheet — ficha técnica: materiais com quantidade, depois os passos
+{
+  "title": "string",
+  "type": "technical-sheet",
+  "content": "",
+  "sheetSummary": "Rendimento, tempo ou nível (opcional)",
+  "sheetMaterials": [
+    { "id": "mat-1", "name": "Material ou ingrediente", "quantity": "500 g", "image": "https://exemplo.com/material.png (opcional)" }
+  ],
+  "sheetSteps": [
+    { "id": "step-1", "text": "Um passo do preparo ou da montagem" }
+  ]
+}
+- "image" só com URL de imagem presente no documento; sem URL, omita o campo
+
 ## Regras gerais
 
 - Na Unidade, os blocos ficam SEMPRE em "blocks". "content" é campo do Bloco, nunca da Unidade
@@ -571,6 +586,11 @@ ${sharedStructure}
 - Bloco MISSAOPRATICA_INICIO...MISSAOPRATICA_FIM → type "practice-checklist"
   - "Missão:" → practiceMission
   - "Item N:" → practiceItems[N-1].text
+- Bloco FICHATECNICA_INICIO...FICHATECNICA_FIM → type "technical-sheet"
+  - "Resumo:" → sheetSummary
+  - "Material N:" → sheetMaterials[N-1].name; "Quantidade do Material N:" → sheetMaterials[N-1].quantity
+  - "Imagem do Material N:" → sheetMaterials[N-1].image (só com URL)
+  - "Passo N:" → sheetSteps[N-1].text
 - Conteúdo fora de marcadores → use title, subtitulo, paragrafo ou lista conforme adequado
 
 ## Texto para analisar
@@ -590,6 +610,7 @@ ${sharedStructure}
 - "Objetivos", "ao final desta unidade você será capaz de" → learning-objectives
 - Lista de ingredientes, materiais, características → list (listType: "unordered")
 - Passos numerados de um processo → list (listType: "ordered")
+- Materiais ou ingredientes com quantidades seguidos dos passos que os usam (receita, montagem, preparo) → UM bloco technical-sheet no lugar das duas listas, com os materiais, quantidades e passos do texto
 - Caso, exemplo de situação real ou dilema descrito no texto → UM bloco scenario com a situação do texto, 3 opções e a consequência de cada uma; nunca invente personagem nem imagem que o texto não traga
 - Definição ou regra com termos-chave (valores, nomes técnicos, prazos) → UM bloco fill-blanks com 1 a 3 frases copiadas do texto, de 2 a 5 lacunas no total e 2 distratores plausíveis
 - Procedimento em que a ordem é o que se aprende (montagem, preparo, sequência de segurança), com 3 a 8 passos → depois da lista, UM bloco sequence com os mesmos passos resumidos, na ordem correta
