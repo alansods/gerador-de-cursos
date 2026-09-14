@@ -89,6 +89,19 @@ describe('interactive image', () => {
     expect(screen.getByRole('dialog')).toBeInTheDocument()
   })
 
+  it('caps the image and its hotspots at the chosen size', () => {
+    render(<InteractiveImageBlock item={{ ...item, size: 'small' }} />)
+
+    expect(ponto(1).parentElement).toHaveClass('max-w-[min(20rem,100%)]')
+  })
+
+  it('centers the image and the caption', () => {
+    render(<InteractiveImageBlock item={item} />)
+
+    expect(ponto(1).parentElement).toHaveClass('mx-auto')
+    expect(screen.getByText('Partes do capacete')).toHaveClass('text-center')
+  })
+
   it('closes on Escape and returns the focus to the hotspot', async () => {
     const user = userEvent.setup()
     render(<InteractiveImageBlock item={item} />)

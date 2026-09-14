@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { X } from 'lucide-react'
 import { Block } from '@/types/course'
+import { maxImageWidth } from './ImageBlock'
 
 function panelPosition(x: number, y: number) {
   const ancoraX = x < 25 ? '0%' : x > 75 ? '-100%' : '-50%'
@@ -58,7 +59,7 @@ export function InteractiveImageBlock({ item }: { item: Block }) {
 
   return (
     <div className="mb-4 space-y-3">
-      <div className="relative inline-block max-w-full">
+      <div className={`relative mx-auto w-fit ${maxImageWidth(item.size)}`}>
         <img
           src={item.baseImage}
           alt={item.caption || 'Imagem interativa'}
@@ -123,7 +124,9 @@ export function InteractiveImageBlock({ item }: { item: Block }) {
       </div>
 
       {item.caption && (
-        <p className="text-sm italic text-gray-600 dark:text-gray-400">{item.caption}</p>
+        <p className="text-center text-sm italic text-gray-600 dark:text-gray-400">
+          {item.caption}
+        </p>
       )}
     </div>
   )

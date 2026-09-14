@@ -80,6 +80,7 @@ function FileField({
   onUrl,
   placeholderUrl = 'ou cole a URL aqui...',
   hint,
+  preview = true,
 }: {
   category: MediaCategory
   label: string
@@ -87,6 +88,7 @@ function FileField({
   onUrl: (url: string) => void
   placeholderUrl?: string
   hint?: React.ReactNode
+  preview?: boolean
 }) {
   const [sending, setSending] = useState(false)
   const [previewBroken, setPreviewBroken] = useState(false)
@@ -154,7 +156,7 @@ function FileField({
         className="text-sm"
       />
 
-      {category === 'image' && url && !previewBroken && (
+      {preview && category === 'image' && url && !previewBroken && (
         <img
           src={url}
           alt=""
@@ -422,6 +424,38 @@ function CategoryEditor({
   )
 }
 
+function ImageSizeField({
+  value,
+  onChange,
+}: {
+  value: Block['size']
+  onChange: (size: NonNullable<Block['size']>) => void
+}) {
+  return (
+    <FormField
+      label={
+        <>
+          Tamanho da Imagem <span className="text-red-500">*</span>
+        </>
+      }
+    >
+      <Select
+        value={value || ''}
+        onValueChange={(size) => onChange(size as NonNullable<Block['size']>)}
+      >
+        <SelectTrigger className="w-full">
+          <SelectValue placeholder="Selecione o tamanho" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="small">Pequena (25%)</SelectItem>
+          <SelectItem value="medium">Média (50%)</SelectItem>
+          <SelectItem value="large">Grande (100%)</SelectItem>
+        </SelectContent>
+      </Select>
+    </FormField>
+  )
+}
+
 function HotspotEditor({
   baseImage,
   hotspots,
@@ -434,57 +468,100 @@ function HotspotEditor({
   const update = (id: string, change: Partial<HotspotItem>) =>
     onChange(hotspots.map((h) => (h.id === id ? { ...h, ...change } : h)))
 
+  const areaRef = React.useRef<HTMLDivElement>(null)
+  const draggingId = React.useRef<string | null>(null)
+
+  const clampPercent = (value: number) => Math.min(100, Math.max(0, Math.round(value)))
+
+  const positionAt = (clientX: number, clientY: number) => {
+    const area = areaRef.current?.getBoundingClientRect()
+    if (!area || area.width === 0 || area.height === 0) return null
+    return {
+      x: clampPercent(((clientX - area.left) / area.width) * 100),
+      y: clampPercent(((clientY - area.top) / area.height) * 100),
+    }
+  }
+
   const addOnClick = (event: React.MouseEvent<HTMLDivElement>) => {
-    const area = event.currentTarget.getBoundingClientRect()
-    const x = Math.round(((event.clientX - area.left) / area.width) * 100)
-    const y = Math.round(((event.clientY - area.top) / area.height) * 100)
-    onChange([...hotspots, { id: `hotspot-${Date.now()}`, x, y, title: '', content: '' }])
+    const position = positionAt(event.clientX, event.clientY)
+    if (!position) return
+    onChange([...hotspots, { id: `hotspot-${Date.now()}`, ...position, title: '', content: '' }])
+  }
+
+  const startDrag = (event: React.PointerEvent<HTMLButtonElement>, id: string) => {
+    event.preventDefault()
+    event.stopPropagation()
+    event.currentTarget.focus()
+    event.currentTarget.setPointerCapture(event.pointerId)
+    draggingId.current = id
+  }
+
+  const drag = (event: React.PointerEvent<HTMLButtonElement>) => {
+    if (!draggingId.current) return
+    const position = positionAt(event.clientX, event.clientY)
+    if (position) update(draggingId.current, position)
+  }
+
+  const endDrag = (event: React.PointerEvent<HTMLButtonElement>) => {
+    draggingId.current = null
+    event.currentTarget.releasePointerCapture(event.pointerId)
+  }
+
+  const nudge = (event: React.KeyboardEvent<HTMLButtonElement>, hotspot: HotspotItem) => {
+    const step = event.shiftKey ? 5 : 1
+    const moves: Record<string, Partial<HotspotItem>> = {
+      ArrowLeft: { x: clampPercent(hotspot.x - step) },
+      ArrowRight: { x: clampPercent(hotspot.x + step) },
+      ArrowUp: { y: clampPercent(hotspot.y - step) },
+      ArrowDown: { y: clampPercent(hotspot.y + step) },
+    }
+    const move = moves[event.key]
+    if (!move) return
+    event.preventDefault()
+    update(hotspot.id, move)
   }
 
   return (
     <div className="space-y-4">
       <div>
-        <div className="mb-2 flex items-center justify-between">
-          <span className="text-sm font-medium text-foreground">
-            Pontos <span className="text-destructive">*</span>
-          </span>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() =>
-              onChange([
-                ...hotspots,
-                { id: `hotspot-${Date.now()}`, x: 50, y: 50, title: '', content: '' },
-              ])
-            }
-            className="text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-800 hover:bg-blue-50 dark:hover:bg-blue-950/20"
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            Adicionar
-          </Button>
-        </div>
+        <span className="mb-2 block text-sm font-medium text-foreground">
+          Pontos <span className="text-destructive">*</span>
+        </span>
         {baseImage ? (
           <>
+            <p className="mb-2 text-xs text-gray-500 dark:text-gray-400">
+              Clique na imagem onde deseja adicionar um ponto. Arraste um ponto para mudar a
+              posição.
+            </p>
             <div
+              ref={areaRef}
               onClick={addOnClick}
-              className="relative inline-block max-w-full cursor-crosshair rounded-lg border border-gray-200 dark:border-gray-700"
+              className="relative inline-block max-w-full cursor-crosshair select-none rounded-lg border border-gray-200 dark:border-gray-700"
             >
-              <img src={baseImage} alt="" className="max-w-full h-auto rounded-lg" />
+              <img
+                src={baseImage}
+                alt=""
+                draggable={false}
+                className="max-w-full h-auto rounded-lg"
+              />
               {hotspots.map((hotspot, index) => (
-                <span
+                <button
                   key={hotspot.id}
+                  type="button"
+                  aria-label={`Mover ponto ${index + 1}`}
                   style={{ left: `${hotspot.x}%`, top: `${hotspot.y}%` }}
-                  className="absolute flex h-6 w-6 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border-2 border-white bg-blue-600 text-xs font-bold text-white shadow"
+                  onPointerDown={(event) => startDrag(event, hotspot.id)}
+                  onPointerMove={drag}
+                  onPointerUp={endDrag}
+                  onPointerCancel={endDrag}
+                  onClick={(event) => event.stopPropagation()}
+                  onKeyDown={(event) => nudge(event, hotspot)}
+                  className="absolute flex h-6 w-6 -translate-x-1/2 -translate-y-1/2 cursor-grab touch-none items-center justify-center rounded-full border-2 border-white bg-blue-600 text-xs font-bold text-white shadow outline-none focus-visible:ring-2 focus-visible:ring-blue-400 active:cursor-grabbing"
                 >
                   {index + 1}
-                </span>
+                </button>
               ))}
             </div>
-            <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-              Clique sobre a imagem para adicionar um ponto, ou use os campos de posição de cada
-              ponto abaixo.
-            </p>
           </>
         ) : (
           <p className="text-sm text-gray-500 dark:text-gray-400 italic">
@@ -512,31 +589,6 @@ function HotspotEditor({
                 </Button>
               </div>
               <div className="space-y-3">
-                <div className="grid grid-cols-2 gap-3">
-                  {(['x', 'y'] as const).map((axis) => (
-                    <FormField
-                      key={axis}
-                      compact
-                      label={axis === 'x' ? 'Horizontal (%)' : 'Vertical (%)'}
-                      htmlFor={`${hotspot.id}-${axis}`}
-                    >
-                      <Input
-                        id={`${hotspot.id}-${axis}`}
-                        type="number"
-                        min={0}
-                        max={100}
-                        value={hotspot[axis]}
-                        onChange={(e) =>
-                          update(hotspot.id, {
-                            [axis]: Math.min(100, Math.max(0, Number(e.target.value) || 0)),
-                          })
-                        }
-                        className="text-sm"
-                      />
-                    </FormField>
-                  ))}
-                </div>
-
                 <Input
                   value={hotspot.title}
                   onChange={(e) => update(hotspot.id, { title: e.target.value })}
@@ -847,32 +899,10 @@ export function ContentBlockDrawer({
               </div>
             </FormField>
 
-            <FormField
-              label={
-                <>
-                  Tamanho da Imagem <span className="text-red-500">*</span>
-                </>
-              }
-            >
-              <Select
-                value={formData.size || ''}
-                onValueChange={(value) =>
-                  setFormData({
-                    ...formData,
-                    size: value as 'small' | 'medium' | 'large',
-                  })
-                }
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Selecione o tamanho" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="small">Pequena (25%)</SelectItem>
-                  <SelectItem value="medium">Média (50%)</SelectItem>
-                  <SelectItem value="large">Grande (100%)</SelectItem>
-                </SelectContent>
-              </Select>
-            </FormField>
+            <ImageSizeField
+              value={formData.size}
+              onChange={(size) => setFormData({ ...formData, size })}
+            />
 
             <FormField
               label={
@@ -1694,6 +1724,7 @@ export function ContentBlockDrawer({
             <FileField
               category="image"
               label="Imagem de fundo"
+              preview={false}
               url={formData.baseImage || ''}
               onUrl={(baseImage) => setFormData({ ...formData, baseImage })}
             />
@@ -1702,6 +1733,11 @@ export function ContentBlockDrawer({
               baseImage={formData.baseImage || ''}
               hotspots={formData.hotspots || []}
               onChange={(hotspots) => setFormData({ ...formData, hotspots })}
+            />
+
+            <ImageSizeField
+              value={formData.size}
+              onChange={(size) => setFormData({ ...formData, size })}
             />
 
             <FormField label="Legenda">

@@ -1,5 +1,5 @@
 import '@testing-library/jest-dom'
-import { render, screen } from '@testing-library/react'
+import { fireEvent, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { ContentBlockDrawer } from '@/components/ContentBlockDrawer'
 import { blockRegistry } from '@/components/course/blocks'
@@ -306,6 +306,96 @@ describe('ContentBlockDrawer', () => {
 
     mount('flipcard')
     expect(screen.queryByRole('button', { name: 'Meia largura' })).not.toBeInTheDocument()
+  })
+
+  it('offers the image size picker on the interactive image, starting at large', () => {
+    mount('interactive-image')
+
+    expect(screen.getByText('Tamanho da Imagem')).toBeInTheDocument()
+    expect(screen.getByRole('combobox')).toHaveTextContent('Grande (100%)')
+  })
+
+  it('shows the interactive base image only once, inside the hotspot editor', () => {
+    render(
+      <ContentBlockDrawer
+        open
+        onOpenChange={jest.fn()}
+        mode="edit"
+        blockData={{ type: 'interactive-image', baseImage: 'https://exemplo.com/a.png' }}
+        onSave={jest.fn()}
+        onCancel={jest.fn()}
+      />
+    )
+
+    const images = document.querySelectorAll('img[src="https://exemplo.com/a.png"]')
+    expect(images).toHaveLength(1)
+    expect(images[0].parentElement).toHaveClass('cursor-crosshair')
+  })
+
+  it('adds hotspots only by clicking the image, with the instruction shown', () => {
+    render(
+      <ContentBlockDrawer
+        open
+        onOpenChange={jest.fn()}
+        mode="edit"
+        blockData={{ type: 'interactive-image', baseImage: 'https://exemplo.com/a.png' }}
+        onSave={jest.fn()}
+        onCancel={jest.fn()}
+      />
+    )
+
+    expect(screen.queryByRole('button', { name: /adicionar/i })).not.toBeInTheDocument()
+    expect(screen.getByText(/Clique na imagem onde deseja adicionar um ponto/)).toBeInTheDocument()
+  })
+
+  it('moves a hotspot by dragging or with the arrows, with no position inputs', async () => {
+    const original = window.PointerEvent
+    window.PointerEvent = class extends MouseEvent {
+      pointerId: number
+      constructor(type: string, init: PointerEventInit = {}) {
+        super(type, init)
+        this.pointerId = init.pointerId ?? 0
+      }
+    } as typeof PointerEvent
+    const onSave = jest.fn()
+    render(
+      <ContentBlockDrawer
+        open
+        onOpenChange={jest.fn()}
+        mode="edit"
+        blockData={{
+          type: 'interactive-image',
+          baseImage: 'https://exemplo.com/a.png',
+          hotspots: [{ id: 'h1', x: 10, y: 10, title: 'Casco', content: '' }],
+        }}
+        onSave={onSave}
+        onCancel={jest.fn()}
+      />
+    )
+
+    expect(screen.queryByLabelText('Horizontal (%)')).not.toBeInTheDocument()
+    expect(screen.queryByLabelText('Vertical (%)')).not.toBeInTheDocument()
+
+    const marker = screen.getByRole('button', { name: /mover ponto 1/i })
+    const area = marker.parentElement as HTMLElement
+    area.getBoundingClientRect = () =>
+      ({ left: 0, top: 0, width: 200, height: 100, right: 200, bottom: 100 }) as DOMRect
+
+    fireEvent.pointerDown(marker, { pointerId: 1, clientX: 20, clientY: 10 })
+    fireEvent.pointerMove(marker, { pointerId: 1, clientX: 150, clientY: 25 })
+    fireEvent.pointerUp(marker, { pointerId: 1, clientX: 150, clientY: 25 })
+    window.PointerEvent = original
+    fireEvent.click(marker)
+    fireEvent.keyDown(marker, { key: 'ArrowDown' })
+    fireEvent.keyDown(marker, { key: 'ArrowLeft', shiftKey: true })
+
+    await userEvent.setup().click(screen.getByRole('button', { name: /salvar/i }))
+
+    expect(onSave).toHaveBeenCalledWith(
+      expect.objectContaining({
+        hotspots: [expect.objectContaining({ id: 'h1', x: 70, y: 26 })],
+      })
+    )
   })
 
   it('removes a list item without touching the others', async () => {

@@ -604,7 +604,7 @@ export const BLOCK_CATALOG: Record<BlockType, BlockMeta> = {
     icon: MousePointerClick,
     description: 'Imagem com pontos clicáveis',
     category: 'interativo',
-    defaults: () => ({ baseImage: '', hotspots: [] }),
+    defaults: () => ({ baseImage: '', hotspots: [], size: 'large' }),
     validateForm: (b) => {
       if (!hasText(b.baseImage)) return 'Adicione a imagem de fundo'
       if (!b.hotspots?.length) return 'Adicione pelo menos um ponto na imagem'
