@@ -15,6 +15,7 @@ import {
 import { Settings } from 'lucide-react'
 import { LayoutSelector } from '@/components/course/LayoutSelector'
 import { DEFAULT_LAYOUT_ID } from '@/components/course/layouts'
+import { TrailLayoutNotice } from '@/components/course/TrailLayoutNotice'
 import { FormField } from '@/components/ui/form-field'
 import { COURSE_CATEGORIES } from '@/lib/constants'
 import { isValidYouTubeUrl, extractYouTubeId } from '@/lib/youtube'
@@ -208,6 +209,11 @@ export function CourseSettingsDrawer({
                 onChange={(layout) => setLocalCourseData({ ...localCourseData, layout })}
               />
             </FormField>
+
+            <TrailLayoutNotice
+              selected={localCourseData.layout || DEFAULT_LAYOUT_ID}
+              previous={courseData.layout || DEFAULT_LAYOUT_ID}
+            />
 
             {courseId && canManageCollaborators && (
               <div className="border-t border-gray-200 dark:border-gray-700 pt-6">

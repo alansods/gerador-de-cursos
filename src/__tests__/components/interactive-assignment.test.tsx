@@ -33,6 +33,27 @@ async function assign(user: ReturnType<typeof userEvent.setup>, chip: string, ta
 }
 
 describe('matching', () => {
+  it('shows the item image inside the target and places a chip by tapping it', async () => {
+    const user = userEvent.setup()
+    const withImage: Block = {
+      ...matching,
+      matchingPairs: [
+        { id: 'par-1', left: 'NR-6', right: 'EPI', leftImage: 'https://exemplo.com/epi.png' },
+        { id: 'par-2', left: 'NR-5', right: 'CIPA' },
+      ],
+    }
+    const { container } = render(<MatchingBlock item={withImage} />)
+
+    const image = container.querySelector('img[src="https://exemplo.com/epi.png"]')
+    expect(image).toHaveAttribute('alt', '')
+    expect(container.querySelectorAll('img')).toHaveLength(1)
+
+    await user.click(screen.getByRole('button', { name: 'EPI' }))
+    await user.click(image as HTMLElement)
+
+    expect(image?.closest('div')).toHaveTextContent('EPI')
+  })
+
   it('matches without dragging, by click and keyboard alone', async () => {
     const user = userEvent.setup()
     render(<MatchingBlock item={matching} />)

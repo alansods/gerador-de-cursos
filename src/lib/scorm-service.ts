@@ -5,6 +5,7 @@ import fs from 'fs/promises'
 import path from 'path'
 // Course types shared with the app.
 import { Course } from '@/types/course'
+import { CREDITS_FILE_NAME } from '@/lib/illustration-library'
 
 /**
  * Escapa caracteres especiais HTML/XML para uso seguro em texto
@@ -65,7 +66,8 @@ ${fileList}
  */
 export async function generateSCORMFromPlayerDist(
   course: Course,
-  courseId?: string
+  courseId?: string,
+  credits?: string | null
 ): Promise<Buffer> {
   console.log(`📦 [SCORM Service] Generating from the Vite player for: ${course.title}`)
 
@@ -129,6 +131,11 @@ export async function generateSCORMFromPlayerDist(
     } catch {
       console.log(`   ℹ️ [SCORM Service] No local image to bundle`)
     }
+  }
+
+  if (credits) {
+    zip.file(CREDITS_FILE_NAME, Buffer.from(credits, 'utf-8'))
+    zipFiles.push(CREDITS_FILE_NAME)
   }
 
   // 4. Write imsmanifest.xml

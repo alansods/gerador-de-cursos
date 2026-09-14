@@ -50,10 +50,47 @@ export interface HotspotItem {
   content: string
 }
 
+export interface SheetMaterial {
+  id: string
+  name: string
+  quantity: string
+  image?: string
+}
+
+export interface SheetStep {
+  id: string
+  text: string
+}
+
+export interface PracticeItem {
+  id: string
+  text: string
+}
+
+export interface ScenarioOption {
+  id: string
+  text: string
+  outcome: 'correct' | 'incorrect'
+  consequence: string
+}
+
+export interface SequenceItem {
+  id: string
+  text: string
+}
+
+export interface TrueFalseItem {
+  id: string
+  statement: string
+  answer: 'true' | 'false'
+  explanation: string
+}
+
 export interface MatchingPair {
   id: string
   left: string
   right: string
+  leftImage?: string
 }
 
 export interface CategorizedItem {
@@ -124,6 +161,12 @@ export interface Block {
     | 'matching'
     | 'categorization'
     | 'interactive-video'
+    | 'true-false'
+    | 'sequence'
+    | 'fill-blanks'
+    | 'scenario'
+    | 'practice-checklist'
+    | 'technical-sheet'
   content: string
   order: number
   // image-specific
@@ -177,10 +220,24 @@ export interface Block {
   // interactive-image-specific
   baseImage?: string
   hotspots?: HotspotItem[]
+  hotspotMode?: 'explore' | 'find'
   // matching-specific
   matchingPairs?: MatchingPair[]
   // categorization-specific
   categories?: CategoryItem[]
+  trueFalseItems?: TrueFalseItem[]
+  sequenceItems?: SequenceItem[]
+  fillBlanksText?: string
+  fillBlanksDistractors?: string[]
+  scenarioCharacter?: string
+  scenarioAvatar?: string
+  scenarioSituation?: string
+  scenarioOptions?: ScenarioOption[]
+  practiceMission?: string
+  practiceItems?: PracticeItem[]
+  sheetSummary?: string
+  sheetMaterials?: SheetMaterial[]
+  sheetSteps?: SheetStep[]
 }
 
 export interface Unit {
@@ -190,6 +247,8 @@ export interface Unit {
   description: string
   blocks: Block[]
   order: number
+  badgeName?: string
+  badgeIcon?: string
 }
 
 export interface Course {

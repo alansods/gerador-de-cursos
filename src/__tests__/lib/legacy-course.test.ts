@@ -120,6 +120,11 @@ describe('upgradeUnits', () => {
     expect(upgradeUnits(undefined)).toEqual([])
     expect(upgradeUnits({})).toEqual([])
   })
+  it('keeps the trail badge fields of a unit', () => {
+    expect(
+      upgradeUnits([{ title: 'U', blocks: [], badgeName: 'Mãos limpas', badgeIcon: 'sparkles' }])
+    ).toEqual([{ title: 'U', blocks: [], badgeName: 'Mãos limpas', badgeIcon: 'sparkles' }])
+  })
 })
 
 describe('upgradeBlock', () => {

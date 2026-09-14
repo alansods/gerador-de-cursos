@@ -3,17 +3,22 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { Course } from '@/types/course'
 import {
+  applyQuizResult,
   calculateScore,
   calculateProgress,
+  completePractice as completePracticeState,
+  completeStep as completeStepState,
   quizKey,
   createEmptyState,
   decodeSuspendData,
   encodeSuspendData,
   formatSessionTime,
   hashCourse,
+  type CompletionRule,
   type ProgressState,
   type ProgressSummary,
 } from '@/lib/scorm-progress'
+import { trailCompletionRule } from '@/lib/trail-progress'
 
 interface WrapperScorm {
   getLocation?: () => string
@@ -41,6 +46,10 @@ function getScorm(): WrapperScorm | null {
 export function useScormProgress(course: Course) {
   const units = useMemo(() => course.units ?? [], [course.units])
   const hash = useMemo(() => hashCourse({ id: course.id, units }), [course.id, units])
+  const rule = useMemo<CompletionRule>(
+    () => (course.layout === 'trail' ? trailCompletionRule({ units }) : { kind: 'units' }),
+    [course.layout, units]
+  )
 
   const [currentUnit, setCurrentUnit] = useState<string | null>(null)
   const [state, setState] = useState<ProgressState>(() => createEmptyState(units.length))
@@ -59,7 +68,7 @@ export function useScormProgress(course: Course) {
 
       scorm.setSuspendData(encodeSuspendData(next, hash))
 
-      const summary = calculateProgress(next)
+      const summary = calculateProgress(next, rule)
       const score = calculateScore(next)
       if (score !== null) scorm.setScore?.(score)
 
@@ -74,7 +83,7 @@ export function useScormProgress(course: Course) {
       if (timerCommit.current) clearTimeout(timerCommit.current)
       timerCommit.current = setTimeout(() => scorm.save?.(), COMMIT_DELAY)
     },
-    [hash]
+    [hash, rule]
   )
 
   useEffect(() => {
@@ -84,7 +93,7 @@ export function useScormProgress(course: Course) {
     const restored = decodeSuspendData(scorm.getSuspendData?.(), hash, units.length)
     if (restored) {
       setState(restored)
-      completedRef.current = calculateProgress(restored).completed
+      completedRef.current = calculateProgress(restored, rule).completed
     }
 
     const salva = scorm.getLocation?.()
@@ -98,7 +107,7 @@ export function useScormProgress(course: Course) {
     }
 
     scorm.save?.()
-  }, [hash, units])
+  }, [hash, units, rule])
 
   useEffect(() => {
     let finished = false
@@ -150,24 +159,73 @@ export function useScormProgress(course: Course) {
   )
 
   const recordQuiz = useCallback(
-    (unitId: string, blockIndex: number, correctCount: number, total: number) => {
+    (
+      unitId: string,
+      blockIndex: number,
+      correctCount: number,
+      total: number,
+      firstTry?: boolean
+    ) => {
       const unitIndex = units.findIndex((u) => u.id === unitId)
       if (unitIndex < 0 || total <= 0) return
 
-      const next: ProgressState = {
-        ...stateRef.current,
-        quizzes: {
-          ...stateRef.current.quizzes,
-          [quizKey(unitIndex, blockIndex)]: { correct: correctCount, total },
-        },
-      }
+      const next = applyQuizResult(
+        stateRef.current,
+        quizKey(unitIndex, blockIndex),
+        correctCount,
+        total,
+        firstTry
+      )
       setState(next)
       saveState(next)
     },
     [units, saveState]
   )
 
-  const progress: ProgressSummary = useMemo(() => calculateProgress(state), [state])
+  const completeStep = useCallback(
+    (unitId: string, stepIndex: number) => {
+      const unitIndex = units.findIndex((u) => u.id === unitId)
+      if (unitIndex < 0) return
 
-  return { currentUnit, navigate, recordQuiz, progress, state }
+      const next = completeStepState(stateRef.current, unitIndex, stepIndex)
+      if (next === stateRef.current) return
+      setState(next)
+      saveState(next)
+    },
+    [units, saveState]
+  )
+
+  const completePractice = useCallback(
+    (unitId: string, blockIndex: number) => {
+      const unitIndex = units.findIndex((u) => u.id === unitId)
+      if (unitIndex < 0) return
+
+      const next = completePracticeState(stateRef.current, quizKey(unitIndex, blockIndex))
+      if (next === stateRef.current) return
+      setState(next)
+      saveState(next)
+    },
+    [units, saveState]
+  )
+
+  const isPracticeCompleted = useCallback(
+    (unitId: string, blockIndex: number) => {
+      const unitIndex = units.findIndex((u) => u.id === unitId)
+      return unitIndex >= 0 && (state.practices ?? []).includes(quizKey(unitIndex, blockIndex))
+    },
+    [units, state.practices]
+  )
+
+  const progress: ProgressSummary = useMemo(() => calculateProgress(state, rule), [state, rule])
+
+  return {
+    currentUnit,
+    navigate,
+    recordQuiz,
+    completeStep,
+    completePractice,
+    isPracticeCompleted,
+    progress,
+    state,
+  }
 }

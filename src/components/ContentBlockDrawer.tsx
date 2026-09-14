@@ -18,18 +18,41 @@ import {
   HelpCircle,
   Upload,
   Loader2,
+  Images,
   Plus,
   Trash2,
   GalleryHorizontal,
   LayoutGrid,
+  ArrowUp,
+  ArrowDown,
 } from 'lucide-react'
 import Image from 'next/image'
-import { Block, AccordionItem, ListItem, CategoryItem, HotspotItem } from '@/types/course'
+import {
+  Block,
+  AccordionItem,
+  ListItem,
+  CategoryItem,
+  HotspotItem,
+  MatchingPair,
+  ScenarioOption,
+  PracticeItem,
+  SheetMaterial,
+  SheetStep,
+  SequenceItem,
+  TrueFalseItem,
+} from '@/types/course'
 import { BLOCK_CATALOG, cardsFlipcard, createEmptyBlock, videoSource } from '@/lib/blocks'
 import { MEDIA_POLICY, type MediaCategory } from '@/lib/media'
 import { uploadFile } from '@/lib/client-upload'
 import { extractYouTubeId } from '@/lib/youtube'
+import { cleanDistractors, fillBlanksAnswers } from '@/lib/fill-blanks'
 import { RichTextEditor } from './RichTextEditor'
+import { IllustrationPicker } from './IllustrationPicker'
+import {
+  ILLUSTRATION_CARD_COLOR,
+  illustrationCardStyle,
+  isIllustrationSource,
+} from '@/lib/illustration-paths'
 import { toast } from 'sonner'
 
 interface ContentBlockDrawerProps {
@@ -81,6 +104,7 @@ function FileField({
   placeholderUrl = 'ou cole a URL aqui...',
   hint,
   preview = true,
+  required = true,
 }: {
   category: MediaCategory
   label: string
@@ -89,9 +113,11 @@ function FileField({
   placeholderUrl?: string
   hint?: React.ReactNode
   preview?: boolean
+  required?: boolean
 }) {
   const [sending, setSending] = useState(false)
   const [previewBroken, setPreviewBroken] = useState(false)
+  const [pickerOpen, setPickerOpen] = useState(false)
   const fileInput = React.useRef<HTMLInputElement>(null)
   const policy = MEDIA_POLICY[category]
 
@@ -117,7 +143,7 @@ function FileField({
     <FormField
       label={
         <>
-          {label} <span className="text-destructive">*</span>
+          {label} {required && <span className="text-destructive">*</span>}
         </>
       }
     >
@@ -136,6 +162,12 @@ function FileField({
           )}
           {sending ? 'Enviando...' : 'Escolher arquivo'}
         </Button>
+        {category === 'image' && (
+          <Button type="button" variant="outline" size="sm" onClick={() => setPickerOpen(true)}>
+            <Images className="h-4 w-4 mr-2" />
+            Escolher do acervo
+          </Button>
+        )}
         <input
           ref={fileInput}
           type="file"
@@ -162,10 +194,22 @@ function FileField({
           alt=""
           onError={() => setPreviewBroken(true)}
           className="max-h-40 w-auto rounded-md border border-border object-contain"
+          style={
+            isIllustrationSource(url) ? { backgroundColor: ILLUSTRATION_CARD_COLOR } : undefined
+          }
         />
       )}
 
       <p className="text-xs text-muted-foreground">{hint ?? policy.sizeHint}</p>
+
+      {category === 'image' && (
+        <IllustrationPicker
+          open={pickerOpen}
+          onOpenChange={setPickerOpen}
+          value={url}
+          onSelect={onUrl}
+        />
+      )}
     </FormField>
   )
 }
@@ -206,6 +250,7 @@ function ItemEditor<T extends { id: string }>({
   createItem,
   onChange,
   emptyText: empty,
+  reorderable = false,
 }: {
   label: string
   itemLabel: string
@@ -214,9 +259,18 @@ function ItemEditor<T extends { id: string }>({
   createItem: () => T
   onChange: (items: T[]) => void
   emptyText: string
+  reorderable?: boolean
 }) {
   const update = (id: string, key: string, value: string) =>
     onChange(items.map((item) => (item.id === id ? { ...item, [key]: value } : item)))
+
+  const moveItem = (index: number, offset: number) => {
+    const target = index + offset
+    if (target < 0 || target >= items.length) return
+    const next = [...items]
+    ;[next[index], next[target]] = [next[target], next[index]]
+    onChange(next)
+  }
 
   return (
     <div className="space-y-4">
@@ -244,15 +298,41 @@ function ItemEditor<T extends { id: string }>({
                 <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">
                   {itemLabel} {index + 1}
                 </span>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => onChange(items.filter((another) => another.id !== item.id))}
-                  className="text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-950/20"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
+                <div className="flex items-center gap-1">
+                  {reorderable && (
+                    <>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        disabled={index === 0}
+                        aria-label={`Mover ${itemLabel.toLowerCase()} ${index + 1} para cima`}
+                        onClick={() => moveItem(index, -1)}
+                      >
+                        <ArrowUp className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        disabled={index === items.length - 1}
+                        aria-label={`Mover ${itemLabel.toLowerCase()} ${index + 1} para baixo`}
+                        onClick={() => moveItem(index, 1)}
+                      >
+                        <ArrowDown className="h-4 w-4" />
+                      </Button>
+                    </>
+                  )}
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => onChange(items.filter((another) => another.id !== item.id))}
+                    className="text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-950/20"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
               </div>
               <div className="space-y-3">
                 {fields
@@ -287,6 +367,7 @@ function ItemEditor<T extends { id: string }>({
                         <FileField
                           category="image"
                           label={field.label}
+                          required={!!field.required}
                           url={String(item[field.key] ?? '')}
                           onUrl={(url) => update(item.id, field.key, url)}
                         />
@@ -453,6 +534,142 @@ function ImageSizeField({
         </SelectContent>
       </Select>
     </FormField>
+  )
+}
+
+const HOTSPOT_MODES: {
+  value: NonNullable<Block['hotspotMode']>
+  label: string
+  description: string
+}[] = [
+  {
+    value: 'explore',
+    label: 'Explorar',
+    description: 'Os pontos ficam visíveis e o aluno clica para ler cada um.',
+  },
+  {
+    value: 'find',
+    label: 'Encontrar',
+    description:
+      'Os pontos ficam escondidos até o aluno tocar no lugar certo. Vale como atividade avaliada.',
+  },
+]
+
+function HotspotModeField({
+  value,
+  onChange,
+}: {
+  value: Block['hotspotMode']
+  onChange: (mode: NonNullable<Block['hotspotMode']>) => void
+}) {
+  const current = value ?? 'explore'
+
+  return (
+    <fieldset className="space-y-2">
+      <legend className="text-sm font-medium text-gray-900 dark:text-gray-100">Modo</legend>
+      <div className="grid gap-2 sm:grid-cols-2">
+        {HOTSPOT_MODES.map((mode) => (
+          <label
+            key={mode.value}
+            className={`flex cursor-pointer items-start gap-2 rounded-lg border p-3 text-sm transition-colors has-focus-visible:ring-2 has-focus-visible:ring-blue-600 ${
+              current === mode.value
+                ? 'border-blue-600 bg-blue-50 dark:bg-blue-950/40'
+                : 'border-gray-200 hover:border-blue-300 dark:border-gray-700'
+            }`}
+          >
+            <input
+              type="radio"
+              name="hotspot-mode"
+              value={mode.value}
+              checked={current === mode.value}
+              onChange={() => onChange(mode.value)}
+              className="mt-0.5 accent-blue-600"
+            />
+            <span>
+              <span className="block font-medium text-gray-900 dark:text-gray-100">
+                {mode.label}
+              </span>
+              <span className="block text-xs text-gray-600 dark:text-gray-400">
+                {mode.description}
+              </span>
+            </span>
+          </label>
+        ))}
+      </div>
+    </fieldset>
+  )
+}
+
+function FillBlanksFields({
+  text,
+  distractors,
+  onChange,
+}: {
+  text: string
+  distractors: string[]
+  onChange: (change: Pick<Block, 'fillBlanksText' | 'fillBlanksDistractors'>) => void
+}) {
+  const [rawDistractors, setRawDistractors] = useState(distractors.join(', '))
+  const answers = fillBlanksAnswers(text)
+
+  return (
+    <div className="space-y-5">
+      <FormField
+        label={
+          <>
+            Texto com lacunas <span className="text-destructive">*</span>
+          </>
+        }
+        description="Escreva entre colchetes cada palavra que o aluno deve completar. Ex.: Lave as mãos por [20] segundos com [sabão]."
+      >
+        {(field) => (
+          <Textarea
+            {...field}
+            value={text}
+            rows={5}
+            onChange={(e) =>
+              onChange({
+                fillBlanksText: e.target.value,
+                fillBlanksDistractors: cleanDistractors(
+                  rawDistractors,
+                  fillBlanksAnswers(e.target.value)
+                ),
+              })
+            }
+            placeholder="Lave as mãos por [20] segundos com [sabão]."
+          />
+        )}
+      </FormField>
+
+      <p className="text-xs text-muted-foreground" aria-live="polite">
+        {answers.length === 0
+          ? 'Nenhuma lacuna marcada ainda.'
+          : `${answers.length} ${answers.length === 1 ? 'lacuna' : 'lacunas'}: ${answers
+              .map((answer) => answer || '(vazia)')
+              .join(', ')}`}
+      </p>
+
+      <FormField
+        label="Palavras extras"
+        optional
+        description="Palavras erradas, mas plausíveis, separadas por vírgula. Aparecem junto das respostas."
+      >
+        {(field) => (
+          <Input
+            {...field}
+            value={rawDistractors}
+            onChange={(e) => {
+              setRawDistractors(e.target.value)
+              onChange({
+                fillBlanksText: text,
+                fillBlanksDistractors: cleanDistractors(e.target.value, answers),
+              })
+            }}
+            placeholder="Ex.: 10, álcool"
+          />
+        )}
+      </FormField>
+    </div>
   )
 }
 
@@ -623,6 +840,7 @@ export function ContentBlockDrawer({
 
   const [formData, setFormData] = useState<Partial<Block>>(prepareForm(blockData))
   const [isUploadingImage, setIsUploadingImage] = useState(false)
+  const [imagePickerOpen, setImagePickerOpen] = useState(false)
   const [imagePreviewUrl, setImagePreviewUrl] = useState<string | null>(null)
 
   useEffect(() => {
@@ -869,12 +1087,34 @@ export function ContentBlockDrawer({
                   </div>
                 </div>
 
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full"
+                  onClick={() => setImagePickerOpen(true)}
+                >
+                  <Images className="h-4 w-4 mr-2" />
+                  Escolher do acervo
+                </Button>
+                <IllustrationPicker
+                  open={imagePickerOpen}
+                  onOpenChange={setImagePickerOpen}
+                  value={formData.content || ''}
+                  onSelect={(path) => {
+                    setFormData({ ...formData, content: path })
+                    setImagePreviewUrl(path)
+                  }}
+                />
+
                 <div>
                   <Input
                     value={formData.content || ''}
                     onChange={(e) => {
                       setFormData({ ...formData, content: e.target.value })
-                      if (e.target.value.startsWith('http')) {
+                      if (
+                        e.target.value.startsWith('http') ||
+                        isIllustrationSource(e.target.value)
+                      ) {
                         setImagePreviewUrl(e.target.value)
                       } else {
                         setImagePreviewUrl(null)
@@ -892,6 +1132,7 @@ export function ContentBlockDrawer({
                       width={300}
                       height={160}
                       className="h-auto rounded-lg border border-gray-300 dark:border-gray-600 max-h-40 object-contain bg-gray-50 dark:bg-gray-800"
+                      style={illustrationCardStyle(imagePreviewUrl || formData.content)}
                       onError={() => setImagePreviewUrl(null)}
                     />
                   </div>
@@ -1729,6 +1970,11 @@ export function ContentBlockDrawer({
               onUrl={(baseImage) => setFormData({ ...formData, baseImage })}
             />
 
+            <HotspotModeField
+              value={formData.hotspotMode}
+              onChange={(hotspotMode) => setFormData({ ...formData, hotspotMode })}
+            />
+
             <HotspotEditor
               baseImage={formData.baseImage || ''}
               hotspots={formData.hotspots || []}
@@ -1752,7 +1998,7 @@ export function ContentBlockDrawer({
 
       case 'matching':
         return (
-          <ItemEditor
+          <ItemEditor<MatchingPair>
             label="Pares"
             itemLabel="Par"
             emptyText="Nenhum par adicionado ainda."
@@ -1765,6 +2011,11 @@ export function ContentBlockDrawer({
                 label: 'Item fixo',
                 required: true,
                 placeholder: 'Ex.: Água',
+              },
+              {
+                key: 'leftImage',
+                label: 'Imagem do item fixo',
+                type: 'image',
               },
               {
                 key: 'right',
@@ -1781,6 +2032,269 @@ export function ContentBlockDrawer({
           <CategoryEditor
             categories={formData.categories || []}
             onChange={(categories) => setFormData({ ...formData, categories })}
+          />
+        )
+
+      case 'scenario':
+        return (
+          <div className="space-y-5">
+            <FormField
+              label="Personagem"
+              optional
+              description="Nome e papel de quem vive a situação."
+            >
+              {(field) => (
+                <Input
+                  {...field}
+                  value={formData.scenarioCharacter || ''}
+                  onChange={(e) => setFormData({ ...formData, scenarioCharacter: e.target.value })}
+                  placeholder="Ex.: Seu João, encarregado da obra"
+                />
+              )}
+            </FormField>
+
+            <FileField
+              category="image"
+              label="Imagem do personagem"
+              required={false}
+              url={formData.scenarioAvatar || ''}
+              onUrl={(scenarioAvatar) => setFormData({ ...formData, scenarioAvatar })}
+            />
+
+            <FormField
+              label={
+                <>
+                  Situação <span className="text-destructive">*</span>
+                </>
+              }
+              description="A fala ou o problema que pede uma decisão do aluno."
+            >
+              {(field) => (
+                <Textarea
+                  {...field}
+                  value={formData.scenarioSituation || ''}
+                  rows={4}
+                  onChange={(e) => setFormData({ ...formData, scenarioSituation: e.target.value })}
+                  placeholder="Ex.: Um colega vai subir no andaime sem o cinto. O que você faz?"
+                />
+              )}
+            </FormField>
+
+            <ItemEditor<ScenarioOption>
+              label="Opções"
+              itemLabel="Opção"
+              emptyText="Nenhuma opção adicionada ainda."
+              items={formData.scenarioOptions || []}
+              createItem={() => ({
+                id: `op-${Date.now()}`,
+                text: '',
+                outcome: 'incorrect',
+                consequence: '',
+              })}
+              onChange={(scenarioOptions) => setFormData({ ...formData, scenarioOptions })}
+              fields={[
+                {
+                  key: 'text',
+                  label: 'Escolha',
+                  required: true,
+                  placeholder: 'Ex.: Peço que ele use o cinto antes de subir',
+                },
+                {
+                  key: 'outcome',
+                  label: 'Resultado',
+                  required: true,
+                  type: 'select',
+                  options: [
+                    { value: 'correct', label: 'Correta' },
+                    { value: 'incorrect', label: 'Incorreta' },
+                  ],
+                },
+                {
+                  key: 'consequence',
+                  label: 'Consequência',
+                  type: 'multiline',
+                  placeholder: 'O que acontece com essa escolha',
+                },
+              ]}
+            />
+          </div>
+        )
+
+      case 'fill-blanks':
+        return (
+          <FillBlanksFields
+            text={formData.fillBlanksText || ''}
+            distractors={formData.fillBlanksDistractors || []}
+            onChange={(change) => setFormData({ ...formData, ...change })}
+          />
+        )
+
+      case 'technical-sheet':
+        return (
+          <div className="space-y-5">
+            <FormField
+              label="Resumo"
+              optional
+              description="Uma linha com rendimento, tempo ou nível, se fizer sentido."
+            >
+              {(field) => (
+                <Input
+                  {...field}
+                  value={formData.sheetSummary || ''}
+                  onChange={(e) => setFormData({ ...formData, sheetSummary: e.target.value })}
+                  placeholder="Ex.: Rende 20 porções · 40 minutos"
+                />
+              )}
+            </FormField>
+
+            <ItemEditor<SheetMaterial>
+              label="Materiais"
+              itemLabel="Material"
+              emptyText="Nenhum material adicionado ainda."
+              items={formData.sheetMaterials || []}
+              createItem={() => ({ id: `mat-${Date.now()}`, name: '', quantity: '' })}
+              onChange={(sheetMaterials) => setFormData({ ...formData, sheetMaterials })}
+              fields={[
+                {
+                  key: 'name',
+                  label: 'Nome do material',
+                  required: true,
+                  placeholder: 'Ex.: Coco ralado',
+                },
+                {
+                  key: 'quantity',
+                  label: 'Quantidade',
+                  placeholder: 'Ex.: 500 g',
+                },
+                {
+                  key: 'image',
+                  label: 'Imagem do material',
+                  type: 'image',
+                },
+              ]}
+            />
+
+            <ItemEditor<SheetStep>
+              label="Passos"
+              itemLabel="Passo"
+              emptyText="Nenhum passo adicionado ainda."
+              items={formData.sheetSteps || []}
+              createItem={() => ({ id: `step-${Date.now()}`, text: '' })}
+              onChange={(sheetSteps) => setFormData({ ...formData, sheetSteps })}
+              fields={[
+                {
+                  key: 'text',
+                  label: 'Texto do passo',
+                  required: true,
+                  type: 'multiline',
+                  placeholder: 'Ex.: Misture o coco e o açúcar no tacho em fogo baixo',
+                },
+              ]}
+            />
+          </div>
+        )
+
+      case 'practice-checklist':
+        return (
+          <div className="space-y-5">
+            <FormField
+              label={
+                <>
+                  Missão <span className="text-destructive">*</span>
+                </>
+              }
+              description="O que o aluno deve fazer na prática."
+            >
+              {(field) => (
+                <Textarea
+                  {...field}
+                  value={formData.practiceMission || ''}
+                  rows={3}
+                  onChange={(e) => setFormData({ ...formData, practiceMission: e.target.value })}
+                  placeholder="Ex.: Vista seus EPIs antes de entrar no canteiro"
+                />
+              )}
+            </FormField>
+
+            <ItemEditor<PracticeItem>
+              label="Itens da missão"
+              itemLabel="Item"
+              emptyText="Nenhum item adicionado ainda."
+              items={formData.practiceItems || []}
+              createItem={() => ({ id: `task-${Date.now()}`, text: '' })}
+              onChange={(practiceItems) => setFormData({ ...formData, practiceItems })}
+              fields={[
+                {
+                  key: 'text',
+                  label: 'Texto do item',
+                  required: true,
+                  placeholder: 'Ex.: Capacete com a jugular ajustada',
+                },
+              ]}
+            />
+          </div>
+        )
+
+      case 'sequence':
+        return (
+          <ItemEditor<SequenceItem>
+            label="Passos, na ordem correta"
+            itemLabel="Passo"
+            emptyText="Nenhum passo adicionado ainda."
+            items={formData.sequenceItems || []}
+            createItem={() => ({ id: `seq-${Date.now()}`, text: '' })}
+            onChange={(sequenceItems) => setFormData({ ...formData, sequenceItems })}
+            reorderable
+            fields={[
+              {
+                key: 'text',
+                label: 'Texto do passo',
+                required: true,
+                placeholder: 'Ex.: Ajustar a carneira ao tamanho da cabeça',
+              },
+            ]}
+          />
+        )
+
+      case 'true-false':
+        return (
+          <ItemEditor<TrueFalseItem>
+            label="Afirmações"
+            itemLabel="Afirmação"
+            emptyText="Nenhuma afirmação adicionada ainda."
+            items={formData.trueFalseItems || []}
+            createItem={() => ({
+              id: `vf-${Date.now()}`,
+              statement: '',
+              answer: 'true',
+              explanation: '',
+            })}
+            onChange={(trueFalseItems) => setFormData({ ...formData, trueFalseItems })}
+            fields={[
+              {
+                key: 'statement',
+                label: 'Afirmação',
+                required: true,
+                type: 'multiline',
+                placeholder: 'Ex.: O EPI deve ser fornecido gratuitamente pelo empregador.',
+              },
+              {
+                key: 'answer',
+                label: 'Resposta',
+                required: true,
+                type: 'select',
+                options: [
+                  { value: 'true', label: 'Verdadeiro' },
+                  { value: 'false', label: 'Falso' },
+                ],
+              },
+              {
+                key: 'explanation',
+                label: 'Explicação',
+                type: 'multiline',
+                placeholder: 'Mostrada depois da resposta',
+              },
+            ]}
           />
         )
 

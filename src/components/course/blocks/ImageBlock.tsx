@@ -1,4 +1,5 @@
 import { Block } from '@/types/course'
+import { illustrationCardStyle, isIllustrationSource } from '@/lib/illustration-paths'
 
 /**
  * O tamanho escolhido é um teto, não uma largura: `min(..., 100%)` impede que a imagem
@@ -18,11 +19,14 @@ export function ImageBlock({ item }: { item: Block }) {
           Fonte: {item.source}
         </p>
       )}
-      <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+      <div className="block-surface p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
         <img
           src={item.content}
           alt={item.caption || 'Imagem'}
-          className={`h-auto object-contain rounded-lg mx-auto ${maxImageWidth(item.size)}`}
+          className={`h-auto object-contain rounded-lg mx-auto ${maxImageWidth(item.size)} ${
+            isIllustrationSource(item.content) ? 'rounded-xl p-4' : ''
+          }`}
+          style={illustrationCardStyle(item.content)}
           onError={(e) => {
             e.currentTarget.style.display = 'none'
           }}

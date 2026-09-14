@@ -1,6 +1,7 @@
 import '@testing-library/jest-dom'
 import { fireEvent, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { ContentBlockDrawer } from '@/components/ContentBlockDrawer'
 import { blockRegistry } from '@/components/course/blocks'
 import { BLOCK_CATALOG, BLOCK_TYPES, createEmptyBlock } from '@/lib/blocks'
@@ -313,6 +314,431 @@ describe('ContentBlockDrawer', () => {
 
     expect(screen.getByText('Tamanho da Imagem')).toBeInTheDocument()
     expect(screen.getByRole('combobox')).toHaveTextContent('Grande (100%)')
+  })
+
+  it('starts the interactive image in explore mode and saves the find mode', async () => {
+    const user = userEvent.setup()
+    const onSave = jest.fn()
+    render(
+      <ContentBlockDrawer
+        open
+        onOpenChange={jest.fn()}
+        mode="edit"
+        blockData={{
+          type: 'interactive-image',
+          baseImage: 'https://exemplo.com/a.png',
+          hotspots: [{ id: 'h1', x: 10, y: 10, title: 'Casco', content: '' }],
+        }}
+        onSave={onSave}
+        onCancel={jest.fn()}
+      />
+    )
+
+    expect(screen.getByRole('radio', { name: /Explorar/ })).toBeChecked()
+
+    await user.click(screen.getByRole('radio', { name: /Encontrar/ }))
+    await user.click(screen.getByRole('button', { name: /salvar/i }))
+
+    expect(screen.getByRole('radio', { name: /Encontrar/ })).toBeChecked()
+    expect(onSave).toHaveBeenCalledWith(expect.objectContaining({ hotspotMode: 'find' }))
+  })
+
+  it('offers an optional image on each matching item and saves it', async () => {
+    const user = userEvent.setup()
+    const onSave = jest.fn()
+    render(
+      <ContentBlockDrawer
+        open
+        onOpenChange={jest.fn()}
+        mode="edit"
+        blockData={{
+          type: 'matching',
+          matchingPairs: [
+            { id: 'p1', left: 'Panela', right: 'Cozinhar' },
+            { id: 'p2', left: 'Faca', right: 'Cortar' },
+          ],
+        }}
+        onSave={onSave}
+        onCancel={jest.fn()}
+      />
+    )
+
+    const labels = screen.getAllByText(/Imagem do item fixo/)
+    expect(labels).toHaveLength(2)
+    expect(labels[0].parentElement).not.toHaveTextContent('*')
+
+    await user.type(
+      screen.getAllByPlaceholderText('ou cole a URL aqui...')[0],
+      'https://x.com/pan.png'
+    )
+    await user.click(screen.getByRole('button', { name: /salvar/i }))
+
+    expect(onSave).toHaveBeenCalledWith(
+      expect.objectContaining({
+        matchingPairs: [
+          expect.objectContaining({ id: 'p1', leftImage: 'https://x.com/pan.png' }),
+          expect.not.objectContaining({ leftImage: expect.anything() }),
+        ],
+      })
+    )
+  })
+
+  it('fills an image field from the illustration library', async () => {
+    const user = userEvent.setup()
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        version: 1,
+        themes: [{ id: 'culinary', title: 'Culinária' }],
+        categories: [{ id: 'ingredients', theme: 'culinary', title: 'Ingredientes' }],
+        items: [
+          {
+            id: 'culinary-ingredients-coconut',
+            title: 'Coco',
+            theme: 'culinary',
+            category: 'ingredients',
+            file: 'culinary/ingredients/coconut.svg',
+            tags: ['coco'],
+            width: 64,
+            height: 64,
+            set: 'original',
+            license: 'original',
+            author: 'Gerador de Cursos',
+          },
+        ],
+      }),
+    })
+    render(
+      <QueryClientProvider client={new QueryClient()}>
+        <ContentBlockDrawer
+          open
+          onOpenChange={jest.fn()}
+          mode="add"
+          blockData={{ type: 'technical-sheet' }}
+          onSave={jest.fn()}
+          onCancel={jest.fn()}
+        />
+      </QueryClientProvider>
+    )
+
+    await user.click(screen.getAllByRole('button', { name: /adicionar/i })[0])
+    await user.click(screen.getByRole('button', { name: 'Escolher do acervo' }))
+    await user.click(await screen.findByRole('button', { name: 'Coco' }))
+    await user.click(screen.getByRole('button', { name: 'Usar ilustração' }))
+
+    expect(
+      screen.getByDisplayValue('/illustrations/culinary/ingredients/coconut.svg')
+    ).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Usar ilustração' })).not.toBeInTheDocument()
+  })
+
+  it('fills the image block from the illustration library', async () => {
+    const user = userEvent.setup()
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        version: 1,
+        themes: [{ id: 'workplace-safety', title: 'Segurança do trabalho' }],
+        categories: [{ id: 'ppe', theme: 'workplace-safety', title: 'EPI' }],
+        items: [
+          {
+            id: 'workplace-safety-ppe-goggles',
+            title: 'Óculos de proteção',
+            theme: 'workplace-safety',
+            category: 'ppe',
+            file: 'workplace-safety/ppe/goggles.svg',
+            tags: ['óculos'],
+            width: 32,
+            height: 32,
+            set: 'fluent-emoji',
+            license: 'MIT',
+            author: 'Microsoft',
+          },
+        ],
+      }),
+    })
+    render(
+      <QueryClientProvider client={new QueryClient()}>
+        <ContentBlockDrawer
+          open
+          onOpenChange={jest.fn()}
+          mode="add"
+          blockData={{ type: 'image' }}
+          onSave={jest.fn()}
+          onCancel={jest.fn()}
+        />
+      </QueryClientProvider>
+    )
+
+    await user.click(screen.getByRole('button', { name: 'Escolher do acervo' }))
+    await user.click(await screen.findByRole('button', { name: 'Óculos de proteção' }))
+    await user.click(screen.getByRole('button', { name: 'Usar ilustração' }))
+
+    expect(screen.getByPlaceholderText('Cole a URL da imagem...')).toHaveValue(
+      '/illustrations/workplace-safety/ppe/goggles.svg'
+    )
+    expect(screen.getByAltText('Preview')).toHaveStyle('background-color: #FBF4E6')
+  })
+
+  it('offers the library only for image fields', () => {
+    mount('audio')
+
+    expect(screen.queryByRole('button', { name: 'Escolher do acervo' })).not.toBeInTheDocument()
+  })
+
+  it('creates a technical sheet with an optional material image and reopens it', async () => {
+    const user = userEvent.setup()
+    const onSave = mount('technical-sheet')
+
+    await user.click(screen.getByRole('button', { name: /salvar/i }))
+    expect(errorToast).toHaveBeenLastCalledWith('Adicione pelo menos 1 material')
+
+    const [addMaterial] = screen.getAllByRole('button', { name: /adicionar/i })
+    await user.click(addMaterial)
+    expect(screen.getByText(/Imagem do material/)).not.toHaveTextContent('*')
+    await user.type(screen.getByPlaceholderText(/Coco ralado/), 'Coco')
+    await user.type(screen.getByPlaceholderText('Ex.: 500 g'), '500 g')
+    await user.click(screen.getByRole('button', { name: /salvar/i }))
+    expect(errorToast).toHaveBeenLastCalledWith('Adicione pelo menos 1 passo')
+
+    await user.click(screen.getAllByRole('button', { name: /adicionar/i }).at(-1) as HTMLElement)
+    await user.type(screen.getByPlaceholderText(/Misture o coco/), 'Misture')
+    await user.click(screen.getByRole('button', { name: /salvar/i }))
+
+    const saved = onSave.mock.calls[0][0]
+    expect(saved.sheetMaterials).toEqual([
+      expect.objectContaining({ name: 'Coco', quantity: '500 g' }),
+    ])
+    expect(saved.sheetSteps).toEqual([expect.objectContaining({ text: 'Misture' })])
+
+    render(
+      <ContentBlockDrawer
+        open
+        onOpenChange={jest.fn()}
+        mode="edit"
+        blockData={saved}
+        onSave={jest.fn()}
+        onCancel={jest.fn()}
+      />
+    )
+    expect((screen.getAllByPlaceholderText(/Coco ralado/).at(-1) as HTMLInputElement).value).toBe(
+      'Coco'
+    )
+    expect(
+      (screen.getAllByPlaceholderText(/Misture o coco/).at(-1) as HTMLTextAreaElement).value
+    ).toBe('Misture')
+  })
+
+  it('creates a practice mission and reopens it', async () => {
+    const user = userEvent.setup()
+    const onSave = mount('practice-checklist')
+
+    await user.click(screen.getByRole('button', { name: /salvar/i }))
+    expect(errorToast).toHaveBeenLastCalledWith('Descreva a missão')
+
+    await user.type(screen.getByPlaceholderText(/Vista seus EPIs/), 'Confira seus EPIs')
+    await user.click(screen.getByRole('button', { name: /adicionar/i }))
+    await user.type(screen.getByPlaceholderText(/jugular ajustada/), 'Capacete')
+    await user.click(screen.getByRole('button', { name: /salvar/i }))
+    expect(errorToast).toHaveBeenLastCalledWith('Adicione pelo menos 2 itens')
+
+    await user.click(screen.getByRole('button', { name: /adicionar/i }))
+    await user.type(screen.getAllByPlaceholderText(/jugular ajustada/)[1], 'Luvas')
+    await user.click(screen.getByRole('button', { name: /salvar/i }))
+
+    const saved = onSave.mock.calls[0][0]
+    expect(saved).toMatchObject({
+      type: 'practice-checklist',
+      practiceMission: 'Confira seus EPIs',
+    })
+    expect(saved.practiceItems.map((entry: { text: string }) => entry.text)).toEqual([
+      'Capacete',
+      'Luvas',
+    ])
+
+    render(
+      <ContentBlockDrawer
+        open
+        onOpenChange={jest.fn()}
+        mode="edit"
+        blockData={saved}
+        onSave={jest.fn()}
+        onCancel={jest.fn()}
+      />
+    )
+    const reopened = screen.getAllByPlaceholderText(/jugular ajustada/).slice(-2)
+    expect(reopened.map((input) => (input as HTMLInputElement).value)).toEqual([
+      'Capacete',
+      'Luvas',
+    ])
+  })
+
+  it('creates a scenario with an optional avatar and reopens it', async () => {
+    const user = userEvent.setup()
+    const onSave = mount('scenario')
+
+    expect(screen.getByText(/Imagem do personagem/)).not.toHaveTextContent('*')
+
+    await user.type(screen.getByLabelText(/Personagem/), 'Seu João')
+    await user.type(screen.getByLabelText(/Situação/), 'Colega sem cinto')
+    await user.click(screen.getByRole('button', { name: /salvar/i }))
+    expect(errorToast).toHaveBeenLastCalledWith('Adicione pelo menos 2 opções')
+
+    await user.click(screen.getByRole('button', { name: /adicionar/i }))
+    await user.click(screen.getByRole('button', { name: /adicionar/i }))
+    const choices = screen.getAllByPlaceholderText(/Peço que ele use o cinto/)
+    await user.type(choices[0], 'Deixo subir')
+    await user.type(choices[1], 'Peço o cinto')
+    await user.click(screen.getByRole('button', { name: /salvar/i }))
+    expect(errorToast).toHaveBeenLastCalledWith('Marque pelo menos uma opção como correta')
+    expect(onSave).not.toHaveBeenCalled()
+
+    const draft = {
+      type: 'scenario' as const,
+      scenarioCharacter: 'Seu João',
+      scenarioSituation: 'Colega sem cinto',
+      scenarioOptions: [
+        { id: 'a', text: 'Deixo subir', outcome: 'incorrect' as const, consequence: '' },
+        { id: 'b', text: 'Peço o cinto', outcome: 'correct' as const, consequence: 'Isso.' },
+      ],
+    }
+    const onSaveEdit = jest.fn()
+    render(
+      <ContentBlockDrawer
+        open
+        onOpenChange={jest.fn()}
+        mode="edit"
+        blockData={draft}
+        onSave={onSaveEdit}
+        onCancel={jest.fn()}
+      />
+    )
+
+    expect(screen.getAllByRole('combobox').map((box) => box.textContent)).toEqual(
+      expect.arrayContaining(['Incorreta', 'Correta'])
+    )
+    await user.click(screen.getAllByRole('button', { name: /salvar/i }).at(-1) as HTMLElement)
+    expect(onSaveEdit).toHaveBeenCalledWith(expect.objectContaining(draft))
+  })
+
+  it('creates a fill-blanks block, listing the blanks, and reopens it', async () => {
+    const user = userEvent.setup()
+    const onSave = mount('fill-blanks')
+
+    expect(screen.getByText('Nenhuma lacuna marcada ainda.')).toBeInTheDocument()
+
+    const text = screen.getByLabelText(/Texto com lacunas/)
+    await user.click(text)
+    await user.paste('Lave por [20] segundos com [sabão].')
+    expect(screen.getByText('2 lacunas: 20, sabão')).toBeInTheDocument()
+
+    await user.type(screen.getByLabelText(/Palavras extras/), '10, álcool, sabão,')
+    expect(screen.getByLabelText(/Palavras extras/)).toHaveValue('10, álcool, sabão,')
+    await user.click(screen.getByRole('button', { name: /salvar/i }))
+
+    const saved = onSave.mock.calls[0][0]
+    expect(saved).toEqual(
+      expect.objectContaining({
+        fillBlanksText: 'Lave por [20] segundos com [sabão].',
+        fillBlanksDistractors: ['10', 'álcool'],
+      })
+    )
+
+    render(
+      <ContentBlockDrawer
+        open
+        onOpenChange={jest.fn()}
+        mode="edit"
+        blockData={saved}
+        onSave={jest.fn()}
+        onCancel={jest.fn()}
+      />
+    )
+    expect(screen.getAllByDisplayValue('10, álcool')).toHaveLength(1)
+  })
+
+  it('creates a sequence, reorders its steps and reopens it in that order', async () => {
+    const user = userEvent.setup()
+    const onSave = mount('sequence')
+
+    for (let i = 0; i < 3; i++) await user.click(screen.getByRole('button', { name: /adicionar/i }))
+    const fields = screen.getAllByPlaceholderText(/Ajustar a carneira/)
+    await user.type(fields[0], 'Colocar')
+    await user.type(fields[1], 'Inspecionar')
+    await user.type(fields[2], 'Prender')
+
+    expect(screen.getByRole('button', { name: 'Mover passo 1 para cima' })).toBeDisabled()
+    await user.click(screen.getByRole('button', { name: 'Mover passo 2 para cima' }))
+    await user.click(screen.getByRole('button', { name: /salvar/i }))
+
+    const saved = onSave.mock.calls[0][0]
+    expect(saved.sequenceItems.map((s: { text: string }) => s.text)).toEqual([
+      'Inspecionar',
+      'Colocar',
+      'Prender',
+    ])
+
+    render(
+      <ContentBlockDrawer
+        open
+        onOpenChange={jest.fn()}
+        mode="edit"
+        blockData={saved}
+        onSave={jest.fn()}
+        onCancel={jest.fn()}
+      />
+    )
+    const reopened = screen.getAllByPlaceholderText(/Ajustar a carneira/).slice(-3)
+    expect(reopened.map((input) => (input as HTMLInputElement).value)).toEqual([
+      'Inspecionar',
+      'Colocar',
+      'Prender',
+    ])
+  })
+
+  it('keeps the other item editors without reorder buttons', async () => {
+    const user = userEvent.setup()
+    mount('tabs')
+
+    await user.click(screen.getByRole('button', { name: /adicionar/i }))
+
+    expect(screen.queryByRole('button', { name: /Mover/ })).not.toBeInTheDocument()
+  })
+
+  it('creates a true-false block and reopens it with the saved answers', async () => {
+    const user = userEvent.setup()
+    const onSave = mount('true-false')
+
+    await user.click(screen.getByRole('button', { name: /adicionar/i }))
+    await user.click(screen.getByRole('button', { name: /adicionar/i }))
+    const statements = screen.getAllByPlaceholderText(/O EPI deve ser fornecido/)
+    await user.type(statements[0], 'O EPI é gratuito.')
+    await user.type(statements[1], 'Tarefa rápida dispensa EPI.')
+    await user.click(screen.getByRole('button', { name: /salvar/i }))
+
+    const saved = onSave.mock.calls[0][0]
+    expect(saved.trueFalseItems).toEqual([
+      expect.objectContaining({ statement: 'O EPI é gratuito.', answer: 'true' }),
+      expect.objectContaining({ statement: 'Tarefa rápida dispensa EPI.', answer: 'true' }),
+    ])
+
+    const reopened = {
+      ...saved,
+      trueFalseItems: [saved.trueFalseItems[0], { ...saved.trueFalseItems[1], answer: 'false' }],
+    }
+    render(
+      <ContentBlockDrawer
+        open
+        onOpenChange={jest.fn()}
+        mode="edit"
+        blockData={reopened}
+        onSave={jest.fn()}
+        onCancel={jest.fn()}
+      />
+    )
+
+    expect(screen.getAllByDisplayValue('Tarefa rápida dispensa EPI.').length).toBeGreaterThan(0)
+    expect(screen.getAllByRole('combobox').map((box) => box.textContent)).toContain('Falso')
   })
 
   it('shows the interactive base image only once, inside the hotspot editor', () => {

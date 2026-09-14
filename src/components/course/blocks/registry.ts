@@ -21,6 +21,12 @@ import { InteractiveImageBlock } from './InteractiveImageBlock'
 import { MatchingBlock } from './MatchingBlock'
 import { CategorizationBlock } from './CategorizationBlock'
 import { InteractiveVideoBlock } from './InteractiveVideoBlock'
+import { TrueFalseBlock } from './TrueFalseBlock'
+import { SequenceBlock } from './SequenceBlock'
+import { FillBlanksBlock } from './FillBlanksBlock'
+import { ScenarioBlock } from './ScenarioBlock'
+import { PracticeChecklistBlock } from './PracticeChecklistBlock'
+import { TechnicalSheetBlock } from './TechnicalSheetBlock'
 
 export interface BlockProps {
   item: Block
@@ -49,4 +55,10 @@ export const blockRegistry: Record<Block['type'], ComponentType<BlockProps>> = {
   matching: MatchingBlock,
   categorization: CategorizationBlock,
   'interactive-video': InteractiveVideoBlock,
+  'true-false': TrueFalseBlock,
+  sequence: SequenceBlock,
+  'fill-blanks': FillBlanksBlock,
+  scenario: ScenarioBlock,
+  'practice-checklist': PracticeChecklistBlock,
+  'technical-sheet': TechnicalSheetBlock,
 }

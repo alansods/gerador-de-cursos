@@ -96,7 +96,7 @@ export default function NewCoursePage() {
       wizard.setCurrentTask(1)
       wizard.setProgress(45)
 
-      const { course, summary } = await createCourseWithAi(text)
+      const { course, summary } = await createCourseWithAi(text, wizard.state.layout)
 
       wizard.setSummary(summary)
       wizard.setCurrentTask(2)

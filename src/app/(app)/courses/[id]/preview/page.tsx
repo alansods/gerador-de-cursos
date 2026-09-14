@@ -11,6 +11,7 @@ import { Loader2 } from 'lucide-react'
 import { CoursePlayer } from '@/components/course/CoursePlayer'
 import { ReviewPanel } from '@/components/review/ReviewPanel'
 import { useCourseQuery } from '@/hooks/queries/useCourseQuery'
+import { useAuth } from '@/context/AuthContext'
 
 export default function PreviewCoursePage() {
   const params = useParams()
@@ -22,6 +23,7 @@ export default function PreviewCoursePage() {
   const courseId = (params?.id as string | undefined) || courseUrlSegment
 
   const { course, isLoading, error } = useCourseQuery(courseId, { alwaysRevalidate: true })
+  const { user } = useAuth()
 
   useEffect(() => {
     if (error) router.push('/courses')
@@ -50,7 +52,7 @@ export default function PreviewCoursePage() {
 
   return (
     <PageTransition>
-      <CoursePlayer course={course} />
+      <CoursePlayer course={course} learnerName={user?.name} />
       {/* a mutation de status invalida a chave do curso, então o painel não
           precisa mais pedir o recarregamento */}
       <ReviewPanel course={course} />

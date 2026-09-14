@@ -15,3 +15,17 @@
   --block-accent-soft: var(--block-accent-soft-dark);
   --block-accent-ink: var(--block-accent-ink-dark);
 }
+
+[data-block-surface] .block-surface {
+  border-style: solid;
+  border-radius: var(--block-surface-radius);
+  border-width: var(--block-surface-border-width);
+  border-color: var(--block-surface-border-color-light);
+  box-shadow: var(--block-surface-shadow-light);
+  background-color: var(--block-surface-background-light);
+}
+.dark [data-block-surface] .block-surface {
+  border-color: var(--block-surface-border-color-dark);
+  box-shadow: var(--block-surface-shadow-dark);
+  background-color: var(--block-surface-background-dark);
+}

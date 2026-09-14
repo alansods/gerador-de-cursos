@@ -18,6 +18,7 @@ import {
 } from '@dnd-kit/core'
 import { Check, RotateCcw, X } from 'lucide-react'
 import { useRegistrarQuiz } from '@/components/course/ScormProgressContext'
+import { illustrationCardStyle } from '@/lib/illustration-paths'
 
 export interface AssignmentChip {
   id: string
@@ -28,6 +29,7 @@ export interface AssignmentChip {
 export interface AssignmentTarget {
   id: string
   label: string
+  image?: string
 }
 
 export interface AssignmentInstructions {
@@ -107,6 +109,7 @@ function Chip({
 function Zone({
   id,
   label,
+  image,
   emptyText: empty,
   canReceive,
   chips,
@@ -115,6 +118,7 @@ function Zone({
 }: {
   id: string
   label: string
+  image?: string
   emptyText: string
   canReceive: boolean
   chips: AssignmentChip[]
@@ -138,6 +142,14 @@ function Zone({
         disabled={!canReceive}
         className="mb-2 w-full text-left text-sm font-semibold text-gray-900 disabled:cursor-default dark:text-gray-100"
       >
+        {image && (
+          <img
+            src={image}
+            alt=""
+            className="mb-2 h-28 w-full rounded-md bg-white object-contain p-1"
+            style={illustrationCardStyle(image)}
+          />
+        )}
         {label}
         {canReceive && (
           <span className="ml-2 text-xs font-normal text-(--block-accent,#2563eb)">
@@ -323,6 +335,7 @@ export function InteractiveAssignment({
               key={target.id}
               id={target.id}
               label={target.label}
+              image={target.image}
               emptyText="Solte um item aqui."
               canReceive={canReceive}
               chips={inOrder.filter((f) => assignments[f.id] === target.id)}

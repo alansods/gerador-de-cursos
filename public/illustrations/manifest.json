@@ -1,0 +1,2524 @@
+{
+  "version": 1,
+  "themes": [
+    {
+      "id": "culinary",
+      "title": "Culinária"
+    },
+    {
+      "id": "food-safety",
+      "title": "Segurança dos alimentos"
+    },
+    {
+      "id": "workplace-safety",
+      "title": "Segurança do trabalho"
+    },
+    {
+      "id": "industry",
+      "title": "Indústria e manutenção"
+    },
+    {
+      "id": "health",
+      "title": "Saúde"
+    },
+    {
+      "id": "office",
+      "title": "Escritório e gestão"
+    }
+  ],
+  "categories": [
+    {
+      "id": "utensils",
+      "theme": "culinary",
+      "title": "Utensílios"
+    },
+    {
+      "id": "ingredients",
+      "theme": "culinary",
+      "title": "Ingredientes"
+    },
+    {
+      "id": "dishes",
+      "theme": "culinary",
+      "title": "Pratos e doces"
+    },
+    {
+      "id": "scenes",
+      "theme": "culinary",
+      "title": "Cenas de preparo"
+    },
+    {
+      "id": "scenes",
+      "theme": "food-safety",
+      "title": "Cenas de higiene"
+    },
+    {
+      "id": "ppe",
+      "theme": "workplace-safety",
+      "title": "EPI"
+    },
+    {
+      "id": "signs",
+      "theme": "workplace-safety",
+      "title": "Sinalização e riscos"
+    },
+    {
+      "id": "tools",
+      "theme": "industry",
+      "title": "Ferramentas"
+    },
+    {
+      "id": "electrical",
+      "theme": "industry",
+      "title": "Elétrica"
+    },
+    {
+      "id": "production",
+      "theme": "industry",
+      "title": "Produção e logística"
+    },
+    {
+      "id": "care",
+      "theme": "health",
+      "title": "Cuidados e laboratório"
+    },
+    {
+      "id": "objects",
+      "theme": "office",
+      "title": "Objetos de escritório"
+    }
+  ],
+  "items": [
+    {
+      "id": "culinary-utensils-whisk",
+      "title": "Fouet",
+      "theme": "culinary",
+      "category": "utensils",
+      "file": "culinary/utensils/whisk.svg",
+      "tags": [
+        "fouet",
+        "batedor",
+        "misturar",
+        "creme"
+      ],
+      "width": 64,
+      "height": 64,
+      "set": "original",
+      "license": "original",
+      "author": "Gerador de Cursos",
+      "source": "Protótipo Trilha Doces Regionais"
+    },
+    {
+      "id": "culinary-utensils-silicone-spatula",
+      "title": "Espátula de silicone (pão-duro)",
+      "theme": "culinary",
+      "category": "utensils",
+      "file": "culinary/utensils/silicone-spatula.svg",
+      "tags": [
+        "espátula",
+        "pão-duro",
+        "silicone",
+        "raspar"
+      ],
+      "width": 64,
+      "height": 64,
+      "set": "original",
+      "license": "original",
+      "author": "Gerador de Cursos",
+      "source": "Protótipo Trilha Doces Regionais"
+    },
+    {
+      "id": "culinary-utensils-sieve",
+      "title": "Peneira",
+      "theme": "culinary",
+      "category": "utensils",
+      "file": "culinary/utensils/sieve.svg",
+      "tags": [
+        "peneira",
+        "peneirar",
+        "coar"
+      ],
+      "width": 64,
+      "height": 64,
+      "set": "original",
+      "license": "original",
+      "author": "Gerador de Cursos",
+      "source": "Protótipo Trilha Doces Regionais"
+    },
+    {
+      "id": "culinary-utensils-blender",
+      "title": "Liquidificador",
+      "theme": "culinary",
+      "category": "utensils",
+      "file": "culinary/utensils/blender.svg",
+      "tags": [
+        "liquidificador",
+        "bater",
+        "triturar",
+        "eletrodoméstico"
+      ],
+      "width": 64,
+      "height": 64,
+      "set": "original",
+      "license": "original",
+      "author": "Gerador de Cursos",
+      "source": "Protótipo Trilha Doces Regionais"
+    },
+    {
+      "id": "culinary-utensils-pot",
+      "title": "Panela",
+      "theme": "culinary",
+      "category": "utensils",
+      "file": "culinary/utensils/pot.svg",
+      "tags": [
+        "panela",
+        "cozinhar",
+        "fogão"
+      ],
+      "width": 64,
+      "height": 64,
+      "set": "original",
+      "license": "original",
+      "author": "Gerador de Cursos",
+      "source": "Protótipo Trilha Doces Regionais"
+    },
+    {
+      "id": "culinary-utensils-kitchen-scale",
+      "title": "Balança de cozinha",
+      "theme": "culinary",
+      "category": "utensils",
+      "file": "culinary/utensils/kitchen-scale.svg",
+      "tags": [
+        "balança",
+        "pesar",
+        "medida",
+        "gramas"
+      ],
+      "width": 64,
+      "height": 64,
+      "set": "original",
+      "license": "original",
+      "author": "Gerador de Cursos",
+      "source": "Protótipo Trilha Doces Regionais"
+    },
+    {
+      "id": "culinary-utensils-bowl",
+      "title": "Bowl (vasilha)",
+      "theme": "culinary",
+      "category": "utensils",
+      "file": "culinary/utensils/bowl.svg",
+      "tags": [
+        "bowl",
+        "vasilha",
+        "tigela",
+        "recipiente"
+      ],
+      "width": 64,
+      "height": 64,
+      "set": "original",
+      "license": "original",
+      "author": "Gerador de Cursos",
+      "source": "Protótipo Trilha Doces Regionais"
+    },
+    {
+      "id": "culinary-utensils-polyethylene-spoon",
+      "title": "Colher de polietileno",
+      "theme": "culinary",
+      "category": "utensils",
+      "file": "culinary/utensils/polyethylene-spoon.svg",
+      "tags": [
+        "colher",
+        "polietileno",
+        "mexer"
+      ],
+      "width": 64,
+      "height": 64,
+      "set": "original",
+      "license": "original",
+      "author": "Gerador de Cursos",
+      "source": "Protótipo Trilha Doces Regionais"
+    },
+    {
+      "id": "culinary-ingredients-rice",
+      "title": "Arroz",
+      "theme": "culinary",
+      "category": "ingredients",
+      "file": "culinary/ingredients/rice.svg",
+      "tags": [
+        "arroz",
+        "grão",
+        "pacote"
+      ],
+      "width": 64,
+      "height": 64,
+      "set": "original",
+      "license": "original",
+      "author": "Gerador de Cursos",
+      "source": "Protótipo Trilha Doces Regionais"
+    },
+    {
+      "id": "culinary-ingredients-sugar",
+      "title": "Açúcar",
+      "theme": "culinary",
+      "category": "ingredients",
+      "file": "culinary/ingredients/sugar.svg",
+      "tags": [
+        "açúcar",
+        "doce",
+        "pacote"
+      ],
+      "width": 64,
+      "height": 64,
+      "set": "original",
+      "license": "original",
+      "author": "Gerador de Cursos",
+      "source": "Protótipo Trilha Doces Regionais"
+    },
+    {
+      "id": "culinary-ingredients-wheat-flour",
+      "title": "Farinha de trigo",
+      "theme": "culinary",
+      "category": "ingredients",
+      "file": "culinary/ingredients/wheat-flour.svg",
+      "tags": [
+        "farinha",
+        "trigo",
+        "pacote"
+      ],
+      "width": 64,
+      "height": 64,
+      "set": "original",
+      "license": "original",
+      "author": "Gerador de Cursos",
+      "source": "Protótipo Trilha Doces Regionais"
+    },
+    {
+      "id": "culinary-ingredients-baking-soda",
+      "title": "Bicarbonato de sódio",
+      "theme": "culinary",
+      "category": "ingredients",
+      "file": "culinary/ingredients/baking-soda.svg",
+      "tags": [
+        "bicarbonato",
+        "fermento",
+        "caixa"
+      ],
+      "width": 64,
+      "height": 64,
+      "set": "original",
+      "license": "original",
+      "author": "Gerador de Cursos",
+      "source": "Protótipo Trilha Doces Regionais"
+    },
+    {
+      "id": "culinary-ingredients-corn-starch",
+      "title": "Amido de milho",
+      "theme": "culinary",
+      "category": "ingredients",
+      "file": "culinary/ingredients/corn-starch.svg",
+      "tags": [
+        "amido",
+        "maisena",
+        "milho",
+        "caixa"
+      ],
+      "width": 64,
+      "height": 64,
+      "set": "original",
+      "license": "original",
+      "author": "Gerador de Cursos",
+      "source": "Protótipo Trilha Doces Regionais"
+    },
+    {
+      "id": "culinary-ingredients-heavy-cream",
+      "title": "Creme de leite",
+      "theme": "culinary",
+      "category": "ingredients",
+      "file": "culinary/ingredients/heavy-cream.svg",
+      "tags": [
+        "creme de leite",
+        "laticínio",
+        "caixa"
+      ],
+      "width": 64,
+      "height": 64,
+      "set": "original",
+      "license": "original",
+      "author": "Gerador de Cursos",
+      "source": "Protótipo Trilha Doces Regionais"
+    },
+    {
+      "id": "culinary-ingredients-condensed-milk",
+      "title": "Leite condensado",
+      "theme": "culinary",
+      "category": "ingredients",
+      "file": "culinary/ingredients/condensed-milk.svg",
+      "tags": [
+        "leite condensado",
+        "lata",
+        "laticínio"
+      ],
+      "width": 64,
+      "height": 64,
+      "set": "original",
+      "license": "original",
+      "author": "Gerador de Cursos",
+      "source": "Protótipo Trilha Doces Regionais"
+    },
+    {
+      "id": "culinary-ingredients-canned-corn",
+      "title": "Milho em conserva",
+      "theme": "culinary",
+      "category": "ingredients",
+      "file": "culinary/ingredients/canned-corn.svg",
+      "tags": [
+        "milho",
+        "conserva",
+        "lata"
+      ],
+      "width": 64,
+      "height": 64,
+      "set": "original",
+      "license": "original",
+      "author": "Gerador de Cursos",
+      "source": "Protótipo Trilha Doces Regionais"
+    },
+    {
+      "id": "culinary-ingredients-milk",
+      "title": "Leite",
+      "theme": "culinary",
+      "category": "ingredients",
+      "file": "culinary/ingredients/milk.svg",
+      "tags": [
+        "leite",
+        "caixa",
+        "laticínio"
+      ],
+      "width": 64,
+      "height": 64,
+      "set": "original",
+      "license": "original",
+      "author": "Gerador de Cursos",
+      "source": "Protótipo Trilha Doces Regionais"
+    },
+    {
+      "id": "culinary-ingredients-coconut-milk",
+      "title": "Leite de coco",
+      "theme": "culinary",
+      "category": "ingredients",
+      "file": "culinary/ingredients/coconut-milk.svg",
+      "tags": [
+        "leite de coco",
+        "coco",
+        "garrafa"
+      ],
+      "width": 64,
+      "height": 64,
+      "set": "original",
+      "license": "original",
+      "author": "Gerador de Cursos",
+      "source": "Protótipo Trilha Doces Regionais"
+    },
+    {
+      "id": "culinary-ingredients-margarine",
+      "title": "Margarina",
+      "theme": "culinary",
+      "category": "ingredients",
+      "file": "culinary/ingredients/margarine.svg",
+      "tags": [
+        "margarina",
+        "manteiga",
+        "gordura",
+        "pote"
+      ],
+      "width": 64,
+      "height": 64,
+      "set": "original",
+      "license": "original",
+      "author": "Gerador de Cursos",
+      "source": "Protótipo Trilha Doces Regionais"
+    },
+    {
+      "id": "culinary-ingredients-salt",
+      "title": "Sal",
+      "theme": "culinary",
+      "category": "ingredients",
+      "file": "culinary/ingredients/salt.svg",
+      "tags": [
+        "sal",
+        "saleiro",
+        "tempero"
+      ],
+      "width": 64,
+      "height": 64,
+      "set": "original",
+      "license": "original",
+      "author": "Gerador de Cursos",
+      "source": "Protótipo Trilha Doces Regionais"
+    },
+    {
+      "id": "culinary-ingredients-water",
+      "title": "Água",
+      "theme": "culinary",
+      "category": "ingredients",
+      "file": "culinary/ingredients/water.svg",
+      "tags": [
+        "água",
+        "copo",
+        "líquido"
+      ],
+      "width": 64,
+      "height": 64,
+      "set": "original",
+      "license": "original",
+      "author": "Gerador de Cursos",
+      "source": "Protótipo Trilha Doces Regionais"
+    },
+    {
+      "id": "culinary-ingredients-corn-cob",
+      "title": "Espiga de milho verde",
+      "theme": "culinary",
+      "category": "ingredients",
+      "file": "culinary/ingredients/corn-cob.svg",
+      "tags": [
+        "milho",
+        "espiga",
+        "milho verde"
+      ],
+      "width": 64,
+      "height": 64,
+      "set": "original",
+      "license": "original",
+      "author": "Gerador de Cursos",
+      "source": "Protótipo Trilha Doces Regionais"
+    },
+    {
+      "id": "culinary-ingredients-coconut",
+      "title": "Coco",
+      "theme": "culinary",
+      "category": "ingredients",
+      "file": "culinary/ingredients/coconut.svg",
+      "tags": [
+        "coco",
+        "fruta"
+      ],
+      "width": 64,
+      "height": 64,
+      "set": "original",
+      "license": "original",
+      "author": "Gerador de Cursos",
+      "source": "Protótipo Trilha Doces Regionais"
+    },
+    {
+      "id": "culinary-ingredients-grated-coconut",
+      "title": "Coco ralado",
+      "theme": "culinary",
+      "category": "ingredients",
+      "file": "culinary/ingredients/grated-coconut.svg",
+      "tags": [
+        "coco ralado",
+        "coco"
+      ],
+      "width": 64,
+      "height": 64,
+      "set": "original",
+      "license": "original",
+      "author": "Gerador de Cursos",
+      "source": "Protótipo Trilha Doces Regionais"
+    },
+    {
+      "id": "culinary-ingredients-orange",
+      "title": "Laranja",
+      "theme": "culinary",
+      "category": "ingredients",
+      "file": "culinary/ingredients/orange.svg",
+      "tags": [
+        "laranja",
+        "fruta",
+        "casca de laranja"
+      ],
+      "width": 64,
+      "height": 64,
+      "set": "original",
+      "license": "original",
+      "author": "Gerador de Cursos",
+      "source": "Protótipo Trilha Doces Regionais"
+    },
+    {
+      "id": "culinary-ingredients-cinnamon-stick",
+      "title": "Canela em pau",
+      "theme": "culinary",
+      "category": "ingredients",
+      "file": "culinary/ingredients/cinnamon-stick.svg",
+      "tags": [
+        "canela",
+        "especiaria",
+        "canela em pau"
+      ],
+      "width": 64,
+      "height": 64,
+      "set": "original",
+      "license": "original",
+      "author": "Gerador de Cursos",
+      "source": "Protótipo Trilha Doces Regionais"
+    },
+    {
+      "id": "culinary-ingredients-cloves",
+      "title": "Cravo-da-índia",
+      "theme": "culinary",
+      "category": "ingredients",
+      "file": "culinary/ingredients/cloves.svg",
+      "tags": [
+        "cravo",
+        "cravo-da-índia",
+        "especiaria"
+      ],
+      "width": 64,
+      "height": 64,
+      "set": "original",
+      "license": "original",
+      "author": "Gerador de Cursos",
+      "source": "Protótipo Trilha Doces Regionais"
+    },
+    {
+      "id": "culinary-ingredients-peanuts",
+      "title": "Amendoim",
+      "theme": "culinary",
+      "category": "ingredients",
+      "file": "culinary/ingredients/peanuts.svg",
+      "tags": [
+        "amendoim",
+        "grão"
+      ],
+      "width": 64,
+      "height": 64,
+      "set": "original",
+      "license": "original",
+      "author": "Gerador de Cursos",
+      "source": "Protótipo Trilha Doces Regionais"
+    },
+    {
+      "id": "culinary-ingredients-eggs",
+      "title": "Ovos",
+      "theme": "culinary",
+      "category": "ingredients",
+      "file": "culinary/ingredients/eggs.svg",
+      "tags": [
+        "ovo",
+        "ovos"
+      ],
+      "width": 64,
+      "height": 64,
+      "set": "original",
+      "license": "original",
+      "author": "Gerador de Cursos",
+      "source": "Protótipo Trilha Doces Regionais"
+    },
+    {
+      "id": "culinary-ingredients-coalho-cheese",
+      "title": "Queijo coalho",
+      "theme": "culinary",
+      "category": "ingredients",
+      "file": "culinary/ingredients/coalho-cheese.svg",
+      "tags": [
+        "queijo",
+        "queijo coalho",
+        "laticínio"
+      ],
+      "width": 64,
+      "height": 64,
+      "set": "original",
+      "license": "original",
+      "author": "Gerador de Cursos",
+      "source": "Protótipo Trilha Doces Regionais"
+    },
+    {
+      "id": "culinary-ingredients-hominy-corn",
+      "title": "Milho para mungunzá (canjica)",
+      "theme": "culinary",
+      "category": "ingredients",
+      "file": "culinary/ingredients/hominy-corn.svg",
+      "tags": [
+        "milho",
+        "mungunzá",
+        "canjica",
+        "pacote"
+      ],
+      "width": 64,
+      "height": 64,
+      "set": "original",
+      "license": "original",
+      "author": "Gerador de Cursos",
+      "source": "Protótipo Trilha Doces Regionais"
+    },
+    {
+      "id": "culinary-dishes-rice-pudding",
+      "title": "Arroz doce",
+      "theme": "culinary",
+      "category": "dishes",
+      "file": "culinary/dishes/rice-pudding.svg",
+      "tags": [
+        "arroz doce",
+        "doce",
+        "sobremesa"
+      ],
+      "width": 120,
+      "height": 90,
+      "set": "original",
+      "license": "original",
+      "author": "Gerador de Cursos",
+      "source": "Protótipo Trilha Doces Regionais"
+    },
+    {
+      "id": "culinary-dishes-mungunza",
+      "title": "Mungunzá doce",
+      "theme": "culinary",
+      "category": "dishes",
+      "file": "culinary/dishes/mungunza.svg",
+      "tags": [
+        "mungunzá",
+        "munguzá",
+        "doce",
+        "milho"
+      ],
+      "width": 120,
+      "height": 90,
+      "set": "original",
+      "license": "original",
+      "author": "Gerador de Cursos",
+      "source": "Protótipo Trilha Doces Regionais"
+    },
+    {
+      "id": "culinary-dishes-green-corn-canjica",
+      "title": "Canjica de milho verde",
+      "theme": "culinary",
+      "category": "dishes",
+      "file": "culinary/dishes/green-corn-canjica.svg",
+      "tags": [
+        "canjica",
+        "milho verde",
+        "doce"
+      ],
+      "width": 120,
+      "height": 90,
+      "set": "original",
+      "license": "original",
+      "author": "Gerador de Cursos",
+      "source": "Protótipo Trilha Doces Regionais"
+    },
+    {
+      "id": "culinary-dishes-canned-corn-canjica",
+      "title": "Canjica de milho em conserva",
+      "theme": "culinary",
+      "category": "dishes",
+      "file": "culinary/dishes/canned-corn-canjica.svg",
+      "tags": [
+        "canjica",
+        "milho",
+        "doce"
+      ],
+      "width": 120,
+      "height": 90,
+      "set": "original",
+      "license": "original",
+      "author": "Gerador de Cursos",
+      "source": "Protótipo Trilha Doces Regionais"
+    },
+    {
+      "id": "culinary-dishes-cocada",
+      "title": "Cocada baiana",
+      "theme": "culinary",
+      "category": "dishes",
+      "file": "culinary/dishes/cocada.svg",
+      "tags": [
+        "cocada",
+        "coco",
+        "doce"
+      ],
+      "width": 120,
+      "height": 90,
+      "set": "original",
+      "license": "original",
+      "author": "Gerador de Cursos",
+      "source": "Protótipo Trilha Doces Regionais"
+    },
+    {
+      "id": "culinary-dishes-pe-de-moleque",
+      "title": "Pé de moleque",
+      "theme": "culinary",
+      "category": "dishes",
+      "file": "culinary/dishes/pe-de-moleque.svg",
+      "tags": [
+        "pé de moleque",
+        "amendoim",
+        "doce"
+      ],
+      "width": 120,
+      "height": 90,
+      "set": "original",
+      "license": "original",
+      "author": "Gerador de Cursos",
+      "source": "Protótipo Trilha Doces Regionais"
+    },
+    {
+      "id": "culinary-dishes-corn-brigadeiro",
+      "title": "Brigadeiro de milho",
+      "theme": "culinary",
+      "category": "dishes",
+      "file": "culinary/dishes/corn-brigadeiro.svg",
+      "tags": [
+        "brigadeiro",
+        "milho",
+        "docinho"
+      ],
+      "width": 120,
+      "height": 90,
+      "set": "original",
+      "license": "original",
+      "author": "Gerador de Cursos",
+      "source": "Protótipo Trilha Doces Regionais"
+    },
+    {
+      "id": "culinary-dishes-queijadinha",
+      "title": "Queijadinha",
+      "theme": "culinary",
+      "category": "dishes",
+      "file": "culinary/dishes/queijadinha.svg",
+      "tags": [
+        "queijadinha",
+        "queijo",
+        "coco",
+        "forno"
+      ],
+      "width": 120,
+      "height": 90,
+      "set": "original",
+      "license": "original",
+      "author": "Gerador de Cursos",
+      "source": "Protótipo Trilha Doces Regionais"
+    },
+    {
+      "id": "culinary-scenes-caramel-sugar-water",
+      "title": "Açúcar e água na panela",
+      "theme": "culinary",
+      "category": "scenes",
+      "file": "culinary/scenes/caramel-sugar-water.svg",
+      "tags": [
+        "caramelo",
+        "açúcar",
+        "panela",
+        "fogão"
+      ],
+      "width": 400,
+      "height": 225,
+      "set": "original",
+      "license": "original",
+      "author": "Gerador de Cursos",
+      "source": "Protótipo Trilha Doces Regionais"
+    },
+    {
+      "id": "culinary-scenes-caramel-no-stirring",
+      "title": "Caramelo sem mexer",
+      "theme": "culinary",
+      "category": "scenes",
+      "file": "culinary/scenes/caramel-no-stirring.svg",
+      "tags": [
+        "caramelo",
+        "ponto",
+        "fogão"
+      ],
+      "width": 400,
+      "height": 225,
+      "set": "original",
+      "license": "original",
+      "author": "Gerador de Cursos",
+      "source": "Protótipo Trilha Doces Regionais"
+    },
+    {
+      "id": "culinary-scenes-caramel-add-coconut",
+      "title": "Coco ralado no caramelo",
+      "theme": "culinary",
+      "category": "scenes",
+      "file": "culinary/scenes/caramel-add-coconut.svg",
+      "tags": [
+        "caramelo",
+        "coco ralado",
+        "cocada"
+      ],
+      "width": 400,
+      "height": 225,
+      "set": "original",
+      "license": "original",
+      "author": "Gerador de Cursos",
+      "source": "Protótipo Trilha Doces Regionais"
+    },
+    {
+      "id": "culinary-scenes-stirring-pot",
+      "title": "Mexendo a panela",
+      "theme": "culinary",
+      "category": "scenes",
+      "file": "culinary/scenes/stirring-pot.svg",
+      "tags": [
+        "mexer",
+        "panela",
+        "fogão",
+        "colher"
+      ],
+      "width": 400,
+      "height": 225,
+      "set": "original",
+      "license": "original",
+      "author": "Gerador de Cursos",
+      "source": "Protótipo Trilha Doces Regionais"
+    },
+    {
+      "id": "culinary-scenes-sweet-in-greased-pan",
+      "title": "Doce na forma untada",
+      "theme": "culinary",
+      "category": "scenes",
+      "file": "culinary/scenes/sweet-in-greased-pan.svg",
+      "tags": [
+        "forma",
+        "esfriar",
+        "cocada"
+      ],
+      "width": 400,
+      "height": 225,
+      "set": "original",
+      "license": "original",
+      "author": "Gerador de Cursos",
+      "source": "Protótipo Trilha Doces Regionais"
+    },
+    {
+      "id": "food-safety-scenes-kitchen-hygiene-errors",
+      "title": "Erros de higiene na cozinha",
+      "theme": "food-safety",
+      "category": "scenes",
+      "file": "food-safety/scenes/kitchen-hygiene-errors.svg",
+      "tags": [
+        "higiene",
+        "manipulador",
+        "touca",
+        "adornos",
+        "caça aos erros"
+      ],
+      "width": 400,
+      "height": 300,
+      "set": "original",
+      "license": "original",
+      "author": "Gerador de Cursos",
+      "source": "Protótipo Trilha Doces Regionais"
+    },
+    {
+      "id": "food-safety-scenes-handwashing-wet-hands",
+      "title": "Molhar as mãos",
+      "theme": "food-safety",
+      "category": "scenes",
+      "file": "food-safety/scenes/handwashing-wet-hands.svg",
+      "tags": [
+        "lavar as mãos",
+        "água",
+        "torneira",
+        "higiene"
+      ],
+      "width": 400,
+      "height": 225,
+      "set": "original",
+      "license": "original",
+      "author": "Gerador de Cursos",
+      "source": "Protótipo Trilha Doces Regionais"
+    },
+    {
+      "id": "food-safety-scenes-handwashing-soap",
+      "title": "Ensaboar palma e dorso",
+      "theme": "food-safety",
+      "category": "scenes",
+      "file": "food-safety/scenes/handwashing-soap.svg",
+      "tags": [
+        "lavar as mãos",
+        "sabonete",
+        "higiene"
+      ],
+      "width": 400,
+      "height": 225,
+      "set": "original",
+      "license": "original",
+      "author": "Gerador de Cursos",
+      "source": "Protótipo Trilha Doces Regionais"
+    },
+    {
+      "id": "food-safety-scenes-handwashing-scrub",
+      "title": "Esfregar unhas, dedos e punhos",
+      "theme": "food-safety",
+      "category": "scenes",
+      "file": "food-safety/scenes/handwashing-scrub.svg",
+      "tags": [
+        "lavar as mãos",
+        "unhas",
+        "punhos",
+        "higiene"
+      ],
+      "width": 400,
+      "height": 225,
+      "set": "original",
+      "license": "original",
+      "author": "Gerador de Cursos",
+      "source": "Protótipo Trilha Doces Regionais"
+    },
+    {
+      "id": "food-safety-scenes-handwashing-rinse",
+      "title": "Enxaguar as mãos",
+      "theme": "food-safety",
+      "category": "scenes",
+      "file": "food-safety/scenes/handwashing-rinse.svg",
+      "tags": [
+        "lavar as mãos",
+        "enxaguar",
+        "água",
+        "higiene"
+      ],
+      "width": 400,
+      "height": 225,
+      "set": "original",
+      "license": "original",
+      "author": "Gerador de Cursos",
+      "source": "Protótipo Trilha Doces Regionais"
+    },
+    {
+      "id": "food-safety-scenes-handwashing-dry",
+      "title": "Secar com papel-toalha",
+      "theme": "food-safety",
+      "category": "scenes",
+      "file": "food-safety/scenes/handwashing-dry.svg",
+      "tags": [
+        "lavar as mãos",
+        "papel-toalha",
+        "secar",
+        "higiene"
+      ],
+      "width": 400,
+      "height": 225,
+      "set": "original",
+      "license": "original",
+      "author": "Gerador de Cursos",
+      "source": "Protótipo Trilha Doces Regionais"
+    },
+    {
+      "id": "food-safety-scenes-handwashing-sanitize",
+      "title": "Álcool em gel",
+      "theme": "food-safety",
+      "category": "scenes",
+      "file": "food-safety/scenes/handwashing-sanitize.svg",
+      "tags": [
+        "álcool em gel",
+        "antisséptico",
+        "higiene"
+      ],
+      "width": 400,
+      "height": 225,
+      "set": "original",
+      "license": "original",
+      "author": "Gerador de Cursos",
+      "source": "Protótipo Trilha Doces Regionais"
+    },
+    {
+      "id": "workplace-safety-ppe-helmet",
+      "title": "Capacete de resgate",
+      "theme": "workplace-safety",
+      "category": "ppe",
+      "file": "workplace-safety/ppe/helmet.svg",
+      "tags": [
+        "capacete",
+        "resgate",
+        "socorro",
+        "epi",
+        "proteção"
+      ],
+      "width": 32,
+      "height": 32,
+      "set": "fluent-emoji",
+      "license": "MIT",
+      "author": "Microsoft",
+      "source": "https://github.com/microsoft/fluentui-emoji"
+    },
+    {
+      "id": "workplace-safety-ppe-safety-vest",
+      "title": "Colete refletivo",
+      "theme": "workplace-safety",
+      "category": "ppe",
+      "file": "workplace-safety/ppe/safety-vest.svg",
+      "tags": [
+        "colete",
+        "refletivo",
+        "epi",
+        "sinalização",
+        "visibilidade"
+      ],
+      "width": 32,
+      "height": 32,
+      "set": "fluent-emoji",
+      "license": "MIT",
+      "author": "Microsoft",
+      "source": "https://github.com/microsoft/fluentui-emoji"
+    },
+    {
+      "id": "workplace-safety-ppe-gloves",
+      "title": "Luvas de proteção",
+      "theme": "workplace-safety",
+      "category": "ppe",
+      "file": "workplace-safety/ppe/gloves.svg",
+      "tags": [
+        "luvas",
+        "epi",
+        "mãos",
+        "proteção"
+      ],
+      "width": 32,
+      "height": 32,
+      "set": "fluent-emoji",
+      "license": "MIT",
+      "author": "Microsoft",
+      "source": "https://github.com/microsoft/fluentui-emoji"
+    },
+    {
+      "id": "workplace-safety-ppe-goggles",
+      "title": "Óculos de proteção",
+      "theme": "workplace-safety",
+      "category": "ppe",
+      "file": "workplace-safety/ppe/goggles.svg",
+      "tags": [
+        "óculos",
+        "epi",
+        "olhos",
+        "proteção"
+      ],
+      "width": 32,
+      "height": 32,
+      "set": "fluent-emoji",
+      "license": "MIT",
+      "author": "Microsoft",
+      "source": "https://github.com/microsoft/fluentui-emoji"
+    },
+    {
+      "id": "workplace-safety-ppe-safety-boot",
+      "title": "Botina",
+      "theme": "workplace-safety",
+      "category": "ppe",
+      "file": "workplace-safety/ppe/safety-boot.svg",
+      "tags": [
+        "botina",
+        "bota",
+        "calçado",
+        "epi",
+        "pés"
+      ],
+      "width": 32,
+      "height": 32,
+      "set": "fluent-emoji",
+      "license": "MIT",
+      "author": "Microsoft",
+      "source": "https://github.com/microsoft/fluentui-emoji"
+    },
+    {
+      "id": "workplace-safety-ppe-lab-coat",
+      "title": "Jaleco",
+      "theme": "workplace-safety",
+      "category": "ppe",
+      "file": "workplace-safety/ppe/lab-coat.svg",
+      "tags": [
+        "jaleco",
+        "avental",
+        "laboratório",
+        "epi",
+        "roupa"
+      ],
+      "width": 32,
+      "height": 32,
+      "set": "fluent-emoji",
+      "license": "MIT",
+      "author": "Microsoft",
+      "source": "https://github.com/microsoft/fluentui-emoji"
+    },
+    {
+      "id": "workplace-safety-signs-warning",
+      "title": "Atenção",
+      "theme": "workplace-safety",
+      "category": "signs",
+      "file": "workplace-safety/signs/warning.svg",
+      "tags": [
+        "atenção",
+        "aviso",
+        "perigo",
+        "cuidado",
+        "sinalização"
+      ],
+      "width": 32,
+      "height": 32,
+      "set": "fluent-emoji",
+      "license": "MIT",
+      "author": "Microsoft",
+      "source": "https://github.com/microsoft/fluentui-emoji"
+    },
+    {
+      "id": "workplace-safety-signs-high-voltage",
+      "title": "Alta tensão",
+      "theme": "workplace-safety",
+      "category": "signs",
+      "file": "workplace-safety/signs/high-voltage.svg",
+      "tags": [
+        "alta tensão",
+        "choque",
+        "eletricidade",
+        "perigo",
+        "raio"
+      ],
+      "width": 32,
+      "height": 32,
+      "set": "fluent-emoji",
+      "license": "MIT",
+      "author": "Microsoft",
+      "source": "https://github.com/microsoft/fluentui-emoji"
+    },
+    {
+      "id": "workplace-safety-signs-radioactive",
+      "title": "Material radioativo",
+      "theme": "workplace-safety",
+      "category": "signs",
+      "file": "workplace-safety/signs/radioactive.svg",
+      "tags": [
+        "radioativo",
+        "radiação",
+        "perigo",
+        "sinalização"
+      ],
+      "width": 32,
+      "height": 32,
+      "set": "fluent-emoji",
+      "license": "MIT",
+      "author": "Microsoft",
+      "source": "https://github.com/microsoft/fluentui-emoji"
+    },
+    {
+      "id": "workplace-safety-signs-biohazard",
+      "title": "Risco biológico",
+      "theme": "workplace-safety",
+      "category": "signs",
+      "file": "workplace-safety/signs/biohazard.svg",
+      "tags": [
+        "risco biológico",
+        "contaminação",
+        "perigo",
+        "sinalização"
+      ],
+      "width": 32,
+      "height": 32,
+      "set": "fluent-emoji",
+      "license": "MIT",
+      "author": "Microsoft",
+      "source": "https://github.com/microsoft/fluentui-emoji"
+    },
+    {
+      "id": "workplace-safety-signs-poison",
+      "title": "Veneno",
+      "theme": "workplace-safety",
+      "category": "signs",
+      "file": "workplace-safety/signs/poison.svg",
+      "tags": [
+        "veneno",
+        "tóxico",
+        "produto químico",
+        "perigo"
+      ],
+      "width": 32,
+      "height": 32,
+      "set": "fluent-emoji",
+      "license": "MIT",
+      "author": "Microsoft",
+      "source": "https://github.com/microsoft/fluentui-emoji"
+    },
+    {
+      "id": "workplace-safety-signs-prohibited",
+      "title": "Proibido",
+      "theme": "workplace-safety",
+      "category": "signs",
+      "file": "workplace-safety/signs/prohibited.svg",
+      "tags": [
+        "proibido",
+        "proibição",
+        "sinalização"
+      ],
+      "width": 32,
+      "height": 32,
+      "set": "fluent-emoji",
+      "license": "MIT",
+      "author": "Microsoft",
+      "source": "https://github.com/microsoft/fluentui-emoji"
+    },
+    {
+      "id": "workplace-safety-signs-no-entry",
+      "title": "Entrada proibida",
+      "theme": "workplace-safety",
+      "category": "signs",
+      "file": "workplace-safety/signs/no-entry.svg",
+      "tags": [
+        "entrada proibida",
+        "acesso restrito",
+        "sinalização"
+      ],
+      "width": 32,
+      "height": 32,
+      "set": "fluent-emoji",
+      "license": "MIT",
+      "author": "Microsoft",
+      "source": "https://github.com/microsoft/fluentui-emoji"
+    },
+    {
+      "id": "workplace-safety-signs-fire",
+      "title": "Fogo",
+      "theme": "workplace-safety",
+      "category": "signs",
+      "file": "workplace-safety/signs/fire.svg",
+      "tags": [
+        "fogo",
+        "incêndio",
+        "chama",
+        "calor",
+        "perigo"
+      ],
+      "width": 32,
+      "height": 32,
+      "set": "fluent-emoji",
+      "license": "MIT",
+      "author": "Microsoft",
+      "source": "https://github.com/microsoft/fluentui-emoji"
+    },
+    {
+      "id": "workplace-safety-signs-fire-extinguisher",
+      "title": "Extintor de incêndio",
+      "theme": "workplace-safety",
+      "category": "signs",
+      "file": "workplace-safety/signs/fire-extinguisher.svg",
+      "tags": [
+        "extintor",
+        "incêndio",
+        "emergência",
+        "combate"
+      ],
+      "width": 32,
+      "height": 32,
+      "set": "fluent-emoji",
+      "license": "MIT",
+      "author": "Microsoft",
+      "source": "https://github.com/microsoft/fluentui-emoji"
+    },
+    {
+      "id": "workplace-safety-signs-non-potable-water",
+      "title": "Água não potável",
+      "theme": "workplace-safety",
+      "category": "signs",
+      "file": "workplace-safety/signs/non-potable-water.svg",
+      "tags": [
+        "água não potável",
+        "proibido beber",
+        "sinalização"
+      ],
+      "width": 32,
+      "height": 32,
+      "set": "fluent-emoji",
+      "license": "MIT",
+      "author": "Microsoft",
+      "source": "https://github.com/microsoft/fluentui-emoji"
+    },
+    {
+      "id": "workplace-safety-signs-potable-water",
+      "title": "Água potável",
+      "theme": "workplace-safety",
+      "category": "signs",
+      "file": "workplace-safety/signs/potable-water.svg",
+      "tags": [
+        "água potável",
+        "beber",
+        "torneira",
+        "sinalização"
+      ],
+      "width": 32,
+      "height": 32,
+      "set": "fluent-emoji",
+      "license": "MIT",
+      "author": "Microsoft",
+      "source": "https://github.com/microsoft/fluentui-emoji"
+    },
+    {
+      "id": "workplace-safety-signs-construction-barrier",
+      "title": "Barreira de obra",
+      "theme": "workplace-safety",
+      "category": "signs",
+      "file": "workplace-safety/signs/construction-barrier.svg",
+      "tags": [
+        "barreira",
+        "obra",
+        "interditado",
+        "isolamento",
+        "sinalização"
+      ],
+      "width": 32,
+      "height": 32,
+      "set": "fluent-emoji",
+      "license": "MIT",
+      "author": "Microsoft",
+      "source": "https://github.com/microsoft/fluentui-emoji"
+    },
+    {
+      "id": "workplace-safety-signs-recycling",
+      "title": "Reciclagem",
+      "theme": "workplace-safety",
+      "category": "signs",
+      "file": "workplace-safety/signs/recycling.svg",
+      "tags": [
+        "reciclagem",
+        "resíduos",
+        "descarte",
+        "meio ambiente"
+      ],
+      "width": 32,
+      "height": 32,
+      "set": "fluent-emoji",
+      "license": "MIT",
+      "author": "Microsoft",
+      "source": "https://github.com/microsoft/fluentui-emoji"
+    },
+    {
+      "id": "industry-tools-hammer",
+      "title": "Martelo",
+      "theme": "industry",
+      "category": "tools",
+      "file": "industry/tools/hammer.svg",
+      "tags": [
+        "martelo",
+        "ferramenta",
+        "pregar"
+      ],
+      "width": 32,
+      "height": 32,
+      "set": "fluent-emoji",
+      "license": "MIT",
+      "author": "Microsoft",
+      "source": "https://github.com/microsoft/fluentui-emoji"
+    },
+    {
+      "id": "industry-tools-wrench",
+      "title": "Chave inglesa",
+      "theme": "industry",
+      "category": "tools",
+      "file": "industry/tools/wrench.svg",
+      "tags": [
+        "chave inglesa",
+        "chave",
+        "ferramenta",
+        "manutenção"
+      ],
+      "width": 32,
+      "height": 32,
+      "set": "fluent-emoji",
+      "license": "MIT",
+      "author": "Microsoft",
+      "source": "https://github.com/microsoft/fluentui-emoji"
+    },
+    {
+      "id": "industry-tools-screwdriver",
+      "title": "Chave de fenda",
+      "theme": "industry",
+      "category": "tools",
+      "file": "industry/tools/screwdriver.svg",
+      "tags": [
+        "chave de fenda",
+        "parafusar",
+        "ferramenta"
+      ],
+      "width": 32,
+      "height": 32,
+      "set": "fluent-emoji",
+      "license": "MIT",
+      "author": "Microsoft",
+      "source": "https://github.com/microsoft/fluentui-emoji"
+    },
+    {
+      "id": "industry-tools-hammer-and-wrench",
+      "title": "Martelo e chave",
+      "theme": "industry",
+      "category": "tools",
+      "file": "industry/tools/hammer-and-wrench.svg",
+      "tags": [
+        "ferramentas",
+        "manutenção",
+        "reparo",
+        "oficina"
+      ],
+      "width": 32,
+      "height": 32,
+      "set": "fluent-emoji",
+      "license": "MIT",
+      "author": "Microsoft",
+      "source": "https://github.com/microsoft/fluentui-emoji"
+    },
+    {
+      "id": "industry-tools-nut-and-bolt",
+      "title": "Porca e parafuso",
+      "theme": "industry",
+      "category": "tools",
+      "file": "industry/tools/nut-and-bolt.svg",
+      "tags": [
+        "porca",
+        "parafuso",
+        "fixação",
+        "montagem"
+      ],
+      "width": 32,
+      "height": 32,
+      "set": "fluent-emoji",
+      "license": "MIT",
+      "author": "Microsoft",
+      "source": "https://github.com/microsoft/fluentui-emoji"
+    },
+    {
+      "id": "industry-tools-gear",
+      "title": "Engrenagem",
+      "theme": "industry",
+      "category": "tools",
+      "file": "industry/tools/gear.svg",
+      "tags": [
+        "engrenagem",
+        "máquina",
+        "mecânica",
+        "processo",
+        "configuração"
+      ],
+      "width": 32,
+      "height": 32,
+      "set": "fluent-emoji",
+      "license": "MIT",
+      "author": "Microsoft",
+      "source": "https://github.com/microsoft/fluentui-emoji"
+    },
+    {
+      "id": "industry-tools-toolbox",
+      "title": "Caixa de ferramentas",
+      "theme": "industry",
+      "category": "tools",
+      "file": "industry/tools/toolbox.svg",
+      "tags": [
+        "caixa de ferramentas",
+        "ferramentas",
+        "manutenção"
+      ],
+      "width": 32,
+      "height": 32,
+      "set": "fluent-emoji",
+      "license": "MIT",
+      "author": "Microsoft",
+      "source": "https://github.com/microsoft/fluentui-emoji"
+    },
+    {
+      "id": "industry-tools-saw",
+      "title": "Serrote",
+      "theme": "industry",
+      "category": "tools",
+      "file": "industry/tools/saw.svg",
+      "tags": [
+        "serrote",
+        "serra",
+        "corte",
+        "marcenaria"
+      ],
+      "width": 32,
+      "height": 32,
+      "set": "fluent-emoji",
+      "license": "MIT",
+      "author": "Microsoft",
+      "source": "https://github.com/microsoft/fluentui-emoji"
+    },
+    {
+      "id": "industry-tools-axe",
+      "title": "Machado",
+      "theme": "industry",
+      "category": "tools",
+      "file": "industry/tools/axe.svg",
+      "tags": [
+        "machado",
+        "corte",
+        "madeira"
+      ],
+      "width": 32,
+      "height": 32,
+      "set": "fluent-emoji",
+      "license": "MIT",
+      "author": "Microsoft",
+      "source": "https://github.com/microsoft/fluentui-emoji"
+    },
+    {
+      "id": "industry-tools-ladder",
+      "title": "Escada",
+      "theme": "industry",
+      "category": "tools",
+      "file": "industry/tools/ladder.svg",
+      "tags": [
+        "escada",
+        "altura",
+        "trabalho em altura"
+      ],
+      "width": 32,
+      "height": 32,
+      "set": "fluent-emoji",
+      "license": "MIT",
+      "author": "Microsoft",
+      "source": "https://github.com/microsoft/fluentui-emoji"
+    },
+    {
+      "id": "industry-tools-magnet",
+      "title": "Ímã",
+      "theme": "industry",
+      "category": "tools",
+      "file": "industry/tools/magnet.svg",
+      "tags": [
+        "ímã",
+        "magnetismo",
+        "atração"
+      ],
+      "width": 32,
+      "height": 32,
+      "set": "fluent-emoji",
+      "license": "MIT",
+      "author": "Microsoft",
+      "source": "https://github.com/microsoft/fluentui-emoji"
+    },
+    {
+      "id": "industry-tools-ruler",
+      "title": "Régua",
+      "theme": "industry",
+      "category": "tools",
+      "file": "industry/tools/ruler.svg",
+      "tags": [
+        "régua",
+        "medida",
+        "medição"
+      ],
+      "width": 32,
+      "height": 32,
+      "set": "fluent-emoji",
+      "license": "MIT",
+      "author": "Microsoft",
+      "source": "https://github.com/microsoft/fluentui-emoji"
+    },
+    {
+      "id": "industry-tools-set-square",
+      "title": "Esquadro",
+      "theme": "industry",
+      "category": "tools",
+      "file": "industry/tools/set-square.svg",
+      "tags": [
+        "esquadro",
+        "desenho técnico",
+        "ângulo",
+        "medida"
+      ],
+      "width": 32,
+      "height": 32,
+      "set": "fluent-emoji",
+      "license": "MIT",
+      "author": "Microsoft",
+      "source": "https://github.com/microsoft/fluentui-emoji"
+    },
+    {
+      "id": "industry-tools-hook",
+      "title": "Gancho",
+      "theme": "industry",
+      "category": "tools",
+      "file": "industry/tools/hook.svg",
+      "tags": [
+        "gancho",
+        "içamento",
+        "pendurar"
+      ],
+      "width": 32,
+      "height": 32,
+      "set": "fluent-emoji",
+      "license": "MIT",
+      "author": "Microsoft",
+      "source": "https://github.com/microsoft/fluentui-emoji"
+    },
+    {
+      "id": "industry-tools-chains",
+      "title": "Correntes",
+      "theme": "industry",
+      "category": "tools",
+      "file": "industry/tools/chains.svg",
+      "tags": [
+        "corrente",
+        "elo",
+        "amarração",
+        "içamento"
+      ],
+      "width": 32,
+      "height": 32,
+      "set": "fluent-emoji",
+      "license": "MIT",
+      "author": "Microsoft",
+      "source": "https://github.com/microsoft/fluentui-emoji"
+    },
+    {
+      "id": "industry-tools-robotic-arm",
+      "title": "Braço mecânico",
+      "theme": "industry",
+      "category": "tools",
+      "file": "industry/tools/robotic-arm.svg",
+      "tags": [
+        "braço mecânico",
+        "robô",
+        "automação",
+        "indústria"
+      ],
+      "width": 32,
+      "height": 32,
+      "set": "fluent-emoji",
+      "license": "MIT",
+      "author": "Microsoft",
+      "source": "https://github.com/microsoft/fluentui-emoji"
+    },
+    {
+      "id": "industry-electrical-electric-plug",
+      "title": "Plugue elétrico",
+      "theme": "industry",
+      "category": "electrical",
+      "file": "industry/electrical/electric-plug.svg",
+      "tags": [
+        "plugue",
+        "tomada",
+        "eletricidade",
+        "energia"
+      ],
+      "width": 32,
+      "height": 32,
+      "set": "fluent-emoji",
+      "license": "MIT",
+      "author": "Microsoft",
+      "source": "https://github.com/microsoft/fluentui-emoji"
+    },
+    {
+      "id": "industry-electrical-battery",
+      "title": "Bateria",
+      "theme": "industry",
+      "category": "electrical",
+      "file": "industry/electrical/battery.svg",
+      "tags": [
+        "bateria",
+        "pilha",
+        "energia",
+        "carga"
+      ],
+      "width": 32,
+      "height": 32,
+      "set": "fluent-emoji",
+      "license": "MIT",
+      "author": "Microsoft",
+      "source": "https://github.com/microsoft/fluentui-emoji"
+    },
+    {
+      "id": "industry-electrical-low-battery",
+      "title": "Bateria fraca",
+      "theme": "industry",
+      "category": "electrical",
+      "file": "industry/electrical/low-battery.svg",
+      "tags": [
+        "bateria fraca",
+        "descarregada",
+        "energia"
+      ],
+      "width": 32,
+      "height": 32,
+      "set": "fluent-emoji",
+      "license": "MIT",
+      "author": "Microsoft",
+      "source": "https://github.com/microsoft/fluentui-emoji"
+    },
+    {
+      "id": "industry-electrical-light-bulb",
+      "title": "Lâmpada",
+      "theme": "industry",
+      "category": "electrical",
+      "file": "industry/electrical/light-bulb.svg",
+      "tags": [
+        "lâmpada",
+        "luz",
+        "iluminação",
+        "ideia"
+      ],
+      "width": 32,
+      "height": 32,
+      "set": "fluent-emoji",
+      "license": "MIT",
+      "author": "Microsoft",
+      "source": "https://github.com/microsoft/fluentui-emoji"
+    },
+    {
+      "id": "industry-electrical-flashlight",
+      "title": "Lanterna",
+      "theme": "industry",
+      "category": "electrical",
+      "file": "industry/electrical/flashlight.svg",
+      "tags": [
+        "lanterna",
+        "luz",
+        "iluminação"
+      ],
+      "width": 32,
+      "height": 32,
+      "set": "fluent-emoji",
+      "license": "MIT",
+      "author": "Microsoft",
+      "source": "https://github.com/microsoft/fluentui-emoji"
+    },
+    {
+      "id": "industry-production-factory",
+      "title": "Fábrica",
+      "theme": "industry",
+      "category": "production",
+      "file": "industry/production/factory.svg",
+      "tags": [
+        "fábrica",
+        "indústria",
+        "produção"
+      ],
+      "width": 32,
+      "height": 32,
+      "set": "fluent-emoji",
+      "license": "MIT",
+      "author": "Microsoft",
+      "source": "https://github.com/microsoft/fluentui-emoji"
+    },
+    {
+      "id": "industry-production-building-construction",
+      "title": "Construção civil",
+      "theme": "industry",
+      "category": "production",
+      "file": "industry/production/building-construction.svg",
+      "tags": [
+        "construção",
+        "obra",
+        "guindaste",
+        "edificação"
+      ],
+      "width": 32,
+      "height": 32,
+      "set": "fluent-emoji",
+      "license": "MIT",
+      "author": "Microsoft",
+      "source": "https://github.com/microsoft/fluentui-emoji"
+    },
+    {
+      "id": "industry-production-package",
+      "title": "Caixa de embalagem",
+      "theme": "industry",
+      "category": "production",
+      "file": "industry/production/package.svg",
+      "tags": [
+        "caixa",
+        "embalagem",
+        "pacote",
+        "estoque",
+        "logística"
+      ],
+      "width": 32,
+      "height": 32,
+      "set": "fluent-emoji",
+      "license": "MIT",
+      "author": "Microsoft",
+      "source": "https://github.com/microsoft/fluentui-emoji"
+    },
+    {
+      "id": "industry-production-delivery-truck",
+      "title": "Caminhão de entrega",
+      "theme": "industry",
+      "category": "production",
+      "file": "industry/production/delivery-truck.svg",
+      "tags": [
+        "caminhão",
+        "entrega",
+        "transporte",
+        "logística"
+      ],
+      "width": 32,
+      "height": 32,
+      "set": "fluent-emoji",
+      "license": "MIT",
+      "author": "Microsoft",
+      "source": "https://github.com/microsoft/fluentui-emoji"
+    },
+    {
+      "id": "industry-production-oil-drum",
+      "title": "Tambor de óleo",
+      "theme": "industry",
+      "category": "production",
+      "file": "industry/production/oil-drum.svg",
+      "tags": [
+        "tambor",
+        "óleo",
+        "combustível",
+        "produto químico"
+      ],
+      "width": 32,
+      "height": 32,
+      "set": "fluent-emoji",
+      "license": "MIT",
+      "author": "Microsoft",
+      "source": "https://github.com/microsoft/fluentui-emoji"
+    },
+    {
+      "id": "industry-production-fuel-pump",
+      "title": "Bomba de combustível",
+      "theme": "industry",
+      "category": "production",
+      "file": "industry/production/fuel-pump.svg",
+      "tags": [
+        "combustível",
+        "abastecimento",
+        "posto"
+      ],
+      "width": 32,
+      "height": 32,
+      "set": "fluent-emoji",
+      "license": "MIT",
+      "author": "Microsoft",
+      "source": "https://github.com/microsoft/fluentui-emoji"
+    },
+    {
+      "id": "industry-production-brick",
+      "title": "Tijolo",
+      "theme": "industry",
+      "category": "production",
+      "file": "industry/production/brick.svg",
+      "tags": [
+        "tijolo",
+        "alvenaria",
+        "construção"
+      ],
+      "width": 32,
+      "height": 32,
+      "set": "fluent-emoji",
+      "license": "MIT",
+      "author": "Microsoft",
+      "source": "https://github.com/microsoft/fluentui-emoji"
+    },
+    {
+      "id": "industry-production-wood",
+      "title": "Madeira",
+      "theme": "industry",
+      "category": "production",
+      "file": "industry/production/wood.svg",
+      "tags": [
+        "madeira",
+        "tora",
+        "matéria-prima"
+      ],
+      "width": 32,
+      "height": 32,
+      "set": "fluent-emoji",
+      "license": "MIT",
+      "author": "Microsoft",
+      "source": "https://github.com/microsoft/fluentui-emoji"
+    },
+    {
+      "id": "industry-production-stopwatch",
+      "title": "Cronômetro",
+      "theme": "industry",
+      "category": "production",
+      "file": "industry/production/stopwatch.svg",
+      "tags": [
+        "cronômetro",
+        "tempo",
+        "medição",
+        "produtividade"
+      ],
+      "width": 32,
+      "height": 32,
+      "set": "fluent-emoji",
+      "license": "MIT",
+      "author": "Microsoft",
+      "source": "https://github.com/microsoft/fluentui-emoji"
+    },
+    {
+      "id": "health-care-stethoscope",
+      "title": "Estetoscópio",
+      "theme": "health",
+      "category": "care",
+      "file": "health/care/stethoscope.svg",
+      "tags": [
+        "estetoscópio",
+        "médico",
+        "consulta",
+        "saúde"
+      ],
+      "width": 32,
+      "height": 32,
+      "set": "fluent-emoji",
+      "license": "MIT",
+      "author": "Microsoft",
+      "source": "https://github.com/microsoft/fluentui-emoji"
+    },
+    {
+      "id": "health-care-syringe",
+      "title": "Seringa",
+      "theme": "health",
+      "category": "care",
+      "file": "health/care/syringe.svg",
+      "tags": [
+        "seringa",
+        "injeção",
+        "vacina",
+        "saúde"
+      ],
+      "width": 32,
+      "height": 32,
+      "set": "fluent-emoji",
+      "license": "MIT",
+      "author": "Microsoft",
+      "source": "https://github.com/microsoft/fluentui-emoji"
+    },
+    {
+      "id": "health-care-pill",
+      "title": "Comprimido",
+      "theme": "health",
+      "category": "care",
+      "file": "health/care/pill.svg",
+      "tags": [
+        "comprimido",
+        "remédio",
+        "medicamento"
+      ],
+      "width": 32,
+      "height": 32,
+      "set": "fluent-emoji",
+      "license": "MIT",
+      "author": "Microsoft",
+      "source": "https://github.com/microsoft/fluentui-emoji"
+    },
+    {
+      "id": "health-care-adhesive-bandage",
+      "title": "Curativo",
+      "theme": "health",
+      "category": "care",
+      "file": "health/care/adhesive-bandage.svg",
+      "tags": [
+        "curativo",
+        "ferimento",
+        "primeiros socorros"
+      ],
+      "width": 32,
+      "height": 32,
+      "set": "fluent-emoji",
+      "license": "MIT",
+      "author": "Microsoft",
+      "source": "https://github.com/microsoft/fluentui-emoji"
+    },
+    {
+      "id": "health-care-thermometer",
+      "title": "Termômetro",
+      "theme": "health",
+      "category": "care",
+      "file": "health/care/thermometer.svg",
+      "tags": [
+        "termômetro",
+        "temperatura",
+        "febre",
+        "medição"
+      ],
+      "width": 32,
+      "height": 32,
+      "set": "fluent-emoji",
+      "license": "MIT",
+      "author": "Microsoft",
+      "source": "https://github.com/microsoft/fluentui-emoji"
+    },
+    {
+      "id": "health-care-drop-of-blood",
+      "title": "Gota de sangue",
+      "theme": "health",
+      "category": "care",
+      "file": "health/care/drop-of-blood.svg",
+      "tags": [
+        "sangue",
+        "exame",
+        "doação"
+      ],
+      "width": 32,
+      "height": 32,
+      "set": "fluent-emoji",
+      "license": "MIT",
+      "author": "Microsoft",
+      "source": "https://github.com/microsoft/fluentui-emoji"
+    },
+    {
+      "id": "health-care-hospital",
+      "title": "Hospital",
+      "theme": "health",
+      "category": "care",
+      "file": "health/care/hospital.svg",
+      "tags": [
+        "hospital",
+        "atendimento",
+        "saúde"
+      ],
+      "width": 32,
+      "height": 32,
+      "set": "fluent-emoji",
+      "license": "MIT",
+      "author": "Microsoft",
+      "source": "https://github.com/microsoft/fluentui-emoji"
+    },
+    {
+      "id": "health-care-ambulance",
+      "title": "Ambulância",
+      "theme": "health",
+      "category": "care",
+      "file": "health/care/ambulance.svg",
+      "tags": [
+        "ambulância",
+        "emergência",
+        "resgate",
+        "socorro"
+      ],
+      "width": 32,
+      "height": 32,
+      "set": "fluent-emoji",
+      "license": "MIT",
+      "author": "Microsoft",
+      "source": "https://github.com/microsoft/fluentui-emoji"
+    },
+    {
+      "id": "health-care-microscope",
+      "title": "Microscópio",
+      "theme": "health",
+      "category": "care",
+      "file": "health/care/microscope.svg",
+      "tags": [
+        "microscópio",
+        "laboratório",
+        "análise",
+        "ciência"
+      ],
+      "width": 32,
+      "height": 32,
+      "set": "fluent-emoji",
+      "license": "MIT",
+      "author": "Microsoft",
+      "source": "https://github.com/microsoft/fluentui-emoji"
+    },
+    {
+      "id": "health-care-test-tube",
+      "title": "Tubo de ensaio",
+      "theme": "health",
+      "category": "care",
+      "file": "health/care/test-tube.svg",
+      "tags": [
+        "tubo de ensaio",
+        "laboratório",
+        "amostra",
+        "química"
+      ],
+      "width": 32,
+      "height": 32,
+      "set": "fluent-emoji",
+      "license": "MIT",
+      "author": "Microsoft",
+      "source": "https://github.com/microsoft/fluentui-emoji"
+    },
+    {
+      "id": "health-care-dna",
+      "title": "DNA",
+      "theme": "health",
+      "category": "care",
+      "file": "health/care/dna.svg",
+      "tags": [
+        "dna",
+        "genética",
+        "biologia"
+      ],
+      "width": 32,
+      "height": 32,
+      "set": "fluent-emoji",
+      "license": "MIT",
+      "author": "Microsoft",
+      "source": "https://github.com/microsoft/fluentui-emoji"
+    },
+    {
+      "id": "health-care-lungs",
+      "title": "Pulmões",
+      "theme": "health",
+      "category": "care",
+      "file": "health/care/lungs.svg",
+      "tags": [
+        "pulmões",
+        "respiração",
+        "anatomia"
+      ],
+      "width": 32,
+      "height": 32,
+      "set": "fluent-emoji",
+      "license": "MIT",
+      "author": "Microsoft",
+      "source": "https://github.com/microsoft/fluentui-emoji"
+    },
+    {
+      "id": "health-care-heart",
+      "title": "Coração",
+      "theme": "health",
+      "category": "care",
+      "file": "health/care/heart.svg",
+      "tags": [
+        "coração",
+        "anatomia",
+        "circulação"
+      ],
+      "width": 32,
+      "height": 32,
+      "set": "fluent-emoji",
+      "license": "MIT",
+      "author": "Microsoft",
+      "source": "https://github.com/microsoft/fluentui-emoji"
+    },
+    {
+      "id": "health-care-tooth",
+      "title": "Dente",
+      "theme": "health",
+      "category": "care",
+      "file": "health/care/tooth.svg",
+      "tags": [
+        "dente",
+        "odontologia",
+        "higiene bucal"
+      ],
+      "width": 32,
+      "height": 32,
+      "set": "fluent-emoji",
+      "license": "MIT",
+      "author": "Microsoft",
+      "source": "https://github.com/microsoft/fluentui-emoji"
+    },
+    {
+      "id": "health-care-soap",
+      "title": "Sabonete",
+      "theme": "health",
+      "category": "care",
+      "file": "health/care/soap.svg",
+      "tags": [
+        "sabonete",
+        "higiene",
+        "lavar as mãos"
+      ],
+      "width": 32,
+      "height": 32,
+      "set": "fluent-emoji",
+      "license": "MIT",
+      "author": "Microsoft",
+      "source": "https://github.com/microsoft/fluentui-emoji"
+    },
+    {
+      "id": "health-care-toothbrush",
+      "title": "Escova de dentes",
+      "theme": "health",
+      "category": "care",
+      "file": "health/care/toothbrush.svg",
+      "tags": [
+        "escova de dentes",
+        "higiene bucal",
+        "limpeza"
+      ],
+      "width": 32,
+      "height": 32,
+      "set": "fluent-emoji",
+      "license": "MIT",
+      "author": "Microsoft",
+      "source": "https://github.com/microsoft/fluentui-emoji"
+    },
+    {
+      "id": "office-objects-laptop",
+      "title": "Notebook",
+      "theme": "office",
+      "category": "objects",
+      "file": "office/objects/laptop.svg",
+      "tags": [
+        "notebook",
+        "computador",
+        "trabalho remoto",
+        "tecnologia"
+      ],
+      "width": 32,
+      "height": 32,
+      "set": "fluent-emoji",
+      "license": "MIT",
+      "author": "Microsoft",
+      "source": "https://github.com/microsoft/fluentui-emoji"
+    },
+    {
+      "id": "office-objects-desktop-computer",
+      "title": "Computador",
+      "theme": "office",
+      "category": "objects",
+      "file": "office/objects/desktop-computer.svg",
+      "tags": [
+        "computador",
+        "monitor",
+        "informática"
+      ],
+      "width": 32,
+      "height": 32,
+      "set": "fluent-emoji",
+      "license": "MIT",
+      "author": "Microsoft",
+      "source": "https://github.com/microsoft/fluentui-emoji"
+    },
+    {
+      "id": "office-objects-printer",
+      "title": "Impressora",
+      "theme": "office",
+      "category": "objects",
+      "file": "office/objects/printer.svg",
+      "tags": [
+        "impressora",
+        "imprimir",
+        "documento"
+      ],
+      "width": 32,
+      "height": 32,
+      "set": "fluent-emoji",
+      "license": "MIT",
+      "author": "Microsoft",
+      "source": "https://github.com/microsoft/fluentui-emoji"
+    },
+    {
+      "id": "office-objects-telephone",
+      "title": "Telefone",
+      "theme": "office",
+      "category": "objects",
+      "file": "office/objects/telephone.svg",
+      "tags": [
+        "telefone",
+        "ligação",
+        "atendimento",
+        "contato"
+      ],
+      "width": 32,
+      "height": 32,
+      "set": "fluent-emoji",
+      "license": "MIT",
+      "author": "Microsoft",
+      "source": "https://github.com/microsoft/fluentui-emoji"
+    },
+    {
+      "id": "office-objects-clipboard",
+      "title": "Prancheta",
+      "theme": "office",
+      "category": "objects",
+      "file": "office/objects/clipboard.svg",
+      "tags": [
+        "prancheta",
+        "checklist",
+        "inspeção",
+        "formulário"
+      ],
+      "width": 32,
+      "height": 32,
+      "set": "fluent-emoji",
+      "license": "MIT",
+      "author": "Microsoft",
+      "source": "https://github.com/microsoft/fluentui-emoji"
+    },
+    {
+      "id": "office-objects-memo",
+      "title": "Anotação",
+      "theme": "office",
+      "category": "objects",
+      "file": "office/objects/memo.svg",
+      "tags": [
+        "anotação",
+        "documento",
+        "registro",
+        "relatório"
+      ],
+      "width": 32,
+      "height": 32,
+      "set": "fluent-emoji",
+      "license": "MIT",
+      "author": "Microsoft",
+      "source": "https://github.com/microsoft/fluentui-emoji"
+    },
+    {
+      "id": "office-objects-pencil",
+      "title": "Lápis",
+      "theme": "office",
+      "category": "objects",
+      "file": "office/objects/pencil.svg",
+      "tags": [
+        "lápis",
+        "escrever",
+        "anotar"
+      ],
+      "width": 32,
+      "height": 32,
+      "set": "fluent-emoji",
+      "license": "MIT",
+      "author": "Microsoft",
+      "source": "https://github.com/microsoft/fluentui-emoji"
+    },
+    {
+      "id": "office-objects-calendar",
+      "title": "Calendário",
+      "theme": "office",
+      "category": "objects",
+      "file": "office/objects/calendar.svg",
+      "tags": [
+        "calendário",
+        "data",
+        "prazo",
+        "agenda"
+      ],
+      "width": 32,
+      "height": 32,
+      "set": "fluent-emoji",
+      "license": "MIT",
+      "author": "Microsoft",
+      "source": "https://github.com/microsoft/fluentui-emoji"
+    },
+    {
+      "id": "office-objects-bar-chart",
+      "title": "Gráfico de barras",
+      "theme": "office",
+      "category": "objects",
+      "file": "office/objects/bar-chart.svg",
+      "tags": [
+        "gráfico",
+        "indicadores",
+        "dados",
+        "resultado"
+      ],
+      "width": 32,
+      "height": 32,
+      "set": "fluent-emoji",
+      "license": "MIT",
+      "author": "Microsoft",
+      "source": "https://github.com/microsoft/fluentui-emoji"
+    },
+    {
+      "id": "office-objects-chart-increasing",
+      "title": "Gráfico em alta",
+      "theme": "office",
+      "category": "objects",
+      "file": "office/objects/chart-increasing.svg",
+      "tags": [
+        "gráfico",
+        "crescimento",
+        "meta",
+        "resultado"
+      ],
+      "width": 32,
+      "height": 32,
+      "set": "fluent-emoji",
+      "license": "MIT",
+      "author": "Microsoft",
+      "source": "https://github.com/microsoft/fluentui-emoji"
+    },
+    {
+      "id": "office-objects-briefcase",
+      "title": "Maleta",
+      "theme": "office",
+      "category": "objects",
+      "file": "office/objects/briefcase.svg",
+      "tags": [
+        "maleta",
+        "trabalho",
+        "negócios",
+        "carreira"
+      ],
+      "width": 32,
+      "height": 32,
+      "set": "fluent-emoji",
+      "license": "MIT",
+      "author": "Microsoft",
+      "source": "https://github.com/microsoft/fluentui-emoji"
+    },
+    {
+      "id": "office-objects-file-folder",
+      "title": "Pasta de arquivos",
+      "theme": "office",
+      "category": "objects",
+      "file": "office/objects/file-folder.svg",
+      "tags": [
+        "pasta",
+        "arquivo",
+        "documentos",
+        "organização"
+      ],
+      "width": 32,
+      "height": 32,
+      "set": "fluent-emoji",
+      "license": "MIT",
+      "author": "Microsoft",
+      "source": "https://github.com/microsoft/fluentui-emoji"
+    },
+    {
+      "id": "office-objects-paperclip",
+      "title": "Clipe de papel",
+      "theme": "office",
+      "category": "objects",
+      "file": "office/objects/paperclip.svg",
+      "tags": [
+        "clipe",
+        "anexo",
+        "documento"
+      ],
+      "width": 32,
+      "height": 32,
+      "set": "fluent-emoji",
+      "license": "MIT",
+      "author": "Microsoft",
+      "source": "https://github.com/microsoft/fluentui-emoji"
+    },
+    {
+      "id": "office-objects-locked",
+      "title": "Cadeado fechado",
+      "theme": "office",
+      "category": "objects",
+      "file": "office/objects/locked.svg",
+      "tags": [
+        "cadeado",
+        "segurança da informação",
+        "bloqueio",
+        "senha"
+      ],
+      "width": 32,
+      "height": 32,
+      "set": "fluent-emoji",
+      "license": "MIT",
+      "author": "Microsoft",
+      "source": "https://github.com/microsoft/fluentui-emoji"
+    },
+    {
+      "id": "office-objects-megaphone",
+      "title": "Megafone",
+      "theme": "office",
+      "category": "objects",
+      "file": "office/objects/megaphone.svg",
+      "tags": [
+        "megafone",
+        "anúncio",
+        "comunicação",
+        "aviso"
+      ],
+      "width": 32,
+      "height": 32,
+      "set": "fluent-emoji",
+      "license": "MIT",
+      "author": "Microsoft",
+      "source": "https://github.com/microsoft/fluentui-emoji"
+    }
+  ]
+}

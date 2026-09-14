@@ -2,7 +2,10 @@ import {
   AlertTriangle,
   ArrowLeftRight,
   Boxes,
+  CheckCheck,
   ChevronDown,
+  ClipboardCheck,
+  ClipboardList,
   Heading2,
   Heading3,
   HelpCircle,
@@ -10,11 +13,14 @@ import {
   FileText,
   GalleryHorizontal,
   List,
+  ListOrdered,
   Milestone,
   MousePointerClick,
   RotateCcw,
   Target,
+  TextCursorInput,
   Minus,
+  MessagesSquare,
   MonitorPlay,
   Music,
   PanelTop,
@@ -28,13 +34,21 @@ import type {
   Course,
   FlipcardItem,
   OptionLetter,
+  PracticeItem,
+  SheetMaterial,
+  SheetStep,
   ListItem,
   VideoQuestion,
   QuizQuestion,
+  ScenarioOption,
+  SequenceItem,
+  TrueFalseItem,
   Unit,
 } from '@/types/course'
 import { timeToSeconds } from '@/lib/video-time'
+import { cleanDistractors, fillBlanksAnswers } from '@/lib/fill-blanks'
 import { isValidYouTubeUrl } from '@/lib/youtube'
+import { isLibraryIllustrationPath } from '@/lib/illustration-paths'
 
 export type BlockType = Block['type']
 
@@ -89,6 +103,11 @@ const CAROUSEL_MODES = ['carousel', 'grid'] as const
 
 const MIN_PAIRS = 2
 const MIN_CATEGORIES = 2
+const MIN_STATEMENTS = 2
+const MIN_SEQUENCE_ITEMS = 2
+const MIN_SEQUENCE_FORM_ITEMS = 3
+const MIN_SCENARIO_OPTIONS = 2
+const MIN_PRACTICE_FORM_ITEMS = 2
 
 const OPTIONS_PER_QUESTION = 5
 
@@ -604,7 +623,7 @@ export const BLOCK_CATALOG: Record<BlockType, BlockMeta> = {
     icon: MousePointerClick,
     description: 'Imagem com pontos clicáveis',
     category: 'interativo',
-    defaults: () => ({ baseImage: '', hotspots: [], size: 'large' }),
+    defaults: () => ({ baseImage: '', hotspots: [], size: 'large', hotspotMode: 'explore' }),
     validateForm: (b) => {
       if (!hasText(b.baseImage)) return 'Adicione a imagem de fundo'
       if (!b.hotspots?.length) return 'Adicione pelo menos um ponto na imagem'
@@ -635,6 +654,12 @@ export const BLOCK_CATALOG: Record<BlockType, BlockMeta> = {
         return 'Todos os pares devem ter os dois lados preenchidos'
       return null
     },
+    extractMedia: (b) => (b.matchingPairs ?? []).map((pair) => pair.leftImage),
+    rewriteMedia: (b, mapper) => ({
+      matchingPairs: (b.matchingPairs ?? []).map((pair) =>
+        pair.leftImage ? { ...pair, leftImage: mapper(pair.leftImage) ?? pair.leftImage } : pair
+      ),
+    }),
   },
   categorization: {
     type: 'categorization',
@@ -654,6 +679,155 @@ export const BLOCK_CATALOG: Record<BlockType, BlockMeta> = {
       if (b.categories?.some((c) => !hasText(c.name))) return 'Todas as categorias devem ter nome'
       if (b.categories?.some((c) => !c.items?.some((i) => hasText(i.text))))
         return 'Cada categoria precisa de pelo menos um item'
+      return null
+    },
+  },
+  'true-false': {
+    type: 'true-false',
+    label: 'Verdadeiro ou falso',
+    pluralLabel: 'blocos de verdadeiro ou falso',
+    marker: 'VERDADEIROFALSO',
+    aiGeneratable: true,
+    requiresDocumentMedia: false,
+    validate: (b) => validTrueFalseItems(b.trueFalseItems).length > 0,
+    icon: CheckCheck,
+    description: 'Afirmações para julgar como verdadeiras ou falsas',
+    category: 'avaliativo',
+    defaults: () => ({ trueFalseItems: [] }),
+    validateForm: (b) => {
+      if ((b.trueFalseItems?.length ?? 0) < MIN_STATEMENTS)
+        return `Adicione pelo menos ${MIN_STATEMENTS} afirmações`
+      if (b.trueFalseItems?.some((item) => !hasText(item.statement)))
+        return 'Todas as afirmações devem ter texto'
+      if (b.trueFalseItems?.some((item) => item.answer !== 'true' && item.answer !== 'false'))
+        return 'Marque se cada afirmação é verdadeira ou falsa'
+      return null
+    },
+  },
+  sequence: {
+    type: 'sequence',
+    label: 'Sequência',
+    pluralLabel: 'sequências',
+    marker: 'SEQUENCIA',
+    aiGeneratable: true,
+    requiresDocumentMedia: false,
+    validate: (b) => validSequenceItems(b.sequenceItems).length >= MIN_SEQUENCE_ITEMS,
+    icon: ListOrdered,
+    description: 'Colocar os passos na ordem certa',
+    category: 'avaliativo',
+    defaults: () => ({ sequenceItems: [] }),
+    validateForm: (b) => {
+      if ((b.sequenceItems?.length ?? 0) < MIN_SEQUENCE_FORM_ITEMS)
+        return `Adicione pelo menos ${MIN_SEQUENCE_FORM_ITEMS} passos`
+      if (b.sequenceItems?.some((item) => !hasText(item.text)))
+        return 'Todos os passos devem ter texto'
+      return null
+    },
+  },
+  'fill-blanks': {
+    type: 'fill-blanks',
+    label: 'Completar lacunas',
+    pluralLabel: 'blocos de completar lacunas',
+    marker: 'LACUNAS',
+    aiGeneratable: true,
+    requiresDocumentMedia: false,
+    validate: (b) => fillBlanksAnswers(b.fillBlanksText).some(hasText),
+    icon: TextCursorInput,
+    description: 'Texto com lacunas para completar com palavras',
+    category: 'avaliativo',
+    defaults: () => ({ fillBlanksText: '', fillBlanksDistractors: [] }),
+    validateForm: (b) => {
+      if (!hasText(b.fillBlanksText)) return 'Escreva o texto com as lacunas'
+      const answers = fillBlanksAnswers(b.fillBlanksText)
+      if (answers.length === 0) return 'Marque cada lacuna entre colchetes, como [palavra]'
+      if (answers.some((answer) => !hasText(answer)))
+        return 'Há uma lacuna vazia: escreva a palavra entre os colchetes'
+      return null
+    },
+  },
+  scenario: {
+    type: 'scenario',
+    label: 'Cenário de decisão',
+    pluralLabel: 'cenários de decisão',
+    marker: 'CENARIO',
+    aiGeneratable: true,
+    requiresDocumentMedia: false,
+    validate: (b) => {
+      const options = validScenarioOptions(b.scenarioOptions)
+      return (
+        hasText(b.scenarioSituation) &&
+        options.length >= MIN_SCENARIO_OPTIONS &&
+        options.some((option) => option.outcome === 'correct')
+      )
+    },
+    icon: MessagesSquare,
+    description: 'Situação com escolhas e consequências',
+    category: 'avaliativo',
+    defaults: () => ({
+      scenarioCharacter: '',
+      scenarioAvatar: '',
+      scenarioSituation: '',
+      scenarioOptions: [],
+    }),
+    validateForm: (b) => {
+      if (!hasText(b.scenarioSituation)) return 'Descreva a situação'
+      if ((b.scenarioOptions?.length ?? 0) < MIN_SCENARIO_OPTIONS)
+        return `Adicione pelo menos ${MIN_SCENARIO_OPTIONS} opções`
+      if (b.scenarioOptions?.some((option) => !hasText(option.text)))
+        return 'Todas as opções devem ter texto'
+      if (!b.scenarioOptions?.some((option) => option.outcome === 'correct'))
+        return 'Marque pelo menos uma opção como correta'
+      return null
+    },
+    extractMedia: (b) => [b.scenarioAvatar],
+    rewriteMedia: (b, mapper) => ({ scenarioAvatar: mapper(b.scenarioAvatar) ?? b.scenarioAvatar }),
+  },
+  'technical-sheet': {
+    type: 'technical-sheet',
+    label: 'Ficha técnica',
+    pluralLabel: 'fichas técnicas',
+    marker: 'FICHATECNICA',
+    aiGeneratable: true,
+    requiresDocumentMedia: false,
+    validate: (b) => validSheetMaterials(b.sheetMaterials).length > 0,
+    icon: ClipboardList,
+    description: 'Materiais com quantidade e imagem, seguidos dos passos',
+    category: 'texto',
+    defaults: () => ({ sheetSummary: '', sheetMaterials: [], sheetSteps: [] }),
+    validateForm: (b) => {
+      if ((b.sheetMaterials?.length ?? 0) === 0) return 'Adicione pelo menos 1 material'
+      if (b.sheetMaterials?.some((material) => !hasText(material.name)))
+        return 'Todos os materiais devem ter nome'
+      if ((b.sheetSteps?.length ?? 0) === 0) return 'Adicione pelo menos 1 passo'
+      if (b.sheetSteps?.some((step) => !hasText(step.text)))
+        return 'Todos os passos devem ter texto'
+      return null
+    },
+    extractMedia: (b) => (b.sheetMaterials ?? []).map((material) => material.image),
+    rewriteMedia: (b, mapper) => ({
+      sheetMaterials: (b.sheetMaterials ?? []).map((material) =>
+        material.image ? { ...material, image: mapper(material.image) ?? material.image } : material
+      ),
+    }),
+  },
+  'practice-checklist': {
+    type: 'practice-checklist',
+    label: 'Missão prática',
+    pluralLabel: 'missões práticas',
+    marker: 'MISSAOPRATICA',
+    aiGeneratable: true,
+    requiresDocumentMedia: false,
+    validate: (b) => validPracticeItems(b.practiceItems).length > 0,
+    icon: ClipboardCheck,
+    description: 'Lista de tarefas para o aluno marcar enquanto pratica',
+    category: 'interativo',
+    defaults: () => ({ practiceMission: '', practiceItems: [] }),
+    validateForm: (b) => {
+      if (!hasText(b.practiceMission)) return 'Descreva a missão'
+      if ((b.practiceItems?.length ?? 0) < MIN_PRACTICE_FORM_ITEMS)
+        return `Adicione pelo menos ${MIN_PRACTICE_FORM_ITEMS} itens`
+      if (b.practiceItems?.some((practiceItem) => !hasText(practiceItem.text)))
+        return 'Todos os itens devem ter texto'
       return null
     },
   },
@@ -686,7 +860,9 @@ export type DraftBlock = Omit<Block, 'id' | 'order'>
 export function extractBlockMedia(block: Block): string[] {
   const meta = BLOCK_CATALOG[block.type]
   if (!meta?.extractMedia) return []
-  return meta.extractMedia(block).filter((url): url is string => isUrl(url))
+  return meta
+    .extractMedia(block)
+    .filter((url): url is string => isUrl(url) || isLibraryIllustrationPath(url))
 }
 
 export function rewriteBlockMedia(block: Block, lookup: Map<string, string>): Block {
@@ -870,6 +1046,7 @@ function repairBlock(block: Block): Block {
   }
 
   if (repaired.type === 'interactive-image') {
+    repaired.hotspotMode = repaired.hotspotMode === 'find' ? 'find' : 'explore'
     repaired.hotspots = (repaired.hotspots ?? [])
       .filter((h) => hasText(h?.title))
       .map((h, index) => ({
@@ -884,11 +1061,55 @@ function repairBlock(block: Block): Block {
   if (repaired.type === 'matching') {
     repaired.matchingPairs = (repaired.matchingPairs ?? [])
       .filter((p) => hasText(p?.left) && hasText(p?.right))
-      .map((p, index) => ({ ...p, id: hasText(p.id) ? p.id : `par-${index + 1}` }))
+      .map((p, index) => {
+        const { leftImage, ...pair } = p
+        return {
+          ...pair,
+          id: hasText(p.id) ? p.id : `par-${index + 1}`,
+          ...(isUrl(leftImage) ? { leftImage: leftImage!.trim() } : {}),
+        }
+      })
   }
 
   if (repaired.type === 'categorization') {
     repaired.categories = validCategories(repaired.categories)
+  }
+
+  if (repaired.type === 'true-false') {
+    repaired.trueFalseItems = validTrueFalseItems(repaired.trueFalseItems)
+  }
+
+  if (repaired.type === 'sequence') {
+    repaired.sequenceItems = validSequenceItems(repaired.sequenceItems)
+  }
+
+  if (repaired.type === 'fill-blanks') {
+    const text = hasText(repaired.fillBlanksText) ? repaired.fillBlanksText!.trim() : ''
+    repaired.fillBlanksText = text.replace(/\[\s*\]/g, '')
+    repaired.fillBlanksDistractors = cleanDistractors(
+      repaired.fillBlanksDistractors,
+      fillBlanksAnswers(repaired.fillBlanksText)
+    )
+  }
+
+  if (repaired.type === 'technical-sheet') {
+    repaired.sheetSummary = repaired.sheetSummary?.trim() ?? ''
+    repaired.sheetMaterials = validSheetMaterials(repaired.sheetMaterials)
+    repaired.sheetSteps = validSheetSteps(repaired.sheetSteps)
+  }
+
+  if (repaired.type === 'practice-checklist') {
+    repaired.practiceMission = repaired.practiceMission?.trim() ?? ''
+    repaired.practiceItems = validPracticeItems(repaired.practiceItems)
+  }
+
+  if (repaired.type === 'scenario') {
+    repaired.scenarioCharacter = hasText(repaired.scenarioCharacter)
+      ? repaired.scenarioCharacter!.trim()
+      : ''
+    repaired.scenarioSituation = repaired.scenarioSituation?.trim() ?? ''
+    repaired.scenarioAvatar = isUrl(repaired.scenarioAvatar) ? repaired.scenarioAvatar!.trim() : ''
+    repaired.scenarioOptions = validScenarioOptions(repaired.scenarioOptions)
   }
 
   if (repaired.type === 'video') {
@@ -988,6 +1209,18 @@ function invalidReason(type: BlockType): string {
       return `com menos de ${MIN_PAIRS} pares completos`
     case 'categorization':
       return `com menos de ${MIN_CATEGORIES} categorias com nome e itens`
+    case 'true-false':
+      return 'sem afirmações com resposta verdadeira ou falsa'
+    case 'sequence':
+      return `com menos de ${MIN_SEQUENCE_ITEMS} passos com texto`
+    case 'fill-blanks':
+      return 'sem lacunas marcadas entre colchetes'
+    case 'technical-sheet':
+      return 'sem materiais com nome'
+    case 'practice-checklist':
+      return 'sem itens com texto'
+    case 'scenario':
+      return `sem situação ou sem ${MIN_SCENARIO_OPTIONS} opções com uma correta`
     default:
       return 'sem conteúdo'
   }
@@ -1035,6 +1268,88 @@ function isListOnly(html: string): boolean {
 
 function stripTags(html: string): string {
   return html.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ')
+}
+
+function scenarioOutcome(value: unknown): ScenarioOption['outcome'] {
+  const normalized = String(value ?? '')
+    .trim()
+    .toLowerCase()
+  return ['correct', 'true', 'correta', 'certa', 'sim'].includes(normalized)
+    ? 'correct'
+    : 'incorrect'
+}
+
+function validScenarioOptions(options?: ScenarioOption[]): ScenarioOption[] {
+  return (options ?? [])
+    .filter((option) => hasText(option?.text))
+    .map((option, index) => ({
+      id: hasText(option.id) ? option.id : `op-${index + 1}`,
+      text: option.text.trim(),
+      outcome: scenarioOutcome(option.outcome),
+      consequence: hasText(option.consequence) ? option.consequence.trim() : '',
+    }))
+}
+
+function validSheetMaterials(materials?: SheetMaterial[]): SheetMaterial[] {
+  return (materials ?? [])
+    .filter((material) => hasText(material?.name))
+    .map((material, index) => ({
+      id: hasText(material.id) ? material.id : `mat-${index + 1}`,
+      name: material.name.trim(),
+      quantity: hasText(material.quantity) ? material.quantity.trim() : '',
+      ...(isUrl(material.image) ? { image: material.image!.trim() } : {}),
+    }))
+}
+
+function validSheetSteps(steps?: SheetStep[]): SheetStep[] {
+  return (steps ?? [])
+    .filter((step) => hasText(step?.text))
+    .map((step, index) => ({
+      id: hasText(step.id) ? step.id : `step-${index + 1}`,
+      text: step.text.trim(),
+    }))
+}
+
+function validPracticeItems(items?: PracticeItem[]): PracticeItem[] {
+  return (items ?? [])
+    .filter((practiceItem) => hasText(practiceItem?.text))
+    .map((practiceItem, index) => ({
+      id: hasText(practiceItem.id) ? practiceItem.id : `task-${index + 1}`,
+      text: practiceItem.text.trim(),
+    }))
+}
+
+function validSequenceItems(items?: SequenceItem[]): SequenceItem[] {
+  return (items ?? [])
+    .filter((item) => hasText(item?.text))
+    .map((item, index) => ({
+      id: hasText(item.id) ? item.id : `seq-${index + 1}`,
+      text: item.text.trim(),
+    }))
+}
+
+function trueFalseAnswer(value: unknown): TrueFalseItem['answer'] | null {
+  const normalized = String(value ?? '')
+    .trim()
+    .toLowerCase()
+  if (['true', 'verdadeiro', 'verdadeira', 'v'].includes(normalized)) return 'true'
+  if (['false', 'falso', 'falsa', 'f'].includes(normalized)) return 'false'
+  return null
+}
+
+function validTrueFalseItems(items?: TrueFalseItem[]): TrueFalseItem[] {
+  return (items ?? []).flatMap((item, index) => {
+    const answer = trueFalseAnswer(item?.answer)
+    if (!hasText(item?.statement) || !answer) return []
+    return [
+      {
+        id: hasText(item.id) ? item.id : `vf-${index + 1}`,
+        statement: item.statement.trim(),
+        answer,
+        explanation: hasText(item.explanation) ? item.explanation.trim() : '',
+      },
+    ]
+  })
 }
 
 function hasText(value?: string): boolean {

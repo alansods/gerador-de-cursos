@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { Block } from '@/types/course'
+import { illustrationCardStyle, isIllustrationSource } from '@/lib/illustration-paths'
 
 export function CarouselBlock({ item }: { item: Block }) {
   const items = item.carouselItems ?? []
@@ -22,7 +23,10 @@ export function CarouselBlock({ item }: { item: Block }) {
             <img
               src={image.url}
               alt={image.caption || `Imagem ${idx + 1}`}
-              className="w-full h-48 object-cover rounded-lg border border-gray-200 dark:border-gray-700"
+              className={`w-full h-48 rounded-lg border border-gray-200 dark:border-gray-700 ${
+                isIllustrationSource(image.url) ? 'object-contain p-3' : 'object-cover'
+              }`}
+              style={illustrationCardStyle(image.url)}
             />
             {image.caption && (
               <figcaption className="text-sm text-gray-600 dark:text-gray-400 italic">
@@ -51,7 +55,7 @@ export function CarouselBlock({ item }: { item: Block }) {
         if (e.key === 'ArrowRight') goTo(current + 1)
       }}
     >
-      <div className="relative rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 p-4">
+      <div className="block-surface relative rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 p-4">
         <div className="overflow-hidden">
           <div
             className="flex items-center transition-transform duration-500 ease-out motion-reduce:transition-none"
@@ -66,7 +70,10 @@ export function CarouselBlock({ item }: { item: Block }) {
                 <img
                   src={slide.url}
                   alt={slide.caption || `Imagem ${idx + 1} de ${items.length}`}
-                  className="mx-auto h-auto max-h-96 max-w-full object-contain rounded-lg"
+                  className={`mx-auto h-auto max-h-96 max-w-full object-contain rounded-lg ${
+                    isIllustrationSource(slide.url) ? 'rounded-xl p-4' : ''
+                  }`}
+                  style={illustrationCardStyle(slide.url)}
                 />
               </div>
             ))}

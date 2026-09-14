@@ -5,6 +5,12 @@ import { Course } from '@/types/course'
 import { normalizeCourse, type GenerationSummary } from '@/lib/blocks'
 import { detectMarkers, type ReadMode } from '@/lib/markers'
 import { upgradeCourse } from '@/lib/legacy-course'
+import {
+  applyLayoutToGeneratedCourse,
+  isCourseLayoutId,
+  layoutPromptSection,
+  type CourseLayoutId,
+} from '@/lib/layout-prompt'
 
 export const maxDuration = 60
 
@@ -28,10 +34,14 @@ export async function POST(req: NextRequest) {
 
   try {
     const body = await req.json()
-    const { text, mode } = body as { text: string; mode?: ReadMode }
+    const { text, mode, layout } = body as { text: string; mode?: ReadMode; layout?: unknown }
 
     if (!text || typeof text !== 'string' || text.trim().length === 0) {
       return createErrorResponse('Texto não fornecido ou inválido', 400)
+    }
+
+    if (layout !== undefined && !isCourseLayoutId(layout)) {
+      return createErrorResponse('Layout do curso inválido', 400)
     }
 
     const readMode: ReadMode = mode ?? detectMarkers(text).mode
@@ -52,20 +62,21 @@ export async function POST(req: NextRequest) {
     let tokenUsage: TokenUsage | undefined
 
     if (geminiApiKey) {
-      const result = await generateWithGemini(text, geminiApiKey, readMode)
+      const result = await generateWithGemini(text, geminiApiKey, readMode, layout)
       course = result.course
       tokenUsage = result.tokenUsage
     } else if (openaiApiKey) {
-      const result = await generateWithOpenAI(text, openaiApiKey, readMode)
+      const result = await generateWithOpenAI(text, openaiApiKey, readMode, layout)
       course = result.course
       tokenUsage = result.tokenUsage
     } else {
       throw new Error('Nenhuma API de IA disponível')
     }
 
-    const { course: normalizedCourse, summary } = normalizeCourse(
+    const { course: normalized, summary } = normalizeCourse(
       upgradeCourse(course as unknown as Record<string, unknown>) as unknown as Course
     )
+    const normalizedCourse = applyLayoutToGeneratedCourse(normalized, layout)
     recordDiscards(summary)
 
     return createSuccessResponse({
@@ -98,7 +109,7 @@ function recordDiscards(summary: GenerationSummary) {
  * Inclui instruções para reconhecer os marcadores de recursos e gerar
  * o JSON correto para cada um dos tipos de bloco suportados.
  */
-function buildPrompt(text: string, mode: ReadMode = 'auto'): string {
+function buildPrompt(text: string, mode: ReadMode = 'auto', layout?: CourseLayoutId): string {
   const truncated =
     text.substring(0, 150000) + (text.length > 150000 ? '\n\n[... texto truncado ...]' : '')
 
@@ -123,7 +134,7 @@ Cada Unidade:
 {
   "title": "string",
   "description": "string",
-  "content": [ <array de Bloco> ]
+  "blocks": [ <array de Bloco> ]
 }
 
 ## Recursos disponíveis
@@ -334,6 +345,7 @@ Cada Unidade:
   "content": "",
   "baseImage": "https://exemplo.com/equipamento.png",
   "caption": "Legenda da imagem",
+  "hotspotMode": "explore" | "find",
   "hotspots": [
     {
       "id": "hotspot-1",
@@ -344,6 +356,8 @@ Cada Unidade:
     }
   ]
 }
+- "explore": os pontos ficam visíveis e o aluno clica para ler cada um
+- "find": os pontos ficam escondidos e o aluno precisa encontrá-los na imagem (ex.: achar os erros)
 
 ### 19. matching
 {
@@ -351,9 +365,10 @@ Cada Unidade:
   "type": "matching",
   "content": "",
   "matchingPairs": [
-    { "id": "par-1", "left": "Termo fixo", "right": "Correspondente" }
+    { "id": "par-1", "left": "Termo fixo", "right": "Correspondente", "leftImage": "https://exemplo.com/termo.png (opcional)" }
   ]
 }
+- "leftImage" só com URL de imagem presente no documento; sem URL, omita o campo
 
 ### 20. categorization
 {
@@ -369,9 +384,87 @@ Cada Unidade:
   ]
 }
 
+### 21. true-false
+{
+  "title": "string",
+  "type": "true-false",
+  "content": "",
+  "trueFalseItems": [
+    {
+      "id": "vf-1",
+      "statement": "Afirmação curta e sem ambiguidade",
+      "answer": "true" | "false",
+      "explanation": "Por que a afirmação é verdadeira ou falsa"
+    }
+  ]
+}
+
+### 22. sequence — os passos vão NA ORDEM CORRETA; o player embaralha
+{
+  "title": "string",
+  "type": "sequence",
+  "content": "",
+  "sequenceItems": [
+    { "id": "seq-1", "text": "Primeiro passo" },
+    { "id": "seq-2", "text": "Segundo passo" }
+  ]
+}
+
+### 23. fill-blanks — cada lacuna é a palavra correta entre colchetes
+{
+  "title": "string",
+  "type": "fill-blanks",
+  "content": "",
+  "fillBlanksText": "Lave as mãos por [20] segundos com água e [sabão].",
+  "fillBlanksDistractors": ["10", "álcool"]
+}
+- Os distratores são palavras erradas, mas plausíveis, que aparecem junto das respostas
+
+### 24. scenario — uma situação com 2 a 4 escolhas e a consequência de cada uma
+{
+  "title": "string",
+  "type": "scenario",
+  "content": "",
+  "scenarioCharacter": "Nome e papel do personagem (opcional)",
+  "scenarioAvatar": "https://exemplo.com/personagem.png (opcional)",
+  "scenarioSituation": "A situação ou fala que pede uma decisão",
+  "scenarioOptions": [
+    { "id": "op-1", "text": "Uma escolha", "outcome": "correct" | "incorrect", "consequence": "O que acontece com essa escolha" }
+  ]
+}
+- Pelo menos uma opção com "outcome": "correct"
+- "scenarioAvatar" só com URL de imagem presente no documento; sem URL, omita o campo
+
+### 25. practice-checklist — missão prática opcional, sem nota: o aluno marca cada item ao fazer
+{
+  "title": "string",
+  "type": "practice-checklist",
+  "content": "",
+  "practiceMission": "O que o aluno deve fazer na prática",
+  "practiceItems": [
+    { "id": "task-1", "text": "Uma ação concreta e verificável" }
+  ]
+}
+- De 2 a 8 itens; não é atividade avaliada e não substitui quiz
+
+### 26. technical-sheet — ficha técnica: materiais com quantidade, depois os passos
+{
+  "title": "string",
+  "type": "technical-sheet",
+  "content": "",
+  "sheetSummary": "Rendimento, tempo ou nível (opcional)",
+  "sheetMaterials": [
+    { "id": "mat-1", "name": "Material ou ingrediente", "quantity": "500 g", "image": "https://exemplo.com/material.png (opcional)" }
+  ],
+  "sheetSteps": [
+    { "id": "step-1", "text": "Um passo do preparo ou da montagem" }
+  ]
+}
+- "image" só com URL de imagem presente no documento; sem URL, omita o campo
+
 ## Regras gerais
 
-- NÃO use "blocks" — use sempre "content"
+- Na Unidade, os blocos ficam SEMPRE em "blocks". "content" é campo do Bloco, nunca da Unidade
 - IDs únicos simples: "item-1", "q-1", "op-1"
 - HTML (em campos "content") apenas com: <p>, <strong>, <em>
 - Para listas, use SEMPRE o campo "listItems" — NUNCA coloque listas em HTML no campo "content"
@@ -389,7 +482,7 @@ Cada Unidade:
   na ausência de URL, o bloco simplesmente não existe
 - Use apenas as informações, exemplos e dados que foram explicitamente fornecidos no texto
 - Se o documento for curto ou superficial, o curso gerado também deve refletir isso
-- Sua função é ESTRUTURAR e ORGANIZAR o conteúdo existente, não criar conteúdo novo`
+- Sua função é ESTRUTURAR e ORGANIZAR o conteúdo existente, não criar conteúdo novo${layoutPromptSection(layout, mode)}`
 
   if (mode === 'markers') {
     return `Você é um especialista em design instrucional. Analise o texto abaixo e gere uma estrutura de curso em JSON respeitando os marcadores de recursos presentes no text.
@@ -463,15 +556,41 @@ ${sharedStructure}
   - "X do Ponto N:" → hotspots[N].x; "Y do Ponto N:" → hotspots[N].y (números de 0 a 100)
   - "Título do Ponto N:" → hotspots[N].title
   - "Conteúdo do Ponto N:" → hotspots[N].content (em HTML)
+  - "Modo:" → hotspotMode (explorar → "explore", encontrar → "find"; use "explore" se ausente)
   - Nunca invente URL de imagem nem coordenadas: sem URL, o bloco não existe
 - Bloco ASSOCIACAO_INICIO...ASSOCIACAO_FIM → type "matching"
   - "Item N:" → matchingPairs[N].left
   - "Correspondente N:" → matchingPairs[N].right
+  - "Imagem do Item N:" → matchingPairs[N].leftImage (só com URL; sem ela, omita o campo)
   - Descarte o par que não tiver os dois lados; são necessários no mínimo 2 pares
 - Bloco CATEGORIZACAO_INICIO...CATEGORIZACAO_FIM → type "categorization"
   - "Categoria N:" → categories[N].name
   - "Item M da Categoria N:" → categories[N].items[M].text
   - São necessárias no mínimo 2 categories, cada uma com ao menos 1 item
+- Bloco VERDADEIROFALSO_INICIO...VERDADEIROFALSO_FIM → type "true-false" (UM único bloco com todas as afirmações)
+  - "Afirmação N:" → trueFalseItems[N-1].statement
+  - "Resposta N:" → trueFalseItems[N-1].answer (Verdadeiro → "true", Falso → "false")
+  - "Explicação N:" → trueFalseItems[N-1].explanation (use "" se ausente)
+  - Descarte a afirmação sem resposta; são necessárias no mínimo 2 afirmações
+- Bloco SEQUENCIA_INICIO...SEQUENCIA_FIM → type "sequence" (UM único bloco com todos os passos)
+  - "Passo N:" → sequenceItems[N-1].text, mantendo a ordem de N
+  - São necessários no mínimo 2 passos
+- Bloco LACUNAS_INICIO...LACUNAS_FIM → type "fill-blanks"
+  - "Texto:" → fillBlanksText, mantendo os colchetes exatamente como estão
+  - "Distratores:" → fillBlanksDistractors (separe por vírgula; use [] se ausente)
+- Bloco CENARIO_INICIO...CENARIO_FIM → type "scenario"
+  - "Personagem:" → scenarioCharacter; "Imagem do Personagem:" → scenarioAvatar (só com URL)
+  - "Situação:" → scenarioSituation
+  - "Opção N:" → scenarioOptions[N-1].text; "Consequência N:" → scenarioOptions[N-1].consequence
+  - "Resposta Correta:" → o número da opção correta recebe "outcome": "correct"; as demais, "incorrect"
+- Bloco MISSAOPRATICA_INICIO...MISSAOPRATICA_FIM → type "practice-checklist"
+  - "Missão:" → practiceMission
+  - "Item N:" → practiceItems[N-1].text
+- Bloco FICHATECNICA_INICIO...FICHATECNICA_FIM → type "technical-sheet"
+  - "Resumo:" → sheetSummary
+  - "Material N:" → sheetMaterials[N-1].name; "Quantidade do Material N:" → sheetMaterials[N-1].quantity
+  - "Imagem do Material N:" → sheetMaterials[N-1].image (só com URL)
+  - "Passo N:" → sheetSteps[N-1].text
 - Conteúdo fora de marcadores → use title, subtitulo, paragrafo ou lista conforme adequado
 
 ## Texto para analisar
@@ -491,13 +610,19 @@ ${sharedStructure}
 - "Objetivos", "ao final desta unidade você será capaz de" → learning-objectives
 - Lista de ingredientes, materiais, características → list (listType: "unordered")
 - Passos numerados de um processo → list (listType: "ordered")
+- Materiais ou ingredientes com quantidades seguidos dos passos que os usam (receita, montagem, preparo) → UM bloco technical-sheet no lugar das duas listas, com os materiais, quantidades e passos do texto
+- Caso, exemplo de situação real ou dilema descrito no texto → UM bloco scenario com a situação do texto, 3 opções e a consequência de cada uma; nunca invente personagem nem imagem que o texto não traga
+- Definição ou regra com termos-chave (valores, nomes técnicos, prazos) → UM bloco fill-blanks com 1 a 3 frases copiadas do texto, de 2 a 5 lacunas no total e 2 distratores plausíveis
+- Procedimento em que a ordem é o que se aprende (montagem, preparo, sequência de segurança), com 3 a 8 passos → depois da lista, UM bloco sequence com os mesmos passos resumidos, na ordem correta
 - Requisitos, critérios verificáveis → list (listType: "check")
+- Tarefa prática que o texto pede para o aluno executar (vestir, montar, preparar, conferir) → no máximo UM bloco practice-checklist por unidade, com a missão e de 2 a 8 itens tirados do texto; nunca invente tarefa que o texto não descreva
 - 3 ou mais tópicos relacionados com subconteúdo → accordion
 - 2 a 5 alternativas comparáveis do mesmo assunto (perfis, abordagens, papéis) → tabs
 - Fatos com date, evolução histórica, cronologia de etapas → timeline
 - 2 a 4 termos técnicos com definição, ou perguntas retóricas com resposta → UM bloco flipcard com um card para cada; NUNCA gere vários blocos flipcard seguidos
 - 4 ou mais pares "termo — definição" do mesmo assunto → matching
 - Itens explicitamente agrupados em 2 ou mais conjuntos nomeados → categorization
+- Fatos, regras ou mitos que o texto afirma ou desmente com clareza → UM bloco true-false com 3 a 5 afirmações; as falsas contradizem um trecho do texto e a explicação cita o que o texto diz
 - "Atenção:", "Importante:", aviso de segurança → info-box (infoBoxType: "warning")
 - "Sabia que", curiosidade, fato interessante → info-box (infoBoxType: "fun-fact")
 - URL de imagem no texto → image, com a legenda que estiver ao lado
@@ -521,11 +646,12 @@ ${truncated}`
 async function generateWithGemini(
   text: string,
   apiKey: string,
-  mode: ReadMode = 'auto'
+  mode: ReadMode = 'auto',
+  layout?: CourseLayoutId
 ): Promise<{ course: Course; tokenUsage: TokenUsage }> {
   const genAI = new GoogleGenerativeAI(apiKey)
 
-  const prompt = buildPrompt(text, mode)
+  const prompt = buildPrompt(text, mode, layout)
 
   // Try the models in order of preference (2025+ names)
   // Referência: https://ai.google.dev/models/gemini
@@ -607,12 +733,13 @@ async function generateWithGemini(
 async function generateWithOpenAI(
   text: string,
   apiKey: string,
-  mode: ReadMode = 'auto'
+  mode: ReadMode = 'auto',
+  layout?: CourseLayoutId
 ): Promise<{ course: Course; tokenUsage: TokenUsage }> {
   const { default: OpenAI } = await import('openai')
   const openai = new OpenAI({ apiKey })
 
-  const prompt = buildPrompt(text, mode)
+  const prompt = buildPrompt(text, mode, layout)
 
   try {
     const completion = await openai.chat.completions.create({

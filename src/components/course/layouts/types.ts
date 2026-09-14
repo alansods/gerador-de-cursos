@@ -4,6 +4,7 @@ import type { BlockTheme } from '../blocks/BlockThemeProvider'
 
 export interface LayoutPlayerProps {
   course: Course
+  learnerName?: string
 }
 
 export interface LayoutMeta {

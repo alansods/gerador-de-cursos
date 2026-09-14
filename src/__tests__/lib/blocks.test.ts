@@ -620,6 +620,350 @@ describe('phase 2 blocks', () => {
   })
 })
 
+describe('technical-sheet block', () => {
+  it('normalizes AI materials and steps, keeping only real image URLs', () => {
+    const { course } = normalizeCourse(
+      courseWith([
+        {
+          type: 'technical-sheet',
+          content: '',
+          sheetSummary: ' Rende 20 porções ',
+          sheetMaterials: [
+            { id: '', name: ' Coco ', quantity: ' 500 g ', image: 'https://x.com/coco.png' },
+            { id: 'm2', name: 'Açúcar', image: 'acucar.png' },
+            { id: 'm3', name: '' },
+          ] as never,
+          sheetSteps: [
+            { id: '', text: ' Misture ' },
+            { id: 's2', text: '' },
+          ] as never,
+        },
+      ])
+    )
+
+    expect(course.units[0].blocks[0]).toMatchObject({
+      sheetSummary: 'Rende 20 porções',
+      sheetMaterials: [
+        { id: 'mat-1', name: 'Coco', quantity: '500 g', image: 'https://x.com/coco.png' },
+        { id: 'm2', name: 'Açúcar', quantity: '' },
+      ],
+      sheetSteps: [{ id: 'step-1', text: 'Misture' }],
+    })
+    expect(course.units[0].blocks[0].sheetMaterials?.[1]).not.toHaveProperty('image')
+    expect(BLOCK_CATALOG['technical-sheet'].category).toBe('texto')
+  })
+
+  it('discards a sheet without materials and validates the form', () => {
+    const { summary } = normalizeCourse(
+      courseWith([{ type: 'technical-sheet', content: '', sheetSteps: [{ id: 's', text: 'P' }] }])
+    )
+    const form = (patch: Partial<Block>) =>
+      BLOCK_CATALOG['technical-sheet'].validateForm({
+        ...createEmptyBlock('technical-sheet'),
+        ...patch,
+      } as Block)
+    const material = (name: string) => ({ id: name || 'empty', name, quantity: '' })
+    const step = (text: string) => ({ id: text || 'empty', text })
+
+    expect(summary.discarded[0].reason).toBe('sem materiais com nome')
+    expect(form({})).toBe('Adicione pelo menos 1 material')
+    expect(form({ sheetMaterials: [material('')] })).toBe('Todos os materiais devem ter nome')
+    expect(form({ sheetMaterials: [material('A')] })).toBe('Adicione pelo menos 1 passo')
+    expect(form({ sheetMaterials: [material('A')], sheetSteps: [step('')] })).toBe(
+      'Todos os passos devem ter texto'
+    )
+    expect(form({ sheetMaterials: [material('A')], sheetSteps: [step('P')] })).toBeNull()
+  })
+
+  it('bundles material images and points the block at the local copies', () => {
+    const block = {
+      ...createEmptyBlock('technical-sheet'),
+      sheetMaterials: [
+        { id: 'a', name: 'Coco', quantity: '', image: 'https://x.com/coco.png' },
+        { id: 'b', name: 'Açúcar', quantity: '' },
+      ],
+    } as Block
+
+    expect(extractBlockMedia(block)).toEqual(['https://x.com/coco.png'])
+    const rewritten = rewriteBlockMedia(
+      block,
+      new Map([['https://x.com/coco.png', 'images/coco.png']])
+    )
+    expect(rewritten.sheetMaterials?.map((material) => material.image)).toEqual([
+      'images/coco.png',
+      undefined,
+    ])
+  })
+})
+
+describe('practice-checklist block', () => {
+  it('normalizes AI items and keeps the block out of the scored activities', () => {
+    const { course } = normalizeCourse(
+      courseWith([
+        {
+          type: 'practice-checklist',
+          content: '',
+          practiceMission: ' Confira seus EPIs ',
+          practiceItems: [
+            { id: '', text: ' Capacete ' },
+            { id: 'x', text: '' },
+          ] as never,
+        },
+      ])
+    )
+
+    expect(course.units[0].blocks[0]).toMatchObject({
+      practiceMission: 'Confira seus EPIs',
+      practiceItems: [{ id: 'task-1', text: 'Capacete' }],
+    })
+    expect(BLOCK_CATALOG['practice-checklist'].category).toBe('interativo')
+  })
+
+  it('discards a mission without items and validates the form', () => {
+    const { summary } = normalizeCourse(
+      courseWith([{ type: 'practice-checklist', content: '', practiceMission: 'M' }])
+    )
+    const form = (patch: Partial<Block>) =>
+      BLOCK_CATALOG['practice-checklist'].validateForm({
+        ...createEmptyBlock('practice-checklist'),
+        ...patch,
+      } as Block)
+    const task = (text: string) => ({ id: text || 'empty', text })
+
+    expect(summary.discarded[0].reason).toBe('sem itens com texto')
+    expect(form({})).toBe('Descreva a missão')
+    expect(form({ practiceMission: 'M', practiceItems: [task('A')] })).toBe(
+      'Adicione pelo menos 2 itens'
+    )
+    expect(form({ practiceMission: 'M', practiceItems: [task('A'), task('')] })).toBe(
+      'Todos os itens devem ter texto'
+    )
+    expect(form({ practiceMission: 'M', practiceItems: [task('A'), task('B')] })).toBeNull()
+  })
+})
+
+describe('scenario block', () => {
+  it('normalizes AI options and outcomes, keeping only a real avatar URL', () => {
+    const { course } = normalizeCourse(
+      courseWith([
+        {
+          type: 'scenario',
+          content: '',
+          scenarioCharacter: ' Seu João ',
+          scenarioAvatar: 'joao.png',
+          scenarioSituation: ' Colega sem cinto ',
+          scenarioOptions: [
+            { id: '', text: 'Deixo', outcome: 'incorrect', consequence: 'Queda' },
+            { id: '', text: 'Peço o cinto', outcome: 'Correta' },
+            { id: '', text: '', outcome: 'correct' },
+          ] as never,
+        },
+      ])
+    )
+    const block = course.units[0].blocks[0]
+
+    expect(block).toMatchObject({
+      scenarioCharacter: 'Seu João',
+      scenarioAvatar: '',
+      scenarioSituation: 'Colega sem cinto',
+    })
+    expect(block.scenarioOptions).toEqual([
+      { id: 'op-1', text: 'Deixo', outcome: 'incorrect', consequence: 'Queda' },
+      { id: 'op-2', text: 'Peço o cinto', outcome: 'correct', consequence: '' },
+    ])
+  })
+
+  it('discards a scenario with no correct option and validates the form', () => {
+    const option = (text: string, outcome: 'correct' | 'incorrect') => ({
+      id: text,
+      text,
+      outcome,
+      consequence: '',
+    })
+    const { summary } = normalizeCourse(
+      courseWith([
+        {
+          type: 'scenario',
+          content: '',
+          scenarioSituation: 'Situação',
+          scenarioOptions: [option('A', 'incorrect'), option('B', 'incorrect')],
+        },
+      ])
+    )
+    const form = (patch: Partial<Block>) =>
+      BLOCK_CATALOG.scenario.validateForm({ ...createEmptyBlock('scenario'), ...patch } as Block)
+
+    expect(summary.discarded[0].reason).toBe('sem situação ou sem 2 opções com uma correta')
+    expect(form({})).toBe('Descreva a situação')
+    expect(form({ scenarioSituation: 'S', scenarioOptions: [option('A', 'correct')] })).toBe(
+      'Adicione pelo menos 2 opções'
+    )
+    expect(
+      form({
+        scenarioSituation: 'S',
+        scenarioOptions: [option('A', 'incorrect'), option('B', 'incorrect')],
+      })
+    ).toBe('Marque pelo menos uma opção como correta')
+    expect(
+      form({
+        scenarioSituation: 'S',
+        scenarioOptions: [option('A', 'incorrect'), option('B', 'correct')],
+      })
+    ).toBeNull()
+    expect(BLOCK_CATALOG.scenario.category).toBe('avaliativo')
+  })
+
+  it('bundles the avatar and points the block at the local copy', () => {
+    const block = {
+      ...createEmptyBlock('scenario'),
+      scenarioAvatar: 'https://x.com/joao.png',
+    } as Block
+
+    expect(extractBlockMedia(block)).toEqual(['https://x.com/joao.png'])
+    expect(
+      rewriteBlockMedia(block, new Map([['https://x.com/joao.png', 'images/joao.png']]))
+        .scenarioAvatar
+    ).toBe('images/joao.png')
+    expect(extractBlockMedia(createEmptyBlock('scenario') as Block)).toEqual([])
+  })
+})
+
+describe('fill-blanks block', () => {
+  it('keeps the text, removes empty brackets and cleans the AI distractors', () => {
+    const { course } = normalizeCourse(
+      courseWith([
+        {
+          type: 'fill-blanks',
+          content: '',
+          fillBlanksText: ' Use [luvas] e [ ] sempre ',
+          fillBlanksDistractors: 'botas, Luvas, , botas' as never,
+        },
+      ])
+    )
+    const block = course.units[0].blocks[0]
+
+    expect(block.fillBlanksText).toBe('Use [luvas] e  sempre')
+    expect(block.fillBlanksDistractors).toEqual(['botas'])
+  })
+
+  it('discards text with no blank and validates the form', () => {
+    const { summary } = normalizeCourse(
+      courseWith([{ type: 'fill-blanks', content: '', fillBlanksText: 'Sem lacunas' }])
+    )
+    const form = (fillBlanksText: string) =>
+      BLOCK_CATALOG['fill-blanks'].validateForm({
+        ...createEmptyBlock('fill-blanks'),
+        fillBlanksText,
+      } as Block)
+
+    expect(summary.discarded[0].reason).toBe('sem lacunas marcadas entre colchetes')
+    expect(form('')).toBe('Escreva o texto com as lacunas')
+    expect(form('Sem lacunas')).toBe('Marque cada lacuna entre colchetes, como [palavra]')
+    expect(form('Use [ ] aqui')).toBe('Há uma lacuna vazia: escreva a palavra entre os colchetes')
+    expect(form('Use [luvas]')).toBeNull()
+    expect(BLOCK_CATALOG['fill-blanks'].category).toBe('avaliativo')
+  })
+})
+
+describe('sequence block', () => {
+  it('keeps the author order, trims the steps and drops empty ones', () => {
+    const { course } = normalizeCourse(
+      courseWith([
+        {
+          type: 'sequence',
+          content: '',
+          sequenceItems: [
+            { id: '', text: ' Inspecionar ' },
+            { id: '', text: '' },
+            { id: 'x', text: 'Ajustar' },
+          ],
+        },
+      ])
+    )
+
+    expect(course.units[0].blocks[0].sequenceItems).toEqual([
+      { id: 'seq-1', text: 'Inspecionar' },
+      { id: 'x', text: 'Ajustar' },
+    ])
+  })
+
+  it('discards a sequence with fewer than two steps and asks for three in the form', () => {
+    const { summary } = normalizeCourse(
+      courseWith([{ type: 'sequence', content: '', sequenceItems: [{ id: 'a', text: 'Só um' }] }])
+    )
+    const form = (count: number, text = 'Passo') =>
+      BLOCK_CATALOG.sequence.validateForm({
+        ...createEmptyBlock('sequence'),
+        sequenceItems: Array.from({ length: count }, (_, i) => ({ id: `s${i}`, text })),
+      } as Block)
+
+    expect(summary.discarded[0].reason).toBe('com menos de 2 passos com texto')
+    expect(form(2)).toBe('Adicione pelo menos 3 passos')
+    expect(form(3, ' ')).toBe('Todos os passos devem ter texto')
+    expect(form(3)).toBeNull()
+    expect(BLOCK_CATALOG.sequence.category).toBe('avaliativo')
+  })
+})
+
+describe('true-false block', () => {
+  it('reads the AI answers leniently and drops statements with no answer', () => {
+    const items = [
+      { id: '', statement: ' O EPI é gratuito. ', answer: true, explanation: 'NR-6' },
+      { id: '', statement: 'Tarefa rápida dispensa EPI.', answer: 'Falso' },
+      { id: '', statement: 'Sem resposta', answer: 'talvez' },
+      { id: '', statement: '', answer: 'true' },
+    ]
+    const { course } = normalizeCourse(
+      courseWith([{ type: 'true-false', content: '', trueFalseItems: items as never }])
+    )
+
+    expect(course.units[0].blocks[0].trueFalseItems).toEqual([
+      { id: 'vf-1', statement: 'O EPI é gratuito.', answer: 'true', explanation: 'NR-6' },
+      { id: 'vf-2', statement: 'Tarefa rápida dispensa EPI.', answer: 'false', explanation: '' },
+    ])
+  })
+
+  it('discards a block with no valid statement and explains why', () => {
+    const { course, summary } = normalizeCourse(
+      courseWith([
+        {
+          type: 'true-false',
+          content: '',
+          trueFalseItems: [{ id: 'a', statement: 'X', answer: 'sim' }] as never,
+        },
+      ])
+    )
+
+    expect(course.units[0].blocks).toHaveLength(0)
+    expect(summary.discarded[0].reason).toBe('sem afirmações com resposta verdadeira ou falsa')
+  })
+
+  it('requires two filled statements in the form', () => {
+    const form = (trueFalseItems: Block['trueFalseItems']) =>
+      BLOCK_CATALOG['true-false'].validateForm({
+        ...createEmptyBlock('true-false'),
+        trueFalseItems,
+      } as Block)
+
+    expect(form([{ id: 'a', statement: 'X', answer: 'true', explanation: '' }])).toBe(
+      'Adicione pelo menos 2 afirmações'
+    )
+    expect(
+      form([
+        { id: 'a', statement: 'X', answer: 'true', explanation: '' },
+        { id: 'b', statement: ' ', answer: 'false', explanation: '' },
+      ])
+    ).toBe('Todas as afirmações devem ter texto')
+    expect(
+      form([
+        { id: 'a', statement: 'X', answer: 'true', explanation: '' },
+        { id: 'b', statement: 'Y', answer: 'false', explanation: '' },
+      ])
+    ).toBeNull()
+    expect(BLOCK_CATALOG['true-false'].category).toBe('avaliativo')
+  })
+})
+
 describe('phase 3 blocks', () => {
   it('drops an interactive image with no base image or no titled hotspot', () => {
     const { course, summary } = normalizeCourse(
@@ -645,6 +989,40 @@ describe('phase 3 blocks', () => {
       'sem imagem de fundo ou sem pontos com título',
       'sem imagem de fundo ou sem pontos com título',
     ])
+  })
+
+  it('keeps the find mode and defaults any other mode to explore', () => {
+    const image = (hotspotMode?: string) => ({
+      type: 'interactive-image' as const,
+      content: '',
+      baseImage: 'https://x.com/a.png',
+      hotspots: [{ id: 'h1', x: 10, y: 20, title: 'Casco', content: '' }],
+      ...(hotspotMode ? { hotspotMode: hotspotMode as 'find' } : {}),
+    })
+    const { course } = normalizeCourse(courseWith([image('find'), image('hunt'), image()]))
+
+    expect(course.units[0].blocks.map((b) => b.hotspotMode)).toEqual(['find', 'explore', 'explore'])
+    expect(createEmptyBlock('interactive-image').hotspotMode).toBe('explore')
+  })
+
+  it('extracts matching item images and keeps only valid image URLs from the AI', () => {
+    const pairs = [
+      { id: '', left: 'Panela', right: 'Cozinhar', leftImage: ' https://x.com/pan.png ' },
+      { id: '', left: 'Faca', right: 'Cortar', leftImage: 'sem imagem' },
+      { id: '', left: 'Colher', right: 'Mexer' },
+    ]
+    const { course } = normalizeCourse(
+      courseWith([{ type: 'matching', content: '', matchingPairs: pairs }])
+    )
+    const block = course.units[0].blocks[0]
+
+    expect(block.matchingPairs?.map((p) => p.leftImage)).toEqual([
+      'https://x.com/pan.png',
+      undefined,
+      undefined,
+    ])
+    expect(block.matchingPairs?.[1]).not.toHaveProperty('leftImage')
+    expect(extractBlockMedia(block)).toEqual(['https://x.com/pan.png'])
   })
 
   it('clamps hotspot coordinates to the 0-100 range', () => {
@@ -960,6 +1338,7 @@ describe('rewriteBlockMedia', () => {
       ['https://x.com/d.pdf', 'images/d.pdf'],
       ['https://x.com/1.png', 'images/1.png'],
       ['https://x.com/base.png', 'images/base.png'],
+      ['https://x.com/pan.png', 'images/pan.png'],
     ])
 
     const image = rewriteBlockMedia(
@@ -1013,6 +1392,21 @@ describe('rewriteBlockMedia', () => {
       lookup
     )
     expect(interactive.baseImage).toBe('images/base.png')
+
+    const matching = rewriteBlockMedia(
+      {
+        ...createEmptyBlock('matching'),
+        matchingPairs: [
+          { id: 'p1', left: 'Panela', right: 'Cozinhar', leftImage: 'https://x.com/pan.png' },
+          { id: 'p2', left: 'Faca', right: 'Cortar' },
+        ],
+      } as Block,
+      lookup
+    )
+    expect(matching.matchingPairs).toEqual([
+      { id: 'p1', left: 'Panela', right: 'Cozinhar', leftImage: 'images/pan.png' },
+      { id: 'p2', left: 'Faca', right: 'Cortar' },
+    ])
   })
 
   it('keeps the URL when the download failed and it is not in the map', () => {

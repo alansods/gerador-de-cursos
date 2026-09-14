@@ -183,7 +183,7 @@ describe('New Course page', () => {
 
     expect(await screen.findByRole('heading', { name: 'Curso criado' })).toBeInTheDocument()
     expect(screen.getByText(/3 unidades · 12 blocos · 2 quizzes, 1 accordion/)).toBeInTheDocument()
-    expect(mockGenerate).toHaveBeenCalledWith('texto sem marcador')
+    expect(mockGenerate).toHaveBeenCalledWith('texto sem marcador', 'classic')
   })
 
   it('returns to the document step when the generation fails', async () => {
