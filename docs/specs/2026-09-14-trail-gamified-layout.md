@@ -65,8 +65,19 @@ out of scope.
   `src/lib/scorm-progress.ts`).
 - New stored data, and nothing else:
   - a per-unit bitmap of completed steps;
-  - a per-activity bit "correct on first attempt".
+  - a per-activity bit "correct on first attempt";
+  - from stage 17, the keys of fully checked `practice-checklist` blocks (kept out of the quiz
+    results so they never enter the LMS score).
 - This bumps the encoding to `v2`; decoding `v1` keeps working.
+- `v2` layout: `v2|hash|visited|steps|quizzes`.
+  - `steps`: one bitmap per unit, comma separated (`110,1,`).
+  - `quizzes`: `unit-block:correct/total`, with a trailing `!` when the first attempt was 100%.
+  - When the string exceeds the safe limit, quiz results and their first-attempt flags collapse
+    into the aggregate score, as in `v1`. Visited units and steps are always kept. Stars then
+    fall back to 1 for the affected units; this only happens in very large courses (roughly
+    300+ scored activities).
+- New fields are optional in `ProgressState` and in `QuizResult`, so `v1` states and existing
+  callers keep their shape.
 - XP, level, stars and badges are **computed**, never stored, by a pure module
   `src/lib/trail-progress.ts`.
 
@@ -103,6 +114,9 @@ Five levels by percentage of the course maximum XP, so short and long courses be
 ### Badges
 
 - Optional `badgeName` and `badgeIcon` on each unit, inside `units` (Json, no migration).
+- `badgeIcon` stores a lucide icon name from a fixed list `BADGE_ICONS` in `trail-progress.ts`.
+  The layout maps names to icon components with a static import map, so the bundle never
+  includes the whole icon set.
 - Edited in the existing unit form (next to title and description), shown only when the
   course layout is `trail`. `badgeIcon` is picked from a grid of about 24 curated lucide
   icons.
@@ -165,6 +179,10 @@ the route must accept it.
 | Recipe card          | `technical-sheet` (materials with image and quantity, then steps)      | new, content                               |
 | Cooking game         | `procedure-simulation`                                                 | separate spec                              |
 
+- **"Scored" is the catalog category `avaliativo`** (`BLOCK_CATALOG[type].category`), the single
+  source of truth: today `quiz`, `interactive-video`, `matching` and `categorization`. New
+  scored blocks use that category. `interactive-image` stays `interativo` and is scored only in
+  `find` mode, a special case added in stage 11.
 - **New blocks are available in every layout**, like all current blocks. Their colors come
   from `blockTheme` (blue in Clássico, violet in Sidebar, orange in Trail). The "sticker"
   look is Trail's `blockTheme`, never hard-coded in a block.
@@ -298,7 +316,10 @@ source }`
 
 - [ ] Stage checklist complete.
 - [ ] `pnpm test` green, including the tests added by the stage.
-- [ ] `pnpm exec tsc --noEmit` clean.
+- [ ] `pnpm exec tsc --noEmit` reports no error in files changed by the stage. Baseline when the
+      branch started: 35 errors in untouched test files (`auth.test.ts`, `courses.test.ts`,
+      `responsive-block-drawer.test.tsx`, `touch-drag-handles.test.tsx`,
+      `scorm-service.test.ts`); the count must not grow. Fixing them is out of scope.
 - [ ] `pnpm lint` clean on the changed files (the pre-commit hook also runs eslint and prettier).
 - [ ] Stages that touch the player, layouts, blocks or the SCORM build: `pnpm build` clean
       (it builds the Vite player too).
@@ -307,33 +328,40 @@ source }`
 
 ### Stages
 
-#### Stage 0 — Spec _(done, pending commit)_
+#### Stage 0 — Spec _(done)_
 
 - [x] This document.
 - **Done when:** the user approved the decisions. Commit: `docs: add trail gamified layout spec`.
 
-#### Stage 1 — Original illustration set _(done, pending commit)_
+#### Stage 1 — Original illustration set _(done)_
 
 - [x] 51 SVGs in `public/illustrations/<theme>/<category>/`.
 - [x] `manifest.json` with themes, categories and items; every SVG is valid XML and renders.
 - **Done when:** files and manifest are in place. Commit: `feat: add original illustration set`.
 
-#### Stage 2 — Progress model `v2` (pure functions)
+#### Stage 2 — Progress model `v2` (pure functions) _(done)_
 
 Files: `src/lib/scorm-progress.ts`, new `src/lib/trail-progress.ts`, new
 `src/lib/learner-name.ts`, tests in `src/__tests__/lib/`.
 
-- [ ] `ProgressState` gains completed steps per unit and first-attempt bits per activity key.
-- [ ] `encodeSuspendData` writes `v2`; `decodeSuspendData` reads `v1` and `v2`.
-- [ ] First-attempt bit is written only on the first result of a key, and only as `true` at
+- [x] `ProgressState` gains completed steps per unit and first-attempt bits per activity key.
+- [x] `encodeSuspendData` writes `v2`; `decodeSuspendData` reads `v1` and `v2`.
+- [x] First-attempt bit is written only on the first result of a key, and only as `true` at
       100%.
-- [ ] `calculateProgress` receives the layout: `trail` = every step completed; others = every
-      unit visited (unchanged).
-- [ ] `trail-progress.ts`: steps derived from `heading` blocks (unit with no heading = one
-      step), scored-block detection (including `interactive-image` in `find` mode), XP table,
-      course max XP, levels by percentage, stars per unit, badge fallback.
-- [ ] `learner-name.ts`: "Last, First" → First; full name → first word; empty → empty.
-- [ ] Tests for each item above, plus a large course (many units, steps and activities)
+- [x] `calculateProgress` receives a completion rule: `units` (default, every unit visited,
+      unchanged) or `steps` with the step count per unit. Trail builds it with
+      `trailCompletionRule`, so the pure function does not know about layouts.
+- [x] Pure state updates: `applyQuizResult` (latest result, first-attempt flag kept from the
+      first call) and `completeStep`.
+- [x] Optional `badgeName` and `badgeIcon` on `Unit` (used by the badge fallback; the form comes
+      in stage 8).
+- [x] `trail-progress.ts`: steps derived from `heading` blocks with their block indices (blocks
+      before the first heading = a step titled with the unit title; unit with no heading = one
+      step), scored-block detection by catalog category, answered and completed checks per
+      step, XP table, course max XP, levels by percentage, stars per unit, `BADGE_ICONS` and
+      badge fallback.
+- [x] `learner-name.ts`: "Last, First" → First; full name → first word; empty → empty.
+- [x] Tests for each item above, plus a large course (many units, steps and activities)
       encoded under 4000 characters.
 - **Done when:** common criteria pass and existing `scorm-progress.test.ts` cases pass without
   edits. Commit: `feat: add trail progress model`.
@@ -384,6 +412,9 @@ the editor preview page.
 
 - [ ] `meta.ts` with name, description and `blockTheme` (colors, dark variants, surface
       tokens).
+- [ ] Step content keeps each block's index in `unit.blocks`. `BlockRenderer` numbers blocks by
+      their position in the array it receives; rendering a step subset must pass the original
+      index, or quiz keys would point to the wrong block.
 - [ ] `TrailPlayer`, `TrailNavbar` (level, XP, badges count), `TrailHome` (greeting, map with
       suggested order, next mission, badges), `TrailUnit` (steps list, step content through
       `UnitContent`, "Concluir etapa" disabled until every scored activity is answered),
@@ -445,6 +476,7 @@ Files: `src/app/(app)/courses/new/actions.ts`, `src/app/api/generate-course-from
 #### Stage 11 — Interactive image `find` mode
 
 - [ ] Mode field on `interactive-image` with `explore` (current) as default.
+- [ ] `trail-progress.ts` scored detection includes `interactive-image` in `find` mode.
 - [ ] `find`: hotspots hidden until found; misses shown briefly; progress counter.
 - [ ] Records `found / total` at the end; first-attempt bit when every error was found with at
       most 2 misses.
@@ -477,8 +509,10 @@ Checklist for each block (from CLAUDE.md, "Como Criar um Novo Tipo de Conteúdo"
 - [ ] Marker in `sample-document.ts` and the three prompt sections.
 - [ ] `extractMedia` and `rewriteMedia` when the block has media (`scenario` avatar,
       `technical-sheet` images).
-- [ ] Scored blocks call `useRegistrarQuiz` once per attempt; the first-attempt bit follows the
-      100% rule. `practice-checklist` reports completion for bonus XP only.
+- [ ] Scored blocks use category `avaliativo` and call `useRegistrarQuiz` once per attempt; the
+      first-attempt bit follows the 100% rule. `practice-checklist` (category `interativo`)
+      stores its completion key in `suspend_data`, adds its bonus to `trail-progress.ts` and
+      never calls `useRegistrarQuiz`.
 - [ ] Tap and keyboard operation; no drag required.
 - [ ] Tests in `blocks.test.ts`, `content-block-drawer.test.tsx` and a component test.
 - [ ] Block created and reopened in the editor; rendered in Clássico, Sidebar and Trail.

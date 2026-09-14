@@ -190,6 +190,8 @@ export interface Unit {
   description: string
   blocks: Block[]
   order: number
+  badgeName?: string
+  badgeIcon?: string
 }
 
 export interface Course {
