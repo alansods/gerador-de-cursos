@@ -1,0 +1,88 @@
+@font-face {
+  font-family: 'Trail Bricolage Grotesque';
+  font-style: normal;
+  font-weight: 200 800;
+  font-display: swap;
+  src: url('./fonts/trail/bricolage-grotesque-latin-variable.woff2') format('woff2');
+  unicode-range:
+    U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329,
+    U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+  font-family: 'Trail Figtree';
+  font-style: normal;
+  font-weight: 300 900;
+  font-display: swap;
+  src: url('./fonts/trail/figtree-latin-variable.woff2') format('woff2');
+  unicode-range:
+    U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329,
+    U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+[data-trail] {
+  --trail-display: 'Trail Bricolage Grotesque', 'Trebuchet MS', system-ui, sans-serif;
+  --trail-body: 'Trail Figtree', 'Segoe UI', system-ui, sans-serif;
+
+  --trail-ground: #fbf4e6;
+  --trail-dot: #e4d4b6;
+  --trail-paper: #fffdf7;
+  --trail-ink: #2b2140;
+  --trail-ink-soft: #3f3556;
+  --trail-muted: #6f6582;
+  --trail-faint: #756a80;
+  --trail-line: #e3d6be;
+  --trail-line-strong: #d8c8aa;
+  --trail-track: #efe4d0;
+  --trail-edge: #2b2140;
+
+  --trail-orange: #f26b3a;
+  --trail-orange-fill: #c24e22;
+  --trail-orange-deep: #b3461d;
+  --trail-orange-soft: #ffe3d3;
+  --trail-teal: #14a392;
+  --trail-teal-fill: #0c7a6d;
+  --trail-teal-deep: #0a6b60;
+  --trail-teal-soft: #d3f2ec;
+  --trail-gold: #f5b82e;
+  --trail-gold-deep: #8a6207;
+  --trail-gold-soft: #fff0c7;
+  --trail-on-accent: #fffdf7;
+
+  background-color: var(--trail-ground);
+  background-image: radial-gradient(var(--trail-dot) 1.3px, transparent 1.3px);
+  background-size: 24px 24px;
+  color: var(--trail-ink);
+  font-family: var(--trail-body);
+}
+
+.dark [data-trail] {
+  --trail-ground: #1b1526;
+  --trail-dot: #2e2640;
+  --trail-paper: #241c33;
+  --trail-ink: #f4efe6;
+  --trail-ink-soft: #d9d1e6;
+  --trail-muted: #a99fba;
+  --trail-faint: #9a90ad;
+  --trail-line: #3a3050;
+  --trail-line-strong: #4a3f62;
+  --trail-track: #30274a;
+  --trail-edge: #0b0812;
+
+  --trail-orange: #f47a4c;
+  --trail-orange-fill: #b84a1f;
+  --trail-orange-deep: #ffb08a;
+  --trail-orange-soft: #4a2a22;
+  --trail-teal: #25b8a6;
+  --trail-teal-fill: #0c7a6d;
+  --trail-teal-deep: #7fe0d2;
+  --trail-teal-soft: #173f3b;
+  --trail-gold: #f5b82e;
+  --trail-gold-deep: #f8d27a;
+  --trail-gold-soft: #43361a;
+  --trail-on-accent: #fffdf7;
+}
+
+[data-trail] .trail-display {
+  font-family: var(--trail-display);
+}

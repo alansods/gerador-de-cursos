@@ -278,14 +278,23 @@ source }`
 - Tokens from the prototype: ground `#FBF4E6`, paper `#FFFDF7`, ink `#2B2140`, orange
   `#F26B3A`, teal `#14A392`, gold `#F5B82E`. "Sticker" surfaces: 2.5px ink border and a
   solid offset shadow.
-- `blockTheme`: accent `#F26B3A`, accentSoft `#FFE3D3`, accentInk `#C24E22`, plus `*Dark`
-  variants. Dark tokens are defined in this layout because the SCORM layout has
-  `ThemeProvider`.
-- Fonts: Bricolage Grotesque (display) and Figtree (body), both SIL Open Font License.
-  Loaded with `@font-face` and woff2 files imported by the layout CSS, **not** `next/font`:
+- Tokens live in `src/styles/trail.css`, scoped to `[data-trail]` (light) and
+  `.dark [data-trail]` (dark). Every text/background pair meets WCAG AA (4.5:1). The bright
+  orange and teal are for decoration only (map nodes, bars); text sits on the `*-fill` tokens
+  (`#C24E22` / `#0C7A6D` light, `#B84A1F` / `#0C7A6D` dark) or uses the `*-deep` tokens as text
+  color. Contrast was computed for each pair when the tokens were written.
+- `blockTheme`: accent `#C24E22`, accentSoft `#FFE3D3`, accentInk `#B3461D`; dark accent
+  `#F47A4C`, accentSoft `#4A2A22`, accentInk `#FFB08A`. Blocks put white text on the accent in
+  dark mode too (quiz option letter, confirm buttons); that pair is below AA, the same
+  limitation Clássico and Sidebar already have with their dark accents. Fixing it for every
+  layout is out of scope.
+- Fonts: Bricolage Grotesque (display) and Figtree (body), both SIL Open Font License,
+  declared as `Trail Bricolage Grotesque` and `Trail Figtree` so they never clash with a system
+  install. Latin-subset variable woff2 files (covers every Portuguese accent), versioned in
+  `src/styles/fonts/trail/` and loaded with `@font-face` from `trail.css`, **not** `next/font`:
   the layout renders through `CoursePlayer`, shared with the Vite player, which has no
-  `next/font` (see the system font stack in `player/src/styles.css`). Must be confirmed
-  inside the exported ZIP. The OFL license text ships next to the font files.
+  `next/font`. The OFL texts sit next to the fonts and in `player/public/fonts/`, which Vite
+  copies into the player build and therefore into every exported ZIP.
 
 ### Runtime constraints
 
@@ -413,18 +422,24 @@ cards, new `src/__tests__/components/block-theme-provider.test.tsx`.
 - **Done when:** common criteria pass, including `pnpm build`. Commit:
   `feat: add surface tokens to block theme`.
 
-#### Stage 5 — Trail visual foundation
+#### Stage 5 — Trail visual foundation _(done)_
 
 Files: new `src/styles/trail.css` (imported in `src/app/globals.css` and
-`player/src/styles.css`), font files and OFL text next to them.
+`player/src/styles.css`), `src/styles/fonts/trail/`, `player/public/fonts/`.
 
-- [ ] Light tokens and dark tokens, scoped to the Trail layout root.
-- [ ] `@font-face` for Bricolage Grotesque and Figtree (woff2, subset latin), with fallback
-      stacks.
-- [ ] OFL license text shipped with the fonts.
-- [ ] Fonts present in the Vite player build output and in an exported ZIP.
-- **Done when:** common criteria pass, including `pnpm build`, and the ZIP check is recorded
-  in the stage report. Commit: `feat: add trail layout tokens and fonts`.
+- [x] Light and dark tokens scoped to `[data-trail]`, plus base ground, dotted texture, text
+      color and body font on the layout root, and `.trail-display` for the display face.
+- [x] Contrast computed for the main pairs; tokens adjusted until every text pair meets AA.
+      Added `--trail-orange-fill` and `--trail-teal-fill` for backgrounds that carry text.
+- [x] `@font-face` for both fonts (latin variable woff2 from Google Fonts) with fallback stacks.
+- [x] OFL texts from `google/fonts` next to the fonts and in `player/public/fonts/`.
+- [x] Player build: fonts in `assets/` referenced with relative `url(./...)`, licenses in
+      `fonts/`. Next build: fonts in `.next/static/media`.
+- [x] Exported ZIP (`generateSCORMFromPlayerDist`): both woff2 files and both OFL texts present;
+      `imsmanifest.xml` lists the fonts.
+- [x] Chromium with the compiled player CSS: both faces `loaded`; light and dark tokens resolve.
+- **Done when:** common criteria pass, including `pnpm build`. Commit:
+  `feat: add trail layout tokens and fonts`.
 
 #### Stage 6 — Trail layout
 

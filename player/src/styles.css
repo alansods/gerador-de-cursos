@@ -5,6 +5,7 @@
    Vite, então precisa do mesmo CSS que o globals.css carrega. */
 @import '../../src/styles/infobox.css';
 @import '../../src/styles/block-theme.css';
+@import '../../src/styles/trail.css';
 
 /* Diz ao Tailwind v4 para escanear os componentes do editor (fora de player/) */
 @source "../../src";
