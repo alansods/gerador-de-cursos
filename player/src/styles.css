@@ -10,6 +10,7 @@
 @source "../../src";
 
 @custom-variant dark (&:is(.dark *));
+@custom-variant no-hover (@media (hover: none));
 
 @theme inline {
   --color-background: var(--background);

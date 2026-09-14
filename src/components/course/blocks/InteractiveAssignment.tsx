@@ -1,6 +1,21 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useId, useMemo, useState } from 'react'
+import { createPortal } from 'react-dom'
+import {
+  DndContext,
+  DragOverlay,
+  MouseSensor,
+  TouchSensor,
+  useDraggable,
+  useDroppable,
+  useSensor,
+  useSensors,
+  type Announcements,
+  type DragEndEvent,
+  type DragStartEvent,
+  type UniqueIdentifier,
+} from '@dnd-kit/core'
 import { Check, RotateCcw, X } from 'lucide-react'
 import { useRegistrarQuiz } from '@/components/course/ScormProgressContext'
 
@@ -15,6 +30,11 @@ export interface AssignmentTarget {
   label: string
 }
 
+export interface AssignmentInstructions {
+  mouse: string
+  touch: string
+}
+
 const BANK = '__banco__'
 
 function shuffle<T>(items: T[]): T[] {
@@ -24,6 +44,28 @@ function shuffle<T>(items: T[]): T[] {
     ;[copy[i], copy[j]] = [copy[j], copy[i]]
   }
   return copy
+}
+
+function chipClassName(active: boolean, correct: boolean | null) {
+  return `flex items-center gap-2 rounded-lg border px-3 py-2 text-left text-sm transition-colors ${
+    correct === true
+      ? 'border-green-500 bg-green-50 text-green-900 dark:bg-green-950/40 dark:text-green-200'
+      : correct === false
+        ? 'border-red-500 bg-red-50 text-red-900 dark:bg-red-950/40 dark:text-red-200'
+        : active
+          ? 'border-(--block-accent,#2563eb) bg-blue-50 ring-2 ring-(--block-accent,#2563eb) dark:bg-blue-950/40'
+          : 'border-gray-300 bg-white hover:border-gray-400 dark:border-gray-700 dark:bg-gray-800'
+  }`
+}
+
+function ChipContent({ chip, correct }: { chip: AssignmentChip; correct: boolean | null }) {
+  return (
+    <>
+      {correct === true && <Check className="h-4 w-4 shrink-0" />}
+      {correct === false && <X className="h-4 w-4 shrink-0" />}
+      <span>{chip.text}</span>
+    </>
+  )
 }
 
 function Chip({
@@ -39,32 +81,31 @@ function Chip({
   locked: boolean
   onSelect: () => void
 }) {
+  const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
+    id: chip.id,
+    disabled: locked,
+  })
+
   return (
     <button
+      ref={setNodeRef}
+      {...attributes}
+      {...listeners}
       type="button"
-      draggable={!locked}
-      onDragStart={onSelect}
       onClick={onSelect}
       aria-pressed={active}
       disabled={locked}
-      className={`flex items-center gap-2 rounded-lg border px-3 py-2 text-left text-sm transition-colors disabled:cursor-default ${
-        correct === true
-          ? 'border-green-500 bg-green-50 text-green-900 dark:bg-green-950/40 dark:text-green-200'
-          : correct === false
-            ? 'border-red-500 bg-red-50 text-red-900 dark:bg-red-950/40 dark:text-red-200'
-            : active
-              ? 'border-(--block-accent,#2563eb) bg-blue-50 ring-2 ring-(--block-accent,#2563eb) dark:bg-blue-950/40'
-              : 'border-gray-300 bg-white hover:border-gray-400 dark:border-gray-700 dark:bg-gray-800'
-      }`}
+      className={`${chipClassName(active, correct)} touch-manipulation select-none [-webkit-touch-callout:none] disabled:cursor-default ${
+        locked ? '' : 'cursor-grab active:cursor-grabbing'
+      } ${isDragging ? 'opacity-40' : ''}`}
     >
-      {correct === true && <Check className="h-4 w-4 shrink-0" />}
-      {correct === false && <X className="h-4 w-4 shrink-0" />}
-      <span>{chip.text}</span>
+      <ChipContent chip={chip} correct={correct} />
     </button>
   )
 }
 
 function Zone({
+  id,
   label,
   emptyText: empty,
   canReceive,
@@ -72,6 +113,7 @@ function Zone({
   onReceive,
   children,
 }: {
+  id: string
   label: string
   emptyText: string
   canReceive: boolean
@@ -79,14 +121,16 @@ function Zone({
   onReceive: () => void
   children: (chip: AssignmentChip) => React.ReactNode
 }) {
+  const { setNodeRef, isOver } = useDroppable({ id })
+
   return (
     <div
-      onDragOver={(e) => e.preventDefault()}
-      onDrop={(e) => {
-        e.preventDefault()
-        onReceive()
-      }}
-      className="rounded-lg border border-dashed border-gray-300 bg-gray-50 p-3 dark:border-gray-700 dark:bg-gray-900/40"
+      ref={setNodeRef}
+      className={`rounded-lg border border-dashed p-3 transition-colors ${
+        isOver
+          ? 'border-(--block-accent,#2563eb) bg-blue-50 dark:bg-blue-950/40'
+          : 'border-gray-300 bg-gray-50 dark:border-gray-700 dark:bg-gray-900/40'
+      }`}
     >
       <button
         type="button"
@@ -118,27 +162,38 @@ export function InteractiveAssignment({
   targets,
   singleCapacity,
   bankLabel: dbLabel,
-  instruction,
+  instructions,
   blockIndex,
 }: {
   chips: AssignmentChip[]
   targets: AssignmentTarget[]
   singleCapacity: boolean
   bankLabel: string
-  instruction: string
+  instructions: AssignmentInstructions
   blockIndex?: number
 }) {
   const recordResult = useRegistrarQuiz(blockIndex)
+  const dndId = useId()
 
   const [order, setOrder] = useState<string[]>(() => chips.map((f) => f.id))
   const [assignments, setAssignments] = useState<Record<string, string>>({})
   const [selected, setSelected] = useState<string | null>(null)
+  const [dragging, setDragging] = useState<string | null>(null)
   const [result, setResult] = useState<{ acertos: number; total: number } | null>(null)
+  const [mounted, setMounted] = useState(false)
+
+  const sensors = useSensors(
+    useSensor(MouseSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 5 } })
+  )
+
+  useEffect(() => setMounted(true), [])
 
   useEffect(() => {
     setOrder(shuffle(chips.map((f) => f.id)))
     setAssignments({})
     setSelected(null)
+    setDragging(null)
     setResult(null)
   }, [chips])
 
@@ -182,7 +237,35 @@ export function InteractiveAssignment({
     setOrder(shuffle(chips.map((f) => f.id)))
     setAssignments({})
     setSelected(null)
+    setDragging(null)
     setResult(null)
+  }
+
+  const chipText = (id: UniqueIdentifier) => byId.get(String(id))?.text ?? ''
+  const zoneLabel = (id: UniqueIdentifier) =>
+    id === BANK ? dbLabel : (targets.find((t) => t.id === id)?.label ?? '')
+
+  const announcements: Announcements = {
+    onDragStart: ({ active }) => `Arrastando ${chipText(active.id)}.`,
+    onDragOver: ({ active, over }) =>
+      over
+        ? `${chipText(active.id)} sobre ${zoneLabel(over.id)}.`
+        : `${chipText(active.id)} fora de uma área.`,
+    onDragEnd: ({ active, over }) =>
+      over
+        ? `${chipText(active.id)} solto em ${zoneLabel(over.id)}.`
+        : `${chipText(active.id)} solto fora de uma área. Nada mudou.`,
+    onDragCancel: ({ active }) => `Arrasto de ${chipText(active.id)} cancelado.`,
+  }
+
+  const handleDragStart = ({ active }: DragStartEvent) => {
+    setSelected(null)
+    setDragging(String(active.id))
+  }
+
+  const handleDragEnd = ({ active, over }: DragEndEvent) => {
+    setDragging(null)
+    if (over) move(String(active.id), String(over.id))
   }
 
   const renderChip = (chip: AssignmentChip) => (
@@ -199,62 +282,96 @@ export function InteractiveAssignment({
   if (chips.length === 0 || targets.length === 0) return null
 
   const canReceive = !!selected && !result
+  const draggingChip = dragging ? byId.get(dragging) : undefined
 
   return (
-    <div className="mb-4 space-y-3">
-      <p className="text-sm text-gray-600 dark:text-gray-400">{instruction}</p>
+    <DndContext
+      id={dndId}
+      sensors={sensors}
+      accessibility={{
+        announcements,
+        screenReaderInstructions: {
+          draggable: `${instructions.mouse} ${instructions.touch}`,
+        },
+      }}
+      onDragStart={handleDragStart}
+      onDragEnd={handleDragEnd}
+      onDragCancel={() => setDragging(null)}
+    >
+      <div className="mb-4 space-y-3">
+        <p className="text-sm text-gray-600 dark:text-gray-400 no-hover:hidden">
+          {instructions.mouse}
+        </p>
+        <p className="hidden text-sm text-gray-600 dark:text-gray-400 no-hover:block">
+          {instructions.touch}
+        </p>
 
-      <Zone
-        label={dbLabel}
-        emptyText="Nenhum item restante."
-        canReceive={canReceive}
-        chips={inBank}
-        onReceive={receive(BANK)}
-      >
-        {renderChip}
-      </Zone>
+        <Zone
+          id={BANK}
+          label={dbLabel}
+          emptyText="Nenhum item restante."
+          canReceive={canReceive}
+          chips={inBank}
+          onReceive={receive(BANK)}
+        >
+          {renderChip}
+        </Zone>
 
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-        {targets.map((target) => (
-          <Zone
-            key={target.id}
-            label={target.label}
-            emptyText="Solte um item aqui."
-            canReceive={canReceive}
-            chips={inOrder.filter((f) => assignments[f.id] === target.id)}
-            onReceive={receive(target.id)}
-          >
-            {renderChip}
-          </Zone>
-        ))}
-      </div>
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          {targets.map((target) => (
+            <Zone
+              key={target.id}
+              id={target.id}
+              label={target.label}
+              emptyText="Solte um item aqui."
+              canReceive={canReceive}
+              chips={inOrder.filter((f) => assignments[f.id] === target.id)}
+              onReceive={receive(target.id)}
+            >
+              {renderChip}
+            </Zone>
+          ))}
+        </div>
 
-      <div aria-live="polite" className="flex flex-wrap items-center gap-3">
-        {result ? (
-          <>
-            <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">
-              {result.acertos} de {result.total} corretos
-            </p>
+        <div aria-live="polite" className="flex flex-wrap items-center gap-3">
+          {result ? (
+            <>
+              <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+                {result.acertos} de {result.total} corretos
+              </p>
+              <button
+                type="button"
+                onClick={restart}
+                className="inline-flex items-center gap-2 rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-800"
+              >
+                <RotateCcw className="h-4 w-4" />
+                Tentar novamente
+              </button>
+            </>
+          ) : (
             <button
               type="button"
-              onClick={restart}
-              className="inline-flex items-center gap-2 rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-800"
+              onClick={verify}
+              disabled={!allAssigned}
+              className="rounded-lg bg-(--block-accent,#2563eb) px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
             >
-              <RotateCcw className="h-4 w-4" />
-              Tentar novamente
+              Verificar
             </button>
-          </>
-        ) : (
-          <button
-            type="button"
-            onClick={verify}
-            disabled={!allAssigned}
-            className="rounded-lg bg-(--block-accent,#2563eb) px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
-          >
-            Verificar
-          </button>
-        )}
+          )}
+        </div>
       </div>
-    </div>
+
+      {mounted &&
+        createPortal(
+          <DragOverlay dropAnimation={null}>
+            {draggingChip ? (
+              <div className={`${chipClassName(false, null)} cursor-grabbing shadow-lg`}>
+                <ChipContent chip={draggingChip} correct={null} />
+              </div>
+            ) : null}
+          </DragOverlay>,
+          document.body
+        )}
+    </DndContext>
   )
 }

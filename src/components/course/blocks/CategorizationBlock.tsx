@@ -38,7 +38,11 @@ export function CategorizationBlock({ item, blockIndex }: { item: Block; blockIn
       targets={targets}
       singleCapacity={false}
       bankLabel="Itens para classificar"
-      instruction="Selecione um item e depois a categoria. Também é possível arrastar."
+      instructions={{
+        mouse: 'Arraste cada item até a categoria, ou clique no item e depois na categoria.',
+        touch:
+          'Toque e segure um item para arrastá-lo até a categoria, ou toque no item e depois na categoria.',
+      }}
       blockIndex={blockIndex}
     />
   )

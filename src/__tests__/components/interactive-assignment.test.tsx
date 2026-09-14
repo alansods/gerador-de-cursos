@@ -79,6 +79,37 @@ describe('matching', () => {
   })
 })
 
+describe('instructions per input type', () => {
+  it.each([
+    [
+      'matching',
+      () => <MatchingBlock item={matching} />,
+      'Arraste cada opção até o item correspondente, ou clique na opção e depois no item.',
+      'Toque e segure uma opção para arrastá-la até o item correspondente, ou toque na opção e depois no item.',
+    ],
+    [
+      'categorization',
+      () => <CategorizationBlock item={categorization} />,
+      'Arraste cada item até a categoria, ou clique no item e depois na categoria.',
+      'Toque e segure um item para arrastá-lo até a categoria, ou toque no item e depois na categoria.',
+    ],
+  ])(
+    '%s shows the mouse text on hover devices and the touch text elsewhere',
+    (_, block, mouse, touch) => {
+      render(block())
+
+      const mouseText = screen.getByText(mouse)
+      expect(mouseText).toHaveClass('no-hover:hidden')
+      expect(mouseText).not.toHaveClass('hidden')
+
+      const touchText = screen.getByText(touch)
+      expect(touchText).toHaveClass('hidden', 'no-hover:block')
+
+      expect(screen.queryByText(/Também é possível arrastar/)).not.toBeInTheDocument()
+    }
+  )
+})
+
 describe('categorization', () => {
   it('accepts more than one item per category and scores the result', async () => {
     const user = userEvent.setup()

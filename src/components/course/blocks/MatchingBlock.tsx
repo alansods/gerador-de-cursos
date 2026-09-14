@@ -26,7 +26,11 @@ export function MatchingBlock({ item, blockIndex }: { item: Block; blockIndex?: 
       targets={targets}
       singleCapacity
       bankLabel="Opções"
-      instruction="Selecione uma opção e depois o item correspondente. Também é possível arrastar."
+      instructions={{
+        mouse: 'Arraste cada opção até o item correspondente, ou clique na opção e depois no item.',
+        touch:
+          'Toque e segure uma opção para arrastá-la até o item correspondente, ou toque na opção e depois no item.',
+      }}
       blockIndex={blockIndex}
     />
   )
