@@ -6,9 +6,10 @@ import { BlockThemeProvider, type BlockTheme } from './BlockThemeProvider'
 interface BlockRendererProps {
   block: Block[]
   theme?: BlockTheme
+  indexOffset?: number
 }
 
-export function BlockRenderer({ block: content, theme }: BlockRendererProps) {
+export function BlockRenderer({ block: content, theme, indexOffset = 0 }: BlockRendererProps) {
   if (content.length === 0) {
     return (
       <div className="text-center py-12 text-gray-500 dark:text-gray-400">
@@ -27,7 +28,7 @@ export function BlockRenderer({ block: content, theme }: BlockRendererProps) {
               key={item.id}
               className={`${item.columns === 6 ? 'md:col-span-6' : 'md:col-span-12'}`}
             >
-              <BlockComponent item={item} blockIndex={index} />
+              <BlockComponent item={item} blockIndex={index + indexOffset} />
             </div>
           )
         })}

@@ -83,6 +83,21 @@
   --trail-on-accent: #fffdf7;
 }
 
+@keyframes trail-drop {
+  0% {
+    opacity: 0;
+    transform: translateY(-32px) scale(0.6) rotate(-18deg);
+  }
+  70% {
+    opacity: 1;
+    transform: translateY(6px) scale(1.06) rotate(4deg);
+  }
+  100% {
+    opacity: 1;
+    transform: none;
+  }
+}
+
 [data-trail] .trail-display {
   font-family: var(--trail-display);
 }

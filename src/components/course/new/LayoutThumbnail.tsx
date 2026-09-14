@@ -17,6 +17,31 @@ export function LayoutThumbnail({ layoutId, className }: LayoutThumbnailProps) {
     </span>
   )
 
+  if (layoutId === 'trail') {
+    return (
+      <span className={cn('relative block overflow-hidden rounded-lg bg-muted p-2.5', className)}>
+        <svg
+          aria-hidden
+          viewBox="0 0 100 40"
+          preserveAspectRatio="none"
+          className="absolute inset-0 h-full w-full"
+        >
+          <path
+            d="M 18 30 C 30 30, 30 10, 42 10 S 58 30, 70 30 S 82 10, 88 10"
+            fill="none"
+            vectorEffect="non-scaling-stroke"
+            className="stroke-primary/40 [stroke-width:3px] [stroke-dasharray:1_5]"
+            strokeLinecap="round"
+          />
+        </svg>
+        <span className="absolute top-3/4 left-[18%] h-4 w-4 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-foreground/60 bg-primary" />
+        <span className="absolute top-1/4 left-[42%] h-4 w-4 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-foreground/60 bg-primary" />
+        <span className="absolute top-3/4 left-[70%] h-5 w-5 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-foreground/60 bg-primary-foreground" />
+        <span className="absolute top-1/4 left-[88%] h-4 w-4 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-dashed border-muted-foreground/50" />
+      </span>
+    )
+  }
+
   if (layoutId === 'sidebar') {
     return (
       <span className={cn('flex gap-2 overflow-hidden rounded-lg bg-muted p-2.5', className)}>

@@ -441,29 +441,49 @@ Files: new `src/styles/trail.css` (imported in `src/app/globals.css` and
 - **Done when:** common criteria pass, including `pnpm build`. Commit:
   `feat: add trail layout tokens and fonts`.
 
-#### Stage 6 — Trail layout
+#### Stage 6 — Trail layout _(done)_
 
 Files: `src/components/course/layouts/trail/*`, `src/components/course/layouts/registry.ts`,
-`src/components/course/new/LayoutThumbnail.tsx`, `src/components/course/CoursePlayer.tsx`,
-the editor preview page.
+`src/components/course/layouts/types.ts`, `src/components/course/new/LayoutThumbnail.tsx`,
+`src/components/course/CoursePlayer.tsx`, `src/components/course/blocks/BlockRenderer.tsx`,
+`src/app/(app)/courses/[id]/preview/page.tsx`, new
+`src/__tests__/components/trail-layout.test.tsx`.
 
-- [ ] `meta.ts` with name, description and `blockTheme` (colors, dark variants, surface
-      tokens).
-- [ ] Step content keeps each block's index in `unit.blocks`. `BlockRenderer` numbers blocks by
-      their position in the array it receives; rendering a step subset must pass the original
-      index, or quiz keys would point to the wrong block.
-- [ ] `TrailPlayer`, `TrailNavbar` (level, XP, badges count), `TrailHome` (greeting, map with
-      suggested order, next mission, badges), `TrailUnit` (steps list, step content through
-      `UnitContent`, "Concluir etapa" disabled until every scored activity is answered),
-      `TrailUnitComplete` (badge, stars, XP), `TrailComplete` (end of trail, no certificate).
-- [ ] Registered in `layoutRegistry`; thumbnail in `LayoutThumbnail`; selectable in the wizard
-      and in `CourseSettingsDrawer`.
-- [ ] Optional learner name prop on `CoursePlayer`; editor preview passes the logged-in user;
-      LMS reads the SCORM name.
-- [ ] Touch and keyboard: every control reachable and operable; visible focus.
-- [ ] Component tests: steps from headings, button gating, unit completion, map states.
-- [ ] Headless screenshots (desktop and 390 px, light and dark) of home, unit, unit complete
-      and end of trail, compared with the prototype.
+- [x] `meta.ts` with name, description and `blockTheme` (accessible colors, dark variants,
+      surface tokens).
+- [x] `BlockRenderer` gained `indexOffset`; `TrailUnit` renders the step blocks with the index of
+      the first one, so quiz keys match `unit.blocks`. The heading that names the step is not
+      rendered again as a block (it is the page title).
+- [x] `TrailPlayer` (views: content, unit complete, trail complete; current step per unit),
+      `TrailNavbar` (home: level, XP bar, badges, theme toggle; unit: back, mission label, step
+      segments, XP), `TrailHome` (greeting, next mission, badges, map), `TrailUnit` (steps list
+      on desktop and chips on mobile, step content, "Concluir etapa" disabled until every
+      scored activity has a result, with a live count), `TrailUnitComplete` (badge, stars, XP,
+      first attempts or completed steps when the unit has no scored activity, level, next
+      mission), `TrailComplete` (no certificate). Shared pieces in `TrailParts.tsx`; badge icon
+      names mapped to components in `badge-icons.tsx`.
+- [x] Map drawn without measuring the DOM: each row draws its connector with an SVG in
+      percentage coordinates (`vector-effect: non-scaling-stroke`), so it works in the static
+      build. Free navigation: every node opens its mission; the first unfinished one is "Você
+      está aqui" and later ones read "recomendada depois".
+- [x] Home order on phones: greeting, next mission, badges, then the map (the main action is no
+      longer below the whole map). Desktop keeps the side column.
+- [x] Registered in `layoutRegistry`; `LayoutThumbnail` has a trail variant; the wizard and
+      `CourseSettingsDrawer` list it through the registry.
+- [x] `LayoutPlayerProps` and `CoursePlayer` accept `learnerName`; the editor preview passes the
+      logged-in user; in the LMS the name comes from `useLMS`. Both go through
+      `learnerFirstName`.
+- [x] Touch and keyboard: every action is a `button` with a visible focus ring; steps and map
+      nodes have descriptive labels; `aria-current` marks the current step.
+- [x] Component tests (9): registration, step content indices, title not repeated, gating with
+      live count, map states and navigation, and a full flow that answers a matching activity
+      by clicks and completes the course. A mutation check (ignoring `indexOffset`) makes the
+      flow test fail.
+- [x] Screenshots of the exported package in Chromium: home, unit, unit complete and next unit at
+      1280 px and 390 px in light and dark; completed home and end of trail through the fake
+      LMS with a saved `v2` state and the name "Santos, Alan". Fixes found there: phone home
+      order and the "0 de 0" stat. The categorization step and the matching card were not
+      captured; stage 7 screenshots cover them.
 - **Done when:** common criteria pass, including `pnpm build`. Commit:
   `feat: add trail course layout`.
 
@@ -471,7 +491,10 @@ the editor preview page.
 
 Files: `e2e/scorm-progress.spec.ts`, `e2e/scorm-fixtures/`.
 
-- [ ] Trail fixture course with headings and scored activities.
+- [ ] Trail fixture course with headings and scored activities (`e2e/scorm-fixtures/trail-course.ts`,
+      created during stage 6 for the screenshots).
+- [ ] Screenshots of the categorization and matching steps in the Trail theme, light and dark;
+      decide whether matching and categorization need an outer `block-surface` card.
 - [ ] Cases: complete a step, complete a unit, resume from `suspend_data`, LMS `completed`
       only after the last step, score from last attempt.
 - **Done when:** `pnpm test:e2e e2e/scorm-progress.spec.ts` green on chromium. Commit:
