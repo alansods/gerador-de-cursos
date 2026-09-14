@@ -382,6 +382,54 @@ describe('ContentBlockDrawer', () => {
     )
   })
 
+  it('creates a scenario with an optional avatar and reopens it', async () => {
+    const user = userEvent.setup()
+    const onSave = mount('scenario')
+
+    expect(screen.getByText(/Imagem do personagem/)).not.toHaveTextContent('*')
+
+    await user.type(screen.getByLabelText(/Personagem/), 'Seu João')
+    await user.type(screen.getByLabelText(/Situação/), 'Colega sem cinto')
+    await user.click(screen.getByRole('button', { name: /salvar/i }))
+    expect(errorToast).toHaveBeenLastCalledWith('Adicione pelo menos 2 opções')
+
+    await user.click(screen.getByRole('button', { name: /adicionar/i }))
+    await user.click(screen.getByRole('button', { name: /adicionar/i }))
+    const choices = screen.getAllByPlaceholderText(/Peço que ele use o cinto/)
+    await user.type(choices[0], 'Deixo subir')
+    await user.type(choices[1], 'Peço o cinto')
+    await user.click(screen.getByRole('button', { name: /salvar/i }))
+    expect(errorToast).toHaveBeenLastCalledWith('Marque pelo menos uma opção como correta')
+    expect(onSave).not.toHaveBeenCalled()
+
+    const draft = {
+      type: 'scenario' as const,
+      scenarioCharacter: 'Seu João',
+      scenarioSituation: 'Colega sem cinto',
+      scenarioOptions: [
+        { id: 'a', text: 'Deixo subir', outcome: 'incorrect' as const, consequence: '' },
+        { id: 'b', text: 'Peço o cinto', outcome: 'correct' as const, consequence: 'Isso.' },
+      ],
+    }
+    const onSaveEdit = jest.fn()
+    render(
+      <ContentBlockDrawer
+        open
+        onOpenChange={jest.fn()}
+        mode="edit"
+        blockData={draft}
+        onSave={onSaveEdit}
+        onCancel={jest.fn()}
+      />
+    )
+
+    expect(screen.getAllByRole('combobox').map((box) => box.textContent)).toEqual(
+      expect.arrayContaining(['Incorreta', 'Correta'])
+    )
+    await user.click(screen.getAllByRole('button', { name: /salvar/i }).at(-1) as HTMLElement)
+    expect(onSaveEdit).toHaveBeenCalledWith(expect.objectContaining(draft))
+  })
+
   it('creates a fill-blanks block, listing the blanks, and reopens it', async () => {
     const user = userEvent.setup()
     const onSave = mount('fill-blanks')

@@ -620,6 +620,92 @@ describe('phase 2 blocks', () => {
   })
 })
 
+describe('scenario block', () => {
+  it('normalizes AI options and outcomes, keeping only a real avatar URL', () => {
+    const { course } = normalizeCourse(
+      courseWith([
+        {
+          type: 'scenario',
+          content: '',
+          scenarioCharacter: ' Seu João ',
+          scenarioAvatar: 'joao.png',
+          scenarioSituation: ' Colega sem cinto ',
+          scenarioOptions: [
+            { id: '', text: 'Deixo', outcome: 'incorrect', consequence: 'Queda' },
+            { id: '', text: 'Peço o cinto', outcome: 'Correta' },
+            { id: '', text: '', outcome: 'correct' },
+          ] as never,
+        },
+      ])
+    )
+    const block = course.units[0].blocks[0]
+
+    expect(block).toMatchObject({
+      scenarioCharacter: 'Seu João',
+      scenarioAvatar: '',
+      scenarioSituation: 'Colega sem cinto',
+    })
+    expect(block.scenarioOptions).toEqual([
+      { id: 'op-1', text: 'Deixo', outcome: 'incorrect', consequence: 'Queda' },
+      { id: 'op-2', text: 'Peço o cinto', outcome: 'correct', consequence: '' },
+    ])
+  })
+
+  it('discards a scenario with no correct option and validates the form', () => {
+    const option = (text: string, outcome: 'correct' | 'incorrect') => ({
+      id: text,
+      text,
+      outcome,
+      consequence: '',
+    })
+    const { summary } = normalizeCourse(
+      courseWith([
+        {
+          type: 'scenario',
+          content: '',
+          scenarioSituation: 'Situação',
+          scenarioOptions: [option('A', 'incorrect'), option('B', 'incorrect')],
+        },
+      ])
+    )
+    const form = (patch: Partial<Block>) =>
+      BLOCK_CATALOG.scenario.validateForm({ ...createEmptyBlock('scenario'), ...patch } as Block)
+
+    expect(summary.discarded[0].reason).toBe('sem situação ou sem 2 opções com uma correta')
+    expect(form({})).toBe('Descreva a situação')
+    expect(form({ scenarioSituation: 'S', scenarioOptions: [option('A', 'correct')] })).toBe(
+      'Adicione pelo menos 2 opções'
+    )
+    expect(
+      form({
+        scenarioSituation: 'S',
+        scenarioOptions: [option('A', 'incorrect'), option('B', 'incorrect')],
+      })
+    ).toBe('Marque pelo menos uma opção como correta')
+    expect(
+      form({
+        scenarioSituation: 'S',
+        scenarioOptions: [option('A', 'incorrect'), option('B', 'correct')],
+      })
+    ).toBeNull()
+    expect(BLOCK_CATALOG.scenario.category).toBe('avaliativo')
+  })
+
+  it('bundles the avatar and points the block at the local copy', () => {
+    const block = {
+      ...createEmptyBlock('scenario'),
+      scenarioAvatar: 'https://x.com/joao.png',
+    } as Block
+
+    expect(extractBlockMedia(block)).toEqual(['https://x.com/joao.png'])
+    expect(
+      rewriteBlockMedia(block, new Map([['https://x.com/joao.png', 'images/joao.png']]))
+        .scenarioAvatar
+    ).toBe('images/joao.png')
+    expect(extractBlockMedia(createEmptyBlock('scenario') as Block)).toEqual([])
+  })
+})
+
 describe('fill-blanks block', () => {
   it('keeps the text, removes empty brackets and cleans the AI distractors', () => {
     const { course } = normalizeCourse(

@@ -24,6 +24,7 @@ import { InteractiveVideoBlock } from './InteractiveVideoBlock'
 import { TrueFalseBlock } from './TrueFalseBlock'
 import { SequenceBlock } from './SequenceBlock'
 import { FillBlanksBlock } from './FillBlanksBlock'
+import { ScenarioBlock } from './ScenarioBlock'
 
 export interface BlockProps {
   item: Block
@@ -55,4 +56,5 @@ export const blockRegistry: Record<Block['type'], ComponentType<BlockProps>> = {
   'true-false': TrueFalseBlock,
   sequence: SequenceBlock,
   'fill-blanks': FillBlanksBlock,
+  scenario: ScenarioBlock,
 }

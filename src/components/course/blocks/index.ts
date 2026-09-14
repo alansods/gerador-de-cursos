@@ -28,3 +28,4 @@ export { InteractiveVideoBlock as VideoInterativoBlock } from './InteractiveVide
 export { TrueFalseBlock } from './TrueFalseBlock'
 export { SequenceBlock } from './SequenceBlock'
 export { FillBlanksBlock } from './FillBlanksBlock'
+export { ScenarioBlock } from './ScenarioBlock'

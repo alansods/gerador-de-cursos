@@ -18,6 +18,7 @@ import {
   Target,
   TextCursorInput,
   Minus,
+  MessagesSquare,
   MonitorPlay,
   Music,
   PanelTop,
@@ -34,6 +35,7 @@ import type {
   ListItem,
   VideoQuestion,
   QuizQuestion,
+  ScenarioOption,
   SequenceItem,
   TrueFalseItem,
   Unit,
@@ -98,6 +100,7 @@ const MIN_CATEGORIES = 2
 const MIN_STATEMENTS = 2
 const MIN_SEQUENCE_ITEMS = 2
 const MIN_SEQUENCE_FORM_ITEMS = 3
+const MIN_SCENARIO_OPTIONS = 2
 
 const OPTIONS_PER_QUESTION = 5
 
@@ -735,6 +738,43 @@ export const BLOCK_CATALOG: Record<BlockType, BlockMeta> = {
       return null
     },
   },
+  scenario: {
+    type: 'scenario',
+    label: 'Cenário de decisão',
+    pluralLabel: 'cenários de decisão',
+    marker: 'CENARIO',
+    aiGeneratable: true,
+    requiresDocumentMedia: false,
+    validate: (b) => {
+      const options = validScenarioOptions(b.scenarioOptions)
+      return (
+        hasText(b.scenarioSituation) &&
+        options.length >= MIN_SCENARIO_OPTIONS &&
+        options.some((option) => option.outcome === 'correct')
+      )
+    },
+    icon: MessagesSquare,
+    description: 'Situação com escolhas e consequências',
+    category: 'avaliativo',
+    defaults: () => ({
+      scenarioCharacter: '',
+      scenarioAvatar: '',
+      scenarioSituation: '',
+      scenarioOptions: [],
+    }),
+    validateForm: (b) => {
+      if (!hasText(b.scenarioSituation)) return 'Descreva a situação'
+      if ((b.scenarioOptions?.length ?? 0) < MIN_SCENARIO_OPTIONS)
+        return `Adicione pelo menos ${MIN_SCENARIO_OPTIONS} opções`
+      if (b.scenarioOptions?.some((option) => !hasText(option.text)))
+        return 'Todas as opções devem ter texto'
+      if (!b.scenarioOptions?.some((option) => option.outcome === 'correct'))
+        return 'Marque pelo menos uma opção como correta'
+      return null
+    },
+    extractMedia: (b) => [b.scenarioAvatar],
+    rewriteMedia: (b, mapper) => ({ scenarioAvatar: mapper(b.scenarioAvatar) ?? b.scenarioAvatar }),
+  },
 }
 
 function baseBlock(): Partial<Block> {
@@ -994,6 +1034,15 @@ function repairBlock(block: Block): Block {
     )
   }
 
+  if (repaired.type === 'scenario') {
+    repaired.scenarioCharacter = hasText(repaired.scenarioCharacter)
+      ? repaired.scenarioCharacter!.trim()
+      : ''
+    repaired.scenarioSituation = repaired.scenarioSituation?.trim() ?? ''
+    repaired.scenarioAvatar = isUrl(repaired.scenarioAvatar) ? repaired.scenarioAvatar!.trim() : ''
+    repaired.scenarioOptions = validScenarioOptions(repaired.scenarioOptions)
+  }
+
   if (repaired.type === 'video') {
     repaired.videoSource = videoSource(repaired, 'youtube')
   }
@@ -1097,6 +1146,8 @@ function invalidReason(type: BlockType): string {
       return `com menos de ${MIN_SEQUENCE_ITEMS} passos com texto`
     case 'fill-blanks':
       return 'sem lacunas marcadas entre colchetes'
+    case 'scenario':
+      return `sem situação ou sem ${MIN_SCENARIO_OPTIONS} opções com uma correta`
     default:
       return 'sem conteúdo'
   }
@@ -1144,6 +1195,26 @@ function isListOnly(html: string): boolean {
 
 function stripTags(html: string): string {
   return html.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ')
+}
+
+function scenarioOutcome(value: unknown): ScenarioOption['outcome'] {
+  const normalized = String(value ?? '')
+    .trim()
+    .toLowerCase()
+  return ['correct', 'true', 'correta', 'certa', 'sim'].includes(normalized)
+    ? 'correct'
+    : 'incorrect'
+}
+
+function validScenarioOptions(options?: ScenarioOption[]): ScenarioOption[] {
+  return (options ?? [])
+    .filter((option) => hasText(option?.text))
+    .map((option, index) => ({
+      id: hasText(option.id) ? option.id : `op-${index + 1}`,
+      text: option.text.trim(),
+      outcome: scenarioOutcome(option.outcome),
+      consequence: hasText(option.consequence) ? option.consequence.trim() : '',
+    }))
 }
 
 function validSequenceItems(items?: SequenceItem[]): SequenceItem[] {

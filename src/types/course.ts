@@ -50,6 +50,13 @@ export interface HotspotItem {
   content: string
 }
 
+export interface ScenarioOption {
+  id: string
+  text: string
+  outcome: 'correct' | 'incorrect'
+  consequence: string
+}
+
 export interface SequenceItem {
   id: string
   text: string
@@ -140,6 +147,7 @@ export interface Block {
     | 'true-false'
     | 'sequence'
     | 'fill-blanks'
+    | 'scenario'
   content: string
   order: number
   // image-specific
@@ -202,6 +210,10 @@ export interface Block {
   sequenceItems?: SequenceItem[]
   fillBlanksText?: string
   fillBlanksDistractors?: string[]
+  scenarioCharacter?: string
+  scenarioAvatar?: string
+  scenarioSituation?: string
+  scenarioOptions?: ScenarioOption[]
 }
 
 export interface Unit {

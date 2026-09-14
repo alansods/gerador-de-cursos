@@ -420,6 +420,21 @@ Cada Unidade:
 }
 - Os distratores são palavras erradas, mas plausíveis, que aparecem junto das respostas
 
+### 24. scenario — uma situação com 2 a 4 escolhas e a consequência de cada uma
+{
+  "title": "string",
+  "type": "scenario",
+  "content": "",
+  "scenarioCharacter": "Nome e papel do personagem (opcional)",
+  "scenarioAvatar": "https://exemplo.com/personagem.png (opcional)",
+  "scenarioSituation": "A situação ou fala que pede uma decisão",
+  "scenarioOptions": [
+    { "id": "op-1", "text": "Uma escolha", "outcome": "correct" | "incorrect", "consequence": "O que acontece com essa escolha" }
+  ]
+}
+- Pelo menos uma opção com "outcome": "correct"
+- "scenarioAvatar" só com URL de imagem presente no documento; sem URL, omita o campo
+
 ## Regras gerais
 
 - Na Unidade, os blocos ficam SEMPRE em "blocks". "content" é campo do Bloco, nunca da Unidade
@@ -536,6 +551,11 @@ ${sharedStructure}
 - Bloco LACUNAS_INICIO...LACUNAS_FIM → type "fill-blanks"
   - "Texto:" → fillBlanksText, mantendo os colchetes exatamente como estão
   - "Distratores:" → fillBlanksDistractors (separe por vírgula; use [] se ausente)
+- Bloco CENARIO_INICIO...CENARIO_FIM → type "scenario"
+  - "Personagem:" → scenarioCharacter; "Imagem do Personagem:" → scenarioAvatar (só com URL)
+  - "Situação:" → scenarioSituation
+  - "Opção N:" → scenarioOptions[N-1].text; "Consequência N:" → scenarioOptions[N-1].consequence
+  - "Resposta Correta:" → o número da opção correta recebe "outcome": "correct"; as demais, "incorrect"
 - Conteúdo fora de marcadores → use title, subtitulo, paragrafo ou lista conforme adequado
 
 ## Texto para analisar
@@ -555,6 +575,7 @@ ${sharedStructure}
 - "Objetivos", "ao final desta unidade você será capaz de" → learning-objectives
 - Lista de ingredientes, materiais, características → list (listType: "unordered")
 - Passos numerados de um processo → list (listType: "ordered")
+- Caso, exemplo de situação real ou dilema descrito no texto → UM bloco scenario com a situação do texto, 3 opções e a consequência de cada uma; nunca invente personagem nem imagem que o texto não traga
 - Definição ou regra com termos-chave (valores, nomes técnicos, prazos) → UM bloco fill-blanks com 1 a 3 frases copiadas do texto, de 2 a 5 lacunas no total e 2 distratores plausíveis
 - Procedimento em que a ordem é o que se aprende (montagem, preparo, sequência de segurança), com 3 a 8 passos → depois da lista, UM bloco sequence com os mesmos passos resumidos, na ordem correta
 - Requisitos, critérios verificáveis → list (listType: "check")

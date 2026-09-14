@@ -33,6 +33,7 @@ import {
   CategoryItem,
   HotspotItem,
   MatchingPair,
+  ScenarioOption,
   SequenceItem,
   TrueFalseItem,
 } from '@/types/course'
@@ -1979,6 +1980,91 @@ export function ContentBlockDrawer({
             categories={formData.categories || []}
             onChange={(categories) => setFormData({ ...formData, categories })}
           />
+        )
+
+      case 'scenario':
+        return (
+          <div className="space-y-5">
+            <FormField
+              label="Personagem"
+              optional
+              description="Nome e papel de quem vive a situação."
+            >
+              {(field) => (
+                <Input
+                  {...field}
+                  value={formData.scenarioCharacter || ''}
+                  onChange={(e) => setFormData({ ...formData, scenarioCharacter: e.target.value })}
+                  placeholder="Ex.: Seu João, encarregado da obra"
+                />
+              )}
+            </FormField>
+
+            <FileField
+              category="image"
+              label="Imagem do personagem"
+              required={false}
+              url={formData.scenarioAvatar || ''}
+              onUrl={(scenarioAvatar) => setFormData({ ...formData, scenarioAvatar })}
+            />
+
+            <FormField
+              label={
+                <>
+                  Situação <span className="text-destructive">*</span>
+                </>
+              }
+              description="A fala ou o problema que pede uma decisão do aluno."
+            >
+              {(field) => (
+                <Textarea
+                  {...field}
+                  value={formData.scenarioSituation || ''}
+                  rows={4}
+                  onChange={(e) => setFormData({ ...formData, scenarioSituation: e.target.value })}
+                  placeholder="Ex.: Um colega vai subir no andaime sem o cinto. O que você faz?"
+                />
+              )}
+            </FormField>
+
+            <ItemEditor<ScenarioOption>
+              label="Opções"
+              itemLabel="Opção"
+              emptyText="Nenhuma opção adicionada ainda."
+              items={formData.scenarioOptions || []}
+              createItem={() => ({
+                id: `op-${Date.now()}`,
+                text: '',
+                outcome: 'incorrect',
+                consequence: '',
+              })}
+              onChange={(scenarioOptions) => setFormData({ ...formData, scenarioOptions })}
+              fields={[
+                {
+                  key: 'text',
+                  label: 'Escolha',
+                  required: true,
+                  placeholder: 'Ex.: Peço que ele use o cinto antes de subir',
+                },
+                {
+                  key: 'outcome',
+                  label: 'Resultado',
+                  required: true,
+                  type: 'select',
+                  options: [
+                    { value: 'correct', label: 'Correta' },
+                    { value: 'incorrect', label: 'Incorreta' },
+                  ],
+                },
+                {
+                  key: 'consequence',
+                  label: 'Consequência',
+                  type: 'multiline',
+                  placeholder: 'O que acontece com essa escolha',
+                },
+              ]}
+            />
+          </div>
         )
 
       case 'fill-blanks':

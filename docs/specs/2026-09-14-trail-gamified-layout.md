@@ -699,6 +699,24 @@ Stage 15 record (`fill-blanks`, done):
 - Checked in the Vite player in Clássico (light), Sidebar (dark, after checking) and Trail
   (390 px).
 
+Stage 16 record (`scenario`, done):
+
+- Data: `scenarioCharacter`, optional `scenarioAvatar`, `scenarioSituation` and
+  `scenarioOptions: { id, text, outcome: 'correct' | 'incorrect', consequence }[]`. At least 2
+  options and one correct; the consequence is optional. `repairBlock` reads `correta`, `certa`,
+  `sim` and `true` as correct and keeps the avatar only when it is an http(s) URL.
+  `extractMedia` and `rewriteMedia` cover the avatar. Marker `CENARIO` (`Personagem:`,
+  `Imagem do Personagem:`, `Situação:`, `Opção N:`, `Consequência N:`, `Resposta Correta:`);
+  `auto` mode builds one only from a case the text describes, never inventing a character or
+  image; the Trail prompt lists it as a scored activity.
+- Player: avatar (or a generic icon when missing or broken), character name and the situation
+  in a speech bubble in the theme accent; "O que você faz?" options. Choosing locks the options,
+  shows the consequence with focus on it and records `1/1` or `0/1` for that attempt; a wrong
+  choice offers "Tentar de novo", and the next choice is a new attempt (the LMS score keeps
+  the last one, the star keeps the first).
+- Checked in the Vite player in Clássico (light, with avatar), Sidebar (dark, no avatar) and
+  Trail (dark, 390 px).
+
 #### Stage 19 — Manifest `set` field and consistency test
 
 - [ ] `set` added to every manifest item (`original` for the first set).
