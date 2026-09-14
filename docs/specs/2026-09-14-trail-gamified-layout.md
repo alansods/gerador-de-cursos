@@ -366,18 +366,26 @@ Files: `src/lib/scorm-progress.ts`, new `src/lib/trail-progress.ts`, new
 - **Done when:** common criteria pass and existing `scorm-progress.test.ts` cases pass without
   edits. Commit: `feat: add trail progress model`.
 
-#### Stage 3 — Progress hook and context
+#### Stage 3 — Progress hook and context _(done)_
 
-Files: `src/hooks/useScormProgress.ts`, `src/components/course/ScormProgressContext.tsx`.
+Files: `src/hooks/useScormProgress.ts`, new `src/__tests__/hooks/use-scorm-progress.test.tsx`.
 
-- [ ] `useScormProgress(course)` uses `course.layout` for the completion rule.
-- [ ] Exposes `completeStep(unitId, stepIndex)` and the completed steps.
-- [ ] `recordQuiz` writes the first-attempt bit through the pure functions.
-- [ ] LMS status: `completed` follows the layout rule; score keeps the last attempt.
-- [ ] Context value carries what Trail needs; `useRegistrarQuiz` keeps its signature.
-- [ ] Hook test covering both layouts' completion and resume from `suspend_data`.
-- **Done when:** common criteria pass and `pnpm test:e2e e2e/scorm-progress.spec.ts` stays
-  green for the classic fixture. Commit: `feat: track trail steps in scorm progress`.
+- [x] `useScormProgress(course)` uses `course.layout` for the completion rule
+      (`trailCompletionRule` for `trail`, visited units otherwise).
+- [x] Exposes `completeStep(unitId, stepIndex)`; completed steps are in `state.steps`.
+- [x] `recordQuiz` writes the first-attempt bit through `applyQuizResult`.
+- [x] LMS status: `completed` follows the layout rule and is reported once; score keeps the last
+      attempt.
+- [x] `ScormProgressContext` unchanged: it only serves blocks recording results, and
+      `useRegistrarQuiz` keeps its signature. Trail components receive progress and
+      `completeStep` as props from `TrailPlayer`, like Clássico receives `state.visited`.
+- [x] Hook test covering both layouts' completion, repeated steps, first attempt vs last score
+      and resume from `suspend_data`.
+- [x] `e2e/scorm-progress.spec.ts` asserted the `v1` prefix of `suspend_data`; the assertion now
+      expects the `v2` layout (`v2|hash|visited|steps|`, empty steps for Clássico).
+- **Done when:** common criteria pass and `pnpm exec playwright test e2e/scorm-progress.spec.ts
+--project=chromium` stays green for the classic fixture, after `pnpm build:player` (the E2E
+  packages `player/dist`). Commit: `feat: track trail steps in scorm progress`.
 
 #### Stage 4 — Block theme surface tokens
 

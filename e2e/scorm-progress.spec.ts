@@ -48,7 +48,7 @@ test('tracks progress, resumes the session and completes the course in the LMS',
 
   let state = await cmi(page)
   expect(state.cmi['cmi.core.lesson_location']).toBe('unidade-a')
-  expect(state.cmi['cmi.suspend_data']).toMatch(/^v1\|[a-z0-9]+\|100\|/)
+  expect(state.cmi['cmi.suspend_data']).toMatch(/^v2\|[a-z0-9]+\|100\|\|/)
 
   await nextUnit(page)
   state = await cmi(page)
