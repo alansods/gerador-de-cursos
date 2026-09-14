@@ -26,7 +26,7 @@ export function SortableBlockWrapper({ id, columns, children }: SortableBlockWra
       <Tooltip>
         <TooltipTrigger asChild>
           <button
-            className="cursor-grab active:cursor-grabbing p-1.5 rounded hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-300 hover:text-gray-500 dark:hover:text-gray-300 transition-colors shrink-0 self-center"
+            className="cursor-grab active:cursor-grabbing touch-none p-1.5 rounded hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-300 hover:text-gray-500 dark:hover:text-gray-300 transition-colors shrink-0 self-center"
             aria-label="Arrastar para reordenar"
             {...attributes}
             {...listeners}
