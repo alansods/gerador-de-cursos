@@ -24,7 +24,14 @@ import {
   LayoutGrid,
 } from 'lucide-react'
 import Image from 'next/image'
-import { Block, AccordionItem, ListItem, CategoryItem, HotspotItem } from '@/types/course'
+import {
+  Block,
+  AccordionItem,
+  ListItem,
+  CategoryItem,
+  HotspotItem,
+  MatchingPair,
+} from '@/types/course'
 import { BLOCK_CATALOG, cardsFlipcard, createEmptyBlock, videoSource } from '@/lib/blocks'
 import { MEDIA_POLICY, type MediaCategory } from '@/lib/media'
 import { uploadFile } from '@/lib/client-upload'
@@ -81,6 +88,7 @@ function FileField({
   placeholderUrl = 'ou cole a URL aqui...',
   hint,
   preview = true,
+  required = true,
 }: {
   category: MediaCategory
   label: string
@@ -89,6 +97,7 @@ function FileField({
   placeholderUrl?: string
   hint?: React.ReactNode
   preview?: boolean
+  required?: boolean
 }) {
   const [sending, setSending] = useState(false)
   const [previewBroken, setPreviewBroken] = useState(false)
@@ -117,7 +126,7 @@ function FileField({
     <FormField
       label={
         <>
-          {label} <span className="text-destructive">*</span>
+          {label} {required && <span className="text-destructive">*</span>}
         </>
       }
     >
@@ -287,6 +296,7 @@ function ItemEditor<T extends { id: string }>({
                         <FileField
                           category="image"
                           label={field.label}
+                          required={!!field.required}
                           url={String(item[field.key] ?? '')}
                           onUrl={(url) => update(item.id, field.key, url)}
                         />
@@ -1820,7 +1830,7 @@ export function ContentBlockDrawer({
 
       case 'matching':
         return (
-          <ItemEditor
+          <ItemEditor<MatchingPair>
             label="Pares"
             itemLabel="Par"
             emptyText="Nenhum par adicionado ainda."
@@ -1833,6 +1843,11 @@ export function ContentBlockDrawer({
                 label: 'Item fixo',
                 required: true,
                 placeholder: 'Ex.: Água',
+              },
+              {
+                key: 'leftImage',
+                label: 'Imagem do item fixo',
+                type: 'image',
               },
               {
                 key: 'right',

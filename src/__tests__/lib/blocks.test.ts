@@ -661,6 +661,26 @@ describe('phase 3 blocks', () => {
     expect(createEmptyBlock('interactive-image').hotspotMode).toBe('explore')
   })
 
+  it('extracts matching item images and keeps only valid image URLs from the AI', () => {
+    const pairs = [
+      { id: '', left: 'Panela', right: 'Cozinhar', leftImage: ' https://x.com/pan.png ' },
+      { id: '', left: 'Faca', right: 'Cortar', leftImage: 'sem imagem' },
+      { id: '', left: 'Colher', right: 'Mexer' },
+    ]
+    const { course } = normalizeCourse(
+      courseWith([{ type: 'matching', content: '', matchingPairs: pairs }])
+    )
+    const block = course.units[0].blocks[0]
+
+    expect(block.matchingPairs?.map((p) => p.leftImage)).toEqual([
+      'https://x.com/pan.png',
+      undefined,
+      undefined,
+    ])
+    expect(block.matchingPairs?.[1]).not.toHaveProperty('leftImage')
+    expect(extractBlockMedia(block)).toEqual(['https://x.com/pan.png'])
+  })
+
   it('clamps hotspot coordinates to the 0-100 range', () => {
     const { course } = normalizeCourse(
       courseWith([
@@ -974,6 +994,7 @@ describe('rewriteBlockMedia', () => {
       ['https://x.com/d.pdf', 'images/d.pdf'],
       ['https://x.com/1.png', 'images/1.png'],
       ['https://x.com/base.png', 'images/base.png'],
+      ['https://x.com/pan.png', 'images/pan.png'],
     ])
 
     const image = rewriteBlockMedia(
@@ -1027,6 +1048,21 @@ describe('rewriteBlockMedia', () => {
       lookup
     )
     expect(interactive.baseImage).toBe('images/base.png')
+
+    const matching = rewriteBlockMedia(
+      {
+        ...createEmptyBlock('matching'),
+        matchingPairs: [
+          { id: 'p1', left: 'Panela', right: 'Cozinhar', leftImage: 'https://x.com/pan.png' },
+          { id: 'p2', left: 'Faca', right: 'Cortar' },
+        ],
+      } as Block,
+      lookup
+    )
+    expect(matching.matchingPairs).toEqual([
+      { id: 'p1', left: 'Panela', right: 'Cozinhar', leftImage: 'images/pan.png' },
+      { id: 'p2', left: 'Faca', right: 'Cortar' },
+    ])
   })
 
   it('keeps the URL when the download failed and it is not in the map', () => {

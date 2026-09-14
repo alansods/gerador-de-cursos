@@ -635,6 +635,12 @@ export const BLOCK_CATALOG: Record<BlockType, BlockMeta> = {
         return 'Todos os pares devem ter os dois lados preenchidos'
       return null
     },
+    extractMedia: (b) => (b.matchingPairs ?? []).map((pair) => pair.leftImage),
+    rewriteMedia: (b, mapper) => ({
+      matchingPairs: (b.matchingPairs ?? []).map((pair) =>
+        pair.leftImage ? { ...pair, leftImage: mapper(pair.leftImage) ?? pair.leftImage } : pair
+      ),
+    }),
   },
   categorization: {
     type: 'categorization',
@@ -885,7 +891,14 @@ function repairBlock(block: Block): Block {
   if (repaired.type === 'matching') {
     repaired.matchingPairs = (repaired.matchingPairs ?? [])
       .filter((p) => hasText(p?.left) && hasText(p?.right))
-      .map((p, index) => ({ ...p, id: hasText(p.id) ? p.id : `par-${index + 1}` }))
+      .map((p, index) => {
+        const { leftImage, ...pair } = p
+        return {
+          ...pair,
+          id: hasText(p.id) ? p.id : `par-${index + 1}`,
+          ...(isUrl(leftImage) ? { leftImage: leftImage!.trim() } : {}),
+        }
+      })
   }
 
   if (repaired.type === 'categorization') {

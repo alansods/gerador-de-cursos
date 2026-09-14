@@ -12,7 +12,10 @@ export function MatchingBlock({ item, blockIndex }: { item: Block; blockIndex?: 
     [pairs]
   )
 
-  const targets = useMemo(() => pairs.map((pair) => ({ id: pair.id, label: pair.left })), [pairs])
+  const targets = useMemo(
+    () => pairs.map((pair) => ({ id: pair.id, label: pair.left, image: pair.leftImage })),
+    [pairs]
+  )
 
   if (pairs.length === 0) {
     return (

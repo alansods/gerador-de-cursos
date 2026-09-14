@@ -54,6 +54,7 @@ export interface MatchingPair {
   id: string
   left: string
   right: string
+  leftImage?: string
 }
 
 export interface CategorizedItem {

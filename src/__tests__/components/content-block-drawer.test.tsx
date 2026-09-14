@@ -342,6 +342,46 @@ describe('ContentBlockDrawer', () => {
     expect(onSave).toHaveBeenCalledWith(expect.objectContaining({ hotspotMode: 'find' }))
   })
 
+  it('offers an optional image on each matching item and saves it', async () => {
+    const user = userEvent.setup()
+    const onSave = jest.fn()
+    render(
+      <ContentBlockDrawer
+        open
+        onOpenChange={jest.fn()}
+        mode="edit"
+        blockData={{
+          type: 'matching',
+          matchingPairs: [
+            { id: 'p1', left: 'Panela', right: 'Cozinhar' },
+            { id: 'p2', left: 'Faca', right: 'Cortar' },
+          ],
+        }}
+        onSave={onSave}
+        onCancel={jest.fn()}
+      />
+    )
+
+    const labels = screen.getAllByText(/Imagem do item fixo/)
+    expect(labels).toHaveLength(2)
+    expect(labels[0].parentElement).not.toHaveTextContent('*')
+
+    await user.type(
+      screen.getAllByPlaceholderText('ou cole a URL aqui...')[0],
+      'https://x.com/pan.png'
+    )
+    await user.click(screen.getByRole('button', { name: /salvar/i }))
+
+    expect(onSave).toHaveBeenCalledWith(
+      expect.objectContaining({
+        matchingPairs: [
+          expect.objectContaining({ id: 'p1', leftImage: 'https://x.com/pan.png' }),
+          expect.not.objectContaining({ leftImage: expect.anything() }),
+        ],
+      })
+    )
+  })
+
   it('shows the interactive base image only once, inside the hotspot editor', () => {
     render(
       <ContentBlockDrawer

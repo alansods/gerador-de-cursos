@@ -611,9 +611,16 @@ Files: `src/app/(app)/courses/new/actions.ts`, `src/app/api/generate-course-from
 
 #### Stage 12 — Images on matching items
 
-- [ ] Optional image per matching item, uploaded or picked later from the library.
-- [ ] `extractMedia` and `rewriteMedia` cover the new field.
-- [ ] Tests, including the media test that requires `rewriteMedia`.
+- [x] Optional `leftImage` on each matching pair: the image shows on a white card inside the
+      target (the fixed item), in the same button that receives a chip, so tapping the image
+      places the selected option. `alt=""` because the item label follows. Uploaded in the
+      drawer (optional image field; `FileField` gained `required`), picked from the library
+      from stage 21.
+- [x] `extractMedia` and `rewriteMedia` cover `leftImage`; `repairBlock` keeps it only when it
+      is an http(s) URL. Prompt schema and marker (`Imagem do Item N:`) accept it only with a URL
+      from the document.
+- [x] Tests, including the media test that requires `rewriteMedia`. Checked in the Vite player
+      with screenshots (light desktop, dark 390 px).
 - **Done when:** common criteria pass, including `pnpm build`. Commit:
   `feat: support images on matching items`.
 

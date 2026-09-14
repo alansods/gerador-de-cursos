@@ -365,9 +365,10 @@ Cada Unidade:
   "type": "matching",
   "content": "",
   "matchingPairs": [
-    { "id": "par-1", "left": "Termo fixo", "right": "Correspondente" }
+    { "id": "par-1", "left": "Termo fixo", "right": "Correspondente", "leftImage": "https://exemplo.com/termo.png (opcional)" }
   ]
 }
+- "leftImage" só com URL de imagem presente no documento; sem URL, omita o campo
 
 ### 20. categorization
 {
@@ -482,6 +483,7 @@ ${sharedStructure}
 - Bloco ASSOCIACAO_INICIO...ASSOCIACAO_FIM → type "matching"
   - "Item N:" → matchingPairs[N].left
   - "Correspondente N:" → matchingPairs[N].right
+  - "Imagem do Item N:" → matchingPairs[N].leftImage (só com URL; sem ela, omita o campo)
   - Descarte o par que não tiver os dois lados; são necessários no mínimo 2 pares
 - Bloco CATEGORIZACAO_INICIO...CATEGORIZACAO_FIM → type "categorization"
   - "Categoria N:" → categories[N].name
