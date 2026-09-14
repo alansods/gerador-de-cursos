@@ -487,18 +487,27 @@ Files: `src/components/course/layouts/trail/*`, `src/components/course/layouts/r
 - **Done when:** common criteria pass, including `pnpm build`. Commit:
   `feat: add trail course layout`.
 
-#### Stage 7 — Trail end-to-end
+#### Stage 7 — Trail end-to-end _(done)_
 
-Files: `e2e/scorm-progress.spec.ts`, `e2e/scorm-fixtures/`.
+Files: `e2e/scorm-progress.spec.ts`, new `e2e/scorm-fixtures/trail-course.ts`.
 
-- [ ] Trail fixture course with headings and scored activities (`e2e/scorm-fixtures/trail-course.ts`,
-      created during stage 6 for the screenshots).
-- [ ] Screenshots of the categorization and matching steps in the Trail theme, light and dark;
-      decide whether matching and categorization need an outer `block-surface` card.
-- [ ] Cases: complete a step, complete a unit, resume from `suspend_data`, LMS `completed`
-      only after the last step, score from last attempt.
-- **Done when:** `pnpm test:e2e e2e/scorm-progress.spec.ts` green on chromium. Commit:
-  `test: cover trail layout scorm progress`.
+- [x] Trail fixture course: a unit with no heading, a unit with two steps (quiz, categorization)
+      and custom badges, a unit with a matching activity and the default badge.
+- [x] One flow through the fake LMS covering: greeting from `cmi.core.student_name`; completing a
+      unit with no scored activity (`steps` = `1`, still `incomplete`); quiz right on the first
+      attempt (`1-2:1/1!`); step button disabled until answered; leaving mid-mission
+      (`exit` = `suspend`) and resuming on the pending step with `lesson_location`; a wrong
+      categorization then a retry (`1-5:3/3`, no first-attempt flag, `score.raw` = `100` from
+      the last attempt, 1 star); `completed` only after the last step, set exactly once;
+      end-of-trail screen.
+- [x] Screenshots of the categorization and matching steps in the Trail theme, light and dark.
+      Both are readable and usable. Decision: no outer `block-surface` card for now. A wrapper
+      would need padding, and padding cannot be scoped to the surface theme without changing
+      Clássico and Sidebar. Visual debt recorded: these blocks look flatter than the quiz, and
+      in dark mode their zones keep Tailwind's gray instead of the Trail palette. Revisit when
+      interactive block styling is touched in stages 13 to 18.
+- **Done when:** `pnpm exec playwright test e2e/scorm-progress.spec.ts --project=chromium` green
+  (after `pnpm build:player`). Commit: `test: cover trail layout scorm progress`.
 
 #### Stage 8 — Badge fields in the unit form
 
