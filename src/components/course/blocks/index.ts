@@ -25,3 +25,4 @@ export { InteractiveImageBlock as ImagemInterativaBlock } from './InteractiveIma
 export { MatchingBlock as AssociacaoBlock } from './MatchingBlock'
 export { CategorizationBlock as CategorizacaoBlock } from './CategorizationBlock'
 export { InteractiveVideoBlock as VideoInterativoBlock } from './InteractiveVideoBlock'
+export { TrueFalseBlock } from './TrueFalseBlock'

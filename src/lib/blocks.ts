@@ -2,6 +2,7 @@ import {
   AlertTriangle,
   ArrowLeftRight,
   Boxes,
+  CheckCheck,
   ChevronDown,
   Heading2,
   Heading3,
@@ -31,6 +32,7 @@ import type {
   ListItem,
   VideoQuestion,
   QuizQuestion,
+  TrueFalseItem,
   Unit,
 } from '@/types/course'
 import { timeToSeconds } from '@/lib/video-time'
@@ -89,6 +91,7 @@ const CAROUSEL_MODES = ['carousel', 'grid'] as const
 
 const MIN_PAIRS = 2
 const MIN_CATEGORIES = 2
+const MIN_STATEMENTS = 2
 
 const OPTIONS_PER_QUESTION = 5
 
@@ -663,6 +666,28 @@ export const BLOCK_CATALOG: Record<BlockType, BlockMeta> = {
       return null
     },
   },
+  'true-false': {
+    type: 'true-false',
+    label: 'Verdadeiro ou falso',
+    pluralLabel: 'blocos de verdadeiro ou falso',
+    marker: 'VERDADEIROFALSO',
+    aiGeneratable: true,
+    requiresDocumentMedia: false,
+    validate: (b) => validTrueFalseItems(b.trueFalseItems).length > 0,
+    icon: CheckCheck,
+    description: 'Afirmações para julgar como verdadeiras ou falsas',
+    category: 'avaliativo',
+    defaults: () => ({ trueFalseItems: [] }),
+    validateForm: (b) => {
+      if ((b.trueFalseItems?.length ?? 0) < MIN_STATEMENTS)
+        return `Adicione pelo menos ${MIN_STATEMENTS} afirmações`
+      if (b.trueFalseItems?.some((item) => !hasText(item.statement)))
+        return 'Todas as afirmações devem ter texto'
+      if (b.trueFalseItems?.some((item) => item.answer !== 'true' && item.answer !== 'false'))
+        return 'Marque se cada afirmação é verdadeira ou falsa'
+      return null
+    },
+  },
 }
 
 function baseBlock(): Partial<Block> {
@@ -905,6 +930,10 @@ function repairBlock(block: Block): Block {
     repaired.categories = validCategories(repaired.categories)
   }
 
+  if (repaired.type === 'true-false') {
+    repaired.trueFalseItems = validTrueFalseItems(repaired.trueFalseItems)
+  }
+
   if (repaired.type === 'video') {
     repaired.videoSource = videoSource(repaired, 'youtube')
   }
@@ -1002,6 +1031,8 @@ function invalidReason(type: BlockType): string {
       return `com menos de ${MIN_PAIRS} pares completos`
     case 'categorization':
       return `com menos de ${MIN_CATEGORIES} categorias com nome e itens`
+    case 'true-false':
+      return 'sem afirmações com resposta verdadeira ou falsa'
     default:
       return 'sem conteúdo'
   }
@@ -1049,6 +1080,30 @@ function isListOnly(html: string): boolean {
 
 function stripTags(html: string): string {
   return html.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ')
+}
+
+function trueFalseAnswer(value: unknown): TrueFalseItem['answer'] | null {
+  const normalized = String(value ?? '')
+    .trim()
+    .toLowerCase()
+  if (['true', 'verdadeiro', 'verdadeira', 'v'].includes(normalized)) return 'true'
+  if (['false', 'falso', 'falsa', 'f'].includes(normalized)) return 'false'
+  return null
+}
+
+function validTrueFalseItems(items?: TrueFalseItem[]): TrueFalseItem[] {
+  return (items ?? []).flatMap((item, index) => {
+    const answer = trueFalseAnswer(item?.answer)
+    if (!hasText(item?.statement) || !answer) return []
+    return [
+      {
+        id: hasText(item.id) ? item.id : `vf-${index + 1}`,
+        statement: item.statement.trim(),
+        answer,
+        explanation: hasText(item.explanation) ? item.explanation.trim() : '',
+      },
+    ]
+  })
 }
 
 function hasText(value?: string): boolean {

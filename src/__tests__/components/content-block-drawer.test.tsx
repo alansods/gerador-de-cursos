@@ -382,6 +382,42 @@ describe('ContentBlockDrawer', () => {
     )
   })
 
+  it('creates a true-false block and reopens it with the saved answers', async () => {
+    const user = userEvent.setup()
+    const onSave = mount('true-false')
+
+    await user.click(screen.getByRole('button', { name: /adicionar/i }))
+    await user.click(screen.getByRole('button', { name: /adicionar/i }))
+    const statements = screen.getAllByPlaceholderText(/O EPI deve ser fornecido/)
+    await user.type(statements[0], 'O EPI é gratuito.')
+    await user.type(statements[1], 'Tarefa rápida dispensa EPI.')
+    await user.click(screen.getByRole('button', { name: /salvar/i }))
+
+    const saved = onSave.mock.calls[0][0]
+    expect(saved.trueFalseItems).toEqual([
+      expect.objectContaining({ statement: 'O EPI é gratuito.', answer: 'true' }),
+      expect.objectContaining({ statement: 'Tarefa rápida dispensa EPI.', answer: 'true' }),
+    ])
+
+    const reopened = {
+      ...saved,
+      trueFalseItems: [saved.trueFalseItems[0], { ...saved.trueFalseItems[1], answer: 'false' }],
+    }
+    render(
+      <ContentBlockDrawer
+        open
+        onOpenChange={jest.fn()}
+        mode="edit"
+        blockData={reopened}
+        onSave={jest.fn()}
+        onCancel={jest.fn()}
+      />
+    )
+
+    expect(screen.getAllByDisplayValue('Tarefa rápida dispensa EPI.').length).toBeGreaterThan(0)
+    expect(screen.getAllByRole('combobox').map((box) => box.textContent)).toContain('Falso')
+  })
+
   it('shows the interactive base image only once, inside the hotspot editor', () => {
     render(
       <ContentBlockDrawer

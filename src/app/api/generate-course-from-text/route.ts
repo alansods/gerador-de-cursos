@@ -384,6 +384,21 @@ Cada Unidade:
   ]
 }
 
+### 21. true-false
+{
+  "title": "string",
+  "type": "true-false",
+  "content": "",
+  "trueFalseItems": [
+    {
+      "id": "vf-1",
+      "statement": "Afirmação curta e sem ambiguidade",
+      "answer": "true" | "false",
+      "explanation": "Por que a afirmação é verdadeira ou falsa"
+    }
+  ]
+}
+
 ## Regras gerais
 
 - Na Unidade, os blocos ficam SEMPRE em "blocks". "content" é campo do Bloco, nunca da Unidade
@@ -489,6 +504,11 @@ ${sharedStructure}
   - "Categoria N:" → categories[N].name
   - "Item M da Categoria N:" → categories[N].items[M].text
   - São necessárias no mínimo 2 categories, cada uma com ao menos 1 item
+- Bloco VERDADEIROFALSO_INICIO...VERDADEIROFALSO_FIM → type "true-false" (UM único bloco com todas as afirmações)
+  - "Afirmação N:" → trueFalseItems[N-1].statement
+  - "Resposta N:" → trueFalseItems[N-1].answer (Verdadeiro → "true", Falso → "false")
+  - "Explicação N:" → trueFalseItems[N-1].explanation (use "" se ausente)
+  - Descarte a afirmação sem resposta; são necessárias no mínimo 2 afirmações
 - Conteúdo fora de marcadores → use title, subtitulo, paragrafo ou lista conforme adequado
 
 ## Texto para analisar
@@ -515,6 +535,7 @@ ${sharedStructure}
 - 2 a 4 termos técnicos com definição, ou perguntas retóricas com resposta → UM bloco flipcard com um card para cada; NUNCA gere vários blocos flipcard seguidos
 - 4 ou mais pares "termo — definição" do mesmo assunto → matching
 - Itens explicitamente agrupados em 2 ou mais conjuntos nomeados → categorization
+- Fatos, regras ou mitos que o texto afirma ou desmente com clareza → UM bloco true-false com 3 a 5 afirmações; as falsas contradizem um trecho do texto e a explicação cita o que o texto diz
 - "Atenção:", "Importante:", aviso de segurança → info-box (infoBoxType: "warning")
 - "Sabia que", curiosidade, fato interessante → info-box (infoBoxType: "fun-fact")
 - URL de imagem no texto → image, com a legenda que estiver ao lado

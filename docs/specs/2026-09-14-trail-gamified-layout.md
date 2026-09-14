@@ -650,6 +650,22 @@ Checklist for each block (from CLAUDE.md, "Como Criar um Novo Tipo de Conteúdo"
 - **Done when:** common criteria pass, including `pnpm build`. Commit:
   `feat: add <type> block`.
 
+Stage 13 record (`true-false`, done):
+
+- Data: `trueFalseItems: { id, statement, answer: 'true' | 'false', explanation }[]`; the answer
+  is a string so the drawer uses the generic `ItemEditor` select. `repairBlock` reads `true`,
+  `verdadeiro`, `falso`, `v`, `f` and booleans; the lenient `validate` needs one valid statement,
+  `validateForm` needs two. Marker `VERDADEIROFALSO` (`Afirmação N:`, `Resposta N:`,
+  `Explicação N:`); `auto` mode may generate 3 to 5 statements; the Trail prompt lists it as a
+  scored activity.
+- Player: one statement at a time with a progress bar; answering locks the buttons, shows the
+  right answer and the explanation, and moves focus to "Próxima"; the result lists every
+  statement and records `correct / total` once per attempt; "Tentar novamente" starts a new
+  attempt.
+- Checked in the Vite player in Clássico, Sidebar and Trail (light, dark and 390 px).
+- Visual debt, shared with the quiz: white text on `--block-accent` is below 4.5:1 in Trail dark
+  (`#f47a4c`). Revisit with an on-accent token for all blocks in a later stage.
+
 #### Stage 19 — Manifest `set` field and consistency test
 
 - [ ] `set` added to every manifest item (`original` for the first set).

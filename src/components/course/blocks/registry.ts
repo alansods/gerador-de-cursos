@@ -21,6 +21,7 @@ import { InteractiveImageBlock } from './InteractiveImageBlock'
 import { MatchingBlock } from './MatchingBlock'
 import { CategorizationBlock } from './CategorizationBlock'
 import { InteractiveVideoBlock } from './InteractiveVideoBlock'
+import { TrueFalseBlock } from './TrueFalseBlock'
 
 export interface BlockProps {
   item: Block
@@ -49,4 +50,5 @@ export const blockRegistry: Record<Block['type'], ComponentType<BlockProps>> = {
   matching: MatchingBlock,
   categorization: CategorizationBlock,
   'interactive-video': InteractiveVideoBlock,
+  'true-false': TrueFalseBlock,
 }

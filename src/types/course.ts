@@ -50,6 +50,13 @@ export interface HotspotItem {
   content: string
 }
 
+export interface TrueFalseItem {
+  id: string
+  statement: string
+  answer: 'true' | 'false'
+  explanation: string
+}
+
 export interface MatchingPair {
   id: string
   left: string
@@ -125,6 +132,7 @@ export interface Block {
     | 'matching'
     | 'categorization'
     | 'interactive-video'
+    | 'true-false'
   content: string
   order: number
   // image-specific
@@ -183,6 +191,7 @@ export interface Block {
   matchingPairs?: MatchingPair[]
   // categorization-specific
   categories?: CategoryItem[]
+  trueFalseItems?: TrueFalseItem[]
 }
 
 export interface Unit {

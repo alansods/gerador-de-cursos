@@ -620,6 +620,65 @@ describe('phase 2 blocks', () => {
   })
 })
 
+describe('true-false block', () => {
+  it('reads the AI answers leniently and drops statements with no answer', () => {
+    const items = [
+      { id: '', statement: ' O EPI é gratuito. ', answer: true, explanation: 'NR-6' },
+      { id: '', statement: 'Tarefa rápida dispensa EPI.', answer: 'Falso' },
+      { id: '', statement: 'Sem resposta', answer: 'talvez' },
+      { id: '', statement: '', answer: 'true' },
+    ]
+    const { course } = normalizeCourse(
+      courseWith([{ type: 'true-false', content: '', trueFalseItems: items as never }])
+    )
+
+    expect(course.units[0].blocks[0].trueFalseItems).toEqual([
+      { id: 'vf-1', statement: 'O EPI é gratuito.', answer: 'true', explanation: 'NR-6' },
+      { id: 'vf-2', statement: 'Tarefa rápida dispensa EPI.', answer: 'false', explanation: '' },
+    ])
+  })
+
+  it('discards a block with no valid statement and explains why', () => {
+    const { course, summary } = normalizeCourse(
+      courseWith([
+        {
+          type: 'true-false',
+          content: '',
+          trueFalseItems: [{ id: 'a', statement: 'X', answer: 'sim' }] as never,
+        },
+      ])
+    )
+
+    expect(course.units[0].blocks).toHaveLength(0)
+    expect(summary.discarded[0].reason).toBe('sem afirmações com resposta verdadeira ou falsa')
+  })
+
+  it('requires two filled statements in the form', () => {
+    const form = (trueFalseItems: Block['trueFalseItems']) =>
+      BLOCK_CATALOG['true-false'].validateForm({
+        ...createEmptyBlock('true-false'),
+        trueFalseItems,
+      } as Block)
+
+    expect(form([{ id: 'a', statement: 'X', answer: 'true', explanation: '' }])).toBe(
+      'Adicione pelo menos 2 afirmações'
+    )
+    expect(
+      form([
+        { id: 'a', statement: 'X', answer: 'true', explanation: '' },
+        { id: 'b', statement: ' ', answer: 'false', explanation: '' },
+      ])
+    ).toBe('Todas as afirmações devem ter texto')
+    expect(
+      form([
+        { id: 'a', statement: 'X', answer: 'true', explanation: '' },
+        { id: 'b', statement: 'Y', answer: 'false', explanation: '' },
+      ])
+    ).toBeNull()
+    expect(BLOCK_CATALOG['true-false'].category).toBe('avaliativo')
+  })
+})
+
 describe('phase 3 blocks', () => {
   it('drops an interactive image with no base image or no titled hotspot', () => {
     const { course, summary } = normalizeCourse(

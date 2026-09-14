@@ -31,6 +31,7 @@ import {
   CategoryItem,
   HotspotItem,
   MatchingPair,
+  TrueFalseItem,
 } from '@/types/course'
 import { BLOCK_CATALOG, cardsFlipcard, createEmptyBlock, videoSource } from '@/lib/blocks'
 import { MEDIA_POLICY, type MediaCategory } from '@/lib/media'
@@ -1864,6 +1865,48 @@ export function ContentBlockDrawer({
           <CategoryEditor
             categories={formData.categories || []}
             onChange={(categories) => setFormData({ ...formData, categories })}
+          />
+        )
+
+      case 'true-false':
+        return (
+          <ItemEditor<TrueFalseItem>
+            label="Afirmações"
+            itemLabel="Afirmação"
+            emptyText="Nenhuma afirmação adicionada ainda."
+            items={formData.trueFalseItems || []}
+            createItem={() => ({
+              id: `vf-${Date.now()}`,
+              statement: '',
+              answer: 'true',
+              explanation: '',
+            })}
+            onChange={(trueFalseItems) => setFormData({ ...formData, trueFalseItems })}
+            fields={[
+              {
+                key: 'statement',
+                label: 'Afirmação',
+                required: true,
+                type: 'multiline',
+                placeholder: 'Ex.: O EPI deve ser fornecido gratuitamente pelo empregador.',
+              },
+              {
+                key: 'answer',
+                label: 'Resposta',
+                required: true,
+                type: 'select',
+                options: [
+                  { value: 'true', label: 'Verdadeiro' },
+                  { value: 'false', label: 'Falso' },
+                ],
+              },
+              {
+                key: 'explanation',
+                label: 'Explicação',
+                type: 'multiline',
+                placeholder: 'Mostrada depois da resposta',
+              },
+            ]}
           />
         )
 
