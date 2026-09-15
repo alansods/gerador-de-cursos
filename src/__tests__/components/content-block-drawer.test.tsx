@@ -919,3 +919,21 @@ describe('graded option', () => {
     expect(screen.getByRole('checkbox', { name: 'Vale nota' })).toBeChecked()
   })
 })
+
+describe('find in image preset', () => {
+  it('opens the interactive image in find mode with the graded option', () => {
+    render(
+      <ContentBlockDrawer
+        open
+        onOpenChange={jest.fn()}
+        mode="add"
+        blockData={{ type: 'interactive-image', hotspotMode: 'find' }}
+        onSave={jest.fn()}
+        onCancel={jest.fn()}
+      />
+    )
+
+    expect(screen.getByRole('radio', { name: /Encontrar/ })).toBeChecked()
+    expect(screen.getByRole('checkbox', { name: 'Vale nota' })).toBeChecked()
+  })
+})

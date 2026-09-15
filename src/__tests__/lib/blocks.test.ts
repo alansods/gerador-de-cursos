@@ -1,6 +1,7 @@
 import {
   BLOCK_CATALOG,
   BLOCK_CATEGORIES,
+  BLOCK_MODAL_ENTRIES,
   BLOCK_TYPES,
   cardsFlipcard,
   createEmptyBlock,
@@ -10,6 +11,7 @@ import {
   isGradedBlock,
   rewriteBlockMedia,
   mergeAdjacentFlipcards,
+  modalEntriesFor,
   normalizeCourse,
 } from '@/lib/blocks'
 import type { BlockType } from '@/lib/blocks'
@@ -1433,5 +1435,57 @@ describe('graded activities', () => {
     expect(practice.graded).toBe(false)
     expect(graded).not.toHaveProperty('graded')
     expect(invalid).not.toHaveProperty('graded')
+  })
+})
+
+describe('modal entries', () => {
+  it('names the activities tab Atividades and keeps the category id', () => {
+    expect(BLOCK_CATEGORIES.find((category) => category.id === 'avaliativo')?.label).toBe(
+      'Atividades'
+    )
+  })
+
+  it('lists the activities from the simplest to the most elaborate', () => {
+    expect(modalEntriesFor('avaliativo').map((entry) => entry.label)).toEqual([
+      'Quiz',
+      'Verdadeiro ou falso',
+      'Completar lacunas',
+      'Associação',
+      'Categorização',
+      'Sequência',
+      'Cenário de decisão',
+      'Encontre na imagem',
+      'Vídeo interativo',
+    ])
+  })
+
+  it('offers the interactive image twice: explore in Interativos and find in Atividades', () => {
+    const imageEntries = BLOCK_MODAL_ENTRIES.filter((entry) => entry.type === 'interactive-image')
+
+    expect(
+      imageEntries.map(({ label, category, preset }) => ({ label, category, preset }))
+    ).toEqual([
+      { label: 'Imagem interativa', category: 'interativo', preset: undefined },
+      { label: 'Encontre na imagem', category: 'avaliativo', preset: { hotspotMode: 'find' } },
+    ])
+    expect(createEmptyBlock('interactive-image').hotspotMode).toBe('explore')
+  })
+
+  it('keeps one entry per type in the other tabs, in catalog order', () => {
+    for (const category of BLOCK_CATEGORIES.filter((c) => c.id !== 'avaliativo')) {
+      expect(modalEntriesFor(category.id).map((entry) => entry.type)).toEqual(
+        (Object.keys(BLOCK_CATALOG) as BlockType[]).filter(
+          (type) => BLOCK_CATALOG[type].category === category.id
+        )
+      )
+    }
+  })
+
+  it('gives every activity card a description that says when to use it', () => {
+    const descriptions = modalEntriesFor('avaliativo').map((entry) => entry.description)
+
+    expect(new Set(descriptions).size).toBe(descriptions.length)
+    expect(descriptions).toContain('Ligar pares, um para um')
+    expect(descriptions).toContain('Separar vários itens em grupos')
   })
 })

@@ -94,9 +94,9 @@ import { QuizData, QuizQuestion, Unit, Block } from '@/types/course'
 import {
   BLOCK_CATALOG,
   BLOCK_CATEGORIES,
-  BLOCK_TYPES,
   cardsFlipcard,
   createEmptyBlock,
+  modalEntriesFor,
 } from '@/lib/blocks'
 import { uploadFile } from '@/lib/client-upload'
 
@@ -540,11 +540,15 @@ function CourseEditor() {
     setAddBlockModal(true)
   }
 
-  const handleSelectBlockType = (type: Block['type'], unitId: string) => {
+  const handleSelectBlockType = (
+    type: Block['type'],
+    unitId: string,
+    preset: Partial<Block> = {}
+  ) => {
     setAddBlockModal(false)
     setContentDrawerUnitId(unitId)
     setContentDrawerMode('add')
-    setContentDrawerBlockData({ type })
+    setContentDrawerBlockData({ ...preset, type })
     setContentDrawerOpen(true)
   }
 
@@ -1925,22 +1929,23 @@ function CourseEditor() {
                 ))}
               </TabsList>
               {BLOCK_CATEGORIES.map((category) => {
-                const types = BLOCK_TYPES.filter(
-                  (type) => BLOCK_CATALOG[type].category === category.id
-                )
+                const entries = modalEntriesFor(category.id)
 
                 return (
                   <TabsContent key={category.id} value={category.id}>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                      {types.map((type) => {
-                        const meta = BLOCK_CATALOG[type]
-                        const Icon = meta.icon
+                      {entries.map((entry) => {
+                        const Icon = entry.icon
                         return (
                           <button
-                            key={type}
+                            key={entry.id}
                             onClick={() => {
                               if (insertAtIndex.current) {
-                                handleSelectBlockType(type, insertAtIndex.current.unitId)
+                                handleSelectBlockType(
+                                  entry.type,
+                                  insertAtIndex.current.unitId,
+                                  entry.preset
+                                )
                               }
                             }}
                             className="flex flex-col items-start p-4 rounded-xl border-2 border-gray-200 dark:border-gray-700 hover:border-blue-500 dark:hover:border-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/20 transition-all group"
@@ -1949,10 +1954,10 @@ function CourseEditor() {
                               <Icon className="h-5 w-5 text-blue-600 dark:text-blue-400" />
                             </div>
                             <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100 mb-0.5">
-                              {meta.label}
+                              {entry.label}
                             </h3>
                             <p className="text-xs text-gray-500 dark:text-gray-400 text-left">
-                              {meta.description}
+                              {entry.description}
                             </p>
                           </button>
                         )

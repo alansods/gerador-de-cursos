@@ -16,6 +16,7 @@ import {
   Milestone,
   MousePointerClick,
   RotateCcw,
+  ScanSearch,
   Target,
   TextCursorInput,
   Minus,
@@ -56,7 +57,7 @@ export const BLOCK_CATEGORIES: { id: BlockCategory; label: string }[] = [
   { id: 'texto', label: 'Texto e estrutura' },
   { id: 'midia', label: 'Mídia' },
   { id: 'interativo', label: 'Interativos' },
-  { id: 'avaliativo', label: 'Avaliação' },
+  { id: 'avaliativo', label: 'Atividades' },
 ]
 
 export interface BlockMeta {
@@ -384,7 +385,7 @@ export const BLOCK_CATALOG: Record<BlockType, BlockMeta> = {
     requiresDocumentMedia: false,
     validate: (b) => !!b.quizData?.questions?.some(isValidQuestion),
     icon: HelpCircle,
-    description: 'Pergunta com resposta',
+    description: 'Perguntas de múltipla escolha com feedback',
     category: 'avaliativo',
     defaults: () => ({ quizData: undefined }),
     validateForm: (b) =>
@@ -641,7 +642,7 @@ export const BLOCK_CATALOG: Record<BlockType, BlockMeta> = {
       (b.matchingPairs ?? []).filter((p) => hasText(p.left) && hasText(p.right)).length >=
       MIN_PAIRS,
     icon: ArrowLeftRight,
-    description: 'Relacionar colunas',
+    description: 'Ligar pares, um para um',
     category: 'avaliativo',
     defaults: () => ({ matchingPairs: [] }),
     validateForm: (b) => {
@@ -667,7 +668,7 @@ export const BLOCK_CATALOG: Record<BlockType, BlockMeta> = {
     requiresDocumentMedia: false,
     validate: (b) => validCategories(b.categories).length >= MIN_CATEGORIES,
     icon: Boxes,
-    description: 'Agrupar itens em categorias',
+    description: 'Separar vários itens em grupos',
     category: 'avaliativo',
     defaults: () => ({ categories: [] }),
     validateForm: (b) => {
@@ -688,7 +689,7 @@ export const BLOCK_CATALOG: Record<BlockType, BlockMeta> = {
     requiresDocumentMedia: false,
     validate: (b) => validTrueFalseItems(b.trueFalseItems).length > 0,
     icon: CheckCheck,
-    description: 'Afirmações para julgar como verdadeiras ou falsas',
+    description: 'Afirmações para julgar, com explicação',
     category: 'avaliativo',
     defaults: () => ({ trueFalseItems: [] }),
     validateForm: (b) => {
@@ -758,7 +759,7 @@ export const BLOCK_CATALOG: Record<BlockType, BlockMeta> = {
       )
     },
     icon: MessagesSquare,
-    description: 'Situação com escolhas e consequências',
+    description: 'Uma situação real: o aluno escolhe e vê a consequência',
     category: 'avaliativo',
     defaults: () => ({
       scenarioCharacter: '',
@@ -853,6 +854,56 @@ export function createEmptyBlock(type: BlockType): DraftBlock {
 }
 
 export const BLOCK_TYPES = Object.keys(BLOCK_CATALOG) as BlockType[]
+
+export interface BlockModalEntry {
+  id: string
+  type: BlockType
+  label: string
+  description: string
+  icon: LucideIcon
+  category: BlockCategory
+  preset?: Partial<Block>
+}
+
+const ACTIVITY_ORDER = [
+  'quiz',
+  'true-false',
+  'fill-blanks',
+  'matching',
+  'categorization',
+  'sequence',
+  'scenario',
+  'find-in-image',
+  'interactive-video',
+]
+
+const FIND_IN_IMAGE_ENTRY: BlockModalEntry = {
+  id: 'find-in-image',
+  type: 'interactive-image',
+  label: 'Encontre na imagem',
+  description: 'Achar pontos escondidos numa imagem',
+  icon: ScanSearch,
+  category: 'avaliativo',
+  preset: { hotspotMode: 'find' },
+}
+
+export const BLOCK_MODAL_ENTRIES: BlockModalEntry[] = [
+  ...BLOCK_TYPES.map((type) => {
+    const { label, description, icon, category } = BLOCK_CATALOG[type]
+    return { id: type, type, label, description, icon, category }
+  }),
+  FIND_IN_IMAGE_ENTRY,
+]
+
+export function modalEntriesFor(category: BlockCategory): BlockModalEntry[] {
+  const entries = BLOCK_MODAL_ENTRIES.filter((entry) => entry.category === category)
+  if (category !== 'avaliativo') return entries
+  const position = (entry: BlockModalEntry) => {
+    const index = ACTIVITY_ORDER.indexOf(entry.id)
+    return index < 0 ? ACTIVITY_ORDER.length : index
+  }
+  return [...entries].sort((a, b) => position(a) - position(b))
+}
 
 export const GRADABLE_TYPES: readonly BlockType[] = [
   'quiz',

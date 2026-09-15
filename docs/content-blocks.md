@@ -13,12 +13,12 @@ blocos novos estão em
 O modal separa os blocos em quatro abas. Todos funcionam nos três layouts (Clássico, Sidebar e
 Trilha) e dentro do pacote SCORM, inclusive offline.
 
-| Aba               | Blocos                                                                                                                   |
-| ----------------- | ------------------------------------------------------------------------------------------------------------------------ |
-| Texto e estrutura | Título, Subtítulo, Parágrafo, Lista, Objetivos, Caixa de destaque, Separador, Ficha técnica                              |
-| Mídia             | Imagem, Vídeo, Carrossel, Áudio, PDF                                                                                     |
-| Interativos       | Accordion, Flipcard, Abas, Linha do tempo, Imagem interativa                                                             |
-| Avaliação         | Quiz, Vídeo interativo, Associação, Categorização, Verdadeiro ou falso, Sequência, Completar lacunas, Cenário de decisão |
+| Aba               | Blocos                                                                                                                                       |
+| ----------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| Texto e estrutura | Título, Subtítulo, Parágrafo, Lista, Objetivos, Caixa de destaque, Separador, Ficha técnica                                                  |
+| Mídia             | Imagem, Vídeo, Carrossel, Áudio, PDF                                                                                                         |
+| Interativos       | Accordion, Flipcard, Abas, Linha do tempo, Imagem interativa                                                                                 |
+| Atividades        | Quiz, Verdadeiro ou falso, Completar lacunas, Associação, Categorização, Sequência, Cenário de decisão, Encontre na imagem, Vídeo interativo |
 
 Regras que valem para todos:
 
@@ -36,8 +36,8 @@ Regras que valem para todos:
 
 ## Nota, conclusão e Trilha
 
-Os blocos da aba **Avaliação** registram nota. A imagem interativa também registra, mas só no
-modo **Encontrar**.
+Os blocos da aba **Atividades** registram nota. O card **Encontre na imagem** dessa aba cria a
+imagem interativa no modo **Encontrar**, o único modo dela que registra nota.
 
 - **Vale nota ou fixação**: esses blocos têm no formulário a caixa **Vale nota**, marcada por
   padrão. Desmarcada, a atividade vira **exercício de fixação**: o aluno responde e vê se acertou
@@ -232,11 +232,13 @@ Eventos em ordem cronológica.
 
 ### Imagem interativa
 
-Imagem com pontos clicáveis. Tem dois modos:
+Imagem com pontos clicáveis. O card **Imagem interativa** fica em Interativos e abre no modo
+Explorar. Tem dois modos:
 
 - **Explorar** (padrão): os pontos aparecem na imagem; o aluno clica para ler o título e o
   conteúdo de cada um. Não dá nota.
-- **Encontrar**: os pontos ficam escondidos e o aluno procura cada um na imagem (bom para
+- **Encontrar** (é o que o card **Encontre na imagem**, na aba Atividades, já abre selecionado):
+  os pontos ficam escondidos e o aluno procura cada um na imagem (bom para
   "encontre os erros"). No teclado, as setas movem uma mira e Enter marca. Um clique fora de
   qualquer ponto conta como erro. Quando acha todos, registra a nota; é "de primeira" com até 2
   cliques errados. **Neste modo, o bloco é avaliado** e ganha a caixa **Vale nota** (veja
@@ -248,7 +250,7 @@ Imagem com pontos clicáveis. Tem dois modos:
 
 ---
 
-## Avaliação
+## Atividades
 
 Todos registram nota por tentativa. O aluno pode refazer; a nota do LMS fica com a última
 tentativa e as estrelas do Trilha com a primeira. Cada um pode ser marcado como exercício de
@@ -263,14 +265,26 @@ Pergunta de múltipla escolha com feedback.
 - **Documento**: `QUIZ` com `Pergunta:`, `Opção A:` a `Opção E:` e `Resposta Correta:`, repetidos
   para cada pergunta.
 
-### Vídeo interativo
+### Verdadeiro ou falso
 
-Vídeo que pausa em momentos marcados para fazer perguntas.
+Afirmações para julgar.
 
-- **Preenche**: o vídeo (arquivo ou YouTube), um título e pelo menos uma pergunta com tempo
-  (`mm:ss`) e alternativas.
-- **Documento**: `VIDEOINTERATIVO` com `URL:`, `Título:`, `Tempo da Pergunta N:`,
-  `Pergunta N:` e `Opção A da Pergunta N:` em diante.
+- **Preenche**: pelo menos 2 afirmações, cada uma com a resposta (verdadeira ou falsa) e uma
+  explicação opcional.
+- **Aluno faz**: responde uma afirmação por vez, vê a resposta certa e a explicação, e no fim a
+  lista com acertos e erros.
+- **Documento**: `VERDADEIROFALSO` com `Afirmação N:`, `Resposta N:` e `Explicação N:`.
+
+### Completar lacunas
+
+Texto com lacunas para completar com palavras de um banco.
+
+- **Preenche**: o texto com cada resposta entre colchetes, como `Lave as mãos por [20] segundos`.
+  Opcional: palavras distratoras (erradas, mas plausíveis), separadas por vírgula. O formulário
+  mostra a lista de lacunas encontradas.
+- **Aluno faz**: toca numa palavra para colocá-la na lacuna destacada; toca numa lacuna
+  preenchida para devolver a palavra. Maiúsculas e espaços não contam como erro.
+- **Documento**: `LACUNAS` com `Texto:` e `Distratores:`.
 
 ### Associação
 
@@ -289,16 +303,6 @@ Agrupar itens em categorias.
 - **Aluno faz**: arrasta cada item para a categoria, ou toca no item e depois na categoria.
 - **Documento**: `CATEGORIZACAO` com `Categoria N:` e `Item M da Categoria N:`.
 
-### Verdadeiro ou falso
-
-Afirmações para julgar.
-
-- **Preenche**: pelo menos 2 afirmações, cada uma com a resposta (verdadeira ou falsa) e uma
-  explicação opcional.
-- **Aluno faz**: responde uma afirmação por vez, vê a resposta certa e a explicação, e no fim a
-  lista com acertos e erros.
-- **Documento**: `VERDADEIROFALSO` com `Afirmação N:`, `Resposta N:` e `Explicação N:`.
-
 ### Sequência
 
 Colocar os passos na ordem certa.
@@ -308,17 +312,6 @@ Colocar os passos na ordem certa.
 - **Aluno faz**: move cada passo com as setas para cima e para baixo e clica em "Verificar
   ordem". A nota é quantos passos ficaram na posição certa.
 - **Documento**: `SEQUENCIA` com `Passo N:`.
-
-### Completar lacunas
-
-Texto com lacunas para completar com palavras de um banco.
-
-- **Preenche**: o texto com cada resposta entre colchetes, como `Lave as mãos por [20] segundos`.
-  Opcional: palavras distratoras (erradas, mas plausíveis), separadas por vírgula. O formulário
-  mostra a lista de lacunas encontradas.
-- **Aluno faz**: toca numa palavra para colocá-la na lacuna destacada; toca numa lacuna
-  preenchida para devolver a palavra. Maiúsculas e espaços não contam como erro.
-- **Documento**: `LACUNAS` com `Texto:` e `Distratores:`.
 
 ### Cenário de decisão
 
@@ -330,6 +323,21 @@ Uma situação com personagem, escolhas e a consequência de cada uma.
   tentar de novo (nova tentativa).
 - **Documento**: `CENARIO` com `Personagem:`, `Imagem do Personagem:`, `Situação:`,
   `Opção N:`, `Consequência N:` e `Resposta Correta:`.
+
+### Encontre na imagem
+
+Card que cria a [Imagem interativa](#imagem-interativa) já no modo **Encontrar**: o aluno procura
+pontos escondidos numa imagem. Os campos, o marcador `HOTSPOT` (com `Modo: encontrar`) e a
+pontuação são os da imagem interativa.
+
+### Vídeo interativo
+
+Vídeo que pausa em momentos marcados para fazer perguntas.
+
+- **Preenche**: o vídeo (arquivo ou YouTube), um título e pelo menos uma pergunta com tempo
+  (`mm:ss`) e alternativas.
+- **Documento**: `VIDEOINTERATIVO` com `URL:`, `Título:`, `Tempo da Pergunta N:`,
+  `Pergunta N:` e `Opção A da Pergunta N:` em diante.
 
 ---
 

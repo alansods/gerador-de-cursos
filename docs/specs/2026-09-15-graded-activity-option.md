@@ -110,8 +110,8 @@ One commit per stage, each after its checks pass and after the author confirms t
 
 ### Stage 2 — Atividades tab
 
-- [ ] Tab label, modal entries with the "Encontre na imagem" card, descriptions and order.
-- [ ] Tests for the modal entries and the find preset.
+- [x] Tab label, modal entries with the "Encontre na imagem" card, descriptions and order.
+- [x] Tests for the modal entries and the find preset.
 - **Commit:** `feat: reorganize the activities tab`.
 
 ### Stage 3 — Quiz with 3 to 5 options
