@@ -4,7 +4,6 @@ import {
   Boxes,
   CheckCheck,
   ChevronDown,
-  ClipboardCheck,
   ClipboardList,
   Heading2,
   Heading3,
@@ -34,7 +33,6 @@ import type {
   Course,
   FlipcardItem,
   OptionLetter,
-  PracticeItem,
   SheetMaterial,
   SheetStep,
   ListItem,
@@ -107,7 +105,6 @@ const MIN_STATEMENTS = 2
 const MIN_SEQUENCE_ITEMS = 2
 const MIN_SEQUENCE_FORM_ITEMS = 3
 const MIN_SCENARIO_OPTIONS = 2
-const MIN_PRACTICE_FORM_ITEMS = 2
 
 const OPTIONS_PER_QUESTION = 5
 
@@ -810,27 +807,6 @@ export const BLOCK_CATALOG: Record<BlockType, BlockMeta> = {
       ),
     }),
   },
-  'practice-checklist': {
-    type: 'practice-checklist',
-    label: 'Missão prática',
-    pluralLabel: 'missões práticas',
-    marker: 'MISSAOPRATICA',
-    aiGeneratable: true,
-    requiresDocumentMedia: false,
-    validate: (b) => validPracticeItems(b.practiceItems).length > 0,
-    icon: ClipboardCheck,
-    description: 'Lista de tarefas para o aluno marcar enquanto pratica',
-    category: 'interativo',
-    defaults: () => ({ practiceMission: '', practiceItems: [] }),
-    validateForm: (b) => {
-      if (!hasText(b.practiceMission)) return 'Descreva a missão'
-      if ((b.practiceItems?.length ?? 0) < MIN_PRACTICE_FORM_ITEMS)
-        return `Adicione pelo menos ${MIN_PRACTICE_FORM_ITEMS} itens`
-      if (b.practiceItems?.some((practiceItem) => !hasText(practiceItem.text)))
-        return 'Todos os itens devem ter texto'
-      return null
-    },
-  },
 }
 
 function baseBlock(): Partial<Block> {
@@ -1098,11 +1074,6 @@ function repairBlock(block: Block): Block {
     repaired.sheetSteps = validSheetSteps(repaired.sheetSteps)
   }
 
-  if (repaired.type === 'practice-checklist') {
-    repaired.practiceMission = repaired.practiceMission?.trim() ?? ''
-    repaired.practiceItems = validPracticeItems(repaired.practiceItems)
-  }
-
   if (repaired.type === 'scenario') {
     repaired.scenarioCharacter = hasText(repaired.scenarioCharacter)
       ? repaired.scenarioCharacter!.trim()
@@ -1217,8 +1188,6 @@ function invalidReason(type: BlockType): string {
       return 'sem lacunas marcadas entre colchetes'
     case 'technical-sheet':
       return 'sem materiais com nome'
-    case 'practice-checklist':
-      return 'sem itens com texto'
     case 'scenario':
       return `sem situação ou sem ${MIN_SCENARIO_OPTIONS} opções com uma correta`
     default:
@@ -1307,15 +1276,6 @@ function validSheetSteps(steps?: SheetStep[]): SheetStep[] {
     .map((step, index) => ({
       id: hasText(step.id) ? step.id : `step-${index + 1}`,
       text: step.text.trim(),
-    }))
-}
-
-function validPracticeItems(items?: PracticeItem[]): PracticeItem[] {
-  return (items ?? [])
-    .filter((practiceItem) => hasText(practiceItem?.text))
-    .map((practiceItem, index) => ({
-      id: hasText(practiceItem.id) ? practiceItem.id : `task-${index + 1}`,
-      text: practiceItem.text.trim(),
     }))
 }
 

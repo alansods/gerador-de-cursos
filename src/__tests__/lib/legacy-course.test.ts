@@ -164,6 +164,37 @@ describe('upgradeBlock', () => {
     })
   })
 
+  it('turns a saved practice checklist into an info box, escaping the text', () => {
+    expect(
+      upgradeBlock({
+        id: 'b7',
+        type: 'practice-checklist',
+        content: '',
+        order: 3,
+        columns: 12,
+        practiceMission: ' Confira seus EPIs <antes> ',
+        practiceItems: [
+          { id: 't1', text: 'Capacete & jugular' },
+          { id: 't2', text: '  ' },
+          { id: 't3', text: 'Luvas' },
+        ],
+      })
+    ).toEqual({
+      id: 'b7',
+      type: 'info-box',
+      order: 3,
+      columns: 12,
+      infoBoxType: 'info',
+      infoBoxTitle: '',
+      content:
+        '<p>Confira seus EPIs &lt;antes&gt;</p><ul><li>Capacete &amp; jugular</li><li>Luvas</li></ul>',
+    })
+    expect(upgradeBlock({ type: 'practice-checklist', content: '' })).toMatchObject({
+      type: 'info-box',
+      content: '',
+    })
+  })
+
   it('leaves values that are already in English untouched', () => {
     expect(upgradeBlock({ tipo: 'info-box', tipoInfoBox: 'info' })).toEqual({
       type: 'info-box',

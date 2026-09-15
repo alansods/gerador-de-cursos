@@ -175,7 +175,31 @@ function moveSingleFlipcard(block: Json): Json {
   return result
 }
 
+function escapeHtml(text: string): string {
+  return text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+}
+
+function practiceChecklistToInfoBox(block: Json): Json {
+  const { practiceMission, practiceItems, ...rest } = block
+  const mission = typeof practiceMission === 'string' ? practiceMission.trim() : ''
+  const items = (Array.isArray(practiceItems) ? practiceItems : [])
+    .map((item) => (isObject(item) && typeof item.text === 'string' ? item.text.trim() : ''))
+    .filter(Boolean)
+  const content = [
+    mission ? `<p>${escapeHtml(mission)}</p>` : '',
+    items.length ? `<ul>${items.map((item) => `<li>${escapeHtml(item)}</li>`).join('')}</ul>` : '',
+  ].join('')
+
+  return { ...rest, type: 'info-box', infoBoxType: 'info', infoBoxTitle: '', content }
+}
+
 export function upgradeBlock(block: Json): Json {
+  if (block.type === 'practice-checklist') return practiceChecklistToInfoBox(block)
+
   const result = moveSingleFlipcard(renameKeys(block, BLOCK_KEYS))
 
   for (const [field, values] of Object.entries(BLOCK_VALUES)) {

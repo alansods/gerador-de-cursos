@@ -12,15 +12,7 @@ interface ClassicPlayerProps {
 }
 
 export function ClassicPlayer({ course }: ClassicPlayerProps) {
-  const {
-    currentUnit,
-    navigate,
-    recordQuiz,
-    completePractice,
-    isPracticeCompleted,
-    progress,
-    state,
-  } = useScormProgress(course)
+  const { currentUnit, navigate, recordQuiz, progress, state } = useScormProgress(course)
 
   const handleNavigate = (unitId: string | null) => {
     navigate(unitId)
@@ -28,9 +20,7 @@ export function ClassicPlayer({ course }: ClassicPlayerProps) {
   }
 
   return (
-    <ScormProgressProvider
-      value={{ unitId: currentUnit, recordQuiz, completePractice, isPracticeCompleted }}
-    >
+    <ScormProgressProvider value={{ unitId: currentUnit, recordQuiz }}>
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
         <ClassicNavbar
           course={course}

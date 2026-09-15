@@ -165,21 +165,6 @@ describe('XP', () => {
     expect(maxCourseXp(course)).toBe(3 * 10 + 3 * 20)
   })
 
-  it('gives 30 for each completed practice mission and counts it in the maximum', () => {
-    const withMission = [unit('A', [block('heading', '1'), block('practice-checklist')])]
-    const state: ProgressState = {
-      ...createEmptyState(1),
-      practices: [quizKey(0, 1), quizKey(0, 0)],
-    }
-
-    expect(unitXp(state, withMission[0], 0)).toBe(30)
-    expect(maxCourseXp({ units: withMission })).toBe(10 + 30)
-    expect(
-      isStepAnswered(createEmptyState(1), withMission[0], 0, deriveSteps(withMission[0])[0])
-    ).toBe(true)
-    expect(unitStars(state, withMission[0], 0)).toBe(3)
-  })
-
   it('ignores results of blocks that are not scored', () => {
     const state = withResult(createEmptyState(2), 1, 0, true)
 

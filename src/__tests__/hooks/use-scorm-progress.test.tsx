@@ -181,28 +181,6 @@ describe('useScormProgress', () => {
     expect(scorm.suspendData).not.toContain('0-1:3/3!')
   })
 
-  it('stores a completed practice mission without touching the score or completion', () => {
-    const scorm = createScorm()
-    install(scorm)
-    const { result } = renderHook(({ course }) => useScormProgress(course), {
-      initialProps: { course: makeCourse('trail') },
-    })
-
-    act(() => result.current.completePractice('missing', 2))
-    expect(result.current.isPracticeCompleted('u1', 2)).toBe(false)
-
-    act(() => result.current.completePractice('u1', 2))
-    const saved = scorm.suspendData
-    act(() => result.current.completePractice('u1', 2))
-
-    expect(result.current.isPracticeCompleted('u1', 2)).toBe(true)
-    expect(result.current.isPracticeCompleted('u2', 2)).toBe(false)
-    expect(scorm.suspendData).toBe(saved)
-    expect(saved.endsWith('|0-2')).toBe(true)
-    expect(scorm.score).toBeNull()
-    expect(result.current.progress.completed).toBe(false)
-  })
-
   it('resumes steps from suspend_data and does not report completion twice', () => {
     const course = makeCourse('trail')
     const hash = hashCourse({ id: course.id, units: course.units })
