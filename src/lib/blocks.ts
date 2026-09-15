@@ -902,6 +902,17 @@ export const BLOCK_MODAL_ENTRIES: BlockModalEntry[] = [
   FIND_IN_IMAGE_ENTRY,
 ]
 
+export function blockIdentity(block: Pick<Block, 'type'> & Pick<Partial<Block>, 'hotspotMode'>): {
+  label: string
+  icon: LucideIcon
+} {
+  const { label, icon } =
+    block.type === 'interactive-image' && block.hotspotMode === 'find'
+      ? FIND_IN_IMAGE_ENTRY
+      : BLOCK_CATALOG[block.type]
+  return { label, icon }
+}
+
 export function modalEntriesFor(category: BlockCategory): BlockModalEntry[] {
   const entries = BLOCK_MODAL_ENTRIES.filter((entry) => entry.category === category)
   if (category !== 'avaliativo') return entries

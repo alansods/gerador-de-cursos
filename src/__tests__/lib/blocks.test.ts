@@ -3,6 +3,7 @@ import {
   BLOCK_CATEGORIES,
   BLOCK_MODAL_ENTRIES,
   BLOCK_TYPES,
+  blockIdentity,
   cardsFlipcard,
   createEmptyBlock,
   extractBlockMedia,
@@ -1553,5 +1554,23 @@ describe('quiz form validation', () => {
     expect(
       validate(quiz(question({ options: options(0, 3).map((o) => ({ ...o, feedback: '' })) })))
     ).toBe('Pergunta 1: escreva o feedback de cada alternativa')
+  })
+})
+
+describe('blockIdentity', () => {
+  it('names a find mode interactive image after its card', () => {
+    expect(blockIdentity({ type: 'interactive-image', hotspotMode: 'find' }).label).toBe(
+      'Encontre na imagem'
+    )
+    expect(blockIdentity({ type: 'interactive-image', hotspotMode: 'explore' }).label).toBe(
+      'Imagem interativa'
+    )
+    expect(blockIdentity({ type: 'interactive-image' }).icon).toBe(
+      BLOCK_CATALOG['interactive-image'].icon
+    )
+    expect(blockIdentity({ type: 'quiz' })).toEqual({
+      label: 'Quiz',
+      icon: BLOCK_CATALOG.quiz.icon,
+    })
   })
 })

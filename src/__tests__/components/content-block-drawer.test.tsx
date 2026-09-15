@@ -316,31 +316,34 @@ describe('ContentBlockDrawer', () => {
     expect(screen.getByRole('combobox')).toHaveTextContent('Grande (100%)')
   })
 
-  it('starts the interactive image in explore mode and saves the find mode', async () => {
+  it('keeps the mode of the card that created the interactive image, with no selector', async () => {
     const user = userEvent.setup()
-    const onSave = jest.fn()
-    render(
-      <ContentBlockDrawer
-        open
-        onOpenChange={jest.fn()}
-        mode="edit"
-        blockData={{
-          type: 'interactive-image',
-          baseImage: 'https://exemplo.com/a.png',
-          hotspots: [{ id: 'h1', x: 10, y: 10, title: 'Casco', content: '' }],
-        }}
-        onSave={onSave}
-        onCancel={jest.fn()}
-      />
-    )
+    const hotspots = [{ id: 'h1', x: 10, y: 10, title: 'Casco', content: '' }]
 
-    expect(screen.getByRole('radio', { name: /Explorar/ })).toBeChecked()
+    for (const hotspotMode of ['explore', 'find'] as const) {
+      const onSave = jest.fn()
+      const { unmount } = render(
+        <ContentBlockDrawer
+          open
+          onOpenChange={jest.fn()}
+          mode="edit"
+          blockData={{
+            type: 'interactive-image',
+            baseImage: 'https://exemplo.com/a.png',
+            hotspots,
+            hotspotMode,
+          }}
+          onSave={onSave}
+          onCancel={jest.fn()}
+        />
+      )
 
-    await user.click(screen.getByRole('radio', { name: /Encontrar/ }))
-    await user.click(screen.getByRole('button', { name: /salvar/i }))
-
-    expect(screen.getByRole('radio', { name: /Encontrar/ })).toBeChecked()
-    expect(onSave).toHaveBeenCalledWith(expect.objectContaining({ hotspotMode: 'find' }))
+      expect(screen.queryByRole('radio')).not.toBeInTheDocument()
+      expect(screen.queryByText('Modo')).not.toBeInTheDocument()
+      await user.click(screen.getByRole('button', { name: /salvar/i }))
+      expect(onSave).toHaveBeenCalledWith(expect.objectContaining({ hotspotMode }))
+      unmount()
+    }
   })
 
   it('offers an optional image on each matching item and saves it', async () => {
@@ -906,22 +909,32 @@ describe('graded option', () => {
     expect(onSave.mock.lastCall[0].graded).toBeUndefined()
   })
 
-  it('shows the option on the interactive image only in find mode', async () => {
-    const user = userEvent.setup()
-    renderEdit({
-      type: 'interactive-image',
+  it('shows the option on the interactive image only in find mode', () => {
+    const image = {
+      type: 'interactive-image' as const,
       baseImage: 'https://exemplo.com/a.png',
       hotspots: [{ id: 'h1', x: 10, y: 10, title: 'Casco', content: '' }],
-    })
-
+    }
+    const { unmount } = render(
+      <ContentBlockDrawer
+        open
+        onOpenChange={jest.fn()}
+        mode="edit"
+        blockData={{ ...image, hotspotMode: 'explore' }}
+        onSave={jest.fn()}
+        onCancel={jest.fn()}
+      />
+    )
     expect(screen.queryByRole('checkbox', { name: 'Vale nota' })).not.toBeInTheDocument()
-    await user.click(screen.getByRole('radio', { name: /Encontrar/ }))
+    unmount()
+
+    renderEdit({ ...image, hotspotMode: 'find' })
     expect(screen.getByRole('checkbox', { name: 'Vale nota' })).toBeChecked()
   })
 })
 
 describe('find in image preset', () => {
-  it('opens the interactive image in find mode with the graded option', () => {
+  it('opens as Encontre na imagem, in find mode, with the graded option', () => {
     render(
       <ContentBlockDrawer
         open
@@ -933,7 +946,8 @@ describe('find in image preset', () => {
       />
     )
 
-    expect(screen.getByRole('radio', { name: /Encontrar/ })).toBeChecked()
+    expect(screen.getByRole('heading', { name: 'Encontre na imagem' })).toBeInTheDocument()
+    expect(screen.queryByRole('radio')).not.toBeInTheDocument()
     expect(screen.getByRole('checkbox', { name: 'Vale nota' })).toBeChecked()
   })
 })

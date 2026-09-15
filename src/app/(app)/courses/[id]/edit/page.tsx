@@ -94,6 +94,7 @@ import { QuizData, QuizQuestion, Unit, Block } from '@/types/course'
 import {
   BLOCK_CATALOG,
   BLOCK_CATEGORIES,
+  blockIdentity,
   cardsFlipcard,
   createEmptyBlock,
   modalEntriesFor,
@@ -1465,7 +1466,7 @@ function CourseEditor() {
                                                   {(dragHandle) => (
                                                     <EditableCard
                                                       flex
-                                                      label={BLOCK_CATALOG[item.type].label}
+                                                      label={blockIdentity(item).label}
                                                       actions={
                                                         <>
                                                           {dragHandle}

@@ -36,8 +36,8 @@ Regras que valem para todos:
 
 ## Nota, conclusão e Trilha
 
-Os blocos da aba **Atividades** registram nota. O card **Encontre na imagem** dessa aba cria a
-imagem interativa no modo **Encontrar**, o único modo dela que registra nota.
+Os blocos da aba **Atividades** registram nota, inclusive o **Encontre na imagem**. A **Imagem
+interativa** da aba Interativos não registra.
 
 - **Vale nota ou fixação**: esses blocos têm no formulário a caixa **Vale nota**, marcada por
   padrão. Desmarcada, a atividade vira **exercício de fixação**: o aluno responde e vê se acertou
@@ -232,21 +232,16 @@ Eventos em ordem cronológica.
 
 ### Imagem interativa
 
-Imagem com pontos clicáveis. O card **Imagem interativa** fica em Interativos e abre no modo
-Explorar. Tem dois modos:
+Imagem com pontos clicáveis que o aluno explora: os pontos aparecem na imagem e o aluno clica
+para ler o título e o conteúdo de cada um. Não dá nota.
 
-- **Explorar** (padrão): os pontos aparecem na imagem; o aluno clica para ler o título e o
-  conteúdo de cada um. Não dá nota.
-- **Encontrar** (é o que o card **Encontre na imagem**, na aba Atividades, já abre selecionado):
-  os pontos ficam escondidos e o aluno procura cada um na imagem (bom para
-  "encontre os erros"). No teclado, as setas movem uma mira e Enter marca. Um clique fora de
-  qualquer ponto conta como erro. Quando acha todos, registra a nota; é "de primeira" com até 2
-  cliques errados. **Neste modo, o bloco é avaliado** e ganha a caixa **Vale nota** (veja
-  [Nota, conclusão e Trilha](#nota-conclusão-e-trilha)).
 - **Preenche**: a imagem de fundo, o tamanho e pelo menos um ponto com título (a posição é
-  arrastada na imagem; o conteúdo é opcional).
-- **Documento**: `HOTSPOT` com `URL:`, `Legenda:`, `Modo:` (`explorar` ou `encontrar`),
-  `X do Ponto N:`, `Y do Ponto N:` (em %), `Título do Ponto N:` e `Conteúdo do Ponto N:`.
+  arrastada na imagem; o conteúdo é opcional). O formulário não tem escolha de modo: o bloco
+  criado por este card fica sempre no modo explorar. Para pontos escondidos, use
+  [Encontre na imagem](#encontre-na-imagem), na aba Atividades.
+- **Documento**: `HOTSPOT` com `URL:`, `Legenda:`, `Modo:` (`explorar` ou `encontrar`; sem a
+  linha, explorar), `X do Ponto N:`, `Y do Ponto N:` (em %), `Título do Ponto N:` e
+  `Conteúdo do Ponto N:`. Com `Modo: encontrar`, o bloco vira um Encontre na imagem.
 
 ---
 
@@ -330,9 +325,16 @@ Uma situação com personagem, escolhas e a consequência de cada uma.
 
 ### Encontre na imagem
 
-Card que cria a [Imagem interativa](#imagem-interativa) já no modo **Encontrar**: o aluno procura
-pontos escondidos numa imagem. Os campos, o marcador `HOTSPOT` (com `Modo: encontrar`) e a
-pontuação são os da imagem interativa.
+A mesma imagem com pontos, mas escondidos: o aluno procura cada um (bom para "encontre os
+erros"). No editor e no drawer, o bloco aparece com o nome **Encontre na imagem**.
+
+- **Preenche**: os mesmos campos da [Imagem interativa](#imagem-interativa), mais a caixa
+  **Vale nota**. Não há escolha de modo: o bloco criado por este card fica sempre no modo
+  encontrar.
+- **Aluno faz**: toca onde acha que está cada ponto. No teclado, as setas movem uma mira e Enter
+  marca. Um clique fora de qualquer ponto conta como erro. Quando acha todos, registra a nota; é
+  "de primeira" com até 2 cliques errados.
+- **Documento**: `HOTSPOT` com `Modo: encontrar`, e os demais campos da imagem interativa.
 
 ### Vídeo interativo
 

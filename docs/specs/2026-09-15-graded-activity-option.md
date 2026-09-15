@@ -60,6 +60,11 @@ Decisions below were taken with the author one question at a time on 2026-09-15.
   block with `hotspotMode: 'find'`. The catalog gains a small list of modal entries (type, label,
   description, icon, tab and default overrides) so a type can have more than one card; every
   other type keeps one entry derived from the catalog.
+- The card decides the mode for good (author review on 2026-09-15): the drawer no longer shows the
+  "Modo" selector. A block created from "Imagem interativa" stays in `explore` and one created from
+  "Encontre na imagem" stays in `find`, also when edited later. The drawer header and the block
+  card in the editor show "Encontre na imagem" for a block in `find` mode. Document markers keep
+  the `Modo:` line.
 - Card descriptions in Atividades say when to use each block:
   - Quiz: "Perguntas de múltipla escolha com feedback"
   - Verdadeiro ou falso: "Afirmações para julgar, com explicação"
@@ -141,6 +146,13 @@ One commit per stage, each after its checks pass and after the author confirms t
 
 - [x] CSS and a player screenshot in light and dark.
 - **Commit:** `fix: show list markers inside info boxes`.
+
+### Stage 5 — Mode fixed by the card
+
+- [x] Remove the "Modo" selector from the interactive image form.
+- [x] Label "Encontre na imagem" for `find` blocks in the drawer header and the editor card.
+- [x] Tests: drawer (no selector, mode kept on save, header label), blocks label helper.
+- **Commit:** `fix: let the card decide the interactive image mode`.
 
 ### Every stage
 
