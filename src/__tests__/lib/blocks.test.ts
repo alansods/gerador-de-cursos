@@ -696,49 +696,9 @@ describe('technical-sheet block', () => {
   })
 })
 
-describe('practice-checklist block', () => {
-  it('normalizes AI items and keeps the block out of the scored activities', () => {
-    const { course } = normalizeCourse(
-      courseWith([
-        {
-          type: 'practice-checklist',
-          content: '',
-          practiceMission: ' Confira seus EPIs ',
-          practiceItems: [
-            { id: '', text: ' Capacete ' },
-            { id: 'x', text: '' },
-          ] as never,
-        },
-      ])
-    )
-
-    expect(course.units[0].blocks[0]).toMatchObject({
-      practiceMission: 'Confira seus EPIs',
-      practiceItems: [{ id: 'task-1', text: 'Capacete' }],
-    })
-    expect(BLOCK_CATALOG['practice-checklist'].category).toBe('interativo')
-  })
-
-  it('discards a mission without items and validates the form', () => {
-    const { summary } = normalizeCourse(
-      courseWith([{ type: 'practice-checklist', content: '', practiceMission: 'M' }])
-    )
-    const form = (patch: Partial<Block>) =>
-      BLOCK_CATALOG['practice-checklist'].validateForm({
-        ...createEmptyBlock('practice-checklist'),
-        ...patch,
-      } as Block)
-    const task = (text: string) => ({ id: text || 'empty', text })
-
-    expect(summary.discarded[0].reason).toBe('sem itens com texto')
-    expect(form({})).toBe('Descreva a missão')
-    expect(form({ practiceMission: 'M', practiceItems: [task('A')] })).toBe(
-      'Adicione pelo menos 2 itens'
-    )
-    expect(form({ practiceMission: 'M', practiceItems: [task('A'), task('')] })).toBe(
-      'Todos os itens devem ter texto'
-    )
-    expect(form({ practiceMission: 'M', practiceItems: [task('A'), task('B')] })).toBeNull()
+describe('practice checklist removal', () => {
+  it('no longer offers the practice checklist block', () => {
+    expect(BLOCK_TYPES).not.toContain('practice-checklist')
   })
 })
 

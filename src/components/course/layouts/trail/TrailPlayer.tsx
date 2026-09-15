@@ -28,15 +28,7 @@ import { TrailComplete } from './TrailComplete'
 type View = 'content' | 'unit-complete' | 'trail-complete'
 
 export function TrailPlayer({ course, learnerName }: LayoutPlayerProps) {
-  const {
-    currentUnit,
-    navigate,
-    recordQuiz,
-    completeStep,
-    completePractice,
-    isPracticeCompleted,
-    state,
-  } = useScormProgress(course)
+  const { currentUnit, navigate, recordQuiz, completeStep, state } = useScormProgress(course)
   const lms = useLMS()
   const [view, setView] = useState<View>('content')
   const [stepByUnit, setStepByUnit] = useState<Record<string, number>>({})
@@ -172,9 +164,7 @@ export function TrailPlayer({ course, learnerName }: LayoutPlayerProps) {
   }
 
   return (
-    <ScormProgressProvider
-      value={{ unitId: currentUnit, recordQuiz, completePractice, isPracticeCompleted }}
-    >
+    <ScormProgressProvider value={{ unitId: currentUnit, recordQuiz }}>
       <div data-trail className="min-h-screen">
         <TrailNavbar
           courseTitle={course.title}

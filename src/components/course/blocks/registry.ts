@@ -25,7 +25,6 @@ import { TrueFalseBlock } from './TrueFalseBlock'
 import { SequenceBlock } from './SequenceBlock'
 import { FillBlanksBlock } from './FillBlanksBlock'
 import { ScenarioBlock } from './ScenarioBlock'
-import { PracticeChecklistBlock } from './PracticeChecklistBlock'
 import { TechnicalSheetBlock } from './TechnicalSheetBlock'
 
 export interface BlockProps {
@@ -59,6 +58,5 @@ export const blockRegistry: Record<Block['type'], ComponentType<BlockProps>> = {
   sequence: SequenceBlock,
   'fill-blanks': FillBlanksBlock,
   scenario: ScenarioBlock,
-  'practice-checklist': PracticeChecklistBlock,
   'technical-sheet': TechnicalSheetBlock,
 }

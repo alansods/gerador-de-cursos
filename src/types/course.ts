@@ -62,11 +62,6 @@ export interface SheetStep {
   text: string
 }
 
-export interface PracticeItem {
-  id: string
-  text: string
-}
-
 export interface ScenarioOption {
   id: string
   text: string
@@ -165,7 +160,6 @@ export interface Block {
     | 'sequence'
     | 'fill-blanks'
     | 'scenario'
-    | 'practice-checklist'
     | 'technical-sheet'
   content: string
   order: number
@@ -233,8 +227,6 @@ export interface Block {
   scenarioAvatar?: string
   scenarioSituation?: string
   scenarioOptions?: ScenarioOption[]
-  practiceMission?: string
-  practiceItems?: PracticeItem[]
   sheetSummary?: string
   sheetMaterials?: SheetMaterial[]
   sheetSteps?: SheetStep[]

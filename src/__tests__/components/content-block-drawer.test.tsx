@@ -529,50 +529,6 @@ describe('ContentBlockDrawer', () => {
     ).toBe('Misture')
   })
 
-  it('creates a practice mission and reopens it', async () => {
-    const user = userEvent.setup()
-    const onSave = mount('practice-checklist')
-
-    await user.click(screen.getByRole('button', { name: /salvar/i }))
-    expect(errorToast).toHaveBeenLastCalledWith('Descreva a missão')
-
-    await user.type(screen.getByPlaceholderText(/Vista seus EPIs/), 'Confira seus EPIs')
-    await user.click(screen.getByRole('button', { name: /adicionar/i }))
-    await user.type(screen.getByPlaceholderText(/jugular ajustada/), 'Capacete')
-    await user.click(screen.getByRole('button', { name: /salvar/i }))
-    expect(errorToast).toHaveBeenLastCalledWith('Adicione pelo menos 2 itens')
-
-    await user.click(screen.getByRole('button', { name: /adicionar/i }))
-    await user.type(screen.getAllByPlaceholderText(/jugular ajustada/)[1], 'Luvas')
-    await user.click(screen.getByRole('button', { name: /salvar/i }))
-
-    const saved = onSave.mock.calls[0][0]
-    expect(saved).toMatchObject({
-      type: 'practice-checklist',
-      practiceMission: 'Confira seus EPIs',
-    })
-    expect(saved.practiceItems.map((entry: { text: string }) => entry.text)).toEqual([
-      'Capacete',
-      'Luvas',
-    ])
-
-    render(
-      <ContentBlockDrawer
-        open
-        onOpenChange={jest.fn()}
-        mode="edit"
-        blockData={saved}
-        onSave={jest.fn()}
-        onCancel={jest.fn()}
-      />
-    )
-    const reopened = screen.getAllByPlaceholderText(/jugular ajustada/).slice(-2)
-    expect(reopened.map((input) => (input as HTMLInputElement).value)).toEqual([
-      'Capacete',
-      'Luvas',
-    ])
-  })
-
   it('creates a scenario with an optional avatar and reopens it', async () => {
     const user = userEvent.setup()
     const onSave = mount('scenario')

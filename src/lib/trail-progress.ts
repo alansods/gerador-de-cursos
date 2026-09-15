@@ -2,7 +2,7 @@ import type { Block, Course, Unit } from '@/types/course'
 import { BLOCK_CATALOG } from '@/lib/blocks'
 import { quizKey, type CompletionRule, type ProgressState } from '@/lib/scorm-progress'
 
-export const TRAIL_XP = { firstTry: 20, retry: 10, step: 10, practice: 30 } as const
+export const TRAIL_XP = { firstTry: 20, retry: 10, step: 10 } as const
 
 export const MAX_RECOMMENDED_STEPS = 8
 
@@ -104,10 +104,6 @@ function unitScoredIndices(unit: Unit): number[] {
   return unit.blocks.flatMap((block, index) => (isScoredBlock(block) ? [index] : []))
 }
 
-function unitPracticeIndices(unit: Unit): number[] {
-  return unit.blocks.flatMap((block, index) => (block.type === 'practice-checklist' ? [index] : []))
-}
-
 export function isStepAnswered(
   state: ProgressState,
   unit: Unit,
@@ -147,12 +143,7 @@ export function unitXp(state: ProgressState, unit: Unit, unitIndex: number): num
     return sum + (result.firstTry ? TRAIL_XP.firstTry : TRAIL_XP.retry)
   }, 0)
 
-  const practiceXp =
-    unitPracticeIndices(unit).filter((index) =>
-      state.practices?.includes(quizKey(unitIndex, index))
-    ).length * TRAIL_XP.practice
-
-  return stepXp + activityXp + practiceXp
+  return stepXp + activityXp
 }
 
 export function courseXp(state: ProgressState, course: Pick<Course, 'units'>): number {
@@ -167,8 +158,7 @@ export function maxCourseXp(course: Pick<Course, 'units'>): number {
     (sum, unit) =>
       sum +
       deriveSteps(unit).length * TRAIL_XP.step +
-      unitScoredIndices(unit).length * TRAIL_XP.firstTry +
-      unitPracticeIndices(unit).length * TRAIL_XP.practice,
+      unitScoredIndices(unit).length * TRAIL_XP.firstTry,
     0
   )
 }

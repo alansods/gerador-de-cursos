@@ -11,8 +11,6 @@ interface ScormProgressContextValue {
     total: number,
     firstTry?: boolean
   ) => void
-  completePractice?: (unitId: string, blockIndex: number) => void
-  isPracticeCompleted?: (unitId: string, blockIndex: number) => boolean
 }
 
 const ScormProgressContext = createContext<ScormProgressContextValue | null>(null)
@@ -37,19 +35,5 @@ export function useRegistrarQuiz(blockIndex: number | undefined) {
       return
     }
     ctx.recordQuiz(ctx.unitId, blockIndex, result.acertos, result.total, result.firstTry)
-  }
-}
-
-export function usePracticeCompletion(blockIndex: number | undefined) {
-  const ctx = useContext(ScormProgressContext)
-  const unitId = ctx?.unitId
-
-  if (!ctx || !unitId || blockIndex === undefined) {
-    return { completed: false, complete: () => {} }
-  }
-
-  return {
-    completed: ctx.isPracticeCompleted?.(unitId, blockIndex) ?? false,
-    complete: () => ctx.completePractice?.(unitId, blockIndex),
   }
 }

@@ -90,9 +90,12 @@ Fixed automatic rule, nothing for the author to configure:
 | Scored activity answered correctly on the first attempt     | 20  |
 | Scored activity answered, but not 100% on the first attempt | 10  |
 | Step completed                                              | 10  |
-| `practice-checklist` fully checked                          | 30  |
+| ~~`practice-checklist` fully checked~~ (removed, see below) | 30  |
 
 The course maximum XP is computed from the course structure.
+
+The practice-checklist bonus was removed together with the block; see
+[`2026-09-14-remove-practice-checklist.md`](2026-09-14-remove-practice-checklist.md).
 
 ### Levels
 
@@ -717,7 +720,8 @@ Stage 16 record (`scenario`, done):
 - Checked in the Vite player in Clássico (light, with avatar), Sidebar (dark, no avatar) and
   Trail (dark, 390 px).
 
-Stage 17 record (`practice-checklist`, done):
+Stage 17 record (`practice-checklist`, done; later removed, see
+[`2026-09-14-remove-practice-checklist.md`](2026-09-14-remove-practice-checklist.md)):
 
 - Data: optional `practiceMission` (what the learner must do) and
   `practiceItems: { id, text }[]`. Category `interativo`, not scored. Lenient `validate` needs
