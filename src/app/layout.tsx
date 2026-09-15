@@ -44,6 +44,7 @@ export default async function RootLayout({
     users: (await import(`@/i18n/locales/${locale}/users.json`)).default,
     scorm: (await import(`@/i18n/locales/${locale}/scorm.json`)).default,
     errors: (await import(`@/i18n/locales/${locale}/errors.json`)).default,
+    blocks: (await import(`@/i18n/locales/${locale}/blocks.json`)).default,
   }
 
   return (

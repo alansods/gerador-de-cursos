@@ -69,6 +69,7 @@ import {
   Moon,
   Sun,
   Settings,
+  ExternalLink,
 } from 'lucide-react'
 import { CourseSettingsDrawer } from '@/components/CourseSettingsDrawer'
 import { ContentBlockDrawer } from '@/components/ContentBlockDrawer'
@@ -1914,7 +1915,16 @@ function CourseEditor() {
             <DialogHeader>
               <DialogTitle className="text-xl font-bold">Adicionar conteúdo</DialogTitle>
               <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                Escolha o tipo de conteúdo que você quer incluir na unidade.
+                Escolha o tipo de conteúdo que você quer incluir na unidade.{' '}
+                <a
+                  href="/blocks"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1 font-medium text-blue-600 hover:underline dark:text-blue-400"
+                >
+                  Ver exemplos
+                  <ExternalLink className="h-3.5 w-3.5" />
+                </a>
               </p>
             </DialogHeader>
             <Tabs defaultValue={BLOCK_CATEGORIES[0].id} className="mt-4">
