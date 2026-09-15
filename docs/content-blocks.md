@@ -13,12 +13,12 @@ blocos novos estão em
 O modal separa os blocos em quatro abas. Todos funcionam nos três layouts (Clássico, Sidebar e
 Trilha) e dentro do pacote SCORM, inclusive offline.
 
-| Aba               | Blocos                                                                                                                   |
-| ----------------- | ------------------------------------------------------------------------------------------------------------------------ |
-| Texto e estrutura | Título, Subtítulo, Parágrafo, Lista, Objetivos, Caixa de destaque, Separador, Ficha técnica                              |
-| Mídia             | Imagem, Vídeo, Carrossel, Áudio, PDF                                                                                     |
-| Interativos       | Accordion, Flipcard, Abas, Linha do tempo, Imagem interativa                                                             |
-| Avaliação         | Quiz, Vídeo interativo, Associação, Categorização, Verdadeiro ou falso, Sequência, Completar lacunas, Cenário de decisão |
+| Aba               | Blocos                                                                                                                                       |
+| ----------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| Texto e estrutura | Título, Subtítulo, Parágrafo, Lista, Objetivos, Caixa de destaque, Separador, Ficha técnica                                                  |
+| Mídia             | Imagem, Vídeo, Carrossel, Áudio, PDF                                                                                                         |
+| Interativos       | Accordion, Flipcard, Abas, Linha do tempo, Imagem interativa                                                                                 |
+| Atividades        | Quiz, Verdadeiro ou falso, Completar lacunas, Associação, Categorização, Sequência, Cenário de decisão, Encontre na imagem, Vídeo interativo |
 
 Regras que valem para todos:
 
@@ -36,11 +36,20 @@ Regras que valem para todos:
 
 ## Nota, conclusão e Trilha
 
-Os blocos da aba **Avaliação** registram nota. A imagem interativa também registra, mas só no
-modo **Encontrar**.
+Os blocos da aba **Atividades** registram nota, inclusive o **Encontre na imagem**. A **Imagem
+interativa** da aba Interativos não registra.
 
-- **Nota no LMS** (`cmi.core.score.raw`): soma dos acertos sobre o total de todas as atividades
-  avaliadas, sempre pela **última tentativa**.
+- **Vale nota ou fixação**: esses blocos têm no formulário a caixa **Vale nota**, marcada por
+  padrão. Desmarcada, a atividade vira **exercício de fixação**: o aluno responde e vê se acertou
+  como sempre, mas ela não entra na nota do LMS, não dá XP, não conta para as estrelas e nunca
+  trava uma etapa do Trilha. No editor, o card mostra o selo **Vale nota** ou **Fixação**; no
+  curso, as atividades que valem nota mostram o selo **Vale nota** e as de fixação ficam sem
+  selo. No documento, a linha opcional `Avaliativa: não` (ou `nao`) dentro do marcador cria a
+  atividade como fixação; sem a linha, ela vale nota. Na geração automática, sem marcadores,
+  toda atividade vale nota.
+- **Nota no LMS** (`cmi.core.score.raw`): soma dos acertos sobre o total das atividades que
+  valem nota, sempre pela **última tentativa**. Se o autor muda uma atividade para fixação depois
+  que alunos responderam, ela deixa de contar.
 - **Conclusão no LMS**: no Clássico e no Sidebar, quando o aluno visita todas as unidades. No
   Trilha, quando conclui todas as etapas.
 - **No layout Trilha**, cada bloco **Título** abre uma etapa. A etapa só pode ser concluída depois
@@ -54,7 +63,8 @@ modo **Encontrar**.
 
 - **Estrelas por unidade** usam só a primeira tentativa: 90% ou mais de acertos de primeira dá 3
   estrelas, 60% ou mais dá 2, abaixo disso 1. Unidade sem atividade avaliada ganha 3.
-- Blocos das outras abas não dão nota, não dão XP e nunca travam uma etapa.
+- Blocos das outras abas e atividades de fixação não dão nota, não dão XP e nunca travam uma
+  etapa. O aviso do editor "etapa sem atividade avaliada" também ignora as de fixação.
 
 ---
 
@@ -111,7 +121,7 @@ Card com ícone e cor para chamar atenção. Tem quatro tipos:
 | **Curiosidade** | fato interessante que ajuda a lembrar                 |
 
 - **Preenche**: o tipo, o conteúdo e um título opcional. Com título, a caixa abre e fecha ao
-  clicar.
+  clicar. Listas no conteúdo aparecem com marcador (bolinha) ou número, conforme o tipo de lista.
 - **Documento**: `INFOBOX` com `Tipo:` (`atencao`, `saiba_mais`, `curiosidade`; sem tipo vira
   Informação), `Título:` e `Conteúdo:`.
 
@@ -222,43 +232,58 @@ Eventos em ordem cronológica.
 
 ### Imagem interativa
 
-Imagem com pontos clicáveis. Tem dois modos:
+Imagem com pontos clicáveis que o aluno explora: os pontos aparecem na imagem e o aluno clica
+para ler o título e o conteúdo de cada um. Não dá nota.
 
-- **Explorar** (padrão): os pontos aparecem na imagem; o aluno clica para ler o título e o
-  conteúdo de cada um. Não dá nota.
-- **Encontrar**: os pontos ficam escondidos e o aluno procura cada um na imagem (bom para
-  "encontre os erros"). No teclado, as setas movem uma mira e Enter marca. Um clique fora de
-  qualquer ponto conta como erro. Quando acha todos, registra a nota; é "de primeira" com até 2
-  cliques errados. **Neste modo, o bloco é avaliado.**
 - **Preenche**: a imagem de fundo, o tamanho e pelo menos um ponto com título (a posição é
-  arrastada na imagem; o conteúdo é opcional).
-- **Documento**: `HOTSPOT` com `URL:`, `Legenda:`, `Modo:` (`explorar` ou `encontrar`),
-  `X do Ponto N:`, `Y do Ponto N:` (em %), `Título do Ponto N:` e `Conteúdo do Ponto N:`.
+  arrastada na imagem; o conteúdo é opcional). O formulário não tem escolha de modo: o bloco
+  criado por este card fica sempre no modo explorar. Para pontos escondidos, use
+  [Encontre na imagem](#encontre-na-imagem), na aba Atividades.
+- **Documento**: `HOTSPOT` com `URL:`, `Legenda:`, `Modo:` (`explorar` ou `encontrar`; sem a
+  linha, explorar), `X do Ponto N:`, `Y do Ponto N:` (em %), `Título do Ponto N:` e
+  `Conteúdo do Ponto N:`. Com `Modo: encontrar`, o bloco vira um Encontre na imagem.
 
 ---
 
-## Avaliação
+## Atividades
 
 Todos registram nota por tentativa. O aluno pode refazer; a nota do LMS fica com a última
-tentativa e as estrelas do Trilha com a primeira.
+tentativa e as estrelas do Trilha com a primeira. Cada um pode ser marcado como exercício de
+fixação, desmarcando **Vale nota**, e aceita `Avaliativa: não` no marcador.
 
 ### Quiz
 
 Pergunta de múltipla escolha com feedback.
 
-- **Preenche**: pelo menos uma pergunta, cada uma com 5 alternativas (A a E), a correta e um
-  feedback por alternativa.
-- **Documento**: `QUIZ` com `Pergunta:`, `Opção A:` a `Opção E:` e `Resposta Correta:`, repetidos
-  para cada pergunta.
+- **Preenche**: pelo menos uma pergunta, cada uma com o enunciado, uma dica opcional e de 3 a 5
+  alternativas (A a E), cada alternativa com texto e feedback. Uma delas é marcada como correta.
+  A pergunta começa com 3 alternativas; **Adicionar alternativa** vai até 5 e a lixeira remove
+  até sobrar 3. As perguntas podem ser reordenadas.
+- **Aluno faz**: escolhe uma alternativa, confirma e vê o feedback; a dica aparece se pedir.
+- **Documento**: `QUIZ` com `Pergunta:`, de `Opção A:` até `Opção C:`, `Opção D:` ou `Opção E:`,
+  e `Resposta Correta:`, repetidos para cada pergunta. Pergunta com menos de 3 opções é
+  descartada.
 
-### Vídeo interativo
+### Verdadeiro ou falso
 
-Vídeo que pausa em momentos marcados para fazer perguntas.
+Afirmações para julgar.
 
-- **Preenche**: o vídeo (arquivo ou YouTube), um título e pelo menos uma pergunta com tempo
-  (`mm:ss`) e alternativas.
-- **Documento**: `VIDEOINTERATIVO` com `URL:`, `Título:`, `Tempo da Pergunta N:`,
-  `Pergunta N:` e `Opção A da Pergunta N:` em diante.
+- **Preenche**: pelo menos 2 afirmações, cada uma com a resposta (verdadeira ou falsa) e uma
+  explicação opcional.
+- **Aluno faz**: responde uma afirmação por vez, vê a resposta certa e a explicação, e no fim a
+  lista com acertos e erros.
+- **Documento**: `VERDADEIROFALSO` com `Afirmação N:`, `Resposta N:` e `Explicação N:`.
+
+### Completar lacunas
+
+Texto com lacunas para completar com palavras de um banco.
+
+- **Preenche**: o texto com cada resposta entre colchetes, como `Lave as mãos por [20] segundos`.
+  Opcional: palavras distratoras (erradas, mas plausíveis), separadas por vírgula. O formulário
+  mostra a lista de lacunas encontradas.
+- **Aluno faz**: toca numa palavra para colocá-la na lacuna destacada; toca numa lacuna
+  preenchida para devolver a palavra. Maiúsculas e espaços não contam como erro.
+- **Documento**: `LACUNAS` com `Texto:` e `Distratores:`.
 
 ### Associação
 
@@ -277,16 +302,6 @@ Agrupar itens em categorias.
 - **Aluno faz**: arrasta cada item para a categoria, ou toca no item e depois na categoria.
 - **Documento**: `CATEGORIZACAO` com `Categoria N:` e `Item M da Categoria N:`.
 
-### Verdadeiro ou falso
-
-Afirmações para julgar.
-
-- **Preenche**: pelo menos 2 afirmações, cada uma com a resposta (verdadeira ou falsa) e uma
-  explicação opcional.
-- **Aluno faz**: responde uma afirmação por vez, vê a resposta certa e a explicação, e no fim a
-  lista com acertos e erros.
-- **Documento**: `VERDADEIROFALSO` com `Afirmação N:`, `Resposta N:` e `Explicação N:`.
-
 ### Sequência
 
 Colocar os passos na ordem certa.
@@ -296,17 +311,6 @@ Colocar os passos na ordem certa.
 - **Aluno faz**: move cada passo com as setas para cima e para baixo e clica em "Verificar
   ordem". A nota é quantos passos ficaram na posição certa.
 - **Documento**: `SEQUENCIA` com `Passo N:`.
-
-### Completar lacunas
-
-Texto com lacunas para completar com palavras de um banco.
-
-- **Preenche**: o texto com cada resposta entre colchetes, como `Lave as mãos por [20] segundos`.
-  Opcional: palavras distratoras (erradas, mas plausíveis), separadas por vírgula. O formulário
-  mostra a lista de lacunas encontradas.
-- **Aluno faz**: toca numa palavra para colocá-la na lacuna destacada; toca numa lacuna
-  preenchida para devolver a palavra. Maiúsculas e espaços não contam como erro.
-- **Documento**: `LACUNAS` com `Texto:` e `Distratores:`.
 
 ### Cenário de decisão
 
@@ -318,6 +322,28 @@ Uma situação com personagem, escolhas e a consequência de cada uma.
   tentar de novo (nova tentativa).
 - **Documento**: `CENARIO` com `Personagem:`, `Imagem do Personagem:`, `Situação:`,
   `Opção N:`, `Consequência N:` e `Resposta Correta:`.
+
+### Encontre na imagem
+
+A mesma imagem com pontos, mas escondidos: o aluno procura cada um (bom para "encontre os
+erros"). No editor e no drawer, o bloco aparece com o nome **Encontre na imagem**.
+
+- **Preenche**: os mesmos campos da [Imagem interativa](#imagem-interativa), mais a caixa
+  **Vale nota**. Não há escolha de modo: o bloco criado por este card fica sempre no modo
+  encontrar.
+- **Aluno faz**: toca onde acha que está cada ponto. No teclado, as setas movem uma mira e Enter
+  marca. Um clique fora de qualquer ponto conta como erro. Quando acha todos, registra a nota; é
+  "de primeira" com até 2 cliques errados.
+- **Documento**: `HOTSPOT` com `Modo: encontrar`, e os demais campos da imagem interativa.
+
+### Vídeo interativo
+
+Vídeo que pausa em momentos marcados para fazer perguntas.
+
+- **Preenche**: o vídeo (arquivo ou YouTube), um título e pelo menos uma pergunta com tempo
+  (`mm:ss`) e alternativas.
+- **Documento**: `VIDEOINTERATIVO` com `URL:`, `Título:`, `Tempo da Pergunta N:`,
+  `Pergunta N:` e `Opção A da Pergunta N:` em diante.
 
 ---
 

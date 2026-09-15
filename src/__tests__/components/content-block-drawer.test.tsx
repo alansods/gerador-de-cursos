@@ -4,7 +4,7 @@ import userEvent from '@testing-library/user-event'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { ContentBlockDrawer } from '@/components/ContentBlockDrawer'
 import { blockRegistry } from '@/components/course/blocks'
-import { BLOCK_CATALOG, BLOCK_TYPES, createEmptyBlock } from '@/lib/blocks'
+import { BLOCK_CATALOG, BLOCK_TYPES, GRADABLE_TYPES, createEmptyBlock } from '@/lib/blocks'
 import type { Block } from '@/types/course'
 
 const errorToast = jest.fn()
@@ -316,31 +316,34 @@ describe('ContentBlockDrawer', () => {
     expect(screen.getByRole('combobox')).toHaveTextContent('Grande (100%)')
   })
 
-  it('starts the interactive image in explore mode and saves the find mode', async () => {
+  it('keeps the mode of the card that created the interactive image, with no selector', async () => {
     const user = userEvent.setup()
-    const onSave = jest.fn()
-    render(
-      <ContentBlockDrawer
-        open
-        onOpenChange={jest.fn()}
-        mode="edit"
-        blockData={{
-          type: 'interactive-image',
-          baseImage: 'https://exemplo.com/a.png',
-          hotspots: [{ id: 'h1', x: 10, y: 10, title: 'Casco', content: '' }],
-        }}
-        onSave={onSave}
-        onCancel={jest.fn()}
-      />
-    )
+    const hotspots = [{ id: 'h1', x: 10, y: 10, title: 'Casco', content: '' }]
 
-    expect(screen.getByRole('radio', { name: /Explorar/ })).toBeChecked()
+    for (const hotspotMode of ['explore', 'find'] as const) {
+      const onSave = jest.fn()
+      const { unmount } = render(
+        <ContentBlockDrawer
+          open
+          onOpenChange={jest.fn()}
+          mode="edit"
+          blockData={{
+            type: 'interactive-image',
+            baseImage: 'https://exemplo.com/a.png',
+            hotspots,
+            hotspotMode,
+          }}
+          onSave={onSave}
+          onCancel={jest.fn()}
+        />
+      )
 
-    await user.click(screen.getByRole('radio', { name: /Encontrar/ }))
-    await user.click(screen.getByRole('button', { name: /salvar/i }))
-
-    expect(screen.getByRole('radio', { name: /Encontrar/ })).toBeChecked()
-    expect(onSave).toHaveBeenCalledWith(expect.objectContaining({ hotspotMode: 'find' }))
+      expect(screen.queryByRole('radio')).not.toBeInTheDocument()
+      expect(screen.queryByText('Modo')).not.toBeInTheDocument()
+      await user.click(screen.getByRole('button', { name: /salvar/i }))
+      expect(onSave).toHaveBeenCalledWith(expect.objectContaining({ hotspotMode }))
+      unmount()
+    }
   })
 
   it('offers an optional image on each matching item and saves it', async () => {
@@ -849,5 +852,194 @@ describe('interactive video source on save', () => {
         videoUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
       })
     )
+  })
+})
+
+describe('graded option', () => {
+  const renderEdit = (blockData: Partial<Block>, onSave = jest.fn()) => {
+    render(
+      <ContentBlockDrawer
+        open
+        onOpenChange={jest.fn()}
+        mode="edit"
+        blockData={blockData}
+        onSave={onSave}
+        onCancel={jest.fn()}
+      />
+    )
+    return onSave
+  }
+
+  it('shows the checkbox checked by default only on gradable blocks', () => {
+    for (const type of BLOCK_TYPES) {
+      const { unmount } = render(
+        <ContentBlockDrawer
+          open
+          onOpenChange={jest.fn()}
+          mode="add"
+          blockData={{ type }}
+          onSave={jest.fn()}
+          onCancel={jest.fn()}
+        />
+      )
+      const checkbox = screen.queryByRole('checkbox', { name: 'Vale nota' })
+      const expected = GRADABLE_TYPES.includes(type) && type !== 'interactive-image'
+
+      expect({ type, shown: checkbox !== null }).toEqual({ type, shown: expected })
+      if (checkbox) expect(checkbox).toBeChecked()
+      unmount()
+    }
+  })
+
+  it('saves a practice activity when unchecked and clears it when checked again', async () => {
+    const user = userEvent.setup()
+    const fillBlanks: Partial<Block> = {
+      type: 'fill-blanks',
+      content: '',
+      fillBlanksText: 'Use [luvas].',
+    }
+    const onSave = renderEdit(fillBlanks)
+
+    await user.click(screen.getByRole('checkbox', { name: 'Vale nota' }))
+    await user.click(screen.getByRole('button', { name: /salvar/i }))
+    expect(onSave).toHaveBeenLastCalledWith(expect.objectContaining({ graded: false }))
+
+    await user.click(screen.getByRole('checkbox', { name: 'Vale nota' }))
+    await user.click(screen.getByRole('button', { name: /salvar/i }))
+    expect(onSave.mock.lastCall[0].graded).toBeUndefined()
+  })
+
+  it('shows the option on the interactive image only in find mode', () => {
+    const image = {
+      type: 'interactive-image' as const,
+      baseImage: 'https://exemplo.com/a.png',
+      hotspots: [{ id: 'h1', x: 10, y: 10, title: 'Casco', content: '' }],
+    }
+    const { unmount } = render(
+      <ContentBlockDrawer
+        open
+        onOpenChange={jest.fn()}
+        mode="edit"
+        blockData={{ ...image, hotspotMode: 'explore' }}
+        onSave={jest.fn()}
+        onCancel={jest.fn()}
+      />
+    )
+    expect(screen.queryByRole('checkbox', { name: 'Vale nota' })).not.toBeInTheDocument()
+    unmount()
+
+    renderEdit({ ...image, hotspotMode: 'find' })
+    expect(screen.getByRole('checkbox', { name: 'Vale nota' })).toBeChecked()
+  })
+})
+
+describe('find in image preset', () => {
+  it('opens as Encontre na imagem, in find mode, with the graded option', () => {
+    render(
+      <ContentBlockDrawer
+        open
+        onOpenChange={jest.fn()}
+        mode="add"
+        blockData={{ type: 'interactive-image', hotspotMode: 'find' }}
+        onSave={jest.fn()}
+        onCancel={jest.fn()}
+      />
+    )
+
+    expect(screen.getByRole('heading', { name: 'Encontre na imagem' })).toBeInTheDocument()
+    expect(screen.queryByRole('radio')).not.toBeInTheDocument()
+    expect(screen.getByRole('checkbox', { name: 'Vale nota' })).toBeChecked()
+  })
+})
+
+describe('quiz form', () => {
+  it('builds a question with three options and saves it', async () => {
+    const user = userEvent.setup()
+    const onSave = mount('quiz')
+
+    expect(screen.queryByText(/não foi migrada/)).not.toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: 'Adicionar pergunta' }))
+    await user.type(screen.getByPlaceholderText('O que o aluno precisa responder...'), 'Qual EPI?')
+    for (const letter of ['A', 'B', 'C']) {
+      await user.type(screen.getByPlaceholderText(`Alternativa ${letter}...`), `Texto ${letter}`)
+      await user.type(
+        screen.getByPlaceholderText(`Feedback da alternativa ${letter}...`),
+        `Feedback ${letter}`
+      )
+    }
+    await user.click(screen.getByRole('radio', { name: 'Alternativa B é a correta' }))
+    await user.click(screen.getByRole('button', { name: /salvar/i }))
+
+    expect(errorToast).not.toHaveBeenCalled()
+    const [question] = onSave.mock.lastCall[0].quizData.questions
+    expect(question.question).toBe('Qual EPI?')
+    expect(
+      question.options.map((o: { text: string; isCorrect: boolean }) => [o.text, o.isCorrect])
+    ).toEqual([
+      ['Texto A', false],
+      ['Texto B', true],
+      ['Texto C', false],
+    ])
+  })
+
+  it('adds options up to five and removes them down to three', async () => {
+    const user = userEvent.setup()
+    mount('quiz')
+
+    await user.click(screen.getByRole('button', { name: 'Adicionar pergunta' }))
+    expect(screen.getByRole('button', { name: 'Remover alternativa A' })).toBeDisabled()
+
+    await user.click(screen.getByRole('button', { name: 'Adicionar alternativa' }))
+    await user.click(screen.getByRole('button', { name: 'Adicionar alternativa' }))
+    expect(screen.getByPlaceholderText('Alternativa E...')).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Adicionar alternativa' })).not.toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: 'Remover alternativa A' }))
+    expect(screen.queryByPlaceholderText('Alternativa E...')).not.toBeInTheDocument()
+    expect(screen.getByRole('radio', { name: 'Alternativa A é a correta' })).toBeChecked()
+  })
+
+  it('blocks saving an incomplete question and names it', async () => {
+    const user = userEvent.setup()
+    const onSave = mount('quiz')
+
+    await user.click(screen.getByRole('button', { name: 'Adicionar pergunta' }))
+    await user.click(screen.getByRole('button', { name: /salvar/i }))
+
+    expect(onSave).not.toHaveBeenCalled()
+    expect(errorToast).toHaveBeenCalledWith('Pergunta 1: escreva o enunciado')
+  })
+
+  it('opens a saved quiz with its options', () => {
+    render(
+      <ContentBlockDrawer
+        open
+        onOpenChange={jest.fn()}
+        mode="edit"
+        blockData={{
+          type: 'quiz',
+          quizData: {
+            questions: [
+              {
+                id: 'q-1',
+                question: 'Pergunta salva',
+                options: ['A', 'B', 'C', 'D', 'E'].map((letter, i) => ({
+                  id: `op-${letter}`,
+                  text: `Opção ${letter}`,
+                  isCorrect: i === 3,
+                  feedback: 'ok',
+                })),
+              },
+            ],
+          },
+        }}
+        onSave={jest.fn()}
+        onCancel={jest.fn()}
+      />
+    )
+
+    expect(screen.getByDisplayValue('Pergunta salva')).toBeInTheDocument()
+    expect(screen.getByDisplayValue('Opção E')).toBeInTheDocument()
+    expect(screen.getByRole('radio', { name: 'Alternativa D é a correta' })).toBeChecked()
   })
 })

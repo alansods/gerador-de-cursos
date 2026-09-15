@@ -110,7 +110,7 @@ export interface QuizQuestion {
   id: string // unique question id
   question: string // quiz question
   hint?: string // optional hint
-  options: QuizItem[] // exactly five options
+  options: QuizItem[] // three to five options
 }
 
 export interface QuizData {
@@ -172,6 +172,7 @@ export interface Block {
   alignment?: 'left' | 'center' | 'right' | 'justify'
   // layout
   columns?: 6 | 12
+  graded?: boolean
   // accordion-specific
   items?: AccordionItem[]
   // flipcard-specific

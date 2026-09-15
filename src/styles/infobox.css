@@ -183,7 +183,8 @@
   overflow: hidden;
 }
 .infobox-content p,
-.infobox-content ul {
+.infobox-content ul,
+.infobox-content ol {
   padding-top: 6px;
 }
 .infobox.collapsible.open .infobox-content {
@@ -239,12 +240,19 @@
 .infobox p + p {
   margin-top: 8px;
 }
-.infobox ul {
+.infobox ul,
+.infobox ol {
   margin: 8px 0 0;
   padding-left: 18px;
   font-size: 14px;
   line-height: 1.6;
   color: #0f172a;
+}
+.infobox ul {
+  list-style: disc;
+}
+.infobox ol {
+  list-style: decimal;
 }
 
 /* Color variants */
@@ -286,7 +294,8 @@
    quase preto (#0f172a) fica ilegível sobre fundo escuro. */
 .dark .infobox h4,
 .dark .infobox p,
-.dark .infobox ul {
+.dark .infobox ul,
+.dark .infobox ol {
   color: #e2e8f0;
 }
 .dark .infobox.info {

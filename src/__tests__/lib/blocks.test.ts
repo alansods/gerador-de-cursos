@@ -1,17 +1,23 @@
 import {
   BLOCK_CATALOG,
   BLOCK_CATEGORIES,
+  BLOCK_MODAL_ENTRIES,
   BLOCK_TYPES,
+  blockIdentity,
   cardsFlipcard,
   createEmptyBlock,
   extractBlockMedia,
+  GRADABLE_TYPES,
+  isGradableBlock,
+  isGradedBlock,
   rewriteBlockMedia,
   mergeAdjacentFlipcards,
+  modalEntriesFor,
   normalizeCourse,
 } from '@/lib/blocks'
 import type { BlockType } from '@/lib/blocks'
 import { blockRegistry } from '@/components/course/blocks/registry'
-import type { Block, Course, FlipcardItem, VideoQuestion } from '@/types/course'
+import type { Block, Course, FlipcardItem, QuizQuestion, VideoQuestion } from '@/types/course'
 import { upgradeBlock } from '@/lib/legacy-course'
 
 function courseWith(blocks: Partial<Block>[]): Course {
@@ -1102,19 +1108,42 @@ describe('normalizeCourse', () => {
     })
   })
 
-  it('drops a quiz with fewer than five options', () => {
+  it('drops a quiz with fewer than three options', () => {
     const { course, summary } = normalizeCourse(
       courseWith([
         {
           type: 'quiz',
           content: '',
-          quizData: { questions: [{ id: 'q-1', question: 'P?', options: options(0, 4) }] },
+          quizData: { questions: [{ id: 'q-1', question: 'P?', options: options(0, 2) }] },
         },
       ])
     )
 
     expect(course.units[0].blocks).toHaveLength(0)
-    expect(summary.discarded[0].type).toBe('quiz')
+    expect(summary.discarded[0]).toMatchObject({
+      type: 'quiz',
+      reason: 'sem pergunta com 3 a 5 opções e uma única correta',
+    })
+  })
+
+  it('keeps quizzes with three or four options', () => {
+    const { course } = normalizeCourse(
+      courseWith([
+        {
+          type: 'quiz',
+          content: '',
+          quizData: {
+            questions: [
+              { id: 'q-1', question: 'P?', options: options(2, 3) },
+              { id: 'q-2', question: 'Q?', options: options(1, 4) },
+            ],
+          },
+        },
+      ])
+    )
+
+    const lengths = course.units[0].blocks[0].quizData!.questions.map((q) => q.options.length)
+    expect(lengths).toEqual([3, 4])
   })
 
   it('keeps a single correct option when the AI marks two', () => {
@@ -1384,5 +1413,164 @@ describe('rewriteBlockMedia', () => {
       (type) => BLOCK_CATALOG[type].extractMedia && !BLOCK_CATALOG[type].rewriteMedia
     )
     expect(withoutRewrite).toEqual([])
+  })
+})
+
+describe('graded activities', () => {
+  it('offers the option on every block where the learner answers', () => {
+    expect([...GRADABLE_TYPES].sort()).toEqual(
+      BLOCK_TYPES.filter((type) => BLOCK_CATALOG[type].category === 'avaliativo')
+        .concat('interactive-image')
+        .sort()
+    )
+    expect(isGradableBlock({ type: 'interactive-image', hotspotMode: 'find' })).toBe(true)
+    expect(isGradableBlock({ type: 'interactive-image', hotspotMode: 'explore' })).toBe(false)
+    expect(isGradableBlock({ type: 'flipcard' })).toBe(false)
+  })
+
+  it('treats a block without the field as graded', () => {
+    expect(isGradedBlock({ type: 'quiz' })).toBe(true)
+    expect(isGradedBlock({ type: 'quiz', graded: false })).toBe(false)
+    expect(isGradedBlock({ type: 'paragraph' })).toBe(false)
+  })
+
+  it('keeps graded false only on gradable blocks coming from the AI', () => {
+    const { course } = normalizeCourse(
+      courseWith([
+        { type: 'paragraph', content: 'Texto', graded: false },
+        {
+          type: 'fill-blanks',
+          content: '',
+          fillBlanksText: 'Use [luvas].',
+          graded: false,
+        },
+        { type: 'fill-blanks', content: '', fillBlanksText: 'Use [botas].', graded: true },
+        {
+          type: 'fill-blanks',
+          content: '',
+          fillBlanksText: 'Use [óculos].',
+          graded: 'não' as never,
+        },
+      ])
+    )
+    const [paragraph, practice, graded, invalid] = course.units[0].blocks
+
+    expect(paragraph).not.toHaveProperty('graded')
+    expect(practice.graded).toBe(false)
+    expect(graded).not.toHaveProperty('graded')
+    expect(invalid).not.toHaveProperty('graded')
+  })
+})
+
+describe('modal entries', () => {
+  it('names the activities tab Atividades and keeps the category id', () => {
+    expect(BLOCK_CATEGORIES.find((category) => category.id === 'avaliativo')?.label).toBe(
+      'Atividades'
+    )
+  })
+
+  it('lists the activities from the simplest to the most elaborate', () => {
+    expect(modalEntriesFor('avaliativo').map((entry) => entry.label)).toEqual([
+      'Quiz',
+      'Verdadeiro ou falso',
+      'Completar lacunas',
+      'Associação',
+      'Categorização',
+      'Sequência',
+      'Cenário de decisão',
+      'Encontre na imagem',
+      'Vídeo interativo',
+    ])
+  })
+
+  it('offers the interactive image twice: explore in Interativos and find in Atividades', () => {
+    const imageEntries = BLOCK_MODAL_ENTRIES.filter((entry) => entry.type === 'interactive-image')
+
+    expect(
+      imageEntries.map(({ label, category, preset }) => ({ label, category, preset }))
+    ).toEqual([
+      { label: 'Imagem interativa', category: 'interativo', preset: undefined },
+      { label: 'Encontre na imagem', category: 'avaliativo', preset: { hotspotMode: 'find' } },
+    ])
+    expect(createEmptyBlock('interactive-image').hotspotMode).toBe('explore')
+  })
+
+  it('keeps one entry per type in the other tabs, in catalog order', () => {
+    for (const category of BLOCK_CATEGORIES.filter((c) => c.id !== 'avaliativo')) {
+      expect(modalEntriesFor(category.id).map((entry) => entry.type)).toEqual(
+        (Object.keys(BLOCK_CATALOG) as BlockType[]).filter(
+          (type) => BLOCK_CATALOG[type].category === category.id
+        )
+      )
+    }
+  })
+
+  it('gives every activity card a description that says when to use it', () => {
+    const descriptions = modalEntriesFor('avaliativo').map((entry) => entry.description)
+
+    expect(new Set(descriptions).size).toBe(descriptions.length)
+    expect(descriptions).toContain('Ligar pares, um para um')
+    expect(descriptions).toContain('Separar vários itens em grupos')
+  })
+})
+
+describe('quiz form validation', () => {
+  const validate = BLOCK_CATALOG.quiz.validateForm
+  const question = (extra: Partial<QuizQuestion> = {}): QuizQuestion => ({
+    id: 'q-1',
+    question: 'Qual EPI protege a cabeça?',
+    options: options(0, 3),
+    ...extra,
+  })
+  const quiz = (...questions: QuizQuestion[]) => ({
+    type: 'quiz' as const,
+    quizData: { questions },
+  })
+
+  it('accepts three to five complete options with one correct', () => {
+    expect(validate(quiz(question()))).toBeNull()
+    expect(validate(quiz(question({ options: options(4, 5) })))).toBeNull()
+  })
+
+  it('names the question and what is missing', () => {
+    expect(validate({ type: 'quiz' })).toBe('O quiz deve ter pelo menos uma pergunta')
+    expect(validate(quiz(question(), question({ id: 'q-2', question: ' ' })))).toBe(
+      'Pergunta 2: escreva o enunciado'
+    )
+    expect(validate(quiz(question({ options: options(0, 2) })))).toBe(
+      'Pergunta 1: use de 3 a 5 alternativas'
+    )
+    expect(validate(quiz(question({ options: options(0, 6) })))).toBe(
+      'Pergunta 1: use de 3 a 5 alternativas'
+    )
+    expect(
+      validate(
+        quiz(question({ options: options(0, 3).map((o, i) => (i ? o : { ...o, text: '' })) }))
+      )
+    ).toBe('Pergunta 1: preencha todas as alternativas')
+    expect(validate(quiz(question({ options: options(-1, 3) })))).toBe(
+      'Pergunta 1: marque uma única alternativa correta'
+    )
+    expect(
+      validate(quiz(question({ options: options(0, 3).map((o) => ({ ...o, feedback: '' })) })))
+    ).toBe('Pergunta 1: escreva o feedback de cada alternativa')
+  })
+})
+
+describe('blockIdentity', () => {
+  it('names a find mode interactive image after its card', () => {
+    expect(blockIdentity({ type: 'interactive-image', hotspotMode: 'find' }).label).toBe(
+      'Encontre na imagem'
+    )
+    expect(blockIdentity({ type: 'interactive-image', hotspotMode: 'explore' }).label).toBe(
+      'Imagem interativa'
+    )
+    expect(blockIdentity({ type: 'interactive-image' }).icon).toBe(
+      BLOCK_CATALOG['interactive-image'].icon
+    )
+    expect(blockIdentity({ type: 'quiz' })).toEqual({
+      label: 'Quiz',
+      icon: BLOCK_CATALOG.quiz.icon,
+    })
   })
 })

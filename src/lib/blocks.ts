@@ -16,6 +16,7 @@ import {
   Milestone,
   MousePointerClick,
   RotateCcw,
+  ScanSearch,
   Target,
   TextCursorInput,
   Minus,
@@ -56,7 +57,7 @@ export const BLOCK_CATEGORIES: { id: BlockCategory; label: string }[] = [
   { id: 'texto', label: 'Texto e estrutura' },
   { id: 'midia', label: 'Mídia' },
   { id: 'interativo', label: 'Interativos' },
-  { id: 'avaliativo', label: 'Avaliação' },
+  { id: 'avaliativo', label: 'Atividades' },
 ]
 
 export interface BlockMeta {
@@ -106,7 +107,7 @@ const MIN_SEQUENCE_ITEMS = 2
 const MIN_SEQUENCE_FORM_ITEMS = 3
 const MIN_SCENARIO_OPTIONS = 2
 
-const OPTIONS_PER_QUESTION = 5
+export const QUIZ_OPTIONS = { min: 3, max: 5 } as const
 
 const OPTION_LETTERS: OptionLetter[] = ['A', 'B', 'C', 'D', 'E']
 const MIN_OPTIONS = 2
@@ -384,11 +385,18 @@ export const BLOCK_CATALOG: Record<BlockType, BlockMeta> = {
     requiresDocumentMedia: false,
     validate: (b) => !!b.quizData?.questions?.some(isValidQuestion),
     icon: HelpCircle,
-    description: 'Pergunta com resposta',
+    description: 'Perguntas de múltipla escolha com feedback',
     category: 'avaliativo',
     defaults: () => ({ quizData: undefined }),
-    validateForm: (b) =>
-      b.quizData?.questions?.length ? null : 'O quiz deve ter pelo menos uma pergunta',
+    validateForm: (b) => {
+      const questions = b.quizData?.questions ?? []
+      if (questions.length === 0) return 'O quiz deve ter pelo menos uma pergunta'
+      for (const [index, question] of questions.entries()) {
+        const error = validateQuizQuestion(question)
+        if (error) return `Pergunta ${index + 1}: ${error}`
+      }
+      return null
+    },
   },
   image: {
     type: 'image',
@@ -641,7 +649,7 @@ export const BLOCK_CATALOG: Record<BlockType, BlockMeta> = {
       (b.matchingPairs ?? []).filter((p) => hasText(p.left) && hasText(p.right)).length >=
       MIN_PAIRS,
     icon: ArrowLeftRight,
-    description: 'Relacionar colunas',
+    description: 'Ligar pares, um para um',
     category: 'avaliativo',
     defaults: () => ({ matchingPairs: [] }),
     validateForm: (b) => {
@@ -667,7 +675,7 @@ export const BLOCK_CATALOG: Record<BlockType, BlockMeta> = {
     requiresDocumentMedia: false,
     validate: (b) => validCategories(b.categories).length >= MIN_CATEGORIES,
     icon: Boxes,
-    description: 'Agrupar itens em categorias',
+    description: 'Separar vários itens em grupos',
     category: 'avaliativo',
     defaults: () => ({ categories: [] }),
     validateForm: (b) => {
@@ -688,7 +696,7 @@ export const BLOCK_CATALOG: Record<BlockType, BlockMeta> = {
     requiresDocumentMedia: false,
     validate: (b) => validTrueFalseItems(b.trueFalseItems).length > 0,
     icon: CheckCheck,
-    description: 'Afirmações para julgar como verdadeiras ou falsas',
+    description: 'Afirmações para julgar, com explicação',
     category: 'avaliativo',
     defaults: () => ({ trueFalseItems: [] }),
     validateForm: (b) => {
@@ -758,7 +766,7 @@ export const BLOCK_CATALOG: Record<BlockType, BlockMeta> = {
       )
     },
     icon: MessagesSquare,
-    description: 'Situação com escolhas e consequências',
+    description: 'Uma situação real: o aluno escolhe e vê a consequência',
     category: 'avaliativo',
     defaults: () => ({
       scenarioCharacter: '',
@@ -853,6 +861,91 @@ export function createEmptyBlock(type: BlockType): DraftBlock {
 }
 
 export const BLOCK_TYPES = Object.keys(BLOCK_CATALOG) as BlockType[]
+
+export interface BlockModalEntry {
+  id: string
+  type: BlockType
+  label: string
+  description: string
+  icon: LucideIcon
+  category: BlockCategory
+  preset?: Partial<Block>
+}
+
+const ACTIVITY_ORDER = [
+  'quiz',
+  'true-false',
+  'fill-blanks',
+  'matching',
+  'categorization',
+  'sequence',
+  'scenario',
+  'find-in-image',
+  'interactive-video',
+]
+
+const FIND_IN_IMAGE_ENTRY: BlockModalEntry = {
+  id: 'find-in-image',
+  type: 'interactive-image',
+  label: 'Encontre na imagem',
+  description: 'Achar pontos escondidos numa imagem',
+  icon: ScanSearch,
+  category: 'avaliativo',
+  preset: { hotspotMode: 'find' },
+}
+
+export const BLOCK_MODAL_ENTRIES: BlockModalEntry[] = [
+  ...BLOCK_TYPES.map((type) => {
+    const { label, description, icon, category } = BLOCK_CATALOG[type]
+    return { id: type, type, label, description, icon, category }
+  }),
+  FIND_IN_IMAGE_ENTRY,
+]
+
+export function blockIdentity(block: Pick<Block, 'type'> & Pick<Partial<Block>, 'hotspotMode'>): {
+  label: string
+  icon: LucideIcon
+} {
+  const { label, icon } =
+    block.type === 'interactive-image' && block.hotspotMode === 'find'
+      ? FIND_IN_IMAGE_ENTRY
+      : BLOCK_CATALOG[block.type]
+  return { label, icon }
+}
+
+export function modalEntriesFor(category: BlockCategory): BlockModalEntry[] {
+  const entries = BLOCK_MODAL_ENTRIES.filter((entry) => entry.category === category)
+  if (category !== 'avaliativo') return entries
+  const position = (entry: BlockModalEntry) => {
+    const index = ACTIVITY_ORDER.indexOf(entry.id)
+    return index < 0 ? ACTIVITY_ORDER.length : index
+  }
+  return [...entries].sort((a, b) => position(a) - position(b))
+}
+
+export const GRADABLE_TYPES: readonly BlockType[] = [
+  'quiz',
+  'interactive-video',
+  'matching',
+  'categorization',
+  'true-false',
+  'sequence',
+  'fill-blanks',
+  'scenario',
+  'interactive-image',
+]
+
+export function isGradableBlock(block: Pick<Partial<Block>, 'type' | 'hotspotMode'>): boolean {
+  if (!block.type || !GRADABLE_TYPES.includes(block.type)) return false
+  if (block.type === 'interactive-image') return block.hotspotMode === 'find'
+  return true
+}
+
+export function isGradedBlock(
+  block: Pick<Partial<Block>, 'type' | 'hotspotMode' | 'graded'>
+): boolean {
+  return isGradableBlock(block) && block.graded !== false
+}
 
 export const BLOCKS_WITH_MARKER = BLOCK_TYPES.map((type) => BLOCK_CATALOG[type]).filter(
   (meta): meta is BlockMeta & { marker: string } => meta.marker !== null
@@ -1106,6 +1199,8 @@ function repairBlock(block: Block): Block {
     repaired.quizData = { questions }
   }
 
+  if (repaired.graded !== false || !isGradableBlock(repaired)) delete repaired.graded
+
   return repaired
 }
 
@@ -1115,12 +1210,12 @@ function repairQuestion(question: QuizQuestion, index: number): QuizQuestion | n
   const options = (question.options ?? []).filter((option) => hasText(option?.text))
   const correctOptions = options.filter((option) => option.isCorrect)
 
-  if (correctOptions.length === 0 || options.length < OPTIONS_PER_QUESTION) return null
+  if (correctOptions.length === 0 || options.length < QUIZ_OPTIONS.min) return null
 
   const correct = correctOptions[0]
   const incorrectOptions = options
     .filter((option) => option !== correct)
-    .slice(0, OPTIONS_PER_QUESTION - 1)
+    .slice(0, QUIZ_OPTIONS.max - 1)
   const correctPosition = options.indexOf(correct)
 
   const selectedOptions = [...incorrectOptions]
@@ -1138,10 +1233,27 @@ function repairQuestion(question: QuizQuestion, index: number): QuizQuestion | n
   }
 }
 
+function validateQuizQuestion(question: QuizQuestion): string | null {
+  const options = question.options ?? []
+  if (!hasText(question.question)) return 'escreva o enunciado'
+  if (options.length < QUIZ_OPTIONS.min || options.length > QUIZ_OPTIONS.max) {
+    return `use de ${QUIZ_OPTIONS.min} a ${QUIZ_OPTIONS.max} alternativas`
+  }
+  if (options.some((option) => !hasText(option.text))) return 'preencha todas as alternativas'
+  if (options.filter((option) => option.isCorrect).length !== 1) {
+    return 'marque uma única alternativa correta'
+  }
+  if (options.some((option) => !hasText(option.feedback))) {
+    return 'escreva o feedback de cada alternativa'
+  }
+  return null
+}
+
 function isValidQuestion(question: QuizQuestion): boolean {
   return (
     hasText(question?.question) &&
-    question.options?.length === OPTIONS_PER_QUESTION &&
+    question.options?.length >= QUIZ_OPTIONS.min &&
+    question.options.length <= QUIZ_OPTIONS.max &&
     question.options.filter((option) => option.isCorrect).length === 1
   )
 }
@@ -1149,7 +1261,7 @@ function isValidQuestion(question: QuizQuestion): boolean {
 function invalidReason(type: BlockType): string {
   switch (type) {
     case 'quiz':
-      return `sem pergunta com ${OPTIONS_PER_QUESTION} opções e uma única correta`
+      return `sem pergunta com ${QUIZ_OPTIONS.min} a ${QUIZ_OPTIONS.max} opções e uma única correta`
     case 'accordion':
       return 'sem itens com título e conteúdo'
     case 'flipcard':

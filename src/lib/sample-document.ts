@@ -194,6 +194,7 @@ export const SAMPLE_DOCUMENT_LINES: string[] = [
   'CATEGORIZACAO_FIM',
   '',
   'VERDADEIROFALSO_INICIO',
+  'Avaliativa: não',
   'Afirmação 1: O EPI deve ser fornecido gratuitamente pelo empregador.',
   'Resposta 1: Verdadeiro',
   'Explicação 1: A NR-6 obriga o empregador a fornecer o EPI adequado ao risco, sem custo para o trabalhador.',

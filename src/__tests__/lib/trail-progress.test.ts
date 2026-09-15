@@ -11,6 +11,8 @@ import {
   isUnitCompleted,
   maxCourseXp,
   reviewTrailSteps,
+  scoredBlockIndices,
+  scoredQuizKeys,
   MAX_RECOMMENDED_STEPS,
   trailCompletionRule,
   trailLevel,
@@ -101,6 +103,43 @@ describe('isScoredBlock', () => {
   it('scores the interactive image only in find mode', () => {
     expect(isScoredBlock({ ...block('interactive-image'), hotspotMode: 'find' })).toBe(true)
     expect(isScoredBlock({ ...block('interactive-image'), hotspotMode: 'explore' })).toBe(false)
+  })
+
+  it('does not score a practice activity', () => {
+    expect(isScoredBlock({ ...block('quiz'), graded: false })).toBe(false)
+    expect(isScoredBlock({ ...block('quiz'), graded: true })).toBe(true)
+    expect(
+      isScoredBlock({ ...block('interactive-image'), hotspotMode: 'find', graded: false })
+    ).toBe(false)
+  })
+})
+
+describe('practice activities', () => {
+  const practiceQuiz: Block = { ...block('quiz'), graded: false }
+  const u = unit('Fixação', [block('heading', 'Etapa'), practiceQuiz, block('matching')])
+
+  it('never block a step, give no XP and do not count for stars', () => {
+    const [step] = deriveSteps(u)
+    const state = withResult(withResult(createEmptyState(1), 0, 1, true), 0, 2, false)
+
+    expect(scoredBlockIndices(u, step)).toEqual([2])
+    expect(isStepAnswered(withResult(createEmptyState(1), 0, 2, false), u, 0, step)).toBe(true)
+    expect(unitXp(state, u, 0)).toBe(10)
+    expect(maxCourseXp({ units: [u] })).toBe(10 + 20)
+    expect(unitStars(state, u, 0)).toBe(1)
+  })
+
+  it('lists only the quiz keys of scored blocks', () => {
+    expect([...scoredQuizKeys({ units: [u, unit('B', [practiceQuiz, block('quiz')])] })]).toEqual([
+      '0-2',
+      '1-1',
+    ])
+  })
+
+  it('leaves the step without a scored activity in the editor review', () => {
+    const onlyPractice = unit('Só fixação', [block('heading', 'Etapa'), practiceQuiz])
+
+    expect(reviewTrailSteps(onlyPractice).stepsWithoutScored).toHaveLength(1)
   })
 })
 

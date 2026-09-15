@@ -116,6 +116,26 @@ describe('POST /api/generate-course-from-text', () => {
     expect(classicPrompt).toBe(sentPrompt())
     expect(data.course.units[0]).not.toHaveProperty('badgeName')
   })
+
+  it('asks for three to five quiz options', async () => {
+    await callRoute({ text: 'Conteúdo', mode: 'auto' })
+
+    expect(sentPrompt()).toContain('de 3 a 5 opções por pergunta')
+    expect(sentPrompt()).not.toContain('exatamente 5 opções')
+  })
+
+  it('copies the Avaliativa marker only in markers mode', async () => {
+    await callRoute({ text: 'QUIZ_INICIO\nAvaliativa: não\nQUIZ_FIM', mode: 'markers' })
+    const markersPrompt = sentPrompt()
+
+    mockGenerateContent.mockClear()
+    await callRoute({ text: 'Conteúdo', mode: 'auto' })
+    const autoPrompt = sentPrompt()
+
+    expect(markersPrompt).toContain('"não" ou "nao" → "graded": false')
+    expect(autoPrompt).toContain('NUNCA use o campo "graded" no modo automático')
+    expect(autoPrompt).not.toContain('"graded": false')
+  })
 })
 
 describe('createCourseWithAi', () => {

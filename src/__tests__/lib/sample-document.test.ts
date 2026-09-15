@@ -45,7 +45,7 @@ describe('sample document', () => {
     expect(isValidYouTubeUrl(line!.replace('VÍDEO INTRODUTÓRIO:', '').trim())).toBe(true)
   })
 
-  it('has a quiz with five options and the correct answer marked', () => {
+  it('has a quiz with options and the correct answer marked', () => {
     expect(SAMPLE_DOCUMENT_TEXT).toContain('Opção E:')
     expect(SAMPLE_DOCUMENT_TEXT).toContain('Resposta Correta:')
   })
