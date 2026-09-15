@@ -139,7 +139,7 @@ One commit per stage, each after its checks pass and after the author confirms t
 
 ### Stage 4 — Lists in info boxes
 
-- [ ] CSS and a player screenshot in light and dark.
+- [x] CSS and a player screenshot in light and dark.
 - **Commit:** `fix: show list markers inside info boxes`.
 
 ### Every stage

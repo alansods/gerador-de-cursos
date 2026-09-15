@@ -121,7 +121,7 @@ Card com ícone e cor para chamar atenção. Tem quatro tipos:
 | **Curiosidade** | fato interessante que ajuda a lembrar                 |
 
 - **Preenche**: o tipo, o conteúdo e um título opcional. Com título, a caixa abre e fecha ao
-  clicar.
+  clicar. Listas no conteúdo aparecem com marcador (bolinha) ou número, conforme o tipo de lista.
 - **Documento**: `INFOBOX` com `Tipo:` (`atencao`, `saiba_mais`, `curiosidade`; sem tipo vira
   Informação), `Título:` e `Conteúdo:`.
 
