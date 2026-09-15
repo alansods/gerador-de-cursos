@@ -5,9 +5,10 @@ import { getServerUser } from '@/lib/auth-server'
 import { getCoursePermissions, type CourseStatus } from '@/lib/permissions'
 import type { Course } from '@/types/course'
 import { upgradeUnits } from '@/lib/legacy-course'
+import { DEFAULT_PAGE_SIZE, normalizePage, normalizePageSize } from '@/lib/course-list-params'
 
 export interface FetchCoursesParams {
-  cursor?: string // id of the last course on the previous page
+  page?: number
   limit?: number
   search?: string
   category?: string
@@ -18,28 +19,28 @@ export interface FetchCoursesParams {
 
 export interface FetchCoursesResult {
   courses: Course[]
-  nextCursor: string | null
-  hasMore: boolean
   total: number
+  page: number
+  totalPages: number
 }
 
-/**
- * Server Action para buscar cursos com cursor pagination (infinite scroll)
- */
 export async function fetchCourses({
-  cursor,
-  limit = 6,
+  page: requestedPage = 1,
+  limit: requestedLimit = DEFAULT_PAGE_SIZE,
   search,
   category,
   modality,
   status,
   scope = 'all',
 }: FetchCoursesParams): Promise<FetchCoursesResult> {
+  const page = normalizePage(requestedPage)
+  const limit = normalizePageSize(requestedLimit)
+
   try {
     const user = await getServerUser()
 
     if (!user) {
-      return { courses: [], nextCursor: null, hasMore: false, total: 0 }
+      return { courses: [], total: 0, page, totalPages: 0 }
     }
 
     // Build the dynamic filters
@@ -86,27 +87,16 @@ export async function fetchCourses({
     // Total course count, for the counter
     const total = await prisma.course.count({ where })
 
-    // Fetch the courses with cursor pagination
-    const courses = await prisma.course.findMany({
+    const returnedCourses = await prisma.course.findMany({
       where,
       include: { owner: { select: { id: true, name: true } } },
-      take: limit + 1, // one extra row tells us whether there is a next page
-      ...(cursor
-        ? {
-            skip: 1, // skip the cursor row itself
-            cursor: { id: cursor },
-          }
-        : {}),
+      skip: (page - 1) * limit,
+      take: limit,
       orderBy: [
         { createdAt: 'desc' },
         { id: 'desc' }, // fallback that keeps the order stable
       ],
     })
-
-    // Check whether more courses remain
-    const hasMore = courses.length > limit
-    const returnedCourses = hasMore ? courses.slice(0, limit) : courses
-    const nextCursor = hasMore ? returnedCourses[returnedCourses.length - 1].id : null
 
     const courseIds = returnedCourses.map((c) => c.id)
 
@@ -155,9 +145,9 @@ export async function fetchCourses({
 
     return {
       courses: formattedCourses,
-      nextCursor,
-      hasMore,
       total,
+      page,
+      totalPages: Math.ceil(total / limit),
     }
   } catch (error) {
     console.error('[fetchCourses] Failed to fetch courses:', error)

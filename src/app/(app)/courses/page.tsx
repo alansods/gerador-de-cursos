@@ -13,7 +13,6 @@ import {
 } from '@/hooks/queries/useCoursesQuery'
 import { ExportModal } from '@/components/ExportModal'
 import { PageTransition } from '@/components/PageTransition'
-import { InfiniteScrollTrigger } from '@/components/InfiniteScrollTrigger'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import {
@@ -68,16 +67,35 @@ import {
   Trash2,
   Sparkles,
 } from 'lucide-react'
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { Suspense, useEffect, useState } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { useDebounce } from '@/hooks/useDebounce'
 import { SearchInput } from '@/components/SearchInput'
 import { PageHeader } from '@/components/PageHeader'
+import { TablePagination } from '@/components/TablePagination'
 import { COURSE_CATEGORIES, COURSE_MODALITIES } from '@/lib/constants'
+import {
+  buildCourseListQuery,
+  PAGE_SIZE_OPTIONS,
+  parseCourseListParams,
+  type CourseListParams,
+} from '@/lib/course-list-params'
 
-const CATEGORIES = ['Todas Categorias', ...COURSE_CATEGORIES]
+const ALL_CATEGORIES = 'Todas Categorias'
+const ALL_MODALITIES = 'Todas Modalidades'
+const ALL_STATUSES = 'all'
 
-const MODALITIES = ['Todas Modalidades', ...COURSE_MODALITIES]
+const CATEGORIES = [ALL_CATEGORIES, ...COURSE_CATEGORIES]
+
+const MODALITIES = [ALL_MODALITIES, ...COURSE_MODALITIES]
+
+const readListParams = () => parseCourseListParams(new URLSearchParams(window.location.search))
+
+const replaceListParams = (changes: Partial<CourseListParams>) => {
+  const query = buildCourseListQuery({ ...readListParams(), page: 1, ...changes })
+  const { pathname } = window.location
+  window.history.replaceState(null, '', query ? `${pathname}?${query}` : pathname)
+}
 
 const isNewCourse = (createdAt?: Date | string) => {
   if (!createdAt) return false
@@ -86,6 +104,14 @@ const isNewCourse = (createdAt?: Date | string) => {
 }
 
 export default function CoursesPage() {
+  return (
+    <Suspense fallback={null}>
+      <CoursesPageContent />
+    </Suspense>
+  )
+}
+
+function CoursesPageContent() {
   const deleteCourse = useDeleteCourseMutation()
   const bulkDeleteCourses = useBulkDeleteCoursesMutation()
   const { openPreview } = usePreview()
@@ -100,65 +126,72 @@ export default function CoursesPage() {
   const [selectedCourseForExport, setSelectedCourseForExport] = useState<Course | null>(null)
   const [requestedAccesses, setRequestedAccesses] = useState<Set<string>>(new Set())
 
-  // Search and filter state
-  const [searchTerm, setSearchTerm] = useState('')
-  const [selectedCategory, setSelectedCategory] = useState<string>('Todas Categorias')
-  const [selectedFormat, setSelectedFormat] = useState<string>('Todas Modalidades')
-  const [selectedStatus, setSelectedStatus] = useState<CourseStatus | 'all'>('all')
-
-  // Debounce searchTerm to avoid firing several requests
+  const listParams = parseCourseListParams(useSearchParams())
+  const [searchTerm, setSearchTerm] = useState(listParams.search)
   const debouncedSearchTerm = useDebounce(searchTerm, 500)
 
   const {
     courses: fetchedCourses,
+    pagination,
     isLoading: loadingCourses,
-    isLoadingMore,
-    hasMore,
-    total: totalCourses,
     error: loadError,
-    loadMore,
   } = useCoursesQuery({
-    limit: 6,
-    search: debouncedSearchTerm,
-    category: selectedCategory !== 'Todas Categorias' ? selectedCategory : undefined,
-    modality: selectedFormat !== 'Todas Modalidades' ? selectedFormat : undefined,
-    status: selectedStatus !== 'all' ? selectedStatus : undefined,
+    page: listParams.page,
+    limit: listParams.perPage,
+    search: listParams.search,
+    category: listParams.category,
+    modality: listParams.modality,
+    status: listParams.status,
   })
 
-  // Cursos exibidos
   const paginatedCourses = fetchedCourses
+  const totalCourses = pagination.total
 
-  // Verificar se há filtros ativos
+  useEffect(() => {
+    if (debouncedSearchTerm !== readListParams().search) {
+      replaceListParams({ search: debouncedSearchTerm })
+    }
+  }, [debouncedSearchTerm])
+
+  useEffect(() => {
+    if (pagination.totalPages > 0 && listParams.page > pagination.totalPages) {
+      replaceListParams({ page: pagination.totalPages })
+    }
+  }, [listParams.page, pagination.totalPages])
+
   const hasActiveFilters =
-    debouncedSearchTerm !== '' ||
-    selectedCategory !== 'Todas Categorias' ||
-    selectedFormat !== 'Todas Modalidades' ||
-    selectedStatus !== 'all'
+    listParams.search !== '' ||
+    listParams.category !== undefined ||
+    listParams.modality !== undefined ||
+    listParams.status !== undefined
 
-  // Limpar filtros
+  const updateListParams = (changes: Partial<CourseListParams>) => {
+    replaceListParams(changes)
+    setSelectedIds(new Set())
+  }
+
   const clearFilters = () => {
     setSearchTerm('')
-    setSelectedCategory('Todas Categorias')
-    setSelectedFormat('Todas Modalidades')
-    setSelectedStatus('all')
+    updateListParams({
+      search: '',
+      category: undefined,
+      modality: undefined,
+      status: undefined,
+    })
   }
+
+  const goToPage = (page: number) => updateListParams({ page })
 
   const updateSearchTerm = (value: string) => {
     setSearchTerm(value)
     setSelectedIds(new Set())
   }
-  const updateCategory = (value: string) => {
-    setSelectedCategory(value)
-    setSelectedIds(new Set())
-  }
-  const updateFormat = (value: string) => {
-    setSelectedFormat(value)
-    setSelectedIds(new Set())
-  }
-  const updateStatus = (value: CourseStatus | 'all') => {
-    setSelectedStatus(value)
-    setSelectedIds(new Set())
-  }
+  const updateCategory = (value: string) =>
+    updateListParams({ category: value === ALL_CATEGORIES ? undefined : value })
+  const updateFormat = (value: string) =>
+    updateListParams({ modality: value === ALL_MODALITIES ? undefined : value })
+  const updateStatus = (value: CourseStatus | typeof ALL_STATUSES) =>
+    updateListParams({ status: value === ALL_STATUSES ? undefined : value })
 
   const deletableCourses = paginatedCourses.filter((c) => c.permissions?.canDelete)
   const canBulkDelete = deletableCourses.length > 0
@@ -217,7 +250,6 @@ export default function CoursesPage() {
   const handleCreateCourse = () => router.push('/courses/new')
   const handleEditCourse = (id: string) => router.push(`/courses/${id}/edit`)
   const handlePreviewCourse = (id: string) => {
-    // Look the course up in the pages loaded so far
     const course = fetchedCourses.find((c) => c.id === id)
     if (course) {
       openPreview(course)
@@ -328,7 +360,10 @@ export default function CoursesPage() {
                 {/* Filtro por Categoria */}
                 <FormField label="Categoria" compact className="flex-1">
                   {(props) => (
-                    <Select value={selectedCategory} onValueChange={updateCategory}>
+                    <Select
+                      value={listParams.category ?? ALL_CATEGORIES}
+                      onValueChange={updateCategory}
+                    >
                       <SelectTrigger id={props.id} className="w-full">
                         <SelectValue placeholder="Categoria" />
                       </SelectTrigger>
@@ -346,7 +381,10 @@ export default function CoursesPage() {
                 {/* Filtro por Modalidade */}
                 <FormField label="Modalidade" compact className="flex-1">
                   {(props) => (
-                    <Select value={selectedFormat} onValueChange={updateFormat}>
+                    <Select
+                      value={listParams.modality ?? ALL_MODALITIES}
+                      onValueChange={updateFormat}
+                    >
                       <SelectTrigger id={props.id} className="w-full">
                         <SelectValue placeholder="Modalidade" />
                       </SelectTrigger>
@@ -365,14 +403,16 @@ export default function CoursesPage() {
                 <FormField label="Status" compact className="flex-1">
                   {(props) => (
                     <Select
-                      value={selectedStatus}
-                      onValueChange={(value) => updateStatus(value as CourseStatus | 'all')}
+                      value={listParams.status ?? ALL_STATUSES}
+                      onValueChange={(value) =>
+                        updateStatus(value as CourseStatus | typeof ALL_STATUSES)
+                      }
                     >
                       <SelectTrigger id={props.id} className="w-full">
                         <SelectValue placeholder="Status" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="todos">Todos os status</SelectItem>
+                        <SelectItem value={ALL_STATUSES}>Todos os status</SelectItem>
                         {COURSE_STATUS.map((status) => (
                           <SelectItem key={status} value={status}>
                             {COURSE_STATUS_LABELS[status]}
@@ -632,11 +672,14 @@ export default function CoursesPage() {
                 </TableBody>
               </Table>
 
-              {/* Infinite Scroll Trigger */}
-              <InfiniteScrollTrigger
-                onLoadMore={loadMore}
-                isLoading={isLoadingMore}
-                hasMore={hasMore}
+              <TablePagination
+                page={listParams.page}
+                pageSize={listParams.perPage}
+                total={pagination.total}
+                pageSizeOptions={PAGE_SIZE_OPTIONS}
+                pageSizeLabel="Cursos por página"
+                onPageChange={goToPage}
+                onPageSizeChange={(perPage) => updateListParams({ perPage })}
               />
             </>
           ) : null}

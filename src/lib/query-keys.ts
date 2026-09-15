@@ -1,6 +1,6 @@
 import type { FetchCoursesParams } from '@/app/(app)/courses/actions'
 
-export type CourseFilters = Omit<FetchCoursesParams, 'cursor'>
+export type CourseFilters = FetchCoursesParams
 
 export interface UserFilters {
   page: number
