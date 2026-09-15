@@ -107,7 +107,7 @@ const MIN_SEQUENCE_ITEMS = 2
 const MIN_SEQUENCE_FORM_ITEMS = 3
 const MIN_SCENARIO_OPTIONS = 2
 
-const OPTIONS_PER_QUESTION = 5
+export const QUIZ_OPTIONS = { min: 3, max: 5 } as const
 
 const OPTION_LETTERS: OptionLetter[] = ['A', 'B', 'C', 'D', 'E']
 const MIN_OPTIONS = 2
@@ -388,8 +388,15 @@ export const BLOCK_CATALOG: Record<BlockType, BlockMeta> = {
     description: 'Perguntas de múltipla escolha com feedback',
     category: 'avaliativo',
     defaults: () => ({ quizData: undefined }),
-    validateForm: (b) =>
-      b.quizData?.questions?.length ? null : 'O quiz deve ter pelo menos uma pergunta',
+    validateForm: (b) => {
+      const questions = b.quizData?.questions ?? []
+      if (questions.length === 0) return 'O quiz deve ter pelo menos uma pergunta'
+      for (const [index, question] of questions.entries()) {
+        const error = validateQuizQuestion(question)
+        if (error) return `Pergunta ${index + 1}: ${error}`
+      }
+      return null
+    },
   },
   image: {
     type: 'image',
@@ -1192,12 +1199,12 @@ function repairQuestion(question: QuizQuestion, index: number): QuizQuestion | n
   const options = (question.options ?? []).filter((option) => hasText(option?.text))
   const correctOptions = options.filter((option) => option.isCorrect)
 
-  if (correctOptions.length === 0 || options.length < OPTIONS_PER_QUESTION) return null
+  if (correctOptions.length === 0 || options.length < QUIZ_OPTIONS.min) return null
 
   const correct = correctOptions[0]
   const incorrectOptions = options
     .filter((option) => option !== correct)
-    .slice(0, OPTIONS_PER_QUESTION - 1)
+    .slice(0, QUIZ_OPTIONS.max - 1)
   const correctPosition = options.indexOf(correct)
 
   const selectedOptions = [...incorrectOptions]
@@ -1215,10 +1222,27 @@ function repairQuestion(question: QuizQuestion, index: number): QuizQuestion | n
   }
 }
 
+function validateQuizQuestion(question: QuizQuestion): string | null {
+  const options = question.options ?? []
+  if (!hasText(question.question)) return 'escreva o enunciado'
+  if (options.length < QUIZ_OPTIONS.min || options.length > QUIZ_OPTIONS.max) {
+    return `use de ${QUIZ_OPTIONS.min} a ${QUIZ_OPTIONS.max} alternativas`
+  }
+  if (options.some((option) => !hasText(option.text))) return 'preencha todas as alternativas'
+  if (options.filter((option) => option.isCorrect).length !== 1) {
+    return 'marque uma única alternativa correta'
+  }
+  if (options.some((option) => !hasText(option.feedback))) {
+    return 'escreva o feedback de cada alternativa'
+  }
+  return null
+}
+
 function isValidQuestion(question: QuizQuestion): boolean {
   return (
     hasText(question?.question) &&
-    question.options?.length === OPTIONS_PER_QUESTION &&
+    question.options?.length >= QUIZ_OPTIONS.min &&
+    question.options.length <= QUIZ_OPTIONS.max &&
     question.options.filter((option) => option.isCorrect).length === 1
   )
 }
@@ -1226,7 +1250,7 @@ function isValidQuestion(question: QuizQuestion): boolean {
 function invalidReason(type: BlockType): string {
   switch (type) {
     case 'quiz':
-      return `sem pergunta com ${OPTIONS_PER_QUESTION} opções e uma única correta`
+      return `sem pergunta com ${QUIZ_OPTIONS.min} a ${QUIZ_OPTIONS.max} opções e uma única correta`
     case 'accordion':
       return 'sem itens com título e conteúdo'
     case 'flipcard':

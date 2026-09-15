@@ -260,10 +260,14 @@ fixação, desmarcando **Vale nota**, e aceita `Avaliativa: não` no marcador.
 
 Pergunta de múltipla escolha com feedback.
 
-- **Preenche**: pelo menos uma pergunta, cada uma com 5 alternativas (A a E), a correta e um
-  feedback por alternativa.
-- **Documento**: `QUIZ` com `Pergunta:`, `Opção A:` a `Opção E:` e `Resposta Correta:`, repetidos
-  para cada pergunta.
+- **Preenche**: pelo menos uma pergunta, cada uma com o enunciado, uma dica opcional e de 3 a 5
+  alternativas (A a E), cada alternativa com texto e feedback. Uma delas é marcada como correta.
+  A pergunta começa com 3 alternativas; **Adicionar alternativa** vai até 5 e a lixeira remove
+  até sobrar 3. As perguntas podem ser reordenadas.
+- **Aluno faz**: escolhe uma alternativa, confirma e vê o feedback; a dica aparece se pedir.
+- **Documento**: `QUIZ` com `Pergunta:`, de `Opção A:` até `Opção C:`, `Opção D:` ou `Opção E:`,
+  e `Resposta Correta:`, repetidos para cada pergunta. Pergunta com menos de 3 opções é
+  descartada.
 
 ### Verdadeiro ou falso
 

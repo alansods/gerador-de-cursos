@@ -110,7 +110,7 @@ export interface QuizQuestion {
   id: string // unique question id
   question: string // quiz question
   hint?: string // optional hint
-  options: QuizItem[] // exactly five options
+  options: QuizItem[] // three to five options
 }
 
 export interface QuizData {

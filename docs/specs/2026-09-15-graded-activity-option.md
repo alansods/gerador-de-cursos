@@ -81,11 +81,26 @@ Decisions below were taken with the author one question at a time on 2026-09-15.
 
 ### Quiz with 3 to 5 options
 
-- A question has 3 to 5 options (letters A to E in order). The drawer lets the author add and
-  remove options within that range; the correct one must be among them.
-- The player renders only the options that exist.
+- Found while starting Stage 3 (decided with the author on 2026-09-15): the quiz could not be
+  created or edited by hand. The drawer showed only "A edição de quiz ainda não foi migrada para o
+  drawer", and the legacy modal that edited quizzes is hidden in the editor page. Stage 3 builds
+  the quiz form in the drawer.
+- Drawer form (`QuizQuestionsField`, a component of its own):
+  - a list of questions; each has the question text, an optional hint and its options;
+  - each option has text, feedback and a radio button that marks it as the correct one;
+  - a question starts with 3 empty options, the first marked correct; "Adicionar alternativa"
+    appears while there are fewer than 5 and removing an option is allowed while there are more
+    than 3; removing the correct option marks the first remaining one;
+  - add, remove and reorder questions like the other list forms.
+- `validateForm` of the quiz: at least one question; each question with text, 3 to 5 options,
+  every option with text and feedback, and exactly one correct option. The error names the
+  question number, like the interactive video.
+- A question has 3 to 5 options (letters A to E in order). The player already renders only the
+  options that exist.
 - AI and markers: `repairQuestion` accepts 3 to 5 options (no longer discards 3 or 4) and keeps
   at most 5; the prompt asks for 3 to 5. Saved courses with 5 options render as today.
+- The legacy quiz validation inside the editor page (`alert` with "exatamente 5 opções") is not
+  reachable and stays untouched.
 
 ## Out of scope
 
@@ -116,8 +131,10 @@ One commit per stage, each after its checks pass and after the author confirms t
 
 ### Stage 3 — Quiz with 3 to 5 options
 
-- [ ] Drawer add/remove options, player, `repairQuestion`, prompt.
-- [ ] Tests: blocks, drawer, quiz player.
+- [x] `QuizQuestionsField` in the drawer, replacing the "não foi migrada" notice.
+- [x] Quiz `validateForm` with 3 to 5 options, `repairQuestion`, `invalidReason`, prompt.
+- [x] Tests: blocks, drawer (create, add/remove options, correct option, validation), quiz player
+      with 3 options.
 - **Commit:** `feat: allow three to five quiz options`.
 
 ### Stage 4 — Lists in info boxes

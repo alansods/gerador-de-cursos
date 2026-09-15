@@ -15,7 +15,6 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import {
-  HelpCircle,
   Upload,
   Loader2,
   Images,
@@ -53,6 +52,7 @@ import { extractYouTubeId } from '@/lib/youtube'
 import { cleanDistractors, fillBlanksAnswers } from '@/lib/fill-blanks'
 import { RichTextEditor } from './RichTextEditor'
 import { IllustrationPicker } from './IllustrationPicker'
+import { QuizQuestionsField } from './QuizQuestionsField'
 import {
   ILLUSTRATION_CARD_COLOR,
   illustrationCardStyle,
@@ -1653,18 +1653,10 @@ export function ContentBlockDrawer({
 
       case 'quiz':
         return (
-          <div className="space-y-4">
-            <div className="text-center py-12 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg">
-              <HelpCircle className="h-12 w-12 mx-auto text-gray-400 dark:text-gray-500 mb-4" />
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">
-                Edição de Quiz
-              </h3>
-              <p className="text-sm text-gray-600 dark:text-gray-400 max-w-md mx-auto">
-                A edição de quiz ainda não foi migrada para o drawer. Por favor, use o modal
-                temporariamente para criar/editar quizzes.
-              </p>
-            </div>
-          </div>
+          <QuizQuestionsField
+            questions={formData.quizData?.questions ?? []}
+            onChange={(questions) => setFormData({ ...formData, quizData: { questions } })}
+          />
         )
 
       case 'flipcard':

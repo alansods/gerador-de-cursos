@@ -117,6 +117,13 @@ describe('POST /api/generate-course-from-text', () => {
     expect(data.course.units[0]).not.toHaveProperty('badgeName')
   })
 
+  it('asks for three to five quiz options', async () => {
+    await callRoute({ text: 'Conteúdo', mode: 'auto' })
+
+    expect(sentPrompt()).toContain('de 3 a 5 opções por pergunta')
+    expect(sentPrompt()).not.toContain('exatamente 5 opções')
+  })
+
   it('copies the Avaliativa marker only in markers mode', async () => {
     await callRoute({ text: 'QUIZ_INICIO\nAvaliativa: não\nQUIZ_FIM', mode: 'markers' })
     const markersPrompt = sentPrompt()

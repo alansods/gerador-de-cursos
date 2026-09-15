@@ -16,7 +16,7 @@ import {
 } from '@/lib/blocks'
 import type { BlockType } from '@/lib/blocks'
 import { blockRegistry } from '@/components/course/blocks/registry'
-import type { Block, Course, FlipcardItem, VideoQuestion } from '@/types/course'
+import type { Block, Course, FlipcardItem, QuizQuestion, VideoQuestion } from '@/types/course'
 import { upgradeBlock } from '@/lib/legacy-course'
 
 function courseWith(blocks: Partial<Block>[]): Course {
@@ -1107,19 +1107,42 @@ describe('normalizeCourse', () => {
     })
   })
 
-  it('drops a quiz with fewer than five options', () => {
+  it('drops a quiz with fewer than three options', () => {
     const { course, summary } = normalizeCourse(
       courseWith([
         {
           type: 'quiz',
           content: '',
-          quizData: { questions: [{ id: 'q-1', question: 'P?', options: options(0, 4) }] },
+          quizData: { questions: [{ id: 'q-1', question: 'P?', options: options(0, 2) }] },
         },
       ])
     )
 
     expect(course.units[0].blocks).toHaveLength(0)
-    expect(summary.discarded[0].type).toBe('quiz')
+    expect(summary.discarded[0]).toMatchObject({
+      type: 'quiz',
+      reason: 'sem pergunta com 3 a 5 opções e uma única correta',
+    })
+  })
+
+  it('keeps quizzes with three or four options', () => {
+    const { course } = normalizeCourse(
+      courseWith([
+        {
+          type: 'quiz',
+          content: '',
+          quizData: {
+            questions: [
+              { id: 'q-1', question: 'P?', options: options(2, 3) },
+              { id: 'q-2', question: 'Q?', options: options(1, 4) },
+            ],
+          },
+        },
+      ])
+    )
+
+    const lengths = course.units[0].blocks[0].quizData!.questions.map((q) => q.options.length)
+    expect(lengths).toEqual([3, 4])
   })
 
   it('keeps a single correct option when the AI marks two', () => {
@@ -1487,5 +1510,48 @@ describe('modal entries', () => {
     expect(new Set(descriptions).size).toBe(descriptions.length)
     expect(descriptions).toContain('Ligar pares, um para um')
     expect(descriptions).toContain('Separar vários itens em grupos')
+  })
+})
+
+describe('quiz form validation', () => {
+  const validate = BLOCK_CATALOG.quiz.validateForm
+  const question = (extra: Partial<QuizQuestion> = {}): QuizQuestion => ({
+    id: 'q-1',
+    question: 'Qual EPI protege a cabeça?',
+    options: options(0, 3),
+    ...extra,
+  })
+  const quiz = (...questions: QuizQuestion[]) => ({
+    type: 'quiz' as const,
+    quizData: { questions },
+  })
+
+  it('accepts three to five complete options with one correct', () => {
+    expect(validate(quiz(question()))).toBeNull()
+    expect(validate(quiz(question({ options: options(4, 5) })))).toBeNull()
+  })
+
+  it('names the question and what is missing', () => {
+    expect(validate({ type: 'quiz' })).toBe('O quiz deve ter pelo menos uma pergunta')
+    expect(validate(quiz(question(), question({ id: 'q-2', question: ' ' })))).toBe(
+      'Pergunta 2: escreva o enunciado'
+    )
+    expect(validate(quiz(question({ options: options(0, 2) })))).toBe(
+      'Pergunta 1: use de 3 a 5 alternativas'
+    )
+    expect(validate(quiz(question({ options: options(0, 6) })))).toBe(
+      'Pergunta 1: use de 3 a 5 alternativas'
+    )
+    expect(
+      validate(
+        quiz(question({ options: options(0, 3).map((o, i) => (i ? o : { ...o, text: '' })) }))
+      )
+    ).toBe('Pergunta 1: preencha todas as alternativas')
+    expect(validate(quiz(question({ options: options(-1, 3) })))).toBe(
+      'Pergunta 1: marque uma única alternativa correta'
+    )
+    expect(
+      validate(quiz(question({ options: options(0, 3).map((o) => ({ ...o, feedback: '' })) })))
+    ).toBe('Pergunta 1: escreva o feedback de cada alternativa')
   })
 })

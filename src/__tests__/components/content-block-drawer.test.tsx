@@ -937,3 +937,95 @@ describe('find in image preset', () => {
     expect(screen.getByRole('checkbox', { name: 'Vale nota' })).toBeChecked()
   })
 })
+
+describe('quiz form', () => {
+  it('builds a question with three options and saves it', async () => {
+    const user = userEvent.setup()
+    const onSave = mount('quiz')
+
+    expect(screen.queryByText(/não foi migrada/)).not.toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: 'Adicionar pergunta' }))
+    await user.type(screen.getByPlaceholderText('O que o aluno precisa responder...'), 'Qual EPI?')
+    for (const letter of ['A', 'B', 'C']) {
+      await user.type(screen.getByPlaceholderText(`Alternativa ${letter}...`), `Texto ${letter}`)
+      await user.type(
+        screen.getByPlaceholderText(`Feedback da alternativa ${letter}...`),
+        `Feedback ${letter}`
+      )
+    }
+    await user.click(screen.getByRole('radio', { name: 'Alternativa B é a correta' }))
+    await user.click(screen.getByRole('button', { name: /salvar/i }))
+
+    expect(errorToast).not.toHaveBeenCalled()
+    const [question] = onSave.mock.lastCall[0].quizData.questions
+    expect(question.question).toBe('Qual EPI?')
+    expect(
+      question.options.map((o: { text: string; isCorrect: boolean }) => [o.text, o.isCorrect])
+    ).toEqual([
+      ['Texto A', false],
+      ['Texto B', true],
+      ['Texto C', false],
+    ])
+  })
+
+  it('adds options up to five and removes them down to three', async () => {
+    const user = userEvent.setup()
+    mount('quiz')
+
+    await user.click(screen.getByRole('button', { name: 'Adicionar pergunta' }))
+    expect(screen.getByRole('button', { name: 'Remover alternativa A' })).toBeDisabled()
+
+    await user.click(screen.getByRole('button', { name: 'Adicionar alternativa' }))
+    await user.click(screen.getByRole('button', { name: 'Adicionar alternativa' }))
+    expect(screen.getByPlaceholderText('Alternativa E...')).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Adicionar alternativa' })).not.toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: 'Remover alternativa A' }))
+    expect(screen.queryByPlaceholderText('Alternativa E...')).not.toBeInTheDocument()
+    expect(screen.getByRole('radio', { name: 'Alternativa A é a correta' })).toBeChecked()
+  })
+
+  it('blocks saving an incomplete question and names it', async () => {
+    const user = userEvent.setup()
+    const onSave = mount('quiz')
+
+    await user.click(screen.getByRole('button', { name: 'Adicionar pergunta' }))
+    await user.click(screen.getByRole('button', { name: /salvar/i }))
+
+    expect(onSave).not.toHaveBeenCalled()
+    expect(errorToast).toHaveBeenCalledWith('Pergunta 1: escreva o enunciado')
+  })
+
+  it('opens a saved quiz with its options', () => {
+    render(
+      <ContentBlockDrawer
+        open
+        onOpenChange={jest.fn()}
+        mode="edit"
+        blockData={{
+          type: 'quiz',
+          quizData: {
+            questions: [
+              {
+                id: 'q-1',
+                question: 'Pergunta salva',
+                options: ['A', 'B', 'C', 'D', 'E'].map((letter, i) => ({
+                  id: `op-${letter}`,
+                  text: `Opção ${letter}`,
+                  isCorrect: i === 3,
+                  feedback: 'ok',
+                })),
+              },
+            ],
+          },
+        }}
+        onSave={jest.fn()}
+        onCancel={jest.fn()}
+      />
+    )
+
+    expect(screen.getByDisplayValue('Pergunta salva')).toBeInTheDocument()
+    expect(screen.getByDisplayValue('Opção E')).toBeInTheDocument()
+    expect(screen.getByRole('radio', { name: 'Alternativa D é a correta' })).toBeChecked()
+  })
+})

@@ -208,7 +208,7 @@ Cada Unidade:
   ]
 }
 
-### 9. quiz — OBRIGATÓRIO: exatamente 5 opções; apenas uma com "isCorrect": true
+### 9. quiz — OBRIGATÓRIO: de 3 a 5 opções por pergunta; apenas uma com "isCorrect": true
 {
   "title": "string",
   "type": "quiz",
@@ -484,7 +484,7 @@ ${sharedStructure}
   - "Conteúdo do Item N:" → items[N].content (em HTML)
 - Bloco QUIZ_INICIO...QUIZ_FIM → type "quiz"
   - "Pergunta:" → quizData.questions[].question
-  - "Opção A/B/C/D/E:" → options[] (identifique a correta pelo contexto)
+  - "Opção A/B/C/D/E:" → options[], só as opções escritas no documento (de 3 a 5; identifique a correta pelo contexto)
   - "Resposta Correta:" → marque o isCorrect correspondente
 - Bloco FLIPCARD_INICIO...FLIPCARD_FIM → type "flipcard" (UM único bloco com todos os cards)
   - "Frente do Card N:" ou "Título do Card N:" → flipcardItems[N-1].frontTitle
