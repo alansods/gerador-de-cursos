@@ -15,6 +15,7 @@ import {
   Menu,
   X,
   Package,
+  LayoutGrid,
 } from 'lucide-react'
 import { ROLE_LABELS, type Action } from '@/lib/permissions'
 import { Button } from './ui/button'
@@ -33,6 +34,7 @@ const navItems: Array<{
 }> = [
   { icon: Home, label: 'Início', href: '/home', active: false },
   { icon: BookOpen, label: 'Cursos', href: '/courses', active: true },
+  { icon: LayoutGrid, label: 'Blocos', href: '/blocks', active: false },
   { icon: Package, label: 'Builds SCORM', href: '/scorm-jobs', active: false },
   {
     icon: Users,
