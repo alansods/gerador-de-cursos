@@ -181,6 +181,50 @@ describe('useScormProgress', () => {
     expect(scorm.suspendData).not.toContain('0-1:3/3!')
   })
 
+  it('ignores results of practice activities and blocks that are not scored', () => {
+    const scorm = createScorm()
+    install(scorm)
+    const course = {
+      ...makeCourse('classic'),
+      units: [
+        unit('u1', [
+          { ...block('quiz', 'fixação'), graded: false },
+          block('quiz'),
+          block('flipcard'),
+        ]),
+      ],
+    } as Course
+    const { result } = renderHook(({ c }) => useScormProgress(c), { initialProps: { c: course } })
+
+    act(() => result.current.recordQuiz('u1', 0, 0, 2))
+    act(() => result.current.recordQuiz('u1', 2, 0, 2))
+    expect(result.current.state.quizzes).toEqual({})
+    expect(scorm.score).toBeNull()
+
+    act(() => result.current.recordQuiz('u1', 1, 1, 2))
+    expect(Object.keys(result.current.state.quizzes)).toEqual(['0-1'])
+    expect(scorm.score).toBe(50)
+  })
+
+  it('scores only blocks that are graded now, even with older saved results', () => {
+    const course = {
+      ...makeCourse('classic'),
+      units: [unit('u1', [{ ...block('quiz', 'fixação'), graded: false }, block('quiz')])],
+    } as Course
+    const hash = hashCourse({ id: course.id, units: course.units })
+    const saved = encodeSuspendData(
+      { visited: [true], quizzes: { '0-0': { correct: 0, total: 4 } } },
+      hash
+    )
+    const scorm = createScorm(saved)
+    install(scorm)
+    const { result } = renderHook(({ c }) => useScormProgress(c), { initialProps: { c: course } })
+
+    act(() => result.current.recordQuiz('u1', 1, 2, 2))
+
+    expect(scorm.score).toBe(100)
+  })
+
   it('resumes steps from suspend_data and does not report completion twice', () => {
     const course = makeCourse('trail')
     const hash = hashCourse({ id: course.id, units: course.units })

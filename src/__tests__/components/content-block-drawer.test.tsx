@@ -4,7 +4,7 @@ import userEvent from '@testing-library/user-event'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { ContentBlockDrawer } from '@/components/ContentBlockDrawer'
 import { blockRegistry } from '@/components/course/blocks'
-import { BLOCK_CATALOG, BLOCK_TYPES, createEmptyBlock } from '@/lib/blocks'
+import { BLOCK_CATALOG, BLOCK_TYPES, GRADABLE_TYPES, createEmptyBlock } from '@/lib/blocks'
 import type { Block } from '@/types/course'
 
 const errorToast = jest.fn()
@@ -849,5 +849,73 @@ describe('interactive video source on save', () => {
         videoUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
       })
     )
+  })
+})
+
+describe('graded option', () => {
+  const renderEdit = (blockData: Partial<Block>, onSave = jest.fn()) => {
+    render(
+      <ContentBlockDrawer
+        open
+        onOpenChange={jest.fn()}
+        mode="edit"
+        blockData={blockData}
+        onSave={onSave}
+        onCancel={jest.fn()}
+      />
+    )
+    return onSave
+  }
+
+  it('shows the checkbox checked by default only on gradable blocks', () => {
+    for (const type of BLOCK_TYPES) {
+      const { unmount } = render(
+        <ContentBlockDrawer
+          open
+          onOpenChange={jest.fn()}
+          mode="add"
+          blockData={{ type }}
+          onSave={jest.fn()}
+          onCancel={jest.fn()}
+        />
+      )
+      const checkbox = screen.queryByRole('checkbox', { name: 'Vale nota' })
+      const expected = GRADABLE_TYPES.includes(type) && type !== 'interactive-image'
+
+      expect({ type, shown: checkbox !== null }).toEqual({ type, shown: expected })
+      if (checkbox) expect(checkbox).toBeChecked()
+      unmount()
+    }
+  })
+
+  it('saves a practice activity when unchecked and clears it when checked again', async () => {
+    const user = userEvent.setup()
+    const fillBlanks: Partial<Block> = {
+      type: 'fill-blanks',
+      content: '',
+      fillBlanksText: 'Use [luvas].',
+    }
+    const onSave = renderEdit(fillBlanks)
+
+    await user.click(screen.getByRole('checkbox', { name: 'Vale nota' }))
+    await user.click(screen.getByRole('button', { name: /salvar/i }))
+    expect(onSave).toHaveBeenLastCalledWith(expect.objectContaining({ graded: false }))
+
+    await user.click(screen.getByRole('checkbox', { name: 'Vale nota' }))
+    await user.click(screen.getByRole('button', { name: /salvar/i }))
+    expect(onSave.mock.lastCall[0].graded).toBeUndefined()
+  })
+
+  it('shows the option on the interactive image only in find mode', async () => {
+    const user = userEvent.setup()
+    renderEdit({
+      type: 'interactive-image',
+      baseImage: 'https://exemplo.com/a.png',
+      hotspots: [{ id: 'h1', x: 10, y: 10, title: 'Casco', content: '' }],
+    })
+
+    expect(screen.queryByRole('checkbox', { name: 'Vale nota' })).not.toBeInTheDocument()
+    await user.click(screen.getByRole('radio', { name: /Encontrar/ }))
+    expect(screen.getByRole('checkbox', { name: 'Vale nota' })).toBeChecked()
   })
 })

@@ -172,6 +172,7 @@ export interface Block {
   alignment?: 'left' | 'center' | 'right' | 'justify'
   // layout
   columns?: 6 | 12
+  graded?: boolean
   // accordion-specific
   items?: AccordionItem[]
   // flipcard-specific

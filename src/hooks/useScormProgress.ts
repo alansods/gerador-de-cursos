@@ -17,7 +17,7 @@ import {
   type ProgressState,
   type ProgressSummary,
 } from '@/lib/scorm-progress'
-import { trailCompletionRule } from '@/lib/trail-progress'
+import { isScoredBlock, scoredQuizKeys, trailCompletionRule } from '@/lib/trail-progress'
 
 interface WrapperScorm {
   getLocation?: () => string
@@ -49,6 +49,7 @@ export function useScormProgress(course: Course) {
     () => (course.layout === 'trail' ? trailCompletionRule({ units }) : { kind: 'units' }),
     [course.layout, units]
   )
+  const scoredKeys = useMemo(() => scoredQuizKeys({ units }), [units])
 
   const [currentUnit, setCurrentUnit] = useState<string | null>(null)
   const [state, setState] = useState<ProgressState>(() => createEmptyState(units.length))
@@ -68,7 +69,7 @@ export function useScormProgress(course: Course) {
       scorm.setSuspendData(encodeSuspendData(next, hash))
 
       const summary = calculateProgress(next, rule)
-      const score = calculateScore(next)
+      const score = calculateScore(next, scoredKeys)
       if (score !== null) scorm.setScore?.(score)
 
       if (summary.completed && !completedRef.current) {
@@ -82,7 +83,7 @@ export function useScormProgress(course: Course) {
       if (timerCommit.current) clearTimeout(timerCommit.current)
       timerCommit.current = setTimeout(() => scorm.save?.(), COMMIT_DELAY)
     },
-    [hash, rule]
+    [hash, rule, scoredKeys]
   )
 
   useEffect(() => {
@@ -167,6 +168,7 @@ export function useScormProgress(course: Course) {
     ) => {
       const unitIndex = units.findIndex((u) => u.id === unitId)
       if (unitIndex < 0 || total <= 0) return
+      if (!isScoredBlock(units[unitIndex].blocks?.[blockIndex])) return
 
       const next = applyQuizResult(
         stateRef.current,

@@ -1,5 +1,5 @@
 import type { Block, Course, Unit } from '@/types/course'
-import { BLOCK_CATALOG } from '@/lib/blocks'
+import { isGradedBlock } from '@/lib/blocks'
 import { quizKey, type CompletionRule, type ProgressState } from '@/lib/scorm-progress'
 
 export const TRAIL_XP = { firstTry: 20, retry: 10, step: 10 } as const
@@ -91,9 +91,16 @@ export function reviewTrailSteps(unit: Unit): TrailStepReview {
   }
 }
 
-export function isScoredBlock(block: Block): boolean {
-  if (block.type === 'interactive-image') return block.hotspotMode === 'find'
-  return BLOCK_CATALOG[block.type]?.category === 'avaliativo'
+export function isScoredBlock(block: Block | undefined): boolean {
+  return block !== undefined && isGradedBlock(block)
+}
+
+export function scoredQuizKeys(course: Pick<Course, 'units'>): Set<string> {
+  return new Set(
+    (course.units ?? []).flatMap((unit, unitIndex) =>
+      unitScoredIndices(unit).map((index) => quizKey(unitIndex, index))
+    )
+  )
 }
 
 export function scoredBlockIndices(unit: Unit, step: TrailStep): number[] {

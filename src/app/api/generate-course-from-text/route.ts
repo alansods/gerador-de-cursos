@@ -576,6 +576,9 @@ ${sharedStructure}
   - "Material N:" → sheetMaterials[N-1].name; "Quantidade do Material N:" → sheetMaterials[N-1].quantity
   - "Imagem do Material N:" → sheetMaterials[N-1].image (só com URL)
   - "Passo N:" → sheetSteps[N-1].text
+- "Avaliativa:" nos blocos QUIZ, VIDEOINTERATIVO, ASSOCIACAO, CATEGORIZACAO, VERDADEIROFALSO, SEQUENCIA, LACUNAS, CENARIO e HOTSPOT com "Modo: encontrar"
+  - "não" ou "nao" → "graded": false (exercício de fixação, fora da nota)
+  - Qualquer outro valor, ou linha ausente → omita o campo "graded"
 - Conteúdo fora de marcadores → use title, subtitulo, paragrafo ou lista conforme adequado
 
 ## Texto para analisar
@@ -616,6 +619,7 @@ ${sharedStructure}
 - Revisão ao final de cada unidade → quiz (1 a 3 perguntas baseadas no conteúdo real)
 - Use ao menos 1 recurso interativo (accordion, tabs, quiz ou flipcard) por unidade
 - NUNCA gere o bloco divider no modo automático
+- NUNCA use o campo "graded" no modo automático: toda atividade gerada vale nota
 - NUNCA gere o bloco interactive-image no modo automático: as coordenadas dos pontos precisam vir do documento
 - NUNCA gere o bloco interactive-video no modo automático: os tempos das perguntas precisam vir do documento, e você não assiste ao vídeo
 

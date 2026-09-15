@@ -124,6 +124,16 @@ describe('calculateScore', () => {
 
     expect(calculateScore(state)).toBe(50)
   })
+
+  it('counts only the given quiz keys', () => {
+    const state: ProgressState = {
+      visited: [true],
+      quizzes: { '0-1': { correct: 3, total: 4 }, '0-2': { correct: 1, total: 4 } },
+    }
+
+    expect(calculateScore(state, new Set(['0-1']))).toBe(75)
+    expect(calculateScore(state, new Set())).toBeNull()
+  })
 })
 
 describe('suspend_data v2', () => {

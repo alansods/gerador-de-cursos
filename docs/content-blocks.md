@@ -39,8 +39,17 @@ Regras que valem para todos:
 Os blocos da aba **Avaliação** registram nota. A imagem interativa também registra, mas só no
 modo **Encontrar**.
 
-- **Nota no LMS** (`cmi.core.score.raw`): soma dos acertos sobre o total de todas as atividades
-  avaliadas, sempre pela **última tentativa**.
+- **Vale nota ou fixação**: esses blocos têm no formulário a caixa **Vale nota**, marcada por
+  padrão. Desmarcada, a atividade vira **exercício de fixação**: o aluno responde e vê se acertou
+  como sempre, mas ela não entra na nota do LMS, não dá XP, não conta para as estrelas e nunca
+  trava uma etapa do Trilha. No editor, o card mostra o selo **Vale nota** ou **Fixação**; no
+  curso, as atividades que valem nota mostram o selo **Vale nota** e as de fixação ficam sem
+  selo. No documento, a linha opcional `Avaliativa: não` (ou `nao`) dentro do marcador cria a
+  atividade como fixação; sem a linha, ela vale nota. Na geração automática, sem marcadores,
+  toda atividade vale nota.
+- **Nota no LMS** (`cmi.core.score.raw`): soma dos acertos sobre o total das atividades que
+  valem nota, sempre pela **última tentativa**. Se o autor muda uma atividade para fixação depois
+  que alunos responderam, ela deixa de contar.
 - **Conclusão no LMS**: no Clássico e no Sidebar, quando o aluno visita todas as unidades. No
   Trilha, quando conclui todas as etapas.
 - **No layout Trilha**, cada bloco **Título** abre uma etapa. A etapa só pode ser concluída depois
@@ -54,7 +63,8 @@ modo **Encontrar**.
 
 - **Estrelas por unidade** usam só a primeira tentativa: 90% ou mais de acertos de primeira dá 3
   estrelas, 60% ou mais dá 2, abaixo disso 1. Unidade sem atividade avaliada ganha 3.
-- Blocos das outras abas não dão nota, não dão XP e nunca travam uma etapa.
+- Blocos das outras abas e atividades de fixação não dão nota, não dão XP e nunca travam uma
+  etapa. O aviso do editor "etapa sem atividade avaliada" também ignora as de fixação.
 
 ---
 
@@ -229,7 +239,8 @@ Imagem com pontos clicáveis. Tem dois modos:
 - **Encontrar**: os pontos ficam escondidos e o aluno procura cada um na imagem (bom para
   "encontre os erros"). No teclado, as setas movem uma mira e Enter marca. Um clique fora de
   qualquer ponto conta como erro. Quando acha todos, registra a nota; é "de primeira" com até 2
-  cliques errados. **Neste modo, o bloco é avaliado.**
+  cliques errados. **Neste modo, o bloco é avaliado** e ganha a caixa **Vale nota** (veja
+  [Nota, conclusão e Trilha](#nota-conclusão-e-trilha)).
 - **Preenche**: a imagem de fundo, o tamanho e pelo menos um ponto com título (a posição é
   arrastada na imagem; o conteúdo é opcional).
 - **Documento**: `HOTSPOT` com `URL:`, `Legenda:`, `Modo:` (`explorar` ou `encontrar`),
@@ -240,7 +251,8 @@ Imagem com pontos clicáveis. Tem dois modos:
 ## Avaliação
 
 Todos registram nota por tentativa. O aluno pode refazer; a nota do LMS fica com a última
-tentativa e as estrelas do Trilha com a primeira.
+tentativa e as estrelas do Trilha com a primeira. Cada um pode ser marcado como exercício de
+fixação, desmarcando **Vale nota**, e aceita `Avaliativa: não` no marcador.
 
 ### Quiz
 

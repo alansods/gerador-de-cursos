@@ -854,6 +854,30 @@ export function createEmptyBlock(type: BlockType): DraftBlock {
 
 export const BLOCK_TYPES = Object.keys(BLOCK_CATALOG) as BlockType[]
 
+export const GRADABLE_TYPES: readonly BlockType[] = [
+  'quiz',
+  'interactive-video',
+  'matching',
+  'categorization',
+  'true-false',
+  'sequence',
+  'fill-blanks',
+  'scenario',
+  'interactive-image',
+]
+
+export function isGradableBlock(block: Pick<Partial<Block>, 'type' | 'hotspotMode'>): boolean {
+  if (!block.type || !GRADABLE_TYPES.includes(block.type)) return false
+  if (block.type === 'interactive-image') return block.hotspotMode === 'find'
+  return true
+}
+
+export function isGradedBlock(
+  block: Pick<Partial<Block>, 'type' | 'hotspotMode' | 'graded'>
+): boolean {
+  return isGradableBlock(block) && block.graded !== false
+}
+
 export const BLOCKS_WITH_MARKER = BLOCK_TYPES.map((type) => BLOCK_CATALOG[type]).filter(
   (meta): meta is BlockMeta & { marker: string } => meta.marker !== null
 )
@@ -1105,6 +1129,8 @@ function repairBlock(block: Block): Block {
       .filter((question): question is QuizQuestion => question !== null)
     repaired.quizData = { questions }
   }
+
+  if (repaired.graded !== false || !isGradableBlock(repaired)) delete repaired.graded
 
   return repaired
 }

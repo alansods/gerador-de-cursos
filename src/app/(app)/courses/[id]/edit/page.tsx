@@ -20,6 +20,7 @@ import { CollabAvatars } from '@/components/collaboration/CollabAvatars'
 import { CollabCursors } from '@/components/collaboration/CollabCursors'
 import { useCollabEvents } from '@/hooks/useCollabEvents'
 import { EditableCard } from '@/components/EditableCard'
+import { ActivityGradingBadge } from '@/components/course/ActivityGradingBadge'
 import { blockRegistry, larguraMaximaImagem } from '@/components/course/blocks'
 import { TooltipButton } from '@/components/TooltipButton'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
@@ -1491,6 +1492,7 @@ function CourseEditor() {
                                                       }
                                                     >
                                                       <div className="flex-1 min-w-0 mt-1">
+                                                        <ActivityGradingBadge block={item} />
                                                         {item.type === 'heading' ? (
                                                           <h3 className="font-bold text-lg text-gray-900 dark:text-gray-100">
                                                             {item.content}

@@ -5,6 +5,9 @@ import {
   cardsFlipcard,
   createEmptyBlock,
   extractBlockMedia,
+  GRADABLE_TYPES,
+  isGradableBlock,
+  isGradedBlock,
   rewriteBlockMedia,
   mergeAdjacentFlipcards,
   normalizeCourse,
@@ -1384,5 +1387,51 @@ describe('rewriteBlockMedia', () => {
       (type) => BLOCK_CATALOG[type].extractMedia && !BLOCK_CATALOG[type].rewriteMedia
     )
     expect(withoutRewrite).toEqual([])
+  })
+})
+
+describe('graded activities', () => {
+  it('offers the option on every block where the learner answers', () => {
+    expect([...GRADABLE_TYPES].sort()).toEqual(
+      BLOCK_TYPES.filter((type) => BLOCK_CATALOG[type].category === 'avaliativo')
+        .concat('interactive-image')
+        .sort()
+    )
+    expect(isGradableBlock({ type: 'interactive-image', hotspotMode: 'find' })).toBe(true)
+    expect(isGradableBlock({ type: 'interactive-image', hotspotMode: 'explore' })).toBe(false)
+    expect(isGradableBlock({ type: 'flipcard' })).toBe(false)
+  })
+
+  it('treats a block without the field as graded', () => {
+    expect(isGradedBlock({ type: 'quiz' })).toBe(true)
+    expect(isGradedBlock({ type: 'quiz', graded: false })).toBe(false)
+    expect(isGradedBlock({ type: 'paragraph' })).toBe(false)
+  })
+
+  it('keeps graded false only on gradable blocks coming from the AI', () => {
+    const { course } = normalizeCourse(
+      courseWith([
+        { type: 'paragraph', content: 'Texto', graded: false },
+        {
+          type: 'fill-blanks',
+          content: '',
+          fillBlanksText: 'Use [luvas].',
+          graded: false,
+        },
+        { type: 'fill-blanks', content: '', fillBlanksText: 'Use [botas].', graded: true },
+        {
+          type: 'fill-blanks',
+          content: '',
+          fillBlanksText: 'Use [óculos].',
+          graded: 'não' as never,
+        },
+      ])
+    )
+    const [paragraph, practice, graded, invalid] = course.units[0].blocks
+
+    expect(paragraph).not.toHaveProperty('graded')
+    expect(practice.graded).toBe(false)
+    expect(graded).not.toHaveProperty('graded')
+    expect(invalid).not.toHaveProperty('graded')
   })
 })

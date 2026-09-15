@@ -40,7 +40,13 @@ import {
   SequenceItem,
   TrueFalseItem,
 } from '@/types/course'
-import { BLOCK_CATALOG, cardsFlipcard, createEmptyBlock, videoSource } from '@/lib/blocks'
+import {
+  BLOCK_CATALOG,
+  cardsFlipcard,
+  createEmptyBlock,
+  isGradableBlock,
+  videoSource,
+} from '@/lib/blocks'
 import { MEDIA_POLICY, type MediaCategory } from '@/lib/media'
 import { uploadFile } from '@/lib/client-upload'
 import { extractYouTubeId } from '@/lib/youtube'
@@ -2303,6 +2309,25 @@ export function ContentBlockDrawer({
                 Em meia largura o bloco divide a linha com o bloco seguinte.
               </p>
             </FormField>
+          )}
+          {selectedType && isGradableBlock({ ...formData, type: selectedType }) && (
+            <div className="space-y-1">
+              <label className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+                <input
+                  type="checkbox"
+                  checked={formData.graded !== false}
+                  onChange={(e) =>
+                    setFormData({ ...formData, graded: e.target.checked ? undefined : false })
+                  }
+                  className="h-4 w-4"
+                />
+                Vale nota
+              </label>
+              <p className="text-xs text-gray-500 dark:text-gray-400">
+                Desmarque para exercício de fixação: o aluno vê se acertou, mas não entra na nota
+                nem no XP.
+              </p>
+            </div>
           )}
         </div>
 

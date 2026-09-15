@@ -189,8 +189,13 @@ export function calculateProgress(
   return { visited, total, percentage, completed: total > 0 && visited === total }
 }
 
-export function calculateScore(state: ProgressState): number | null {
-  const results = Object.values(state.quizzes)
+export function calculateScore(
+  state: ProgressState,
+  countedKeys?: ReadonlySet<string>
+): number | null {
+  const results = Object.entries(state.quizzes)
+    .filter(([key]) => !countedKeys || countedKeys.has(key))
+    .map(([, result]) => result)
   if (results.length === 0) return null
 
   const correctCount = results.reduce((s, r) => s + r.correct, 0)
