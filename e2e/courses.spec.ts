@@ -2,7 +2,7 @@
  * Testes E2E - Página de Cursos
  *
  * A lista não passa mais por `GET /api/cursos`: quem busca é a Server Action
- * `buscarCursos` (cursor pagination + infinite scroll), consumida pelo
+ * `fetchCourses` (paginação de tabela), consumida pelo
  * TanStack Query. Por isso a contagem de requisições olha os POSTs com o
  * header `next-action` em vez de URLs de API.
  *
@@ -15,7 +15,7 @@ import { test, expect, type Page } from '@playwright/test'
 const EMAIL = process.env.E2E_EMAIL ?? 'alan.conteudista@senai.br'
 const PASSWORD = process.env.E2E_SENHA ?? '123456'
 
-const COURSES_PER_PAGE = 6
+const COURSES_PER_PAGE = 20
 const SEARCH_DEBOUNCE = 500
 
 async function logIn(page: Page) {
@@ -176,24 +176,54 @@ test.describe('E2E - Courses page', () => {
     await expect(lines(page).getByText(title)).toBeVisible()
   })
 
-  test('loads the next page through the infinite scroll', async ({ page }) => {
+  test('opens the status filter showing every status', async ({ page }) => {
+    await page.goto('/courses')
+    await expect(lines(page).first()).toBeVisible()
+
+    await expect(page.getByLabel('Status')).toHaveText('Todos os status')
+  })
+
+  test('moves to the next page through the table pagination', async ({ page }) => {
     // Arrange - garantir mais cursos do que cabe numa página
     await page.goto('/courses')
     await expect(lines(page).first()).toBeVisible()
 
     const firstPage = await lines(page).count()
+    const firstTitle = await lines(page).first().textContent()
     test.skip(
       firstPage < COURSES_PER_PAGE,
-      `o banco tem só ${firstPage} curso(s): sem segunda página para carregar`
+      `o banco tem só ${firstPage} curso(s): sem segunda página para abrir`
     )
 
     const actions = countActions(page)
 
-    // Act - o gatilho carrega ao entrar em viewport
-    await lines(page).last().scrollIntoViewIfNeeded()
+    // Act
+    await page.getByRole('button', { name: 'Próxima página' }).click()
 
-    // Assert - mais linhas na tela, sem recarregar a primeira página
-    await expect(lines(page)).not.toHaveCount(firstPage, { timeout: 15000 })
+    // Assert - outra fatia de cursos, com uma única busca
+    await expect(lines(page).first()).not.toHaveText(firstTitle ?? '', { timeout: 15000 })
+    await expect(page.getByRole('button', { name: 'Página anterior' })).toBeEnabled()
+    await expect(page).toHaveURL(/\/courses\?page=2$/)
     expect(actions.count).toBe(1)
+  })
+
+  test('keeps the page size and filters after a reload', async ({ page }) => {
+    // Arrange
+    await page.goto('/courses')
+    await expect(lines(page).first()).toBeVisible()
+
+    // Act
+    await page.getByRole('combobox', { name: 'Cursos por página' }).click()
+    await page.getByRole('option', { name: '50' }).click()
+    await page.getByLabel('Categoria').click()
+    await page.getByRole('option', { name: 'Tecnologia' }).click()
+    await expect(page).toHaveURL(/perPage=50&category=Tecnologia/)
+
+    await page.reload()
+
+    // Assert
+    await expect(page.getByLabel('Categoria')).toHaveText('Tecnologia')
+    await expect(page.getByRole('combobox', { name: 'Cursos por página' })).toHaveText('50')
+    await expect(page.getByRole('button', { name: /Limpar Filtros/i })).toBeVisible()
   })
 })

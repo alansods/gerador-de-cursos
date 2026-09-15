@@ -19,7 +19,7 @@ const mockFetchCourses = fetchCourses as jest.MockedFunction<typeof fetchCourses
 const mockFetch = jest.fn()
 global.fetch = mockFetch
 
-const FILTERS = { limit: 6, search: '' }
+const FILTERS = { page: 1, limit: 20, search: '' }
 
 function createWrapper() {
   const queryClient = new QueryClient({
@@ -36,46 +36,34 @@ describe('useCoursesQuery', () => {
     jest.clearAllMocks()
     mockFetchCourses.mockResolvedValue({
       courses: [],
-      nextCursor: null,
-      hasMore: false,
       total: 0,
+      page: 1,
+      totalPages: 0,
     } as never)
     mockFetch.mockResolvedValue({ ok: true, json: async () => ({ success: true }) })
   })
 
-  it('chains the next page cursor and concatenates the rows', async () => {
-    const page1 = {
-      courses: [{ id: 'a', title: 'Curso A' }],
-      nextCursor: 'a',
-      hasMore: true,
-      total: 2,
-    }
-    const page2 = {
-      courses: [{ id: 'b', title: 'Curso B' }],
-      nextCursor: null,
-      hasMore: false,
-      total: 2,
-    }
+  it('fetches each page on its own and replaces the rows', async () => {
+    const page1 = { courses: [{ id: 'a', title: 'Curso A' }], total: 11, page: 1, totalPages: 2 }
+    const page2 = { courses: [{ id: 'b', title: 'Curso B' }], total: 11, page: 2, totalPages: 2 }
     mockFetchCourses.mockResolvedValueOnce(page1 as never).mockResolvedValueOnce(page2 as never)
 
-    const { result } = renderHook(() => useCoursesQuery(FILTERS), { wrapper: createWrapper() })
+    const { result, rerender } = renderHook(
+      ({ page }: { page: number }) => useCoursesQuery({ ...FILTERS, page }),
+      { wrapper: createWrapper(), initialProps: { page: 1 } }
+    )
 
     await waitFor(() => expect(result.current.isLoading).toBe(false))
-    expect(mockFetchCourses).toHaveBeenNthCalledWith(
-      1,
-      expect.objectContaining({ cursor: undefined })
-    )
-    expect(result.current.courses).toHaveLength(1)
-    expect(result.current.hasMore).toBe(true)
+    expect(mockFetchCourses).toHaveBeenNthCalledWith(1, expect.objectContaining({ page: 1 }))
+    expect(result.current.courses.map((c) => c.id)).toEqual(['a'])
+    expect(result.current.pagination).toEqual({ page: 1, total: 11, totalPages: 2 })
 
-    await act(async () => {
-      await result.current.loadMore()
-    })
+    rerender({ page: 2 })
 
-    // the cursor of the 2nd call comes from the nextCursor of the 1st page
-    expect(mockFetchCourses).toHaveBeenNthCalledWith(2, expect.objectContaining({ cursor: 'a' }))
-    await waitFor(() => expect(result.current.courses.map((c) => c.id)).toEqual(['a', 'b']))
-    expect(result.current.hasMore).toBe(false)
+    expect(result.current.courses.map((c) => c.id)).toEqual(['a'])
+    await waitFor(() => expect(result.current.courses.map((c) => c.id)).toEqual(['b']))
+    expect(mockFetchCourses).toHaveBeenNthCalledWith(2, expect.objectContaining({ page: 2 }))
+    expect(result.current.pagination.page).toBe(2)
   })
 
   it('invalidates the cached list when a course is deleted', async () => {
