@@ -14,19 +14,21 @@ blocos novos estão em
 O modal separa os blocos em quatro abas. Todos funcionam nos três layouts (Clássico, Sidebar e
 Trilha) e dentro do pacote SCORM, inclusive offline.
 
-| Aba               | Blocos                                                                                                                                       |
-| ----------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
-| Texto e estrutura | Título, Subtítulo, Parágrafo, Lista, Objetivos, Caixa de destaque, Separador, Ficha técnica                                                  |
-| Mídia             | Imagem, Vídeo, Carrossel, Áudio, PDF                                                                                                         |
-| Interativos       | Accordion, Flipcard, Abas, Linha do tempo, Imagem interativa                                                                                 |
-| Atividades        | Quiz, Verdadeiro ou falso, Completar lacunas, Associação, Categorização, Sequência, Cenário de decisão, Encontre na imagem, Vídeo interativo |
+| Aba               | Blocos                                                                                                                                                      |
+| ----------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Texto e estrutura | Título, Subtítulo, Parágrafo, Lista, Objetivos, Caixa de destaque, Separador, Ficha técnica                                                                 |
+| Mídia             | Imagem, Vídeo, Carrossel, Áudio, PDF                                                                                                                        |
+| Interativos       | Accordion, Flipcard, Abas, Linha do tempo, Imagem interativa                                                                                                |
+| Atividades        | Quiz, Verdadeiro ou falso, Completar lacunas, Caça-palavras, Associação, Categorização, Sequência, Cenário de decisão, Encontre na imagem, Vídeo interativo |
 
 Regras que valem para todos:
 
 - **Campos obrigatórios** têm `*` no formulário. O botão Salvar mostra o que falta (por exemplo,
   "Adicione pelo menos 2 opções").
-- **Toque e teclado**: nenhuma atividade exige arrastar. Onde há arrastar (Associação e
-  Categorização), também dá para tocar na opção e depois no destino.
+- **Toque e teclado**: onde há arrastar na Associação e na Categorização, também dá para
+  tocar na opção e depois no destino. O **Caça-palavras** é a exceção: no toque, a palavra
+  se marca arrastando o dedo da primeira à última letra; no teclado, as setas movem o cursor
+  e Enter marca o início e o fim.
 - **Imagens do acervo**: todo campo de imagem tem o botão **Escolher do acervo**, ao lado do
   upload. Veja [Acervo de ilustrações](#acervo-de-ilustrações).
 - **Upload**: o arquivo vai direto para o armazenamento, com o tamanho recomendado indicado

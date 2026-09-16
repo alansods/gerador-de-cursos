@@ -26,6 +26,7 @@ import { SequenceBlock } from './SequenceBlock'
 import { FillBlanksBlock } from './FillBlanksBlock'
 import { ScenarioBlock } from './ScenarioBlock'
 import { TechnicalSheetBlock } from './TechnicalSheetBlock'
+import { WordSearchBlock } from './WordSearchBlock'
 
 export interface BlockProps {
   item: Block
@@ -59,4 +60,5 @@ export const blockRegistry: Record<Block['type'], ComponentType<BlockProps>> = {
   'fill-blanks': FillBlanksBlock,
   scenario: ScenarioBlock,
   'technical-sheet': TechnicalSheetBlock,
+  'word-search': WordSearchBlock,
 }

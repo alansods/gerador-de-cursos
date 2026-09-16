@@ -24,6 +24,8 @@ import {
   LayoutGrid,
   ArrowUp,
   ArrowDown,
+  AlertCircle,
+  Shuffle,
 } from 'lucide-react'
 import Image from 'next/image'
 import {
@@ -38,7 +40,18 @@ import {
   SheetStep,
   SequenceItem,
   TrueFalseItem,
+  WordSearchItem,
 } from '@/types/course'
+import {
+  buildWordSearch,
+  MAX_GRID_SIZE,
+  MAX_WORDS,
+  MIN_WORD_LENGTH,
+  MIN_WORDS,
+  normalizeWord,
+  placementCells,
+  randomSeed,
+} from '@/lib/word-search'
 import {
   BLOCK_CATALOG,
   blockIdentity,
@@ -228,6 +241,7 @@ interface FieldConfig<T> {
   type?: 'text' | 'multiline' | 'select' | 'image'
   options?: { value: string; label: string }[]
   visibleIf?: (item: T) => boolean
+  hint?: (item: T) => { text: string; error?: boolean }
 }
 
 function ItemField<T>({ field, children }: { field: FieldConfig<T>; children: React.ReactNode }) {
@@ -382,8 +396,16 @@ function ItemEditor<T extends { id: string }>({
                           value={String(item[field.key] ?? '')}
                           onChange={(e) => update(item.id, field.key, e.target.value)}
                           placeholder={field.placeholder}
+                          aria-invalid={field.hint?.(item).error || undefined}
                           className="text-sm"
                         />
+                      )}
+                      {field.hint && (
+                        <p
+                          className={`text-xs ${field.hint(item).error ? 'font-medium text-destructive' : 'text-muted-foreground'}`}
+                        >
+                          {field.hint(item).text}
+                        </p>
                       )}
                     </ItemField>
                   ))}
@@ -540,6 +562,156 @@ function ImageSizeField({
         </SelectContent>
       </Select>
     </FormField>
+  )
+}
+
+function wordHint(item: WordSearchItem): { text: string; error?: boolean } {
+  const normalized = normalizeWord(item.word)
+  if (normalized.length === 0) return { text: 'Acentos e espaços são ignorados na grade.' }
+  if (normalized.length > MAX_GRID_SIZE)
+    return {
+      text: `${normalized} · ${normalized.length} letras. O máximo é ${MAX_GRID_SIZE}.`,
+      error: true,
+    }
+  if (normalized.length < MIN_WORD_LENGTH)
+    return { text: `Mínimo de ${MIN_WORD_LENGTH} letras.`, error: true }
+  return { text: `${normalized} · ${normalized.length} letras` }
+}
+
+function WordSearchFields({
+  items,
+  seed,
+  onChange,
+}: {
+  items: WordSearchItem[]
+  seed: number
+  onChange: (change: Pick<Block, 'wordSearchItems' | 'wordSearchSeed'>) => void
+}) {
+  const layout = buildWordSearch(items, seed)
+  const colorIndex = new Map(items.map((item, index) => [item.id, index % 6]))
+  const owner = new Map<string, number[]>()
+  for (const placement of layout.placements) {
+    for (const cell of placementCells(placement)) {
+      const key = `${cell.row},${cell.col}`
+      owner.set(key, [...(owner.get(key) ?? []), colorIndex.get(placement.id) ?? 0])
+    }
+  }
+  const unplacedWords = layout.unplaced.map((id) =>
+    normalizeWord(items.find((item) => item.id === id)?.word)
+  )
+
+  return (
+    <div className="space-y-5">
+      <p className="text-sm text-muted-foreground">
+        O aluno vê só as dicas. Use de {MIN_WORDS} a {MAX_WORDS} palavras, cada uma com{' '}
+        {MIN_WORD_LENGTH} a {MAX_GRID_SIZE} letras.
+      </p>
+
+      <ItemEditor<WordSearchItem>
+        label="Palavras e dicas"
+        itemLabel="Palavra"
+        emptyText="Nenhuma palavra adicionada ainda."
+        items={items}
+        createItem={() => ({ id: `ws-${Date.now()}`, word: '', clue: '' })}
+        onChange={(wordSearchItems) => onChange({ wordSearchItems, wordSearchSeed: seed })}
+        fields={[
+          {
+            key: 'word',
+            label: 'Palavra',
+            required: true,
+            placeholder: 'Ex.: Capacete',
+            hint: wordHint,
+          },
+          {
+            key: 'clue',
+            label: 'Dica',
+            required: true,
+            type: 'multiline',
+            placeholder: 'Ex.: Protege a cabeça contra impactos',
+          },
+        ]}
+      />
+
+      <section
+        aria-labelledby="word-search-preview"
+        data-word-search
+        className="space-y-3 rounded-xl border bg-muted/40 p-4"
+      >
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <h3 id="word-search-preview" className="text-sm font-semibold text-foreground">
+              Prévia da grade
+            </h3>
+            <p className="text-xs text-muted-foreground">O aluno recebe esta grade sem as cores.</p>
+          </div>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => onChange({ wordSearchItems: items, wordSearchSeed: randomSeed() })}
+          >
+            <Shuffle className="mr-2 h-4 w-4" />
+            Embaralhar
+          </Button>
+        </div>
+
+        {layout.unplaced.length > 0 && (
+          <div
+            role="alert"
+            className="flex items-start gap-2 rounded-lg border border-destructive/40 bg-destructive/10 px-3 py-2.5 text-sm text-destructive"
+          >
+            <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
+            <p>
+              <span className="font-semibold">
+                Algumas palavras não couberam: {unplacedWords.join(', ')}.
+              </span>{' '}
+              Clique em Embaralhar ou encurte-as.
+            </p>
+          </div>
+        )}
+
+        {items.length > 0 && (
+          <div
+            aria-hidden="true"
+            className="mx-auto grid w-full max-w-[320px] gap-0.5 rounded-lg border bg-background p-1.5"
+            style={{ gridTemplateColumns: `repeat(${layout.size}, minmax(0, 1fr))` }}
+          >
+            {layout.grid.flatMap((row, rowIndex) =>
+              row.map((letter, colIndex) => {
+                const colors = owner.get(`${rowIndex},${colIndex}`) ?? []
+                const style: React.CSSProperties =
+                  colors.length > 1
+                    ? {
+                        background: `linear-gradient(135deg, var(--ws-${colors[0]}-bg) 0 50%, var(--ws-${colors[1]}-bg) 50% 100%)`,
+                        fontWeight: 700,
+                      }
+                    : colors.length === 1
+                      ? {
+                          background: `var(--ws-${colors[0]}-bg)`,
+                          color: `var(--ws-${colors[0]}-fg)`,
+                          fontWeight: 700,
+                        }
+                      : {}
+                return (
+                  <div
+                    key={`${rowIndex}-${colIndex}`}
+                    className="flex aspect-square items-center justify-center rounded-sm bg-muted font-mono text-xs text-muted-foreground"
+                    style={style}
+                  >
+                    {letter}
+                  </div>
+                )
+              })
+            )}
+          </div>
+        )}
+
+        <p className="text-center text-xs text-muted-foreground">
+          {layout.placements.length} de {items.length} palavras na grade · {layout.size} ×{' '}
+          {layout.size}
+        </p>
+      </section>
+    </div>
   )
 }
 
@@ -2055,6 +2227,15 @@ export function ContentBlockDrawer({
           <FillBlanksFields
             text={formData.fillBlanksText || ''}
             distractors={formData.fillBlanksDistractors || []}
+            onChange={(change) => setFormData({ ...formData, ...change })}
+          />
+        )
+
+      case 'word-search':
+        return (
+          <WordSearchFields
+            items={formData.wordSearchItems || []}
+            seed={formData.wordSearchSeed ?? 1}
             onChange={(change) => setFormData({ ...formData, ...change })}
           />
         )

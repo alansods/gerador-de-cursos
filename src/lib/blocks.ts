@@ -11,6 +11,7 @@ import {
   Image as ImageIcon,
   FileText,
   GalleryHorizontal,
+  Grid3x3,
   List,
   ListOrdered,
   Milestone,
@@ -43,11 +44,21 @@ import type {
   SequenceItem,
   TrueFalseItem,
   Unit,
+  WordSearchItem,
 } from '@/types/course'
 import { timeToSeconds } from '@/lib/video-time'
 import { cleanDistractors, fillBlanksAnswers } from '@/lib/fill-blanks'
 import { isValidYouTubeUrl } from '@/lib/youtube'
 import { isLibraryIllustrationPath } from '@/lib/illustration-paths'
+import {
+  buildWordSearch,
+  MAX_GRID_SIZE,
+  MAX_WORDS,
+  MIN_WORD_LENGTH,
+  MIN_WORDS,
+  normalizeWord,
+  randomSeed,
+} from '@/lib/word-search'
 
 export type BlockType = Block['type']
 
@@ -750,6 +761,33 @@ export const BLOCK_CATALOG: Record<BlockType, BlockMeta> = {
       return null
     },
   },
+  'word-search': {
+    type: 'word-search',
+    label: 'Caça-palavras',
+    pluralLabel: 'caça-palavras',
+    marker: 'CACAPALAVRAS',
+    aiGeneratable: true,
+    requiresDocumentMedia: false,
+    validate: (b) => validWordSearchItems(b.wordSearchItems).length >= MIN_WORDS,
+    icon: Grid3x3,
+    description: 'Achar palavras escondidas numa grade a partir de dicas',
+    category: 'avaliativo',
+    defaults: () => ({ wordSearchItems: [], wordSearchSeed: randomSeed() }),
+    validateForm: (b) => {
+      const items = b.wordSearchItems ?? []
+      if (items.length < MIN_WORDS) return `Adicione pelo menos ${MIN_WORDS} palavras`
+      if (items.length > MAX_WORDS) return `Use no máximo ${MAX_WORDS} palavras`
+      if (items.some((item) => !hasText(item.clue))) return 'Todas as palavras precisam de dica'
+      const normalized = items.map((item) => normalizeWord(item.word))
+      if (normalized.some((word) => word.length < MIN_WORD_LENGTH || word.length > MAX_GRID_SIZE))
+        return `Cada palavra precisa ter de ${MIN_WORD_LENGTH} a ${MAX_GRID_SIZE} letras`
+      if (new Set(normalized).size !== normalized.length) return 'Há palavras repetidas'
+      const { unplaced } = buildWordSearch(items, b.wordSearchSeed ?? 1)
+      if (unplaced.length > 0)
+        return 'Algumas palavras não couberam: clique em Embaralhar ou encurte-as'
+      return null
+    },
+  },
   scenario: {
     type: 'scenario',
     label: 'Cenário de decisão',
@@ -876,6 +914,7 @@ const ACTIVITY_ORDER = [
   'quiz',
   'true-false',
   'fill-blanks',
+  'word-search',
   'matching',
   'categorization',
   'sequence',
@@ -931,6 +970,7 @@ export const GRADABLE_TYPES: readonly BlockType[] = [
   'true-false',
   'sequence',
   'fill-blanks',
+  'word-search',
   'scenario',
   'interactive-image',
 ]
@@ -1161,6 +1201,13 @@ function repairBlock(block: Block): Block {
     )
   }
 
+  if (repaired.type === 'word-search') {
+    repaired.wordSearchItems = validWordSearchItems(repaired.wordSearchItems).slice(0, MAX_WORDS)
+    repaired.wordSearchSeed = Number.isInteger(repaired.wordSearchSeed)
+      ? repaired.wordSearchSeed
+      : 1
+  }
+
   if (repaired.type === 'technical-sheet') {
     repaired.sheetSummary = repaired.sheetSummary?.trim() ?? ''
     repaired.sheetMaterials = validSheetMaterials(repaired.sheetMaterials)
@@ -1298,6 +1345,8 @@ function invalidReason(type: BlockType): string {
       return `com menos de ${MIN_SEQUENCE_ITEMS} passos com texto`
     case 'fill-blanks':
       return 'sem lacunas marcadas entre colchetes'
+    case 'word-search':
+      return `com menos de ${MIN_WORDS} palavras com dica`
     case 'technical-sheet':
       return 'sem materiais com nome'
     case 'scenario':
@@ -1398,6 +1447,23 @@ function validSequenceItems(items?: SequenceItem[]): SequenceItem[] {
       id: hasText(item.id) ? item.id : `seq-${index + 1}`,
       text: item.text.trim(),
     }))
+}
+
+function validWordSearchItems(items?: WordSearchItem[]): WordSearchItem[] {
+  const seen = new Set<string>()
+  return (items ?? []).flatMap((item, index) => {
+    const normalized = normalizeWord(item?.word)
+    if (!hasText(item?.clue) || normalized.length < MIN_WORD_LENGTH) return []
+    if (normalized.length > MAX_GRID_SIZE || seen.has(normalized)) return []
+    seen.add(normalized)
+    return [
+      {
+        id: hasText(item.id) ? item.id : `ws-${index + 1}`,
+        word: item.word.trim(),
+        clue: item.clue.trim(),
+      },
+    ]
+  })
 }
 
 function trueFalseAnswer(value: unknown): TrueFalseItem['answer'] | null {

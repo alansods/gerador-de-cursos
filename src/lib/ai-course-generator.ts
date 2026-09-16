@@ -394,6 +394,18 @@ Cada Unidade:
 }
 - Os distratores são palavras erradas, mas plausíveis, que aparecem junto das respostas
 
+### 23b. word-search — caça-palavras: o aluno lê a dica e acha a palavra escondida na grade
+{
+  "title": "string",
+  "type": "word-search",
+  "content": "",
+  "wordSearchItems": [
+    { "id": "ws-1", "word": "Capacete", "clue": "Protege a cabeça contra impactos" }
+  ]
+}
+- De 3 a 10 palavras; cada palavra com 3 a 12 letras, sem contar acentos, espaços e hífens
+- A dica é uma definição curta que identifica uma única palavra, sem conter a própria palavra
+
 ### 24. scenario — uma situação com 2 a 4 escolhas e a consequência de cada uma
 {
   "title": "string",
@@ -540,6 +552,10 @@ ${sharedStructure}
 - Bloco LACUNAS_INICIO...LACUNAS_FIM → type "fill-blanks"
   - "Texto:" → fillBlanksText, mantendo os colchetes exatamente como estão
   - "Distratores:" → fillBlanksDistractors (separe por vírgula; use [] se ausente)
+- Bloco CACAPALAVRAS_INICIO...CACAPALAVRAS_FIM → type "word-search" (UM único bloco com todas as palavras)
+  - "Palavra N:" → wordSearchItems[N-1].word, como está escrita
+  - "Dica N:" → wordSearchItems[N-1].clue
+  - Descarte a palavra sem dica; são necessárias no mínimo 3 palavras
 - Bloco CENARIO_INICIO...CENARIO_FIM → type "scenario"
   - "Personagem:" → scenarioCharacter; "Imagem do Personagem:" → scenarioAvatar (só com URL)
   - "Situação:" → scenarioSituation
@@ -550,7 +566,7 @@ ${sharedStructure}
   - "Material N:" → sheetMaterials[N-1].name; "Quantidade do Material N:" → sheetMaterials[N-1].quantity
   - "Imagem do Material N:" → sheetMaterials[N-1].image (só com URL)
   - "Passo N:" → sheetSteps[N-1].text
-- "Avaliativa:" nos blocos QUIZ, VIDEOINTERATIVO, ASSOCIACAO, CATEGORIZACAO, VERDADEIROFALSO, SEQUENCIA, LACUNAS, CENARIO e HOTSPOT com "Modo: encontrar"
+- "Avaliativa:" nos blocos QUIZ, VIDEOINTERATIVO, ASSOCIACAO, CATEGORIZACAO, VERDADEIROFALSO, SEQUENCIA, LACUNAS, CACAPALAVRAS, CENARIO e HOTSPOT com "Modo: encontrar"
   - "não" ou "nao" → "graded": false (exercício de fixação, fora da nota)
   - Qualquer outro valor, ou linha ausente → omita o campo "graded"
 - Conteúdo fora de marcadores → use title, subtitulo, paragrafo ou lista conforme adequado
@@ -575,6 +591,7 @@ ${sharedStructure}
 - Materiais ou ingredientes com quantidades seguidos dos passos que os usam (receita, montagem, preparo) → UM bloco technical-sheet no lugar das duas listas, com os materiais, quantidades e passos do texto
 - Caso, exemplo de situação real ou dilema descrito no texto → UM bloco scenario com a situação do texto, 3 opções e a consequência de cada uma; nunca invente personagem nem imagem que o texto não traga
 - Definição ou regra com termos-chave (valores, nomes técnicos, prazos) → UM bloco fill-blanks com 1 a 3 frases copiadas do texto, de 2 a 5 lacunas no total e 2 distratores plausíveis
+- Unidade com 5 a 8 termos-chave de uma palavra só (equipamentos, peças, conceitos), cada um definido no texto → UM bloco word-search com esses termos e dicas tiradas das definições do texto; no máximo um por unidade
 - Procedimento em que a ordem é o que se aprende (montagem, preparo, sequência de segurança), com 3 a 8 passos → depois da lista, UM bloco sequence com os mesmos passos resumidos, na ordem correta
 - Requisitos, critérios verificáveis → list (listType: "check")
 - 3 ou mais tópicos relacionados com subconteúdo → accordion

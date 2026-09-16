@@ -616,6 +616,85 @@ describe('ContentBlockDrawer', () => {
     expect(screen.getAllByDisplayValue('10, álcool')).toHaveLength(1)
   })
 
+  it('creates a word search, previews the grid, reshuffles it and reopens it', async () => {
+    const user = userEvent.setup()
+    const onSave = mount('word-search')
+
+    for (let i = 0; i < 3; i++) await user.click(screen.getByRole('button', { name: /adicionar/i }))
+    const words = screen.getAllByPlaceholderText('Ex.: Capacete')
+    const clues = screen.getAllByPlaceholderText(/Protege a cabeça/)
+    for (const [index, [word, clue]] of [
+      ['Capacete', 'Protege a cabeça'],
+      ['Luva', 'Protege as mãos'],
+      ['Óculos', 'Protege os olhos'],
+    ].entries()) {
+      await user.type(words[index], word)
+      await user.type(clues[index], clue)
+    }
+
+    expect(screen.getByText('OCULOS · 6 letras')).toBeInTheDocument()
+    expect(screen.getByText('3 de 3 palavras na grade · 10 × 10')).toBeInTheDocument()
+
+    const random = jest.spyOn(Math, 'random').mockReturnValue(0.5)
+    await user.click(screen.getByRole('button', { name: 'Embaralhar' }))
+    random.mockRestore()
+    await user.click(screen.getByRole('button', { name: /salvar/i }))
+
+    const saved = onSave.mock.calls[0][0]
+    expect(saved.wordSearchSeed).toBe(2 ** 30)
+    expect(
+      saved.wordSearchItems.map((w: { word: string; clue: string }) => [w.word, w.clue])
+    ).toEqual([
+      ['Capacete', 'Protege a cabeça'],
+      ['Luva', 'Protege as mãos'],
+      ['Óculos', 'Protege os olhos'],
+    ])
+
+    render(
+      <ContentBlockDrawer
+        open
+        onOpenChange={jest.fn()}
+        mode="edit"
+        blockData={saved}
+        onSave={jest.fn()}
+        onCancel={jest.fn()}
+      />
+    )
+    expect(screen.getAllByDisplayValue('Óculos')).toHaveLength(2)
+  })
+
+  it('flags a word that cannot fit in the grid and blocks saving', async () => {
+    const user = userEvent.setup()
+    const onSave = jest.fn()
+    render(
+      <ContentBlockDrawer
+        open
+        onOpenChange={jest.fn()}
+        mode="edit"
+        blockData={{
+          ...createEmptyBlock('word-search'),
+          wordSearchSeed: 7,
+          wordSearchItems: [
+            { id: 'a', word: 'Capacete', clue: 'Cabeça' },
+            { id: 'b', word: 'Extintor de incêndio', clue: 'Incêndio' },
+            { id: 'c', word: 'Luva', clue: 'Mãos' },
+          ],
+        }}
+        onSave={onSave}
+        onCancel={jest.fn()}
+      />
+    )
+
+    expect(screen.getByText('EXTINTORDEINCENDIO · 18 letras. O máximo é 12.')).toBeInTheDocument()
+    expect(screen.getByRole('alert')).toHaveTextContent(
+      'Algumas palavras não couberam: EXTINTORDEINCENDIO.'
+    )
+
+    await user.click(screen.getByRole('button', { name: /salvar/i }))
+    expect(onSave).not.toHaveBeenCalled()
+    expect(errorToast).toHaveBeenCalledWith('Cada palavra precisa ter de 3 a 12 letras')
+  })
+
   it('creates a sequence, reorders its steps and reopens it in that order', async () => {
     const user = userEvent.setup()
     const onSave = mount('sequence')
