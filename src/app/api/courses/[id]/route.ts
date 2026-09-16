@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requireAuth, createErrorResponse, createSuccessResponse } from '@/lib/auth'
 import { getCoursePermissions } from '@/lib/permissions'
-import { fetchCollaboration } from '@/lib/course-access'
 import { Block, Course, Unit } from '@/types/course'
 import { slugifyUnits } from '@/lib/slug'
 import { mergeAdjacentFlipcards } from '@/lib/blocks'
@@ -25,14 +24,17 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     // Try the id first, then the slug
     const course = await prisma.course.findFirst({
       where: { OR: [{ id }, { slug: id }] },
-      include: { owner: { select: { id: true, name: true } } },
+      include: {
+        owner: { select: { id: true, name: true } },
+        collaborators: { where: { userId: authResult.user.id }, select: { id: true } },
+      },
     })
 
     if (!course) {
       return createErrorResponse('Curso não encontrado', 404)
     }
 
-    const collaboration = await fetchCollaboration(course.id, authResult.user.id)
+    const collaboration = course.collaborators.length > 0 ? { granted: true as const } : null
 
     // Normalize the units: ensure ids, slugs and a well-formed structure
     const originalUnits = upgradeUnits(course.units) as unknown as Partial<Unit>[]

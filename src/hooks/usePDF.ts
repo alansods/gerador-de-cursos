@@ -1,17 +1,18 @@
 'use client'
 
 import { useState } from 'react'
-import { generateCoursePDF } from '@/lib/pdf-service'
+import type { generateCoursePDF as GenerateCoursePDF } from '@/lib/pdf-service'
 
 export const usePDF = () => {
   const [isGenerating, setIsGenerating] = useState(false)
 
   const generatePDF = async (
-    course: Parameters<typeof generateCoursePDF>[0],
+    course: Parameters<typeof GenerateCoursePDF>[0],
     filename?: string
   ) => {
     setIsGenerating(true)
     try {
+      const { generateCoursePDF } = await import('@/lib/pdf-service')
       await generateCoursePDF(course, filename)
     } catch (error) {
       console.error('PDF generation failed:', error)

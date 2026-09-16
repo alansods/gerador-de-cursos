@@ -202,6 +202,7 @@ describe('API - Courses', () => {
         version: 0,
         ownerId: '1',
         owner: { id: '1', name: 'Test User' },
+        collaborators: [],
         reviewedById: null,
         reviewedAt: null,
         createdAt: new Date(),
@@ -227,6 +228,49 @@ describe('API - Courses', () => {
 
       // Assert a single call
       expect(mockPrisma.course.findFirst).toHaveBeenCalledTimes(1)
+    })
+
+    it('reads the user collaboration in the same query as the course', async () => {
+      ;(mockPrisma.user.findUnique as jest.Mock).mockResolvedValue({
+        ...authenticatedUser,
+        role: 'CONTENT_AUTHOR',
+      } as never)
+      ;(mockPrisma.course.findFirst as jest.Mock).mockResolvedValue({
+        id: 'c1',
+        title: 'Curso de outra pessoa',
+        description: '',
+        workload: '',
+        modality: 'Online',
+        category: '',
+        units: [],
+        slug: 'curso',
+        status: 'IN_PROGRESS',
+        version: 0,
+        ownerId: 'someone-else',
+        owner: { id: 'someone-else', name: 'Outra' },
+        collaborators: [{ id: 'collab-1' }],
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      } as never)
+
+      const response = await getCursoByIdHandler(
+        new NextRequest('http://localhost:3000/api/courses/curso', {
+          headers: await authHeaders('CONTENT_AUTHOR'),
+        }),
+        { params: Promise.resolve({ id: 'curso' }) }
+      )
+      const data = await response.json()
+
+      expect(data.course.permissions.canEdit).toBe(true)
+      expect(mockPrisma.course.findFirst).toHaveBeenCalledWith(
+        expect.objectContaining({
+          include: expect.objectContaining({
+            collaborators: { where: { userId: '1' }, select: { id: true } },
+          }),
+        })
+      )
+      expect(mockPrisma.courseCollaborator.findUnique).not.toHaveBeenCalled()
+      expect(data.course).not.toHaveProperty('collaborators')
     })
 
     it('returns 404 when the course does not exist', async () => {
