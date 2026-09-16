@@ -5,6 +5,7 @@ import {
   createContext,
   useContext,
   useEffect,
+  useMemo,
   useRef,
   useState,
   type RefObject,
@@ -177,16 +178,17 @@ export function CollabProvider({ courseId, children }: Props) {
 
   const active = COLLAB_ENABLED && authorized === true && !failed
 
+  const contextValue = useMemo(
+    () => ({ active, roomFull: active ? false : roomFull, broadcastRef }),
+    [active, roomFull]
+  )
+
   if (!active) {
-    return (
-      <CollabContext.Provider value={{ active: false, roomFull, broadcastRef }}>
-        {children}
-      </CollabContext.Provider>
-    )
+    return <CollabContext.Provider value={contextValue}>{children}</CollabContext.Provider>
   }
 
   return (
-    <CollabContext.Provider value={{ active: true, roomFull: false, broadcastRef }}>
+    <CollabContext.Provider value={contextValue}>
       <LiveblocksProvider authEndpoint="/api/liveblocks-auth" badgeLocation="bottom-left">
         <ErrorMonitor onError={disableOnError} />
         <RoomProvider

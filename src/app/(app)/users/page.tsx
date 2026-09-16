@@ -3,6 +3,7 @@
 // This page must not be exported statically (it uses the API)
 export const dynamic = 'error'
 
+import { useDebounce } from '@/hooks/useDebounce'
 import { useState, useEffect } from 'react'
 import {
   useUpdateUserMutation,
@@ -55,6 +56,7 @@ function isRecentUser(createdAt: string) {
 
 export default function UsersPage() {
   const [searchTerm, setSearchTerm] = useState('')
+  const debouncedSearchTerm = useDebounce(searchTerm, 500)
   const [startDate, setStartDate] = useState('')
   const [endDate, setEndDate] = useState('')
   const [selectedRole, setSelectedRole] = useState(ALL_ROLES)
@@ -77,7 +79,7 @@ export default function UsersPage() {
   } = useUsersQuery({
     page,
     limit: 10,
-    search: searchTerm,
+    search: debouncedSearchTerm,
     startDate: startDate || undefined,
     endDate: endDate || undefined,
     role: selectedRole !== ALL_ROLES ? selectedRole : undefined,
@@ -94,7 +96,7 @@ export default function UsersPage() {
   // filtering goes back to page one: the current page may not exist in the new slice
   useEffect(() => {
     setPage(1)
-  }, [searchTerm, startDate, endDate, selectedRole])
+  }, [debouncedSearchTerm, startDate, endDate, selectedRole])
 
   const clearForm = () => setFormData({ name: '', role: 'CONTENT_AUTHOR', email: '', password: '' })
 
