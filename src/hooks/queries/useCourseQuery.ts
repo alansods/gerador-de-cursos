@@ -23,6 +23,16 @@ interface CourseOptions {
 }
 
 /** Aceita id ou slug — a rota da API resolve os dois. */
+export function usePrefetchCourse() {
+  const queryClient = useQueryClient()
+
+  return (identifier: string) =>
+    queryClient.prefetchQuery({
+      queryKey: queryKeys.courses.detail(identifier),
+      queryFn: () => fetchCourse(identifier),
+    })
+}
+
 export function useCourseQuery(identifier: string | null, options: CourseOptions = {}) {
   const query = useQuery({
     queryKey: queryKeys.courses.detail(identifier ?? ''),

@@ -12,8 +12,6 @@ import { usePreview } from '@/hooks/usePreview'
 import { useTheme } from '@/hooks/useTheme'
 import { usePDF } from '@/hooks/usePDF'
 import { useSCORM } from '@/hooks/useSCORM'
-import { ExportModal } from '@/components/ExportModal'
-import { RichTextEditor } from '@/components/RichTextEditor'
 import { PageTransition } from '@/components/PageTransition'
 import { CollabProvider } from '@/components/collaboration/CollabProvider'
 import { CollabAvatars } from '@/components/collaboration/CollabAvatars'
@@ -71,10 +69,17 @@ import {
   Settings,
   ExternalLink,
 } from 'lucide-react'
-import { CourseSettingsDrawer } from '@/components/CourseSettingsDrawer'
-import { ContentBlockDrawer } from '@/components/ContentBlockDrawer'
 import { UnitsDropdown } from '@/components/UnitsDropdown'
-import { ManageUnitsModal } from '@/components/ManageUnitsModal'
+import {
+  ContentBlockDrawer,
+  CourseSettingsDrawer,
+  ExportModal,
+  ManageUnitsModal,
+  RichTextEditor,
+  useMountAfterFirstOpen,
+  usePreloadEditorParts,
+} from '@/components/course/editor/lazy-editor-parts'
+import { EditorLoading } from '@/components/course/editor/EditorLoading'
 import { TrailBadgeFields } from '@/components/course/TrailBadgeFields'
 import { TrailStepSummary } from '@/components/course/TrailStepSummary'
 import { SortableBlockWrapper } from '@/components/SortableBlockWrapper'
@@ -1061,16 +1066,15 @@ function CourseEditor() {
     notify('reordered', 'block', authorName)
   }
 
+  const exportModalMounted = useMountAfterFirstOpen(exportModalOpen)
+  const settingsDrawerMounted = useMountAfterFirstOpen(settingsDrawerOpen)
+  const manageUnitsModalMounted = useMountAfterFirstOpen(manageUnitsModalOpen)
+  const contentDrawerMounted = useMountAfterFirstOpen(contentDrawerOpen)
+  usePreloadEditorParts(Boolean(state.currentCourse))
+
   // Loading, or the course was not found
   if (state.loading || isFetchingCourse || !state.currentCourse) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-[#F5F7FA] dark:bg-gray-950">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-500 dark:text-gray-400">Carregando curso...</p>
-        </div>
-      </div>
-    )
+    return <EditorLoading />
   }
 
   return (
@@ -4429,89 +4433,99 @@ function CourseEditor() {
         </Dialog>
 
         {/* Modal de Exportação */}
-        <ExportModal
-          isOpen={exportModalOpen}
-          onClose={() => setExportModalOpen(false)}
-          onExportPDF={async (filename) => {
-            try {
-              await generatePDF(state.currentCourse!, filename)
-              setExportModalOpen(false)
-            } catch (error) {
-              // Erro já foi tratado no hook, modal permanece aberto
-              console.error('PDF generation failed:', error)
-            }
-          }}
-          onExportSCORM={async (filename) => {
-            try {
-              console.log('🔄 [Export] Starting the SCORM export...')
-              console.log('📦 [Export] Current course:', state.currentCourse)
-              console.log('📝 [Export] Filename:', filename)
-
-              if (state.currentCourse) {
-                console.log('✅ [Export] Course found, calling generateSCORM...')
-                await generateSCORM(state.currentCourse, filename)
-                console.log('✅ [Export] generateSCORM finished')
+        {exportModalMounted && (
+          <ExportModal
+            isOpen={exportModalOpen}
+            onClose={() => setExportModalOpen(false)}
+            onExportPDF={async (filename) => {
+              try {
+                await generatePDF(state.currentCourse!, filename)
                 setExportModalOpen(false)
-              } else {
-                console.error('❌ [Export] state.currentCourse is null/undefined')
-                toast.error('Erro: Curso não encontrado')
+              } catch (error) {
+                // Erro já foi tratado no hook, modal permanece aberto
+                console.error('PDF generation failed:', error)
               }
-            } catch (error) {
-              // Erro já foi tratado no hook, modal permanece aberto
-              console.error('❌ [Export] SCORM generation failed:', error)
-            }
-          }}
-          courseName={state.currentCourse?.title || 'Curso'}
-          courseId={state.currentCourse?.id}
-          isGeneratingPDF={isGeneratingPDF}
-          isGeneratingSCORM={isGeneratingSCORM}
-        />
+            }}
+            onExportSCORM={async (filename) => {
+              try {
+                console.log('🔄 [Export] Starting the SCORM export...')
+                console.log('📦 [Export] Current course:', state.currentCourse)
+                console.log('📝 [Export] Filename:', filename)
+
+                if (state.currentCourse) {
+                  console.log('✅ [Export] Course found, calling generateSCORM...')
+                  await generateSCORM(state.currentCourse, filename)
+                  console.log('✅ [Export] generateSCORM finished')
+                  setExportModalOpen(false)
+                } else {
+                  console.error('❌ [Export] state.currentCourse is null/undefined')
+                  toast.error('Erro: Curso não encontrado')
+                }
+              } catch (error) {
+                // Erro já foi tratado no hook, modal permanece aberto
+                console.error('❌ [Export] SCORM generation failed:', error)
+              }
+            }}
+            courseName={state.currentCourse?.title || 'Curso'}
+            courseId={state.currentCourse?.id}
+            isGeneratingPDF={isGeneratingPDF}
+            isGeneratingSCORM={isGeneratingSCORM}
+          />
+        )}
 
         {/* Course Settings Drawer */}
-        <CourseSettingsDrawer
-          courseId={state.currentCourse.id}
-          canManageCollaborators={state.currentCourse.permissions?.canManageCollaborators ?? false}
-          open={settingsDrawerOpen}
-          onOpenChange={setSettingsDrawerOpen}
-          courseData={{
-            title: state.currentCourse.title,
-            description: state.currentCourse.description || '',
-            category: state.currentCourse.category || undefined,
-            workload: state.currentCourse.workload,
-            layout: state.currentCourse.layout,
-            bannerVideoUrl: state.currentCourse.bannerVideoUrl,
-          }}
-          units={state.currentCourse.units || []}
-          onSave={async (courseData, units) => {
-            if (state.currentCourse) {
-              await updateCourse(state.currentCourse.id, {
-                title: courseData.title,
-                description: courseData.description,
-                category: courseData.category || '',
-                workload: courseData.workload,
-                layout: courseData.layout,
-                bannerVideoUrl: courseData.bannerVideoUrl ?? '',
-              })
-              await reorderUnits(units as Unit[])
+        {settingsDrawerMounted && (
+          <CourseSettingsDrawer
+            courseId={state.currentCourse.id}
+            canManageCollaborators={
+              state.currentCourse.permissions?.canManageCollaborators ?? false
             }
-          }}
-        />
+            open={settingsDrawerOpen}
+            onOpenChange={setSettingsDrawerOpen}
+            courseData={{
+              title: state.currentCourse.title,
+              description: state.currentCourse.description || '',
+              category: state.currentCourse.category || undefined,
+              workload: state.currentCourse.workload,
+              layout: state.currentCourse.layout,
+              bannerVideoUrl: state.currentCourse.bannerVideoUrl,
+            }}
+            units={state.currentCourse.units || []}
+            onSave={async (courseData, units) => {
+              if (state.currentCourse) {
+                await updateCourse(state.currentCourse.id, {
+                  title: courseData.title,
+                  description: courseData.description,
+                  category: courseData.category || '',
+                  workload: courseData.workload,
+                  layout: courseData.layout,
+                  bannerVideoUrl: courseData.bannerVideoUrl ?? '',
+                })
+                await reorderUnits(units as Unit[])
+              }
+            }}
+          />
+        )}
 
         {/* Manage Units Modal */}
-        <ManageUnitsModal
-          open={manageUnitsModalOpen}
-          onOpenChange={setManageUnitsModalOpen}
-          units={state.currentCourse.units || []}
-        />
+        {manageUnitsModalMounted && (
+          <ManageUnitsModal
+            open={manageUnitsModalOpen}
+            onOpenChange={setManageUnitsModalOpen}
+            units={state.currentCourse.units || []}
+          />
+        )}
 
-        <ContentBlockDrawer
-          open={contentDrawerOpen}
-          onOpenChange={setContentDrawerOpen}
-          mode={contentDrawerMode}
-          blockData={contentDrawerBlockData}
-          onSave={handleSaveContentFromDrawer}
-          onCancel={handleCancelContentDrawer}
-        />
+        {contentDrawerMounted && (
+          <ContentBlockDrawer
+            open={contentDrawerOpen}
+            onOpenChange={setContentDrawerOpen}
+            mode={contentDrawerMode}
+            blockData={contentDrawerBlockData}
+            onSave={handleSaveContentFromDrawer}
+            onCancel={handleCancelContentDrawer}
+          />
+        )}
       </div>
     </PageTransition>
   )

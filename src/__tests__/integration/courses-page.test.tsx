@@ -20,6 +20,7 @@ const mockFetch = jest.fn()
 global.fetch = mockFetch
 
 const mockPush = jest.fn()
+const mockPrefetch = jest.fn()
 jest.mock('next/navigation', () => {
   const { useSyncExternalStore } = jest.requireActual('react')
   const URL_CHANGE = 'test:url-change'
@@ -39,7 +40,7 @@ jest.mock('next/navigation', () => {
     useRouter: () => ({
       push: mockPush,
       replace: jest.fn(),
-      prefetch: jest.fn(),
+      prefetch: mockPrefetch,
       back: jest.fn(),
     }),
     usePathname: () => '/courses',
@@ -551,6 +552,49 @@ describe('Integration - Courses page', () => {
         expect(mockFetch).toHaveBeenCalledWith('/api/course-generation-jobs/job-2/retry', {
           method: 'POST',
         })
+      )
+    })
+  })
+
+  describe('opening the editor', () => {
+    const editableResponse = {
+      courses: [
+        { ...coursesMock[0], slug: 'javascript-basico', permissions: { canEdit: true } },
+        { ...coursesMock[1], slug: 'react-avancado', permissions: { canEdit: false } },
+      ],
+      total: 2,
+      page: 1,
+      totalPages: 1,
+    }
+
+    it('prefetches the editor route and the course when the actions menu opens', async () => {
+      mockFetchCourses.mockResolvedValue(editableResponse as never)
+      mockFetch.mockImplementation((url: string) =>
+        Promise.resolve({
+          ok: true,
+          json: async () =>
+            url.startsWith('/api/courses/')
+              ? { success: true, course: { id: '1', title: 'JavaScript Básico' } }
+              : { success: true, authenticated: false, user: null },
+        })
+      )
+      const user = userEvent.setup()
+      renderCoursesPage()
+      await waitForLoad()
+
+      const [editableActions, readOnlyActions] = screen.getAllByRole('button', {
+        name: 'Ações do curso',
+      })
+
+      await user.click(readOnlyActions)
+      expect(mockPrefetch).not.toHaveBeenCalled()
+      await user.keyboard('{Escape}')
+
+      await user.click(editableActions)
+
+      expect(mockPrefetch).toHaveBeenCalledWith('/courses/javascript-basico/edit')
+      await waitFor(() =>
+        expect(mockFetch).toHaveBeenCalledWith('/api/courses/javascript-basico', expect.anything())
       )
     })
   })

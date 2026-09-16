@@ -12,6 +12,7 @@ import {
   useBulkDeleteCoursesMutation,
 } from '@/hooks/queries/useCoursesQuery'
 import { useRetryGenerationMutation } from '@/hooks/queries/useGenerationJobsQuery'
+import { usePrefetchCourse } from '@/hooks/queries/useCourseQuery'
 import { useGenerationBanners } from '@/context/GenerationBannerContext'
 import { ExportModal } from '@/components/ExportModal'
 import { PageTransition } from '@/components/PageTransition'
@@ -118,6 +119,7 @@ function CoursesPageContent() {
   const deleteCourse = useDeleteCourseMutation()
   const bulkDeleteCourses = useBulkDeleteCoursesMutation()
   const retryGeneration = useRetryGenerationMutation()
+  const prefetchCourse = usePrefetchCourse()
   const { showGenerating } = useGenerationBanners()
   const { openPreview } = usePreview()
   const { generatePDF, isGenerating: isGeneratingPDF } = usePDF()
@@ -254,6 +256,14 @@ function CoursesPageContent() {
 
   const handleCreateCourse = () => router.push('/courses/new')
   const handleEditCourse = (id: string) => router.push(`/courses/${id}/edit`)
+
+  const prefetchEditor = (course: Course) => {
+    if (!course.permissions?.canEdit) return
+
+    const identifier = course.slug || course.id
+    router.prefetch(`/courses/${identifier}/edit`)
+    prefetchCourse(identifier)
+  }
 
   const handleRetryGeneration = (jobId: string) =>
     retryGeneration.mutate(jobId, {
@@ -686,7 +696,7 @@ function CoursesPageContent() {
                               </DropdownMenuContent>
                             </DropdownMenu>
                           ) : (
-                            <DropdownMenu>
+                            <DropdownMenu onOpenChange={(open) => open && prefetchEditor(course)}>
                               <DropdownMenuTrigger asChild>
                                 <Button
                                   variant="ghost"
