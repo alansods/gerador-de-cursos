@@ -74,8 +74,8 @@ jest.mock('next/navigation', () => ({
 }))
 
 // Mock Prisma Client
-jest.mock('@/lib/prisma', () => ({
-  prisma: {
+jest.mock('@/lib/prisma', () => {
+  const prisma = {
     user: {
       findUnique: jest.fn(),
       create: jest.fn(),
@@ -89,6 +89,7 @@ jest.mock('@/lib/prisma', () => ({
       delete: jest.fn(),
       deleteMany: jest.fn(),
       count: jest.fn(),
+      updateMany: jest.fn(),
     },
     courseCollaborator: {
       findMany: jest.fn().mockResolvedValue([]),
@@ -113,10 +114,23 @@ jest.mock('@/lib/prisma', () => ({
       findMany: jest.fn().mockResolvedValue([]),
       create: jest.fn(),
     },
-    $transaction: jest.fn((ops) => Promise.all(ops)),
-  },
-  ensureConnection: jest.fn().mockResolvedValue(undefined),
-}))
+    courseGenerationJob: {
+      findMany: jest.fn().mockResolvedValue([]),
+      findUnique: jest.fn().mockResolvedValue(null),
+      findUniqueOrThrow: jest.fn(),
+      create: jest.fn(),
+      updateMany: jest.fn().mockResolvedValue({ count: 0 }),
+    },
+  }
+  prisma.$transaction = jest.fn((arg) =>
+    typeof arg === 'function' ? arg(prisma) : Promise.all(arg)
+  )
+
+  return {
+    prisma,
+    ensureConnection: jest.fn().mockResolvedValue(undefined),
+  }
+})
 
 // Suppress console errors during tests
 const originalError = console.error

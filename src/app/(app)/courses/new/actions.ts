@@ -1,18 +1,9 @@
-import type { GenerationSummary } from '@/lib/blocks'
 import { SAMPLE_FILE_NAME } from '@/lib/sample-document'
 import type { MarkerDetection } from '@/lib/markers'
-import type { Course } from '@/types/course'
-
-const GENERATION_TIMEOUT = 310_000
 
 interface ExtractionResponse {
   text: string
   markers?: MarkerDetection
-}
-
-interface GenerationResponse {
-  course: Course
-  summary: GenerationSummary
 }
 
 export async function extractDocument(file: File): Promise<ExtractionResponse> {
@@ -25,36 +16,6 @@ export async function extractDocument(file: File): Promise<ExtractionResponse> {
   if (!data.text) throw new Error('Não foi possível extrair texto do documento')
 
   return data
-}
-
-export async function createCourseWithAi(
-  text: string,
-  layout?: string
-): Promise<GenerationResponse> {
-  const controller = new AbortController()
-  const limit = setTimeout(() => controller.abort(), GENERATION_TIMEOUT)
-
-  try {
-    const response = await fetch('/api/generate-course-from-text', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ text, layout }),
-      signal: controller.signal,
-    })
-
-    const data = await readJson<Partial<GenerationResponse>>(response, 'Erro ao gerar curso com IA')
-
-    if (!data.course) throw new Error('A IA não retornou um curso válido')
-
-    return data as GenerationResponse
-  } catch (error) {
-    if (error instanceof DOMException && error.name === 'AbortError') {
-      throw new Error('A geração excedeu o tempo limite. Tente novamente em alguns instantes.')
-    }
-    throw error
-  } finally {
-    clearTimeout(limit)
-  }
 }
 
 export async function downloadSampleDocument(): Promise<void> {

@@ -14,6 +14,7 @@ import CoursesPage from '@/app/(app)/courses/page'
 import { fetchCourses } from '@/app/(app)/courses/actions'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { AuthProvider } from '@/context/AuthContext'
+import { GenerationBannerProvider } from '@/context/GenerationBannerContext'
 
 const mockFetch = jest.fn()
 global.fetch = mockFetch
@@ -104,9 +105,11 @@ const createQueryClient = (staleTime = 0) =>
 const renderCoursesPage = (queryClient = createQueryClient()) =>
   render(
     <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <CoursesPage />
-      </AuthProvider>
+      <GenerationBannerProvider>
+        <AuthProvider>
+          <CoursesPage />
+        </AuthProvider>
+      </GenerationBannerProvider>
     </QueryClientProvider>
   )
 
@@ -468,6 +471,87 @@ describe('Integration - Courses page', () => {
       await waitFor(() => {
         expect(screen.queryByText('1 curso selecionado')).not.toBeInTheDocument()
       })
+    })
+  })
+
+  describe('courses generated in the background', () => {
+    const generationResponse = {
+      courses: [
+        {
+          ...coursesMock[0],
+          id: 'gen-1',
+          title: 'roteiro',
+          category: '',
+          workload: '',
+          modality: '',
+          generation: {
+            jobId: 'job-1',
+            status: 'GENERATING',
+            fileName: 'roteiro.docx',
+            error: null,
+          },
+          permissions: { canDelete: true },
+        },
+        {
+          ...coursesMock[1],
+          id: 'gen-2',
+          title: 'apostila',
+          status: 'IN_PROGRESS',
+          generation: {
+            jobId: 'job-2',
+            status: 'FAILED',
+            fileName: 'apostila.docx',
+            error: 'A IA não retornou um curso válido',
+          },
+          permissions: { canDelete: true },
+        },
+      ],
+      total: 2,
+      page: 1,
+      totalPages: 1,
+    }
+
+    it('shows the generation badges instead of the editorial status', async () => {
+      mockFetchCourses.mockResolvedValue(generationResponse as never)
+      renderCoursesPage()
+
+      expect(await screen.findByText('roteiro.docx')).toBeInTheDocument()
+      expect(screen.getByText('Gerando…')).toBeInTheDocument()
+      expect(screen.getByText('Gerando com IA · pode levar cerca de 1 minuto')).toBeInTheDocument()
+      expect(screen.getByText('Falhou')).toBeInTheDocument()
+      expect(screen.getByText('A IA não retornou um curso válido')).toBeInTheDocument()
+      expect(screen.queryByText('Em andamento')).not.toBeInTheDocument()
+    })
+
+    it('locks the actions while generating and offers retry after a failure', async () => {
+      mockFetchCourses.mockResolvedValue(generationResponse as never)
+      mockFetch.mockImplementation((url: string) =>
+        Promise.resolve({
+          ok: true,
+          json: async () =>
+            url.includes('/retry')
+              ? { success: true, jobId: 'job-2', courseId: 'gen-2', fileName: 'apostila.docx' }
+              : { success: true, authenticated: false, user: null },
+        })
+      )
+      const user = userEvent.setup()
+      renderCoursesPage()
+      await screen.findByText('roteiro.docx')
+
+      const [generatingActions, failedActions] = screen.getAllByRole('button', {
+        name: 'Ações do curso',
+      })
+      expect(generatingActions).toBeDisabled()
+
+      await user.click(failedActions)
+      expect(screen.queryByRole('menuitem', { name: /Editar/ })).not.toBeInTheDocument()
+      await user.click(screen.getByRole('menuitem', { name: /Tentar de novo/ }))
+
+      await waitFor(() =>
+        expect(mockFetch).toHaveBeenCalledWith('/api/course-generation-jobs/job-2/retry', {
+          method: 'POST',
+        })
+      )
     })
   })
 })

@@ -4,11 +4,18 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { fetchCourses } from '@/app/(app)/courses/actions'
 import { queryKeys, type CourseFilters } from '@/lib/query-keys'
 
+export const GENERATION_POLLING_INTERVAL = 5_000
+
 export function useCoursesQuery(filters: CourseFilters) {
   const query = useQuery({
     queryKey: queryKeys.courses.list(filters),
     queryFn: () => fetchCourses(filters),
     placeholderData: (previous) => previous,
+    refetchInterval: ({ state }) =>
+      state.data?.courses.some((course) => course.generation?.status === 'GENERATING')
+        ? GENERATION_POLLING_INTERVAL
+        : false,
+    refetchIntervalInBackground: false,
   })
 
   return {

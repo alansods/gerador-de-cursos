@@ -225,3 +225,27 @@ describe('getCoursePermissions', () => {
     })
   })
 })
+
+describe('course with a pending generation', () => {
+  it.each(['GENERATING', 'FAILED'] as const)(
+    'only allows deleting a %s course, even for an admin',
+    (generationStatus) => {
+      const course = { ...courseOf('u1'), generationStatus }
+
+      expect(getCoursePermissions(user('ADMIN'), course)).toMatchObject({
+        canEdit: false,
+        canDelete: true,
+        canComment: false,
+        canSubmitForReview: false,
+        canApprove: false,
+        canManageCollaborators: false,
+      })
+    }
+  )
+
+  it('frees the course once the generation completes', () => {
+    const course = { ...courseOf('u1'), generationStatus: null }
+
+    expect(can(user('CONTENT_AUTHOR'), 'course:update', { course })).toBe(true)
+  })
+})

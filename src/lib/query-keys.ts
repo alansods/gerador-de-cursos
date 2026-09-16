@@ -36,6 +36,9 @@ export const queryKeys = {
     pending: () => ['access-requests', 'pending'] as const,
     ofCourse: (courseId: string) => ['access-requests', 'course', courseId] as const,
   },
+  generationJobs: {
+    all: ['generation-jobs'] as const,
+  },
   activities: {
     recent: (limit: number) => ['activities', 'recent', limit] as const,
   },

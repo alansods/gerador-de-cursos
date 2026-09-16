@@ -1,5 +1,6 @@
 // Course content types
 import type { CoursePermissions, CourseStatus } from '@/lib/permissions'
+import type { CourseGenerationInfo } from '@/types/course-generation'
 
 export type { CoursePermissions, CourseStatus }
 
@@ -260,6 +261,7 @@ export interface Course {
   ownerName?: string
   permissions?: CoursePermissions
   hasPendingRequest?: boolean
+  generation?: CourseGenerationInfo
   createdAt: Date
   updatedAt: Date
   units: Unit[]

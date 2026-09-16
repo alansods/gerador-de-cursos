@@ -10,16 +10,21 @@ import { PageTransition } from '@/components/PageTransition'
 import { NewCourseWizard } from '@/components/course/new/NewCourseWizard'
 import { useNewCourseWizard } from '@/components/course/new/useNewCourseWizard'
 import { useCourseEditor } from '@/context/CourseEditorContext'
+import { useGenerationBanners } from '@/context/GenerationBannerContext'
+import { useStartGenerationMutation } from '@/hooks/queries/useGenerationJobsQuery'
 import { SAMPLE_FILE_NAME } from '@/lib/sample-document'
 import { detectMarkers } from '@/lib/markers'
-import { createCourseWithAi, extractDocument, downloadSampleDocument } from './actions'
+import { extractDocument, downloadSampleDocument } from './actions'
 
 export default function NewCoursePage() {
   const router = useRouter()
   const { createCourse } = useCourseEditor()
   const wizard = useNewCourseWizard()
+  const { showGenerating } = useGenerationBanners()
+  const { mutateAsync: startGeneration } = useStartGenerationMutation()
   const [extracting, setExtracting] = useState(false)
   const [createdCourseId, setCreatedCourseId] = useState('')
+  const [startingGeneration, setStartingGeneration] = useState(false)
 
   const { file, setMarkers, setExtractedText, setDocumentError } = wizard
 
@@ -52,12 +57,32 @@ export default function NewCoursePage() {
     if (!wizard.advance()) return
 
     wizard.setGenerationError('')
+
+    if (wizard.isAi) {
+      setStartingGeneration(true)
+
+      try {
+        const started = await generateWithAi()
+        showGenerating(started)
+        wizard.clearDraft()
+        router.push('/courses')
+      } catch (error) {
+        setStartingGeneration(false)
+        wizard.setGenerationError(
+          error instanceof Error ? error.message : 'Erro ao iniciar a geração do curso'
+        )
+        wizard.goTo(2)
+        toast.error('Erro ao iniciar a geração do curso')
+      }
+      return
+    }
+
     wizard.setPhase('criando')
     wizard.setProgress(12)
     wizard.setCurrentTask(0)
 
     try {
-      const id = wizard.isAi ? await generateWithAi() : await saveManual()
+      const id = await saveManual()
 
       setCreatedCourseId(id)
       wizard.setProgress(100)
@@ -91,20 +116,11 @@ export default function NewCoursePage() {
         text = extracted.text
       }
 
-      if (!text) throw new Error('Não foi possível ler o documento enviado')
+      if (!text || !wizard.file) throw new Error('Não foi possível ler o documento enviado')
 
-      wizard.setCurrentTask(1)
-      wizard.setProgress(45)
-
-      const { course, summary } = await createCourseWithAi(text, wizard.state.layout)
-
-      wizard.setSummary(summary)
-      wizard.setCurrentTask(2)
-      wizard.setProgress(80)
-
-      return createCourse({ ...course, layout: wizard.state.layout })
+      return startGeneration({ text, fileName: wizard.file.name, layout: wizard.state.layout })
     }
-  }, [createCourse, router, wizard])
+  }, [createCourse, router, wizard, showGenerating, startGeneration])
 
   const downloadSample = useCallback(async () => {
     try {
@@ -141,6 +157,7 @@ export default function NewCoursePage() {
             createdCourseTitle={wizard.state.data.title || 'Seu curso'}
             onCancel={() => router.push('/courses')}
             onFinish={finish}
+            submitting={startingGeneration}
             onDownloadSample={downloadSample}
             onOpenEditor={() =>
               router.push(createdCourseId ? `/courses/${createdCourseId}/edit` : '/courses')

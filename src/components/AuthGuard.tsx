@@ -3,6 +3,7 @@
 import { usePathname, useRouter } from 'next/navigation'
 import { Sidebar } from '@/components/Sidebar'
 import { MobileNavbar } from '@/components/layout/MobileNavbar'
+import { GenerationBanners } from '@/components/course/GenerationBanner'
 import { useAuth } from '@/context/AuthContext'
 import { useEffect, useState } from 'react'
 
@@ -131,7 +132,12 @@ export function AuthGuard({ children }: AuthGuardProps) {
 
   // Authenticated on an immersive route: no app sidebar
   if (isNoSidebarRoute) {
-    return <>{children}</>
+    return (
+      <>
+        <GenerationBanners placement="overlay" />
+        {children}
+      </>
+    )
   }
 
   // Authenticated: sidebar plus content
@@ -140,7 +146,10 @@ export function AuthGuard({ children }: AuthGuardProps) {
       <MobileNavbar />
       <Sidebar />
       <main className="flex-1 overflow-auto w-full lg:w-auto">
-        <div className="pt-16 lg:pt-0">{children}</div>
+        <div className="pt-16 lg:pt-0">
+          <GenerationBanners placement="sticky" />
+          {children}
+        </div>
       </main>
     </div>
   )
