@@ -30,7 +30,9 @@ O `after()` roda na mesma execução da função e herda o `maxDuration = 300` d
 1. Na revisão do assistente, o rodapé avisa que a geração roda em segundo plano.
 2. "Gerar curso" envia texto extraído e layout. A rota cria o curso e o job, agenda a
    geração com `after()` e responde `202` com `courseId` e `jobId`.
-3. O assistente redireciona para `/courses` e mostra o banner "Gerando".
+3. Enquanto a requisição está em andamento, o botão "Gerar curso" (e o "Voltar") fica
+   desabilitado com spinner; a tela antiga de carregamento da criação não aparece.
+   Com a resposta, o assistente mostra o banner "Gerando" e redireciona para `/courses`.
 4. Ao terminar, a geração grava as unidades e os metadados no curso e marca o job como
    `COMPLETED` ou `FAILED`.
 
@@ -88,9 +90,10 @@ Os avisos são um banner no topo da área de conteúdo, não toasts.
 - Montado no shell de `src/components/AuthGuard.tsx`, para aparecer em **todas as
   páginas logadas**:
   - rotas com barra lateral: primeiro elemento dentro de `<main>`, antes de
-    `{children}`, fixo no topo enquanto o conteúdo rola (`sticky top-0`);
+    `{children}`, fixo no topo enquanto o conteúdo rola (`sticky top-16 lg:top-0`, abaixo da navbar
+    móvel);
   - rotas sem barra lateral (`/edit`, que hoje retorna `children` direto): o mesmo banner
-    acima do conteúdo, editor incluído.
+    fixo sobre a página (`fixed inset-x-0 top-0`), por cima da barra do editor.
 - Continua dentro do `QueryProvider` (`src/app/(app)/layout.tsx`) e fora do pacote
   SCORM.
 
@@ -132,10 +135,20 @@ false`) enquanto houver job `GENERATING`.
 
 - Não há componente de alert em `src/components/ui`; criar
   `src/components/course/GenerationBanner.tsx`.
-- Erro reaproveita as classes do alerta que já existe no assistente
-  (`NewCourseWizard.tsx`: `border-destructive/30 bg-destructive/5 text-destructive`).
-  "Gerando" usa o equivalente em `primary` e "Pronto" em emerald, como o
-  `CourseCreated.tsx`.
+- Faixa com altura mínima de 64 px (`min-h-16`, `py-4`), texto `text-sm` que vira
+  `text-base` a partir de `sm`, ícones de 20 px. Fundo sólido, sem transparência e sem
+  sombra: a separação da página é só uma linha na base (`border-b`).
+- Cores por estado, ajustadas na revisão visual para seguir os tons já usados no projeto:
+
+  | Estado  | Fundo e texto                                                          | Linha                | Ação                                           |
+  | ------- | ---------------------------------------------------------------------- | -------------------- | ---------------------------------------------- |
+  | Gerando | `bg-secondary text-secondary-foreground` (item ativo da barra lateral) | `border-border`      | —                                              |
+  | Pronto  | `bg-emerald-100 text-emerald-800` (selo "Aprovado")                    | `border-emerald-200` | "Abrir no editor": `bg-emerald-700 text-white` |
+  | Falhou  | `bg-destructive text-destructive-foreground`                           | `border-red-600`     | "Tentar de novo": `bg-white text-destructive`  |
+
+  No modo escuro, "Pronto" usa `bg-emerald-950 text-emerald-300` com linha
+  `border-emerald-900`; os demais seguem os tokens do tema.
+
 - `role="status"` para "Gerando" e "Pronto", `role="alert"` para "Falhou".
 
 ## Protótipo aprovado

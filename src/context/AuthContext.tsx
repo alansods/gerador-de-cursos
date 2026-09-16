@@ -1,6 +1,15 @@
 'use client'
 
-import { createContext, useContext, useState, ReactNode, useEffect, useRef } from 'react'
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useMemo,
+  useState,
+  ReactNode,
+  useEffect,
+  useRef,
+} from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import { toast } from 'sonner'
 import { can, ROLES, type Action, type PermissionContext, type UserRole } from '@/lib/permissions'
@@ -41,7 +50,7 @@ export function AuthProvider({ children, initialUser }: AuthProviderProps) {
   const pathname = usePathname()
   const checkSessionRef = useRef(false) // prevents duplicate checks
 
-  const login = async (email: string, password: string): Promise<boolean> => {
+  const login = useCallback(async (email: string, password: string): Promise<boolean> => {
     setLoading(true)
     try {
       const response = await fetch('/api/auth/login', {
@@ -68,9 +77,9 @@ export function AuthProvider({ children, initialUser }: AuthProviderProps) {
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
 
-  const loginAsGuest = async () => {
+  const loginAsGuest = useCallback(async () => {
     try {
       setLoading(true)
 
@@ -96,9 +105,9 @@ export function AuthProvider({ children, initialUser }: AuthProviderProps) {
     } finally {
       setLoading(false)
     }
-  }
+  }, [router])
 
-  const logout = async () => {
+  const logout = useCallback(async () => {
     try {
       console.log('[AuthContext] 🚪 Logging out...')
 
@@ -129,7 +138,7 @@ export function AuthProvider({ children, initialUser }: AuthProviderProps) {
       checkSessionRef.current = false
       router.push('/login')
     }
-  }
+  }, [router])
 
   // Check the session on mount
   useEffect(() => {
@@ -200,31 +209,32 @@ export function AuthProvider({ children, initialUser }: AuthProviderProps) {
   // happens while the session is still loading.
   const role: UserRole | null = user?.role && ROLES.includes(user.role) ? user.role : null
 
-  const permissionUser = user && role ? { id: user.id, role } : null
+  const permissionUser = useMemo(() => (user && role ? { id: user.id, role } : null), [user, role])
 
-  const checkPermission = (action: Action, ctx?: PermissionContext) =>
-    can(permissionUser, action, ctx)
-
-  return (
-    <AuthContext.Provider
-      value={{
-        user,
-        loading,
-        isAuthenticated,
-        role,
-        can: checkPermission,
-        isAdmin: role === 'ADMIN',
-        canManageUsers: checkPermission('user:manage'),
-        canCreateCourse: checkPermission('course:create'),
-        login,
-        loginAsGuest,
-        logout,
-        setUser,
-      }}
-    >
-      {children}
-    </AuthContext.Provider>
+  const checkPermission = useCallback(
+    (action: Action, ctx?: PermissionContext) => can(permissionUser, action, ctx),
+    [permissionUser]
   )
+
+  const value = useMemo(
+    () => ({
+      user,
+      loading,
+      isAuthenticated,
+      role,
+      can: checkPermission,
+      isAdmin: role === 'ADMIN',
+      canManageUsers: checkPermission('user:manage'),
+      canCreateCourse: checkPermission('course:create'),
+      login,
+      loginAsGuest,
+      logout,
+      setUser,
+    }),
+    [user, loading, isAuthenticated, role, checkPermission, login, loginAsGuest, logout]
+  )
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }
 
 export function useAuth() {
