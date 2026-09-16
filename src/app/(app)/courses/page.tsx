@@ -11,6 +11,8 @@ import {
   useDeleteCourseMutation,
   useBulkDeleteCoursesMutation,
 } from '@/hooks/queries/useCoursesQuery'
+import { useRetryGenerationMutation } from '@/hooks/queries/useGenerationJobsQuery'
+import { useGenerationBanners } from '@/context/GenerationBannerContext'
 import { ExportModal } from '@/components/ExportModal'
 import { PageTransition } from '@/components/PageTransition'
 import { Button } from '@/components/ui/button'
@@ -66,6 +68,7 @@ import {
   Clock3,
   Trash2,
   Sparkles,
+  RotateCcw,
 } from 'lucide-react'
 import { Suspense, useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
@@ -114,6 +117,8 @@ export default function CoursesPage() {
 function CoursesPageContent() {
   const deleteCourse = useDeleteCourseMutation()
   const bulkDeleteCourses = useBulkDeleteCoursesMutation()
+  const retryGeneration = useRetryGenerationMutation()
+  const { showGenerating } = useGenerationBanners()
   const { openPreview } = usePreview()
   const { generatePDF, isGenerating: isGeneratingPDF } = usePDF()
   const { generateSCORM, isGeneratingSCORM } = useSCORM()
@@ -249,6 +254,12 @@ function CoursesPageContent() {
 
   const handleCreateCourse = () => router.push('/courses/new')
   const handleEditCourse = (id: string) => router.push(`/courses/${id}/edit`)
+
+  const handleRetryGeneration = (jobId: string) =>
+    retryGeneration.mutate(jobId, {
+      onSuccess: (started) => showGenerating(started),
+      onError: (error) => toast.error(error.message),
+    })
   const handlePreviewCourse = (id: string) => {
     const course = fetchedCourses.find((c) => c.id === id)
     if (course) {
@@ -562,22 +573,55 @@ function CoursesPageContent() {
                           </TableCell>
                         )}
                         <TableCell>
-                          <div className="flex items-center gap-2">
-                            <span className="font-medium text-foreground">{course.title}</span>
-                            {isNewCourse(course.createdAt) && (
-                              <Badge
-                                variant="secondary"
-                                className="bg-linear-to-r from-emerald-500 to-green-500 text-white border-0 gap-1"
-                              >
-                                <Sparkles className="w-3 h-3" />
-                                Novo
-                              </Badge>
-                            )}
-                          </div>
+                          {course.generation ? (
+                            <div className="flex flex-col gap-0.5">
+                              <span className="font-medium text-foreground">
+                                {course.generation.fileName}
+                              </span>
+                              {course.generation.status === 'GENERATING' ? (
+                                <span className="text-xs text-muted-foreground">
+                                  Gerando com IA · pode levar cerca de 1 minuto
+                                </span>
+                              ) : (
+                                <span className="text-xs text-destructive">
+                                  {course.generation.error || 'A geração falhou'}
+                                </span>
+                              )}
+                            </div>
+                          ) : (
+                            <div className="flex items-center gap-2">
+                              <span className="font-medium text-foreground">{course.title}</span>
+                              {isNewCourse(course.createdAt) && (
+                                <Badge
+                                  variant="secondary"
+                                  className="bg-linear-to-r from-emerald-500 to-green-500 text-white border-0 gap-1"
+                                >
+                                  <Sparkles className="w-3 h-3" />
+                                  Novo
+                                </Badge>
+                              )}
+                            </div>
+                          )}
                         </TableCell>
-                        <TableCell className="text-muted-foreground">{course.category}</TableCell>
+                        <TableCell className="text-muted-foreground">
+                          {course.category || '—'}
+                        </TableCell>
                         <TableCell>
-                          {course.status && (
+                          {course.generation?.status === 'GENERATING' && (
+                            <Badge variant="secondary" className="gap-1 border-0 whitespace-nowrap">
+                              <Loader2 className="h-3 w-3 animate-spin" aria-hidden />
+                              Gerando…
+                            </Badge>
+                          )}
+                          {course.generation?.status === 'FAILED' && (
+                            <Badge
+                              variant="secondary"
+                              className={`border-0 whitespace-nowrap ${COURSE_STATUS_CLASSES.REJECTED}`}
+                            >
+                              Falhou
+                            </Badge>
+                          )}
+                          {!course.generation && course.status && (
                             <Badge
                               variant="secondary"
                               className={`border-0 whitespace-nowrap ${COURSE_STATUS_CLASSES[course.status]}`}
@@ -590,81 +634,130 @@ function CoursesPageContent() {
                           {course.ownerName || '—'}
                         </TableCell>
                         <TableCell className="text-muted-foreground whitespace-nowrap">
-                          {course.workload}
+                          {course.workload || '—'}
                         </TableCell>
-                        <TableCell className="text-muted-foreground">{course.modality}</TableCell>
+                        <TableCell className="text-muted-foreground">
+                          {course.modality || '—'}
+                        </TableCell>
                         <TableCell className="text-right">
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-8 w-8"
-                                aria-label="Ações do curso"
-                              >
-                                <MoreHorizontal className="h-4 w-4" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className="w-52">
-                              <DropdownMenuItem onClick={() => handlePreviewCourse(course.id)}>
-                                <Eye className="h-4 w-4" />
-                                Preview
-                              </DropdownMenuItem>
-
-                              {canReview && (
-                                <DropdownMenuItem onClick={() => handleReviewCourse(course)}>
-                                  <ClipboardCheck className="h-4 w-4" />
-                                  Revisar
-                                </DropdownMenuItem>
-                              )}
-
-                              {permissions?.canEdit && (
-                                <DropdownMenuItem
-                                  onClick={() => handleEditCourse(course.slug || course.id)}
+                          {course.generation?.status === 'GENERATING' ? (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8"
+                              aria-label="Ações do curso"
+                              title="Disponível quando a geração terminar"
+                              disabled
+                            >
+                              <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                          ) : course.generation?.status === 'FAILED' ? (
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-8 w-8"
+                                  aria-label="Ações do curso"
                                 >
-                                  <Pencil className="h-4 w-4" />
-                                  Editar
-                                </DropdownMenuItem>
-                              )}
-
-                              <DropdownMenuItem onClick={() => handleOpenExportModal(course)}>
-                                <Download className="h-4 w-4" />
-                                Exportar
-                              </DropdownMenuItem>
-
-                              {permissions?.canRequestAccess && (
+                                  <MoreHorizontal className="h-4 w-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end" className="w-52">
                                 <DropdownMenuItem
-                                  disabled={accessRequested}
-                                  onClick={() => handleRequestAccess(course.id, course.title)}
+                                  disabled={retryGeneration.isPending}
+                                  onClick={() => handleRetryGeneration(course.generation!.jobId)}
                                 >
-                                  {accessRequested ? (
-                                    <>
-                                      <Clock3 className="h-4 w-4" />
-                                      Aguardando acesso
-                                    </>
-                                  ) : (
-                                    <>
-                                      <KeyRound className="h-4 w-4" />
-                                      Solicitar acesso
-                                    </>
-                                  )}
+                                  <RotateCcw className="h-4 w-4" />
+                                  Tentar de novo
                                 </DropdownMenuItem>
-                              )}
+                                {permissions?.canDelete && (
+                                  <>
+                                    <DropdownMenuSeparator />
+                                    <DropdownMenuItem
+                                      className="text-destructive focus:text-destructive"
+                                      onClick={() => setShowDeleteConfirm(course.id)}
+                                    >
+                                      <Trash2 className="h-4 w-4" />
+                                      Excluir
+                                    </DropdownMenuItem>
+                                  </>
+                                )}
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          ) : (
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-8 w-8"
+                                  aria-label="Ações do curso"
+                                >
+                                  <MoreHorizontal className="h-4 w-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end" className="w-52">
+                                <DropdownMenuItem onClick={() => handlePreviewCourse(course.id)}>
+                                  <Eye className="h-4 w-4" />
+                                  Preview
+                                </DropdownMenuItem>
 
-                              {permissions?.canDelete && (
-                                <>
-                                  <DropdownMenuSeparator />
-                                  <DropdownMenuItem
-                                    className="text-destructive focus:text-destructive"
-                                    onClick={() => setShowDeleteConfirm(course.id)}
-                                  >
-                                    <Trash2 className="h-4 w-4" />
-                                    Excluir
+                                {canReview && (
+                                  <DropdownMenuItem onClick={() => handleReviewCourse(course)}>
+                                    <ClipboardCheck className="h-4 w-4" />
+                                    Revisar
                                   </DropdownMenuItem>
-                                </>
-                              )}
-                            </DropdownMenuContent>
-                          </DropdownMenu>
+                                )}
+
+                                {permissions?.canEdit && (
+                                  <DropdownMenuItem
+                                    onClick={() => handleEditCourse(course.slug || course.id)}
+                                  >
+                                    <Pencil className="h-4 w-4" />
+                                    Editar
+                                  </DropdownMenuItem>
+                                )}
+
+                                <DropdownMenuItem onClick={() => handleOpenExportModal(course)}>
+                                  <Download className="h-4 w-4" />
+                                  Exportar
+                                </DropdownMenuItem>
+
+                                {permissions?.canRequestAccess && (
+                                  <DropdownMenuItem
+                                    disabled={accessRequested}
+                                    onClick={() => handleRequestAccess(course.id, course.title)}
+                                  >
+                                    {accessRequested ? (
+                                      <>
+                                        <Clock3 className="h-4 w-4" />
+                                        Aguardando acesso
+                                      </>
+                                    ) : (
+                                      <>
+                                        <KeyRound className="h-4 w-4" />
+                                        Solicitar acesso
+                                      </>
+                                    )}
+                                  </DropdownMenuItem>
+                                )}
+
+                                {permissions?.canDelete && (
+                                  <>
+                                    <DropdownMenuSeparator />
+                                    <DropdownMenuItem
+                                      className="text-destructive focus:text-destructive"
+                                      onClick={() => setShowDeleteConfirm(course.id)}
+                                    >
+                                      <Trash2 className="h-4 w-4" />
+                                      Excluir
+                                    </DropdownMenuItem>
+                                  </>
+                                )}
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          )}
                         </TableCell>
                       </TableRow>
                     )

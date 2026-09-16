@@ -38,6 +38,7 @@ export interface PermissionCourse {
   id: string
   ownerId?: string | null
   status?: CourseStatus
+  generationStatus?: 'GENERATING' | 'COMPLETED' | 'FAILED' | null
 }
 
 export interface PermissionContext {
@@ -61,6 +62,10 @@ export class ForbiddenError extends Error {
  */
 export function resolveTokenRole(role: unknown): UserRole | null {
   return typeof role === 'string' && ROLES.includes(role as UserRole) ? (role as UserRole) : null
+}
+
+function isGenerationPending(course?: PermissionCourse | null) {
+  return course?.generationStatus === 'GENERATING' || course?.generationStatus === 'FAILED'
 }
 
 function isOwner(user: PermissionUser, course?: PermissionCourse | null) {
@@ -96,6 +101,10 @@ export function can(
   if (!user) return false
 
   const { course, collaboration } = ctx
+
+  if (isGenerationPending(course) && action !== 'course:delete') {
+    return false
+  }
 
   switch (action) {
     case 'user:manage':

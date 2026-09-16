@@ -6,6 +6,8 @@ import { getCoursePermissions, type CourseStatus } from '@/lib/permissions'
 import type { Course } from '@/types/course'
 import { upgradeUnits } from '@/lib/legacy-course'
 import { DEFAULT_PAGE_SIZE, normalizePage, normalizePageSize } from '@/lib/course-list-params'
+import { expireStaleGenerationJobs } from '@/lib/course-generation-jobs'
+import type { CourseGenerationInfo } from '@/types/course-generation'
 
 export interface FetchCoursesParams {
   page?: number
@@ -42,6 +44,8 @@ export async function fetchCourses({
     if (!user) {
       return { courses: [], total: 0, page, totalPages: 0 }
     }
+
+    await expireStaleGenerationJobs()
 
     // Build the dynamic filters
     const where: {
@@ -117,6 +121,10 @@ export async function fetchCourses({
     })
     const pendingRequestByCourse = new Set(pendingAccessRequests.map((s) => s.courseId))
 
+    const generationByCourse = await fetchPendingGenerations(
+      returnedCourses.filter((c) => c.generationStatus && c.generationStatus !== 'COMPLETED')
+    )
+
     // Map to the API course shape
     const formattedCourses: Course[] = returnedCourses.map(
       (course): Course => ({
@@ -138,6 +146,7 @@ export async function fetchCourses({
           collaborationByCourse.get(course.id) ?? null
         ),
         hasPendingRequest: pendingRequestByCourse.has(course.id),
+        generation: generationByCourse.get(course.id),
         createdAt: course.createdAt,
         updatedAt: course.updatedAt,
       })
@@ -154,4 +163,30 @@ export async function fetchCourses({
     console.error('[fetchCourses] Stack:', error instanceof Error ? error.stack : 'No stack')
     throw error
   }
+}
+
+async function fetchPendingGenerations(
+  courses: Array<{ id: string }>
+): Promise<Map<string, CourseGenerationInfo>> {
+  if (courses.length === 0) return new Map()
+
+  const jobs = await prisma.courseGenerationJob.findMany({
+    where: { courseId: { in: courses.map((c) => c.id) }, status: { in: ['GENERATING', 'FAILED'] } },
+    select: { id: true, courseId: true, status: true, sourceFileName: true, error: true },
+    orderBy: { startedAt: 'desc' },
+  })
+
+  const byCourse = new Map<string, CourseGenerationInfo>()
+
+  for (const job of jobs) {
+    if (byCourse.has(job.courseId)) continue
+    byCourse.set(job.courseId, {
+      jobId: job.id,
+      status: job.status as CourseGenerationInfo['status'],
+      fileName: job.sourceFileName,
+      error: job.error,
+    })
+  }
+
+  return byCourse
 }

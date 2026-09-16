@@ -29,6 +29,14 @@ enum CourseStatus {
   @@map("StatusCurso")
 }
 
+enum CourseGenerationStatus {
+  GENERATING
+  COMPLETED
+  FAILED
+
+  @@map("course_generation_status")
+}
+
 enum AccessRequestStatus {
   PENDING  @map("PENDENTE")
   APPROVED @map("APROVADA")
@@ -55,6 +63,7 @@ model User {
   accessRequests          CourseAccessRequest[] @relation("AccessRequestRequester")
   respondedAccessRequests CourseAccessRequest[] @relation("AccessRequestResponder")
   comments                CourseComment[]       @relation("CommentAuthor")
+  generationJobs          CourseGenerationJob[]
 
   @@index([email])
   @@index([role])
@@ -63,28 +72,30 @@ model User {
 
 // Course, with the unit tree stored as JSON
 model Course {
-  id             String                @id @default(cuid())
-  title          String                @map("titulo")
-  slug           String?               @unique
-  description    String                @map("descricao")
-  workload       String                @map("carga_horaria")
-  modality       String                @map("modalidade")
-  category       String                @map("categoria")
-  layout         String                @default("classic")
-  bannerVideoUrl String?               @map("banner_video_url")
-  units          Json                  @default("[]") @map("unidades")
-  status         CourseStatus          @default(IN_PROGRESS)
-  version        Int                   @default(0)
-  ownerId        String?               @map("owner_id")
-  owner          User?                 @relation("CourseOwner", fields: [ownerId], references: [id], onDelete: SetNull)
-  reviewedById   String?               @map("revisado_por_id")
-  reviewedBy     User?                 @relation("CourseReviewer", fields: [reviewedById], references: [id], onDelete: SetNull)
-  reviewedAt     DateTime?             @map("revisado_em")
-  createdAt      DateTime              @default(now()) @map("data_criacao")
-  updatedAt      DateTime              @updatedAt @map("data_modificacao")
-  collaborators  CourseCollaborator[]
-  accessRequests CourseAccessRequest[]
-  comments       CourseComment[]
+  id               String                  @id @default(cuid())
+  title            String                  @map("titulo")
+  slug             String?                 @unique
+  description      String                  @map("descricao")
+  workload         String                  @map("carga_horaria")
+  modality         String                  @map("modalidade")
+  category         String                  @map("categoria")
+  layout           String                  @default("classic")
+  bannerVideoUrl   String?                 @map("banner_video_url")
+  units            Json                    @default("[]") @map("unidades")
+  status           CourseStatus            @default(IN_PROGRESS)
+  generationStatus CourseGenerationStatus? @map("generation_status")
+  version          Int                     @default(0)
+  ownerId          String?                 @map("owner_id")
+  owner            User?                   @relation("CourseOwner", fields: [ownerId], references: [id], onDelete: SetNull)
+  reviewedById     String?                 @map("revisado_por_id")
+  reviewedBy       User?                   @relation("CourseReviewer", fields: [reviewedById], references: [id], onDelete: SetNull)
+  reviewedAt       DateTime?               @map("revisado_em")
+  createdAt        DateTime                @default(now()) @map("data_criacao")
+  updatedAt        DateTime                @updatedAt @map("data_modificacao")
+  collaborators    CourseCollaborator[]
+  accessRequests   CourseAccessRequest[]
+  comments         CourseComment[]
+  generationJobs   CourseGenerationJob[]
 
   @@index([title])
   @@index([category])
@@ -179,4 +190,28 @@ model SCORMJob {
   @@index([createdAt])
   @@index([courseId])
   @@map("scorm_jobs")
+}
+
+model CourseGenerationJob {
+  id               String                 @id @default(cuid())
+  courseId         String                 @map("course_id")
+  course           Course                 @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  userId           String                 @map("user_id")
+  user             User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  status           CourseGenerationStatus @default(GENERATING)
+  sourceFileName   String                 @map("source_file_name")
+  sourceText       String                 @map("source_text")
+  layout           String?
+  mode             String
+  error            String?
+  model            String?
+  promptTokens     Int?                   @map("prompt_tokens")
+  completionTokens Int?                   @map("completion_tokens")
+  startedAt        DateTime               @default(now()) @map("started_at")
+  finishedAt       DateTime?              @map("finished_at")
+  notifiedAt       DateTime?              @map("notified_at")
+
+  @@index([userId, status])
+  @@index([courseId])
+  @@map("course_generation_jobs")
 }

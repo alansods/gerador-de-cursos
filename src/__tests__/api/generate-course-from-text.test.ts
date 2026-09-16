@@ -2,10 +2,11 @@
  * @jest-environment node
  */
 
-import { NextRequest } from 'next/server'
+import { NextRequest, after } from 'next/server'
 import { SignJWT } from 'jose'
 import { POST, maxDuration } from '@/app/api/generate-course-from-text/route'
-import { createCourseWithAi } from '@/app/(app)/courses/new/actions'
+import { generateCourseFromText } from '@/lib/ai-course-generator'
+import { runGenerationJob } from '@/lib/course-generation-jobs'
 import { prisma } from '@/lib/prisma'
 
 const mockGenerateContent = jest.fn()
@@ -20,7 +21,28 @@ jest.mock('@google/generative-ai', () => ({
   })),
 }))
 
-const mockPrisma = prisma as unknown as { user: { findUnique: jest.Mock } }
+jest.mock('next/server', () => ({
+  ...jest.requireActual('next/server'),
+  after: jest.fn(),
+}))
+
+jest.mock('@/lib/course-generation-jobs', () => ({
+  ...jest.requireActual('@/lib/course-generation-jobs'),
+  runGenerationJob: jest.fn(),
+}))
+
+jest.mock('@/lib/slug', () => ({
+  ...jest.requireActual('@/lib/slug'),
+  generateUniqueSlug: jest.fn().mockResolvedValue('roteiro'),
+}))
+
+jest.mock('@/lib/activity-logger', () => ({ logActivity: jest.fn() }))
+
+const mockPrisma = prisma as unknown as {
+  user: { findUnique: jest.Mock }
+  course: { create: jest.Mock }
+  courseGenerationJob: { create: jest.Mock }
+}
 
 const aiCourse = {
   title: 'Doces Regionais',
@@ -39,9 +61,9 @@ const aiCourse = {
   ],
 }
 
-async function authCookie() {
+async function authCookie(role = 'ADMIN') {
   const secret = new TextEncoder().encode(process.env.JWT_SECRET)
-  const token = await new SignJWT({ id: 'user-1', email: 'a@senai.br', name: 'A', role: 'ADMIN' })
+  const token = await new SignJWT({ id: 'user-1', email: 'a@senai.br', name: 'A', role })
     .setProtectedHeader({ alg: 'HS256' })
     .setExpirationTime('1h')
     .sign(secret)
@@ -61,79 +83,143 @@ function sentPrompt(): string {
   return mockGenerateContent.mock.calls[0][0] as string
 }
 
-describe('POST /api/generate-course-from-text', () => {
-  const originalKey = process.env.GEMINI_API_KEY
+const originalKey = process.env.GEMINI_API_KEY
 
+beforeEach(() => {
+  jest.clearAllMocks()
+  jest.spyOn(console, 'log').mockImplementation(() => {})
+  process.env.GEMINI_API_KEY = 'test-key'
+  mockPrisma.user.findUnique.mockResolvedValue({ name: 'A', role: 'ADMIN' })
+  mockGenerateContent.mockResolvedValue({
+    response: { text: () => JSON.stringify(aiCourse), usageMetadata: {} },
+  })
+})
+
+afterAll(() => {
+  process.env.GEMINI_API_KEY = originalKey
+})
+
+describe('POST /api/generate-course-from-text', () => {
   beforeEach(() => {
-    jest.clearAllMocks()
-    jest.spyOn(console, 'log').mockImplementation(() => {})
-    process.env.GEMINI_API_KEY = 'test-key'
-    mockPrisma.user.findUnique.mockResolvedValue({ name: 'A', role: 'ADMIN' })
-    mockGenerateContent.mockResolvedValue({
-      response: { text: () => JSON.stringify(aiCourse), usageMetadata: {} },
+    mockPrisma.course.create.mockResolvedValue({ id: 'course-1' })
+    mockPrisma.courseGenerationJob.create.mockResolvedValue({
+      id: 'job-1',
+      courseId: 'course-1',
     })
   })
 
-  afterAll(() => {
-    process.env.GEMINI_API_KEY = originalKey
+  it('creates the course and the job, schedules the generation and answers right away', async () => {
+    const response = await callRoute({
+      text: 'Conteúdo',
+      fileName: 'roteiro.docx',
+      layout: 'trail',
+    })
+
+    expect(response.status).toBe(202)
+    expect(await response.json()).toEqual({
+      success: true,
+      jobId: 'job-1',
+      courseId: 'course-1',
+    })
+    expect(mockPrisma.course.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        title: 'roteiro',
+        layout: 'trail',
+        ownerId: 'user-1',
+        generationStatus: 'GENERATING',
+      }),
+    })
+    expect(mockPrisma.courseGenerationJob.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        courseId: 'course-1',
+        userId: 'user-1',
+        sourceFileName: 'roteiro.docx',
+        sourceText: 'Conteúdo',
+        layout: 'trail',
+        mode: 'auto',
+      }),
+    })
+    expect(mockGenerateContent).not.toHaveBeenCalled()
+
+    const scheduled = (after as jest.Mock).mock.calls[0][0] as () => Promise<void>
+    await scheduled()
+    expect(runGenerationJob).toHaveBeenCalledWith('job-1')
   })
 
-  it('asks for the unit blocks under blocks and returns them', async () => {
-    const response = await callRoute({ text: 'Conteúdo' })
-    const data = await response.json()
-
-    expect(sentPrompt()).toContain('"blocks": [ <array de Bloco> ]')
-    expect(data.course.units[0].blocks.map((block: { type: string }) => block.type)).toEqual([
-      'heading',
-      'paragraph',
-    ])
-    expect(data.summary.blocks).toBe(2)
-  })
-
-  it('rejects an unknown layout before calling the AI', async () => {
-    const response = await callRoute({ text: 'Conteúdo', layout: 'mosaic' })
+  it('rejects an unknown layout before creating anything', async () => {
+    const response = await callRoute({ text: 'Conteúdo', fileName: 'a.docx', layout: 'mosaic' })
 
     expect(response.status).toBe(400)
-    expect(mockGenerateContent).not.toHaveBeenCalled()
+    expect(mockPrisma.course.create).not.toHaveBeenCalled()
+  })
+
+  it('requires the file name', async () => {
+    const response = await callRoute({ text: 'Conteúdo' })
+
+    expect(response.status).toBe(400)
+    expect(mockPrisma.course.create).not.toHaveBeenCalled()
+  })
+
+  it('refuses to start when no AI key is configured', async () => {
+    delete process.env.GEMINI_API_KEY
+    const openaiKey = process.env.OPENAI_API_KEY
+    delete process.env.OPENAI_API_KEY
+
+    const response = await callRoute({ text: 'Conteúdo', fileName: 'a.docx' })
+
+    process.env.OPENAI_API_KEY = openaiKey
+    expect(response.status).toBe(500)
+    expect(mockPrisma.course.create).not.toHaveBeenCalled()
+  })
+
+  it('allows the function to run for up to 300 seconds', () => {
+    expect(maxDuration).toBe(300)
+  })
+})
+
+describe('generateCourseFromText', () => {
+  it('asks for the unit blocks under blocks and returns them', async () => {
+    const { course, summary } = await generateCourseFromText('Conteúdo', 'auto')
+
+    expect(sentPrompt()).toContain('"blocks": [ <array de Bloco> ]')
+    expect(course.units[0].blocks.map((block) => block.type)).toEqual(['heading', 'paragraph'])
+    expect(summary.blocks).toBe(2)
   })
 
   it('adds the trail section to the prompt and keeps the sanitized badge', async () => {
-    const response = await callRoute({ text: 'Conteúdo', layout: 'trail' })
-    const data = await response.json()
+    const { course } = await generateCourseFromText('Conteúdo', 'auto', 'trail')
 
-    expect(response.status).toBe(200)
     expect(sentPrompt()).toContain('## Layout Trilha')
-    expect(data.course.layout).toBe('trail')
-    expect(data.course.units[0].badgeName).toBe('Mãos limpas')
-    expect(data.course.units[0]).not.toHaveProperty('badgeIcon')
+    expect(course.layout).toBe('trail')
+    expect(course.units[0].badgeName).toBe('Mãos limpas')
+    expect(course.units[0]).not.toHaveProperty('badgeIcon')
   })
 
   it('keeps the previous prompt and drops badges for other layouts', async () => {
-    const response = await callRoute({ text: 'Conteúdo', layout: 'classic' })
-    const data = await response.json()
+    const { course } = await generateCourseFromText('Conteúdo', 'auto', 'classic')
     const classicPrompt = sentPrompt()
 
     mockGenerateContent.mockClear()
-    await callRoute({ text: 'Conteúdo' })
+    await generateCourseFromText('Conteúdo', 'auto')
 
     expect(classicPrompt).not.toContain('Layout Trilha')
     expect(classicPrompt).toBe(sentPrompt())
-    expect(data.course.units[0]).not.toHaveProperty('badgeName')
+    expect(course.units[0]).not.toHaveProperty('badgeName')
   })
 
   it('asks for three to five quiz options', async () => {
-    await callRoute({ text: 'Conteúdo', mode: 'auto' })
+    await generateCourseFromText('Conteúdo', 'auto')
 
     expect(sentPrompt()).toContain('de 3 a 5 opções por pergunta')
     expect(sentPrompt()).not.toContain('exatamente 5 opções')
   })
 
   it('copies the Avaliativa marker only in markers mode', async () => {
-    await callRoute({ text: 'QUIZ_INICIO\nAvaliativa: não\nQUIZ_FIM', mode: 'markers' })
+    await generateCourseFromText('QUIZ_INICIO\nAvaliativa: não\nQUIZ_FIM', 'markers')
     const markersPrompt = sentPrompt()
 
     mockGenerateContent.mockClear()
-    await callRoute({ text: 'Conteúdo', mode: 'auto' })
+    await generateCourseFromText('Conteúdo', 'auto')
     const autoPrompt = sentPrompt()
 
     expect(markersPrompt).toContain('"não" ou "nao" → "graded": false')
@@ -142,76 +228,12 @@ describe('POST /api/generate-course-from-text', () => {
   })
 
   it('caps the model thinking at a fixed budget', async () => {
-    await callRoute({ text: 'Conteúdo' })
+    await generateCourseFromText('Conteúdo', 'auto')
 
     expect(mockGetGenerativeModel).toHaveBeenCalledWith(
       expect.objectContaining({
         generationConfig: { thinkingConfig: { thinkingBudget: 2048 } },
       })
     )
-  })
-
-  it('allows the function to run for up to 300 seconds', () => {
-    expect(maxDuration).toBe(300)
-  })
-})
-
-describe('createCourseWithAi', () => {
-  it('sends the chosen layout with the text', async () => {
-    const fetchMock = jest.spyOn(global, 'fetch').mockResolvedValue(
-      new Response(JSON.stringify({ course: aiCourse, summary: {} }), {
-        headers: { 'content-type': 'application/json' },
-      })
-    )
-
-    await createCourseWithAi('Conteúdo', 'trail')
-
-    const [, init] = fetchMock.mock.calls[0]
-    expect(JSON.parse(String(init?.body))).toEqual({ text: 'Conteúdo', layout: 'trail' })
-    fetchMock.mockRestore()
-  })
-
-  describe('timeout', () => {
-    let fetchMock: jest.SpyInstance
-    let aborted: boolean
-
-    beforeEach(() => {
-      jest.useFakeTimers()
-      aborted = false
-      fetchMock = jest.spyOn(global, 'fetch').mockImplementation(
-        (_input, init) =>
-          new Promise((_resolve, reject) => {
-            init?.signal?.addEventListener('abort', () => {
-              aborted = true
-              reject(new DOMException('Aborted', 'AbortError'))
-            })
-          })
-      )
-    })
-
-    afterEach(() => {
-      fetchMock.mockRestore()
-      jest.useRealTimers()
-    })
-
-    it('keeps waiting past the old 55 second limit', async () => {
-      const generation = createCourseWithAi('Conteúdo')
-      generation.catch(() => {})
-
-      await jest.advanceTimersByTimeAsync(60_000)
-
-      expect(aborted).toBe(false)
-    })
-
-    it('gives up after 310 seconds with a time limit message', async () => {
-      const generation = createCourseWithAi('Conteúdo')
-      const assertion = expect(generation).rejects.toThrow(
-        'A geração excedeu o tempo limite. Tente novamente em alguns instantes.'
-      )
-
-      await jest.advanceTimersByTimeAsync(310_000)
-
-      await assertion
-    })
   })
 })

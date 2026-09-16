@@ -31,7 +31,7 @@ export function StepDocument({
   const invalid = showError && !file
 
   return (
-    <div className="flex max-w-3xl flex-col gap-5">
+    <div className="flex w-full flex-col gap-5">
       <input
         ref={inputRef}
         type="file"

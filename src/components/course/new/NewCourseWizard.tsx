@@ -1,6 +1,6 @@
 'use client'
 
-import { AlertCircle, ArrowRight, Save, Sparkles } from 'lucide-react'
+import { AlertCircle, ArrowRight, Loader2, Save, Sparkles } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { CreatingCourse } from './CreatingCourse'
 import { CourseCreated } from './CourseCreated'
@@ -20,6 +20,7 @@ interface NewCourseWizardProps {
   createdCourseTitle: string
   onCancel: () => void
   onFinish: () => void
+  submitting?: boolean
   onDownloadSample: () => void
   onOpenEditor: () => void
 }
@@ -30,6 +31,7 @@ export function NewCourseWizard({
   createdCourseTitle,
   onCancel,
   onFinish,
+  submitting = false,
   onDownloadSample,
   onOpenEditor,
 }: NewCourseWizardProps) {
@@ -136,20 +138,36 @@ export function NewCourseWizard({
               type="button"
               variant="ghost"
               onClick={state.step === 1 ? onCancel : wizard.back}
+              disabled={submitting}
             >
               {state.step === 1 ? 'Cancelar' : 'Voltar'}
             </Button>
 
-            <p
-              className="order-last w-full text-sm text-destructive sm:order-none sm:w-auto sm:flex-1 sm:text-right"
-              role="alert"
-            >
-              {footerNotice(wizard)}
-            </p>
+            {footerNotice(wizard) ? (
+              <p
+                className="order-last w-full text-sm text-destructive sm:order-none sm:w-auto sm:flex-1 sm:text-right"
+                role="alert"
+              >
+                {footerNotice(wizard)}
+              </p>
+            ) : (
+              <p className="order-last w-full text-sm text-muted-foreground sm:order-none sm:w-auto sm:flex-1 sm:text-right">
+                {state.step === TOTAL_STEPS && isAi
+                  ? 'A geração roda em segundo plano: você volta para a lista e pode seguir usando o app.'
+                  : ''}
+              </p>
+            )}
 
-            <Button type="button" onClick={onFinish} className="ml-auto gap-2 sm:ml-0">
+            <Button
+              type="button"
+              onClick={onFinish}
+              disabled={submitting}
+              className="ml-auto gap-2 sm:ml-0"
+            >
               {actionLabel(state.step, isAi)}
-              {state.step === TOTAL_STEPS ? (
+              {submitting ? (
+                <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
+              ) : state.step === TOTAL_STEPS ? (
                 isAi ? (
                   <Sparkles className="h-4 w-4" aria-hidden />
                 ) : (

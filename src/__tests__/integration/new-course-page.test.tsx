@@ -1,8 +1,8 @@
 import '@testing-library/jest-dom'
-import { render, screen, waitFor } from '@testing-library/react'
+import { act, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import NewCoursePage from '@/app/(app)/courses/new/page'
-import { createCourseWithAi, extractDocument } from '@/app/(app)/courses/new/actions'
+import { extractDocument } from '@/app/(app)/courses/new/actions'
 
 const mockPush = jest.fn()
 const mockBack = jest.fn()
@@ -18,7 +18,6 @@ jest.mock('sonner', () => ({
 
 jest.mock('@/app/(app)/courses/new/actions', () => ({
   extractDocument: jest.fn(),
-  createCourseWithAi: jest.fn(),
   downloadSampleDocument: jest.fn(),
 }))
 
@@ -27,12 +26,21 @@ jest.mock('@/context/CourseEditorContext', () => ({
   useCourseEditor: () => ({ createCourse: mockCreateCourse }),
 }))
 
+const mockStartGeneration = jest.fn()
+jest.mock('@/hooks/queries/useGenerationJobsQuery', () => ({
+  useStartGenerationMutation: () => ({ mutateAsync: mockStartGeneration }),
+}))
+
+const mockShowGenerating = jest.fn()
+jest.mock('@/context/GenerationBannerContext', () => ({
+  useGenerationBanners: () => ({ showGenerating: mockShowGenerating }),
+}))
+
 jest.mock('@/components/PageTransition', () => ({
   PageTransition: ({ children }: { children: React.ReactNode }) => <>{children}</>,
 }))
 
 const mockExtract = extractDocument as jest.MockedFunction<typeof extractDocument>
-const mockGenerate = createCourseWithAi as jest.MockedFunction<typeof createCourseWithAi>
 
 function docx(name = 'apostila.docx'): File {
   const file = new File(['conteudo'], name, {
@@ -159,16 +167,18 @@ describe('New Course page', () => {
     expect(screen.queryByText(/marcadores suportados/)).not.toBeInTheDocument()
   })
 
-  it('generates the course with AI and shows a summary of what was created', async () => {
+  it('starts the generation in the background and goes back to the course list', async () => {
     const user = userEvent.setup()
     mockExtract.mockResolvedValue({
       text: 'texto sem marcador',
       markers: { found: false, total: 0, byType: {}, mode: 'auto' },
     })
-    mockGenerate.mockResolvedValue({
-      course: { title: 'Curso gerado', units: [] } as never,
-      summary: { units: 3, blocks: 12, byType: { quiz: 2, accordion: 1 }, discarded: [] },
-    })
+    let finishStart: (value: unknown) => void = () => {}
+    mockStartGeneration.mockReturnValue(
+      new Promise((resolve) => {
+        finishStart = resolve
+      })
+    )
 
     const { container } = render(<NewCoursePage />)
 
@@ -179,20 +189,45 @@ describe('New Course page', () => {
 
     await user.click(screen.getByRole('button', { name: /Continuar/ }))
     await user.click(await screen.findByRole('button', { name: /Continuar/ }))
-    await user.click(await screen.findByRole('button', { name: /Gerar curso/ }))
 
-    expect(await screen.findByRole('heading', { name: 'Curso criado' })).toBeInTheDocument()
-    expect(screen.getByText(/3 unidades · 12 blocos · 2 quizzes, 1 accordion/)).toBeInTheDocument()
-    expect(mockGenerate).toHaveBeenCalledWith('texto sem marcador', 'classic')
+    expect(
+      await screen.findByText(
+        'A geração roda em segundo plano: você volta para a lista e pode seguir usando o app.'
+      )
+    ).toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: /Gerar curso/ }))
+
+    expect(screen.getByRole('button', { name: /Gerar curso/ })).toBeDisabled()
+    expect(screen.queryByRole('status', { name: /Gerando seu curso/ })).not.toBeInTheDocument()
+    expect(screen.queryByText('Gerando seu curso com IA')).not.toBeInTheDocument()
+
+    await act(async () =>
+      finishStart({ jobId: 'job-1', courseId: 'course-1', fileName: 'apostila.docx' })
+    )
+
+    await waitFor(() => expect(mockPush).toHaveBeenCalledWith('/courses'))
+    expect(screen.queryByText('Gerando seu curso com IA')).not.toBeInTheDocument()
+    expect(mockStartGeneration).toHaveBeenCalledWith({
+      text: 'texto sem marcador',
+      fileName: 'apostila.docx',
+      layout: 'classic',
+    })
+    expect(mockShowGenerating).toHaveBeenCalledWith({
+      jobId: 'job-1',
+      courseId: 'course-1',
+      fileName: 'apostila.docx',
+    })
+    expect(mockCreateCourse).not.toHaveBeenCalled()
   })
 
-  it('returns to the document step when the generation fails', async () => {
+  it('returns to the document step when the generation cannot start', async () => {
     const user = userEvent.setup()
     mockExtract.mockResolvedValue({
       text: 'texto',
       markers: { found: false, total: 0, byType: {}, mode: 'auto' },
     })
-    mockGenerate.mockRejectedValue(new Error('A IA está indisponível no momento'))
+    mockStartGeneration.mockRejectedValue(new Error('API de IA não configurada'))
 
     const { container } = render(<NewCoursePage />)
 
@@ -205,7 +240,8 @@ describe('New Course page', () => {
     await user.click(await screen.findByRole('button', { name: /Continuar/ }))
     await user.click(await screen.findByRole('button', { name: /Gerar curso/ }))
 
-    expect(await screen.findByText('A IA está indisponível no momento')).toBeInTheDocument()
+    expect(await screen.findByText('API de IA não configurada')).toBeInTheDocument()
+    expect(mockPush).not.toHaveBeenCalled()
     expect(screen.getByRole('heading', { name: 'Envie o documento base' })).toBeInTheDocument()
   })
 
