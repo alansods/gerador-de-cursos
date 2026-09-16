@@ -4,15 +4,19 @@
 
 import { NextRequest } from 'next/server'
 import { SignJWT } from 'jose'
-import { POST } from '@/app/api/generate-course-from-text/route'
+import { POST, maxDuration } from '@/app/api/generate-course-from-text/route'
 import { createCourseWithAi } from '@/app/(app)/courses/new/actions'
 import { prisma } from '@/lib/prisma'
 
 const mockGenerateContent = jest.fn()
+const mockGetGenerativeModel = jest.fn()
 
 jest.mock('@google/generative-ai', () => ({
   GoogleGenerativeAI: jest.fn().mockImplementation(() => ({
-    getGenerativeModel: () => ({ generateContent: mockGenerateContent }),
+    getGenerativeModel: (params: unknown) => {
+      mockGetGenerativeModel(params)
+      return { generateContent: mockGenerateContent }
+    },
   })),
 }))
 
@@ -136,6 +140,20 @@ describe('POST /api/generate-course-from-text', () => {
     expect(autoPrompt).toContain('NUNCA use o campo "graded" no modo automático')
     expect(autoPrompt).not.toContain('"graded": false')
   })
+
+  it('caps the model thinking at a fixed budget', async () => {
+    await callRoute({ text: 'Conteúdo' })
+
+    expect(mockGetGenerativeModel).toHaveBeenCalledWith(
+      expect.objectContaining({
+        generationConfig: { thinkingConfig: { thinkingBudget: 2048 } },
+      })
+    )
+  })
+
+  it('allows the function to run for up to 300 seconds', () => {
+    expect(maxDuration).toBe(300)
+  })
 })
 
 describe('createCourseWithAi', () => {
@@ -151,5 +169,49 @@ describe('createCourseWithAi', () => {
     const [, init] = fetchMock.mock.calls[0]
     expect(JSON.parse(String(init?.body))).toEqual({ text: 'Conteúdo', layout: 'trail' })
     fetchMock.mockRestore()
+  })
+
+  describe('timeout', () => {
+    let fetchMock: jest.SpyInstance
+    let aborted: boolean
+
+    beforeEach(() => {
+      jest.useFakeTimers()
+      aborted = false
+      fetchMock = jest.spyOn(global, 'fetch').mockImplementation(
+        (_input, init) =>
+          new Promise((_resolve, reject) => {
+            init?.signal?.addEventListener('abort', () => {
+              aborted = true
+              reject(new DOMException('Aborted', 'AbortError'))
+            })
+          })
+      )
+    })
+
+    afterEach(() => {
+      fetchMock.mockRestore()
+      jest.useRealTimers()
+    })
+
+    it('keeps waiting past the old 55 second limit', async () => {
+      const generation = createCourseWithAi('Conteúdo')
+      generation.catch(() => {})
+
+      await jest.advanceTimersByTimeAsync(60_000)
+
+      expect(aborted).toBe(false)
+    })
+
+    it('gives up after 310 seconds with a time limit message', async () => {
+      const generation = createCourseWithAi('Conteúdo')
+      const assertion = expect(generation).rejects.toThrow(
+        'A geração excedeu o tempo limite. Tente novamente em alguns instantes.'
+      )
+
+      await jest.advanceTimersByTimeAsync(310_000)
+
+      await assertion
+    })
   })
 })
