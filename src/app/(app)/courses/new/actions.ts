@@ -3,7 +3,7 @@ import { SAMPLE_FILE_NAME } from '@/lib/sample-document'
 import type { MarkerDetection } from '@/lib/markers'
 import type { Course } from '@/types/course'
 
-const GENERATION_TIMEOUT = 55_000
+const GENERATION_TIMEOUT = 310_000
 
 interface ExtractionResponse {
   text: string
@@ -49,9 +49,7 @@ export async function createCourseWithAi(
     return data as GenerationResponse
   } catch (error) {
     if (error instanceof DOMException && error.name === 'AbortError') {
-      throw new Error(
-        'O documento é grande demais para uma geração única. Divida o conteúdo em partes menores e tente novamente.'
-      )
+      throw new Error('A geração excedeu o tempo limite. Tente novamente em alguns instantes.')
     }
     throw error
   } finally {

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAuth, createErrorResponse, createSuccessResponse } from '@/lib/auth'
-import { GoogleGenerativeAI } from '@google/generative-ai'
+import { GoogleGenerativeAI, type GenerationConfig } from '@google/generative-ai'
 import { Course } from '@/types/course'
 import { normalizeCourse, type GenerationSummary } from '@/lib/blocks'
 import { detectMarkers, type ReadMode } from '@/lib/markers'
@@ -12,7 +12,17 @@ import {
   type CourseLayoutId,
 } from '@/lib/layout-prompt'
 
-export const maxDuration = 60
+export const maxDuration = 300
+
+const THINKING_BUDGET = 2048
+
+interface ThinkingGenerationConfig extends GenerationConfig {
+  thinkingConfig: { thinkingBudget: number }
+}
+
+const generationConfig: ThinkingGenerationConfig = {
+  thinkingConfig: { thinkingBudget: THINKING_BUDGET },
+}
 
 interface TokenUsage {
   promptTokens: number
@@ -648,7 +658,7 @@ async function generateWithGemini(
 
   for (const modelName of modelNames) {
     try {
-      const model = genAI.getGenerativeModel({ model: modelName })
+      const model = genAI.getGenerativeModel({ model: modelName, generationConfig })
       console.log(`🔄 Tentando modelo: ${modelName}`)
 
       const result = await model.generateContent(prompt)
