@@ -279,6 +279,16 @@ export const BLOCK_SAMPLES: Record<ShowcaseEntryId, Block> = {
       'Esfregue as mãos por pelo menos [20] segundos e seque com [papel toalha] descartável.',
     fillBlanksDistractors: ['5', 'pano de prato'],
   }),
+  'word-search': sample('word-search', 'word-search', {
+    wordSearchSeed: 7,
+    wordSearchItems: [
+      { id: 'ws-1', word: 'Touca', clue: 'Impede que cabelos caiam no alimento' },
+      { id: 'ws-2', word: 'Luvas', clue: 'Barreira no contato com alimento pronto' },
+      { id: 'ws-3', word: 'Avental', clue: 'Protege o uniforme da sujeira' },
+      { id: 'ws-4', word: 'Sabão', clue: 'Usado com água para lavar as mãos' },
+      { id: 'ws-5', word: 'Máscara', clue: 'Cobre nariz e boca durante o preparo' },
+    ],
+  }),
   matching: sample('matching', 'matching', {
     matchingPairs: [
       {
@@ -515,6 +525,14 @@ export const BLOCK_GUIDE: Record<ShowcaseEntryId, BlockGuide> = {
       'Toca numa palavra para colocá-la na lacuna destacada; toca numa lacuna preenchida para devolver a palavra. Maiúsculas e espaços não contam como erro.',
     grading: GRADING_ACTIVITY,
     marker: 'LACUNAS com "Texto:" e "Distratores:".',
+  },
+  'word-search': {
+    authorFills:
+      'De 3 a 10 palavras, cada uma com 3 a 12 letras e uma dica. Acentos e espaços são ignorados na grade. "Embaralhar" gera outra disposição até todas caberem.',
+    learnerDoes:
+      'Lê as dicas e arrasta sobre as letras, da primeira à última, para marcar cada palavra. Pelo teclado, usa as setas e Enter. "Ver respostas" revela o que falta e encerra a atividade.',
+    grading: GRADING_ACTIVITY,
+    marker: 'CACAPALAVRAS com "Palavra N:" e "Dica N:".',
   },
   matching: {
     authorFills:

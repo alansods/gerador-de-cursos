@@ -89,6 +89,12 @@ export interface MatchingPair {
   leftImage?: string
 }
 
+export interface WordSearchItem {
+  id: string
+  word: string
+  clue: string
+}
+
 export interface CategorizedItem {
   id: string
   text: string
@@ -162,6 +168,7 @@ export interface Block {
     | 'fill-blanks'
     | 'scenario'
     | 'technical-sheet'
+    | 'word-search'
   content: string
   order: number
   // image-specific
@@ -232,6 +239,8 @@ export interface Block {
   sheetSummary?: string
   sheetMaterials?: SheetMaterial[]
   sheetSteps?: SheetStep[]
+  wordSearchItems?: WordSearchItem[]
+  wordSearchSeed?: number
 }
 
 export interface Unit {

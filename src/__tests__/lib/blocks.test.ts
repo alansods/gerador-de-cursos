@@ -831,6 +831,106 @@ describe('fill-blanks block', () => {
   })
 })
 
+describe('word-search block', () => {
+  const words = (...pairs: [string, string][]) =>
+    pairs.map(([word, clue], index) => ({ id: `w-${index + 1}`, word, clue }))
+  const safety = words(
+    ['Capacete', 'Protege a cabeça'],
+    ['Luva', 'Protege as mãos'],
+    ['Óculos', 'Protege os olhos']
+  )
+
+  it('is a gradable activity with its own marker', () => {
+    const meta = BLOCK_CATALOG['word-search']
+    expect(meta.category).toBe('avaliativo')
+    expect(meta.marker).toBe('CACAPALAVRAS')
+    expect(isGradableBlock({ type: 'word-search' })).toBe(true)
+  })
+
+  it('creates the block with an empty list and a numeric seed', () => {
+    const block = createEmptyBlock('word-search')
+    expect(block.wordSearchItems).toEqual([])
+    expect(Number.isInteger(block.wordSearchSeed)).toBe(true)
+  })
+
+  it('repairs AI blocks: trims, drops incomplete or oversized words, caps at ten and seeds', () => {
+    const { course } = normalizeCourse(
+      courseWith([
+        {
+          type: 'word-search',
+          content: '',
+          wordSearchItems: [
+            { id: '', word: ' Capacete ', clue: ' Protege a cabeça ' },
+            { id: 'x', word: 'Luva', clue: '' },
+            { id: 'y', word: 'Extintor de incêndio', clue: 'Combate incêndios' },
+            ...words(
+              ['Óculos', 'Olhos'],
+              ['Botina', 'Pés'],
+              ['Protetor', 'Ouvidos'],
+              ['Máscara', 'Respiração'],
+              ['Avental', 'Corpo'],
+              ['Placa', 'Sinalização'],
+              ['Cinto', 'Altura'],
+              ['Extintor', 'Incêndio'],
+              ['Faixa', 'Isolamento'],
+              ['Cone', 'Via']
+            ),
+          ],
+        },
+      ])
+    )
+    const block = course.units[0].blocks[0]
+
+    expect(block.wordSearchItems).toHaveLength(10)
+    expect(block.wordSearchItems?.[0]).toEqual({
+      id: 'ws-1',
+      word: 'Capacete',
+      clue: 'Protege a cabeça',
+    })
+    expect(block.wordSearchItems?.map((i) => i.word)).not.toContain('Luva')
+    expect(block.wordSearchItems?.map((i) => i.word)).not.toContain('Extintor de incêndio')
+    expect(block.wordSearchSeed).toBe(1)
+  })
+
+  it('discards a block with fewer than three usable words', () => {
+    const { summary } = normalizeCourse(
+      courseWith([{ type: 'word-search', content: '', wordSearchItems: safety.slice(0, 2) }])
+    )
+    expect(summary.discarded[0].reason).toBe('com menos de 3 palavras com dica')
+  })
+
+  it('validates the form strictly', () => {
+    const form = (wordSearchItems: ReturnType<typeof words>) =>
+      BLOCK_CATALOG['word-search'].validateForm({
+        ...createEmptyBlock('word-search'),
+        wordSearchItems,
+        wordSearchSeed: 7,
+      } as Block)
+
+    expect(form(safety.slice(0, 2))).toBe('Adicione pelo menos 3 palavras')
+    expect(
+      form(
+        words(
+          ...Array.from({ length: 11 }, (_, i): [string, string] => [
+            `Palavra${'a'.repeat(i)}`,
+            'Dica',
+          ])
+        )
+      )
+    ).toBe('Use no máximo 10 palavras')
+    expect(form(words(['Capacete', 'Cabeça'], ['Luva', ''], ['Óculos', 'Olhos']))).toBe(
+      'Todas as palavras precisam de dica'
+    )
+    expect(form(words(['Capacete', 'Cabeça'], ['Ok', 'Curta'], ['Óculos', 'Olhos']))).toBe(
+      'Cada palavra precisa ter de 3 a 12 letras'
+    )
+    expect(form(words(['Capacete', 'Cabeça'], ['Óculos', 'Olhos'], ['oculos', 'De novo']))).toBe(
+      'Há palavras repetidas'
+    )
+    expect(form(safety)).toBeNull()
+  })
+})
+
 describe('sequence block', () => {
   it('keeps the author order, trims the steps and drops empty ones', () => {
     const { course } = normalizeCourse(
@@ -1474,6 +1574,7 @@ describe('modal entries', () => {
       'Quiz',
       'Verdadeiro ou falso',
       'Completar lacunas',
+      'Caça-palavras',
       'Associação',
       'Categorização',
       'Sequência',
