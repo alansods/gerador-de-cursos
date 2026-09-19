@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextRequest, NextResponse, after } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requireAuth, createErrorResponse, createSuccessResponse } from '@/lib/auth'
 import { assertCan, can, ForbiddenError, getCoursePermissions } from '@/lib/permissions'
@@ -9,6 +9,7 @@ import { generateUniqueSlug, slugifyUnits } from '@/lib/slug'
 import { Prisma } from '@prisma/client'
 import type { CourseStatus } from '@/lib/permissions'
 import { upgradeUnits } from '@/lib/legacy-course'
+import { reindexCourseContent } from '@/lib/tutor/knowledge'
 
 /** Status cuja revisão deixa de valer assim que o conteúdo muda. */
 const REVIEW_INVALIDATED_ON_EDIT: CourseStatus[] = ['APPROVED', 'REJECTED']
@@ -383,6 +384,15 @@ export async function PUT(req: NextRequest) {
         version: { increment: 1 },
       },
     })
+
+    if (normalizedUnits !== undefined) {
+      const savedUnits = normalizedUnits as unknown as Unit[]
+      after(() =>
+        reindexCourseContent(course.id, savedUnits).catch((error) =>
+          console.error('Failed to reindex the course content for the tutor:', error)
+        )
+      )
+    }
 
     // Log the activity
     await logActivity({

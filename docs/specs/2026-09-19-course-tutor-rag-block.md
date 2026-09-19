@@ -141,7 +141,7 @@ Cada item só é marcado quando o critério de "Pronto quando" foi verificado.
   - Pronto quando: a rota extrai com mammoth, grava fonte `document` e chunks com
     embedding; responde 403 para REVIEWER, GUEST e para quem não é dono nem colaborador;
     testes cobrem as permissões.
-- [ ] **Indexação do conteúdo do curso**
+- [x] **Indexação do conteúdo do curso**
   - Pronto quando: salvar o curso substitui só os chunks da fonte `course`, sem tocar nos
     documentos; cada chunk leva o rótulo de unidade e tópico; blocos sem texto são
     ignorados; testes cobrem a extração de texto dos blocos.

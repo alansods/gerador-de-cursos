@@ -3,6 +3,8 @@ import type { KnowledgeSourceKind } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
 import { chunkText } from '@/lib/tutor/chunking'
 import { getTutorProvider, type TutorProvider } from '@/lib/tutor/provider'
+import { courseSections } from '@/lib/tutor/course-text'
+import type { Unit } from '@/types/course'
 
 export interface LabeledSection {
   label: string
@@ -33,7 +35,23 @@ interface IndexSourceInput {
   kind: KnowledgeSourceKind
   name: string
   sections: LabeledSection[]
-  replaceSourceId?: string
+  reusableVectors?: Map<string, number[]>
+}
+
+function chunkKey(chunk: PreparedChunk): string {
+  return `${chunk.label}\u0000${chunk.text}`
+}
+
+async function embedMissing(
+  chunks: PreparedChunk[],
+  reusable: Map<string, number[]>,
+  provider: TutorProvider
+): Promise<number[][]> {
+  const missing = chunks.filter((chunk) => !reusable.has(chunkKey(chunk)))
+  const fresh = missing.length > 0 ? await provider.embedDocuments(missing.map((c) => c.text)) : []
+  const vectors = new Map(reusable)
+  missing.forEach((chunk, index) => vectors.set(chunkKey(chunk), fresh[index]))
+  return chunks.map((chunk) => vectors.get(chunkKey(chunk)) as number[])
 }
 
 export async function indexSource(
@@ -42,11 +60,11 @@ export async function indexSource(
 ) {
   const chunks = prepareChunks(input.sections)
   const contentHash = chunksHash(chunks)
-  const vectors = chunks.length > 0 ? await provider.embedDocuments(chunks.map((c) => c.text)) : []
+  const vectors = await embedMissing(chunks, input.reusableVectors ?? new Map(), provider)
 
   return prisma.$transaction(async (tx) => {
-    if (input.replaceSourceId) {
-      await tx.knowledgeSource.deleteMany({ where: { id: input.replaceSourceId } })
+    if (input.kind === 'COURSE') {
+      await tx.knowledgeSource.deleteMany({ where: { courseId: input.courseId, kind: 'COURSE' } })
     }
 
     const source = await tx.knowledgeSource.create({
@@ -77,4 +95,47 @@ export async function listSources(courseId: string) {
   })
 
   return sources.map(({ _count, ...source }) => ({ ...source, chunkCount: _count.chunks }))
+}
+
+export const COURSE_SOURCE_NAME = 'Conteúdo do curso'
+
+async function courseChunkVectors(sourceId: string): Promise<Map<string, number[]>> {
+  const rows = await prisma.$queryRaw<{ label: string; text: string; embedding: string }[]>`
+    SELECT label, text, embedding::text AS embedding FROM knowledge_chunks WHERE source_id = ${sourceId}`
+
+  return new Map(rows.map((row) => [chunkKey(row), JSON.parse(row.embedding) as number[]]))
+}
+
+export async function reindexCourseContent(
+  courseId: string,
+  units: Unit[],
+  provider?: TutorProvider
+): Promise<'unchanged' | 'removed' | 'indexed'> {
+  const sections = courseSections(units)
+  const chunks = prepareChunks(sections)
+  const existing = await prisma.knowledgeSource.findFirst({
+    where: { courseId, kind: 'COURSE' },
+    select: { id: true, contentHash: true },
+  })
+
+  if (chunks.length === 0) {
+    if (!existing) return 'unchanged'
+    await prisma.knowledgeSource.deleteMany({ where: { courseId, kind: 'COURSE' } })
+    return 'removed'
+  }
+
+  if (existing?.contentHash === chunksHash(chunks)) return 'unchanged'
+
+  await indexSource(
+    {
+      courseId,
+      kind: 'COURSE',
+      name: COURSE_SOURCE_NAME,
+      sections,
+      reusableVectors: existing ? await courseChunkVectors(existing.id) : undefined,
+    },
+    provider
+  )
+
+  return 'indexed'
 }
