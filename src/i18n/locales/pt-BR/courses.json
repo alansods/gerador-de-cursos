@@ -91,7 +91,7 @@
     "uploading": "Enviando e indexando...",
     "uploaded": "\"{name}\" foi adicionado ao repositório",
     "readOnly": "Só o dono do curso, os colaboradores e administradores podem adicionar ou excluir documentos.",
-    "empty": "Nenhum documento enviado. O tutor já responde com o conteúdo das aulas.",
+    "empty": "Nenhum documento enviado.",
     "delete": "Excluir",
     "deleteConfirm": "Excluir \"{name}\" do repositório? O tutor deixa de usar esse conteúdo.",
     "deleted": "Documento excluído",

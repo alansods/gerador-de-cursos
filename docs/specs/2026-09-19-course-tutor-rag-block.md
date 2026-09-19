@@ -218,7 +218,7 @@ A troca fica isolada num único módulo de provedor (`src/lib/tutor/provider.ts`
   truncar, em todas as páginas.
 - **A tabela lista só os documentos enviados**, com o tipo do arquivo (PDF ou DOCX). O
   conteúdo do curso continua indexado como fonte `COURSE`, mas não aparece: é implícito, e a
-  descrição e o estado vazio dizem que o tutor já responde com as aulas.
+  descrição diz que o tutor já responde com as aulas.
 - **Tabela no celular:** esconde Tipo, Trechos, Tamanho e data para as ações caberem.
 - **Com erro ao carregar a lista, a página mostra só o erro**, sem o aviso de "somente
   leitura", que confundia.

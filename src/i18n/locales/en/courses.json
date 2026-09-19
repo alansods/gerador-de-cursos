@@ -91,7 +91,7 @@
     "uploading": "Uploading and indexing...",
     "uploaded": "\"{name}\" was added to the knowledge base",
     "readOnly": "Only the course owner, collaborators and administrators can add or delete documents.",
-    "empty": "No documents yet. The tutor already answers from the lesson content.",
+    "empty": "No documents yet.",
     "delete": "Delete",
     "deleteConfirm": "Delete \"{name}\" from the knowledge base? The tutor stops using this content.",
     "deleted": "Document deleted",
