@@ -1,4 +1,4 @@
-# Bloco "Tutor IA" (`tutor`) — chatbot RAG por curso
+# Tutor IA do curso — chatbot RAG por curso
 
 ## Contexto
 
@@ -12,9 +12,9 @@ O nome do aluno já é lido do LMS: `cmi.core.student_name` (SCORM 1.2) e
 
 ### Viabilidade
 
-- O aluno acessa pelo LMS, então está sempre online. O bloco é o primeiro do pacote a
+- O aluno acessa pelo LMS, então está sempre online. O tutor é o primeiro recurso do pacote a
   chamar um domínio externo (a API na Vercel): se a CSP do LMS bloquear a chamada, ou a
-  API falhar, o bloco mostra "tutor indisponível" em vez de quebrar.
+  API falhar, o chat mostra "tutor indisponível" em vez de quebrar.
 - O Neon suporta `pgvector`, então os vetores ficam no banco que já existe.
 - O .docx já é extraído com mammoth (`/api/extract-document`). O PDF **não** é extraído
   hoje e entra nesta feature.
@@ -32,25 +32,28 @@ Não existe RAG que dispense mostrar à IA os trechos usados na resposta:
 
 ## Decisões
 
-| Tema            | Decisão                                                                            |
-| --------------- | ---------------------------------------------------------------------------------- |
-| Provedor        | Gemini, **no plano gratuito por enquanto** (ver "Risco aceito")                    |
-| Vetores         | `pgvector` no Neon, busca filtrada por `courseId`                                  |
-| Nome do aluno   | Usado só no cliente, na saudação; **nunca** vai no payload do LLM                  |
-| Fora do escopo  | Similaridade abaixo do limiar → resposta fixa, sem chamar o LLM                    |
-| Grounding       | Prompt manda responder só com o contexto e citar a fonte (arquivo ou unidade)      |
-| Acesso à rota   | Token por curso embutido no pacote, CORS aberto só nessa rota, rate limit, teto    |
-| Origem do bloco | Só pelo editor: sem marcador de documento, `aiGeneratable: false`                  |
-| Conteúdo        | Documentos enviados **e** o texto dos blocos do próprio curso, indexado sozinho    |
-| Repositório     | Um por curso; nada é compartilhado entre cursos                                    |
-| Escopo da busca | O curso inteiro, sem filtro por unidade                                            |
-| Atividades      | Blocos avaliativos (`isGradableBlock`) não são indexados: o tutor não dá gabarito  |
-| Permissão       | Dono, colaboradores e ADMIN enviam e removem; REVIEWER e GUEST só veem a lista     |
-| Histórico       | Nenhuma pergunta ou resposta é persistida                                          |
-| Banco da PoC    | O banco atual do Neon: a migration só adiciona a extensão e duas tabelas novas     |
-| Teste em LMS    | SCORM Cloud (não reproduz a CSP do Moodle do SENAI)                                |
-| Idioma          | Respostas sempre em pt-BR                                                          |
-| Limites         | Rate limit por sessão e teto diário por curso, ajustáveis por variável de ambiente |
+| Tema            | Decisão                                                                               |
+| --------------- | ------------------------------------------------------------------------------------- |
+| Provedor        | Gemini, **no plano gratuito por enquanto** (ver "Risco aceito")                       |
+| Vetores         | `pgvector` no Neon, busca filtrada por `courseId`                                     |
+| Nome do aluno   | Usado só no cliente, na saudação; **nunca** vai no payload do LLM                     |
+| Fora do escopo  | Similaridade abaixo do limiar → resposta fixa, sem chamar o LLM                       |
+| Grounding       | Prompt manda responder só com o contexto e citar a fonte (arquivo ou unidade)         |
+| Acesso à rota   | Token por curso embutido no pacote, CORS aberto só nessa rota, rate limit, teto       |
+| Ativação        | Chave "Tutor IA" no painel "Sobre o curso"; desligada por padrão. Não é um bloco      |
+| Onde aparece    | Botão flutuante em todas as páginas do curso (preview e SCORM), só com a chave ligada |
+| Indexação       | O conteúdo do curso só é indexado com a chave ligada; ligar dispara a indexação       |
+| Desligar        | Esconde o chat e recusa perguntas, mas mantém o repositório para religar sem custo    |
+| Conteúdo        | Documentos enviados **e** o texto dos blocos do próprio curso, indexado sozinho       |
+| Repositório     | Um por curso; nada é compartilhado entre cursos                                       |
+| Escopo da busca | O curso inteiro, sem filtro por unidade                                               |
+| Atividades      | Blocos avaliativos (`isGradableBlock`) não são indexados: o tutor não dá gabarito     |
+| Permissão       | Dono, colaboradores e ADMIN enviam e removem; REVIEWER e GUEST só veem a lista        |
+| Histórico       | Nenhuma pergunta ou resposta é persistida                                             |
+| Banco da PoC    | O banco atual do Neon: a migration só adiciona a extensão e duas tabelas novas        |
+| Teste em LMS    | SCORM Cloud (não reproduz a CSP do Moodle do SENAI)                                   |
+| Idioma          | Respostas sempre em pt-BR                                                             |
+| Limites         | Rate limit por sessão e teto diário por curso, ajustáveis por variável de ambiente    |
 
 ### Risco aceito: plano gratuito do Gemini
 
@@ -90,10 +93,8 @@ A troca fica isolada num único módulo de provedor, para não exigir retrabalho
   lista de fontes, status e exclusão.
 - Extração de PDF.
 - Ingestão assíncrona, no molde do `SCORMJob`, se um PDF grande estourar o timeout da Vercel.
-- Bloco `tutor` pelo checklist do CLAUDE.md: `BLOCK_CATALOG`, registry, drawer e
-  `block-showcase`.
-- `docs/content-blocks.md` diz que todos os blocos funcionam "inclusive offline". Com o
-  tutor, a frase passa a ter exceção: registrar lá que ele depende da API.
+- Chave "Tutor IA" no painel "Sobre o curso" (`CourseSettingsDrawer`), que liga o chat no
+  preview e no pacote SCORM.
 - Segurança da rota pública (token, CORS, rate limit, teto de custo) e aviso de "tutor
   indisponível" no pacote SCORM quando a chamada falhar.
 
@@ -190,6 +191,12 @@ Cada item só é marcado quando o critério de "Pronto quando" foi verificado.
 
 ### Fase 2 — produto
 
+- [ ] **Chave "Tutor IA" nas configurações do curso**
+  - Pronto quando: `Course.tutorEnabled` existe (migration nova, `@map`, padrão `false`);
+    o painel "Sobre o curso" tem a chave e salva com o curso; o chat do preview só aparece
+    com a chave ligada; `POST /api/tutor/[courseId]` recusa curso com a chave desligada;
+    salvar o curso só reindexa com a chave ligada, e ligar a chave indexa na hora; testes
+    cobrem os quatro comportamentos.
 - [ ] **Página `/courses/[id]/knowledge`**
   - Pronto quando: dono, colaboradores e ADMIN enviam (via `uploadFile` e `MEDIA_POLICY`)
     e excluem documentos; REVIEWER e GUEST veem só a lista; o status de cada fonte aparece;
@@ -201,20 +208,18 @@ Cada item só é marcado quando o critério de "Pronto quando" foi verificado.
   - Pronto quando: um PDF grande é indexado sem estourar o timeout da Vercel, com status
     acompanhado no molde do `SCORMJob`. Pode ser dispensado se a Fase 1 mostrar que não é
     necessário, com o motivo registrado.
-- [ ] **Bloco `tutor`**
-  - Pronto quando: o checklist de novo bloco do CLAUDE.md está cumprido (union, catálogo
-    com `aiGeneratable: false` e sem marcador, `repairBlock`/`invalidReason`, componente,
-    registry, `index.ts`, drawer, `BLOCK_SAMPLES`/`BLOCK_GUIDE`, testes); o bloco é criado,
-    salvo e reaberto no editor.
 - [ ] **Segurança da rota pública**
   - Pronto quando: o pacote leva um token por curso; o token pode ser revogado e gerado de
     novo; CORS aberto só nessa rota; rate limit por sessão e teto diário por curso,
     ajustáveis por variável de ambiente; testes cobrem token inválido e limite estourado.
 - [ ] **Chat no pacote SCORM**
-  - Pronto quando: o bloco chama a API com o token, saúda pelo nome vindo do LMS e mostra
-    "tutor indisponível" quando a chamada é bloqueada ou falha.
+  - Pronto quando: com a chave ligada, o pacote exportado mostra o botão do tutor em todas
+    as páginas; o chat chama a API com o token, saúda pelo nome vindo do LMS e mostra
+    "tutor indisponível" quando a chamada é bloqueada ou falha; com a chave desligada, o
+    pacote não leva nada do tutor.
 - [ ] **Documentação**
-  - Pronto quando: `docs/content-blocks.md` registra que o tutor depende da API.
+  - Pronto quando: o CLAUDE.md registra o tutor (chave do curso, rotas, variáveis
+    `TUTOR_*`, dependência da API dentro do pacote SCORM).
 - [ ] **Fechamento da Fase 2**
   - Pronto quando: `pnpm build` está limpo, `pnpm test` está verde e todos os itens de
     "Verificação" foram conferidos, incluindo o SCORM Cloud.
