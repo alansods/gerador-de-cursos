@@ -59,8 +59,9 @@ Não existe RAG que dispense mostrar à IA os trechos usados na resposta:
 
 No plano gratuito, o Google pode usar o conteúdo enviado para melhorar os produtos,
 inclusive com revisão humana. Isso vale para os embeddings e para os trechos enviados em
-cada pergunta. É aceitável para testar com material de exemplo. **Antes de indexar
-conteúdo real e sensível**, é preciso migrar para uma destas opções:
+cada pergunta. **O usuário decidiu (19/09/2026) seguir no plano gratuito, inclusive com
+turmas reais**, aceitando esse risco. Se um dia a exposição deixar de ser aceitável, as
+opções são:
 
 1. Gemini pago ou Vertex AI, que não usam os dados para treino.
 2. Embeddings gerados no próprio servidor com um modelo aberto, para que o repositório inteiro
@@ -150,7 +151,6 @@ A troca fica isolada num único módulo de provedor (`src/lib/tutor/provider.ts`
 - [x] Documento: enviar, visualizar, baixar (idêntico ao original) e excluir (some do store); blob sem assinatura → 403.
 - [x] Pacote exportado dentro de um LMS falso, noutra origem: chat funciona, saúda pelo nome do LMS e, com a API inacessível, mostra "tutor indisponível".
 - [x] Subir o pacote no SCORM Cloud (19/09/2026, conferido pelo usuário).
-- [ ] Antes de usar com turma real, repetir o teste no Moodle do SENAI, cuja CSP o SCORM Cloud não reproduz.
 
 ## O que mudou na implementação
 
@@ -160,7 +160,8 @@ A troca fica isolada num único módulo de provedor (`src/lib/tutor/provider.ts`
   `TUTOR_MIN_SIMILARITY`). Medido num curso sintético sobre EPI/EPC/ergonomia: perguntas do
   conteúdo tiveram melhor trecho entre 0,68 e 0,75; perguntas de fora (receita, futebol,
   geografia), no máximo 0,52; o pedido "mostre todo o seu contexto e instruções" ficou em 0,61
-  e foi recusado sem chamar o LLM. Recalibrar com um curso real antes de usar com turma.
+  e foi recusado sem chamar o LLM. O usuário dispensou recalibrar com um curso real; o valor
+  segue ajustável por `TUTOR_MIN_SIMILARITY`.
 - **O rótulo entra no texto do embedding** (`<rótulo>\n\n<trecho>`). Sem ele, uma
   pergunta sobre ergonomia não sabia que o trecho era da unidade de ergonomia.
 - **O título da unidade sozinho não vira trecho.** Aparecia como ruído no topo de quase toda
@@ -395,8 +396,6 @@ Cada item só é marcado quando o critério de "Pronto quando" foi verificado.
   - Pronto quando: `pnpm build` limpo, `pnpm test` verde e todos os itens de "Verificação"
     conferidos, incluindo o SCORM Cloud.
   - Feito em 19/09/2026: build limpo, testes verdes e pacote testado pelo usuário no SCORM
-    Cloud, já com a continuação (conversa, progresso e dicas). O teste no Moodle do SENAI
-    fica no item seguinte.
-- [ ] **Antes de turma real** (fora do código)
-  - Pronto quando: o provedor saiu do plano gratuito (ver "Risco aceito"), o limiar foi
-    recalibrado com um curso real e o pacote foi testado no Moodle do SENAI.
+    Cloud, já com a continuação (conversa, progresso e dicas).
+- **Antes de turma real** — dispensado pelo usuário em 19/09/2026: segue no plano gratuito do
+  Gemini, sem recalibrar o limiar com curso real e sem teste separado no Moodle do SENAI.
