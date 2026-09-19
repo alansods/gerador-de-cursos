@@ -1,7 +1,7 @@
 /**
  * @jest-environment node
  */
-import { blockText, courseSections, htmlToText } from '@/lib/tutor/course-text'
+import { assessmentText, blockText, courseSections, htmlToText } from '@/lib/tutor/course-text'
 import { chunksHash, prepareChunks, reindexCourseContent } from '@/lib/tutor/knowledge'
 import { prisma } from '@/lib/prisma'
 import type { TutorProvider } from '@/lib/tutor/provider'
@@ -110,6 +110,180 @@ describe('blockText', () => {
   })
 })
 
+describe('assessmentText', () => {
+  it('keeps the quiz question, options and author hint, but not which option is right', () => {
+    const text = assessmentText(
+      block({
+        type: 'quiz',
+        quizData: {
+          questions: [
+            {
+              id: 'q',
+              question: 'Qual equipamento protege as mãos?',
+              hint: 'Pense no que se veste.',
+              options: [
+                { id: 'a', text: 'Luva', isCorrect: true, feedback: 'Correto, a luva protege.' },
+                { id: 'b', text: 'Extintor', isCorrect: false, feedback: 'Extintor é EPC.' },
+              ],
+            },
+          ],
+        },
+      })
+    )
+
+    expect(text).toContain('Qual equipamento protege as mãos?')
+    expect(text).toContain('- Luva')
+    expect(text).toContain('- Extintor')
+    expect(text).toContain('Dica do autor: Pense no que se veste.')
+    expect(text).not.toMatch(/Correto|correta|EPC|true/i)
+  })
+
+  it('keeps the interactive video question without the right letter or feedback', () => {
+    const text = assessmentText(
+      block({
+        type: 'interactive-video',
+        videoQuestions: [
+          {
+            id: 'v',
+            time: '00:30',
+            question: 'O que o operador esqueceu?',
+            optionA: 'Capacete',
+            optionB: 'Óculos',
+            correct: 'B',
+            feedback: 'Faltaram os óculos.',
+          },
+        ],
+      })
+    )
+
+    expect(text).toContain('O que o operador esqueceu?')
+    expect(text).toContain('- Capacete')
+    expect(text).not.toMatch(/Faltaram|correct|\bB\b/)
+  })
+
+  it('keeps true-false statements without the verdict or explanation', () => {
+    const text = assessmentText(
+      block({
+        type: 'true-false',
+        trueFalseItems: [
+          { id: 't', statement: 'Luva é EPC.', answer: 'false', explanation: 'Luva é EPI.' },
+        ],
+      })
+    )
+
+    expect(text).toContain('Luva é EPC.')
+    expect(text).not.toMatch(/false|falsa\b|Luva é EPI/)
+  })
+
+  it('keeps the scenario situation and options without outcomes or consequences', () => {
+    const text = assessmentText(
+      block({
+        type: 'scenario',
+        scenarioSituation: 'Um colega está sem capacete.',
+        scenarioOptions: [
+          {
+            id: 'a',
+            text: 'Avisar o colega',
+            outcome: 'correct',
+            consequence: 'Acidente evitado.',
+          },
+          { id: 'b', text: 'Ignorar', outcome: 'incorrect', consequence: 'Ele se machuca.' },
+        ],
+      })
+    )
+
+    expect(text).toContain('Um colega está sem capacete.')
+    expect(text).toContain('- Avisar o colega')
+    expect(text).not.toMatch(/correct|evitado|machuca/)
+  })
+
+  it('lists sequence items alphabetically, never in the saved order', () => {
+    const text = assessmentText(
+      block({
+        type: 'sequence',
+        sequenceItems: [
+          { id: '1', text: 'Vestir a luva' },
+          { id: '2', text: 'Checar a luva' },
+          { id: '3', text: 'Ajustar o punho' },
+        ],
+      })
+    )
+
+    expect(text).toContain('- Ajustar o punho\n- Checar a luva\n- Vestir a luva')
+  })
+
+  it('lists matching columns separately, each sorted, so the pairs are not given away', () => {
+    const text = assessmentText(
+      block({
+        type: 'matching',
+        matchingPairs: [
+          { id: '1', left: 'Luva', right: 'Mãos' },
+          { id: '2', left: 'Capacete', right: 'Cabeça' },
+        ],
+      })
+    )
+
+    expect(text).toContain('Coluna A:\n1. Capacete\n2. Luva')
+    expect(text).toContain('Coluna B:\n1. Cabeça\n2. Mãos')
+    expect(text).not.toMatch(/Luva.*Mãos|Capacete.*Cabeça/)
+  })
+
+  it('lists categories and items apart, without saying where each item goes', () => {
+    const text = assessmentText(
+      block({
+        type: 'categorization',
+        categories: [
+          { id: 'c1', name: 'EPI', items: [{ id: 'i1', text: 'Luva' }] },
+          { id: 'c2', name: 'EPC', items: [{ id: 'i2', text: 'Extintor' }] },
+        ],
+      })
+    )
+
+    expect(text).toBe('Categorias: EPC; EPI\nItens para classificar: Extintor; Luva')
+  })
+
+  it('blanks out the fill-in answers and leaves the distractors out', () => {
+    const text = assessmentText(
+      block({
+        type: 'fill-blanks',
+        fillBlanksText: 'A [luva] protege as [mãos].',
+        fillBlanksDistractors: ['pés'],
+      })
+    )
+
+    expect(text).toContain('A ____ protege as ____.')
+    expect(text).not.toMatch(/luva|mãos|pés/)
+  })
+
+  it('keeps only the word search clues', () => {
+    const text = assessmentText(
+      block({
+        type: 'word-search',
+        wordSearchItems: [{ id: 'w', word: 'CAPACETE', clue: 'Protege a cabeça' }],
+      })
+    )
+
+    expect(text).toContain('- Protege a cabeça')
+    expect(text).not.toMatch(/CAPACETE/i)
+  })
+
+  it('indexes nothing from an interactive image in find mode', () => {
+    expect(
+      assessmentText(
+        block({
+          type: 'interactive-image',
+          hotspotMode: 'find',
+          hotspots: [{ id: 'h', x: 0, y: 0, title: 'Alvo', content: 'Resposta' }],
+        })
+      )
+    ).toBe('')
+  })
+
+  it('returns nothing for instructional blocks', () => {
+    expect(assessmentText(block({ content: 'Texto' }))).toBe('')
+  })
+})
+
 describe('courseSections', () => {
   it('labels sections by unit and heading, in order', () => {
     const sections = courseSections([
@@ -130,6 +304,36 @@ describe('courseSections', () => {
       { label: 'Unidade 1 — Introdução', text: 'Boas-vindas.' },
       { label: 'Unidade 2 — Segurança › EPI', text: 'EPI\n\nEquipamento individual.' },
       { label: 'Unidade 2 — Segurança › EPC', text: 'EPC\n\nEquipamento coletivo.' },
+    ])
+  })
+})
+
+describe('courseSections with activities', () => {
+  it('puts each activity in its own section, labeled as an activity of its unit', () => {
+    const sections = courseSections([
+      unit('Segurança', [
+        block({ type: 'heading', content: 'EPI' }, 1),
+        block({ content: 'Luva protege as mãos.' }, 2),
+        block(
+          {
+            type: 'true-false',
+            trueFalseItems: [
+              { id: 't', statement: 'Luva é EPC.', answer: 'false', explanation: '' },
+            ],
+          },
+          3
+        ),
+        block({ content: 'Capacete protege a cabeça.' }, 4),
+      ]),
+    ])
+
+    expect(sections).toEqual([
+      { label: 'Unidade 1 — Segurança › EPI', text: 'EPI\n\nLuva protege as mãos.' },
+      {
+        label: 'Unidade 1 — Segurança › Atividade avaliativa: Verdadeiro ou falso',
+        text: 'Afirmações para julgar como verdadeiras ou falsas:\n- Luva é EPC.',
+      },
+      { label: 'Unidade 1 — Segurança › EPI', text: 'Capacete protege a cabeça.' },
     ])
   })
 })

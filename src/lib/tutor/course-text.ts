@@ -1,4 +1,5 @@
-import { isGradableBlock } from '@/lib/blocks'
+import { BLOCK_CATALOG, isGradableBlock } from '@/lib/blocks'
+import { parseFillBlanks } from '@/lib/fill-blanks'
 import type { Block, Unit } from '@/types/course'
 import type { LabeledSection } from '@/lib/tutor/knowledge'
 
@@ -82,6 +83,101 @@ export function blockText(block: Block): string {
   }
 }
 
+function alphabetical(values: (string | undefined)[]): string[] {
+  return values
+    .map((value) => htmlToText(value))
+    .filter(Boolean)
+    .sort((a, b) => a.localeCompare(b, 'pt-BR'))
+}
+
+function numbered(items: string[]): string[] {
+  return items.map((item, index) => `${index + 1}. ${item}`)
+}
+
+export function assessmentText(block: Block): string {
+  if (!isGradableBlock(block)) return ''
+
+  switch (block.type) {
+    case 'quiz':
+      return (block.quizData?.questions ?? [])
+        .map((question) =>
+          lines(
+            `Questão: ${htmlToText(question.question)}`,
+            ...question.options.map((option) => `- ${htmlToText(option.text)}`),
+            question.hint && `Dica do autor: ${htmlToText(question.hint)}`
+          )
+        )
+        .join('\n\n')
+    case 'interactive-video':
+      return (block.videoQuestions ?? [])
+        .map((question) =>
+          lines(
+            `Questão: ${htmlToText(question.question)}`,
+            ...[
+              question.optionA,
+              question.optionB,
+              question.optionC,
+              question.optionD,
+              question.optionE,
+            ]
+              .filter(Boolean)
+              .map((option) => `- ${htmlToText(option)}`)
+          )
+        )
+        .join('\n\n')
+    case 'true-false':
+      return lines(
+        'Afirmações para julgar como verdadeiras ou falsas:',
+        ...(block.trueFalseItems ?? []).map((item) => `- ${htmlToText(item.statement)}`)
+      )
+    case 'scenario':
+      return lines(
+        block.scenarioSituation && `Situação: ${htmlToText(block.scenarioSituation)}`,
+        ...(block.scenarioOptions ?? []).map((option) => `- ${htmlToText(option.text)}`)
+      )
+    case 'sequence':
+      return lines(
+        'Itens para colocar em ordem:',
+        ...alphabetical((block.sequenceItems ?? []).map((item) => item.text)).map(
+          (item) => `- ${item}`
+        )
+      )
+    case 'matching': {
+      const pairs = block.matchingPairs ?? []
+      return lines(
+        'Associar os itens da coluna A com os da coluna B.',
+        'Coluna A:',
+        ...numbered(alphabetical(pairs.map((pair) => pair.left))),
+        'Coluna B:',
+        ...numbered(alphabetical(pairs.map((pair) => pair.right)))
+      )
+    }
+    case 'categorization': {
+      const categories = block.categories ?? []
+      return lines(
+        `Categorias: ${alphabetical(categories.map((category) => category.name)).join('; ')}`,
+        `Itens para classificar: ${alphabetical(
+          categories.flatMap((category) => category.items.map((item) => item.text))
+        ).join('; ')}`
+      )
+    }
+    case 'fill-blanks':
+      return lines(
+        'Texto para completar:',
+        parseFillBlanks(block.fillBlanksText)
+          .map((segment) => (segment.kind === 'blank' ? '____' : segment.value))
+          .join('')
+      )
+    case 'word-search':
+      return lines(
+        'Pistas das palavras escondidas:',
+        ...(block.wordSearchItems ?? []).map((item) => `- ${htmlToText(item.clue)}`)
+      )
+    default:
+      return ''
+  }
+}
+
 function isSectionHeading(block: Block): boolean {
   return block.type === 'heading' || block.type === 'subheading'
 }
@@ -105,6 +201,16 @@ export function courseSections(units: Unit[]): LabeledSection[] {
       ;[...(unit.blocks ?? [])]
         .sort((a, b) => a.order - b.order)
         .forEach((block) => {
+          const activity = assessmentText(block)
+          if (activity) {
+            flush()
+            sections.push({
+              label: `${unitLabel} › Atividade avaliativa: ${BLOCK_CATALOG[block.type].label}`,
+              text: activity,
+            })
+            return
+          }
+
           const text = blockText(block)
           if (isSectionHeading(block) && text) {
             flush()

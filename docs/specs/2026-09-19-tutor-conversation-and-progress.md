@@ -137,7 +137,7 @@ Cada item só é marcado quando o critério de "Pronto quando" foi verificado.
   - Pronto quando: `small-talk.ts` reconhece as categorias acima, com e sem acento e
     pontuação; mensagem com pergunta junto segue o fluxo normal; o tutor responde sem chamar
     embedding nem IA; testes cobrem os casos.
-- [ ] **Atividades avaliativas sem gabarito**
+- [x] **Atividades avaliativas sem gabarito**
   - Pronto quando: cada tipo da tabela gera a seção com o rótulo de atividade e só com o que
     a tabela permite; testes provam, tipo a tipo, que resposta, feedback, pares, ordem,
     categorias e palavras não aparecem no texto indexado.
