@@ -365,7 +365,7 @@ Cada item só é marcado quando o critério de "Pronto quando" foi verificado.
     páginas; o chat chama a API com o token, saúda pelo nome vindo do LMS e mostra "tutor
     indisponível" quando a chamada é bloqueada ou falha; com a chave desligada, o pacote não
     leva nada do tutor.
-- [ ] **Documentação**
+- [x] **Documentação** (o CLAUDE.md não é versionado; a mudança fica na máquina do autor)
   - Pronto quando: o CLAUDE.md registra o tutor (chave do curso, rotas, variáveis `TUTOR_*`,
     store privado, dependência da API dentro do pacote SCORM).
 - [ ] **Fechamento da Fase 2**
