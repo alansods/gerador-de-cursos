@@ -36,23 +36,23 @@ Não existe RAG que dispense mostrar à IA os trechos usados na resposta:
 | --------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
 | Provedor              | Gemini (`gemini-embedding-001` a 768 dimensões e `gemini-2.5-flash`), **no plano gratuito por enquanto** (ver "Risco aceito")  |
 | Vetores               | `pgvector` no Neon, busca sempre filtrada por `courseId`                                                                       |
-| Ativação              | Chave "Tutor IA" no painel "Sobre o curso"; desligada por padrão. Não é um bloco                                               |
+| Ativação              | Opção "Tutor IA" no painel "Sobre o curso"; desligada por padrão. Não é um bloco                                               |
 | Formato do chat       | Widget tradicional: botão redondo com robô no canto inferior direito que abre um popup não modal (a página continua navegável) |
-| Onde aparece          | Em todas as páginas do curso com a chave ligada: preview e pacote SCORM                                                        |
+| Onde aparece          | Em todas as páginas do curso com o tutor ligado: preview e pacote SCORM                                                        |
 | Conteúdo              | Texto dos blocos do próprio curso **e** documentos enviados. Sem documento nenhum, o tutor já responde com o conteúdo da aula  |
 | Atividades            | Blocos avaliativos (`isGradableBlock`) não são indexados: o tutor não dá gabarito                                              |
-| Indexação             | O conteúdo do curso só é indexado com a chave ligada; ligar dispara a indexação; salvar reindexa só o que mudou                |
-| Desligar              | Esconde o chat e recusa perguntas, mas mantém o repositório para religar sem custo                                             |
+| Indexação             | O conteúdo do curso só é indexado com o tutor ligado; ligar dispara a indexação; salvar reindexa só o que mudou                |
+| Desligar              | Esconde o chat e recusa perguntas, mas mantém o repositório; religar gera chave de acesso nova (exportar o curso de novo)      |
 | Repositório           | Um por curso; nada é compartilhado entre cursos; busca no curso inteiro, sem filtro por unidade                                |
 | Acesso ao repositório | Página `/courses/[id]/knowledge`: menu "⋯" da lista de cursos e link "Documentos do tutor" no painel "Sobre o curso"           |
 | Armazenamento         | Original em store de Blob **privado** (`tutor-documents`), aberto só por URL assinada de 5 min; no banco, só trechos e vetores |
-| Permissão             | Enviar, excluir e ligar/desligar a chave: dono, colaboradores e ADMIN. Visualizar e baixar: qualquer usuário logado            |
+| Permissão             | Enviar, excluir e ligar/desligar o tutor: dono, colaboradores e ADMIN. Visualizar e baixar: qualquer usuário logado            |
 | Nome do aluno         | Usado só no cliente, na saudação; **nunca** vai no payload do LLM                                                              |
 | Fora do escopo        | Similaridade abaixo do limiar → resposta fixa, sem chamar o LLM                                                                |
 | Grounding             | Prompt manda responder só com o contexto e citar a fonte; a API devolve as fontes, mas o chat não as mostra ao aluno           |
 | Histórico             | Nenhuma pergunta ou resposta é persistida                                                                                      |
 | Idioma                | Respostas sempre em pt-BR; textos da página de documentos em pt-BR e en                                                        |
-| Acesso à rota pública | Chave por curso embutida no pacote, limites por sessão e por curso; CORS aberto (global, já existia)                           |
+| Acesso à rota pública | Chave de acesso por curso, automática e invisível, embutida no pacote; limites por sessão e por curso; CORS aberto (global)    |
 | Teste em LMS          | SCORM Cloud (não reproduz a CSP do Moodle do SENAI)                                                                            |
 
 ### Risco aceito: plano gratuito do Gemini
@@ -71,7 +71,7 @@ A troca fica isolada num único módulo de provedor (`src/lib/tutor/provider.ts`
 
 ## Arquitetura
 
-### Dados (4 migrations; as 3 primeiras aplicadas na produção em 19/09/2026)
+### Dados (4 migrations, todas aplicadas na produção em 19/09/2026)
 
 - `20260919120000_add_course_knowledge_base`: extensão `vector`, enum
   `knowledge_source_kind` (`DOCUMENT`, `COURSE`), tabelas `knowledge_sources` e
@@ -85,29 +85,30 @@ A troca fica isolada num único módulo de provedor (`src/lib/tutor/provider.ts`
 
 ### Servidor
 
-| Arquivo / rota                                          | Papel                                                                            |
-| ------------------------------------------------------- | -------------------------------------------------------------------------------- |
-| `src/lib/tutor/provider.ts`                             | Interface do provedor e implementação Gemini por REST (embeddings e resposta)    |
-| `src/lib/tutor/chunking.ts`                             | Divide texto em trechos de ~3.200 caracteres com sobreposição                    |
-| `src/lib/tutor/course-text.ts`                          | Extrai o texto dos blocos, por unidade e título, sem atividades avaliativas      |
-| `src/lib/tutor/knowledge.ts`                            | Indexa fontes, reaproveita vetores e reindexa o conteúdo do curso                |
-| `src/lib/tutor/extract.ts`                              | Lê .docx (`mammoth`) e PDF por página (`unpdf`); recusa PDF digitalizado         |
-| `src/lib/tutor/ask.ts`                                  | Busca top-k, aplica o limiar, chama o LLM e separa a citação                     |
-| `src/lib/tutor/document-storage.ts`                     | Store privado: leitura, exclusão e URL assinada                                  |
-| `src/lib/tutor/document-access.ts`                      | Busca o documento do curso e limpa arquivos de cursos excluídos                  |
-| `POST /api/tutor/[courseId]`                            | Pergunta no preview do app (com login)                                           |
-| `POST /api/public/tutor/[courseId]`                     | Pergunta vinda do pacote SCORM (chave do curso, limites, sem login)              |
-| `GET/POST/DELETE /api/courses/[id]/knowledge`           | Lista, indexa e exclui documentos (`maxDuration = 120`)                          |
-| `POST /api/courses/[id]/knowledge/upload`               | Token de upload direto ao store privado, só para quem gerencia                   |
-| `GET .../knowledge/[sourceId]/file?mode=view\|download` | Redireciona para a URL assinada                                                  |
-| `GET .../knowledge/[sourceId]/preview`                  | PDF → URL assinada; .docx → HTML                                                 |
-| `PUT /api/courses`                                      | Grava `tutorEnabled` e reindexa o curso com `after()` quando a chave está ligada |
+| Arquivo / rota                                          | Papel                                                                         |
+| ------------------------------------------------------- | ----------------------------------------------------------------------------- |
+| `src/lib/tutor/provider.ts`                             | Interface do provedor e implementação Gemini por REST (embeddings e resposta) |
+| `src/lib/tutor/chunking.ts`                             | Divide texto em trechos de ~3.200 caracteres com sobreposição                 |
+| `src/lib/tutor/course-text.ts`                          | Extrai o texto dos blocos, por unidade e título, sem atividades avaliativas   |
+| `src/lib/tutor/knowledge.ts`                            | Indexa fontes, reaproveita vetores e reindexa o conteúdo do curso             |
+| `src/lib/tutor/extract.ts`                              | Lê .docx (`mammoth`) e PDF por página (`unpdf`); recusa PDF digitalizado      |
+| `src/lib/tutor/ask.ts`                                  | Busca top-k, aplica o limiar, chama o LLM e separa a citação                  |
+| `src/lib/tutor/document-storage.ts`                     | Store privado: leitura, exclusão e URL assinada                               |
+| `src/lib/tutor/document-access.ts`                      | Busca o documento do curso e limpa arquivos de cursos excluídos               |
+| `POST /api/tutor/[courseId]`                            | Pergunta no preview do app (com login)                                        |
+| `POST /api/public/tutor/[courseId]`                     | Pergunta vinda do pacote SCORM (chave do curso, limites, sem login)           |
+| `GET/POST/DELETE /api/courses/[id]/knowledge`           | Lista, indexa e exclui documentos (`maxDuration = 120`)                       |
+| `POST /api/courses/[id]/knowledge/upload`               | Token de upload direto ao store privado, só para quem gerencia                |
+| `GET .../knowledge/[sourceId]/file?mode=view\|download` | Redireciona para a URL assinada                                               |
+| `GET .../knowledge/[sourceId]/preview`                  | PDF → URL assinada; .docx → HTML                                              |
+| `PUT /api/courses`                                      | Grava `tutorEnabled`, gera a chave ao ligar e reindexa com `after()`          |
 
 ### Interface
 
 - `src/components/tutor/TutorChatPanel.tsx`: widget do chat, montado no preview
   (`/courses/[id]/preview`) quando `course.tutorEnabled`.
-- `src/components/CourseSettingsDrawer.tsx`: chave "Tutor IA" e link para os documentos.
+- `src/components/CourseSettingsDrawer.tsx`: opção "Tutor IA", aviso ao desligar e link para
+  os documentos.
 - `src/app/(app)/courses/[id]/knowledge/page.tsx`: tabela de fontes, envio, modal de
   visualização, download e exclusão.
 - `src/app/(app)/courses/page.tsx`: item "Documentos do tutor" no menu "⋯".
@@ -138,8 +139,8 @@ A troca fica isolada num único módulo de provedor (`src/lib/tutor/provider.ts`
 
 ## Verificação
 
-- [x] Perguntar algo que está no documento: o tutor responde e cita o arquivo (e a página, no PDF).
-- [x] Perguntar algo que só está nos blocos do curso: o tutor responde e cita a unidade, mesmo sem documento enviado.
+- [x] Perguntar algo que está no documento: o tutor responde e a API cita o arquivo (e a página, no PDF).
+- [x] Perguntar algo que só está nos blocos do curso: o tutor responde e a API cita a unidade, mesmo sem documento enviado.
 - [x] Editar um bloco e salvar: a resposta passa a refletir o texto novo.
 - [x] Dois cursos com conteúdo diferente: a pergunta de um nunca traz trecho do outro.
 - [x] REVIEWER, GUEST e MANAGER tentando enviar ou excluir um documento: a rota recusa.
@@ -171,9 +172,9 @@ A troca fica isolada num único módulo de provedor (`src/lib/tutor/provider.ts`
   escreve e devolve em `sources` só os rótulos citados. Sem citação, `sources` lista todos os
   trechos usados.
 
-### Chave, chat e permissões
+### Opção do curso, chat e permissões
 
-- **O tutor deixou de ser bloco e virou opção do curso**, a pedido do usuário: a chave
+- **O tutor deixou de ser bloco e virou opção do curso**, a pedido do usuário: a opção
   "Tutor IA" no painel "Sobre o curso" liga o chat em todas as páginas do curso.
 - **O chat virou widget não modal.** A primeira versão era uma gaveta (`Sheet`) que cobria a
   página. Agora é um botão redondo com robô e um popup acima dele; a página continua
@@ -184,11 +185,10 @@ A troca fica isolada num único módulo de provedor (`src/lib/tutor/provider.ts`
 - **A navegação entre unidades acontece dentro do `CoursePlayer`**, na mesma página; a rota
   `/preview/[unitId]` só redireciona. Por isso montar o chat em `/preview` já cobre todas as
   unidades.
-- **Ligar ou desligar a chave segue a permissão dos documentos**, não a de edição: MANAGER
-  e GUEST editam o curso mas não mudam a chave (o painel a mostra desabilitada e o `PUT`
+- **Ligar ou desligar o tutor segue a permissão dos documentos**, não a de edição: MANAGER
+  e GUEST editam o curso mas não mudam a opção (o painel a mostra desabilitada e o `PUT`
   responde 403). Ligar manda o texto do curso ao Gemini. As permissões do curso ganharam
   `canManageKnowledge`.
-
 - **O chat não mostra as fontes ao aluno**, a pedido do usuário. A API continua devolvendo
   `sources` (útil para depurar e para a calibração), e o `splitCitation` continua tirando a
   linha "Fonte:" do texto.
@@ -211,6 +211,10 @@ A troca fica isolada num único módulo de provedor (`src/lib/tutor/provider.ts`
   bloqueia script sem precisar de sanitizador.
 - **O arquivo baixado leva o sufixo aleatório do Blob no nome** (`apostila-Uc0s….docx`): a
   URL assinada de leitura não aceita definir o `Content-Disposition`. Ficou assim.
+- **Layout igual ao de Cursos e Usuários:** largura `max-w-7xl`, "Adicionar documento" no
+  `PageHeader` (que ganhou ícone e estado desabilitado opcionais), sem o aviso sobre o
+  Gemini e sem o subtítulo "Fontes do tutor". O título do `PageHeader` passou a quebrar
+  linha em vez de truncar, em todas as páginas, porque aqui ele leva o nome do curso.
 - **Tabela no celular:** esconde Tipo, Trechos, Tamanho e data para as ações caberem.
 - **Com erro ao carregar a lista, a página mostra só o erro**, sem o aviso de "somente
   leitura", que confundia.
@@ -223,8 +227,8 @@ A troca fica isolada num único módulo de provedor (`src/lib/tutor/provider.ts`
 - **`POST /api/public/tutor/[courseId]`**, sem login, para o pacote SCORM. Exige a chave do curso
   no corpo JSON (`token`) (`cursos.tutor_token`, comparação em tempo constante),
   o tutor ligado e um `sessionId` gerado pelo player; responde só `answer` e `grounded`, sem
-  as fontes. CORS aberto (`*`) apenas nessa rota, porque o domínio de cada LMS é
-  desconhecido; a chave é o que protege.
+  as fontes. Responde com CORS aberto (`*`), porque o domínio de cada LMS é desconhecido
+  (o `next.config.ts` já abre toda a `/api`, ver abaixo).
 - **A chave é gerada toda vez que o tutor é ligado** e ninguém a vê: vai para o pacote no
   export e nunca aparece nas respostas da API do app. A primeira versão tinha um card
   "Gerar nova chave" na página de documentos; o usuário achou confuso para um caso raro
@@ -241,7 +245,6 @@ A troca fica isolada num único módulo de provedor (`src/lib/tutor/provider.ts`
   depois da resposta.
 - **Migration `20260919150000_add_tutor_public_access`** (`tutor_token` e `tutor_usage`),
   validada num branch descartável.
-
 - **A chave vai no corpo JSON, não num cabeçalho próprio.** A primeira versão usava
   `x-tutor-token`, e o preflight do navegador barrou: o `next.config.ts` já aplica um CORS
   global em **todas** as rotas `/api` (`Access-Control-Allow-Origin: *` e uma lista fixa de
@@ -298,7 +301,7 @@ A troca fica isolada num único módulo de provedor (`src/lib/tutor/provider.ts`
 - **Builds de teste em cópia isolada.** `next build` no mesmo diretório de um `next dev`
   aberto divide a `.next` e quebra os dois. E uma cópia com `node_modules` em symlink divide o
   cliente Prisma: um build de outra branch regerou o cliente sem `tutorEnabled` e o Salvar da
-  chave passou a falhar com "Erro ao atualizar curso" até `prisma generate` na branch certa.
+  opção passou a falhar com "Erro ao atualizar curso" até `prisma generate` na branch certa.
 - **Conflito falso no Salvar do painel "Sobre o curso".** O Salvar fazia dois `PUT` (dados do
   curso e `reorderUnits`), e o segundo, com a versão antiga, voltava 409 e mostrava "Este
   curso foi alterado por outra pessoa…" a cada Salvar, embora a gravação desse certo. O
@@ -341,10 +344,10 @@ Cada item só é marcado quando o critério de "Pronto quando" foi verificado.
 
 ### Fase 2 — produto
 
-- [x] **Chave "Tutor IA" nas configurações do curso**
-  - Pronto quando: `Course.tutorEnabled` existe; o painel tem a chave e salva com o curso; o
-    chat só aparece com a chave ligada; a rota recusa curso com a chave desligada; salvar só
-    reindexa com a chave ligada, e ligar indexa na hora.
+- [x] **Opção "Tutor IA" nas configurações do curso**
+  - Pronto quando: `Course.tutorEnabled` existe; o painel tem a opção e salva com o curso; o
+    chat só aparece com o tutor ligado; a rota recusa curso com o tutor desligado; salvar só
+    reindexa com o tutor ligado, e ligar indexa na hora.
 - [x] **Página `/courses/[id]/knowledge`**
   - Pronto quando: acessível pelo menu "⋯"; tabela com as fontes; envio direto ao store
     privado; visualizar (modal), baixar e excluir; textos em pt-BR e en; conferido com o
@@ -361,15 +364,15 @@ Cada item só é marcado quando o critério de "Pronto quando" foi verificado.
       `fix/settings-drawer-save-conflict`
 - [x] **Segurança da rota pública**
   - Pronto quando: o pacote leva um token por curso; o token pode ser revogado (religando o
-    tutor); CORS aberto só nessa rota; rate limit por sessão e teto diário por curso,
+    tutor); CORS aberto para qualquer LMS; rate limit por sessão e teto diário por curso,
     ajustáveis por variável de ambiente; testes cobrem token inválido e limite estourado.
 - [x] **Chat no pacote SCORM**
-  - Pronto quando: com a chave ligada, o pacote exportado mostra o widget em todas as
+  - Pronto quando: com o tutor ligado, o pacote exportado mostra o widget em todas as
     páginas; o chat chama a API com o token, saúda pelo nome vindo do LMS e mostra "tutor
-    indisponível" quando a chamada é bloqueada ou falha; com a chave desligada, o pacote não
+    indisponível" quando a chamada é bloqueada ou falha; com o tutor desligado, o pacote não
     leva nada do tutor.
 - [x] **Documentação** (o CLAUDE.md não é versionado; a mudança fica na máquina do autor)
-  - Pronto quando: o CLAUDE.md registra o tutor (chave do curso, rotas, variáveis `TUTOR_*`,
+  - Pronto quando: o CLAUDE.md registra o tutor (opção do curso, rotas, variáveis `TUTOR_*`,
     store privado, dependência da API dentro do pacote SCORM).
 - [ ] **Fechamento da Fase 2**
   - Pronto quando: `pnpm build` limpo, `pnpm test` verde e todos os itens de "Verificação"
