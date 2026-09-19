@@ -32,28 +32,29 @@ Não existe RAG que dispense mostrar à IA os trechos usados na resposta:
 
 ## Decisões
 
-| Tema            | Decisão                                                                               |
-| --------------- | ------------------------------------------------------------------------------------- |
-| Provedor        | Gemini, **no plano gratuito por enquanto** (ver "Risco aceito")                       |
-| Vetores         | `pgvector` no Neon, busca filtrada por `courseId`                                     |
-| Nome do aluno   | Usado só no cliente, na saudação; **nunca** vai no payload do LLM                     |
-| Fora do escopo  | Similaridade abaixo do limiar → resposta fixa, sem chamar o LLM                       |
-| Grounding       | Prompt manda responder só com o contexto e citar a fonte (arquivo ou unidade)         |
-| Acesso à rota   | Token por curso embutido no pacote, CORS aberto só nessa rota, rate limit, teto       |
-| Ativação        | Chave "Tutor IA" no painel "Sobre o curso"; desligada por padrão. Não é um bloco      |
-| Onde aparece    | Botão flutuante em todas as páginas do curso (preview e SCORM), só com a chave ligada |
-| Indexação       | O conteúdo do curso só é indexado com a chave ligada; ligar dispara a indexação       |
-| Desligar        | Esconde o chat e recusa perguntas, mas mantém o repositório para religar sem custo    |
-| Conteúdo        | Documentos enviados **e** o texto dos blocos do próprio curso, indexado sozinho       |
-| Repositório     | Um por curso; nada é compartilhado entre cursos                                       |
-| Escopo da busca | O curso inteiro, sem filtro por unidade                                               |
-| Atividades      | Blocos avaliativos (`isGradableBlock`) não são indexados: o tutor não dá gabarito     |
-| Permissão       | Dono, colaboradores e ADMIN enviam e removem; REVIEWER e GUEST só veem a lista        |
-| Histórico       | Nenhuma pergunta ou resposta é persistida                                             |
-| Banco da PoC    | O banco atual do Neon: a migration só adiciona a extensão e duas tabelas novas        |
-| Teste em LMS    | SCORM Cloud (não reproduz a CSP do Moodle do SENAI)                                   |
-| Idioma          | Respostas sempre em pt-BR                                                             |
-| Limites         | Rate limit por sessão e teto diário por curso, ajustáveis por variável de ambiente    |
+| Tema            | Decisão                                                                                                                        |
+| --------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| Provedor        | Gemini, **no plano gratuito por enquanto** (ver "Risco aceito")                                                                |
+| Vetores         | `pgvector` no Neon, busca filtrada por `courseId`                                                                              |
+| Nome do aluno   | Usado só no cliente, na saudação; **nunca** vai no payload do LLM                                                              |
+| Fora do escopo  | Similaridade abaixo do limiar → resposta fixa, sem chamar o LLM                                                                |
+| Grounding       | Prompt manda responder só com o contexto e citar a fonte (arquivo ou unidade)                                                  |
+| Acesso à rota   | Token por curso embutido no pacote, CORS aberto só nessa rota, rate limit, teto                                                |
+| Ativação        | Chave "Tutor IA" no painel "Sobre o curso"; desligada por padrão. Não é um bloco                                               |
+| Onde aparece    | Botão flutuante em todas as páginas do curso (preview e SCORM), só com a chave ligada                                          |
+| Formato do chat | Widget tradicional: botão redondo com robô no canto inferior direito que abre um popup não modal (a página continua navegável) |
+| Indexação       | O conteúdo do curso só é indexado com a chave ligada; ligar dispara a indexação                                                |
+| Desligar        | Esconde o chat e recusa perguntas, mas mantém o repositório para religar sem custo                                             |
+| Conteúdo        | Documentos enviados **e** o texto dos blocos do próprio curso, indexado sozinho                                                |
+| Repositório     | Um por curso; nada é compartilhado entre cursos                                                                                |
+| Escopo da busca | O curso inteiro, sem filtro por unidade                                                                                        |
+| Atividades      | Blocos avaliativos (`isGradableBlock`) não são indexados: o tutor não dá gabarito                                              |
+| Permissão       | Dono, colaboradores e ADMIN enviam e removem; REVIEWER e GUEST só veem a lista                                                 |
+| Histórico       | Nenhuma pergunta ou resposta é persistida                                                                                      |
+| Banco da PoC    | O banco atual do Neon: a migration só adiciona a extensão e duas tabelas novas                                                 |
+| Teste em LMS    | SCORM Cloud (não reproduz a CSP do Moodle do SENAI)                                                                            |
+| Idioma          | Respostas sempre em pt-BR                                                                                                      |
+| Limites         | Rate limit por sessão e teto diário por curso, ajustáveis por variável de ambiente                                             |
 
 ### Risco aceito: plano gratuito do Gemini
 

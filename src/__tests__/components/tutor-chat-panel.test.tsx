@@ -10,10 +10,13 @@ beforeEach(() => {
   global.fetch = fetchMock as unknown as typeof fetch
 })
 
+const onPageButton = jest.fn()
+
 function renderPanel(learnerName?: string) {
   const client = new QueryClient({ defaultOptions: { mutations: { retry: false } } })
   render(
     <QueryClientProvider client={client}>
+      <button onClick={onPageButton}>Próxima aula</button>
       <TutorChatPanel courseId="curso-1" learnerName={learnerName} />
     </QueryClientProvider>
   )
@@ -77,5 +80,39 @@ describe('TutorChatPanel', () => {
     await openAndAsk('O que é EPI?')
 
     expect(await screen.findByText(/O tutor está indisponível no momento/)).toBeInTheDocument()
+  })
+
+  it('opens as a non-modal popup that leaves the page usable', async () => {
+    const user = userEvent.setup()
+    renderPanel()
+
+    expect(screen.queryByRole('dialog')).toBeNull()
+    await user.click(screen.getByRole('button', { name: 'Abrir o tutor do curso' }))
+
+    expect(screen.getByRole('dialog', { name: 'Tutor do curso' })).toHaveAttribute(
+      'aria-modal',
+      'false'
+    )
+    expect(screen.getByLabelText('Pergunta para o tutor')).toHaveFocus()
+
+    await user.click(screen.getByRole('button', { name: 'Próxima aula' }))
+    expect(onPageButton).toHaveBeenCalled()
+    expect(screen.getByRole('dialog')).toBeInTheDocument()
+  })
+
+  it('closes with Escape and keeps the conversation when reopened', async () => {
+    respond(200, { success: true, answer: 'Resposta do tutor.', sources: [], grounded: true })
+    const user = userEvent.setup()
+    renderPanel()
+
+    await openAndAsk('O que é EPI?')
+    expect(await screen.findByText('Resposta do tutor.')).toBeInTheDocument()
+
+    await user.keyboard('{Escape}')
+    expect(screen.queryByRole('dialog')).toBeNull()
+
+    await user.click(screen.getByRole('button', { name: 'Abrir o tutor do curso' }))
+    expect(screen.getByText('Resposta do tutor.')).toBeInTheDocument()
+    expect(screen.getByText('O que é EPI?')).toBeInTheDocument()
   })
 })

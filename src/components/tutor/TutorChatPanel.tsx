@@ -1,15 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import { Bot, Loader2, Send } from 'lucide-react'
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from '@/components/ui/sheet'
+import { Bot, Loader2, Send, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { learnerFirstName } from '@/lib/learner-name'
@@ -40,15 +32,22 @@ export function greeting(learnerName?: string): string {
 }
 
 export function TutorChatPanel({ courseId, learnerName }: Props) {
+  const [open, setOpen] = useState(false)
   const [question, setQuestion] = useState('')
   const [messages, setMessages] = useState<Message[]>([])
   const nextId = useRef(0)
-  const endRef = useRef<HTMLDivElement>(null)
+  const messagesRef = useRef<HTMLDivElement>(null)
+  const inputRef = useRef<HTMLTextAreaElement>(null)
   const ask = useAskTutorMutation(courseId)
 
   useEffect(() => {
-    endRef.current?.scrollIntoView?.({ block: 'end' })
-  }, [messages, ask.isPending])
+    const list = messagesRef.current
+    if (list) list.scrollTop = list.scrollHeight
+  }, [messages, ask.isPending, open])
+
+  useEffect(() => {
+    if (open) inputRef.current?.focus()
+  }, [open])
 
   const append = (message: Omit<Message, 'id'>) =>
     setMessages((current) => [...current, { ...message, id: nextId.current++ }])
@@ -59,6 +58,7 @@ export function TutorChatPanel({ courseId, learnerName }: Props) {
 
     append({ role: 'learner', text })
     setQuestion('')
+    inputRef.current?.focus()
 
     try {
       const reply = await ask.mutateAsync(text)
@@ -69,91 +69,121 @@ export function TutorChatPanel({ courseId, learnerName }: Props) {
   }
 
   return (
-    <Sheet>
-      <SheetTrigger asChild>
-        <Button
-          variant="outline"
-          className="fixed bottom-20 right-6 z-50 shadow-lg gap-2"
-          aria-label="Abrir o tutor do curso"
-        >
-          <Bot className="h-4 w-4" />
-          Tutor
-        </Button>
-      </SheetTrigger>
-
-      <SheetContent className="w-full sm:max-w-md flex flex-col">
-        <SheetHeader>
-          <SheetTitle className="flex items-center gap-2">
-            <Bot className="h-5 w-5" />
-            Tutor do curso
-          </SheetTitle>
-          <SheetDescription>Responde só com o conteúdo deste curso.</SheetDescription>
-        </SheetHeader>
-
-        <div className="flex-1 overflow-y-auto space-y-3 px-4" aria-live="polite">
-          <p className="rounded-lg bg-muted px-3 py-2 text-sm">{greeting(learnerName)}</p>
-
-          {messages.map((message) => (
-            <div
-              key={message.id}
-              className={
-                message.role === 'learner'
-                  ? 'ml-8 rounded-lg bg-primary px-3 py-2 text-sm text-primary-foreground'
-                  : `mr-8 rounded-lg px-3 py-2 text-sm ${
-                      message.failed ? 'bg-destructive/10 text-destructive' : 'bg-muted'
-                    }`
-              }
-            >
-              <p className="whitespace-pre-wrap">{message.text}</p>
-              {message.sources && message.sources.length > 0 && (
-                <p className="mt-2 text-xs text-muted-foreground">
-                  Fontes: {message.sources.join('; ')}
-                </p>
-              )}
-            </div>
-          ))}
-
-          {ask.isPending && (
-            <p className="mr-8 flex items-center gap-2 rounded-lg bg-muted px-3 py-2 text-sm text-muted-foreground">
-              <Loader2 className="h-4 w-4 animate-spin" />
-              Procurando no conteúdo do curso...
-            </p>
-          )}
-          <div ref={endRef} />
-        </div>
-
-        <form
-          className="flex gap-2 border-t p-4"
-          onSubmit={(event) => {
-            event.preventDefault()
-            send()
+    <>
+      {open && (
+        <section
+          role="dialog"
+          aria-modal="false"
+          aria-labelledby="tutor-chat-title"
+          onKeyDown={(event) => {
+            if (event.key === 'Escape') setOpen(false)
           }}
+          className="fixed bottom-40 right-4 z-50 flex h-[min(540px,calc(100dvh-11rem))] w-[min(380px,calc(100vw-2rem))] flex-col overflow-hidden rounded-2xl border bg-background shadow-2xl sm:right-6"
         >
-          <Textarea
-            value={question}
-            onChange={(event) => setQuestion(event.target.value)}
-            onKeyDown={(event) => {
-              if (event.key === 'Enter' && !event.shiftKey) {
-                event.preventDefault()
-                send()
-              }
-            }}
-            maxLength={MAX_QUESTION_LENGTH}
-            placeholder="Escreva sua dúvida sobre a aula"
-            aria-label="Pergunta para o tutor"
-            className="min-h-[44px] resize-none"
-            rows={2}
-          />
-          <Button
-            type="submit"
-            size="icon"
-            disabled={!question.trim() || ask.isPending}
-            aria-label="Enviar pergunta"
+          <header className="flex items-center gap-3 bg-primary px-4 py-3 text-primary-foreground">
+            <span className="flex h-9 w-9 items-center justify-center rounded-full bg-primary-foreground/15">
+              <Bot className="h-5 w-5" />
+            </span>
+            <div className="min-w-0 flex-1">
+              <h2 id="tutor-chat-title" className="text-sm font-semibold">
+                Tutor do curso
+              </h2>
+              <p className="text-xs opacity-80">Responde só com o conteúdo deste curso</p>
+            </div>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setOpen(false)}
+              aria-label="Fechar o tutor"
+              className="h-8 w-8 text-primary-foreground hover:bg-primary-foreground/15 hover:text-primary-foreground"
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          </header>
+
+          <div
+            ref={messagesRef}
+            className="flex-1 space-y-3 overflow-y-auto overscroll-contain p-4"
+            aria-live="polite"
           >
-            <Send className="h-4 w-4" />
-          </Button>
-        </form>
-      </SheetContent>
-    </Sheet>
+            <p className="mr-8 rounded-2xl rounded-tl-sm bg-muted px-3 py-2 text-sm">
+              {greeting(learnerName)}
+            </p>
+
+            {messages.map((message) => (
+              <div
+                key={message.id}
+                className={
+                  message.role === 'learner'
+                    ? 'ml-8 rounded-2xl rounded-tr-sm bg-primary px-3 py-2 text-sm text-primary-foreground'
+                    : `mr-8 rounded-2xl rounded-tl-sm px-3 py-2 text-sm ${
+                        message.failed ? 'bg-destructive/10 text-destructive' : 'bg-muted'
+                      }`
+                }
+              >
+                <p className="whitespace-pre-wrap">{message.text}</p>
+                {message.sources && message.sources.length > 0 && (
+                  <p className="mt-2 text-xs text-muted-foreground">
+                    Fontes: {message.sources.join('; ')}
+                  </p>
+                )}
+              </div>
+            ))}
+
+            {ask.isPending && (
+              <p className="mr-8 flex items-center gap-2 rounded-2xl rounded-tl-sm bg-muted px-3 py-2 text-sm text-muted-foreground">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Procurando no conteúdo do curso...
+              </p>
+            )}
+          </div>
+
+          <form
+            className="flex items-end gap-2 border-t p-3"
+            onSubmit={(event) => {
+              event.preventDefault()
+              send()
+            }}
+          >
+            <Textarea
+              ref={inputRef}
+              value={question}
+              onChange={(event) => setQuestion(event.target.value)}
+              onKeyDown={(event) => {
+                if (event.key === 'Enter' && !event.shiftKey) {
+                  event.preventDefault()
+                  send()
+                }
+              }}
+              maxLength={MAX_QUESTION_LENGTH}
+              placeholder="Escreva sua dúvida sobre a aula"
+              aria-label="Pergunta para o tutor"
+              className="max-h-28 min-h-[44px] resize-none"
+              rows={1}
+            />
+            <Button
+              type="submit"
+              size="icon"
+              disabled={!question.trim() || ask.isPending}
+              aria-label="Enviar pergunta"
+              className="shrink-0 rounded-full"
+            >
+              <Send className="h-4 w-4" />
+            </Button>
+          </form>
+        </section>
+      )}
+
+      <button
+        type="button"
+        onClick={() => setOpen((current) => !current)}
+        aria-label={open ? 'Fechar o tutor' : 'Abrir o tutor do curso'}
+        aria-expanded={open}
+        title="Tutor do curso"
+        className="fixed bottom-20 right-4 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg transition-transform hover:scale-105 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-ring/50 sm:right-6"
+      >
+        {open ? <X className="h-6 w-6" /> : <Bot className="h-7 w-7" />}
+      </button>
+    </>
   )
 }
