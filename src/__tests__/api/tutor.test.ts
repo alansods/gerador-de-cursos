@@ -4,12 +4,7 @@
 import { NextRequest } from 'next/server'
 import { SignJWT } from 'jose'
 import { POST } from '@/app/api/tutor/[courseId]/route'
-import {
-  askTutor,
-  splitCitation,
-  NOT_FOUND_ANSWER,
-  TUTOR_MAX_QUESTION_LENGTH,
-} from '@/lib/tutor/ask'
+import { askTutor, splitCitation, TUTOR_MAX_QUESTION_LENGTH } from '@/lib/tutor/ask'
 import { getTutorProvider, type TutorProvider } from '@/lib/tutor/provider'
 import { prisma } from '@/lib/prisma'
 
@@ -43,6 +38,12 @@ beforeEach(() => {
   ;(getTutorProvider as jest.Mock).mockReturnValue(provider)
 })
 
+const units = [
+  { id: 'u1', title: 'Segurança', description: '', order: 0, blocks: [] },
+  { id: 'u2', title: 'Ergonomia', description: '', order: 1, blocks: [] },
+]
+const noProgress = { units, progress: null }
+
 function passage(label: string, similarity: number) {
   return { label, text: `Texto de ${label}`, similarity }
 }
@@ -57,15 +58,19 @@ describe('askTutor', () => {
     ])
 
     provider.answer.mockResolvedValue('EPI é equipamento de proteção individual.')
-    const reply = await askTutor('curso-1', 'O que é EPI?', provider)
+    const reply = await askTutor('curso-1', 'O que é EPI?', noProgress, provider)
 
     expect(reply.grounded).toBe(true)
     expect(reply.sources).toEqual(['Unidade 1', 'apostila.docx'])
-    expect(provider.answer).toHaveBeenCalledWith('O que é EPI?', [
-      { label: 'Unidade 1', text: 'Texto de Unidade 1' },
-      { label: 'Unidade 1', text: 'Texto de Unidade 1' },
-      { label: 'apostila.docx', text: 'Texto de apostila.docx' },
-    ])
+    expect(provider.answer).toHaveBeenCalledWith(
+      'O que é EPI?',
+      [
+        { label: 'Unidade 1', text: 'Texto de Unidade 1' },
+        { label: 'Unidade 1', text: 'Texto de Unidade 1' },
+        { label: 'apostila.docx', text: 'Texto de apostila.docx' },
+      ],
+      expect.any(Object)
+    )
   })
 
   it('moves the citation out of the answer and keeps only the cited sources', async () => {
@@ -75,23 +80,40 @@ describe('askTutor', () => {
     ])
     provider.answer.mockResolvedValue('Extintor é EPC.\n\nFonte: apostila.docx')
 
-    const reply = await askTutor('curso-1', 'Extintor é EPI?', provider)
+    const reply = await askTutor('curso-1', 'Extintor é EPI?', noProgress, provider)
 
     expect(reply.answer).toBe('Extintor é EPC.')
     expect(reply.sources).toEqual(['apostila.docx'])
   })
 
-  it('returns the fixed answer and skips the LLM when nothing is similar enough', async () => {
+  it('still asks the LLM without passages when nothing is similar, so it can answer about the course or decline', async () => {
     mockPrisma.$queryRaw.mockResolvedValue([passage('Unidade 1', 0.3)])
+    provider.answer.mockResolvedValue('O curso tem 2 unidades.')
 
-    const reply = await askTutor('curso-1', 'Quem ganhou a Copa?', provider)
+    const reply = await askTutor('curso-1', 'Quantas unidades tem o curso?', noProgress, provider)
 
-    expect(reply).toEqual({ answer: NOT_FOUND_ANSWER, sources: [], grounded: false })
-    expect(provider.answer).not.toHaveBeenCalled()
+    expect(reply).toEqual({ answer: 'O curso tem 2 unidades.', sources: [], grounded: false })
+    expect(provider.answer.mock.calls[0][1]).toEqual([])
+  })
+
+  it('sends the course outline and the learner progress with every question', async () => {
+    mockPrisma.$queryRaw.mockResolvedValue([])
+
+    await askTutor(
+      'curso-1',
+      'O que falta?',
+      { units, progress: { units: [100, 0], score: 80 } },
+      provider
+    )
+
+    const context = provider.answer.mock.calls[0][2]
+    expect(context.outline).toContain('Unidade 2 — Ergonomia')
+    expect(context.progress).toContain('Unidades concluídas: Unidade 1 — Segurança.')
+    expect(context.progress).toContain('Nota nas atividades avaliativas: 80%.')
   })
 
   it('answers small talk with a ready reply, without embedding or the LLM', async () => {
-    const reply = await askTutor('curso-1', 'Oi, tudo bem?', provider)
+    const reply = await askTutor('curso-1', 'Oi, tudo bem?', noProgress, provider)
 
     expect(reply.grounded).toBe(false)
     expect(reply.answer).toMatch(/curso/)
@@ -102,7 +124,7 @@ describe('askTutor', () => {
   it('searches only the chunks of the course being asked about', async () => {
     mockPrisma.$queryRaw.mockResolvedValue([])
 
-    await askTutor('curso-1', 'pergunta', provider)
+    await askTutor('curso-1', 'pergunta', noProgress, provider)
 
     const [sql, ...values] = mockPrisma.$queryRaw.mock.calls[0]
     expect(sql.join('?')).toContain('WHERE course_id = ?')
@@ -113,7 +135,7 @@ describe('askTutor', () => {
     process.env.TUTOR_MIN_SIMILARITY = '0.9'
     mockPrisma.$queryRaw.mockResolvedValue([passage('Unidade 1', 0.82)])
 
-    expect((await askTutor('curso-1', 'pergunta', provider)).grounded).toBe(false)
+    expect((await askTutor('curso-1', 'pergunta', noProgress, provider)).grounded).toBe(false)
   })
 })
 
@@ -142,7 +164,7 @@ describe('POST /api/tutor/[courseId]', () => {
   }
 
   beforeEach(() => {
-    mockPrisma.course.findUnique.mockResolvedValue({ tutorEnabled: true })
+    mockPrisma.course.findUnique.mockResolvedValue({ tutorEnabled: true, units })
     mockPrisma.$queryRaw.mockResolvedValue([passage('Unidade 1', 0.8)])
   })
 
@@ -154,6 +176,14 @@ describe('POST /api/tutor/[courseId]', () => {
     expect(body.grounded).toBe(true)
     expect(body.sources).toEqual(['Unidade 1'])
     expect(provider.answer.mock.calls[0][0]).toBe('O que é EPI?')
+  })
+
+  it('passes the validated progress along and drops an invalid one', async () => {
+    await ask({ question: 'Qual meu progresso?', progress: { units: [100, 50], score: null } })
+    expect(provider.answer.mock.calls[0][2].progress).toContain('Unidade 2 — Ergonomia (50%)')
+
+    await ask({ question: 'Qual meu progresso?', progress: { units: [100], score: null } })
+    expect(provider.answer.mock.calls[1][2].progress).toBe('Progresso do aluno: indisponível.')
   })
 
   it('never forwards anything but the question to the LLM', async () => {

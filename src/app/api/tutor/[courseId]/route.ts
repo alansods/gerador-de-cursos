@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requireAuth, createErrorResponse, createSuccessResponse } from '@/lib/auth'
 import { askTutor, TUTOR_MAX_QUESTION_LENGTH } from '@/lib/tutor/ask'
+import { parseProgress } from '@/lib/tutor/learner-context'
+import { upgradeUnits } from '@/lib/legacy-course'
+import type { Unit } from '@/types/course'
 
 export async function POST(
   req: NextRequest,
@@ -31,7 +34,7 @@ export async function POST(
 
     const course = await prisma.course.findUnique({
       where: { id: courseId },
-      select: { tutorEnabled: true },
+      select: { tutorEnabled: true, units: true },
     })
 
     if (!course) {
@@ -42,7 +45,10 @@ export async function POST(
       return createErrorResponse('O tutor não está ativo neste curso', 403)
     }
 
-    return createSuccessResponse(await askTutor(courseId, question))
+    const units = upgradeUnits(course.units) as unknown as Unit[]
+    const progress = parseProgress(body.progress, units.length)
+
+    return createSuccessResponse(await askTutor(courseId, question, { units, progress }))
   } catch (error) {
     console.error('The tutor failed to answer:', error)
     return createErrorResponse('O tutor está indisponível no momento', 503, error)

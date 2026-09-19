@@ -64,7 +64,11 @@ beforeEach(() => {
   mockPrisma.$queryRaw.mockReset()
   delete process.env.TUTOR_SESSION_LIMIT_PER_MINUTE
   delete process.env.TUTOR_COURSE_DAILY_LIMIT
-  mockPrisma.course.findUnique.mockResolvedValue({ tutorEnabled: true, tutorToken: TOKEN })
+  mockPrisma.course.findUnique.mockResolvedValue({
+    tutorEnabled: true,
+    tutorToken: TOKEN,
+    units: [{ id: 'u1', title: 'EPI', description: '', order: 0, blocks: [] }],
+  })
   ;(askTutor as jest.Mock).mockResolvedValue({
     answer: 'EPI protege o trabalhador.',
     sources: ['Unidade 1'],
@@ -82,7 +86,18 @@ describe('POST /api/public/tutor/[courseId]', () => {
     expect(res.status).toBe(200)
     expect(res.headers.get('access-control-allow-origin')).toBe('*')
     expect(body).toEqual({ success: true, answer: 'EPI protege o trabalhador.', grounded: true })
-    expect(askTutor).toHaveBeenCalledWith('curso-1', 'O que é EPI?')
+    expect(askTutor).toHaveBeenCalledWith('curso-1', 'O que é EPI?', {
+      units: [expect.objectContaining({ title: 'EPI' })],
+      progress: null,
+    })
+  })
+
+  it('forwards the learner progress from the package when it matches the course', async () => {
+    counts(1, 1)
+
+    await ask({ progress: { units: [50], score: 70 } })
+
+    expect((askTutor as jest.Mock).mock.calls[0][2].progress).toEqual({ units: [50], score: 70 })
   })
 
   it.each([

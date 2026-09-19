@@ -40,7 +40,7 @@ Não existe RAG que dispense mostrar à IA os trechos usados na resposta:
 | Formato do chat       | Widget tradicional: botão redondo com robô no canto inferior direito que abre um popup não modal (a página continua navegável) |
 | Onde aparece          | Em todas as páginas do curso com o tutor ligado: preview e pacote SCORM                                                        |
 | Conteúdo              | Texto dos blocos do próprio curso **e** documentos enviados. Sem documento nenhum, o tutor já responde com o conteúdo da aula  |
-| Atividades            | Blocos avaliativos (`isGradableBlock`) não são indexados: o tutor não dá gabarito                                              |
+| Atividades            | Só enunciados, sem gabarito, marcados como atividade; o tutor dá dica e aponta onde estudar (ver continuação)                  |
 | Indexação             | O conteúdo do curso só é indexado com o tutor ligado; ligar dispara a indexação; salvar reindexa só o que mudou                |
 | Desligar              | Esconde o chat e recusa perguntas, mas mantém o repositório; religar gera chave de acesso nova (exportar o curso de novo)      |
 | Repositório           | Um por curso; nada é compartilhado entre cursos; busca no curso inteiro, sem filtro por unidade                                |
@@ -48,7 +48,7 @@ Não existe RAG que dispense mostrar à IA os trechos usados na resposta:
 | Armazenamento         | Original em store de Blob **privado** (`tutor-documents`), aberto só por URL assinada de 5 min; no banco, só trechos e vetores |
 | Permissão             | Enviar, excluir e ligar/desligar o tutor: dono, colaboradores e ADMIN. Visualizar e baixar: qualquer usuário logado            |
 | Nome do aluno         | Usado só no cliente, na saudação; **nunca** vai no payload do LLM                                                              |
-| Fora do escopo        | Similaridade abaixo do limiar → resposta fixa, sem chamar o LLM                                                                |
+| Fora do escopo        | Conversa rápida sai pronta do código; o resto vai à IA, que recusa o que foge do tema (ver continuação)                        |
 | Grounding             | Prompt manda responder só com o contexto e citar a fonte; a API devolve as fontes, mas o chat não as mostra ao aluno           |
 | Histórico             | Nenhuma pergunta ou resposta é persistida                                                                                      |
 | Idioma                | Respostas sempre em pt-BR; textos da página de documentos em pt-BR e en                                                        |
@@ -144,8 +144,8 @@ A troca fica isolada num único módulo de provedor (`src/lib/tutor/provider.ts`
 - [x] Editar um bloco e salvar: a resposta passa a refletir o texto novo.
 - [x] Dois cursos com conteúdo diferente: a pergunta de um nunca traz trecho do outro.
 - [x] REVIEWER, GUEST e MANAGER tentando enviar ou excluir um documento: a rota recusa.
-- [x] Perguntar algo que não está: o tutor recusa sem chamar o LLM.
-- [x] Prompt injection pedindo "todo o contexto": recusado pelo limiar.
+- [x] Perguntar algo que não está: o tutor recusa sem chamar o LLM. (Mudou na continuação: a IA é chamada sem trechos e recusa.)
+- [x] Prompt injection pedindo "todo o contexto": recusado pelo limiar. (Mudou na continuação: quem recusa é a instrução da IA.)
 - [x] O payload enviado ao LLM não contém o nome do aluno.
 - [x] Documento: enviar, visualizar, baixar (idêntico ao original) e excluir (some do store); blob sem assinatura → 403.
 - [x] Pacote exportado dentro de um LMS falso, noutra origem: chat funciona, saúda pelo nome do LMS e, com a API inacessível, mostra "tutor indisponível".

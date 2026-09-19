@@ -2,12 +2,12 @@ import { prisma } from '@/lib/prisma'
 import { toVectorLiteral } from '@/lib/tutor/knowledge'
 import { getTutorProvider, type Passage, type TutorProvider } from '@/lib/tutor/provider'
 import { detectSmallTalk, smallTalkReply } from '@/lib/tutor/small-talk'
+import { courseOutline, progressSummary, type LearnerProgress } from '@/lib/tutor/learner-context'
+import type { Unit } from '@/types/course'
 
 export const TUTOR_TOP_K = 5
 export const DEFAULT_MIN_SIMILARITY = 0.62
 export const TUTOR_MAX_QUESTION_LENGTH = 500
-export const NOT_FOUND_ANSWER =
-  'Não encontrei isso no conteúdo desta aula. Tente perguntar de outro jeito ou sobre um tema tratado no curso.'
 
 export function minSimilarity(): number {
   const value = Number(process.env.TUTOR_MIN_SIMILARITY)
@@ -47,9 +47,15 @@ export interface TutorReply {
   grounded: boolean
 }
 
+export interface TutorCourseContext {
+  units: Unit[]
+  progress: LearnerProgress | null
+}
+
 export async function askTutor(
   courseId: string,
   question: string,
+  { units, progress }: TutorCourseContext,
   provider?: TutorProvider
 ): Promise<TutorReply> {
   const smallTalk = detectSmallTalk(question)
@@ -64,17 +70,18 @@ export async function askTutor(
     (passage) => Number(passage.similarity) >= threshold
   )
 
-  if (passages.length === 0) {
-    return { answer: NOT_FOUND_ANSWER, sources: [], grounded: false }
-  }
-
   const answer = await provider.answer(
     question,
-    passages.map(({ label, text }) => ({ label, text }))
+    passages.map(({ label, text }) => ({ label, text })),
+    { outline: courseOutline(units), progress: progressSummary(units, progress) }
   )
 
   const labels = [...new Set(passages.map((passage) => passage.label))]
   const { text, cited } = splitCitation(answer, labels)
 
-  return { answer: text, sources: cited.length > 0 ? cited : labels, grounded: true }
+  return {
+    answer: text,
+    sources: cited.length > 0 ? cited : labels,
+    grounded: passages.length > 0,
+  }
 }

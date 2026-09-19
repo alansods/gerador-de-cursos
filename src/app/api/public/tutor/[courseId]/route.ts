@@ -7,6 +7,9 @@ import {
   purgeExpiredTutorUsage,
   tokensMatch,
 } from '@/lib/tutor/public-access'
+import { parseProgress } from '@/lib/tutor/learner-context'
+import { upgradeUnits } from '@/lib/legacy-course'
+import type { Unit } from '@/types/course'
 
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
@@ -43,7 +46,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ cou
 
     const course = await prisma.course.findUnique({
       where: { id: courseId },
-      select: { tutorEnabled: true, tutorToken: true },
+      select: { tutorEnabled: true, tutorToken: true, units: true },
     })
 
     const token = typeof body.token === 'string' ? body.token : null
@@ -69,7 +72,9 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ cou
       )
     }
 
-    const answer = await askTutor(courseId, question)
+    const units = upgradeUnits(course.units) as unknown as Unit[]
+    const progress = parseProgress(body.progress, units.length)
+    const answer = await askTutor(courseId, question, { units, progress })
     return reply({ success: true, answer: answer.answer, grounded: answer.grounded }, 200)
   } catch (error) {
     console.error('The public tutor failed to answer:', error)

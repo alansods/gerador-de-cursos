@@ -1,7 +1,11 @@
 /**
  * @jest-environment node
  */
-import { createGeminiProvider, EMBEDDING_DIMENSIONS } from '@/lib/tutor/provider'
+import {
+  createGeminiProvider,
+  EMBEDDING_DIMENSIONS,
+  TUTOR_SYSTEM_INSTRUCTION,
+} from '@/lib/tutor/provider'
 
 const fetchMock = jest.fn()
 
@@ -53,20 +57,47 @@ describe('createGeminiProvider', () => {
     expect(sentBody(0).requests[0].taskType).toBe('RETRIEVAL_QUERY')
   })
 
-  it('answers with the system instruction and only the passages and question', async () => {
+  const context = {
+    outline: 'O curso tem 1 unidade:\n- Unidade 1 — Segurança',
+    progress: 'Progresso do aluno: indisponível.',
+  }
+
+  it('answers with the system instruction, the course context, the passages and the question', async () => {
     fetchMock.mockResolvedValue(
       jsonResponse({ candidates: [{ content: { parts: [{ text: ' Resposta. ' }] } }] })
     )
 
-    const answer = await createGeminiProvider('key').answer('o que é EPI?', [
-      { label: 'Unidade 1 — Segurança', text: 'EPI é equipamento de proteção individual.' },
-    ])
+    const answer = await createGeminiProvider('key').answer(
+      'o que é EPI?',
+      [{ label: 'Unidade 1 — Segurança', text: 'EPI é equipamento de proteção individual.' }],
+      context
+    )
 
     expect(answer).toBe('Resposta.')
     const body = sentBody(0)
     expect(body.systemInstruction.parts[0].text).toContain('SOMENTE')
     expect(body.contents[0].parts[0].text).toContain('Rótulo: Unidade 1 — Segurança')
     expect(body.contents[0].parts[0].text).toContain('o que é EPI?')
+    expect(body.contents[0].parts[0].text).toContain('O curso tem 1 unidade')
+    expect(body.contents[0].parts[0].text).toContain('Progresso do aluno: indisponível.')
+  })
+
+  it('tells the model there is no related passage instead of sending an empty list', async () => {
+    fetchMock.mockResolvedValue(
+      jsonResponse({ candidates: [{ content: { parts: [{ text: 'Resposta.' }] } }] })
+    )
+
+    await createGeminiProvider('key').answer('quantas unidades?', [], context)
+
+    expect(sentBody(0).contents[0].parts[0].text).toContain(
+      'Nenhum trecho do material tem relação com a pergunta.'
+    )
+  })
+
+  it('forbids giving away graded activity answers and answering off-topic questions', () => {
+    expect(TUTOR_SYSTEM_INSTRUCTION).toContain('Atividade avaliativa')
+    expect(TUTOR_SYSTEM_INSTRUCTION).toMatch(/Nunca diga a resposta/)
+    expect(TUTOR_SYSTEM_INSTRUCTION).toMatch(/sem relação com o curso: recuse/)
   })
 
   it('throws with the status when Gemini fails', async () => {
@@ -78,6 +109,8 @@ describe('createGeminiProvider', () => {
   it('throws when the answer comes back empty', async () => {
     fetchMock.mockResolvedValue(jsonResponse({ candidates: [] }))
 
-    await expect(createGeminiProvider('key').answer('x', [])).rejects.toThrow('empty answer')
+    await expect(createGeminiProvider('key').answer('x', [], context)).rejects.toThrow(
+      'empty answer'
+    )
   })
 })

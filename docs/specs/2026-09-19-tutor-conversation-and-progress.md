@@ -148,7 +148,7 @@ Cada item só é marcado quando o critério de "Pronto quando" foi verificado.
   - Pronto quando: o servidor monta a estrutura a partir do banco e o progresso a partir do
     campo validado; campo inválido é ignorado; testes cobrem os dois layouts (unidades e
     trilha) e a ausência de progresso.
-- [ ] **Novo fluxo de resposta e instruções**
+- [x] **Novo fluxo de resposta e instruções**
   - Pronto quando: fora da conversa rápida a IA é sempre chamada com estrutura, progresso e
     os trechos acima do limiar (ou nenhum); o prompt segue as regras acima; `grounded` indica
     se houve trecho; testes com provedor falso conferem o que vai no prompt.
