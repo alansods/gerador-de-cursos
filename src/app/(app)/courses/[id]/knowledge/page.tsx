@@ -190,7 +190,7 @@ export default function CourseKnowledgePage() {
             {canManage ? (
               <p className="text-sm text-muted-foreground">{t('uploadHint')}</p>
             ) : (
-              !loading && <p className="text-sm text-muted-foreground">{t('readOnly')}</p>
+              !loading && !error && <p className="text-sm text-muted-foreground">{t('readOnly')}</p>
             )}
           </div>
           {canManage && (

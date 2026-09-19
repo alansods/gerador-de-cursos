@@ -1,5 +1,5 @@
 import '@testing-library/jest-dom'
-import { render, screen, within } from '@testing-library/react'
+import { cleanup, render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { NextIntlClientProvider } from 'next-intl'
 import CourseKnowledgePage from '@/app/(app)/courses/[id]/knowledge/page'
@@ -140,6 +140,27 @@ describe('course knowledge page', () => {
     expect(screen.getByRole('button', { name: 'Visualizar apostila.pdf' })).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Baixar apostila.pdf' })).toBeInTheDocument()
     expect(screen.getByText(/Só o dono do curso/)).toBeInTheDocument()
+  })
+
+  it('shows only the load error, not the read-only notice, when the list fails', () => {
+    renderPage()
+    ;(useKnowledgeQuery as jest.Mock).mockReturnValue({
+      sources: [],
+      canManage: false,
+      loading: false,
+      error: new Error('relation "knowledge_sources" does not exist'),
+    })
+    cleanup()
+    render(
+      <NextIntlClientProvider locale="pt-BR" messages={{ courses: coursesMessages }} timeZone="UTC">
+        <CourseKnowledgePage />
+      </NextIntlClientProvider>
+    )
+
+    expect(
+      screen.getByText('Não foi possível carregar o repositório do tutor.')
+    ).toBeInTheDocument()
+    expect(screen.queryByText(/Só o dono do curso/)).toBeNull()
   })
 
   it('warns when the tutor is off for the course', () => {
