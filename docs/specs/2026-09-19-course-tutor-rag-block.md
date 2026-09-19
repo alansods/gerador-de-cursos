@@ -308,6 +308,12 @@ A troca fica isolada num único módulo de provedor (`src/lib/tutor/provider.ts`
   aberto divide a `.next` e quebra os dois. E uma cópia com `node_modules` em symlink divide o
   cliente Prisma: um build de outra branch regerou o cliente sem `tutorEnabled` e o Salvar da
   opção passou a falhar com "Erro ao atualizar curso" até `prisma generate` na branch certa.
+- **Pacote exportado em local com player desatualizado.** O export copia `player/dist`,
+  que só é refeito por `pnpm build:player` (o `pnpm build` da Vercel já faz isso; o
+  `pnpm dev`, não). Um `player/dist` local da primeira versão da rota pública ainda mandava a
+  chave no cabeçalho `x-tutor-token`, o preflight barrava e o chat mostrava "tutor
+  indisponível". Depois de mexer em `player/`, rode `pnpm build:player` antes de exportar em
+  local.
 - **Conflito falso no Salvar do painel "Sobre o curso".** O Salvar fazia dois `PUT` (dados do
   curso e `reorderUnits`), e o segundo, com a versão antiga, voltava 409 e mostrava "Este
   curso foi alterado por outra pessoa…" a cada Salvar, embora a gravação desse certo. O
