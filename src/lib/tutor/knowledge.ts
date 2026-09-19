@@ -38,6 +38,10 @@ interface IndexSourceInput {
   reusableVectors?: Map<string, number[]>
 }
 
+export function embeddingInput(chunk: PreparedChunk): string {
+  return `${chunk.label}\n\n${chunk.text}`
+}
+
 function chunkKey(chunk: PreparedChunk): string {
   return `${chunk.label}\u0000${chunk.text}`
 }
@@ -48,7 +52,7 @@ async function embedMissing(
   provider: TutorProvider
 ): Promise<number[][]> {
   const missing = chunks.filter((chunk) => !reusable.has(chunkKey(chunk)))
-  const fresh = missing.length > 0 ? await provider.embedDocuments(missing.map((c) => c.text)) : []
+  const fresh = missing.length > 0 ? await provider.embedDocuments(missing.map(embeddingInput)) : []
   const vectors = new Map(reusable)
   missing.forEach((chunk, index) => vectors.set(chunkKey(chunk), fresh[index]))
   return chunks.map((chunk) => vectors.get(chunkKey(chunk)) as number[])

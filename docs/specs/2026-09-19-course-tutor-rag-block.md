@@ -145,7 +145,7 @@ Cada item só é marcado quando o critério de "Pronto quando" foi verificado.
   - Pronto quando: salvar o curso substitui só os chunks da fonte `course`, sem tocar nos
     documentos; cada chunk leva o rótulo de unidade e tópico; blocos sem texto são
     ignorados; testes cobrem a extração de texto dos blocos.
-- [ ] **Rota de consulta `POST /api/tutor/[courseId]`**
+- [x] **Rota de consulta `POST /api/tutor/[courseId]`**
   - Pronto quando: busca o top-k filtrado por `courseId`; abaixo do limiar devolve a
     resposta fixa sem chamar o LLM; acima dele devolve resposta em pt-BR com as fontes; o
     payload enviado ao LLM não contém dado do aluno; nada é persistido; testes cobrem os

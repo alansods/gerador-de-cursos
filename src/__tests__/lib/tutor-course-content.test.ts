@@ -127,8 +127,7 @@ describe('courseSections', () => {
     ])
 
     expect(sections).toEqual([
-      { label: 'Unidade 1 — Introdução', text: 'Introdução\n\nBoas-vindas.' },
-      { label: 'Unidade 2 — Segurança', text: 'Segurança' },
+      { label: 'Unidade 1 — Introdução', text: 'Boas-vindas.' },
       { label: 'Unidade 2 — Segurança › EPI', text: 'EPI\n\nEquipamento individual.' },
       { label: 'Unidade 2 — Segurança › EPC', text: 'EPC\n\nEquipamento coletivo.' },
     ])
@@ -172,7 +171,9 @@ describe('reindexCourseContent', () => {
     ]
 
     expect(await reindexCourseContent('c1', edited, provider)).toBe('indexed')
-    expect(provider.embedDocuments).toHaveBeenCalledWith(['Novo tópico\n\nTexto novo.'])
+    expect(provider.embedDocuments).toHaveBeenCalledWith([
+      'Unidade 1 — Segurança › Novo tópico\n\nNovo tópico\n\nTexto novo.',
+    ])
     expect(mockPrisma.knowledgeSource.deleteMany).toHaveBeenCalledWith({
       where: { courseId: 'c1', kind: 'COURSE' },
     })

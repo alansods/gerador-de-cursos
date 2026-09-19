@@ -94,7 +94,7 @@ export function courseSections(units: Unit[]): LabeledSection[] {
     .forEach((unit, unitIndex) => {
       const unitLabel = `Unidade ${unitIndex + 1} — ${htmlToText(unit.title)}`
       let label = unitLabel
-      let parts: string[] = [lines(unit.title, unit.description)]
+      let parts: string[] = [lines(unit.description)]
 
       const flush = () => {
         const text = parts.filter(Boolean).join('\n\n')
