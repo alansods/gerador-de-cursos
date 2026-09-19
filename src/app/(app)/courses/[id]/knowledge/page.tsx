@@ -7,7 +7,6 @@ import { useFormatter, useTranslations } from 'next-intl'
 import { toast } from 'sonner'
 import {
   ArrowLeft,
-  BookOpen,
   Bot,
   Download,
   Eye,
@@ -48,6 +47,11 @@ import {
   useUploadKnowledgeMutation,
   type KnowledgeSource,
 } from '@/hooks/queries/useTutorQuery'
+
+function fileKind(source: KnowledgeSource): string {
+  if (source.contentType === 'application/pdf' || /\.pdf$/i.test(source.name)) return 'PDF'
+  return 'DOCX'
+}
 
 function DocumentPreviewDialog({
   courseId,
@@ -150,6 +154,8 @@ export default function CourseKnowledgePage() {
     }
   }
 
+  const documents = sources.filter((source) => source.kind === 'DOCUMENT')
+
   const indexedAt = (source: KnowledgeSource) =>
     format.dateTime(new Date(source.updatedAt), {
       dateStyle: 'short',
@@ -170,8 +176,8 @@ export default function CourseKnowledgePage() {
 
           <PageHeader
             icon={Bot}
-            title={course ? `${t('title')} · ${course.title}` : t('title')}
-            description={t('description')}
+            title={t('title')}
+            description={course ? t('description', { course: course.title }) : ''}
             {...(canManage && {
               actionLabel: upload.isPending ? t('uploading') : t('addDocument'),
               actionIcon: Upload,
@@ -198,17 +204,15 @@ export default function CourseKnowledgePage() {
             </p>
           )}
 
-          {canManage ? (
-            <p className="text-sm text-muted-foreground">{t('uploadHint')}</p>
-          ) : (
-            !loading && !error && <p className="text-sm text-muted-foreground">{t('readOnly')}</p>
+          {!canManage && !loading && !error && (
+            <p className="text-sm text-muted-foreground">{t('readOnly')}</p>
           )}
 
           {loading ? (
             <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
           ) : error ? (
             <p className="text-sm text-destructive">{t('loadError')}</p>
-          ) : sources.length === 0 ? (
+          ) : documents.length === 0 ? (
             <Card className="p-6 text-sm text-muted-foreground">{t('empty')}</Card>
           ) : (
             <Card className="overflow-x-auto p-0">
@@ -228,33 +232,19 @@ export default function CourseKnowledgePage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {sources.map((source) => {
-                    const isCourse = source.kind === 'COURSE'
+                  {documents.map((source) => {
                     const hasFile = Boolean(source.filePathname)
 
                     return (
                       <TableRow key={source.id}>
                         <TableCell className="max-w-[140px] sm:max-w-[260px]">
                           <span className="flex items-center gap-2">
-                            {isCourse ? (
-                              <BookOpen className="h-4 w-4 shrink-0 text-muted-foreground" />
-                            ) : (
-                              <FileText className="h-4 w-4 shrink-0 text-muted-foreground" />
-                            )}
-                            <span className="truncate font-medium">
-                              {isCourse ? t('kindCourse') : source.name}
-                            </span>
+                            <FileText className="h-4 w-4 shrink-0 text-muted-foreground" />
+                            <span className="truncate font-medium">{source.name}</span>
                           </span>
-                          {isCourse && (
-                            <span className="mt-1 block text-xs text-muted-foreground">
-                              {t('courseContentHint')}
-                            </span>
-                          )}
                         </TableCell>
                         <TableCell className="hidden sm:table-cell">
-                          <Badge variant="secondary">
-                            {isCourse ? t('kindCourseShort') : t('kindDocument')}
-                          </Badge>
+                          <Badge variant="secondary">{fileKind(source)}</Badge>
                         </TableCell>
                         <TableCell className="hidden text-right tabular-nums md:table-cell">
                           {source.chunkCount}
@@ -266,47 +256,45 @@ export default function CourseKnowledgePage() {
                           {indexedAt(source)}
                         </TableCell>
                         <TableCell className="text-right">
-                          {!isCourse && (
-                            <span className="inline-flex gap-1">
-                              {hasFile ? (
-                                <>
-                                  <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    onClick={() => setPreviewing(source)}
-                                    aria-label={`${t('view')} ${source.name}`}
-                                    title={t('view')}
-                                  >
-                                    <Eye className="h-4 w-4" />
-                                  </Button>
-                                  <Button variant="ghost" size="icon" asChild title={t('download')}>
-                                    <a
-                                      href={documentFileUrl(courseId, source.id, 'download')}
-                                      aria-label={`${t('download')} ${source.name}`}
-                                    >
-                                      <Download className="h-4 w-4" />
-                                    </a>
-                                  </Button>
-                                </>
-                              ) : (
-                                <span className="self-center text-xs text-muted-foreground">
-                                  {t('noFile')}
-                                </span>
-                              )}
-                              {canManage && (
+                          <span className="inline-flex gap-1">
+                            {hasFile ? (
+                              <>
                                 <Button
                                   variant="ghost"
                                   size="icon"
-                                  onClick={() => deleteSource(source)}
-                                  disabled={remove.isPending}
-                                  aria-label={`${t('delete')} ${source.name}`}
-                                  title={t('delete')}
+                                  onClick={() => setPreviewing(source)}
+                                  aria-label={`${t('view')} ${source.name}`}
+                                  title={t('view')}
                                 >
-                                  <Trash2 className="h-4 w-4" />
+                                  <Eye className="h-4 w-4" />
                                 </Button>
-                              )}
-                            </span>
-                          )}
+                                <Button variant="ghost" size="icon" asChild title={t('download')}>
+                                  <a
+                                    href={documentFileUrl(courseId, source.id, 'download')}
+                                    aria-label={`${t('download')} ${source.name}`}
+                                  >
+                                    <Download className="h-4 w-4" />
+                                  </a>
+                                </Button>
+                              </>
+                            ) : (
+                              <span className="self-center text-xs text-muted-foreground">
+                                {t('noFile')}
+                              </span>
+                            )}
+                            {canManage && (
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => deleteSource(source)}
+                                disabled={remove.isPending}
+                                aria-label={`${t('delete')} ${source.name}`}
+                                title={t('delete')}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            )}
+                          </span>
                         </TableCell>
                       </TableRow>
                     )

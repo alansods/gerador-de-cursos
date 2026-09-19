@@ -213,8 +213,12 @@ A troca fica isolada num único módulo de provedor (`src/lib/tutor/provider.ts`
   URL assinada de leitura não aceita definir o `Content-Disposition`. Ficou assim.
 - **Layout igual ao de Cursos e Usuários:** largura `max-w-7xl`, "Adicionar documento" no
   `PageHeader` (que ganhou ícone e estado desabilitado opcionais), sem o aviso sobre o
-  Gemini e sem o subtítulo "Fontes do tutor". O título do `PageHeader` passou a quebrar
-  linha em vez de truncar, em todas as páginas, porque aqui ele leva o nome do curso.
+  Gemini e sem o subtítulo "Fontes do tutor". O nome do curso e as regras de arquivo foram
+  para a descrição, ao lado do botão. O título do `PageHeader` passou a quebrar linha em vez
+  de truncar, em todas as páginas.
+- **A tabela lista só os documentos enviados**, com o tipo do arquivo (PDF ou DOCX). O
+  conteúdo do curso continua indexado como fonte `COURSE`, mas não aparece: é implícito, e a
+  descrição e o estado vazio dizem que o tutor já responde com as aulas.
 - **Tabela no celular:** esconde Tipo, Trechos, Tamanho e data para as ações caberem.
 - **Com erro ao carregar a lista, a página mostra só o erro**, sem o aviso de "somente
   leitura", que confundia.

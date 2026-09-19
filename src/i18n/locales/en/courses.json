@@ -84,21 +84,14 @@
   },
   "knowledge": {
     "title": "Tutor knowledge base",
-    "description": "Documents the AI Tutor uses to answer this course's learners.",
+    "description": "Documents the AI Tutor uses, along with the lesson content, to answer the learners of “{course}”. .docx or .pdf files up to 20 MB; scanned PDFs (images only) are not accepted.",
     "backToEditor": "Back to the editor",
     "tutorOff": "The AI Tutor is off for this course. Documents are kept, but learners only see the chat after you turn the option on in About the course.",
-    "uploadTitle": "Add a document",
-    "uploadHint": ".docx or .pdf file up to 20 MB. Scanned PDFs (images only) are not accepted.",
     "chooseFile": "Choose file",
     "uploading": "Uploading and indexing...",
     "uploaded": "\"{name}\" was added to the knowledge base",
     "readOnly": "Only the course owner, collaborators and administrators can add or delete documents.",
-    "empty": "No sources yet. Upload a document or turn the AI Tutor on to index the course content.",
-    "kindDocument": "Document",
-    "kindCourse": "Course content",
-    "courseContentHint": "Updated automatically when the course is saved with the tutor on.",
-    "chunks": "{count, plural, one {# passage} other {# passages}}",
-    "indexedAt": "Indexed on {date}",
+    "empty": "No documents yet. The tutor already answers from the lesson content.",
     "delete": "Delete",
     "deleteConfirm": "Delete \"{name}\" from the knowledge base? The tutor stops using this content.",
     "deleted": "Document deleted",
@@ -115,7 +108,6 @@
     "noFile": "No original file",
     "previewLoading": "Loading the document...",
     "previewError": "Could not display the document.",
-    "previewImagesNote": "Text preview; images in the document only show in the downloaded file.",
-    "kindCourseShort": "Course"
+    "previewImagesNote": "Text preview; images in the document only show in the downloaded file."
   }
 }

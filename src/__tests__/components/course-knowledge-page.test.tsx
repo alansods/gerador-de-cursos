@@ -51,12 +51,12 @@ const sources = [
   },
 ]
 
-function renderPage({ canManage = true, tutorEnabled = true } = {}) {
+function renderPage({ canManage = true, tutorEnabled = true, items = sources } = {}) {
   ;(useCourseQuery as jest.Mock).mockReturnValue({
     course: { id: 'curso-1', slug: 'seguranca-do-trabalho', title: 'Segurança', tutorEnabled },
   })
   ;(useKnowledgeQuery as jest.Mock).mockReturnValue({
-    sources,
+    sources: items,
     canManage,
     loading: false,
     error: null,
@@ -94,14 +94,28 @@ describe('course knowledge page', () => {
     )
   })
 
-  it('shows the sources in a table with passages and file size', () => {
+  it('shows the uploaded documents in a table with type, passages and file size', () => {
     renderPage()
 
     expect(screen.getByRole('columnheader', { name: 'Trechos' })).toBeInTheDocument()
     const pdfRow = rowOf('apostila.pdf')
     expect(within(pdfRow).getByText('12')).toBeInTheDocument()
     expect(within(pdfRow).getByText('2 MB')).toBeInTheDocument()
-    expect(within(rowOf('Conteúdo do curso')).getByText('Curso')).toBeInTheDocument()
+    expect(within(pdfRow).getByText('PDF')).toBeInTheDocument()
+  })
+
+  it('leaves the course content out of the table', () => {
+    renderPage()
+
+    expect(screen.queryByText('Conteúdo do curso')).toBeNull()
+    expect(screen.getAllByRole('row')).toHaveLength(2)
+  })
+
+  it('shows the empty state when only the course content is indexed', () => {
+    renderPage({ items: sources.filter((source) => source.kind === 'COURSE') })
+
+    expect(screen.queryByRole('table')).toBeNull()
+    expect(screen.getByText(/Nenhum documento enviado/)).toBeInTheDocument()
   })
 
   it('uploads the chosen file', async () => {
@@ -129,13 +143,9 @@ describe('course knowledge page', () => {
     )
   })
 
-  it('offers view, download and delete only on documents', async () => {
+  it('offers download and delete on each document', async () => {
     jest.spyOn(window, 'confirm').mockReturnValue(true)
     renderPage()
-
-    const courseRow = rowOf('Conteúdo do curso')
-    expect(within(courseRow).queryByRole('button')).toBeNull()
-    expect(within(courseRow).queryByRole('link')).toBeNull()
 
     expect(screen.getByRole('link', { name: 'Baixar apostila.pdf' })).toHaveAttribute(
       'href',
