@@ -222,7 +222,7 @@ export default function CourseKnowledgePage() {
           ) : error ? (
             <p className="text-sm text-destructive">{t('loadError')}</p>
           ) : documents.length === 0 ? (
-            <Card className="p-6 text-sm text-muted-foreground">{t('empty')}</Card>
+            <Card className="p-6 text-center text-sm text-muted-foreground">{t('empty')}</Card>
           ) : (
             <Card className="overflow-x-auto p-0">
               <Table>
