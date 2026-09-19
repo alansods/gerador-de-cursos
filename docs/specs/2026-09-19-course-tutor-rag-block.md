@@ -137,7 +137,7 @@ Cada item só é marcado quando o critério de "Pronto quando" foi verificado.
 - [x] **Chunking**
   - Pronto quando: a função pura divide texto em chunks de ~800 tokens com sobreposição,
     sem cortar palavra, com testes para texto vazio, curto e longo.
-- [ ] **Ingestão de .docx**
+- [x] **Ingestão de .docx**
   - Pronto quando: a rota extrai com mammoth, grava fonte `document` e chunks com
     embedding; responde 403 para REVIEWER, GUEST e para quem não é dono nem colaborador;
     testes cobrem as permissões.

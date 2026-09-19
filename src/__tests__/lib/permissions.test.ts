@@ -3,6 +3,7 @@ import {
   assertCan,
   canEditCourse,
   canDeleteCourse,
+  canManageKnowledge,
   getCoursePermissions,
   resolveTokenRole,
   ForbiddenError,
@@ -117,6 +118,26 @@ describe('canEditCourse', () => {
   it('lets only ADMIN and MANAGER edit an orphan course', () => {
     expect(canEditCourse(user('ADMIN'), courseOf(null))).toBe(true)
     expect(canEditCourse(user('CONTENT_AUTHOR'), courseOf(null))).toBe(false)
+  })
+})
+
+describe('canManageKnowledge', () => {
+  it('lets ADMIN manage any course', () => {
+    expect(canManageKnowledge(user('ADMIN'), courseOf('outro'))).toBe(true)
+  })
+
+  it('lets a CONTENT_AUTHOR manage only as owner or collaborator', () => {
+    expect(canManageKnowledge(user('CONTENT_AUTHOR'), courseOf('u1'))).toBe(true)
+    expect(canManageKnowledge(user('CONTENT_AUTHOR'), courseOf('outro'), { granted: true })).toBe(
+      true
+    )
+    expect(canManageKnowledge(user('CONTENT_AUTHOR'), courseOf('outro'), null)).toBe(false)
+  })
+
+  it('refuses MANAGER, REVIEWER and GUEST even where they can edit the course', () => {
+    for (const role of ['MANAGER', 'REVIEWER', 'GUEST'] as UserRole[]) {
+      expect(canManageKnowledge(user(role), courseOf('u1'), { granted: true })).toBe(false)
+    }
   })
 })
 
