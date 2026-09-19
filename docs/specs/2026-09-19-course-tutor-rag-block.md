@@ -125,7 +125,8 @@ Cada item só é marcado quando o critério de "Pronto quando" foi verificado.
 
 ### Fase 1 — PoC
 
-- [ ] **Migration do pgvector e dos modelos**
+- [x] **Migration do pgvector e dos modelos** (validada num branch descartável do Neon;
+      aplicar na produção com `prisma migrate deploy` antes do teste manual)
   - Pronto quando: `CREATE EXTENSION vector` e as tabelas de `KnowledgeSource` e
     `KnowledgeChunk` foram aplicadas, com `@map`/`@@map`; `prisma migrate status`
     está limpo; excluir uma fonte ou um curso apaga os chunks em cascata.

@@ -96,6 +96,7 @@ model Course {
   accessRequests   CourseAccessRequest[]
   comments         CourseComment[]
   generationJobs   CourseGenerationJob[]
+  knowledgeSources KnowledgeSource[]
 
   @@index([title])
   @@index([category])
@@ -214,4 +215,40 @@ model CourseGenerationJob {
   @@index([userId, status])
   @@index([courseId])
   @@map("course_generation_jobs")
+}
+
+enum KnowledgeSourceKind {
+  DOCUMENT
+  COURSE
+
+  @@map("knowledge_source_kind")
+}
+
+model KnowledgeSource {
+  id          String              @id @default(cuid())
+  courseId    String              @map("course_id")
+  course      Course              @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  kind        KnowledgeSourceKind
+  name        String
+  contentHash String              @map("content_hash")
+  createdAt   DateTime            @default(now()) @map("created_at")
+  updatedAt   DateTime            @updatedAt @map("updated_at")
+  chunks      KnowledgeChunk[]
+
+  @@index([courseId, kind])
+  @@map("knowledge_sources")
+}
+
+model KnowledgeChunk {
+  id        String                     @id @default(cuid())
+  sourceId  String                     @map("source_id")
+  source    KnowledgeSource            @relation(fields: [sourceId], references: [id], onDelete: Cascade)
+  courseId  String                     @map("course_id")
+  label     String
+  text      String
+  embedding Unsupported("vector(768)")
+
+  @@index([courseId])
+  @@index([sourceId])
+  @@map("knowledge_chunks")
 }
