@@ -134,6 +134,13 @@ A troca fica isolada num único módulo de provedor, para não exigir retrabalho
 - **Salvar o curso só gera embedding do que mudou.** Salvar sem mudança de texto não chama
   o Gemini; os trechos iguais reaproveitam o vetor gravado. Importa porque o editor salva
   com frequência e o plano gratuito tem cota.
+- **A linha "Fonte:" sai do texto da resposta.** O Gemini cita a fonte como o prompt pede;
+  `splitCitation` tira essa linha do texto e devolve em `sources` só os rótulos citados,
+  para o painel não mostrar a fonte duas vezes. Sem citação, `sources` lista todos os
+  trechos usados.
+- **Verificação da Fase 1** feita com o app de desenvolvimento ligado a um branch
+  descartável do Neon (cópia da produção), via Playwright a 1280px e 375px: saudação pelo
+  nome, resposta citando `apostila-seguranca.docx` e recusa de "Qual a capital da França?".
 - **Rota de ingestão aceita até 4 MB** por enquanto, porque o arquivo passa pela função
   serverless (limite de 4,5 MB na Vercel). O envio via Blob fica para a Fase 2.
 - **MANAGER não envia documentos**, embora edite cursos: segue a decisão de permissão
@@ -177,7 +184,7 @@ Cada item só é marcado quando o critério de "Pronto quando" foi verificado.
   - Pronto quando: com um curso de exemplo, perguntas do conteúdo são respondidas e
     perguntas de fora são recusadas; o valor escolhido fica registrado em
     "O que mudou na implementação".
-- [ ] **Fechamento da Fase 1**
+- [x] **Fechamento da Fase 1**
   - Pronto quando: `pnpm build` está limpo, `pnpm test` está verde e os itens de
     "Verificação" que não dependem do SCORM foram conferidos manualmente.
 

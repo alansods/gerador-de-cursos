@@ -4,7 +4,12 @@
 import { NextRequest } from 'next/server'
 import { SignJWT } from 'jose'
 import { POST } from '@/app/api/tutor/[courseId]/route'
-import { askTutor, NOT_FOUND_ANSWER, TUTOR_MAX_QUESTION_LENGTH } from '@/lib/tutor/ask'
+import {
+  askTutor,
+  splitCitation,
+  NOT_FOUND_ANSWER,
+  TUTOR_MAX_QUESTION_LENGTH,
+} from '@/lib/tutor/ask'
 import { getTutorProvider, type TutorProvider } from '@/lib/tutor/provider'
 import { prisma } from '@/lib/prisma'
 
@@ -51,6 +56,7 @@ describe('askTutor', () => {
       passage('Unidade 3', 0.4),
     ])
 
+    provider.answer.mockResolvedValue('EPI é equipamento de proteção individual.')
     const reply = await askTutor('curso-1', 'O que é EPI?', provider)
 
     expect(reply.grounded).toBe(true)
@@ -60,6 +66,19 @@ describe('askTutor', () => {
       { label: 'Unidade 1', text: 'Texto de Unidade 1' },
       { label: 'apostila.docx', text: 'Texto de apostila.docx' },
     ])
+  })
+
+  it('moves the citation out of the answer and keeps only the cited sources', async () => {
+    mockPrisma.$queryRaw.mockResolvedValue([
+      passage('Unidade 1', 0.82),
+      passage('apostila.docx', 0.7),
+    ])
+    provider.answer.mockResolvedValue('Extintor é EPC.\n\nFonte: apostila.docx')
+
+    const reply = await askTutor('curso-1', 'Extintor é EPI?', provider)
+
+    expect(reply.answer).toBe('Extintor é EPC.')
+    expect(reply.sources).toEqual(['apostila.docx'])
   })
 
   it('returns the fixed answer and skips the LLM when nothing is similar enough', async () => {
@@ -155,5 +174,25 @@ describe('POST /api/tutor/[courseId]', () => {
 
   it('requires authentication', async () => {
     expect((await ask({ question: 'O que é EPI?' }, { authenticated: false })).status).toBe(401)
+  })
+})
+
+describe('splitCitation', () => {
+  const labels = ['Unidade 1 — Segurança › EPI', 'apostila.docx']
+
+  it('reads "Fonte" and "Fontes" lines, with or without markdown bold', () => {
+    expect(
+      splitCitation('Texto.\n**Fontes:** apostila.docx; Unidade 1 — Segurança › EPI', labels)
+    ).toEqual({
+      text: 'Texto.',
+      cited: labels,
+    })
+  })
+
+  it('keeps the whole answer and cites nothing when there is no citation line', () => {
+    expect(splitCitation('Texto sem fonte.', labels)).toEqual({
+      text: 'Texto sem fonte.',
+      cited: [],
+    })
   })
 })

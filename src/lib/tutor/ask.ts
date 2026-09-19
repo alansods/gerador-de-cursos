@@ -30,6 +30,16 @@ export async function searchPassages(
     LIMIT ${limit}`
 }
 
+const CITATION_LINE = /^\s*\**fontes?\**\s*:\s*(.+)$/gim
+
+export function splitCitation(answer: string, labels: string[]): { text: string; cited: string[] } {
+  const citations = [...answer.matchAll(CITATION_LINE)].map((match) => match[1])
+  const text = answer.replace(CITATION_LINE, '').trim()
+  const cited = labels.filter((label) => citations.some((line) => line.includes(label)))
+
+  return { text: text || answer.trim(), cited }
+}
+
 export interface TutorReply {
   answer: string
   sources: string[]
@@ -56,9 +66,8 @@ export async function askTutor(
     passages.map(({ label, text }) => ({ label, text }))
   )
 
-  return {
-    answer,
-    sources: [...new Set(passages.map((passage) => passage.label))],
-    grounded: true,
-  }
+  const labels = [...new Set(passages.map((passage) => passage.label))]
+  const { text, cited } = splitCitation(answer, labels)
+
+  return { answer: text, sources: cited.length > 0 ? cited : labels, grounded: true }
 }
