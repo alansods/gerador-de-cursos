@@ -95,7 +95,7 @@ import { QuizContent } from '@/components/QuizContent'
 import { InfoBox } from '@/components/InfoBox'
 import { BlockThemeProvider } from '@/components/course/blocks'
 import { resolveLayout } from '@/components/course/layouts'
-import { QuizData, QuizQuestion, Unit, Block } from '@/types/course'
+import { QuizData, QuizQuestion, Block } from '@/types/course'
 import {
   BLOCK_CATALOG,
   BLOCK_CATEGORIES,
@@ -119,7 +119,6 @@ function CourseEditor() {
     addUnit,
     updateUnit,
     deleteUnit,
-    reorderUnits,
     addBlock,
     updateBlock,
     deleteBlock,
@@ -4461,7 +4460,7 @@ function CourseEditor() {
             tutorEnabled: state.currentCourse.tutorEnabled ?? false,
           }}
           units={state.currentCourse.units || []}
-          onSave={async (courseData, units) => {
+          onSave={async (courseData) => {
             if (state.currentCourse) {
               await updateCourse(state.currentCourse.id, {
                 title: courseData.title,
@@ -4472,7 +4471,6 @@ function CourseEditor() {
                 bannerVideoUrl: courseData.bannerVideoUrl ?? '',
                 tutorEnabled: courseData.tutorEnabled ?? false,
               })
-              await reorderUnits(units as Unit[])
             }
           }}
         />
