@@ -178,24 +178,7 @@ export default function CourseKnowledgePage() {
             icon={Bot}
             title={t('title')}
             description={course ? t('description', { course: course.title }) : ''}
-            {...(canManage && {
-              actionLabel: upload.isPending ? t('uploading') : t('addDocument'),
-              actionIcon: Upload,
-              actionDisabled: upload.isPending,
-              onAction: () => fileInput.current?.click(),
-            })}
           />
-
-          {canManage && (
-            <input
-              ref={fileInput}
-              type="file"
-              accept={MEDIA_POLICY.knowledge.extensions}
-              className="hidden"
-              aria-label={t('chooseFile')}
-              onChange={(event) => sendFile(event.target.files?.[0])}
-            />
-          )}
 
           {course && !course.tutorEnabled && (
             <p className="flex gap-2 rounded-lg border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900 dark:border-amber-800 dark:bg-amber-950/30 dark:text-amber-200">
@@ -206,6 +189,32 @@ export default function CourseKnowledgePage() {
 
           {!canManage && !loading && !error && (
             <p className="text-sm text-muted-foreground">{t('readOnly')}</p>
+          )}
+
+          {canManage && (
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-end sm:gap-4">
+              <p className="text-xs text-muted-foreground sm:text-right">{t('uploadHint')}</p>
+              <input
+                ref={fileInput}
+                type="file"
+                accept={MEDIA_POLICY.knowledge.extensions}
+                className="hidden"
+                aria-label={t('chooseFile')}
+                onChange={(event) => sendFile(event.target.files?.[0])}
+              />
+              <Button
+                onClick={() => fileInput.current?.click()}
+                disabled={upload.isPending}
+                className="w-full gap-2 sm:w-auto"
+              >
+                {upload.isPending ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Upload className="h-4 w-4" />
+                )}
+                {upload.isPending ? t('uploading') : t('addDocument')}
+              </Button>
+            </div>
           )}
 
           {loading ? (

@@ -7,8 +7,6 @@ interface PageHeaderProps {
   description: string
   actionLabel?: string
   onAction?: () => void
-  actionIcon?: LucideIcon
-  actionDisabled?: boolean
 }
 
 export function PageHeader({
@@ -17,8 +15,6 @@ export function PageHeader({
   description,
   actionLabel,
   onAction,
-  actionIcon: ActionIcon = Plus,
-  actionDisabled = false,
 }: PageHeaderProps) {
   return (
     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 sm:mb-8">
@@ -32,8 +28,8 @@ export function PageHeader({
         <p className="text-sm sm:text-base text-muted-foreground">{description}</p>
       </div>
       {actionLabel && onAction && (
-        <Button onClick={onAction} disabled={actionDisabled} className="w-full sm:w-auto shrink-0">
-          <ActionIcon className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
+        <Button onClick={onAction} className="w-full sm:w-auto shrink-0">
+          <Plus className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
           {actionLabel}
         </Button>
       )}

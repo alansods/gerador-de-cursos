@@ -84,7 +84,7 @@
   },
   "knowledge": {
     "title": "Tutor knowledge base",
-    "description": "Documents the AI Tutor uses, along with the lesson content, to answer the learners of “{course}”. .docx or .pdf files up to 20 MB; scanned PDFs (images only) are not accepted.",
+    "description": "Documents the AI Tutor uses, along with the lesson content, to answer the learners of “{course}”.",
     "backToEditor": "Back to the editor",
     "tutorOff": "The AI Tutor is off for this course. Documents are kept, but learners only see the chat after you turn the option on in About the course.",
     "chooseFile": "Choose file",
@@ -108,6 +108,7 @@
     "noFile": "No original file",
     "previewLoading": "Loading the document...",
     "previewError": "Could not display the document.",
-    "previewImagesNote": "Text preview; images in the document only show in the downloaded file."
+    "previewImagesNote": "Text preview; images in the document only show in the downloaded file.",
+    "uploadHint": ".docx or .pdf files up to 20 MB; scanned PDFs (images only) are not accepted."
   }
 }

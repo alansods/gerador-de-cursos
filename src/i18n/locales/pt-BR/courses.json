@@ -84,7 +84,7 @@
   },
   "knowledge": {
     "title": "Repositório do tutor",
-    "description": "Documentos que o Tutor IA usa, junto com o conteúdo das aulas, para responder aos alunos de “{course}”. Arquivos .docx ou .pdf de até 20 MB; PDF digitalizado (só imagem) não é aceito.",
+    "description": "Documentos que o Tutor IA usa, junto com o conteúdo das aulas, para responder aos alunos de “{course}”.",
     "backToEditor": "Voltar ao editor",
     "tutorOff": "O Tutor IA está desligado neste curso. Os documentos ficam guardados, mas os alunos só veem o chat depois que você ligar a opção em Sobre o curso.",
     "chooseFile": "Escolher arquivo",
@@ -108,6 +108,7 @@
     "noFile": "Sem arquivo original",
     "previewLoading": "Carregando o documento...",
     "previewError": "Não foi possível visualizar o documento.",
-    "previewImagesNote": "Visualização do texto; imagens do documento aparecem só no arquivo baixado."
+    "previewImagesNote": "Visualização do texto; imagens do documento aparecem só no arquivo baixado.",
+    "uploadHint": "Arquivos .docx ou .pdf de até 20 MB; PDF digitalizado (só imagem) não é aceito."
   }
 }
