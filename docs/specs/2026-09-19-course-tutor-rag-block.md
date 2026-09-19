@@ -130,7 +130,7 @@ Cada item só é marcado quando o critério de "Pronto quando" foi verificado.
   - Pronto quando: `CREATE EXTENSION vector` e as tabelas de `KnowledgeSource` e
     `KnowledgeChunk` foram aplicadas, com `@map`/`@@map`; `prisma migrate status`
     está limpo; excluir uma fonte ou um curso apaga os chunks em cascata.
-- [ ] **Módulo de provedor**
+- [x] **Módulo de provedor**
   - Pronto quando: embeddings e resposta do LLM passam por uma única interface, com o Gemini
     como implementação; trocar de provedor não exige mexer nas rotas; teste unitário com
     provedor falso.
