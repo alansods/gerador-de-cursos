@@ -68,7 +68,10 @@ perguntas e dicas em vez de responder.
 - Corpo do pedido ganha `progress?: { units: number[]; score: number | null }`: percentual
   de 0 a 100 por unidade, na ordem do curso, e a nota das atividades (a mesma de
   `calculateScore`). O cliente não manda título nem texto livre; o servidor valida (inteiros
-  de 0 a 100, no máximo uma entrada por unidade) e ignora o campo se vier inválido.
+  de 0 a 100, **exatamente** uma entrada por unidade do curso no banco) e ignora o campo se
+  vier inválido. O pacote leva as unidades do momento do export; se o curso foi editado
+  depois e o número de unidades não bate, o progresso é ignorado em vez de ser atribuído à
+  unidade errada.
 - No layout por unidades o percentual é 0 ou 100 (visitada); na trilha, etapas concluídas
   sobre o total da unidade.
 - `useScormProgress` publica o resumo num store simples (`src/lib/tutor/progress-store.ts`,
@@ -141,7 +144,7 @@ Cada item só é marcado quando o critério de "Pronto quando" foi verificado.
   - Pronto quando: cada tipo da tabela gera a seção com o rótulo de atividade e só com o que
     a tabela permite; testes provam, tipo a tipo, que resposta, feedback, pares, ordem,
     categorias e palavras não aparecem no texto indexado.
-- [ ] **Estrutura e progresso no contexto**
+- [x] **Estrutura e progresso no contexto**
   - Pronto quando: o servidor monta a estrutura a partir do banco e o progresso a partir do
     campo validado; campo inválido é ignorado; testes cobrem os dois layouts (unidades e
     trilha) e a ausência de progresso.
