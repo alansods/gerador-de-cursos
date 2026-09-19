@@ -39,13 +39,16 @@ const url = 'http://localhost:3000/api/public/tutor/curso-1'
 const context = { params: Promise.resolve({ courseId: 'curso-1' }) }
 
 function ask(body: Record<string, unknown>, token: string | null = TOKEN) {
-  const headers: Record<string, string> = { 'Content-Type': 'application/json' }
-  if (token) headers['x-tutor-token'] = token
   return POST(
     new NextRequest(url, {
       method: 'POST',
-      headers,
-      body: JSON.stringify({ question: 'O que é EPI?', sessionId: SESSION, ...body }),
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        question: 'O que é EPI?',
+        sessionId: SESSION,
+        ...(token !== null && { token }),
+        ...body,
+      }),
     }),
     context
   )
@@ -146,7 +149,7 @@ describe('POST /api/public/tutor/[courseId]', () => {
     const res = OPTIONS()
 
     expect(res.status).toBe(204)
-    expect(res.headers.get('access-control-allow-headers')).toContain('x-tutor-token')
+    expect(res.headers.get('access-control-allow-headers')).toBe('Content-Type')
   })
 
   it('returns 503 when the tutor fails', async () => {

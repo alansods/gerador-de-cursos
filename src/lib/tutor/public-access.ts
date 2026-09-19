@@ -1,8 +1,6 @@
 import { randomBytes, timingSafeEqual } from 'crypto'
 import { prisma } from '@/lib/prisma'
 
-export const TUTOR_TOKEN_HEADER = 'x-tutor-token'
-
 const MINUTE_MS = 60 * 1000
 const DAY_MS = 24 * 60 * MINUTE_MS
 

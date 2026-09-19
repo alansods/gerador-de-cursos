@@ -2,7 +2,6 @@ import { NextRequest, NextResponse, after } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { askTutor, TUTOR_MAX_QUESTION_LENGTH } from '@/lib/tutor/ask'
 import {
-  TUTOR_TOKEN_HEADER,
   consumeTutorQuota,
   isValidSessionId,
   purgeExpiredTutorUsage,
@@ -12,7 +11,7 @@ import {
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
-  'Access-Control-Allow-Headers': `Content-Type, ${TUTOR_TOKEN_HEADER}`,
+  'Access-Control-Allow-Headers': 'Content-Type',
   'Access-Control-Max-Age': '86400',
 }
 
@@ -47,7 +46,9 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ cou
       select: { tutorEnabled: true, tutorToken: true },
     })
 
-    if (!course || !tokensMatch(course.tutorToken, req.headers.get(TUTOR_TOKEN_HEADER))) {
+    const token = typeof body.token === 'string' ? body.token : null
+
+    if (!course || !tokensMatch(course.tutorToken, token)) {
       return refuse('Acesso ao tutor não autorizado', 401)
     }
 

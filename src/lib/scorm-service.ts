@@ -1,6 +1,7 @@
 // src/lib/scorm-service.ts
 
 import JSZip from 'jszip'
+import type { TutorPackageConfig } from '@/lib/tutor/package-config'
 import fs from 'fs/promises'
 import path from 'path'
 // Course types shared with the app.
@@ -67,7 +68,8 @@ ${fileList}
 export async function generateSCORMFromPlayerDist(
   course: Course,
   courseId?: string,
-  credits?: string | null
+  credits?: string | null,
+  tutorConfig: TutorPackageConfig | null = null
 ): Promise<Buffer> {
   console.log(`📦 [SCORM Service] Generating from the Vite player for: ${course.title}`)
 
@@ -107,6 +109,10 @@ export async function generateSCORMFromPlayerDist(
   let indexHtml = await fs.readFile(path.join(distDir, 'index.html'), 'utf-8')
   const courseJson = JSON.stringify(course)
   indexHtml = indexHtml.replace('null /* COURSE_DATA_PLACEHOLDER */', courseJson)
+  indexHtml = indexHtml.replace(
+    'null /* TUTOR_CONFIG_PLACEHOLDER */',
+    tutorConfig ? JSON.stringify(tutorConfig) : 'null'
+  )
   // Drop the crossorigin attribute Vite adds — many LMSes block assets
   // carrying it, by CORS policy
   indexHtml = indexHtml.replace(/ crossorigin/g, '')

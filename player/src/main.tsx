@@ -5,10 +5,12 @@ import App from './App'
 import { scormAPI } from './scorm-api'
 import { ThemeProvider } from '@/components/ThemeProvider'
 import type { Course } from '@/types/course'
+import type { TutorConfig } from './PlayerTutor'
 
 declare global {
   interface Window {
     __COURSE_DATA__: Course | null
+    __TUTOR_CONFIG__: TutorConfig | null
   }
 }
 
@@ -30,7 +32,7 @@ const courseData = window.__COURSE_DATA__
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <ThemeProvider>
-      <App course={courseData} />
+      <App course={courseData} tutor={window.__TUTOR_CONFIG__ ?? null} />
     </ThemeProvider>
   </React.StrictMode>
 )

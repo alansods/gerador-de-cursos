@@ -38,7 +38,7 @@ Não existe RAG que dispense mostrar à IA os trechos usados na resposta:
 | Vetores               | `pgvector` no Neon, busca sempre filtrada por `courseId`                                                                       |
 | Ativação              | Chave "Tutor IA" no painel "Sobre o curso"; desligada por padrão. Não é um bloco                                               |
 | Formato do chat       | Widget tradicional: botão redondo com robô no canto inferior direito que abre um popup não modal (a página continua navegável) |
-| Onde aparece          | Em todas as páginas do curso com a chave ligada: preview (feito) e pacote SCORM (pendente)                                     |
+| Onde aparece          | Em todas as páginas do curso com a chave ligada: preview e pacote SCORM                                                        |
 | Conteúdo              | Texto dos blocos do próprio curso **e** documentos enviados. Sem documento nenhum, o tutor já responde com o conteúdo da aula  |
 | Atividades            | Blocos avaliativos (`isGradableBlock`) não são indexados: o tutor não dá gabarito                                              |
 | Indexação             | O conteúdo do curso só é indexado com a chave ligada; ligar dispara a indexação; salvar reindexa só o que mudou                |
@@ -52,7 +52,7 @@ Não existe RAG que dispense mostrar à IA os trechos usados na resposta:
 | Grounding             | Prompt manda responder só com o contexto e citar a fonte; a API devolve as fontes, mas o chat não as mostra ao aluno           |
 | Histórico             | Nenhuma pergunta ou resposta é persistida                                                                                      |
 | Idioma                | Respostas sempre em pt-BR; textos da página de documentos em pt-BR e en                                                        |
-| Acesso à rota pública | Token por curso embutido no pacote, CORS aberto só nessa rota, rate limit, teto (pendente)                                     |
+| Acesso à rota pública | Chave por curso embutida no pacote, limites por sessão e por curso; CORS aberto (global, já existia)                           |
 | Teste em LMS          | SCORM Cloud (não reproduz a CSP do Moodle do SENAI)                                                                            |
 
 ### Risco aceito: plano gratuito do Gemini
@@ -95,7 +95,9 @@ A troca fica isolada num único módulo de provedor (`src/lib/tutor/provider.ts`
 | `src/lib/tutor/ask.ts`                                  | Busca top-k, aplica o limiar, chama o LLM e separa a citação                     |
 | `src/lib/tutor/document-storage.ts`                     | Store privado: leitura, exclusão e URL assinada                                  |
 | `src/lib/tutor/document-access.ts`                      | Busca o documento do curso e limpa arquivos de cursos excluídos                  |
-| `POST /api/tutor/[courseId]`                            | Pergunta do aluno (hoje com login; a versão pública do SCORM está pendente)      |
+| `POST /api/tutor/[courseId]`                            | Pergunta no preview do app (com login)                                           |
+| `POST /api/public/tutor/[courseId]`                     | Pergunta vinda do pacote SCORM (chave do curso, limites, sem login)              |
+| `POST /api/courses/[id]/tutor-token`                    | Gera uma nova chave (invalida pacotes exportados)                                |
 | `GET/POST/DELETE /api/courses/[id]/knowledge`           | Lista, indexa e exclui documentos (`maxDuration = 120`)                          |
 | `POST /api/courses/[id]/knowledge/upload`               | Token de upload direto ao store privado, só para quem gerencia                   |
 | `GET .../knowledge/[sourceId]/file?mode=view\|download` | Redireciona para a URL assinada                                                  |
@@ -115,13 +117,16 @@ A troca fica isolada num único módulo de provedor (`src/lib/tutor/provider.ts`
 
 ### Variáveis de ambiente
 
-| Variável                      | Uso                                                                                                                                            |
-| ----------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
-| `GEMINI_API_KEY`              | Já existia; embeddings e respostas                                                                                                             |
-| `TUTOR_BLOB_READ_WRITE_TOKEN` | Store privado `tutor-documents`. **Não revogar**, apesar da sugestão da Vercel de usar OIDC: o token de upload do navegador é assinado com ele |
-| `TUTOR_EMBEDDING_MODEL`       | Opcional; padrão `gemini-embedding-001`                                                                                                        |
-| `TUTOR_ANSWER_MODEL`          | Opcional; padrão `gemini-2.5-flash`                                                                                                            |
-| `TUTOR_MIN_SIMILARITY`        | Opcional; padrão `0.62`                                                                                                                        |
+| Variável                         | Uso                                                                                                                                            |
+| -------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| `GEMINI_API_KEY`                 | Já existia; embeddings e respostas                                                                                                             |
+| `TUTOR_BLOB_READ_WRITE_TOKEN`    | Store privado `tutor-documents`. **Não revogar**, apesar da sugestão da Vercel de usar OIDC: o token de upload do navegador é assinado com ele |
+| `TUTOR_EMBEDDING_MODEL`          | Opcional; padrão `gemini-embedding-001`                                                                                                        |
+| `TUTOR_ANSWER_MODEL`             | Opcional; padrão `gemini-2.5-flash`                                                                                                            |
+| `TUTOR_MIN_SIMILARITY`           | Opcional; padrão `0.62`                                                                                                                        |
+| `TUTOR_SESSION_LIMIT_PER_MINUTE` | Opcional; padrão `6` perguntas por minuto por sessão do pacote                                                                                 |
+| `TUTOR_COURSE_DAILY_LIMIT`       | Opcional; padrão `500` perguntas por dia por curso, somando todos os pacotes                                                                   |
+| `TUTOR_PUBLIC_API_URL`           | Opcional; endereço gravado no pacote. Sem ela, usa `VERCEL_PROJECT_PRODUCTION_URL` e, em local, a origem do export                             |
 
 ## Fora do escopo
 
@@ -143,7 +148,8 @@ A troca fica isolada num único módulo de provedor (`src/lib/tutor/provider.ts`
 - [x] Prompt injection pedindo "todo o contexto": recusado pelo limiar.
 - [x] O payload enviado ao LLM não contém o nome do aluno.
 - [x] Documento: enviar, visualizar, baixar (idêntico ao original) e excluir (some do store); blob sem assinatura → 403.
-- [ ] Exportar o SCORM e subir no SCORM Cloud: o chat funciona e, com a API fora do ar, mostra "tutor indisponível".
+- [x] Pacote exportado dentro de um LMS falso, noutra origem: chat funciona, saúda pelo nome do LMS e, com a API inacessível, mostra "tutor indisponível".
+- [ ] Subir o pacote no SCORM Cloud.
 - [ ] Antes de usar com turma real, repetir o teste no Moodle do SENAI, cuja CSP o SCORM Cloud não reproduz.
 
 ## O que mudou na implementação
@@ -215,8 +221,8 @@ A troca fica isolada num único módulo de provedor (`src/lib/tutor/provider.ts`
 
 ### Rota pública
 
-- **`POST /api/public/tutor/[courseId]`**, sem login, para o pacote SCORM. Exige o cabeçalho
-  `x-tutor-token` com a chave do curso (`cursos.tutor_token`, comparação em tempo constante),
+- **`POST /api/public/tutor/[courseId]`**, sem login, para o pacote SCORM. Exige a chave do curso
+  no corpo JSON (`token`) (`cursos.tutor_token`, comparação em tempo constante),
   o tutor ligado e um `sessionId` gerado pelo player; responde só `answer` e `grounded`, sem
   as fontes. CORS aberto (`*`) apenas nessa rota, porque o domínio de cada LMS é
   desconhecido; a chave é o que protege.
@@ -232,6 +238,38 @@ A troca fica isolada num único módulo de provedor (`src/lib/tutor/provider.ts`
   depois da resposta.
 - **Migration `20260919150000_add_tutor_public_access`** (`tutor_token` e `tutor_usage`),
   validada num branch descartável.
+
+- **A chave vai no corpo JSON, não num cabeçalho próprio.** A primeira versão usava
+  `x-tutor-token`, e o preflight do navegador barrou: o `next.config.ts` já aplica um CORS
+  global em **todas** as rotas `/api` (`Access-Control-Allow-Origin: *` e uma lista fixa de
+  cabeçalhos permitidos), que prevalece sobre o que a rota responde. Com a chave no corpo,
+  basta o `Content-Type`, que a lista global permite. Esse CORS global aberto já existia e
+  vale para toda a API; como as outras rotas dependem do cookie de sessão e o navegador não
+  o envia com `*`, ele não abre as rotas autenticadas, mas convém revisá-lo à parte.
+
+### Pacote SCORM
+
+- **O export grava `window.__TUTOR_CONFIG__ = { endpoint, token }` no `index.html`** só
+  quando o tutor está ligado; desligado, fica `null` e o pacote não leva chave nem endereço.
+  O estado do tutor e a chave são lidos do banco na hora do export (o corpo da requisição
+  vem do navegador e não é confiável). Curso ligado antes de existirem chaves ganha a chave
+  no primeiro export.
+- **O endereço da API** vem de `TUTOR_PUBLIC_API_URL`; sem ela, de
+  `VERCEL_PROJECT_PRODUCTION_URL` (o domínio de produção, mesmo quando o export roda num
+  deploy de preview); sem as duas, da origem da requisição de export (útil em local).
+- **O widget foi dividido:** `TutorChatWidget` é só visual e recebe `onAsk`; no app,
+  `TutorChatPanel` usa a mutation do TanStack Query; no player, `player/src/PlayerTutor.tsx`
+  usa `fetch` puro, porque o pacote não pode carregar o TanStack Query. Conferido: o bundle
+  do player não contém a biblioteca. O código do widget está no bundle mesmo com o tutor
+  desligado; o que decide se ele aparece é a configuração.
+- **No pacote, o nome vem do LMS** (`useLMS`); "Convidado" (sem LMS) vira saudação sem nome.
+  Cada abertura do pacote gera um `sessionId` para os limites. Resposta 429 mostra a
+  mensagem do servidor; qualquer outra falha mostra "tutor indisponível".
+- **Verificado de ponta a ponta** com o build isolado ligado a um branch descartável: export
+  pela rota real, pacote servido dentro do LMS falso de `e2e/scorm-fixtures/lms.html` numa
+  **outra origem**; saudação "Olá, Aluno!", resposta correta vinda da rota pública; com o
+  endereço inacessível, "tutor indisponível"; com o tutor desligado, export sem configuração
+  e sem o botão.
 
 ### PDF e desempenho
 
@@ -322,7 +360,7 @@ Cada item só é marcado quando o critério de "Pronto quando" foi verificado.
   - Pronto quando: o pacote leva um token por curso; o token pode ser revogado e gerado de
     novo; CORS aberto só nessa rota; rate limit por sessão e teto diário por curso,
     ajustáveis por variável de ambiente; testes cobrem token inválido e limite estourado.
-- [ ] **Chat no pacote SCORM**
+- [x] **Chat no pacote SCORM**
   - Pronto quando: com a chave ligada, o pacote exportado mostra o widget em todas as
     páginas; o chat chama a API com o token, saúda pelo nome vindo do LMS e mostra "tutor
     indisponível" quando a chamada é bloqueada ou falha; com a chave desligada, o pacote não

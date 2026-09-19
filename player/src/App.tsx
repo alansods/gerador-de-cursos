@@ -1,12 +1,14 @@
 import React from 'react'
 import type { Course } from '@/types/course'
 import { CoursePlayer } from '@/components/course/CoursePlayer'
+import PlayerTutor, { type TutorConfig } from './PlayerTutor'
 
 interface AppProps {
   course: Course | null
+  tutor?: TutorConfig | null
 }
 
-export default function App({ course }: AppProps) {
+export default function App({ course, tutor = null }: AppProps) {
   if (!course) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -35,5 +37,10 @@ export default function App({ course }: AppProps) {
     )
   }
 
-  return <CoursePlayer course={course} />
+  return (
+    <>
+      <CoursePlayer course={course} />
+      {tutor && <PlayerTutor config={tutor} />}
+    </>
+  )
 }
