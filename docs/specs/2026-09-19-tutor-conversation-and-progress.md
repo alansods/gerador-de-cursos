@@ -133,7 +133,7 @@ Cada item só é marcado quando o critério de "Pronto quando" foi verificado.
 - [x] **Spec e branch**
   - Pronto quando: esta spec está commitada na `feat/tutor-conversation` e referenciada na
     spec principal do tutor.
-- [ ] **Conversa rápida**
+- [x] **Conversa rápida**
   - Pronto quando: `small-talk.ts` reconhece as categorias acima, com e sem acento e
     pontuação; mensagem com pergunta junto segue o fluxo normal; o tutor responde sem chamar
     embedding nem IA; testes cobrem os casos.

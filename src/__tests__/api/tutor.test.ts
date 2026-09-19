@@ -90,6 +90,15 @@ describe('askTutor', () => {
     expect(provider.answer).not.toHaveBeenCalled()
   })
 
+  it('answers small talk with a ready reply, without embedding or the LLM', async () => {
+    const reply = await askTutor('curso-1', 'Oi, tudo bem?', provider)
+
+    expect(reply.grounded).toBe(false)
+    expect(reply.answer).toMatch(/curso/)
+    expect(provider.embedQuery).not.toHaveBeenCalled()
+    expect(provider.answer).not.toHaveBeenCalled()
+  })
+
   it('searches only the chunks of the course being asked about', async () => {
     mockPrisma.$queryRaw.mockResolvedValue([])
 

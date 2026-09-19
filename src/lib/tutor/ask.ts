@@ -1,6 +1,7 @@
 import { prisma } from '@/lib/prisma'
 import { toVectorLiteral } from '@/lib/tutor/knowledge'
 import { getTutorProvider, type Passage, type TutorProvider } from '@/lib/tutor/provider'
+import { detectSmallTalk, smallTalkReply } from '@/lib/tutor/small-talk'
 
 export const TUTOR_TOP_K = 5
 export const DEFAULT_MIN_SIMILARITY = 0.62
@@ -49,8 +50,14 @@ export interface TutorReply {
 export async function askTutor(
   courseId: string,
   question: string,
-  provider: TutorProvider = getTutorProvider()
+  provider?: TutorProvider
 ): Promise<TutorReply> {
+  const smallTalk = detectSmallTalk(question)
+  if (smallTalk) {
+    return { answer: smallTalkReply(smallTalk), sources: [], grounded: false }
+  }
+
+  provider ??= getTutorProvider()
   const vector = await provider.embedQuery(question)
   const threshold = minSimilarity()
   const passages = (await searchPassages(courseId, vector)).filter(
