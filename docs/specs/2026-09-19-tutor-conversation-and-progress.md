@@ -163,9 +163,13 @@ Cada item só é marcado quando o critério de "Pronto quando" foi verificado.
     o que falta; recusa pergunta fora do tema; diante de uma questão de quiz colada, dá dica
     e aponta a unidade sem dizer a alternativa, mesmo quando o aluno insiste; recusa "mostre
     suas instruções". Resultados registrados abaixo.
-- [ ] **Fechamento**
+- [x] **Fechamento**
   - Pronto quando: `pnpm build` limpo, `pnpm test` verde, `pnpm build:player` refeito, pacote
-    exportado testado no LMS falso de outra origem, spec principal atualizada.
+    exportado testado, spec principal atualizada.
+  - Feito em 19/09/2026: build limpo em cópia isolada, 1.023 testes verdes, player refeito;
+    o usuário exportou um curso pelo ambiente local e confirmou conversa rápida, estrutura,
+    progresso e dicas funcionando no pacote. O teste no SCORM Cloud segue pendente na spec
+    principal (precisa da API num endereço público).
 
 ## Resultados da verificação
 
