@@ -71,7 +71,7 @@ A troca fica isolada num único módulo de provedor (`src/lib/tutor/provider.ts`
 
 ## Arquitetura
 
-### Dados (3 migrations, aplicadas na produção em 19/09/2026)
+### Dados (4 migrations; as 3 primeiras aplicadas na produção em 19/09/2026)
 
 - `20260919120000_add_course_knowledge_base`: extensão `vector`, enum
   `knowledge_source_kind` (`DOCUMENT`, `COURSE`), tabelas `knowledge_sources` e
@@ -80,6 +80,8 @@ A troca fica isolada num único módulo de provedor (`src/lib/tutor/provider.ts`
 - `20260919130000_add_course_tutor_enabled`: `cursos.tutor_enabled` (padrão `false`).
 - `20260919140000_add_knowledge_source_file`: `file_pathname`, `content_type` e `file_size`
   em `knowledge_sources` (nulos na fonte `COURSE`).
+- `20260919150000_add_tutor_public_access`: `cursos.tutor_token` (único) e a tabela
+  `tutor_usage` dos limites da rota pública.
 
 ### Servidor
 
@@ -211,6 +213,26 @@ A troca fica isolada num único módulo de provedor (`src/lib/tutor/provider.ts`
   primeira tela a usar `useFormatter`; sem o fuso explícito, ele registra
   `ENVIRONMENT_FALLBACK` no console.
 
+### Rota pública
+
+- **`POST /api/public/tutor/[courseId]`**, sem login, para o pacote SCORM. Exige o cabeçalho
+  `x-tutor-token` com a chave do curso (`cursos.tutor_token`, comparação em tempo constante),
+  o tutor ligado e um `sessionId` gerado pelo player; responde só `answer` e `grounded`, sem
+  as fontes. CORS aberto (`*`) apenas nessa rota, porque o domínio de cada LMS é
+  desconhecido; a chave é o que protege.
+- **A chave nasce quando o tutor é ligado pela primeira vez** e continua a mesma se ele for
+  desligado e religado. "Gerar nova chave", na página de documentos (só quem gerencia),
+  invalida os pacotes já exportados; o curso precisa ser exportado de novo. A chave nunca
+  aparece nas respostas da API do app.
+- **Limites no Postgres** (tabela `tutor_usage`, contador por chave com expiração), porque
+  memória não é compartilhada entre instâncias serverless: 6 perguntas por minuto por
+  sessão (`TUTOR_SESSION_LIMIT_PER_MINUTE`) e 500 por dia por curso
+  (`TUTOR_COURSE_DAILY_LIMIT`), com 429 e `Retry-After`. O teto por curso é o que segura o
+  custo mesmo se alguém trocar o `sessionId` a cada pergunta. Linhas vencidas são apagadas
+  depois da resposta.
+- **Migration `20260919150000_add_tutor_public_access`** (`tutor_token` e `tutor_usage`),
+  validada num branch descartável.
+
 ### PDF e desempenho
 
 - **PDF lido com `unpdf`, uma seção por página** (`arquivo.pdf, p. N`), para o tutor citar a
@@ -296,7 +318,7 @@ Cada item só é marcado quando o critério de "Pronto quando" foi verificado.
 - [x] **Migrations aplicadas na produção** (19/09/2026, com backup no Neon)
 - [x] **Correção do conflito falso no painel "Sobre o curso"** trazida da branch
       `fix/settings-drawer-save-conflict`
-- [ ] **Segurança da rota pública**
+- [x] **Segurança da rota pública**
   - Pronto quando: o pacote leva um token por curso; o token pode ser revogado e gerado de
     novo; CORS aberto só nessa rota; rate limit por sessão e teto diário por curso,
     ajustáveis por variável de ambiente; testes cobrem token inválido e limite estourado.

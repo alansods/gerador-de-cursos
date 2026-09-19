@@ -118,6 +118,11 @@
     "previewLoading": "Loading the document...",
     "previewError": "Could not display the document.",
     "previewImagesNote": "Text preview; images in the document only show in the downloaded file.",
-    "kindCourseShort": "Course"
+    "kindCourseShort": "Course",
+    "accessTitle": "SCORM package access",
+    "accessDescription": "Each exported package carries a key that unlocks the tutor for this course. If a package circulates outside the LMS, generate a new key: packages already exported stop answering and the course must be exported again.",
+    "regenerate": "Generate new key",
+    "regenerateConfirm": "Generate a new key? SCORM packages already exported for this course lose access to the tutor until they are exported again.",
+    "regenerated": "New key generated. Export the course again so learners can use the tutor."
   }
 }

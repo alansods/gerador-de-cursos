@@ -17,6 +17,7 @@ import type { CourseStatus } from '@/lib/permissions'
 import { upgradeUnits } from '@/lib/legacy-course'
 import { reindexCourseContent } from '@/lib/tutor/knowledge'
 import { courseDocumentPathnames, deleteStoredDocuments } from '@/lib/tutor/document-access'
+import { generateTutorToken } from '@/lib/tutor/public-access'
 
 /** Status cuja revisão deixa de valer assim que o conteúdo muda. */
 const REVIEW_INVALIDATED_ON_EDIT: CourseStatus[] = ['APPROVED', 'REJECTED']
@@ -388,6 +389,11 @@ export async function PUT(req: NextRequest) {
         ...(layout && { layout }),
         ...(bannerVideoUrl !== undefined && { bannerVideoUrl: bannerVideoUrl || null }),
         ...(togglesTutor && { tutorEnabled }),
+        ...(togglesTutor &&
+          tutorEnabled &&
+          !existingCourse.tutorToken && {
+            tutorToken: generateTutorToken(),
+          }),
         ...(normalizedUnits !== undefined && {
           units: normalizedUnits as unknown as Prisma.InputJsonValue,
         }),

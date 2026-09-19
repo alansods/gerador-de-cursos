@@ -49,10 +49,11 @@ function storedCourse(tutorEnabled: boolean) {
 async function save(
   { userId, role }: { userId: string; role: string },
   stored: boolean,
-  body: Record<string, unknown>
+  body: Record<string, unknown>,
+  tutorToken: string | null = null
 ) {
   mockPrisma.user.findUnique.mockResolvedValue({ id: userId, name: 'X', role })
-  mockPrisma.course.findUnique.mockResolvedValue(storedCourse(stored))
+  mockPrisma.course.findUnique.mockResolvedValue({ ...storedCourse(stored), tutorToken })
   mockPrisma.course.update.mockImplementation(async ({ data }) => ({
     ...storedCourse(stored),
     ...(typeof data.tutorEnabled === 'boolean' && { tutorEnabled: data.tutorEnabled }),
@@ -93,6 +94,19 @@ describe('PUT /api/courses — Tutor IA setting', () => {
     expect(res.status).toBe(200)
     expect(data.tutorEnabled).toBe(true)
     expect(reindexCourseContent).toHaveBeenCalledWith('curso-1', units)
+  })
+
+  it('creates the package access token the first time the tutor is turned on', async () => {
+    const { data } = await save(owner, false, { tutorEnabled: true })
+
+    expect(data.tutorToken).toMatch(/^[A-Za-z0-9_-]{32}$/)
+  })
+
+  it('keeps the existing access token when the tutor is turned on again', async () => {
+    const { data } = await save(owner, false, { tutorEnabled: true }, 'antigo')
+
+    expect(data.tutorEnabled).toBe(true)
+    expect(data.tutorToken).toBeUndefined()
   })
 
   it('refuses a MANAGER turning the tutor on, even though a MANAGER edits the course', async () => {

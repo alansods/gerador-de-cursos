@@ -82,6 +82,7 @@ model Course {
   layout           String                  @default("classic")
   bannerVideoUrl   String?                 @map("banner_video_url")
   tutorEnabled     Boolean                 @default(false) @map("tutor_enabled")
+  tutorToken       String?                 @unique @map("tutor_token")
   units            Json                    @default("[]") @map("unidades")
   status           CourseStatus            @default(IN_PROGRESS)
   generationStatus CourseGenerationStatus? @map("generation_status")
@@ -255,4 +256,13 @@ model KnowledgeChunk {
   @@index([courseId])
   @@index([sourceId])
   @@map("knowledge_chunks")
+}
+
+model TutorUsage {
+  key       String   @id
+  count     Int      @default(0)
+  expiresAt DateTime @map("expires_at")
+
+  @@index([expiresAt])
+  @@map("tutor_usage")
 }
