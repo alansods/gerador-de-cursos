@@ -217,8 +217,8 @@ A troca fica isolada num único módulo de provedor (`src/lib/tutor/provider.ts`
   arquivo em letra menor ao lado. O título do `PageHeader` passou a quebrar linha em vez de
   truncar, em todas as páginas.
 - **A tabela lista só os documentos enviados**, com o tipo do arquivo (PDF ou DOCX). O
-  conteúdo do curso continua indexado como fonte `COURSE`, mas não aparece: é implícito, e a
-  descrição diz que o tutor já responde com as aulas.
+  conteúdo do curso continua indexado como fonte `COURSE`, mas não aparece nem é mencionado:
+  é implícito.
 - **Tabela no celular:** esconde Tipo, Trechos, Tamanho e data para as ações caberem.
 - **Com erro ao carregar a lista, a página mostra só o erro**, sem o aviso de "somente
   leitura", que confundia.

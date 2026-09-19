@@ -84,7 +84,7 @@
   },
   "knowledge": {
     "title": "Tutor knowledge base",
-    "description": "Documents the AI Tutor uses, along with the lesson content, to answer the learners of “{course}”.",
+    "description": "AI Tutor documents for “{course}”.",
     "backToEditor": "Back to the editor",
     "tutorOff": "The AI Tutor is off for this course. Documents are kept, but learners only see the chat after you turn the option on in About the course.",
     "chooseFile": "Choose file",
