@@ -89,7 +89,7 @@
     "tutorOff": "O Tutor IA está desligado neste curso. Os documentos ficam guardados, mas os alunos só veem o chat depois que você ligar a opção em Sobre o curso.",
     "privacy": "O texto dos documentos é enviado ao Gemini para gerar a busca do tutor. O arquivo original é apagado assim que o texto é extraído.",
     "uploadTitle": "Adicionar documento",
-    "uploadHint": "Arquivo .docx de até 20 MB.",
+    "uploadHint": "Arquivo .docx ou .pdf de até 20 MB. PDF digitalizado (só imagem) não é aceito.",
     "chooseFile": "Escolher arquivo",
     "uploading": "Enviando e indexando...",
     "uploaded": "\"{name}\" foi adicionado ao repositório",

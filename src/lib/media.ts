@@ -54,8 +54,8 @@ export const MEDIA_POLICY: Record<MediaCategory, MediaPolicy> = {
   knowledge: {
     category: 'knowledge',
     label: 'Documento do tutor',
-    allowedTypes: [DOCX_TYPE],
-    extensions: '.docx',
+    allowedTypes: [DOCX_TYPE, 'application/pdf'],
+    extensions: '.docx,.pdf',
     hardLimitBytes: 20 * MB,
     recommendedLimitBytes: 5 * MB,
     sizeHint: 'Ideal até 5 MB.',

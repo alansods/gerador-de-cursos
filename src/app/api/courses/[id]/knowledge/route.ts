@@ -13,7 +13,7 @@ import { indexSource, listSources, prepareChunks, chunksHash } from '@/lib/tutor
 import {
   DocumentError,
   downloadKnowledgeBlob,
-  extractDocumentText,
+  extractDocumentSections,
   isKnowledgeBlobUrl,
 } from '@/lib/tutor/extract'
 
@@ -74,9 +74,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 
     blobUrl = body.url
     const { buffer, type } = await downloadKnowledgeBlob(body.url)
-    const text = await extractDocumentText(buffer, type, name)
-
-    const sections = [{ label: name, text }]
+    const sections = await extractDocumentSections(buffer, type, name)
     const chunks = prepareChunks(sections)
 
     if (chunks.length === 0) {

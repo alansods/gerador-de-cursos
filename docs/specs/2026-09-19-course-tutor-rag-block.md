@@ -160,6 +160,13 @@ A troca fica isolada num único módulo de provedor, para não exigir retrabalho
 - **O "status" de cada fonte é a data de indexação e o número de trechos.** A indexação é
   síncrona; não existe estado intermediário a mostrar enquanto a ingestão assíncrona não
   for necessária.
+- **PDF lido com `unpdf`, uma seção por página** (`arquivo.pdf, p. N`), para o tutor citar a
+  página. PDF com menos de 20 caracteres por página em média é tratado como digitalizado
+  e recusado com mensagem, sem criar fonte vazia. OCR ficou fora.
+- **No Jest, a `unpdf` é simulada.** Ela carrega o PDF.js por `import()` dinâmico, que o Jest
+  não executa sem `--experimental-vm-modules`. A extração real foi conferida com `tsx` e no
+  `next build` + `next start`: PDF de duas páginas indexado, digitalizado recusado, Blob vazio
+  depois do envio, resposta citando `primeiros-socorros.pdf, p. 2`.
 - **A data da lista usa o fuso do navegador.** O `next-intl` não tem fuso global configurado
   e esta é a primeira tela a usar `useFormatter`; sem o fuso explícito, ele registra
   `ENVIRONMENT_FALLBACK` no console.
@@ -220,7 +227,7 @@ Cada item só é marcado quando o critério de "Pronto quando" foi verificado.
   - Pronto quando: dono, colaboradores e ADMIN enviam (via `uploadFile` e `MEDIA_POLICY`)
     e excluem documentos; REVIEWER e GUEST veem só a lista; o status de cada fonte aparece;
     textos de UI em pt-BR e en.
-- [ ] **Extração de PDF**
+- [x] **Extração de PDF**
   - Pronto quando: PDF com texto é indexado como o .docx; PDF sem texto (escaneado) gera
     status de erro legível, não um repositório vazio em silêncio.
 - [ ] **Ingestão assíncrona**

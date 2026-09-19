@@ -89,7 +89,7 @@
     "tutorOff": "The AI Tutor is off for this course. Documents are kept, but learners only see the chat after you turn the option on in About the course.",
     "privacy": "Document text is sent to Gemini to build the tutor's search. The original file is deleted as soon as the text is extracted.",
     "uploadTitle": "Add a document",
-    "uploadHint": ".docx file up to 20 MB.",
+    "uploadHint": ".docx or .pdf file up to 20 MB. Scanned PDFs (images only) are not accepted.",
     "chooseFile": "Choose file",
     "uploading": "Uploading and indexing...",
     "uploaded": "\"{name}\" was added to the knowledge base",
