@@ -84,7 +84,7 @@
   },
   "knowledge": {
     "title": "Repositório do tutor",
-    "description": "Documentos do Tutor IA para o curso “{course}”.",
+    "description": "Fontes do Tutor IA para o curso “{course}”.",
     "backToEditor": "Voltar ao editor",
     "tutorOff": "O Tutor IA está desligado neste curso. Os documentos ficam guardados, mas os alunos só veem o chat depois que você ligar a opção em Sobre o curso.",
     "chooseFile": "Escolher arquivo",
