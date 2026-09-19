@@ -149,7 +149,7 @@ A troca fica isolada num único módulo de provedor (`src/lib/tutor/provider.ts`
 - [x] O payload enviado ao LLM não contém o nome do aluno.
 - [x] Documento: enviar, visualizar, baixar (idêntico ao original) e excluir (some do store); blob sem assinatura → 403.
 - [x] Pacote exportado dentro de um LMS falso, noutra origem: chat funciona, saúda pelo nome do LMS e, com a API inacessível, mostra "tutor indisponível".
-- [ ] Subir o pacote no SCORM Cloud.
+- [x] Subir o pacote no SCORM Cloud (19/09/2026, conferido pelo usuário).
 - [ ] Antes de usar com turma real, repetir o teste no Moodle do SENAI, cuja CSP o SCORM Cloud não reproduz.
 
 ## O que mudou na implementação
@@ -391,9 +391,12 @@ Cada item só é marcado quando o critério de "Pronto quando" foi verificado.
 - [x] **Documentação** (o CLAUDE.md não é versionado; a mudança fica na máquina do autor)
   - Pronto quando: o CLAUDE.md registra o tutor (opção do curso, rotas, variáveis `TUTOR_*`,
     store privado, dependência da API dentro do pacote SCORM).
-- [ ] **Fechamento da Fase 2**
+- [x] **Fechamento da Fase 2**
   - Pronto quando: `pnpm build` limpo, `pnpm test` verde e todos os itens de "Verificação"
     conferidos, incluindo o SCORM Cloud.
+  - Feito em 19/09/2026: build limpo, testes verdes e pacote testado pelo usuário no SCORM
+    Cloud, já com a continuação (conversa, progresso e dicas). O teste no Moodle do SENAI
+    fica no item seguinte.
 - [ ] **Antes de turma real** (fora do código)
   - Pronto quando: o provedor saiu do plano gratuito (ver "Risco aceito"), o limiar foi
     recalibrado com um curso real e o pacote foi testado no Moodle do SENAI.
