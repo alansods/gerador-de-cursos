@@ -321,6 +321,11 @@ A troca fica isolada num único módulo de provedor (`src/lib/tutor/provider.ts`
   `fix/settings-drawer-save-conflict` (`docs/specs/2026-09-19-settings-drawer-save-conflict.md`),
   trazida para esta branch por `cherry-pick`.
 
+## Continuação
+
+Conversa rápida, estrutura do curso, progresso do aluno e dicas em atividades avaliativas:
+`docs/specs/2026-09-19-tutor-conversation-and-progress.md`.
+
 ## Checklist
 
 Cada item só é marcado quando o critério de "Pronto quando" foi verificado.
