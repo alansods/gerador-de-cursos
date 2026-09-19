@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import mammoth from 'mammoth'
+import { del } from '@vercel/blob'
 import { prisma } from '@/lib/prisma'
 import {
   requireAuth,
@@ -10,9 +10,12 @@ import {
 import { canManageKnowledge } from '@/lib/permissions'
 import { fetchCourseWithCollaboration } from '@/lib/course-access'
 import { indexSource, listSources, prepareChunks, chunksHash } from '@/lib/tutor/knowledge'
-
-const MAX_FILE_SIZE = 4 * 1024 * 1024
-const DOCX_TYPE = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+import {
+  DocumentError,
+  downloadKnowledgeBlob,
+  extractDocumentText,
+  isKnowledgeBlobUrl,
+} from '@/lib/tutor/extract'
 
 async function loadAccess(courseId: string, user: JWTPayload) {
   const { course, collaboration } = await fetchCourseWithCollaboration(courseId, user.id)
@@ -48,6 +51,8 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     return authResult
   }
 
+  let blobUrl: string | null = null
+
   try {
     const { id } = await params
     const { course, canManage } = await loadAccess(id, authResult.user)
@@ -60,30 +65,18 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       return createErrorResponse('Você não tem permissão para alterar o repositório do tutor', 403)
     }
 
-    const formData = await req.formData()
-    const file = formData.get('file')
+    const body = await req.json().catch(() => ({}))
+    const name = typeof body.name === 'string' ? body.name.trim().slice(0, 200) : ''
 
-    if (!(file instanceof File)) {
-      return createErrorResponse('Arquivo não fornecido', 400)
+    if (!isKnowledgeBlobUrl(body.url) || !name) {
+      return createErrorResponse('Envie o documento antes de indexar', 400)
     }
 
-    if (file.type !== DOCX_TYPE && !file.name.toLowerCase().endsWith('.docx')) {
-      return createErrorResponse('Tipo de arquivo não suportado. Envie um documento .docx.', 400)
-    }
+    blobUrl = body.url
+    const { buffer, type } = await downloadKnowledgeBlob(body.url)
+    const text = await extractDocumentText(buffer, type, name)
 
-    if (file.size > MAX_FILE_SIZE) {
-      return createErrorResponse('Arquivo muito grande. Tamanho máximo: 4 MB', 400)
-    }
-
-    let text: string
-    try {
-      const result = await mammoth.extractRawText({ buffer: Buffer.from(await file.arrayBuffer()) })
-      text = result.value
-    } catch (extractError) {
-      return createErrorResponse('Não foi possível ler o documento', 400, extractError)
-    }
-
-    const sections = [{ label: file.name, text }]
+    const sections = [{ label: name, text }]
     const chunks = prepareChunks(sections)
 
     if (chunks.length === 0) {
@@ -103,12 +96,21 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       return createErrorResponse(`Este conteúdo já está no repositório (${duplicate.name})`, 409)
     }
 
-    const source = await indexSource({ courseId: id, kind: 'DOCUMENT', name: file.name, sections })
+    const source = await indexSource({ courseId: id, kind: 'DOCUMENT', name, sections })
 
     return createSuccessResponse({ source }, 201)
   } catch (error) {
+    if (error instanceof DocumentError) {
+      return createErrorResponse(error.message, 400)
+    }
     console.error('Failed to index the document:', error)
     return createErrorResponse('Erro ao indexar o documento', 500, error)
+  } finally {
+    if (blobUrl) {
+      await del(blobUrl).catch((error) =>
+        console.error('Failed to delete the uploaded tutor document:', error)
+      )
+    }
   }
 }
 

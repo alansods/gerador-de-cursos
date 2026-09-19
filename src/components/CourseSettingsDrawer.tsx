@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
+import Link from 'next/link'
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter } from '@/components/ui/sheet'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -13,7 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Bot, Settings } from 'lucide-react'
+import { Bot, FileText, Settings } from 'lucide-react'
 import { LayoutSelector } from '@/components/course/LayoutSelector'
 import { DEFAULT_LAYOUT_ID } from '@/components/course/layouts'
 import { TrailLayoutNotice } from '@/components/course/TrailLayoutNotice'
@@ -246,6 +247,15 @@ export function CourseSettingsDrawer({
                     <p className="text-xs text-gray-500 dark:text-gray-400">
                       Só o dono do curso, os colaboradores e administradores podem mudar esta opção.
                     </p>
+                  )}
+                  {courseId && (
+                    <Link
+                      href={`/courses/${courseId}/knowledge`}
+                      className="inline-flex items-center gap-1 text-xs font-medium text-blue-600 hover:underline dark:text-blue-400"
+                    >
+                      <FileText className="h-3.5 w-3.5" />
+                      Documentos do tutor
+                    </Link>
                   )}
                 </div>
               </div>

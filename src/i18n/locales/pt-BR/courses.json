@@ -81,5 +81,29 @@
     "deleting": "Excluindo...",
     "success": "Curso excluído com sucesso!",
     "error": "Erro ao excluir curso"
+  },
+  "knowledge": {
+    "title": "Repositório do tutor",
+    "description": "Documentos que o Tutor IA usa para responder aos alunos deste curso.",
+    "backToEditor": "Voltar ao editor",
+    "tutorOff": "O Tutor IA está desligado neste curso. Os documentos ficam guardados, mas os alunos só veem o chat depois que você ligar a opção em Sobre o curso.",
+    "privacy": "O texto dos documentos é enviado ao Gemini para gerar a busca do tutor. O arquivo original é apagado assim que o texto é extraído.",
+    "uploadTitle": "Adicionar documento",
+    "uploadHint": "Arquivo .docx de até 20 MB.",
+    "chooseFile": "Escolher arquivo",
+    "uploading": "Enviando e indexando...",
+    "uploaded": "\"{name}\" foi adicionado ao repositório",
+    "readOnly": "Só o dono do curso, os colaboradores e administradores podem adicionar ou excluir documentos.",
+    "sourcesTitle": "Fontes do tutor",
+    "empty": "Nenhuma fonte ainda. Envie um documento ou ligue o Tutor IA para indexar o conteúdo do curso.",
+    "kindDocument": "Documento",
+    "kindCourse": "Conteúdo do curso",
+    "courseContentHint": "Atualizado sozinho quando o curso é salvo com o tutor ligado.",
+    "chunks": "{count, plural, one {# trecho} other {# trechos}}",
+    "indexedAt": "Indexado em {date}",
+    "delete": "Excluir",
+    "deleteConfirm": "Excluir \"{name}\" do repositório? O tutor deixa de usar esse conteúdo.",
+    "deleted": "Documento excluído",
+    "loadError": "Não foi possível carregar o repositório do tutor."
   }
 }

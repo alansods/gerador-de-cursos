@@ -81,5 +81,29 @@
     "deleting": "Deleting...",
     "success": "Course deleted successfully!",
     "error": "Error deleting course"
+  },
+  "knowledge": {
+    "title": "Tutor knowledge base",
+    "description": "Documents the AI Tutor uses to answer this course's learners.",
+    "backToEditor": "Back to the editor",
+    "tutorOff": "The AI Tutor is off for this course. Documents are kept, but learners only see the chat after you turn the option on in About the course.",
+    "privacy": "Document text is sent to Gemini to build the tutor's search. The original file is deleted as soon as the text is extracted.",
+    "uploadTitle": "Add a document",
+    "uploadHint": ".docx file up to 20 MB.",
+    "chooseFile": "Choose file",
+    "uploading": "Uploading and indexing...",
+    "uploaded": "\"{name}\" was added to the knowledge base",
+    "readOnly": "Only the course owner, collaborators and administrators can add or delete documents.",
+    "sourcesTitle": "Tutor sources",
+    "empty": "No sources yet. Upload a document or turn the AI Tutor on to index the course content.",
+    "kindDocument": "Document",
+    "kindCourse": "Course content",
+    "courseContentHint": "Updated automatically when the course is saved with the tutor on.",
+    "chunks": "{count, plural, one {# passage} other {# passages}}",
+    "indexedAt": "Indexed on {date}",
+    "delete": "Delete",
+    "deleteConfirm": "Delete \"{name}\" from the knowledge base? The tutor stops using this content.",
+    "deleted": "Document deleted",
+    "loadError": "Could not load the tutor knowledge base."
   }
 }

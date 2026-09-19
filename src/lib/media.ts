@@ -1,4 +1,4 @@
-export type MediaCategory = 'image' | 'audio' | 'video' | 'document'
+export type MediaCategory = 'image' | 'audio' | 'video' | 'document' | 'knowledge'
 
 export interface MediaPolicy {
   category: MediaCategory
@@ -11,6 +11,8 @@ export interface MediaPolicy {
 }
 
 const MB = 1024 * 1024
+
+export const DOCX_TYPE = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
 
 export const MEDIA_POLICY: Record<MediaCategory, MediaPolicy> = {
   image: {
@@ -45,6 +47,15 @@ export const MEDIA_POLICY: Record<MediaCategory, MediaPolicy> = {
     label: 'PDF',
     allowedTypes: ['application/pdf'],
     extensions: '.pdf',
+    hardLimitBytes: 20 * MB,
+    recommendedLimitBytes: 5 * MB,
+    sizeHint: 'Ideal até 5 MB.',
+  },
+  knowledge: {
+    category: 'knowledge',
+    label: 'Documento do tutor',
+    allowedTypes: [DOCX_TYPE],
+    extensions: '.docx',
     hardLimitBytes: 20 * MB,
     recommendedLimitBytes: 5 * MB,
     sizeHint: 'Ideal até 5 MB.',

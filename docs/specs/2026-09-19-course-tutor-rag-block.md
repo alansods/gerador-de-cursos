@@ -149,8 +149,20 @@ A troca fica isolada num único módulo de provedor, para não exigir retrabalho
 - **Achado fora do escopo:** o Salvar do painel "Sobre o curso" faz dois `PUT` seguidos
   (dados do curso e depois `reorderUnits`), e o segundo sai com a versão antiga e volta 409.
   Já acontecia antes do tutor; reordenar unidades pelo painel pode não estar sendo salvo.
-- **Rota de ingestão aceita até 4 MB** por enquanto, porque o arquivo passa pela função
-  serverless (limite de 4,5 MB na Vercel). O envio via Blob fica para a Fase 2.
+- **O documento vai do navegador direto ao Blob** (`uploadFile`, categoria `knowledge` do
+  `MEDIA_POLICY`, até 20 MB) e a rota recebe só a URL. O servidor baixa, extrai o texto e
+  **apaga o arquivo do Blob** em qualquer desfecho (sucesso, erro, duplicado): no banco
+  ficam só os trechos. O Blob do projeto é público, então guardar o original deixaria o
+  material acessível a quem tivesse o link.
+- **A rota só aceita e só apaga URLs `https` do Blob no prefixo `cursos/knowledge/`.** Sem
+  isso, qualquer usuário logado poderia fazer a rota baixar um endereço arbitrário ou apagar
+  imagens de outros cursos.
+- **O "status" de cada fonte é a data de indexação e o número de trechos.** A indexação é
+  síncrona; não existe estado intermediário a mostrar enquanto a ingestão assíncrona não
+  for necessária.
+- **A data da lista usa o fuso do navegador.** O `next-intl` não tem fuso global configurado
+  e esta é a primeira tela a usar `useFormatter`; sem o fuso explícito, ele registra
+  `ENVIRONMENT_FALLBACK` no console.
 - **MANAGER não envia documentos**, embora edite cursos: segue a decisão de permissão
   (dono, colaboradores e ADMIN).
 
@@ -204,7 +216,7 @@ Cada item só é marcado quando o critério de "Pronto quando" foi verificado.
     com a chave ligada; `POST /api/tutor/[courseId]` recusa curso com a chave desligada;
     salvar o curso só reindexa com a chave ligada, e ligar a chave indexa na hora; testes
     cobrem os quatro comportamentos.
-- [ ] **Página `/courses/[id]/knowledge`**
+- [x] **Página `/courses/[id]/knowledge`**
   - Pronto quando: dono, colaboradores e ADMIN enviam (via `uploadFile` e `MEDIA_POLICY`)
     e excluem documentos; REVIEWER e GUEST veem só a lista; o status de cada fonte aparece;
     textos de UI em pt-BR e en.

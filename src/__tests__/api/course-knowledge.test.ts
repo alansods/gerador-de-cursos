@@ -6,11 +6,14 @@ import { SignJWT } from 'jose'
 import { GET, POST, DELETE } from '@/app/api/courses/[id]/knowledge/route'
 import { prisma } from '@/lib/prisma'
 import { indexSource, listSources } from '@/lib/tutor/knowledge'
+import { del } from '@vercel/blob'
 
 jest.mock('mammoth', () => ({
   __esModule: true,
   default: { extractRawText: jest.fn(async () => ({ value: 'EPI protege o trabalhador.' })) },
 }))
+
+jest.mock('@vercel/blob', () => ({ del: jest.fn().mockResolvedValue(undefined) }))
 
 jest.mock('@/lib/tutor/knowledge', () => ({
   ...jest.requireActual('@/lib/tutor/knowledge'),
@@ -56,13 +59,27 @@ async function as(userId: string, role: string, { collaborator = false } = {}) {
 const context = { params: Promise.resolve({ id: COURSE_ID }) }
 const url = `http://localhost:3000/api/courses/${COURSE_ID}/knowledge`
 
-function upload(
-  headers: Record<string, string>,
-  file = new File(['x'], 'aula.docx', { type: DOCX })
-) {
-  const body = new FormData()
-  body.append('file', file)
-  return POST(new NextRequest(url, { method: 'POST', headers, body }), context)
+const BLOB_URL = 'https://abc.public.blob.vercel-storage.com/cursos/knowledge/aula-x1.docx'
+const fetchMock = jest.fn()
+global.fetch = fetchMock as unknown as typeof fetch
+
+function blobResponse(type: string) {
+  return {
+    ok: true,
+    headers: new Headers({ 'content-type': type }),
+    arrayBuffer: async () => new ArrayBuffer(8),
+  }
+}
+
+function upload(headers: Record<string, string>, body: Record<string, unknown> = {}) {
+  return POST(
+    new NextRequest(url, {
+      method: 'POST',
+      headers: { ...headers, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ url: BLOB_URL, name: 'aula.docx', ...body }),
+    }),
+    context
+  )
 }
 
 function remove(headers: Record<string, string>, sourceId = 'src-1') {
@@ -77,6 +94,7 @@ beforeEach(() => {
   mockPrisma.knowledgeSource.findFirst.mockResolvedValue(null)
   mockIndexSource.mockResolvedValue({ id: 'src-1', name: 'aula.docx', chunkCount: 1 })
   mockListSources.mockResolvedValue([])
+  fetchMock.mockResolvedValue(blobResponse(DOCX))
 })
 
 describe('POST /api/courses/[id]/knowledge', () => {
@@ -94,6 +112,8 @@ describe('POST /api/courses/[id]/knowledge', () => {
       name: 'aula.docx',
       sections: [{ label: 'aula.docx', text: 'EPI protege o trabalhador.' }],
     })
+    expect(fetchMock).toHaveBeenCalledWith(BLOB_URL)
+    expect(del).toHaveBeenCalledWith(BLOB_URL)
   })
 
   it.each([
@@ -108,11 +128,26 @@ describe('POST /api/courses/[id]/knowledge', () => {
     expect(mockIndexSource).not.toHaveBeenCalled()
   })
 
-  it('refuses a file that is not .docx', async () => {
-    const pdf = new File(['x'], 'aula.pdf', { type: 'application/pdf' })
-    const res = await upload(await as(OWNER_ID, 'CONTENT_AUTHOR'), pdf)
+  it('refuses a file that is not .docx and still deletes the upload', async () => {
+    fetchMock.mockResolvedValue(blobResponse('application/zip'))
+
+    const res = await upload(await as(OWNER_ID, 'CONTENT_AUTHOR'), { name: 'aula.zip' })
 
     expect(res.status).toBe(400)
+    expect(mockIndexSource).not.toHaveBeenCalled()
+    expect(del).toHaveBeenCalledWith(BLOB_URL)
+  })
+
+  it.each([
+    ['another host', 'https://evil.example.com/cursos/knowledge/a.docx'],
+    ['another blob folder', 'https://abc.public.blob.vercel-storage.com/cursos/image/a.png'],
+    ['plain http', 'http://abc.public.blob.vercel-storage.com/cursos/knowledge/a.docx'],
+  ])('refuses a URL from %s without fetching or deleting it', async (_case, other) => {
+    const res = await upload(await as(OWNER_ID, 'CONTENT_AUTHOR'), { url: other })
+
+    expect(res.status).toBe(400)
+    expect(fetchMock).not.toHaveBeenCalled()
+    expect(del).not.toHaveBeenCalled()
   })
 
   it('refuses content already in the repository', async () => {
@@ -122,6 +157,7 @@ describe('POST /api/courses/[id]/knowledge', () => {
 
     expect(res.status).toBe(409)
     expect(mockIndexSource).not.toHaveBeenCalled()
+    expect(del).toHaveBeenCalledWith(BLOB_URL)
   })
 })
 
