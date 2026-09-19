@@ -89,8 +89,8 @@ A troca fica isolada num único módulo de provedor, para não exigir retrabalho
 
 ### Fase 2 — produto
 
-- Página `/courses/[id]/knowledge`: upload via Blob (`uploadFile`, `MEDIA_POLICY`),
-  lista de fontes, status e exclusão.
+- Página `/courses/[id]/knowledge` (menu "⋯" da lista de cursos): tabela de fontes, envio
+  ao store privado, visualizar, baixar e excluir.
 - Extração de PDF.
 - Ingestão assíncrona, no molde do `SCORMJob`, se um PDF grande estourar o timeout da Vercel.
 - Chave "Tutor IA" no painel "Sobre o curso" (`CourseSettingsDrawer`), que liga o chat no
@@ -149,14 +149,35 @@ A troca fica isolada num único módulo de provedor, para não exigir retrabalho
 - **Achado fora do escopo:** o Salvar do painel "Sobre o curso" faz dois `PUT` seguidos
   (dados do curso e depois `reorderUnits`), e o segundo sai com a versão antiga e volta 409.
   Já acontecia antes do tutor; reordenar unidades pelo painel pode não estar sendo salvo.
-- **O documento vai do navegador direto ao Blob** (`uploadFile`, categoria `knowledge` do
-  `MEDIA_POLICY`, até 20 MB) e a rota recebe só a URL. O servidor baixa, extrai o texto e
-  **apaga o arquivo do Blob** em qualquer desfecho (sucesso, erro, duplicado): no banco
-  ficam só os trechos. O Blob do projeto é público, então guardar o original deixaria o
-  material acessível a quem tivesse o link.
-- **A rota só aceita e só apaga URLs `https` do Blob no prefixo `cursos/knowledge/`.** Sem
-  isso, qualquer usuário logado poderia fazer a rota baixar um endereço arbitrário ou apagar
-  imagens de outros cursos.
+- **O original fica num store de Blob privado (`tutor-documents`, token
+  `TUTOR_BLOB_READ_WRITE_TOKEN`).** Numa primeira versão o arquivo era apagado logo depois da
+  extração, porque o store do projeto é público. A decisão mudou quando a página passou a
+  oferecer **visualizar** e **baixar**: o acesso privado do Vercel Blob é por store (um store
+  público recusa blob privado), então os documentos ganharam store próprio, e o
+  `@vercel/blob` subiu para 2.8.0, primeira linha com `access: 'private'`. Guardar no
+  Postgres não servia: a resposta de função na Vercel vai até 4,5 MB e o documento, até 20 MB.
+- **O navegador envia direto ao store privado** com um token emitido por
+  `POST /api/courses/[id]/knowledge/upload`, só para quem gerencia e só no caminho
+  `courses/<id>/`. A rota de indexação recebe o `pathname`, recusa qualquer um fora desse
+  prefixo (ou com `..`), lê o arquivo, indexa e o **mantém**; apaga apenas quando a
+  indexação falha ou o conteúdo é duplicado. Excluir o documento, ou o curso, apaga o arquivo.
+  A categoria `knowledge` foi bloqueada na rota pública `/api/upload-file`.
+- **Visualizar e baixar valem para todo usuário logado que abre o curso**; enviar e excluir
+  seguem com dono, colaboradores e ADMIN. O arquivo abre por URL assinada de 5 minutos
+  (`GET .../knowledge/[sourceId]/file?mode=view|download`). No modal, o PDF abre no leitor do
+  navegador; o .docx vira HTML pelo `mammoth` (sem as imagens, para caber na resposta) e é
+  exibido num `iframe` com `sandbox`, que bloqueia script sem precisar de sanitizador.
+- **Verificado com o store privado real** (build de produção ligado ao branch descartável):
+  menu "⋯" → Documentos do tutor → envio de um PDF e de um .docx sintéticos → visualizar
+  os dois no modal → baixar (arquivo idêntico ao original, por hash) → excluir (o blob some
+  do store); URL do blob sem assinatura responde 403. No celular, a tabela esconde Tipo,
+  Trechos, Tamanho e data para as ações caberem.
+- **O arquivo baixado leva o sufixo aleatório do Blob no nome**
+  (`apostila-Uc0s….docx`): a URL assinada de leitura não aceita definir o
+  `Content-Disposition`. Ficou assim por enquanto.
+- **Acesso pela lista de cursos:** item "Documentos do tutor" no menu "⋯" de cada curso, além
+  do link no painel "Sobre o curso". A página é uma tabela com Nome, Tipo, Trechos, Tamanho,
+  Indexado em e as ações.
 - **O "status" de cada fonte é a data de indexação e o número de trechos.** A indexação é
   síncrona; não existe estado intermediário a mostrar enquanto a ingestão assíncrona não
   for necessária.
@@ -224,9 +245,10 @@ Cada item só é marcado quando o critério de "Pronto quando" foi verificado.
     salvar o curso só reindexa com a chave ligada, e ligar a chave indexa na hora; testes
     cobrem os quatro comportamentos.
 - [x] **Página `/courses/[id]/knowledge`**
-  - Pronto quando: dono, colaboradores e ADMIN enviam (via `uploadFile` e `MEDIA_POLICY`)
-    e excluem documentos; REVIEWER e GUEST veem só a lista; o status de cada fonte aparece;
-    textos de UI em pt-BR e en.
+  - Pronto quando: acessível pelo menu "⋯" da lista de cursos; tabela com as fontes; dono,
+    colaboradores e ADMIN enviam (direto ao store privado) e excluem documentos; todo
+    usuário logado visualiza (modal) e baixa o original por URL assinada; excluir apaga o
+    arquivo do store; textos de UI em pt-BR e en; conferido com o store privado real.
 - [x] **Extração de PDF**
   - Pronto quando: PDF com texto é indexado como o .docx; PDF sem texto (escaneado) gera
     status de erro legível, não um repositório vazio em silêncio.

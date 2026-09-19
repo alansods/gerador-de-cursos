@@ -3,6 +3,7 @@
 // This page must not be exported statically (it uses context and the API)
 export const dynamic = 'error'
 
+import Link from 'next/link'
 import { usePreview } from '@/hooks/usePreview'
 import { usePDF } from '@/hooks/usePDF'
 import { useSCORM } from '@/hooks/useSCORM'
@@ -70,6 +71,7 @@ import {
   Trash2,
   Sparkles,
   RotateCcw,
+  FileText,
 } from 'lucide-react'
 import { Suspense, useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
@@ -732,6 +734,13 @@ function CoursesPageContent() {
                                 <DropdownMenuItem onClick={() => handleOpenExportModal(course)}>
                                   <Download className="h-4 w-4" />
                                   Exportar
+                                </DropdownMenuItem>
+
+                                <DropdownMenuItem asChild>
+                                  <Link href={`/courses/${course.id}/knowledge`}>
+                                    <FileText className="h-4 w-4" />
+                                    Documentos do tutor
+                                  </Link>
                                 </DropdownMenuItem>
 
                                 {permissions?.canRequestAccess && (

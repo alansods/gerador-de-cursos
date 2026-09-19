@@ -1,5 +1,5 @@
 import '@testing-library/jest-dom'
-import { render, screen } from '@testing-library/react'
+import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { NextIntlClientProvider } from 'next-intl'
 import CourseKnowledgePage from '@/app/(app)/courses/[id]/knowledge/page'
@@ -7,6 +7,7 @@ import coursesMessages from '@/i18n/locales/pt-BR/courses.json'
 import { useCourseQuery } from '@/hooks/queries/useCourseQuery'
 import {
   useDeleteKnowledgeMutation,
+  useDocumentPreviewQuery,
   useKnowledgeQuery,
   useUploadKnowledgeMutation,
 } from '@/hooks/queries/useTutorQuery'
@@ -15,9 +16,11 @@ jest.mock('next/navigation', () => ({ useParams: () => ({ id: 'curso-1' }) }))
 jest.mock('sonner', () => ({ toast: { success: jest.fn(), error: jest.fn(), warning: jest.fn() } }))
 jest.mock('@/hooks/queries/useCourseQuery', () => ({ useCourseQuery: jest.fn() }))
 jest.mock('@/hooks/queries/useTutorQuery', () => ({
+  ...jest.requireActual('@/hooks/queries/useTutorQuery'),
   useKnowledgeQuery: jest.fn(),
   useUploadKnowledgeMutation: jest.fn(),
   useDeleteKnowledgeMutation: jest.fn(),
+  useDocumentPreviewQuery: jest.fn(),
 }))
 
 const upload = { mutateAsync: jest.fn().mockResolvedValue({ warning: null }), isPending: false }
@@ -29,14 +32,20 @@ const sources = [
     kind: 'COURSE',
     name: 'Conteúdo do curso',
     chunkCount: 4,
+    filePathname: null,
+    contentType: null,
+    fileSize: null,
     createdAt: '2026-09-19T10:00:00Z',
     updatedAt: '2026-09-19T10:00:00Z',
   },
   {
-    id: 'src-doc',
+    id: 'src-pdf',
     kind: 'DOCUMENT',
-    name: 'apostila.docx',
-    chunkCount: 1,
+    name: 'apostila.pdf',
+    chunkCount: 12,
+    filePathname: 'courses/curso-1/apostila-x1.pdf',
+    contentType: 'application/pdf',
+    fileSize: 2 * 1024 * 1024,
     createdAt: '2026-09-19T10:00:00Z',
     updatedAt: '2026-09-19T10:00:00Z',
   },
@@ -52,6 +61,11 @@ function renderPage({ canManage = true, tutorEnabled = true } = {}) {
   })
   ;(useUploadKnowledgeMutation as jest.Mock).mockReturnValue(upload)
   ;(useDeleteKnowledgeMutation as jest.Mock).mockReturnValue(remove)
+  ;(useDocumentPreviewQuery as jest.Mock).mockImplementation((_courseId, sourceId) =>
+    sourceId
+      ? { isPending: false, isError: false, data: { kind: 'pdf', url: 'https://signed/apostila' } }
+      : { isPending: true, isError: false, data: undefined }
+  )
 
   render(
     <NextIntlClientProvider locale="pt-BR" messages={{ courses: coursesMessages }} timeZone="UTC">
@@ -60,46 +74,72 @@ function renderPage({ canManage = true, tutorEnabled = true } = {}) {
   )
 }
 
+function rowOf(text: string) {
+  return screen.getByText(text).closest('tr') as HTMLElement
+}
+
 beforeEach(() => jest.clearAllMocks())
 
 describe('course knowledge page', () => {
-  it('lists the course content and the documents with their passage counts', () => {
+  it('shows the sources in a table with passages and file size', () => {
     renderPage()
 
-    expect(screen.getByText('Conteúdo do curso')).toBeInTheDocument()
-    expect(screen.getByText('apostila.docx')).toBeInTheDocument()
-    expect(screen.getByText(/4 trechos/)).toBeInTheDocument()
-    expect(screen.getByText(/1 trecho ·/)).toBeInTheDocument()
+    expect(screen.getByRole('columnheader', { name: 'Trechos' })).toBeInTheDocument()
+    const pdfRow = rowOf('apostila.pdf')
+    expect(within(pdfRow).getByText('12')).toBeInTheDocument()
+    expect(within(pdfRow).getByText('2 MB')).toBeInTheDocument()
+    expect(within(rowOf('Conteúdo do curso')).getByText('Curso')).toBeInTheDocument()
   })
 
-  it('uploads the chosen .docx', async () => {
+  it('uploads the chosen file', async () => {
     renderPage()
-    const file = new File(['x'], 'nova.docx', {
-      type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-    })
+    const file = new File(['x'], 'nova.pdf', { type: 'application/pdf' })
 
     await userEvent.upload(screen.getByLabelText('Escolher arquivo'), file)
 
     expect(upload.mutateAsync).toHaveBeenCalledWith(file)
   })
 
-  it('deletes a document but never the course content source', async () => {
+  it('opens the document in a modal and offers the download', async () => {
+    renderPage()
+
+    await userEvent.click(screen.getByRole('button', { name: 'Visualizar apostila.pdf' }))
+
+    const dialog = screen.getByRole('dialog')
+    expect(within(dialog).getByTitle('apostila.pdf')).toHaveAttribute(
+      'src',
+      'https://signed/apostila'
+    )
+    expect(within(dialog).getByRole('link', { name: /Baixar/ })).toHaveAttribute(
+      'href',
+      '/api/courses/curso-1/knowledge/src-pdf/file?mode=download'
+    )
+  })
+
+  it('offers view, download and delete only on documents', async () => {
     jest.spyOn(window, 'confirm').mockReturnValue(true)
     renderPage()
 
-    expect(screen.queryByRole('button', { name: 'Excluir Conteúdo do curso' })).toBeNull()
-    await userEvent.click(screen.getByRole('button', { name: 'Excluir apostila.docx' }))
+    const courseRow = rowOf('Conteúdo do curso')
+    expect(within(courseRow).queryByRole('button')).toBeNull()
+    expect(within(courseRow).queryByRole('link')).toBeNull()
 
-    expect(remove.mutateAsync).toHaveBeenCalledWith('src-doc')
+    expect(screen.getByRole('link', { name: 'Baixar apostila.pdf' })).toHaveAttribute(
+      'href',
+      '/api/courses/curso-1/knowledge/src-pdf/file?mode=download'
+    )
+    await userEvent.click(screen.getByRole('button', { name: 'Excluir apostila.pdf' }))
+    expect(remove.mutateAsync).toHaveBeenCalledWith('src-pdf')
   })
 
-  it('shows only the list to someone who cannot manage it', () => {
+  it('lets someone who cannot manage view and download, but not add or delete', () => {
     renderPage({ canManage: false })
 
     expect(screen.queryByLabelText('Escolher arquivo')).toBeNull()
     expect(screen.queryByRole('button', { name: /Excluir/ })).toBeNull()
+    expect(screen.getByRole('button', { name: 'Visualizar apostila.pdf' })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Baixar apostila.pdf' })).toBeInTheDocument()
     expect(screen.getByText(/Só o dono do curso/)).toBeInTheDocument()
-    expect(screen.getByText('apostila.docx')).toBeInTheDocument()
   })
 
   it('warns when the tutor is off for the course', () => {

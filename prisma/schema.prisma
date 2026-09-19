@@ -226,15 +226,18 @@ enum KnowledgeSourceKind {
 }
 
 model KnowledgeSource {
-  id          String              @id @default(cuid())
-  courseId    String              @map("course_id")
-  course      Course              @relation(fields: [courseId], references: [id], onDelete: Cascade)
-  kind        KnowledgeSourceKind
-  name        String
-  contentHash String              @map("content_hash")
-  createdAt   DateTime            @default(now()) @map("created_at")
-  updatedAt   DateTime            @updatedAt @map("updated_at")
-  chunks      KnowledgeChunk[]
+  id           String              @id @default(cuid())
+  courseId     String              @map("course_id")
+  course       Course              @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  kind         KnowledgeSourceKind
+  name         String
+  contentHash  String              @map("content_hash")
+  filePathname String?             @map("file_pathname")
+  contentType  String?             @map("content_type")
+  fileSize     Int?                @map("file_size")
+  createdAt    DateTime            @default(now()) @map("created_at")
+  updatedAt    DateTime            @updatedAt @map("updated_at")
+  chunks       KnowledgeChunk[]
 
   @@index([courseId, kind])
   @@map("knowledge_sources")

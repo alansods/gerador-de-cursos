@@ -114,6 +114,9 @@ jest.mock('@/lib/prisma', () => {
       findMany: jest.fn().mockResolvedValue([]),
       create: jest.fn(),
     },
+    knowledgeSource: {
+      findMany: jest.fn().mockResolvedValue([]),
+    },
     courseGenerationJob: {
       findMany: jest.fn().mockResolvedValue([]),
       findUnique: jest.fn().mockResolvedValue(null),

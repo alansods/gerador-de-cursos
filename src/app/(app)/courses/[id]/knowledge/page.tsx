@@ -1,24 +1,112 @@
 'use client'
 
-import { useRef } from 'react'
+import { useRef, useState } from 'react'
 import Link from 'next/link'
 import { useParams } from 'next/navigation'
 import { useFormatter, useTranslations } from 'next-intl'
 import { toast } from 'sonner'
-import { ArrowLeft, Bot, FileText, Info, Loader2, Trash2, Upload, BookOpen } from 'lucide-react'
+import {
+  ArrowLeft,
+  BookOpen,
+  Bot,
+  Download,
+  Eye,
+  FileText,
+  Info,
+  Loader2,
+  Trash2,
+  Upload,
+} from 'lucide-react'
 import { PageHeader } from '@/components/PageHeader'
 import { PageTransition } from '@/components/PageTransition'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { MEDIA_POLICY } from '@/lib/media'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import { MEDIA_POLICY, formatBytes } from '@/lib/media'
 import { useCourseQuery } from '@/hooks/queries/useCourseQuery'
 import {
+  documentFileUrl,
   useDeleteKnowledgeMutation,
+  useDocumentPreviewQuery,
   useKnowledgeQuery,
   useUploadKnowledgeMutation,
   type KnowledgeSource,
 } from '@/hooks/queries/useTutorQuery'
+
+function DocumentPreviewDialog({
+  courseId,
+  source,
+  onClose,
+}: {
+  courseId: string
+  source: KnowledgeSource | null
+  onClose: () => void
+}) {
+  const t = useTranslations('courses.knowledge')
+  const preview = useDocumentPreviewQuery(courseId, source?.id ?? null)
+
+  return (
+    <Dialog open={Boolean(source)} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="flex h-[85vh] w-full max-w-4xl flex-col gap-4 sm:max-w-4xl">
+        <DialogHeader>
+          <DialogTitle className="truncate pr-8">{source?.name}</DialogTitle>
+          {preview.data?.kind === 'html' && (
+            <DialogDescription>{t('previewImagesNote')}</DialogDescription>
+          )}
+        </DialogHeader>
+
+        <div className="min-h-0 flex-1 overflow-hidden rounded-md border bg-white">
+          {preview.isPending ? (
+            <p className="flex h-full items-center justify-center gap-2 text-sm text-muted-foreground">
+              <Loader2 className="h-4 w-4 animate-spin" />
+              {t('previewLoading')}
+            </p>
+          ) : preview.isError ? (
+            <p className="flex h-full items-center justify-center text-sm text-destructive">
+              {t('previewError')}
+            </p>
+          ) : preview.data.kind === 'pdf' ? (
+            <iframe title={source?.name} src={preview.data.url} className="h-full w-full" />
+          ) : (
+            <iframe
+              title={source?.name}
+              sandbox=""
+              srcDoc={`<!doctype html><meta charset="utf-8"><style>body{font-family:system-ui,sans-serif;line-height:1.6;padding:24px;color:#111;max-width:760px;margin:auto}table{border-collapse:collapse}td,th{border:1px solid #ccc;padding:4px 8px}</style>${preview.data.html}`}
+              className="h-full w-full"
+            />
+          )}
+        </div>
+
+        {source && (
+          <DialogFooter>
+            <Button asChild className="gap-2">
+              <a href={documentFileUrl(courseId, source.id, 'download')}>
+                <Download className="h-4 w-4" />
+                {t('download')}
+              </a>
+            </Button>
+          </DialogFooter>
+        )}
+      </DialogContent>
+    </Dialog>
+  )
+}
 
 export default function CourseKnowledgePage() {
   const params = useParams()
@@ -26,6 +114,7 @@ export default function CourseKnowledgePage() {
   const t = useTranslations('courses.knowledge')
   const format = useFormatter()
   const fileInput = useRef<HTMLInputElement>(null)
+  const [previewing, setPreviewing] = useState<KnowledgeSource | null>(null)
 
   const { course } = useCourseQuery(courseId)
   const { sources, canManage, loading, error } = useKnowledgeQuery(courseId)
@@ -60,9 +149,16 @@ export default function CourseKnowledgePage() {
     }
   }
 
+  const indexedAt = (source: KnowledgeSource) =>
+    format.dateTime(new Date(source.updatedAt), {
+      dateStyle: 'short',
+      timeStyle: 'short',
+      timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+    })
+
   return (
     <PageTransition>
-      <div className="mx-auto max-w-4xl space-y-6 p-4 sm:p-6">
+      <div className="mx-auto max-w-5xl space-y-6 p-4 sm:p-6">
         <Button variant="ghost" asChild className="gap-2 px-2">
           <Link href={`/courses/${courseId}/edit`}>
             <ArrowLeft className="h-4 w-4" />
@@ -88,95 +184,159 @@ export default function CourseKnowledgePage() {
           {t('privacy')}
         </p>
 
-        {canManage ? (
-          <Card className="flex flex-col gap-4 p-6 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <h2 className="font-semibold">{t('uploadTitle')}</h2>
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <h2 className="font-semibold">{t('sourcesTitle')}</h2>
+            {canManage ? (
               <p className="text-sm text-muted-foreground">{t('uploadHint')}</p>
-            </div>
-            <input
-              ref={fileInput}
-              type="file"
-              accept={MEDIA_POLICY.knowledge.extensions}
-              className="hidden"
-              aria-label={t('chooseFile')}
-              onChange={(event) => sendFile(event.target.files?.[0])}
-            />
-            <Button
-              onClick={() => fileInput.current?.click()}
-              disabled={upload.isPending}
-              className="gap-2"
-            >
-              {upload.isPending ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <Upload className="h-4 w-4" />
-              )}
-              {upload.isPending ? t('uploading') : t('chooseFile')}
-            </Button>
-          </Card>
-        ) : (
-          !loading && <p className="text-sm text-muted-foreground">{t('readOnly')}</p>
-        )}
-
-        <section className="space-y-3">
-          <h2 className="font-semibold">{t('sourcesTitle')}</h2>
-
-          {loading ? (
-            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-          ) : error ? (
-            <p className="text-sm text-destructive">{t('loadError')}</p>
-          ) : sources.length === 0 ? (
-            <p className="text-sm text-muted-foreground">{t('empty')}</p>
-          ) : (
-            <ul className="space-y-2">
-              {sources.map((source) => (
-                <li key={source.id}>
-                  <Card className="flex items-center gap-4 p-4">
-                    {source.kind === 'COURSE' ? (
-                      <BookOpen className="h-5 w-5 shrink-0 text-muted-foreground" />
-                    ) : (
-                      <FileText className="h-5 w-5 shrink-0 text-muted-foreground" />
-                    )}
-                    <div className="min-w-0 flex-1">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <span className="truncate font-medium">
-                          {source.kind === 'COURSE' ? t('kindCourse') : source.name}
-                        </span>
-                        {source.kind === 'DOCUMENT' && (
-                          <Badge variant="secondary">{t('kindDocument')}</Badge>
-                        )}
-                      </div>
-                      <p className="text-xs text-muted-foreground">
-                        {t('chunks', { count: source.chunkCount })} ·{' '}
-                        {t('indexedAt', {
-                          date: format.dateTime(new Date(source.updatedAt), {
-                            dateStyle: 'medium',
-                            timeStyle: 'short',
-                            timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-                          }),
-                        })}
-                        {source.kind === 'COURSE' && ` · ${t('courseContentHint')}`}
-                      </p>
-                    </div>
-                    {canManage && source.kind === 'DOCUMENT' && (
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => deleteSource(source)}
-                        disabled={remove.isPending}
-                        aria-label={`${t('delete')} ${source.name}`}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    )}
-                  </Card>
-                </li>
-              ))}
-            </ul>
+            ) : (
+              !loading && <p className="text-sm text-muted-foreground">{t('readOnly')}</p>
+            )}
+          </div>
+          {canManage && (
+            <>
+              <input
+                ref={fileInput}
+                type="file"
+                accept={MEDIA_POLICY.knowledge.extensions}
+                className="hidden"
+                aria-label={t('chooseFile')}
+                onChange={(event) => sendFile(event.target.files?.[0])}
+              />
+              <Button
+                onClick={() => fileInput.current?.click()}
+                disabled={upload.isPending}
+                className="gap-2"
+              >
+                {upload.isPending ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Upload className="h-4 w-4" />
+                )}
+                {upload.isPending ? t('uploading') : t('addDocument')}
+              </Button>
+            </>
           )}
-        </section>
+        </div>
+
+        {loading ? (
+          <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+        ) : error ? (
+          <p className="text-sm text-destructive">{t('loadError')}</p>
+        ) : sources.length === 0 ? (
+          <Card className="p-6 text-sm text-muted-foreground">{t('empty')}</Card>
+        ) : (
+          <Card className="overflow-x-auto p-0">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>{t('columnName')}</TableHead>
+                  <TableHead className="hidden sm:table-cell">{t('columnKind')}</TableHead>
+                  <TableHead className="hidden text-right md:table-cell">
+                    {t('columnChunks')}
+                  </TableHead>
+                  <TableHead className="hidden text-right md:table-cell">
+                    {t('columnSize')}
+                  </TableHead>
+                  <TableHead className="hidden lg:table-cell">{t('columnIndexedAt')}</TableHead>
+                  <TableHead className="text-right">{t('columnActions')}</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {sources.map((source) => {
+                  const isCourse = source.kind === 'COURSE'
+                  const hasFile = Boolean(source.filePathname)
+
+                  return (
+                    <TableRow key={source.id}>
+                      <TableCell className="max-w-[140px] sm:max-w-[260px]">
+                        <span className="flex items-center gap-2">
+                          {isCourse ? (
+                            <BookOpen className="h-4 w-4 shrink-0 text-muted-foreground" />
+                          ) : (
+                            <FileText className="h-4 w-4 shrink-0 text-muted-foreground" />
+                          )}
+                          <span className="truncate font-medium">
+                            {isCourse ? t('kindCourse') : source.name}
+                          </span>
+                        </span>
+                        {isCourse && (
+                          <span className="mt-1 block text-xs text-muted-foreground">
+                            {t('courseContentHint')}
+                          </span>
+                        )}
+                      </TableCell>
+                      <TableCell className="hidden sm:table-cell">
+                        <Badge variant="secondary">
+                          {isCourse ? t('kindCourseShort') : t('kindDocument')}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="hidden text-right tabular-nums md:table-cell">
+                        {source.chunkCount}
+                      </TableCell>
+                      <TableCell className="hidden text-right tabular-nums md:table-cell">
+                        {source.fileSize ? formatBytes(source.fileSize) : '—'}
+                      </TableCell>
+                      <TableCell className="hidden whitespace-nowrap lg:table-cell">
+                        {indexedAt(source)}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        {!isCourse && (
+                          <span className="inline-flex gap-1">
+                            {hasFile ? (
+                              <>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() => setPreviewing(source)}
+                                  aria-label={`${t('view')} ${source.name}`}
+                                  title={t('view')}
+                                >
+                                  <Eye className="h-4 w-4" />
+                                </Button>
+                                <Button variant="ghost" size="icon" asChild title={t('download')}>
+                                  <a
+                                    href={documentFileUrl(courseId, source.id, 'download')}
+                                    aria-label={`${t('download')} ${source.name}`}
+                                  >
+                                    <Download className="h-4 w-4" />
+                                  </a>
+                                </Button>
+                              </>
+                            ) : (
+                              <span className="self-center text-xs text-muted-foreground">
+                                {t('noFile')}
+                              </span>
+                            )}
+                            {canManage && (
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => deleteSource(source)}
+                                disabled={remove.isPending}
+                                aria-label={`${t('delete')} ${source.name}`}
+                                title={t('delete')}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            )}
+                          </span>
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  )
+                })}
+              </TableBody>
+            </Table>
+          </Card>
+        )}
       </div>
+
+      <DocumentPreviewDialog
+        courseId={courseId}
+        source={previewing}
+        onClose={() => setPreviewing(null)}
+      />
     </PageTransition>
   )
 }

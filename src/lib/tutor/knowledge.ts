@@ -36,6 +36,7 @@ interface IndexSourceInput {
   name: string
   sections: LabeledSection[]
   reusableVectors?: Map<string, number[]>
+  file?: { pathname: string; contentType: string; size: number }
 }
 
 export function embeddingInput(chunk: PreparedChunk): string {
@@ -72,7 +73,15 @@ export async function indexSource(
     }
 
     const source = await tx.knowledgeSource.create({
-      data: { courseId: input.courseId, kind: input.kind, name: input.name, contentHash },
+      data: {
+        courseId: input.courseId,
+        kind: input.kind,
+        name: input.name,
+        contentHash,
+        filePathname: input.file?.pathname,
+        contentType: input.file?.contentType,
+        fileSize: input.file?.size,
+      },
     })
 
     if (chunks.length > 0) {

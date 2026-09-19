@@ -87,7 +87,7 @@
     "description": "Documents the AI Tutor uses to answer this course's learners.",
     "backToEditor": "Back to the editor",
     "tutorOff": "The AI Tutor is off for this course. Documents are kept, but learners only see the chat after you turn the option on in About the course.",
-    "privacy": "Document text is sent to Gemini to build the tutor's search. The original file is deleted as soon as the text is extracted.",
+    "privacy": "Document text is sent to Gemini to build the tutor's search. The original file is kept in private storage and only opens through a temporary link.",
     "uploadTitle": "Add a document",
     "uploadHint": ".docx or .pdf file up to 20 MB. Scanned PDFs (images only) are not accepted.",
     "chooseFile": "Choose file",
@@ -104,6 +104,20 @@
     "delete": "Delete",
     "deleteConfirm": "Delete \"{name}\" from the knowledge base? The tutor stops using this content.",
     "deleted": "Document deleted",
-    "loadError": "Could not load the tutor knowledge base."
+    "loadError": "Could not load the tutor knowledge base.",
+    "addDocument": "Add document",
+    "columnName": "Name",
+    "columnKind": "Type",
+    "columnChunks": "Passages",
+    "columnSize": "Size",
+    "columnIndexedAt": "Indexed on",
+    "columnActions": "Actions",
+    "view": "View",
+    "download": "Download",
+    "noFile": "No original file",
+    "previewLoading": "Loading the document...",
+    "previewError": "Could not display the document.",
+    "previewImagesNote": "Text preview; images in the document only show in the downloaded file.",
+    "kindCourseShort": "Course"
   }
 }

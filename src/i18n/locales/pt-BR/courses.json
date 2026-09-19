@@ -87,7 +87,7 @@
     "description": "Documentos que o Tutor IA usa para responder aos alunos deste curso.",
     "backToEditor": "Voltar ao editor",
     "tutorOff": "O Tutor IA está desligado neste curso. Os documentos ficam guardados, mas os alunos só veem o chat depois que você ligar a opção em Sobre o curso.",
-    "privacy": "O texto dos documentos é enviado ao Gemini para gerar a busca do tutor. O arquivo original é apagado assim que o texto é extraído.",
+    "privacy": "O texto dos documentos é enviado ao Gemini para gerar a busca do tutor. O arquivo original fica em armazenamento privado e só abre por link temporário.",
     "uploadTitle": "Adicionar documento",
     "uploadHint": "Arquivo .docx ou .pdf de até 20 MB. PDF digitalizado (só imagem) não é aceito.",
     "chooseFile": "Escolher arquivo",
@@ -104,6 +104,20 @@
     "delete": "Excluir",
     "deleteConfirm": "Excluir \"{name}\" do repositório? O tutor deixa de usar esse conteúdo.",
     "deleted": "Documento excluído",
-    "loadError": "Não foi possível carregar o repositório do tutor."
+    "loadError": "Não foi possível carregar o repositório do tutor.",
+    "addDocument": "Adicionar documento",
+    "columnName": "Nome",
+    "columnKind": "Tipo",
+    "columnChunks": "Trechos",
+    "columnSize": "Tamanho",
+    "columnIndexedAt": "Indexado em",
+    "columnActions": "Ações",
+    "view": "Visualizar",
+    "download": "Baixar",
+    "noFile": "Sem arquivo original",
+    "previewLoading": "Carregando o documento...",
+    "previewError": "Não foi possível visualizar o documento.",
+    "previewImagesNote": "Visualização do texto; imagens do documento aparecem só no arquivo baixado.",
+    "kindCourseShort": "Curso"
   }
 }

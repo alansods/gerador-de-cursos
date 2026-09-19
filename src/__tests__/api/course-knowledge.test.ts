@@ -6,14 +6,22 @@ import { SignJWT } from 'jose'
 import { GET, POST, DELETE } from '@/app/api/courses/[id]/knowledge/route'
 import { prisma } from '@/lib/prisma'
 import { indexSource, listSources } from '@/lib/tutor/knowledge'
-import { del } from '@vercel/blob'
+import {
+  DocumentStorageError,
+  deletePrivateDocument,
+  readPrivateDocument,
+} from '@/lib/tutor/document-storage'
 
 jest.mock('mammoth', () => ({
   __esModule: true,
   default: { extractRawText: jest.fn(async () => ({ value: 'EPI protege o trabalhador.' })) },
 }))
 
-jest.mock('@vercel/blob', () => ({ del: jest.fn().mockResolvedValue(undefined) }))
+jest.mock('@/lib/tutor/document-storage', () => ({
+  ...jest.requireActual('@/lib/tutor/document-storage'),
+  readPrivateDocument: jest.fn(),
+  deletePrivateDocument: jest.fn().mockResolvedValue(undefined),
+}))
 
 jest.mock('@/lib/tutor/knowledge', () => ({
   ...jest.requireActual('@/lib/tutor/knowledge'),
@@ -36,10 +44,13 @@ mockPrisma.knowledgeSource = {
 
 const mockIndexSource = indexSource as jest.Mock
 const mockListSources = listSources as jest.Mock
+const mockRead = readPrivateDocument as jest.Mock
+const mockDelete = deletePrivateDocument as jest.Mock
 
 const COURSE_ID = 'curso-1'
 const OWNER_ID = 'user-dono'
 const DOCX = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+const PATHNAME = `courses/${COURSE_ID}/aula-x1.docx`
 
 async function cookieFor(userId: string, role: string) {
   const token = await new SignJWT({ id: userId, email: 'x@senai.br', name: 'X', role })
@@ -59,24 +70,12 @@ async function as(userId: string, role: string, { collaborator = false } = {}) {
 const context = { params: Promise.resolve({ id: COURSE_ID }) }
 const url = `http://localhost:3000/api/courses/${COURSE_ID}/knowledge`
 
-const BLOB_URL = 'https://abc.public.blob.vercel-storage.com/cursos/knowledge/aula-x1.docx'
-const fetchMock = jest.fn()
-global.fetch = fetchMock as unknown as typeof fetch
-
-function blobResponse(type: string) {
-  return {
-    ok: true,
-    headers: new Headers({ 'content-type': type }),
-    arrayBuffer: async () => new ArrayBuffer(8),
-  }
-}
-
 function upload(headers: Record<string, string>, body: Record<string, unknown> = {}) {
   return POST(
     new NextRequest(url, {
       method: 'POST',
       headers: { ...headers, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ url: BLOB_URL, name: 'aula.docx', ...body }),
+      body: JSON.stringify({ pathname: PATHNAME, name: 'aula.docx', ...body }),
     }),
     context
   )
@@ -94,7 +93,7 @@ beforeEach(() => {
   mockPrisma.knowledgeSource.findFirst.mockResolvedValue(null)
   mockIndexSource.mockResolvedValue({ id: 'src-1', name: 'aula.docx', chunkCount: 1 })
   mockListSources.mockResolvedValue([])
-  fetchMock.mockResolvedValue(blobResponse(DOCX))
+  mockRead.mockResolvedValue({ buffer: Buffer.from('x'), contentType: DOCX, size: 1234 })
 })
 
 describe('POST /api/courses/[id]/knowledge', () => {
@@ -102,19 +101,23 @@ describe('POST /api/courses/[id]/knowledge', () => {
     ['owner', OWNER_ID, 'CONTENT_AUTHOR', false],
     ['collaborator', 'user-colab', 'CONTENT_AUTHOR', true],
     ['admin', 'user-admin', 'ADMIN', false],
-  ])('lets the %s index a .docx', async (_who, userId, role, collaborator) => {
-    const res = await upload(await as(userId, role, { collaborator }))
+  ])(
+    'lets the %s index a document and keeps the stored file',
+    async (_who, userId, role, collaborator) => {
+      const res = await upload(await as(userId, role, { collaborator }))
 
-    expect(res.status).toBe(201)
-    expect(mockIndexSource).toHaveBeenCalledWith({
-      courseId: COURSE_ID,
-      kind: 'DOCUMENT',
-      name: 'aula.docx',
-      sections: [{ label: 'aula.docx', text: 'EPI protege o trabalhador.' }],
-    })
-    expect(fetchMock).toHaveBeenCalledWith(BLOB_URL)
-    expect(del).toHaveBeenCalledWith(BLOB_URL)
-  })
+      expect(res.status).toBe(201)
+      expect(mockRead).toHaveBeenCalledWith(PATHNAME, expect.any(Number))
+      expect(mockIndexSource).toHaveBeenCalledWith({
+        courseId: COURSE_ID,
+        kind: 'DOCUMENT',
+        name: 'aula.docx',
+        sections: [{ label: 'aula.docx', text: 'EPI protege o trabalhador.' }],
+        file: { pathname: PATHNAME, contentType: DOCX, size: 1234 },
+      })
+      expect(mockDelete).not.toHaveBeenCalled()
+    }
+  )
 
   it.each([
     ['MANAGER', 'user-gestor'],
@@ -125,39 +128,62 @@ describe('POST /api/courses/[id]/knowledge', () => {
     const res = await upload(await as(userId, role))
 
     expect(res.status).toBe(403)
-    expect(mockIndexSource).not.toHaveBeenCalled()
+    expect(mockRead).not.toHaveBeenCalled()
   })
 
-  it('refuses a file that is not .docx and still deletes the upload', async () => {
-    fetchMock.mockResolvedValue(blobResponse('application/zip'))
+  it.each([
+    ['another course', 'courses/outro-curso/aula.docx'],
+    ['a path escaping the course folder', `courses/${COURSE_ID}/../outro/aula.docx`],
+    ['a missing file', undefined],
+  ])('refuses %s without reading or deleting anything', async (_case, pathname) => {
+    const res = await upload(await as(OWNER_ID, 'CONTENT_AUTHOR'), { pathname })
+
+    expect(res.status).toBe(400)
+    expect(mockRead).not.toHaveBeenCalled()
+    expect(mockDelete).not.toHaveBeenCalled()
+  })
+
+  it('refuses an unsupported file and deletes the upload', async () => {
+    mockRead.mockResolvedValue({
+      buffer: Buffer.from('x'),
+      contentType: 'application/zip',
+      size: 9,
+    })
 
     const res = await upload(await as(OWNER_ID, 'CONTENT_AUTHOR'), { name: 'aula.zip' })
 
     expect(res.status).toBe(400)
     expect(mockIndexSource).not.toHaveBeenCalled()
-    expect(del).toHaveBeenCalledWith(BLOB_URL)
+    expect(mockDelete).toHaveBeenCalledWith(PATHNAME)
   })
 
-  it.each([
-    ['another host', 'https://evil.example.com/cursos/knowledge/a.docx'],
-    ['another blob folder', 'https://abc.public.blob.vercel-storage.com/cursos/image/a.png'],
-    ['plain http', 'http://abc.public.blob.vercel-storage.com/cursos/knowledge/a.docx'],
-  ])('refuses a URL from %s without fetching or deleting it', async (_case, other) => {
-    const res = await upload(await as(OWNER_ID, 'CONTENT_AUTHOR'), { url: other })
-
-    expect(res.status).toBe(400)
-    expect(fetchMock).not.toHaveBeenCalled()
-    expect(del).not.toHaveBeenCalled()
-  })
-
-  it('refuses content already in the repository', async () => {
+  it('refuses content already in the repository and deletes the upload', async () => {
     mockPrisma.knowledgeSource.findFirst.mockResolvedValue({ name: 'antiga.docx' })
 
     const res = await upload(await as(OWNER_ID, 'CONTENT_AUTHOR'))
 
     expect(res.status).toBe(409)
     expect(mockIndexSource).not.toHaveBeenCalled()
-    expect(del).toHaveBeenCalledWith(BLOB_URL)
+    expect(mockDelete).toHaveBeenCalledWith(PATHNAME)
+  })
+
+  it('reports a file missing from storage as a bad request', async () => {
+    mockRead.mockRejectedValue(
+      new DocumentStorageError('Documento não encontrado no armazenamento')
+    )
+
+    const res = await upload(await as(OWNER_ID, 'CONTENT_AUTHOR'))
+
+    expect(res.status).toBe(400)
+  })
+
+  it('deletes the upload when indexing fails', async () => {
+    mockIndexSource.mockRejectedValue(new Error('Gemini 429'))
+
+    const res = await upload(await as(OWNER_ID, 'CONTENT_AUTHOR'))
+
+    expect(res.status).toBe(500)
+    expect(mockDelete).toHaveBeenCalledWith(PATHNAME)
   })
 })
 
@@ -178,16 +204,18 @@ describe('GET /api/courses/[id]/knowledge', () => {
 })
 
 describe('DELETE /api/courses/[id]/knowledge', () => {
-  it('deletes a document of the course', async () => {
+  it('deletes a document of the course and its stored file', async () => {
     mockPrisma.knowledgeSource.findUnique.mockResolvedValue({
       courseId: COURSE_ID,
       kind: 'DOCUMENT',
+      filePathname: PATHNAME,
     })
 
     const res = await remove(await as(OWNER_ID, 'CONTENT_AUTHOR'))
 
     expect(res.status).toBe(200)
     expect(mockPrisma.knowledgeSource.delete).toHaveBeenCalledWith({ where: { id: 'src-1' } })
+    expect(mockDelete).toHaveBeenCalledWith(PATHNAME)
   })
 
   it('refuses a GUEST', async () => {
@@ -207,5 +235,6 @@ describe('DELETE /api/courses/[id]/knowledge', () => {
     expect((await remove(headers)).status).toBe(404)
 
     expect(mockPrisma.knowledgeSource.delete).not.toHaveBeenCalled()
+    expect(mockDelete).not.toHaveBeenCalled()
   })
 })

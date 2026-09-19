@@ -2,7 +2,7 @@
  * @jest-environment node
  */
 import { extractText, getDocumentProxy } from 'unpdf'
-import { DocumentError, extractDocumentSections, isKnowledgeBlobUrl } from '@/lib/tutor/extract'
+import { DocumentError, extractDocumentSections } from '@/lib/tutor/extract'
 
 jest.mock('unpdf', () => ({ getDocumentProxy: jest.fn(), extractText: jest.fn() }))
 
@@ -47,20 +47,5 @@ describe('extractDocumentSections', () => {
     await expect(
       extractDocumentSections(Buffer.from('x'), 'application/zip', 'pacote.zip')
     ).rejects.toThrow(/\.docx ou \.pdf/)
-  })
-})
-
-describe('isKnowledgeBlobUrl', () => {
-  it('accepts only https URLs in the knowledge folder of the Blob store', () => {
-    expect(
-      isKnowledgeBlobUrl('https://abc.public.blob.vercel-storage.com/cursos/knowledge/a.pdf')
-    ).toBe(true)
-    expect(
-      isKnowledgeBlobUrl('https://abc.public.blob.vercel-storage.com/cursos/image/a.png')
-    ).toBe(false)
-    expect(isKnowledgeBlobUrl('https://blob.vercel-storage.com.evil.com/cursos/knowledge/a')).toBe(
-      false
-    )
-    expect(isKnowledgeBlobUrl(42)).toBe(false)
   })
 })

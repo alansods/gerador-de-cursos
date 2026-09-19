@@ -2,7 +2,8 @@
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { queryKeys } from '@/lib/query-keys'
-import { uploadFile } from '@/lib/client-upload'
+import { upload } from '@vercel/blob/client'
+import { validateFile } from '@/lib/media'
 
 export interface TutorReply {
   answer: string
@@ -15,8 +16,17 @@ export interface KnowledgeSource {
   kind: 'DOCUMENT' | 'COURSE'
   name: string
   chunkCount: number
+  filePathname: string | null
+  contentType: string | null
+  fileSize: number | null
   createdAt: string
   updatedAt: string
+}
+
+export type DocumentPreview = { kind: 'pdf'; url: string } | { kind: 'html'; html: string }
+
+export function documentFileUrl(courseId: string, sourceId: string, mode: 'view' | 'download') {
+  return `/api/courses/${courseId}/knowledge/${sourceId}/file?mode=${mode}`
 }
 
 async function readJson(response: Response, fallback: string) {
@@ -68,13 +78,21 @@ export function useUploadKnowledgeMutation(courseId: string) {
 
   return useMutation({
     mutationFn: async (file: File): Promise<{ warning: string | null }> => {
-      const { url, warning } = await uploadFile(file, 'knowledge')
+      const { error, warning } = validateFile(file, 'knowledge')
+      if (error) throw new Error(error)
+
+      const safeName = file.name.replace(/[^\w.-]+/g, '-').slice(-80)
+      const blob = await upload(`courses/${courseId}/${safeName}`, file, {
+        access: 'private',
+        handleUploadUrl: `/api/courses/${courseId}/knowledge/upload`,
+        contentType: file.type,
+      })
 
       await readJson(
         await fetch(`/api/courses/${courseId}/knowledge`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ url, name: file.name }),
+          body: JSON.stringify({ pathname: blob.pathname, name: file.name }),
         }),
         'Erro ao indexar o documento'
       )
@@ -98,5 +116,23 @@ export function useDeleteKnowledgeMutation(courseId: string) {
       )
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.knowledge(courseId) }),
+  })
+}
+
+export function useDocumentPreviewQuery(courseId: string, sourceId: string | null) {
+  return useQuery({
+    queryKey: queryKeys.knowledgePreview(courseId, sourceId ?? ''),
+    queryFn: async (): Promise<DocumentPreview> => {
+      const data = await readJson(
+        await fetch(`/api/courses/${courseId}/knowledge/${sourceId}/preview`),
+        'Não foi possível visualizar o documento'
+      )
+      return data.kind === 'pdf'
+        ? { kind: 'pdf', url: data.url }
+        : { kind: 'html', html: data.html }
+    },
+    enabled: Boolean(sourceId),
+    staleTime: 0,
+    gcTime: 0,
   })
 }
