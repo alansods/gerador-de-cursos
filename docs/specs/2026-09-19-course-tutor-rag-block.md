@@ -237,7 +237,7 @@ A troca fica isolada num único módulo de provedor (`src/lib/tutor/provider.ts`
   curso foi alterado por outra pessoa…" a cada Salvar, embora a gravação desse certo. O
   painel nem reordena unidades. Já acontecia antes do tutor; corrigido na branch
   `fix/settings-drawer-save-conflict` (`docs/specs/2026-09-19-settings-drawer-save-conflict.md`),
-  que ainda precisa entrar nesta.
+  trazida para esta branch por `cherry-pick`.
 
 ## Checklist
 
@@ -290,7 +290,7 @@ Cada item só é marcado quando o critério de "Pronto quando" foi verificado.
   - Pronto quando: botão redondo com robô abre um popup que não bloqueia a página; fecha pelo
     botão, pelo X e por Esc; a conversa persiste ao reabrir; conferido a 1280px e 375px.
 - [x] **Migrations aplicadas na produção** (19/09/2026, com backup no Neon)
-- [ ] **Correção do conflito falso no painel "Sobre o curso"** trazida da branch
+- [x] **Correção do conflito falso no painel "Sobre o curso"** trazida da branch
       `fix/settings-drawer-save-conflict`
 - [ ] **Segurança da rota pública**
   - Pronto quando: o pacote leva um token por curso; o token pode ser revogado e gerado de
