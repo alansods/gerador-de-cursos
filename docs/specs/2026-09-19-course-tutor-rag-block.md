@@ -211,10 +211,12 @@ A troca fica isolada num único módulo de provedor (`src/lib/tutor/provider.ts`
   bloqueia script sem precisar de sanitizador.
 - **O arquivo baixado leva o sufixo aleatório do Blob no nome** (`apostila-Uc0s….docx`): a
   URL assinada de leitura não aceita definir o `Content-Disposition`. Ficou assim.
-- **Layout igual ao de Cursos e Usuários:** largura `max-w-7xl` e `PageHeader` com o nome
-  do curso na descrição, sem o aviso sobre o Gemini e sem o subtítulo "Fontes do tutor".
-  "Adicionar documento" fica numa linha própria acima da tabela, à direita, com as regras de
-  arquivo em letra menor ao lado. O título do `PageHeader` passou a quebrar linha em vez de
+- **Layout igual ao de Cursos e Usuários:** largura `max-w-7xl` e `PageHeader` com a
+  descrição curta "Fontes do Tutor IA para o curso “<nome>”", sem o aviso sobre o Gemini e
+  sem o antigo título de seção acima da tabela. "Adicionar documento" fica numa linha própria
+  acima da tabela, à direita, com "Arquivos .docx ou .pdf de até 20 MB." em letra menor ao
+  lado; o aviso de PDF digitalizado saiu da página e aparece só como erro no envio. Sem
+  documentos, a tabela dá lugar a "Nenhum documento enviado.", centralizado. O título do `PageHeader` passou a quebrar linha em vez de
   truncar, em todas as páginas.
 - **A tabela lista só os documentos enviados**, com o tipo do arquivo (PDF ou DOCX). O
   conteúdo do curso continua indexado como fonte `COURSE`, mas não aparece nem é mencionado:
