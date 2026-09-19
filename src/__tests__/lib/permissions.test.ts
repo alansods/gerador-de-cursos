@@ -3,6 +3,7 @@ import {
   assertCan,
   canEditCourse,
   canDeleteCourse,
+  canManageKnowledge,
   getCoursePermissions,
   resolveTokenRole,
   ForbiddenError,
@@ -120,6 +121,26 @@ describe('canEditCourse', () => {
   })
 })
 
+describe('canManageKnowledge', () => {
+  it('lets ADMIN manage any course', () => {
+    expect(canManageKnowledge(user('ADMIN'), courseOf('outro'))).toBe(true)
+  })
+
+  it('lets a CONTENT_AUTHOR manage only as owner or collaborator', () => {
+    expect(canManageKnowledge(user('CONTENT_AUTHOR'), courseOf('u1'))).toBe(true)
+    expect(canManageKnowledge(user('CONTENT_AUTHOR'), courseOf('outro'), { granted: true })).toBe(
+      true
+    )
+    expect(canManageKnowledge(user('CONTENT_AUTHOR'), courseOf('outro'), null)).toBe(false)
+  })
+
+  it('refuses MANAGER, REVIEWER and GUEST even where they can edit the course', () => {
+    for (const role of ['MANAGER', 'REVIEWER', 'GUEST'] as UserRole[]) {
+      expect(canManageKnowledge(user(role), courseOf('u1'), { granted: true })).toBe(false)
+    }
+  })
+})
+
 describe('canDeleteCourse', () => {
   it('lets CONTENT_AUTHOR delete only their own course, even as an EDITOR collaborator', () => {
     expect(canDeleteCourse(user('CONTENT_AUTHOR'), courseOf('u1'))).toBe(true)
@@ -208,6 +229,7 @@ describe('getCoursePermissions', () => {
       canApprove: false,
       canRequestAccess: false,
       canManageCollaborators: true,
+      canManageKnowledge: true,
       isOwner: true,
     })
   })
@@ -221,6 +243,7 @@ describe('getCoursePermissions', () => {
       canApprove: true,
       canRequestAccess: false,
       canManageCollaborators: false,
+      canManageKnowledge: false,
       isOwner: false,
     })
   })

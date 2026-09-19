@@ -1,7 +1,13 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextRequest, NextResponse, after } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requireAuth, createErrorResponse, createSuccessResponse } from '@/lib/auth'
-import { assertCan, can, ForbiddenError, getCoursePermissions } from '@/lib/permissions'
+import {
+  assertCan,
+  can,
+  canManageKnowledge,
+  ForbiddenError,
+  getCoursePermissions,
+} from '@/lib/permissions'
 import { fetchCollaboration } from '@/lib/course-access'
 import { Course, Unit } from '@/types/course'
 import { logActivity } from '@/lib/activity-logger'
@@ -9,6 +15,9 @@ import { generateUniqueSlug, slugifyUnits } from '@/lib/slug'
 import { Prisma } from '@prisma/client'
 import type { CourseStatus } from '@/lib/permissions'
 import { upgradeUnits } from '@/lib/legacy-course'
+import { reindexCourseContent } from '@/lib/tutor/knowledge'
+import { courseDocumentPathnames, deleteStoredDocuments } from '@/lib/tutor/document-access'
+import { generateTutorToken } from '@/lib/tutor/public-access'
 
 /** Status cuja revisão deixa de valer assim que o conteúdo muda. */
 const REVIEW_INVALIDATED_ON_EDIT: CourseStatus[] = ['APPROVED', 'REJECTED']
@@ -137,6 +146,7 @@ export async function GET(req: NextRequest) {
         category: course.category,
         layout: course.layout,
         bannerVideoUrl: course.bannerVideoUrl ?? undefined,
+        tutorEnabled: course.tutorEnabled,
         units: normalizedUnits,
         status: course.status,
         version: course.version,
@@ -249,6 +259,7 @@ export async function POST(req: NextRequest) {
       category: course.category,
       layout: course.layout,
       bannerVideoUrl: course.bannerVideoUrl ?? undefined,
+      tutorEnabled: course.tutorEnabled,
       units: upgradeUnits(course.units) as unknown as Unit[],
       status: course.status,
       version: course.version,
@@ -290,6 +301,7 @@ export async function PUT(req: NextRequest) {
       category,
       layout,
       bannerVideoUrl,
+      tutorEnabled,
       units,
       version,
     } = body
@@ -310,6 +322,13 @@ export async function PUT(req: NextRequest) {
     const collaboration = await fetchCollaboration(id, authResult.user.id)
 
     assertCan(authResult.user, 'course:update', { course: existingCourse, collaboration })
+
+    const togglesTutor =
+      typeof tutorEnabled === 'boolean' && tutorEnabled !== existingCourse.tutorEnabled
+
+    if (togglesTutor && !canManageKnowledge(authResult.user, existingCourse, collaboration)) {
+      throw new ForbiddenError('Você não tem permissão para ligar ou desligar o tutor deste curso')
+    }
 
     // Concurrency guard: reject a write based on a stale version
     if (typeof version === 'number' && version !== existingCourse.version) {
@@ -369,6 +388,8 @@ export async function PUT(req: NextRequest) {
         ...(category && { category }),
         ...(layout && { layout }),
         ...(bannerVideoUrl !== undefined && { bannerVideoUrl: bannerVideoUrl || null }),
+        ...(togglesTutor && { tutorEnabled }),
+        ...(togglesTutor && tutorEnabled && { tutorToken: generateTutorToken() }),
         ...(normalizedUnits !== undefined && {
           units: normalizedUnits as unknown as Prisma.InputJsonValue,
         }),
@@ -383,6 +404,15 @@ export async function PUT(req: NextRequest) {
         version: { increment: 1 },
       },
     })
+
+    if (course.tutorEnabled && (normalizedUnits !== undefined || togglesTutor)) {
+      const savedUnits = upgradeUnits(course.units) as unknown as Unit[]
+      after(() =>
+        reindexCourseContent(course.id, savedUnits).catch((error) =>
+          console.error('Failed to reindex the course content for the tutor:', error)
+        )
+      )
+    }
 
     // Log the activity
     await logActivity({
@@ -405,6 +435,7 @@ export async function PUT(req: NextRequest) {
       category: course.category,
       layout: course.layout,
       bannerVideoUrl: course.bannerVideoUrl ?? undefined,
+      tutorEnabled: course.tutorEnabled,
       units: upgradeUnits(course.units) as unknown as Unit[],
       status: course.status,
       version: course.version,
@@ -453,10 +484,14 @@ export async function DELETE(req: NextRequest) {
 
       assertCan(authResult.user, 'course:delete', { course: existingCourse })
 
+      const documentPathnames = await courseDocumentPathnames([id])
+
       // Delete the course
       await prisma.course.delete({
         where: { id },
       })
+
+      after(() => deleteStoredDocuments(documentPathnames))
 
       // Log the activity
       await logActivity({
@@ -505,6 +540,8 @@ export async function DELETE(req: NextRequest) {
       )
     }
 
+    const documentPathnames = await courseDocumentPathnames(foundCourses.map((c) => c.id))
+
     await prisma.$transaction([
       prisma.course.deleteMany({ where: { id: { in: foundCourses.map((c) => c.id) } } }),
       ...foundCourses.map((course) =>
@@ -520,6 +557,8 @@ export async function DELETE(req: NextRequest) {
         })
       ),
     ])
+
+    after(() => deleteStoredDocuments(documentPathnames))
 
     return createSuccessResponse({ deleted: foundCourses.length, notFound })
   } catch (error) {

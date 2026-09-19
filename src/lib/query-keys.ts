@@ -44,6 +44,9 @@ export const queryKeys = {
   },
   collaborators: (courseId: string) => ['collaborators', courseId] as const,
   comments: (courseId: string) => ['comments', courseId] as const,
+  knowledge: (courseId: string) => ['knowledge', courseId] as const,
+  knowledgePreview: (courseId: string, sourceId: string) =>
+    ['knowledge', courseId, 'preview', sourceId] as const,
   illustrations: {
     manifest: ['illustrations', 'manifest'] as const,
   },

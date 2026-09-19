@@ -10,6 +10,7 @@ import { PageTransition } from '@/components/PageTransition'
 import { Loader2 } from 'lucide-react'
 import { CoursePlayer } from '@/components/course/CoursePlayer'
 import { ReviewPanel } from '@/components/review/ReviewPanel'
+import { TutorChatPanel } from '@/components/tutor/TutorChatPanel'
 import { useCourseQuery } from '@/hooks/queries/useCourseQuery'
 import { useAuth } from '@/context/AuthContext'
 
@@ -56,6 +57,7 @@ export default function PreviewCoursePage() {
       {/* a mutation de status invalida a chave do curso, então o painel não
           precisa mais pedir o recarregamento */}
       <ReviewPanel course={course} />
+      {course.tutorEnabled && <TutorChatPanel courseId={course.id} learnerName={user?.name} />}
     </PageTransition>
   )
 }

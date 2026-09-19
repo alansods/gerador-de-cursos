@@ -4,6 +4,11 @@ import { requireAuth, createErrorResponse } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { generateSCORMFromPlayerDist } from '@/lib/scorm-service'
 import { downloadAndUpdateImages, cleanupTempFiles } from '@/lib/scorm-build-service'
+import {
+  tutorApiOrigin,
+  tutorPackageConfig,
+  type TutorPackageConfig,
+} from '@/lib/tutor/package-config'
 
 // In-memory generation takes seconds, but image downloads need headroom
 export const maxDuration = 60
@@ -36,6 +41,8 @@ export async function POST(req: NextRequest) {
     console.log(`   📍 Course id: ${courseId}`)
     console.log(`   📍 Units: ${courseData.units?.length || 0}`)
 
+    const tutorConfig = await tutorPackageConfig(courseId, tutorApiOrigin(req.url))
+
     // Create the job row
     const job = await prisma.sCORMJob.create({
       data: {
@@ -51,7 +58,7 @@ export async function POST(req: NextRequest) {
     // Run the generation after the response is sent (after() keeps it alive on Vercel)
     after(async () => {
       try {
-        await executeBuildInBackground(job.id, courseData)
+        await executeBuildInBackground(job.id, courseData, tutorConfig)
       } catch (error) {
         console.error(`❌ [Background Build] Job ${job.id} failed:`, error)
         await prisma.sCORMJob
@@ -98,7 +105,11 @@ function truncateError(message: string, maxLength = 2000): string {
 /**
  * Executa a geração do pacote SCORM em background (geração in-memory, sem next build)
  */
-async function executeBuildInBackground(jobId: string, course: Course): Promise<void> {
+async function executeBuildInBackground(
+  jobId: string,
+  course: Course,
+  tutorConfig: TutorPackageConfig | null
+): Promise<void> {
   await prisma.sCORMJob.update({
     where: { id: jobId },
     data: { status: 'building', progress: 'Preparando geração do pacote SCORM...' },
@@ -134,7 +145,12 @@ async function executeBuildInBackground(jobId: string, course: Course): Promise<
       data: { progress: '📦 Gerando pacote SCORM...' },
     })
 
-    const zipBuffer = await generateSCORMFromPlayerDist(finalCourse, course.id, credits)
+    const zipBuffer = await generateSCORMFromPlayerDist(
+      finalCourse,
+      course.id,
+      credits,
+      tutorConfig
+    )
 
     console.log(
       `✅ [Background Build] Job ${jobId}: Pacote gerado (${(zipBuffer.length / 1024).toFixed(2)} KB)`

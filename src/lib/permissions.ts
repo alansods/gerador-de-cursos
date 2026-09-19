@@ -84,6 +84,17 @@ export function canEditCourse(
   return Boolean(collaboration)
 }
 
+export function canManageKnowledge(
+  user: PermissionUser | null | undefined,
+  course?: PermissionCourse | null,
+  collaboration?: Collaboration
+): boolean {
+  if (!user) return false
+  if (user.role === 'ADMIN') return true
+  if (user.role !== 'CONTENT_AUTHOR') return false
+  return isOwner(user, course) || Boolean(collaboration)
+}
+
 export function canDeleteCourse(
   user: PermissionUser | null | undefined,
   course?: PermissionCourse | null
@@ -168,6 +179,7 @@ export function getCoursePermissions(
     canApprove: can(user, 'course:approve', ctx),
     canRequestAccess: can(user, 'course:requestAccess', ctx),
     canManageCollaborators: can(user, 'collaborator:manage', ctx),
+    canManageKnowledge: canManageKnowledge(user, course, collaboration),
     isOwner: Boolean(user && isOwner(user, course)),
   }
 }

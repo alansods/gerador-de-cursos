@@ -95,7 +95,7 @@ import { QuizContent } from '@/components/QuizContent'
 import { InfoBox } from '@/components/InfoBox'
 import { BlockThemeProvider } from '@/components/course/blocks'
 import { resolveLayout } from '@/components/course/layouts'
-import { QuizData, QuizQuestion, Unit, Block } from '@/types/course'
+import { QuizData, QuizQuestion, Block } from '@/types/course'
 import {
   BLOCK_CATALOG,
   BLOCK_CATEGORIES,
@@ -119,7 +119,6 @@ function CourseEditor() {
     addUnit,
     updateUnit,
     deleteUnit,
-    reorderUnits,
     addBlock,
     updateBlock,
     deleteBlock,
@@ -4447,7 +4446,9 @@ function CourseEditor() {
       {settingsDrawerMounted && (
         <CourseSettingsDrawer
           courseId={state.currentCourse.id}
+          courseSlug={state.currentCourse.slug}
           canManageCollaborators={state.currentCourse.permissions?.canManageCollaborators ?? false}
+          canManageTutor={state.currentCourse.permissions?.canManageKnowledge ?? false}
           open={settingsDrawerOpen}
           onOpenChange={setSettingsDrawerOpen}
           courseData={{
@@ -4457,9 +4458,10 @@ function CourseEditor() {
             workload: state.currentCourse.workload,
             layout: state.currentCourse.layout,
             bannerVideoUrl: state.currentCourse.bannerVideoUrl,
+            tutorEnabled: state.currentCourse.tutorEnabled ?? false,
           }}
           units={state.currentCourse.units || []}
-          onSave={async (courseData, units) => {
+          onSave={async (courseData) => {
             if (state.currentCourse) {
               await updateCourse(state.currentCourse.id, {
                 title: courseData.title,
@@ -4468,8 +4470,8 @@ function CourseEditor() {
                 workload: courseData.workload,
                 layout: courseData.layout,
                 bannerVideoUrl: courseData.bannerVideoUrl ?? '',
+                tutorEnabled: courseData.tutorEnabled ?? false,
               })
-              await reorderUnits(units as Unit[])
             }
           }}
         />

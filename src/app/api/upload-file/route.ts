@@ -20,7 +20,7 @@ export async function POST(request: NextRequest) {
       onBeforeGenerateToken: async (_pathname: string, clientPayload: string | null) => {
         const category = clientPayload ?? ''
 
-        if (!isMediaCategory(category)) {
+        if (!isMediaCategory(category) || category === 'knowledge') {
           throw new Error('Categoria de mídia inválida')
         }
 

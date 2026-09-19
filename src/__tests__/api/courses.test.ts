@@ -23,6 +23,11 @@ import { GET as getCursoByIdHandler } from '@/app/api/courses/[id]/route'
 import { prisma } from '@/lib/prisma'
 import { SignJWT } from 'jose'
 
+jest.mock('next/server', () => ({
+  ...jest.requireActual('next/server'),
+  after: jest.fn(),
+}))
+
 // Mock do prisma já está configurado no jest.setup.js
 const mockPrisma = prisma as jest.Mocked<typeof prisma>
 
