@@ -102,10 +102,17 @@ describe('PUT /api/courses — Tutor IA setting', () => {
     expect(data.tutorToken).toMatch(/^[A-Za-z0-9_-]{32}$/)
   })
 
-  it('keeps the existing access token when the tutor is turned on again', async () => {
+  it('issues a new access token when the tutor is turned on again, cutting off old packages', async () => {
     const { data } = await save(owner, false, { tutorEnabled: true }, 'antigo')
 
     expect(data.tutorEnabled).toBe(true)
+    expect(data.tutorToken).toMatch(/^[A-Za-z0-9_-]{32}$/)
+    expect(data.tutorToken).not.toBe('antigo')
+  })
+
+  it('keeps the access token when the tutor stays on', async () => {
+    const { data } = await save(owner, true, { units }, 'atual')
+
     expect(data.tutorToken).toBeUndefined()
   })
 

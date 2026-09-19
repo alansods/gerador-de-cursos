@@ -116,11 +116,6 @@
     "previewLoading": "Carregando o documento...",
     "previewError": "Não foi possível visualizar o documento.",
     "previewImagesNote": "Visualização do texto; imagens do documento aparecem só no arquivo baixado.",
-    "kindCourseShort": "Curso",
-    "accessTitle": "Acesso dos pacotes SCORM",
-    "accessDescription": "Cada pacote exportado leva uma chave que libera o tutor para aquele curso. Se um pacote circular fora do LMS, gere uma nova chave: os pacotes já exportados param de responder e o curso precisa ser exportado de novo.",
-    "regenerate": "Gerar nova chave",
-    "regenerateConfirm": "Gerar uma nova chave? Os pacotes SCORM já exportados deste curso deixam de acessar o tutor até serem exportados de novo.",
-    "regenerated": "Nova chave gerada. Exporte o curso de novo para os alunos voltarem a usar o tutor."
+    "kindCourseShort": "Curso"
   }
 }

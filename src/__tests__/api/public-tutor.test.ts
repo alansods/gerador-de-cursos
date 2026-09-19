@@ -4,7 +4,6 @@
 import { NextRequest } from 'next/server'
 import { SignJWT } from 'jose'
 import { POST, OPTIONS } from '@/app/api/public/tutor/[courseId]/route'
-import { POST as regenerate } from '@/app/api/courses/[id]/tutor-token/route'
 import { askTutor } from '@/lib/tutor/ask'
 import {
   consumeTutorQuota,
@@ -182,46 +181,5 @@ describe('tokensMatch', () => {
     expect(tokensMatch(TOKEN, TOKEN.slice(0, -1))).toBe(false)
     expect(tokensMatch(null, TOKEN)).toBe(false)
     expect(tokensMatch(TOKEN, null)).toBe(false)
-  })
-})
-
-describe('POST /api/courses/[id]/tutor-token', () => {
-  async function as(userId: string, role: string) {
-    mockPrisma.user.findUnique.mockResolvedValue({ id: userId, name: 'X', role })
-    mockPrisma.course.findUnique.mockResolvedValue({
-      id: 'curso-1',
-      ownerId: 'user-dono',
-      owner: null,
-    })
-    mockPrisma.courseCollaborator.findUnique.mockResolvedValue(null)
-    const token = await new SignJWT({ id: userId, email: 'x@senai.br', name: 'X', role })
-      .setProtectedHeader({ alg: 'HS256' })
-      .setExpirationTime('1h')
-      .sign(new TextEncoder().encode(process.env.JWT_SECRET))
-    return { Cookie: `auth-token=${token}` }
-  }
-
-  function call(headers: Record<string, string>) {
-    return regenerate(
-      new NextRequest('http://localhost:3000/api/courses/curso-1/tutor-token', {
-        method: 'POST',
-        headers,
-      }),
-      { params: Promise.resolve({ id: 'curso-1' }) }
-    )
-  }
-
-  it('lets the owner generate a new token', async () => {
-    const res = await call(await as('user-dono', 'CONTENT_AUTHOR'))
-
-    expect(res.status).toBe(200)
-    const { data } = mockPrisma.course.update.mock.calls[0][0]
-    expect(data.tutorToken).toMatch(/^[A-Za-z0-9_-]{32}$/)
-    expect(JSON.stringify(await res.json())).not.toContain(data.tutorToken)
-  })
-
-  it.each(['MANAGER', 'REVIEWER', 'GUEST'])('refuses %s', async (role) => {
-    expect((await call(await as(`user-${role}`, role))).status).toBe(403)
-    expect(mockPrisma.course.update).not.toHaveBeenCalled()
   })
 })

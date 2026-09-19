@@ -9,7 +9,6 @@ import {
   useDeleteKnowledgeMutation,
   useDocumentPreviewQuery,
   useKnowledgeQuery,
-  useRegenerateTutorTokenMutation,
   useUploadKnowledgeMutation,
 } from '@/hooks/queries/useTutorQuery'
 
@@ -22,12 +21,10 @@ jest.mock('@/hooks/queries/useTutorQuery', () => ({
   useUploadKnowledgeMutation: jest.fn(),
   useDeleteKnowledgeMutation: jest.fn(),
   useDocumentPreviewQuery: jest.fn(),
-  useRegenerateTutorTokenMutation: jest.fn(),
 }))
 
 const upload = { mutateAsync: jest.fn().mockResolvedValue({ warning: null }), isPending: false }
 const remove = { mutateAsync: jest.fn().mockResolvedValue(undefined), isPending: false }
-const regenerate = { mutateAsync: jest.fn().mockResolvedValue(undefined), isPending: false }
 
 const sources = [
   {
@@ -64,7 +61,6 @@ function renderPage({ canManage = true, tutorEnabled = true } = {}) {
   })
   ;(useUploadKnowledgeMutation as jest.Mock).mockReturnValue(upload)
   ;(useDeleteKnowledgeMutation as jest.Mock).mockReturnValue(remove)
-  ;(useRegenerateTutorTokenMutation as jest.Mock).mockReturnValue(regenerate)
   ;(useDocumentPreviewQuery as jest.Mock).mockImplementation((_courseId, sourceId) =>
     sourceId
       ? { isPending: false, isError: false, data: { kind: 'pdf', url: 'https://signed/apostila' } }
@@ -165,24 +161,6 @@ describe('course knowledge page', () => {
       screen.getByText('Não foi possível carregar o repositório do tutor.')
     ).toBeInTheDocument()
     expect(screen.queryByText(/Só o dono do curso/)).toBeNull()
-  })
-
-  it('regenerates the package key after confirmation', async () => {
-    const confirmSpy = jest.spyOn(window, 'confirm').mockReturnValue(false)
-    renderPage()
-
-    await userEvent.click(screen.getByRole('button', { name: 'Gerar nova chave' }))
-    expect(regenerate.mutateAsync).not.toHaveBeenCalled()
-
-    confirmSpy.mockReturnValue(true)
-    await userEvent.click(screen.getByRole('button', { name: 'Gerar nova chave' }))
-    expect(regenerate.mutateAsync).toHaveBeenCalledTimes(1)
-  })
-
-  it('hides the package key section from someone who cannot manage', () => {
-    renderPage({ canManage: false })
-
-    expect(screen.queryByRole('button', { name: 'Gerar nova chave' })).toBeNull()
   })
 
   it('warns when the tutor is off for the course', () => {

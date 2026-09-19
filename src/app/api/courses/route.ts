@@ -389,11 +389,7 @@ export async function PUT(req: NextRequest) {
         ...(layout && { layout }),
         ...(bannerVideoUrl !== undefined && { bannerVideoUrl: bannerVideoUrl || null }),
         ...(togglesTutor && { tutorEnabled }),
-        ...(togglesTutor &&
-          tutorEnabled &&
-          !existingCourse.tutorToken && {
-            tutorToken: generateTutorToken(),
-          }),
+        ...(togglesTutor && tutorEnabled && { tutorToken: generateTutorToken() }),
         ...(normalizedUnits !== undefined && {
           units: normalizedUnits as unknown as Prisma.InputJsonValue,
         }),

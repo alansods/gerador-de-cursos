@@ -243,6 +243,12 @@ export function CourseSettingsDrawer({
                     Mostra ao aluno um chat que tira dúvidas usando só o conteúdo deste curso. Ao
                     ligar, o texto do curso é enviado ao Gemini para indexação.
                   </p>
+                  {courseData.tutorEnabled && !localCourseData.tutorEnabled && (
+                    <p className="text-xs text-amber-700 dark:text-amber-400">
+                      Os pacotes SCORM já exportados param de responder. Se religar o tutor, exporte
+                      o curso de novo.
+                    </p>
+                  )}
                   {!canManageTutor && (
                     <p className="text-xs text-gray-500 dark:text-gray-400">
                       Só o dono do curso, os colaboradores e administradores podem mudar esta opção.

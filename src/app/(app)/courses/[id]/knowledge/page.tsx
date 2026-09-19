@@ -13,7 +13,6 @@ import {
   Eye,
   FileText,
   Info,
-  KeyRound,
   Loader2,
   Trash2,
   Upload,
@@ -46,7 +45,6 @@ import {
   useDeleteKnowledgeMutation,
   useDocumentPreviewQuery,
   useKnowledgeQuery,
-  useRegenerateTutorTokenMutation,
   useUploadKnowledgeMutation,
   type KnowledgeSource,
 } from '@/hooks/queries/useTutorQuery'
@@ -122,7 +120,6 @@ export default function CourseKnowledgePage() {
   const { sources, canManage, loading, error } = useKnowledgeQuery(courseId)
   const upload = useUploadKnowledgeMutation(courseId)
   const remove = useDeleteKnowledgeMutation(courseId)
-  const regenerate = useRegenerateTutorTokenMutation(courseId)
 
   const reportError = (reason: unknown) =>
     toast.error(reason instanceof Error ? reason.message : t('loadError'))
@@ -147,17 +144,6 @@ export default function CourseKnowledgePage() {
     try {
       await remove.mutateAsync(source.id)
       toast.success(t('deleted'))
-    } catch (reason) {
-      reportError(reason)
-    }
-  }
-
-  const regenerateToken = async () => {
-    if (!confirm(t('regenerateConfirm'))) return
-
-    try {
-      await regenerate.mutateAsync()
-      toast.success(t('regenerated'))
     } catch (reason) {
       reportError(reason)
     }
@@ -326,26 +312,6 @@ export default function CourseKnowledgePage() {
                   })}
                 </TableBody>
               </Table>
-            </Card>
-          )}
-
-          {canManage && (
-            <Card className="flex flex-col gap-4 p-6 sm:flex-row sm:items-center sm:justify-between">
-              <div className="space-y-1">
-                <h2 className="flex items-center gap-2 font-semibold">
-                  <KeyRound className="h-4 w-4" />
-                  {t('accessTitle')}
-                </h2>
-                <p className="text-sm text-muted-foreground">{t('accessDescription')}</p>
-              </div>
-              <Button
-                variant="outline"
-                onClick={regenerateToken}
-                disabled={regenerate.isPending}
-                className="shrink-0"
-              >
-                {t('regenerate')}
-              </Button>
             </Card>
           )}
         </div>

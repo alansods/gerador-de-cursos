@@ -136,14 +136,3 @@ export function useDocumentPreviewQuery(courseId: string, sourceId: string | nul
     gcTime: 0,
   })
 }
-
-export function useRegenerateTutorTokenMutation(courseId: string) {
-  return useMutation({
-    mutationFn: async () => {
-      await readJson(
-        await fetch(`/api/courses/${courseId}/tutor-token`, { method: 'POST' }),
-        'Erro ao gerar a nova chave do tutor'
-      )
-    },
-  })
-}

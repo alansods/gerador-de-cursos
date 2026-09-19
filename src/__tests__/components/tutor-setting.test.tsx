@@ -51,6 +51,16 @@ describe('Tutor IA setting', () => {
     expect(screen.getByText(/o texto do curso é enviado ao Gemini/)).toBeInTheDocument()
   })
 
+  it('warns that turning it off cuts off the packages already exported', async () => {
+    openDrawer({ tutorEnabled: true })
+    const warning = /pacotes SCORM já exportados param de responder/
+
+    expect(screen.queryByText(warning)).toBeNull()
+    await userEvent.click(screen.getByRole('checkbox', { name: 'Tutor IA' }))
+
+    expect(screen.getByText(warning)).toBeInTheDocument()
+  })
+
   it('is disabled for someone who cannot manage the tutor', () => {
     openDrawer({ tutorEnabled: true, canManageTutor: false })
 

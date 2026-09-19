@@ -97,7 +97,6 @@ A troca fica isolada num único módulo de provedor (`src/lib/tutor/provider.ts`
 | `src/lib/tutor/document-access.ts`                      | Busca o documento do curso e limpa arquivos de cursos excluídos                  |
 | `POST /api/tutor/[courseId]`                            | Pergunta no preview do app (com login)                                           |
 | `POST /api/public/tutor/[courseId]`                     | Pergunta vinda do pacote SCORM (chave do curso, limites, sem login)              |
-| `POST /api/courses/[id]/tutor-token`                    | Gera uma nova chave (invalida pacotes exportados)                                |
 | `GET/POST/DELETE /api/courses/[id]/knowledge`           | Lista, indexa e exclui documentos (`maxDuration = 120`)                          |
 | `POST /api/courses/[id]/knowledge/upload`               | Token de upload direto ao store privado, só para quem gerencia                   |
 | `GET .../knowledge/[sourceId]/file?mode=view\|download` | Redireciona para a URL assinada                                                  |
@@ -226,10 +225,14 @@ A troca fica isolada num único módulo de provedor (`src/lib/tutor/provider.ts`
   o tutor ligado e um `sessionId` gerado pelo player; responde só `answer` e `grounded`, sem
   as fontes. CORS aberto (`*`) apenas nessa rota, porque o domínio de cada LMS é
   desconhecido; a chave é o que protege.
-- **A chave nasce quando o tutor é ligado pela primeira vez** e continua a mesma se ele for
-  desligado e religado. "Gerar nova chave", na página de documentos (só quem gerencia),
-  invalida os pacotes já exportados; o curso precisa ser exportado de novo. A chave nunca
-  aparece nas respostas da API do app.
+- **A chave é gerada toda vez que o tutor é ligado** e ninguém a vê: vai para o pacote no
+  export e nunca aparece nas respostas da API do app. A primeira versão tinha um card
+  "Gerar nova chave" na página de documentos; o usuário achou confuso para um caso raro
+  (pacote vazado fora do LMS), então o card e a rota `POST /api/courses/[id]/tutor-token`
+  saíram. Para revogar, desliga-se e religa-se o tutor: os pacotes antigos param de
+  responder e o curso precisa ser exportado de novo. O painel avisa isso ao desmarcar.
+- **A chave é fraca por natureza**: quem abre o ZIP consegue lê-la. Ela impede o uso só
+  com o id do curso e permite cortar um pacote vazado; quem segura abuso são os limites.
 - **Limites no Postgres** (tabela `tutor_usage`, contador por chave com expiração), porque
   memória não é compartilhada entre instâncias serverless: 6 perguntas por minuto por
   sessão (`TUTOR_SESSION_LIMIT_PER_MINUTE`) e 500 por dia por curso
@@ -357,8 +360,8 @@ Cada item só é marcado quando o critério de "Pronto quando" foi verificado.
 - [x] **Correção do conflito falso no painel "Sobre o curso"** trazida da branch
       `fix/settings-drawer-save-conflict`
 - [x] **Segurança da rota pública**
-  - Pronto quando: o pacote leva um token por curso; o token pode ser revogado e gerado de
-    novo; CORS aberto só nessa rota; rate limit por sessão e teto diário por curso,
+  - Pronto quando: o pacote leva um token por curso; o token pode ser revogado (religando o
+    tutor); CORS aberto só nessa rota; rate limit por sessão e teto diário por curso,
     ajustáveis por variável de ambiente; testes cobrem token inválido e limite estourado.
 - [x] **Chat no pacote SCORM**
   - Pronto quando: com a chave ligada, o pacote exportado mostra o widget em todas as
