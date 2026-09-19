@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { queryKeys } from '@/lib/query-keys'
 import { upload } from '@vercel/blob/client'
 import { validateFile } from '@/lib/media'
+import { currentProgress } from '@/lib/tutor/progress-store'
 
 export interface TutorReply {
   answer: string
@@ -42,7 +43,7 @@ export function useAskTutorMutation(courseId: string) {
         await fetch(`/api/tutor/${courseId}`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ question }),
+          body: JSON.stringify({ question, progress: currentProgress() }),
         }),
         'O tutor está indisponível no momento'
       )

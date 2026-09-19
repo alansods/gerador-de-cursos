@@ -2,6 +2,7 @@ import { act, renderHook } from '@testing-library/react'
 import type { Block, Course, Unit } from '@/types/course'
 import { useScormProgress } from '@/hooks/useScormProgress'
 import { encodeSuspendData, hashCourse } from '@/lib/scorm-progress'
+import { currentProgress } from '@/lib/tutor/progress-store'
 
 interface FakeScorm {
   suspendData: string
@@ -243,5 +244,49 @@ describe('useScormProgress', () => {
 
     act(() => result.current.recordQuiz('u1', 1, 2, 2))
     expect(scorm.statusCalls).not.toContain('completed')
+  })
+})
+
+describe('progress shared with the tutor', () => {
+  const renderPlayer = (layout: string) =>
+    renderHook(({ course }) => useScormProgress(course), {
+      initialProps: { course: makeCourse(layout) },
+    })
+
+  it('publishes 0 or 100 per unit in a classic course, with the quiz score', () => {
+    install(createScorm())
+    const { result } = renderPlayer('classic')
+
+    expect(currentProgress()).toEqual({ units: [0, 0], score: null })
+
+    act(() => result.current.navigate('u1'))
+    act(() => result.current.recordQuiz('u1', 1, 3, 4))
+
+    expect(currentProgress()).toEqual({ units: [100, 0], score: 75 })
+  })
+
+  it('publishes the share of steps done per unit in a trail course', () => {
+    install(createScorm())
+    const { result } = renderPlayer('trail')
+
+    act(() => result.current.completeStep('u1', 0))
+
+    expect(currentProgress()).toEqual({ units: [50, 0], score: null })
+  })
+
+  it('works without an LMS, as in the preview', () => {
+    const { result } = renderPlayer('classic')
+
+    act(() => result.current.navigate('u2'))
+
+    expect(currentProgress()).toEqual({ units: [0, 100], score: null })
+  })
+
+  it('clears the shared progress when the player goes away', () => {
+    const { unmount } = renderPlayer('classic')
+
+    unmount()
+
+    expect(currentProgress()).toBeNull()
   })
 })

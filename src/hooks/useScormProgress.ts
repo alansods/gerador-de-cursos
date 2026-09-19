@@ -18,6 +18,7 @@ import {
   type ProgressSummary,
 } from '@/lib/scorm-progress'
 import { isScoredBlock, scoredQuizKeys, trailCompletionRule } from '@/lib/trail-progress'
+import { publishProgress } from '@/lib/tutor/progress-store'
 
 interface WrapperScorm {
   getLocation?: () => string
@@ -40,6 +41,18 @@ const COMMIT_DELAY = 1500
 function getScorm(): WrapperScorm | null {
   if (typeof window === 'undefined') return null
   return (window as unknown as { SCORM?: WrapperScorm }).SCORM ?? null
+}
+
+export function unitPercentages(state: ProgressState, rule: CompletionRule): number[] {
+  if (rule.kind === 'steps') {
+    return rule.stepCounts.map((count, unitIndex) => {
+      if (count === 0) return state.visited[unitIndex] ? 100 : 0
+      const done = (state.steps?.[unitIndex] ?? []).slice(0, count).filter(Boolean).length
+      return Math.round((done / count) * 100)
+    })
+  }
+
+  return state.visited.map((visited) => (visited ? 100 : 0))
 }
 
 export function useScormProgress(course: Course) {
@@ -197,6 +210,15 @@ export function useScormProgress(course: Course) {
   )
 
   const progress: ProgressSummary = useMemo(() => calculateProgress(state, rule), [state, rule])
+
+  useEffect(() => {
+    publishProgress({
+      units: unitPercentages(state, rule),
+      score: calculateScore(state, scoredKeys),
+    })
+  }, [state, rule, scoredKeys])
+
+  useEffect(() => () => publishProgress(null), [])
 
   return {
     currentUnit,

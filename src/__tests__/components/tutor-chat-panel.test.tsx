@@ -2,10 +2,12 @@ import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { TutorChatPanel, greeting } from '@/components/tutor/TutorChatPanel'
+import { publishProgress } from '@/lib/tutor/progress-store'
 
 const fetchMock = jest.fn()
 
 beforeEach(() => {
+  publishProgress(null)
   fetchMock.mockReset()
   global.fetch = fetchMock as unknown as typeof fetch
 })
@@ -60,7 +62,21 @@ describe('TutorChatPanel', () => {
 
     const [url, init] = fetchMock.mock.calls[0]
     expect(url).toBe('/api/tutor/curso-1')
-    expect(JSON.parse(init.body)).toEqual({ question: 'O que é EPI?' })
+    expect(JSON.parse(init.body)).toEqual({ question: 'O que é EPI?', progress: null })
+  })
+
+  it('sends the progress published by the course player along with the question', async () => {
+    respond(200, { success: true, answer: 'Faltam 2 unidades.', sources: [], grounded: false })
+    publishProgress({ units: [100, 0, 0], score: 70 })
+    renderPanel()
+
+    await openAndAsk('O que falta?')
+
+    await screen.findByText('Faltam 2 unidades.')
+    expect(JSON.parse(fetchMock.mock.calls[0][1].body).progress).toEqual({
+      units: [100, 0, 0],
+      score: 70,
+    })
   })
 
   it('tells the learner the tutor is unavailable when the call fails', async () => {

@@ -74,9 +74,10 @@ perguntas e dicas em vez de responder.
   unidade errada.
 - No layout por unidades o percentual é 0 ou 100 (visitada); na trilha, etapas concluídas
   sobre o total da unidade.
-- `useScormProgress` publica o resumo num store simples (`src/lib/tutor/progress-store.ts`,
-  `subscribe`/`getSnapshot`), lido com `useSyncExternalStore` por `PlayerTutor` (pacote) e
-  `TutorChatPanel` (preview). Sem TanStack Query no player.
+- `useScormProgress` publica o resumo num store simples (`src/lib/tutor/progress-store.ts`)
+  sempre que o progresso muda. `PlayerTutor` (pacote) e `TutorChatPanel` (preview) leem o
+  último resumo no momento de enviar a pergunta; o chat não precisa renderizar de novo quando
+  o progresso muda. Sem TanStack Query no player.
 - Rotas: `POST /api/tutor/[courseId]` (preview) e `POST /api/public/tutor/[courseId]`
   (pacote) aceitam o campo.
 
@@ -152,7 +153,7 @@ Cada item só é marcado quando o critério de "Pronto quando" foi verificado.
   - Pronto quando: fora da conversa rápida a IA é sempre chamada com estrutura, progresso e
     os trechos acima do limiar (ou nenhum); o prompt segue as regras acima; `grounded` indica
     se houve trecho; testes com provedor falso conferem o que vai no prompt.
-- [ ] **Progresso enviado pelo chat**
+- [x] **Progresso enviado pelo chat**
   - Pronto quando: `useScormProgress` publica o resumo no store; `PlayerTutor` e
     `TutorChatPanel` o enviam; o bundle do player continua sem TanStack Query; testes do
     store e dos dois clientes.

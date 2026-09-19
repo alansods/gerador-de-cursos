@@ -1,6 +1,7 @@
 import { useMemo } from 'react'
 import { TutorChatWidget, TutorLimitError } from '@/components/tutor/TutorChatWidget'
 import { useLMS } from '@/hooks/useLMS'
+import { currentProgress } from '@/lib/tutor/progress-store'
 
 export interface TutorConfig {
   endpoint: string
@@ -22,7 +23,12 @@ export default function PlayerTutor({ config }: { config: TutorConfig }) {
     const response = await fetch(config.endpoint, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ question, sessionId, token: config.token }),
+      body: JSON.stringify({
+        question,
+        sessionId,
+        token: config.token,
+        progress: currentProgress(),
+      }),
     })
     const data = await response.json().catch(() => ({}))
 
