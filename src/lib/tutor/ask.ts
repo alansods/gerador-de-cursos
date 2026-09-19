@@ -3,13 +3,14 @@ import { toVectorLiteral } from '@/lib/tutor/knowledge'
 import { getTutorProvider, type Passage, type TutorProvider } from '@/lib/tutor/provider'
 
 export const TUTOR_TOP_K = 5
+export const DEFAULT_MIN_SIMILARITY = 0.62
 export const TUTOR_MAX_QUESTION_LENGTH = 500
 export const NOT_FOUND_ANSWER =
   'Não encontrei isso no conteúdo desta aula. Tente perguntar de outro jeito ou sobre um tema tratado no curso.'
 
 export function minSimilarity(): number {
   const value = Number(process.env.TUTOR_MIN_SIMILARITY)
-  return Number.isFinite(value) && value > 0 ? value : 0.6
+  return Number.isFinite(value) && value > 0 ? value : DEFAULT_MIN_SIMILARITY
 }
 
 interface ScoredPassage extends Passage {

@@ -47,7 +47,7 @@ describe('askTutor', () => {
     mockPrisma.$queryRaw.mockResolvedValue([
       passage('Unidade 1', 0.82),
       passage('Unidade 1', 0.75),
-      passage('apostila.docx', 0.61),
+      passage('apostila.docx', 0.64),
       passage('Unidade 3', 0.4),
     ])
 
