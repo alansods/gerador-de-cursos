@@ -29,10 +29,17 @@ export async function POST(
       )
     }
 
-    const course = await prisma.course.findUnique({ where: { id: courseId }, select: { id: true } })
+    const course = await prisma.course.findUnique({
+      where: { id: courseId },
+      select: { tutorEnabled: true },
+    })
 
     if (!course) {
       return createErrorResponse('Curso não encontrado', 404)
+    }
+
+    if (!course.tutorEnabled) {
+      return createErrorResponse('O tutor não está ativo neste curso', 403)
     }
 
     return createSuccessResponse(await askTutor(courseId, question))

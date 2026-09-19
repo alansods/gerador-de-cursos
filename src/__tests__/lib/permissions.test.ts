@@ -229,6 +229,7 @@ describe('getCoursePermissions', () => {
       canApprove: false,
       canRequestAccess: false,
       canManageCollaborators: true,
+      canManageKnowledge: true,
       isOwner: true,
     })
   })
@@ -242,6 +243,7 @@ describe('getCoursePermissions', () => {
       canApprove: true,
       canRequestAccess: false,
       canManageCollaborators: false,
+      canManageKnowledge: false,
       isOwner: false,
     })
   })

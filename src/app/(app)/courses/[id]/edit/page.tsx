@@ -4448,6 +4448,7 @@ function CourseEditor() {
         <CourseSettingsDrawer
           courseId={state.currentCourse.id}
           canManageCollaborators={state.currentCourse.permissions?.canManageCollaborators ?? false}
+          canManageTutor={state.currentCourse.permissions?.canManageKnowledge ?? false}
           open={settingsDrawerOpen}
           onOpenChange={setSettingsDrawerOpen}
           courseData={{
@@ -4457,6 +4458,7 @@ function CourseEditor() {
             workload: state.currentCourse.workload,
             layout: state.currentCourse.layout,
             bannerVideoUrl: state.currentCourse.bannerVideoUrl,
+            tutorEnabled: state.currentCourse.tutorEnabled ?? false,
           }}
           units={state.currentCourse.units || []}
           onSave={async (courseData, units) => {
@@ -4468,6 +4470,7 @@ function CourseEditor() {
                 workload: courseData.workload,
                 layout: courseData.layout,
                 bannerVideoUrl: courseData.bannerVideoUrl ?? '',
+                tutorEnabled: courseData.tutorEnabled ?? false,
               })
               await reorderUnits(units as Unit[])
             }

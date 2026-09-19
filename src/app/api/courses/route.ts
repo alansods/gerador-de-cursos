@@ -1,7 +1,13 @@
 import { NextRequest, NextResponse, after } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requireAuth, createErrorResponse, createSuccessResponse } from '@/lib/auth'
-import { assertCan, can, ForbiddenError, getCoursePermissions } from '@/lib/permissions'
+import {
+  assertCan,
+  can,
+  canManageKnowledge,
+  ForbiddenError,
+  getCoursePermissions,
+} from '@/lib/permissions'
 import { fetchCollaboration } from '@/lib/course-access'
 import { Course, Unit } from '@/types/course'
 import { logActivity } from '@/lib/activity-logger'
@@ -138,6 +144,7 @@ export async function GET(req: NextRequest) {
         category: course.category,
         layout: course.layout,
         bannerVideoUrl: course.bannerVideoUrl ?? undefined,
+        tutorEnabled: course.tutorEnabled,
         units: normalizedUnits,
         status: course.status,
         version: course.version,
@@ -250,6 +257,7 @@ export async function POST(req: NextRequest) {
       category: course.category,
       layout: course.layout,
       bannerVideoUrl: course.bannerVideoUrl ?? undefined,
+      tutorEnabled: course.tutorEnabled,
       units: upgradeUnits(course.units) as unknown as Unit[],
       status: course.status,
       version: course.version,
@@ -291,6 +299,7 @@ export async function PUT(req: NextRequest) {
       category,
       layout,
       bannerVideoUrl,
+      tutorEnabled,
       units,
       version,
     } = body
@@ -311,6 +320,13 @@ export async function PUT(req: NextRequest) {
     const collaboration = await fetchCollaboration(id, authResult.user.id)
 
     assertCan(authResult.user, 'course:update', { course: existingCourse, collaboration })
+
+    const togglesTutor =
+      typeof tutorEnabled === 'boolean' && tutorEnabled !== existingCourse.tutorEnabled
+
+    if (togglesTutor && !canManageKnowledge(authResult.user, existingCourse, collaboration)) {
+      throw new ForbiddenError('Você não tem permissão para ligar ou desligar o tutor deste curso')
+    }
 
     // Concurrency guard: reject a write based on a stale version
     if (typeof version === 'number' && version !== existingCourse.version) {
@@ -370,6 +386,7 @@ export async function PUT(req: NextRequest) {
         ...(category && { category }),
         ...(layout && { layout }),
         ...(bannerVideoUrl !== undefined && { bannerVideoUrl: bannerVideoUrl || null }),
+        ...(togglesTutor && { tutorEnabled }),
         ...(normalizedUnits !== undefined && {
           units: normalizedUnits as unknown as Prisma.InputJsonValue,
         }),
@@ -385,8 +402,8 @@ export async function PUT(req: NextRequest) {
       },
     })
 
-    if (normalizedUnits !== undefined) {
-      const savedUnits = normalizedUnits as unknown as Unit[]
+    if (course.tutorEnabled && (normalizedUnits !== undefined || togglesTutor)) {
+      const savedUnits = upgradeUnits(course.units) as unknown as Unit[]
       after(() =>
         reindexCourseContent(course.id, savedUnits).catch((error) =>
           console.error('Failed to reindex the course content for the tutor:', error)
@@ -415,6 +432,7 @@ export async function PUT(req: NextRequest) {
       category: course.category,
       layout: course.layout,
       bannerVideoUrl: course.bannerVideoUrl ?? undefined,
+      tutorEnabled: course.tutorEnabled,
       units: upgradeUnits(course.units) as unknown as Unit[],
       status: course.status,
       version: course.version,

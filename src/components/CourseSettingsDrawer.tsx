@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react'
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter } from '@/components/ui/sheet'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Checkbox } from '@/components/ui/checkbox'
 import { Textarea } from '@/components/ui/textarea'
 import {
   Select,
@@ -12,7 +13,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Settings } from 'lucide-react'
+import { Bot, Settings } from 'lucide-react'
 import { LayoutSelector } from '@/components/course/LayoutSelector'
 import { DEFAULT_LAYOUT_ID } from '@/components/course/layouts'
 import { TrailLayoutNotice } from '@/components/course/TrailLayoutNotice'
@@ -36,11 +37,13 @@ interface CourseData {
   workload: string
   layout?: string
   bannerVideoUrl?: string
+  tutorEnabled?: boolean
 }
 
 interface CourseSettingsDrawerProps {
   courseId?: string
   canManageCollaborators?: boolean
+  canManageTutor?: boolean
   open: boolean
   onOpenChange: (open: boolean) => void
   courseData: CourseData
@@ -51,6 +54,7 @@ interface CourseSettingsDrawerProps {
 export function CourseSettingsDrawer({
   courseId,
   canManageCollaborators = false,
+  canManageTutor = false,
   open,
   onOpenChange,
   courseData,
@@ -214,6 +218,38 @@ export function CourseSettingsDrawer({
               selected={localCourseData.layout || DEFAULT_LAYOUT_ID}
               previous={courseData.layout || DEFAULT_LAYOUT_ID}
             />
+
+            <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
+              <div className="flex items-start gap-3">
+                <Checkbox
+                  id="tutor-enabled"
+                  checked={Boolean(localCourseData.tutorEnabled)}
+                  onCheckedChange={(checked) =>
+                    setLocalCourseData({ ...localCourseData, tutorEnabled: checked === true })
+                  }
+                  disabled={!canManageTutor}
+                  className="mt-0.5"
+                />
+                <div className="space-y-1">
+                  <label
+                    htmlFor="tutor-enabled"
+                    className="flex items-center gap-2 text-sm font-medium text-gray-900 dark:text-gray-100 cursor-pointer"
+                  >
+                    <Bot className="h-4 w-4" />
+                    Tutor IA
+                  </label>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                    Mostra ao aluno um chat que tira dúvidas usando só o conteúdo deste curso. Ao
+                    ligar, o texto do curso é enviado ao Gemini para indexação.
+                  </p>
+                  {!canManageTutor && (
+                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                      Só o dono do curso, os colaboradores e administradores podem mudar esta opção.
+                    </p>
+                  )}
+                </div>
+              </div>
+            </div>
 
             {courseId && canManageCollaborators && (
               <div className="border-t border-gray-200 dark:border-gray-700 pt-6">

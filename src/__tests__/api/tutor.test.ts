@@ -133,7 +133,7 @@ describe('POST /api/tutor/[courseId]', () => {
   }
 
   beforeEach(() => {
-    mockPrisma.course.findUnique.mockResolvedValue({ id: 'curso-1' })
+    mockPrisma.course.findUnique.mockResolvedValue({ tutorEnabled: true })
     mockPrisma.$queryRaw.mockResolvedValue([passage('Unidade 1', 0.8)])
   })
 
@@ -164,6 +164,13 @@ describe('POST /api/tutor/[courseId]', () => {
     mockPrisma.course.findUnique.mockResolvedValue(null)
 
     expect((await ask({ question: 'O que é EPI?' })).status).toBe(404)
+  })
+
+  it('refuses a course with the tutor turned off, without calling the provider', async () => {
+    mockPrisma.course.findUnique.mockResolvedValue({ tutorEnabled: false })
+
+    expect((await ask({ question: 'O que é EPI?' })).status).toBe(403)
+    expect(provider.embedQuery).not.toHaveBeenCalled()
   })
 
   it('returns 503 when the provider fails', async () => {

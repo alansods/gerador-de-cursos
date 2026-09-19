@@ -142,6 +142,13 @@ A troca fica isolada num único módulo de provedor, para não exigir retrabalho
 - **Verificação da Fase 1** feita com o app de desenvolvimento ligado a um branch
   descartável do Neon (cópia da produção), via Playwright a 1280px e 375px: saudação pelo
   nome, resposta citando `apostila-seguranca.docx` e recusa de "Qual a capital da França?".
+- **Ligar ou desligar a chave segue a permissão dos documentos**, não a de edição: MANAGER
+  e GUEST editam o curso mas não mudam a chave (o painel a mostra desabilitada, e o `PUT`
+  responde 403 se tentarem). Ligar manda o texto do curso ao Gemini, então vale a mesma
+  regra de quem envia documentos. As permissões do curso ganharam `canManageKnowledge`.
+- **Achado fora do escopo:** o Salvar do painel "Sobre o curso" faz dois `PUT` seguidos
+  (dados do curso e depois `reorderUnits`), e o segundo sai com a versão antiga e volta 409.
+  Já acontecia antes do tutor; reordenar unidades pelo painel pode não estar sendo salvo.
 - **Rota de ingestão aceita até 4 MB** por enquanto, porque o arquivo passa pela função
   serverless (limite de 4,5 MB na Vercel). O envio via Blob fica para a Fase 2.
 - **MANAGER não envia documentos**, embora edite cursos: segue a decisão de permissão
@@ -191,7 +198,7 @@ Cada item só é marcado quando o critério de "Pronto quando" foi verificado.
 
 ### Fase 2 — produto
 
-- [ ] **Chave "Tutor IA" nas configurações do curso**
+- [x] **Chave "Tutor IA" nas configurações do curso**
   - Pronto quando: `Course.tutorEnabled` existe (migration nova, `@map`, padrão `false`);
     o painel "Sobre o curso" tem a chave e salva com o curso; o chat do preview só aparece
     com a chave ligada; `POST /api/tutor/[courseId]` recusa curso com a chave desligada;

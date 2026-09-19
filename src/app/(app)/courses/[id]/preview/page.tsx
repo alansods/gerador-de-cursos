@@ -57,7 +57,7 @@ export default function PreviewCoursePage() {
       {/* a mutation de status invalida a chave do curso, então o painel não
           precisa mais pedir o recarregamento */}
       <ReviewPanel course={course} />
-      <TutorChatPanel courseId={course.id} learnerName={user?.name} />
+      {course.tutorEnabled && <TutorChatPanel courseId={course.id} learnerName={user?.name} />}
     </PageTransition>
   )
 }

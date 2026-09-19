@@ -179,6 +179,7 @@ export function getCoursePermissions(
     canApprove: can(user, 'course:approve', ctx),
     canRequestAccess: can(user, 'course:requestAccess', ctx),
     canManageCollaborators: can(user, 'collaborator:manage', ctx),
+    canManageKnowledge: canManageKnowledge(user, course, collaboration),
     isOwner: Boolean(user && isOwner(user, course)),
   }
 }
