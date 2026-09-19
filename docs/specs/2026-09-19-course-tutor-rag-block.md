@@ -170,7 +170,7 @@ Cada item só é marcado quando o critério de "Pronto quando" foi verificado.
     resposta fixa sem chamar o LLM; acima dele devolve resposta em pt-BR com as fontes; o
     payload enviado ao LLM não contém dado do aluno; nada é persistido; testes cobrem os
     dois caminhos.
-- [ ] **Chat na página de preview**
+- [x] **Chat na página de preview**
   - Pronto quando: o chat saúda pelo nome montado no cliente, mostra a resposta e as
     fontes, e mostra "tutor indisponível" quando a rota falha.
 - [x] **Calibração do limiar**
