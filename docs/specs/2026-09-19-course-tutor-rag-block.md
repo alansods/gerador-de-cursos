@@ -172,6 +172,12 @@ A troca fica isolada num único módulo de provedor, para não exigir retrabalho
   os dois no modal → baixar (arquivo idêntico ao original, por hash) → excluir (o blob some
   do store); URL do blob sem assinatura responde 403. No celular, a tabela esconde Tipo,
   Trechos, Tamanho e data para as ações caberem.
+- **Ingestão assíncrona dispensada, com números.** Medido com PDFs sintéticos contra o
+  store privado e o branch descartável, no plano gratuito do Gemini: 200 páginas (500 KB,
+  200 trechos) em 7,7 s; 1.000 páginas (2 MB, 1.000 trechos) em 25,2 s, quase todo o tempo
+  em embeddings, sem nenhum 429. Um PDF de 20 MB costuma ter muita imagem e menos texto que
+  isso. A rota de indexação ganhou `maxDuration = 120`; a fila (`after()` + estado na fonte
+  - polling) só volta à mesa se aparecer 429 ou documento que passe desse tempo.
 - **O arquivo baixado leva o sufixo aleatório do Blob no nome**
   (`apostila-Uc0s….docx`): a URL assinada de leitura não aceita definir o
   `Content-Disposition`. Ficou assim por enquanto.
@@ -252,7 +258,7 @@ Cada item só é marcado quando o critério de "Pronto quando" foi verificado.
 - [x] **Extração de PDF**
   - Pronto quando: PDF com texto é indexado como o .docx; PDF sem texto (escaneado) gera
     status de erro legível, não um repositório vazio em silêncio.
-- [ ] **Ingestão assíncrona**
+- [x] **Ingestão assíncrona** — dispensada (ver "O que mudou na implementação")
   - Pronto quando: um PDF grande é indexado sem estourar o timeout da Vercel, com status
     acompanhado no molde do `SCORMJob`. Pode ser dispensado se a Fase 1 mostrar que não é
     necessário, com o motivo registrado.

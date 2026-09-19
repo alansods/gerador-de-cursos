@@ -24,6 +24,8 @@ async function discardUpload(pathname: string) {
   )
 }
 
+export const maxDuration = 120
+
 async function loadAccess(courseId: string, user: JWTPayload) {
   const { course, collaboration } = await fetchCourseWithCollaboration(courseId, user.id)
   return { course, canManage: Boolean(course) && canManageKnowledge(user, course, collaboration) }
