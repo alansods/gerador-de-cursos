@@ -109,6 +109,6 @@
     "previewLoading": "Carregando o documento...",
     "previewError": "Não foi possível visualizar o documento.",
     "previewImagesNote": "Visualização do texto; imagens do documento aparecem só no arquivo baixado.",
-    "uploadHint": "Arquivos .docx ou .pdf de até 20 MB; PDF digitalizado (só imagem) não é aceito."
+    "uploadHint": "Arquivos .docx ou .pdf de até 20 MB."
   }
 }

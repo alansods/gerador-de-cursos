@@ -109,6 +109,6 @@
     "previewLoading": "Loading the document...",
     "previewError": "Could not display the document.",
     "previewImagesNote": "Text preview; images in the document only show in the downloaded file.",
-    "uploadHint": ".docx or .pdf files up to 20 MB; scanned PDFs (images only) are not accepted."
+    "uploadHint": ".docx or .pdf files up to 20 MB."
   }
 }
