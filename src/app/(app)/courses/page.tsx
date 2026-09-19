@@ -737,7 +737,7 @@ function CoursesPageContent() {
                                 </DropdownMenuItem>
 
                                 <DropdownMenuItem asChild>
-                                  <Link href={`/courses/${course.id}/knowledge`}>
+                                  <Link href={`/courses/${course.slug || course.id}/knowledge`}>
                                     <FileText className="h-4 w-4" />
                                     Documentos do tutor
                                   </Link>

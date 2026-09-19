@@ -12,7 +12,7 @@ import {
   useUploadKnowledgeMutation,
 } from '@/hooks/queries/useTutorQuery'
 
-jest.mock('next/navigation', () => ({ useParams: () => ({ id: 'curso-1' }) }))
+jest.mock('next/navigation', () => ({ useParams: () => ({ id: 'seguranca-do-trabalho' }) }))
 jest.mock('sonner', () => ({ toast: { success: jest.fn(), error: jest.fn(), warning: jest.fn() } }))
 jest.mock('@/hooks/queries/useCourseQuery', () => ({ useCourseQuery: jest.fn() }))
 jest.mock('@/hooks/queries/useTutorQuery', () => ({
@@ -52,7 +52,9 @@ const sources = [
 ]
 
 function renderPage({ canManage = true, tutorEnabled = true } = {}) {
-  ;(useCourseQuery as jest.Mock).mockReturnValue({ course: { title: 'Segurança', tutorEnabled } })
+  ;(useCourseQuery as jest.Mock).mockReturnValue({
+    course: { id: 'curso-1', slug: 'seguranca-do-trabalho', title: 'Segurança', tutorEnabled },
+  })
   ;(useKnowledgeQuery as jest.Mock).mockReturnValue({
     sources,
     canManage,
@@ -81,6 +83,17 @@ function rowOf(text: string) {
 beforeEach(() => jest.clearAllMocks())
 
 describe('course knowledge page', () => {
+  it('opens by the course slug and talks to the API with the course id', () => {
+    renderPage()
+
+    expect(useCourseQuery).toHaveBeenCalledWith('seguranca-do-trabalho')
+    expect(useKnowledgeQuery).toHaveBeenCalledWith('curso-1')
+    expect(screen.getByRole('link', { name: /Voltar ao editor/ })).toHaveAttribute(
+      'href',
+      '/courses/seguranca-do-trabalho/edit'
+    )
+  })
+
   it('shows the sources in a table with passages and file size', () => {
     renderPage()
 

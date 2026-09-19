@@ -110,13 +110,14 @@ function DocumentPreviewDialog({
 
 export default function CourseKnowledgePage() {
   const params = useParams()
-  const courseId = params?.id as string
+  const courseRef = params?.id as string
   const t = useTranslations('courses.knowledge')
   const format = useFormatter()
   const fileInput = useRef<HTMLInputElement>(null)
   const [previewing, setPreviewing] = useState<KnowledgeSource | null>(null)
 
-  const { course } = useCourseQuery(courseId)
+  const { course } = useCourseQuery(courseRef)
+  const courseId = course?.id ?? ''
   const { sources, canManage, loading, error } = useKnowledgeQuery(courseId)
   const upload = useUploadKnowledgeMutation(courseId)
   const remove = useDeleteKnowledgeMutation(courseId)
@@ -161,7 +162,7 @@ export default function CourseKnowledgePage() {
       <div className="min-h-screen bg-background">
         <div className="max-w-7xl mx-auto space-y-6 px-4 sm:px-6 lg:px-8 py-8">
           <Button variant="ghost" asChild className="gap-2 px-2">
-            <Link href={`/courses/${courseId}/edit`}>
+            <Link href={`/courses/${courseRef}/edit`}>
               <ArrowLeft className="h-4 w-4" />
               {t('backToEditor')}
             </Link>

@@ -62,6 +62,7 @@ export function useKnowledgeQuery(courseId: string) {
       )
       return { sources: data.sources, canManage: Boolean(data.canManage) }
     },
+    enabled: Boolean(courseId),
     staleTime: 0,
   })
 

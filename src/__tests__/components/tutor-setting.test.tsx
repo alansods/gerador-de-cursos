@@ -17,6 +17,8 @@ function openDrawer({ tutorEnabled = false, canManageTutor = true } = {}) {
     <CourseSettingsDrawer
       open
       onOpenChange={jest.fn()}
+      courseId="curso-1"
+      courseSlug="seguranca-do-trabalho"
       canManageTutor={canManageTutor}
       courseData={{
         title: 'Segurança do Trabalho',
@@ -59,6 +61,15 @@ describe('Tutor IA setting', () => {
     await userEvent.click(screen.getByRole('checkbox', { name: 'Tutor IA' }))
 
     expect(screen.getByText(warning)).toBeInTheDocument()
+  })
+
+  it('links to the tutor documents by the course slug', () => {
+    openDrawer()
+
+    expect(screen.getByRole('link', { name: /Documentos do tutor/ })).toHaveAttribute(
+      'href',
+      '/courses/seguranca-do-trabalho/knowledge'
+    )
   })
 
   it('is disabled for someone who cannot manage the tutor', () => {

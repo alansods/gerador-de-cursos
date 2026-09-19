@@ -4446,6 +4446,7 @@ function CourseEditor() {
       {settingsDrawerMounted && (
         <CourseSettingsDrawer
           courseId={state.currentCourse.id}
+          courseSlug={state.currentCourse.slug}
           canManageCollaborators={state.currentCourse.permissions?.canManageCollaborators ?? false}
           canManageTutor={state.currentCourse.permissions?.canManageKnowledge ?? false}
           open={settingsDrawerOpen}

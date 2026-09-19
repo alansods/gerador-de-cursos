@@ -43,6 +43,7 @@ interface CourseData {
 
 interface CourseSettingsDrawerProps {
   courseId?: string
+  courseSlug?: string
   canManageCollaborators?: boolean
   canManageTutor?: boolean
   open: boolean
@@ -54,6 +55,7 @@ interface CourseSettingsDrawerProps {
 
 export function CourseSettingsDrawer({
   courseId,
+  courseSlug,
   canManageCollaborators = false,
   canManageTutor = false,
   open,
@@ -256,7 +258,7 @@ export function CourseSettingsDrawer({
                   )}
                   {courseId && (
                     <Link
-                      href={`/courses/${courseId}/knowledge`}
+                      href={`/courses/${courseSlug || courseId}/knowledge`}
                       className="inline-flex items-center gap-1 text-xs font-medium text-blue-600 hover:underline dark:text-blue-400"
                     >
                       <FileText className="h-3.5 w-3.5" />
