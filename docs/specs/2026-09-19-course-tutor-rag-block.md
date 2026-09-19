@@ -49,7 +49,7 @@ Não existe RAG que dispense mostrar à IA os trechos usados na resposta:
 | Permissão             | Enviar, excluir e ligar/desligar a chave: dono, colaboradores e ADMIN. Visualizar e baixar: qualquer usuário logado            |
 | Nome do aluno         | Usado só no cliente, na saudação; **nunca** vai no payload do LLM                                                              |
 | Fora do escopo        | Similaridade abaixo do limiar → resposta fixa, sem chamar o LLM                                                                |
-| Grounding             | Prompt manda responder só com o contexto e citar a fonte (arquivo, página ou unidade)                                          |
+| Grounding             | Prompt manda responder só com o contexto e citar a fonte; a API devolve as fontes, mas o chat não as mostra ao aluno           |
 | Histórico             | Nenhuma pergunta ou resposta é persistida                                                                                      |
 | Idioma                | Respostas sempre em pt-BR; textos da página de documentos em pt-BR e en                                                        |
 | Acesso à rota pública | Token por curso embutido no pacote, CORS aberto só nessa rota, rate limit, teto (pendente)                                     |
@@ -181,6 +181,10 @@ A troca fica isolada num único módulo de provedor (`src/lib/tutor/provider.ts`
   e GUEST editam o curso mas não mudam a chave (o painel a mostra desabilitada e o `PUT`
   responde 403). Ligar manda o texto do curso ao Gemini. As permissões do curso ganharam
   `canManageKnowledge`.
+
+- **O chat não mostra as fontes ao aluno**, a pedido do usuário. A API continua devolvendo
+  `sources` (útil para depurar e para a calibração), e o `splitCitation` continua tirando a
+  linha "Fonte:" do texto.
 
 ### Documentos e armazenamento
 

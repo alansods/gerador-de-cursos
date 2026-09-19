@@ -15,7 +15,6 @@ interface Message {
   id: number
   role: 'learner' | 'tutor'
   text: string
-  sources?: string[]
   failed?: boolean
 }
 
@@ -62,7 +61,7 @@ export function TutorChatPanel({ courseId, learnerName }: Props) {
 
     try {
       const reply = await ask.mutateAsync(text)
-      append({ role: 'tutor', text: reply.answer, sources: reply.sources })
+      append({ role: 'tutor', text: reply.answer })
     } catch {
       append({ role: 'tutor', text: UNAVAILABLE_MESSAGE, failed: true })
     }
@@ -122,11 +121,6 @@ export function TutorChatPanel({ courseId, learnerName }: Props) {
                 }
               >
                 <p className="whitespace-pre-wrap">{message.text}</p>
-                {message.sources && message.sources.length > 0 && (
-                  <p className="mt-2 text-xs text-muted-foreground">
-                    Fontes: {message.sources.join('; ')}
-                  </p>
-                )}
               </div>
             ))}
 

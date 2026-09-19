@@ -42,7 +42,7 @@ describe('greeting', () => {
 })
 
 describe('TutorChatPanel', () => {
-  it('shows the answer with its sources and sends only the question', async () => {
+  it('shows the answer without the sources and sends only the question', async () => {
     respond(200, {
       success: true,
       answer: 'EPI é equipamento de proteção individual.',
@@ -54,7 +54,8 @@ describe('TutorChatPanel', () => {
     await openAndAsk('O que é EPI?')
 
     expect(await screen.findByText('EPI é equipamento de proteção individual.')).toBeInTheDocument()
-    expect(screen.getByText('Fontes: Unidade 1 — Segurança')).toBeInTheDocument()
+    expect(screen.queryByText(/Fontes:/)).toBeNull()
+    expect(screen.queryByText(/Unidade 1 — Segurança/)).toBeNull()
     expect(screen.getByText(/Olá, Maria!/)).toBeInTheDocument()
 
     const [url, init] = fetchMock.mock.calls[0]
