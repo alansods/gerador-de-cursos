@@ -198,6 +198,7 @@ export interface Block {
   videoSource?: 'youtube' | 'file'
   videoUrl?: string
   videoTitle?: string
+  videoDescription?: string
   // interactive-video-specific
   videoQuestions?: VideoQuestion[]
   // learning-objectives-specific

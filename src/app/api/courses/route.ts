@@ -19,6 +19,7 @@ import { reindexCourseContent } from '@/lib/tutor/knowledge'
 import { courseDocumentPathnames, deleteStoredDocuments } from '@/lib/tutor/document-access'
 import { generateTutorToken } from '@/lib/tutor/public-access'
 import { normalizeObjectives } from '@/lib/course-objectives'
+import { limitVideoDescription } from '@/lib/video-lessons'
 
 /** Status cuja revisão deixa de valer assim que o conteúdo muda. */
 const REVIEW_INVALIDATED_ON_EDIT: CourseStatus[] = ['APPROVED', 'REJECTED']
@@ -217,6 +218,7 @@ export async function POST(req: NextRequest) {
       const unitId = unit.id || `unidade-${Date.now()}-${index}`
       const normalizedContent = (unit.blocks || []).map((item: UnitContent, itemIndex: number) => ({
         ...item,
+        ...limitVideoDescription(item.videoDescription),
         id: item.id || `conteudo-${Date.now()}-${index}-${itemIndex}`,
         order: item.order ?? itemIndex,
         type: item.type || 'paragraph',
@@ -367,6 +369,7 @@ export async function PUT(req: NextRequest) {
         const normalizedContent = (unit.blocks || []).map(
           (item: UnitContent, itemIndex: number) => ({
             ...item,
+            ...limitVideoDescription(item.videoDescription),
             id: item.id || `conteudo-${Date.now()}-${index}-${itemIndex}`,
             order: item.order ?? itemIndex,
             type: item.type || 'paragraph',

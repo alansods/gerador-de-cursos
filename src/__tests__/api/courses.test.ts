@@ -736,6 +736,36 @@ describe('API - Courses', () => {
       expect((await send({ objectives: ['Um', 'Dois'] })).objectives).toEqual(['Um', 'Dois'])
       expect((await send({ title: 'Outro' })).objectives).toBeUndefined()
     })
+
+    it('cuts a lesson description longer than the limit when saving units', async () => {
+      mockPrisma.course.findUnique.mockResolvedValueOnce(storedCourse as never)
+      mockPrisma.course.update.mockResolvedValueOnce(storedCourse as never)
+
+      const request = new NextRequest('http://localhost:3000/api/courses', {
+        method: 'PUT',
+        headers: await authHeaders(),
+        body: JSON.stringify({
+          id: '1',
+          version: 0,
+          units: [
+            {
+              id: 'u1',
+              title: 'Módulo',
+              blocks: [
+                { id: 'b1', type: 'video', videoTitle: 'Aula', videoDescription: 'a'.repeat(2500) },
+              ],
+            },
+          ],
+        }),
+      })
+
+      await updateCursoHandler(request)
+      const saved = mockPrisma.course.update.mock.calls[0][0].data.units as {
+        blocks: { videoDescription: string }[]
+      }[]
+
+      expect(saved[0].blocks[0].videoDescription).toHaveLength(2000)
+    })
   })
 
   describe('DELETE /api/courses', () => {
