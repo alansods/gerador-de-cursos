@@ -184,7 +184,7 @@ Cada item só é marcado quando o critério de "Pronto quando" foi verificado.
     `allowedBlockTypes`, `blocksOutsideLayout` e `canUseLayout`, e
     `src/lib/video-lessons.ts` tem `deriveLessons`, `lessonsMissingVideo` e a regra de
     conclusão, todos com testes.
-- [ ] **Regra no `useScormProgress`**
+- [x] **Regra no `useScormProgress`**
   - Pronto quando: `video-lessons` usa `steps` por unidade, `completeStep` marca a aula, o
     curso fica `completed` com todas marcadas, módulo sem aulas não trava a conclusão, e
     os testes de `trail` e `classic` seguem verdes.
