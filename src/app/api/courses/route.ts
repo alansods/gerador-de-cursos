@@ -20,9 +20,12 @@ import { courseDocumentPathnames, deleteStoredDocuments } from '@/lib/tutor/docu
 import { generateTutorToken } from '@/lib/tutor/public-access'
 import { normalizeObjectives } from '@/lib/course-objectives'
 import { limitVideoDescription } from '@/lib/video-lessons'
+import { blocksOutsideLayout } from '@/lib/layout-blocks'
 
 /** Status cuja revisão deixa de valer assim que o conteúdo muda. */
 const REVIEW_INVALIDATED_ON_EDIT: CourseStatus[] = ['APPROVED', 'REJECTED']
+
+const LAYOUT_BLOCKS_ERROR = 'Este layout aceita apenas aulas em vídeo'
 
 type UnitContent = {
   id?: string
@@ -233,6 +236,10 @@ export async function POST(req: NextRequest) {
     })
     const normalizedUnits = slugifyUnits(mappedUnits)
 
+    if (blocksOutsideLayout(normalizedUnits as unknown as Unit[], layout) > 0) {
+      return createErrorResponse(LAYOUT_BLOCKS_ERROR, 400)
+    }
+
     // Build a unique slug from the title
     const slug = await generateUniqueSlug(title)
 
@@ -384,6 +391,12 @@ export async function PUT(req: NextRequest) {
         }
       })
       normalizedUnits = slugifyUnits(mappedUnits)
+    }
+
+    const layoutToSave = layout || existingCourse.layout
+    const unitsToSave = (normalizedUnits ?? upgradeUnits(existingCourse.units)) as unknown as Unit[]
+    if (blocksOutsideLayout(unitsToSave, layoutToSave) > 0) {
+      return createErrorResponse(LAYOUT_BLOCKS_ERROR, 400)
     }
 
     // Regenerate the slug when the title changed

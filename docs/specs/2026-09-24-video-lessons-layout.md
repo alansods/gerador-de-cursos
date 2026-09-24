@@ -188,7 +188,7 @@ Cada item só é marcado quando o critério de "Pronto quando" foi verificado.
   - Pronto quando: `video-lessons` usa `steps` por unidade, `completeStep` marca a aula, o
     curso fica `completed` com todas marcadas, módulo sem aulas não trava a conclusão, e
     os testes de `trail` e `classic` seguem verdes.
-- [ ] **API recusa bloco fora do layout**
+- [x] **API recusa bloco fora do layout**
   - Pronto quando: salvar um curso `video-lessons` com um parágrafo devolve 400, com
     teste.
 
