@@ -649,6 +649,95 @@ describe('API - Courses', () => {
     })
   })
 
+  describe('course objectives', () => {
+    const storedCourse = {
+      id: '1',
+      title: 'Curso',
+      description: 'Desc',
+      workload: '40h',
+      modality: 'Online',
+      category: 'Tecnologia',
+      units: [],
+      layout: 'video-lessons',
+      objectives: ['Criar uma API'],
+      slug: null,
+      status: 'IN_PROGRESS',
+      version: 0,
+      ownerId: '1',
+      owner: { id: '1', name: 'Test User' },
+      reviewedById: null,
+      reviewedAt: null,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    }
+
+    it('stores the cleaned objectives list on create and returns it', async () => {
+      mockPrisma.course.findUnique.mockResolvedValueOnce(null as never)
+      mockPrisma.course.create.mockResolvedValueOnce(storedCourse as never)
+
+      const request = new NextRequest('http://localhost:3000/api/courses', {
+        method: 'POST',
+        headers: await authHeaders(),
+        body: JSON.stringify({
+          title: 'Curso',
+          description: 'Desc',
+          workload: '40h',
+          modality: 'Online',
+          category: 'Tecnologia',
+          units: [],
+          objectives: ['  Criar uma API  ', '', 42, 'x'.repeat(200)],
+        }),
+      })
+
+      const response = await createCursoHandler(request)
+      const data = await response.json()
+      const saved = mockPrisma.course.create.mock.calls[0][0].data
+
+      expect(response.status).toBe(201)
+      expect(saved.objectives).toEqual(['Criar uma API', 'x'.repeat(160)])
+      expect(data.course.objectives).toEqual(['Criar uma API'])
+    })
+
+    it('defaults to an empty list on create when none is sent', async () => {
+      mockPrisma.course.findUnique.mockResolvedValueOnce(null as never)
+      mockPrisma.course.create.mockResolvedValueOnce(storedCourse as never)
+
+      const request = new NextRequest('http://localhost:3000/api/courses', {
+        method: 'POST',
+        headers: await authHeaders(),
+        body: JSON.stringify({
+          title: 'Curso',
+          description: 'Desc',
+          workload: '40h',
+          modality: 'Online',
+          category: 'Tecnologia',
+          units: [],
+        }),
+      })
+
+      await createCursoHandler(request)
+
+      expect(mockPrisma.course.create.mock.calls[0][0].data.objectives).toEqual([])
+    })
+
+    it('updates objectives only when they are sent', async () => {
+      const send = async (body: Record<string, unknown>) => {
+        mockPrisma.course.findUnique.mockResolvedValueOnce(storedCourse as never)
+        mockPrisma.course.update.mockResolvedValueOnce(storedCourse as never)
+        const request = new NextRequest('http://localhost:3000/api/courses', {
+          method: 'PUT',
+          headers: await authHeaders(),
+          body: JSON.stringify({ id: '1', version: 0, ...body }),
+        })
+        await updateCursoHandler(request)
+        return mockPrisma.course.update.mock.calls.at(-1)?.[0]?.data
+      }
+
+      expect((await send({ objectives: ['Um', 'Dois'] })).objectives).toEqual(['Um', 'Dois'])
+      expect((await send({ title: 'Outro' })).objectives).toBeUndefined()
+    })
+  })
+
   describe('DELETE /api/courses', () => {
     it('deletes a course with a valid session', async () => {
       // Arrange

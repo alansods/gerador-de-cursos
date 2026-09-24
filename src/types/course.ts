@@ -264,6 +264,7 @@ export interface Course {
   category: string
   layout?: string
   bannerVideoUrl?: string
+  objectives?: string[]
   tutorEnabled?: boolean
   status?: CourseStatus
   version?: number

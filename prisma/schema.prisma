@@ -81,6 +81,7 @@ model Course {
   category         String                  @map("categoria")
   layout           String                  @default("classic")
   bannerVideoUrl   String?                 @map("banner_video_url")
+  objectives       String[]                @default([])
   tutorEnabled     Boolean                 @default(false) @map("tutor_enabled")
   tutorToken       String?                 @unique @map("tutor_token")
   units            Json                    @default("[]") @map("unidades")

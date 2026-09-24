@@ -72,6 +72,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       category: course.category,
       layout: course.layout,
       bannerVideoUrl: course.bannerVideoUrl ?? undefined,
+      objectives: course.objectives,
       tutorEnabled: course.tutorEnabled,
       units: normalizedUnits,
       status: course.status,
