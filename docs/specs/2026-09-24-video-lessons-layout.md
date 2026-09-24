@@ -40,8 +40,10 @@ JetBrains Mono (rótulos).
   `video`, e cada um é uma aula, na ordem dos blocos. O módulo usa o título e a descrição
   da unidade.
 - **Estrutura fixa, garantida em três lugares:**
-  - Catálogo: `LayoutMeta` ganha `allowedBlockTypes?: BlockType[]`; `video-lessons`
-    declara `['video']`. Os outros layouts não declaram (tudo liberado).
+  - Catálogo: `src/lib/layout-blocks.ts` diz quais tipos de bloco cada layout aceita
+    (`video-lessons` → `['video']`; os outros não declaram, tudo liberado). Fica em `lib`,
+    e não só no `meta` do layout, porque a rota da API precisa da regra sem importar os
+    players React; o `LayoutMeta` ganha `allowedBlockTypes?` lido dali para a UI.
   - Editor: neste layout o botão "Adicionar conteúdo" vira "Adicionar aula" e abre direto
     o formulário do vídeo, sem o modal de tipos. Reordenar, editar e excluir aulas
     continua; unidades (módulos) continuam sendo criadas e removidas normalmente.
@@ -103,10 +105,11 @@ JetBrains Mono (rótulos).
 
 ### Regras do layout
 
+- `src/lib/layout-blocks.ts`: `allowedBlockTypes(layoutId)`,
+  `blocksOutsideLayout(units, layoutId)` e `canUseLayout(course, layoutId)`.
 - `src/components/course/layouts/types.ts`: `allowedBlockTypes?` em `LayoutMeta`.
 - `src/lib/video-lessons.ts`: `deriveLessons(unit)` (vídeos da unidade com índice do
-  bloco), `videoLessonsCompletionRule(course)`, `canUseLayout(course, layoutId)`,
-  `lessonsMissingVideo(course)`.
+  bloco), `videoLessonsCompletionRule(course)` e `lessonsMissingVideo(course)`.
 - `src/hooks/useScormProgress.ts:61-64`: `trail` → `trailCompletionRule`,
   `video-lessons` → `videoLessonsCompletionRule`, resto → `units`.
 
@@ -170,16 +173,17 @@ Cada item só é marcado quando o critério de "Pronto quando" foi verificado.
   - Pronto quando: migration aditiva validada num branch descartável do Neon, tipo
     atualizado, API grava e devolve a lista com limpeza e limites, com teste em
     `api/courses.test.ts`.
-- [ ] **`videoDescription` no bloco de vídeo**
+- [x] **`videoDescription` no bloco de vídeo**
   - Pronto quando: o tipo tem o campo, o limite de 2.000 caracteres é aplicado e o
     pacote exportado traz o campo e os objetivos no JSON lido pelo player.
 
 ### Fase 2 — Regras do layout
 
-- [ ] **`allowedBlockTypes` e funções de apoio**
-  - Pronto quando: `LayoutMeta` tem o campo, `src/lib/video-lessons.ts` tem
-    `deriveLessons`, `canUseLayout`, `lessonsMissingVideo` e a regra de conclusão, todos
-    com testes.
+- [x] **`allowedBlockTypes` e funções de apoio**
+  - Pronto quando: `LayoutMeta` tem o campo, `src/lib/layout-blocks.ts` tem
+    `allowedBlockTypes`, `blocksOutsideLayout` e `canUseLayout`, e
+    `src/lib/video-lessons.ts` tem `deriveLessons`, `lessonsMissingVideo` e a regra de
+    conclusão, todos com testes.
 - [ ] **Regra no `useScormProgress`**
   - Pronto quando: `video-lessons` usa `steps` por unidade, `completeStep` marca a aula, o
     curso fica `completed` com todas marcadas, módulo sem aulas não trava a conclusão, e

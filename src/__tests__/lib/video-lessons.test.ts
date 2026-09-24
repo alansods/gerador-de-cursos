@@ -6,8 +6,82 @@ import * as os from 'os'
 import * as path from 'path'
 import JSZip from 'jszip'
 import { generateSCORMFromPlayerDist } from '@/lib/scorm-service'
-import { MAX_VIDEO_DESCRIPTION_LENGTH, limitVideoDescription } from '@/lib/video-lessons'
-import type { Course } from '@/types/course'
+import {
+  MAX_VIDEO_DESCRIPTION_LENGTH,
+  deriveLessons,
+  lessonsMissingVideo,
+  limitVideoDescription,
+  videoLessonsCompletionRule,
+} from '@/lib/video-lessons'
+import { calculateProgress, completeStep, createEmptyState } from '@/lib/scorm-progress'
+import type { Block, Course, Unit } from '@/types/course'
+
+const video = (videoTitle = '', videoUrl = 'https://youtu.be/abc123def45') =>
+  ({ id: videoTitle, type: 'video', videoTitle, videoUrl }) as Block
+
+const moduleOf = (title: string, blocks: Block[]) => ({ id: title, title, blocks }) as Unit
+
+describe('deriveLessons', () => {
+  it('turns every video block into a lesson, in block order', () => {
+    const lessons = deriveLessons(moduleOf('Módulo', [video('Aula A'), video('Aula B')]))
+
+    expect(lessons.map((l) => [l.title, l.blockIndex])).toEqual([
+      ['Aula A', 0],
+      ['Aula B', 1],
+    ])
+  })
+
+  it('names an untitled lesson after the module and its position', () => {
+    const lessons = deriveLessons(moduleOf('Fundamentos', [video('Aula A'), video('  ')]))
+
+    expect(lessons[1].title).toBe('Fundamentos — Aula 2')
+  })
+
+  it('ignores blocks that are not videos and returns nothing for an empty module', () => {
+    const stray = { id: 'p', type: 'paragraph', content: 'x' } as Block
+
+    expect(deriveLessons(moduleOf('M', [stray, video('Aula')]))).toHaveLength(1)
+    expect(deriveLessons(moduleOf('M', []))).toEqual([])
+  })
+})
+
+describe('videoLessonsCompletionRule', () => {
+  const course = {
+    units: [
+      moduleOf('M1', [video('A'), video('B')]),
+      moduleOf('M2', []),
+      moduleOf('M3', [video('C')]),
+    ],
+  }
+  const rule = videoLessonsCompletionRule(course)
+
+  it('counts one step per lesson in each module', () => {
+    expect(rule).toEqual({ kind: 'steps', stepCounts: [2, 0, 1] })
+  })
+
+  it('completes the course when every lesson is marked, even with an empty module', () => {
+    let state = createEmptyState(3)
+    state = completeStep(state, 0, 0)
+    state = completeStep(state, 0, 1)
+    expect(calculateProgress(state, rule).completed).toBe(false)
+
+    state = completeStep(state, 2, 0)
+    expect(calculateProgress(state, rule)).toMatchObject({ completed: true, percentage: 100 })
+  })
+})
+
+describe('lessonsMissingVideo', () => {
+  it('lists the lessons whose video was not added yet', () => {
+    const course = {
+      units: [moduleOf('M1', [video('A'), video('B', '')]), moduleOf('M2', [video('C', '   ')])],
+    }
+
+    expect(lessonsMissingVideo(course)).toEqual([
+      { unitIndex: 0, lessonIndex: 1, unitTitle: 'M1', lessonTitle: 'B' },
+      { unitIndex: 1, lessonIndex: 0, unitTitle: 'M2', lessonTitle: 'C' },
+    ])
+  })
+})
 
 describe('limitVideoDescription', () => {
   it('keeps a description within the limit and cuts a longer one', () => {
