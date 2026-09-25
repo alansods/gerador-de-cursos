@@ -326,6 +326,9 @@ Cada item só é marcado quando o critério de "Pronto quando" foi verificado.
 - [ ] **E2E do pacote**
   - Pronto quando: fixture e `describe` novos em `e2e/scorm-progress.spec.ts` cobrem
     conclusão, retomada e `lesson_status`, verdes no chromium.
-- [ ] **Build e testes**
+- [x] **Build e testes**
   - Pronto quando: `pnpm build` limpo, `pnpm test` verde e um curso criado, editado, visto
     no preview e exportado (após `pnpm build:player`) no layout novo.
+  - Verificado (2026-09-25): `pnpm build` terminou sem erro (só o aviso de tamanho de chunk
+    do player, já existente); `pnpm test` com 92 suítes e 1.080 testes verdes; teste manual
+    feito pelo autor com o curso "Ruby on Rails para iniciantes" (10 aulas do YouTube).
