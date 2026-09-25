@@ -20,7 +20,7 @@ import { courseDocumentPathnames, deleteStoredDocuments } from '@/lib/tutor/docu
 import { generateTutorToken } from '@/lib/tutor/public-access'
 import { normalizeObjectives } from '@/lib/course-objectives'
 import { limitVideoDescription } from '@/lib/video-lessons'
-import { blocksOutsideLayout } from '@/lib/layout-blocks'
+import { blocksOutsideLayout, isLayoutLocked, LAYOUT_LOCKED_REASON } from '@/lib/layout-blocks'
 
 /** Status cuja revisão deixa de valer assim que o conteúdo muda. */
 const REVIEW_INVALIDATED_ON_EDIT: CourseStatus[] = ['APPROVED', 'REJECTED']
@@ -394,6 +394,9 @@ export async function PUT(req: NextRequest) {
     }
 
     const layoutToSave = layout || existingCourse.layout
+    if (isLayoutLocked(existingCourse.layout) && layoutToSave !== existingCourse.layout) {
+      return createErrorResponse(LAYOUT_LOCKED_REASON, 400)
+    }
     const unitsToSave = (normalizedUnits ?? upgradeUnits(existingCourse.units)) as unknown as Unit[]
     if (blocksOutsideLayout(unitsToSave, layoutToSave) > 0) {
       return createErrorResponse(LAYOUT_BLOCKS_ERROR, 400)

@@ -36,3 +36,9 @@ export function onlyBlockType(layoutId: string | undefined): BlockType | null {
   const allowed = allowedBlockTypes(layoutId)
   return allowed?.length === 1 ? allowed[0] : null
 }
+
+export const LAYOUT_LOCKED_REASON = 'Cursos no layout Aulas em vídeo não podem mudar de layout.'
+
+export function isLayoutLocked(layoutId: string | undefined | null): boolean {
+  return layoutId === VIDEO_LESSONS_LAYOUT_ID
+}

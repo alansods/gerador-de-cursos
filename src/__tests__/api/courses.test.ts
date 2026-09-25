@@ -827,6 +827,23 @@ describe('API - Courses', () => {
       expect(mockPrisma.course.update).not.toHaveBeenCalled()
     })
 
+    it('refuses to move a video lessons course to another layout', async () => {
+      mockPrisma.course.findUnique.mockResolvedValueOnce(courseIn('video-lessons') as never)
+
+      const request = new NextRequest('http://localhost:3000/api/courses', {
+        method: 'PUT',
+        headers: await authHeaders(),
+        body: JSON.stringify({ id: '1', version: 0, layout: 'classic' }),
+      })
+
+      const response = await updateCursoHandler(request)
+      const body = await response.json()
+
+      expect(response.status).toBe(400)
+      expect(body.error).toBe('Cursos no layout Aulas em vídeo não podem mudar de layout.')
+      expect(mockPrisma.course.update).not.toHaveBeenCalled()
+    })
+
     it('refuses to switch a course with other blocks to video lessons', async () => {
       mockPrisma.course.findUnique.mockResolvedValueOnce(courseIn('classic') as never)
 

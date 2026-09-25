@@ -62,6 +62,13 @@ layout é sempre escuro, independente do tema do app.
   em vídeo; o curso tem N blocos de outros tipos"). Nada é apagado nem escondido. O wizard
   (`StepLayout`) não precisa da trava: o layout é escolhido antes de o curso existir, e a
   geração já sai só com vídeos.
+- **Curso em "Aulas em vídeo" não muda de layout.** Depois de salvo neste layout, o curso
+  fica preso a ele: no `LayoutSelector` as outras opções aparecem desabilitadas com o
+  motivo ("Cursos no layout Aulas em vídeo não podem mudar de layout"), e o `PUT
+/api/courses` recusa a troca com 400. A regra vale para o layout salvo no banco
+  (`isLayoutLocked` em `src/lib/layout-blocks.ts`), não para a escolha ainda não salva no
+  painel. A trava é só de saída: um curso de outro layout, só com vídeos, ainda pode
+  entrar neste.
 - **IA e .docx geram só a estrutura.** Com o layout `video-lessons`, o prompt pede
   módulos com aulas `video` de `videoTitle` e `videoDescription`, `videoUrl` vazio. A
   única exceção é um link de vídeo que apareça literalmente no documento: esse é
@@ -217,6 +224,10 @@ Cada item só é marcado quando o critério de "Pronto quando" foi verificado.
 - [x] **API recusa bloco fora do layout**
   - Pronto quando: salvar um curso `video-lessons` com um parágrafo devolve 400, com
     teste.
+- [x] **Layout travado depois de salvo**
+  - Pronto quando: `PUT /api/courses` de um curso salvo em `video-lessons` com outro
+    layout devolve 400; no painel "Sobre o curso" desse curso as outras opções aparecem
+    desabilitadas com o motivo; os dois com teste.
 
 ### Fase 3 — Editor
 

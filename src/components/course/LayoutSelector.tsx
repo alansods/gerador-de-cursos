@@ -2,7 +2,7 @@
 
 import { Check } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { blocksOutsideLayout, type LayoutUnits } from '@/lib/layout-blocks'
+import { blocksOutsideLayout, LAYOUT_LOCKED_REASON, type LayoutUnits } from '@/lib/layout-blocks'
 import { layoutRegistry } from './layouts'
 import { LayoutThumbnail } from './new/LayoutThumbnail'
 
@@ -10,10 +10,17 @@ interface LayoutSelectorProps {
   value: string
   onChange: (layoutId: string) => void
   units?: LayoutUnits
+  locked?: boolean
   className?: string
 }
 
-export function LayoutSelector({ value, onChange, units, className }: LayoutSelectorProps) {
+export function LayoutSelector({
+  value,
+  onChange,
+  units,
+  locked = false,
+  className,
+}: LayoutSelectorProps) {
   const layouts = Object.values(layoutRegistry)
 
   return (
@@ -21,7 +28,8 @@ export function LayoutSelector({ value, onChange, units, className }: LayoutSele
       {layouts.map(({ meta }) => {
         const isSelected = value === meta.id
         const outside = isSelected ? 0 : blocksOutsideLayout(units, meta.id)
-        const disabled = outside > 0
+        const lockedOut = locked && !isSelected
+        const disabled = lockedOut || outside > 0
         return (
           <button
             key={meta.id}
@@ -49,9 +57,11 @@ export function LayoutSelector({ value, onChange, units, className }: LayoutSele
             <p className="text-xs text-gray-500 dark:text-gray-400">{meta.description}</p>
             {disabled && (
               <p className="mt-2 text-xs font-medium text-amber-700 dark:text-amber-400">
-                {`Este layout aceita apenas aulas em vídeo; o curso tem ${outside} ${
-                  outside === 1 ? 'bloco' : 'blocos'
-                } de outros tipos.`}
+                {lockedOut
+                  ? LAYOUT_LOCKED_REASON
+                  : `Este layout aceita apenas aulas em vídeo; o curso tem ${outside} ${
+                      outside === 1 ? 'bloco' : 'blocos'
+                    } de outros tipos.`}
               </p>
             )}
           </button>

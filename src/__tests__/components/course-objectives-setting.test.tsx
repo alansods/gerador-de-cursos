@@ -7,8 +7,10 @@ jest.mock('@/components/collaboration/ManageCollaborators', () => ({
   ManageCollaborators: () => null,
 }))
 
+const mockLayoutSelector = jest.fn<null, [{ locked?: boolean }]>(() => null)
+
 jest.mock('@/components/course/LayoutSelector', () => ({
-  LayoutSelector: () => null,
+  LayoutSelector: (props: { locked?: boolean }) => mockLayoutSelector(props),
 }))
 
 function openDrawer(layout: string, objectives: string[] = [], onSave = jest.fn()) {
@@ -31,6 +33,14 @@ function openDrawer(layout: string, objectives: string[] = [], onSave = jest.fn(
 }
 
 describe('course objectives setting', () => {
+  it('locks the layout choice only for a course saved in video lessons', () => {
+    openDrawer('video-lessons')
+    expect(mockLayoutSelector).toHaveBeenLastCalledWith(expect.objectContaining({ locked: true }))
+
+    openDrawer('classic')
+    expect(mockLayoutSelector).toHaveBeenLastCalledWith(expect.objectContaining({ locked: false }))
+  })
+
   it('shows the notice and the objectives only in the video lessons layout', () => {
     openDrawer('classic')
 

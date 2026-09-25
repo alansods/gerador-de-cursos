@@ -21,7 +21,7 @@ import { TrailLayoutNotice } from '@/components/course/TrailLayoutNotice'
 import { VideoLessonsLayoutNotice } from '@/components/course/VideoLessonsLayoutNotice'
 import { CourseObjectivesField } from '@/components/course/CourseObjectivesField'
 import { normalizeObjectives } from '@/lib/course-objectives'
-import { VIDEO_LESSONS_LAYOUT_ID } from '@/lib/layout-blocks'
+import { isLayoutLocked, VIDEO_LESSONS_LAYOUT_ID } from '@/lib/layout-blocks'
 import { FormField } from '@/components/ui/form-field'
 import { COURSE_CATEGORIES } from '@/lib/constants'
 import { isValidYouTubeUrl, extractYouTubeId } from '@/lib/youtube'
@@ -230,6 +230,7 @@ export function CourseSettingsDrawer({
                 value={localCourseData.layout || DEFAULT_LAYOUT_ID}
                 onChange={(layout) => setLocalCourseData({ ...localCourseData, layout })}
                 units={localUnits}
+                locked={isLayoutLocked(courseData.layout)}
               />
             </FormField>
 
