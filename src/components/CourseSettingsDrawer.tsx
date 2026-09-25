@@ -18,6 +18,10 @@ import { Bot, FileText, Settings } from 'lucide-react'
 import { LayoutSelector } from '@/components/course/LayoutSelector'
 import { DEFAULT_LAYOUT_ID } from '@/components/course/layouts'
 import { TrailLayoutNotice } from '@/components/course/TrailLayoutNotice'
+import { VideoLessonsLayoutNotice } from '@/components/course/VideoLessonsLayoutNotice'
+import { CourseObjectivesField } from '@/components/course/CourseObjectivesField'
+import { normalizeObjectives } from '@/lib/course-objectives'
+import { VIDEO_LESSONS_LAYOUT_ID } from '@/lib/layout-blocks'
 import { FormField } from '@/components/ui/form-field'
 import { COURSE_CATEGORIES } from '@/lib/constants'
 import { isValidYouTubeUrl, extractYouTubeId } from '@/lib/youtube'
@@ -39,6 +43,7 @@ interface CourseData {
   workload: string
   layout?: string
   bannerVideoUrl?: string
+  objectives?: string[]
   tutorEnabled?: boolean
 }
 
@@ -79,7 +84,16 @@ export function CourseSettingsDrawer({
 
   const handleSave = () => {
     if (invalidBannerVideo) return
-    onSave({ ...localCourseData, bannerVideoUrl }, localUnits)
+    onSave(
+      {
+        ...localCourseData,
+        bannerVideoUrl,
+        ...(localCourseData.objectives && {
+          objectives: normalizeObjectives(localCourseData.objectives),
+        }),
+      },
+      localUnits
+    )
     onOpenChange(false)
   }
 
@@ -223,6 +237,17 @@ export function CourseSettingsDrawer({
               selected={localCourseData.layout || DEFAULT_LAYOUT_ID}
               previous={courseData.layout || DEFAULT_LAYOUT_ID}
             />
+
+            <VideoLessonsLayoutNotice selected={localCourseData.layout} />
+
+            {localCourseData.layout === VIDEO_LESSONS_LAYOUT_ID && (
+              <FormField label="Objetivos">
+                <CourseObjectivesField
+                  value={localCourseData.objectives ?? []}
+                  onChange={(objectives) => setLocalCourseData({ ...localCourseData, objectives })}
+                />
+              </FormField>
+            )}
 
             <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
               <div className="flex items-start gap-3">

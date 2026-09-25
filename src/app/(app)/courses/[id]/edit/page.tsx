@@ -4469,6 +4469,7 @@ function CourseEditor() {
             workload: state.currentCourse.workload,
             layout: state.currentCourse.layout,
             bannerVideoUrl: state.currentCourse.bannerVideoUrl,
+            objectives: state.currentCourse.objectives ?? [],
             tutorEnabled: state.currentCourse.tutorEnabled ?? false,
           }}
           units={state.currentCourse.units || []}
@@ -4481,6 +4482,7 @@ function CourseEditor() {
                 workload: courseData.workload,
                 layout: courseData.layout,
                 bannerVideoUrl: courseData.bannerVideoUrl ?? '',
+                objectives: courseData.objectives,
                 tutorEnabled: courseData.tutorEnabled ?? false,
               })
             }

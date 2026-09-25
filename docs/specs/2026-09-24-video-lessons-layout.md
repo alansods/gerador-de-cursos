@@ -135,8 +135,8 @@ JetBrains Mono (rótulos).
 - `src/components/ContentBlockDrawer.tsx`: prop `showVideoDescription`; campo "Descrição da aula" (multiline) no
   formulário do vídeo, visível neste layout.
 - `LayoutSelector.tsx`: recebe as unidades e desabilita a opção via `blocksOutsideLayout`.
-- `CourseSettingsDrawer.tsx`: aviso do layout (modelo: `TrailLayoutNotice`) e editor de
-  objetivos.
+- `CourseSettingsDrawer.tsx`: aviso do layout (`VideoLessonsLayoutNotice`, modelo: `TrailLayoutNotice`)
+  e editor de objetivos (`CourseObjectivesField`), só neste layout.
 - Exportação (`useSCORM.ts` / rota de export): bloquear com `lessonsMissingVideo`.
 
 ### Geração
@@ -205,7 +205,7 @@ Cada item só é marcado quando o critério de "Pronto quando" foi verificado.
   - Pronto quando: em curso com outros blocos a opção aparece desabilitada com o motivo
     no painel; em curso vazio ou só com vídeos ela funciona; o layout atual nunca fica
     desabilitado.
-- [ ] **Objetivos e aviso no painel "Sobre o curso"**
+- [x] **Objetivos e aviso no painel "Sobre o curso"**
   - Pronto quando: com o layout escolhido aparecem o aviso e o editor de objetivos, e o
     valor salvo reabre igual.
 - [ ] **Aula pendente e exportação**
