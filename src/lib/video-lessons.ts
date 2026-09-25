@@ -1,5 +1,6 @@
 import type { Block, Course, Unit } from '@/types/course'
 import type { CompletionRule } from '@/lib/scorm-progress'
+import { VIDEO_LESSONS_LAYOUT_ID } from '@/lib/layout-blocks'
 
 export const MAX_VIDEO_DESCRIPTION_LENGTH = 2000
 
@@ -53,4 +54,19 @@ export function lessonsMissingVideo(course: Pick<Course, 'units'>): MissingVideo
         lessonTitle: lesson.title,
       }))
   )
+}
+
+export function missingVideoExportError(course: Pick<Course, 'layout' | 'units'>): string | null {
+  if (course.layout !== VIDEO_LESSONS_LAYOUT_ID) return null
+
+  const missing = lessonsMissingVideo(course)
+  if (missing.length === 0) return null
+
+  const lessons = missing
+    .map(
+      ({ unitIndex, lessonIndex, lessonTitle }) =>
+        `Módulo ${unitIndex + 1} · Aula ${lessonIndex + 1} (${lessonTitle})`
+    )
+    .join('; ')
+  return `Adicione o vídeo das aulas pendentes antes de exportar: ${lessons}`
 }

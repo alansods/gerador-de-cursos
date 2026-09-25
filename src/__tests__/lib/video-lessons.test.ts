@@ -10,6 +10,7 @@ import {
   MAX_VIDEO_DESCRIPTION_LENGTH,
   deriveLessons,
   lessonsMissingVideo,
+  missingVideoExportError,
   limitVideoDescription,
   videoLessonsCompletionRule,
 } from '@/lib/video-lessons'
@@ -156,5 +157,23 @@ describe('video lessons data in the exported package', () => {
 
     expect(html).toContain('"objectives":["Criar uma API"]')
     expect(html).toContain('"videoDescription":"O que é o .NET"')
+  })
+})
+
+describe('missingVideoExportError', () => {
+  const course = (layout: string, blocks: Block[]) => ({
+    layout,
+    units: [moduleOf('M1', [video('Olá, .NET')]), moduleOf('M2', blocks)],
+  })
+
+  it('refuses the export and names every pending lesson', () => {
+    expect(missingVideoExportError(course('video-lessons', [video('A'), video('B', '')]))).toBe(
+      'Adicione o vídeo das aulas pendentes antes de exportar: Módulo 2 · Aula 2 (B)'
+    )
+  })
+
+  it('lets the export through when every lesson has a video or in other layouts', () => {
+    expect(missingVideoExportError(course('video-lessons', [video('A')]))).toBeNull()
+    expect(missingVideoExportError(course('classic', [video('B', '')]))).toBeNull()
   })
 })

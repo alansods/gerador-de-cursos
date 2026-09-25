@@ -3,6 +3,7 @@ import { Course } from '@/types/course'
 import { requireAuth, createErrorResponse } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { generateSCORMFromPlayerDist } from '@/lib/scorm-service'
+import { missingVideoExportError } from '@/lib/video-lessons'
 import { downloadAndUpdateImages, cleanupTempFiles } from '@/lib/scorm-build-service'
 import {
   tutorApiOrigin,
@@ -36,6 +37,11 @@ export async function POST(req: NextRequest) {
 
     const courseData = course as Course
     const courseId = courseData.id
+
+    const missingVideo = missingVideoExportError(courseData)
+    if (missingVideo) {
+      return createErrorResponse(missingVideo, 400)
+    }
 
     console.log(`📦 [API generate-scorm-v2] Starting generation for: ${courseData.title}`)
     console.log(`   📍 Course id: ${courseId}`)

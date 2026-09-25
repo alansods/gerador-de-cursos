@@ -137,7 +137,9 @@ JetBrains Mono (rótulos).
 - `LayoutSelector.tsx`: recebe as unidades e desabilita a opção via `blocksOutsideLayout`.
 - `CourseSettingsDrawer.tsx`: aviso do layout (`VideoLessonsLayoutNotice`, modelo: `TrailLayoutNotice`)
   e editor de objetivos (`CourseObjectivesField`), só neste layout.
-- Exportação (`useSCORM.ts` / rota de export): bloquear com `lessonsMissingVideo`.
+- Exportação: `/api/generate-scorm-v2` devolve 400 com a mensagem de
+  `missingVideoExportError` (lista "Módulo N · Aula M (título)"); o `useSCORM` já mostra o
+  erro da resposta num toast. O card da aula sem URL (`VideoBlock`) mostra "Vídeo pendente".
 
 ### Geração
 
@@ -208,7 +210,7 @@ Cada item só é marcado quando o critério de "Pronto quando" foi verificado.
 - [x] **Objetivos e aviso no painel "Sobre o curso"**
   - Pronto quando: com o layout escolhido aparecem o aviso e o editor de objetivos, e o
     valor salvo reabre igual.
-- [ ] **Aula pendente e exportação**
+- [x] **Aula pendente e exportação**
   - Pronto quando: aula sem URL mostra "Vídeo pendente" no editor e a exportação é
     recusada com a lista das aulas pendentes.
 
