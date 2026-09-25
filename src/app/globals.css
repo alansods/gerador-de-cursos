@@ -3,6 +3,7 @@
 @import '../styles/infobox.css';
 @import '../styles/block-theme.css';
 @import '../styles/trail.css';
+@import '../styles/video-lessons.css';
 
 @custom-variant dark (&:is(.dark *));
 @custom-variant no-hover (@media (hover: none));

@@ -42,6 +42,38 @@ export function LayoutThumbnail({ layoutId, className }: LayoutThumbnailProps) {
     )
   }
 
+  if (layoutId === 'video-lessons') {
+    return (
+      <span className={cn('flex gap-2 overflow-hidden rounded-lg bg-muted p-2.5', className)}>
+        <span className="flex flex-1 flex-col gap-1.5">
+          <span className="relative flex flex-1 items-center justify-center rounded bg-foreground/80">
+            <span className="h-0 w-0 border-y-[5px] border-l-[8px] border-y-transparent border-l-primary-foreground" />
+          </span>
+          <span className="h-1.5 w-2/3 rounded-full bg-muted-foreground/40" />
+          <span className="h-1 w-full rounded-full bg-muted-foreground/15" />
+        </span>
+        <span className="flex w-1/3 flex-col gap-1.5 rounded border border-border bg-card p-1.5">
+          <span className="flex items-center gap-1">
+            <span className="h-2 w-2 shrink-0 rounded-full bg-primary" />
+            <span className="h-1 w-full rounded-full bg-muted-foreground/30" />
+          </span>
+          <span className="flex items-center gap-1">
+            <span className="h-2 w-2 shrink-0 rounded-full bg-primary" />
+            <span className="h-1 w-full rounded-full bg-muted-foreground/30" />
+          </span>
+          <span className="flex items-center gap-1">
+            <span className="h-2 w-2 shrink-0 rounded-full border border-muted-foreground/50" />
+            <span className="h-1 w-full rounded-full bg-muted-foreground/15" />
+          </span>
+          <span className="flex items-center gap-1">
+            <span className="h-2 w-2 shrink-0 rounded-full border border-muted-foreground/50" />
+            <span className="h-1 w-full rounded-full bg-muted-foreground/15" />
+          </span>
+        </span>
+      </span>
+    )
+  }
+
   if (layoutId === 'sidebar') {
     return (
       <span className={cn('flex gap-2 overflow-hidden rounded-lg bg-muted p-2.5', className)}>

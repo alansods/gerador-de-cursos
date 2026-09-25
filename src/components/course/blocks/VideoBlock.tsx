@@ -27,6 +27,15 @@ export function VideoBlock({ item }: { item: Block }) {
             )}
           </div>
         </div>
+      ) : item.videoTitle ? (
+        <div className="space-y-3">
+          <h4 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+            {item.videoTitle}
+          </h4>
+          <div className="flex aspect-video w-full items-center justify-center rounded-lg border-2 border-dashed border-amber-400 bg-amber-50 text-sm font-medium text-amber-800 dark:border-amber-600 dark:bg-amber-950/30 dark:text-amber-300">
+            Vídeo pendente
+          </div>
+        </div>
       ) : (
         <div className="text-gray-500 dark:text-gray-400 text-sm italic p-4 border border-gray-300 dark:border-gray-700 rounded-lg">
           Vídeo incompleto ou sem dados

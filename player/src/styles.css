@@ -6,6 +6,7 @@
 @import '../../src/styles/infobox.css';
 @import '../../src/styles/block-theme.css';
 @import '../../src/styles/trail.css';
+@import '../../src/styles/video-lessons.css';
 
 /* Diz ao Tailwind v4 para escanear os componentes do editor (fora de player/) */
 @source "../../src";

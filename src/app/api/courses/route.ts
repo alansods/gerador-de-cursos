@@ -18,9 +18,14 @@ import { upgradeUnits } from '@/lib/legacy-course'
 import { reindexCourseContent } from '@/lib/tutor/knowledge'
 import { courseDocumentPathnames, deleteStoredDocuments } from '@/lib/tutor/document-access'
 import { generateTutorToken } from '@/lib/tutor/public-access'
+import { normalizeObjectives } from '@/lib/course-objectives'
+import { limitVideoDescription } from '@/lib/video-lessons'
+import { blocksOutsideLayout, isLayoutLocked, LAYOUT_LOCKED_REASON } from '@/lib/layout-blocks'
 
 /** Status cuja revisão deixa de valer assim que o conteúdo muda. */
 const REVIEW_INVALIDATED_ON_EDIT: CourseStatus[] = ['APPROVED', 'REJECTED']
+
+const LAYOUT_BLOCKS_ERROR = 'Este layout aceita apenas aulas em vídeo'
 
 type UnitContent = {
   id?: string
@@ -146,6 +151,7 @@ export async function GET(req: NextRequest) {
         category: course.category,
         layout: course.layout,
         bannerVideoUrl: course.bannerVideoUrl ?? undefined,
+        objectives: course.objectives,
         tutorEnabled: course.tutorEnabled,
         units: normalizedUnits,
         status: course.status,
@@ -193,7 +199,17 @@ export async function POST(req: NextRequest) {
     assertCan(authResult.user, 'course:create')
 
     const body = await req.json()
-    const { title, description, workload, modality, category, layout, bannerVideoUrl, units } = body
+    const {
+      title,
+      description,
+      workload,
+      modality,
+      category,
+      layout,
+      bannerVideoUrl,
+      objectives,
+      units,
+    } = body
 
     // Validate the required fields
     if (!title || !description || !workload || !modality || !category) {
@@ -205,6 +221,7 @@ export async function POST(req: NextRequest) {
       const unitId = unit.id || `unidade-${Date.now()}-${index}`
       const normalizedContent = (unit.blocks || []).map((item: UnitContent, itemIndex: number) => ({
         ...item,
+        ...limitVideoDescription(item.videoDescription),
         id: item.id || `conteudo-${Date.now()}-${index}-${itemIndex}`,
         order: item.order ?? itemIndex,
         type: item.type || 'paragraph',
@@ -218,6 +235,10 @@ export async function POST(req: NextRequest) {
       }
     })
     const normalizedUnits = slugifyUnits(mappedUnits)
+
+    if (blocksOutsideLayout(normalizedUnits as unknown as Unit[], layout) > 0) {
+      return createErrorResponse(LAYOUT_BLOCKS_ERROR, 400)
+    }
 
     // Build a unique slug from the title
     const slug = await generateUniqueSlug(title)
@@ -233,6 +254,7 @@ export async function POST(req: NextRequest) {
         category,
         layout: layout || 'classic',
         bannerVideoUrl: bannerVideoUrl || null,
+        objectives: normalizeObjectives(objectives) ?? [],
         units: normalizedUnits as unknown as Prisma.InputJsonValue,
         ownerId: authResult.user.id,
       },
@@ -259,6 +281,7 @@ export async function POST(req: NextRequest) {
       category: course.category,
       layout: course.layout,
       bannerVideoUrl: course.bannerVideoUrl ?? undefined,
+      objectives: course.objectives,
       tutorEnabled: course.tutorEnabled,
       units: upgradeUnits(course.units) as unknown as Unit[],
       status: course.status,
@@ -301,6 +324,7 @@ export async function PUT(req: NextRequest) {
       category,
       layout,
       bannerVideoUrl,
+      objectives,
       tutorEnabled,
       units,
       version,
@@ -352,6 +376,7 @@ export async function PUT(req: NextRequest) {
         const normalizedContent = (unit.blocks || []).map(
           (item: UnitContent, itemIndex: number) => ({
             ...item,
+            ...limitVideoDescription(item.videoDescription),
             id: item.id || `conteudo-${Date.now()}-${index}-${itemIndex}`,
             order: item.order ?? itemIndex,
             type: item.type || 'paragraph',
@@ -366,6 +391,15 @@ export async function PUT(req: NextRequest) {
         }
       })
       normalizedUnits = slugifyUnits(mappedUnits)
+    }
+
+    const layoutToSave = layout || existingCourse.layout
+    if (isLayoutLocked(existingCourse.layout) && layoutToSave !== existingCourse.layout) {
+      return createErrorResponse(LAYOUT_LOCKED_REASON, 400)
+    }
+    const unitsToSave = (normalizedUnits ?? upgradeUnits(existingCourse.units)) as unknown as Unit[]
+    if (blocksOutsideLayout(unitsToSave, layoutToSave) > 0) {
+      return createErrorResponse(LAYOUT_BLOCKS_ERROR, 400)
     }
 
     // Regenerate the slug when the title changed
@@ -388,6 +422,7 @@ export async function PUT(req: NextRequest) {
         ...(category && { category }),
         ...(layout && { layout }),
         ...(bannerVideoUrl !== undefined && { bannerVideoUrl: bannerVideoUrl || null }),
+        ...(objectives !== undefined && { objectives: normalizeObjectives(objectives) }),
         ...(togglesTutor && { tutorEnabled }),
         ...(togglesTutor && tutorEnabled && { tutorToken: generateTutorToken() }),
         ...(normalizedUnits !== undefined && {
@@ -435,6 +470,7 @@ export async function PUT(req: NextRequest) {
       category: course.category,
       layout: course.layout,
       bannerVideoUrl: course.bannerVideoUrl ?? undefined,
+      objectives: course.objectives,
       tutorEnabled: course.tutorEnabled,
       units: upgradeUnits(course.units) as unknown as Unit[],
       status: course.status,

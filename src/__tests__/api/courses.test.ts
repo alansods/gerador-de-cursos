@@ -649,6 +649,217 @@ describe('API - Courses', () => {
     })
   })
 
+  describe('course objectives', () => {
+    const storedCourse = {
+      id: '1',
+      title: 'Curso',
+      description: 'Desc',
+      workload: '40h',
+      modality: 'Online',
+      category: 'Tecnologia',
+      units: [],
+      layout: 'video-lessons',
+      objectives: ['Criar uma API'],
+      slug: null,
+      status: 'IN_PROGRESS',
+      version: 0,
+      ownerId: '1',
+      owner: { id: '1', name: 'Test User' },
+      reviewedById: null,
+      reviewedAt: null,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    }
+
+    it('stores the cleaned objectives list on create and returns it', async () => {
+      mockPrisma.course.findUnique.mockResolvedValueOnce(null as never)
+      mockPrisma.course.create.mockResolvedValueOnce(storedCourse as never)
+
+      const request = new NextRequest('http://localhost:3000/api/courses', {
+        method: 'POST',
+        headers: await authHeaders(),
+        body: JSON.stringify({
+          title: 'Curso',
+          description: 'Desc',
+          workload: '40h',
+          modality: 'Online',
+          category: 'Tecnologia',
+          units: [],
+          objectives: ['  Criar uma API  ', '', 42, 'x'.repeat(200)],
+        }),
+      })
+
+      const response = await createCursoHandler(request)
+      const data = await response.json()
+      const saved = mockPrisma.course.create.mock.calls[0][0].data
+
+      expect(response.status).toBe(201)
+      expect(saved.objectives).toEqual(['Criar uma API', 'x'.repeat(160)])
+      expect(data.course.objectives).toEqual(['Criar uma API'])
+    })
+
+    it('defaults to an empty list on create when none is sent', async () => {
+      mockPrisma.course.findUnique.mockResolvedValueOnce(null as never)
+      mockPrisma.course.create.mockResolvedValueOnce(storedCourse as never)
+
+      const request = new NextRequest('http://localhost:3000/api/courses', {
+        method: 'POST',
+        headers: await authHeaders(),
+        body: JSON.stringify({
+          title: 'Curso',
+          description: 'Desc',
+          workload: '40h',
+          modality: 'Online',
+          category: 'Tecnologia',
+          units: [],
+        }),
+      })
+
+      await createCursoHandler(request)
+
+      expect(mockPrisma.course.create.mock.calls[0][0].data.objectives).toEqual([])
+    })
+
+    it('updates objectives only when they are sent', async () => {
+      const send = async (body: Record<string, unknown>) => {
+        mockPrisma.course.findUnique.mockResolvedValueOnce(storedCourse as never)
+        mockPrisma.course.update.mockResolvedValueOnce(storedCourse as never)
+        const request = new NextRequest('http://localhost:3000/api/courses', {
+          method: 'PUT',
+          headers: await authHeaders(),
+          body: JSON.stringify({ id: '1', version: 0, ...body }),
+        })
+        await updateCursoHandler(request)
+        return mockPrisma.course.update.mock.calls.at(-1)?.[0]?.data
+      }
+
+      expect((await send({ objectives: ['Um', 'Dois'] })).objectives).toEqual(['Um', 'Dois'])
+      expect((await send({ title: 'Outro' })).objectives).toBeUndefined()
+    })
+
+    it('cuts a lesson description longer than the limit when saving units', async () => {
+      mockPrisma.course.findUnique.mockResolvedValueOnce(storedCourse as never)
+      mockPrisma.course.update.mockResolvedValueOnce(storedCourse as never)
+
+      const request = new NextRequest('http://localhost:3000/api/courses', {
+        method: 'PUT',
+        headers: await authHeaders(),
+        body: JSON.stringify({
+          id: '1',
+          version: 0,
+          units: [
+            {
+              id: 'u1',
+              title: 'Módulo',
+              blocks: [
+                { id: 'b1', type: 'video', videoTitle: 'Aula', videoDescription: 'a'.repeat(2500) },
+              ],
+            },
+          ],
+        }),
+      })
+
+      await updateCursoHandler(request)
+      const saved = mockPrisma.course.update.mock.calls[0][0].data.units as {
+        blocks: { videoDescription: string }[]
+      }[]
+
+      expect(saved[0].blocks[0].videoDescription).toHaveLength(2000)
+    })
+  })
+
+  describe('video lessons layout blocks', () => {
+    const paragraphUnit = {
+      id: 'u1',
+      title: 'Módulo',
+      blocks: [{ id: 'p1', type: 'paragraph', content: 'Texto' }],
+    }
+    const courseIn = (layout: string) => ({
+      id: '1',
+      title: 'Curso',
+      description: 'Desc',
+      workload: '40h',
+      modality: 'Online',
+      category: 'Tecnologia',
+      units: [paragraphUnit],
+      layout,
+      slug: 'curso',
+      status: 'IN_PROGRESS',
+      version: 0,
+      ownerId: '1',
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    })
+
+    it('refuses to create a video lessons course with a paragraph', async () => {
+      const request = new NextRequest('http://localhost:3000/api/courses', {
+        method: 'POST',
+        headers: await authHeaders(),
+        body: JSON.stringify({
+          title: 'Curso',
+          description: 'Desc',
+          workload: '40h',
+          modality: 'Online',
+          category: 'Tecnologia',
+          layout: 'video-lessons',
+          units: [paragraphUnit],
+        }),
+      })
+
+      const response = await createCursoHandler(request)
+
+      expect(response.status).toBe(400)
+      expect(mockPrisma.course.create).not.toHaveBeenCalled()
+    })
+
+    it('refuses to save a paragraph into a video lessons course', async () => {
+      mockPrisma.course.findUnique.mockResolvedValueOnce(courseIn('video-lessons') as never)
+
+      const request = new NextRequest('http://localhost:3000/api/courses', {
+        method: 'PUT',
+        headers: await authHeaders(),
+        body: JSON.stringify({ id: '1', version: 0, units: [paragraphUnit] }),
+      })
+
+      const response = await updateCursoHandler(request)
+
+      expect(response.status).toBe(400)
+      expect(mockPrisma.course.update).not.toHaveBeenCalled()
+    })
+
+    it('refuses to move a video lessons course to another layout', async () => {
+      mockPrisma.course.findUnique.mockResolvedValueOnce(courseIn('video-lessons') as never)
+
+      const request = new NextRequest('http://localhost:3000/api/courses', {
+        method: 'PUT',
+        headers: await authHeaders(),
+        body: JSON.stringify({ id: '1', version: 0, layout: 'classic' }),
+      })
+
+      const response = await updateCursoHandler(request)
+      const body = await response.json()
+
+      expect(response.status).toBe(400)
+      expect(body.error).toBe('Cursos no layout Aulas em vídeo não podem mudar de layout.')
+      expect(mockPrisma.course.update).not.toHaveBeenCalled()
+    })
+
+    it('refuses to switch a course with other blocks to video lessons', async () => {
+      mockPrisma.course.findUnique.mockResolvedValueOnce(courseIn('classic') as never)
+
+      const request = new NextRequest('http://localhost:3000/api/courses', {
+        method: 'PUT',
+        headers: await authHeaders(),
+        body: JSON.stringify({ id: '1', version: 0, layout: 'video-lessons' }),
+      })
+
+      const response = await updateCursoHandler(request)
+
+      expect(response.status).toBe(400)
+      expect(mockPrisma.course.update).not.toHaveBeenCalled()
+    })
+  })
+
   describe('DELETE /api/courses', () => {
     it('deletes a course with a valid session', async () => {
       // Arrange

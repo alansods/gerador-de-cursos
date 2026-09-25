@@ -50,6 +50,8 @@ import { timeToSeconds } from '@/lib/video-time'
 import { cleanDistractors, fillBlanksAnswers } from '@/lib/fill-blanks'
 import { isValidYouTubeUrl } from '@/lib/youtube'
 import { isLibraryIllustrationPath } from '@/lib/illustration-paths'
+import { allowedBlockTypes, VIDEO_LESSONS_LAYOUT_ID } from '@/lib/layout-blocks'
+import { toGeneratedLesson } from '@/lib/video-lessons'
 import {
   buildWordSearch,
   MAX_GRID_SIZE,
@@ -1004,7 +1006,10 @@ export interface GenerationSummary {
   discarded: DiscardedBlock[]
 }
 
-export function normalizeCourse(course: Course): {
+export function normalizeCourse(
+  course: Course,
+  layout?: string
+): {
   course: Course
   summary: GenerationSummary
 } {
@@ -1018,7 +1023,7 @@ export function normalizeCourse(course: Course): {
     const unitTitle = hasText(unit?.title) ? unit.title : `Unidade ${unitIndex + 1}`
 
     const salvaged = rawContent
-      .map((block) => normalizeBlock(block, unitTitle, discarded))
+      .map((block) => normalizeBlock(block, unitTitle, discarded, layout))
       .filter((block): block is Block => block !== null)
 
     const content = mergeAdjacentFlipcards(salvaged).map((block, blockIdx) => {
@@ -1051,7 +1056,8 @@ export function normalizeCourse(course: Course): {
 function normalizeBlock(
   block: Block,
   unitTitle: string,
-  discarded: DiscardedBlock[]
+  discarded: DiscardedBlock[],
+  layout?: string
 ): Block | null {
   const type = block?.type
   const meta = type ? BLOCK_CATALOG[type] : undefined
@@ -1063,6 +1069,18 @@ function normalizeBlock(
       reason: 'tipo desconhecido',
     })
     return null
+  }
+
+  const allowed = allowedBlockTypes(layout)
+  if (allowed && !allowed.includes(meta.type)) {
+    discarded.push({ unit: unitTitle, type: meta.type, reason: 'fora do layout' })
+    return null
+  }
+
+  if (layout === VIDEO_LESSONS_LAYOUT_ID && meta.type === 'video') {
+    const lesson = toGeneratedLesson({ ...block, content: '' })
+    if (!lesson) discarded.push({ unit: unitTitle, type: meta.type, reason: 'aula sem título' })
+    return lesson
   }
 
   const repaired = repairBlock({ ...block })

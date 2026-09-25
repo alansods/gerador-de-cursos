@@ -19,6 +19,8 @@ import {
 } from '@/lib/scorm-progress'
 import { isScoredBlock, scoredQuizKeys, trailCompletionRule } from '@/lib/trail-progress'
 import { publishProgress } from '@/lib/tutor/progress-store'
+import { videoLessonsCompletionRule } from '@/lib/video-lessons'
+import { VIDEO_LESSONS_LAYOUT_ID } from '@/lib/layout-blocks'
 
 interface WrapperScorm {
   getLocation?: () => string
@@ -55,11 +57,17 @@ export function unitPercentages(state: ProgressState, rule: CompletionRule): num
   return state.visited.map((visited) => (visited ? 100 : 0))
 }
 
+function completionRuleFor(layout: string | undefined, units: Course['units']): CompletionRule {
+  if (layout === 'trail') return trailCompletionRule({ units })
+  if (layout === VIDEO_LESSONS_LAYOUT_ID) return videoLessonsCompletionRule({ units })
+  return { kind: 'units' }
+}
+
 export function useScormProgress(course: Course) {
   const units = useMemo(() => course.units ?? [], [course.units])
   const hash = useMemo(() => hashCourse({ id: course.id, units }), [course.id, units])
   const rule = useMemo<CompletionRule>(
-    () => (course.layout === 'trail' ? trailCompletionRule({ units }) : { kind: 'units' }),
+    () => completionRuleFor(course.layout, units),
     [course.layout, units]
   )
   const scoredKeys = useMemo(() => scoredQuizKeys({ units }), [units])
@@ -105,6 +113,7 @@ export function useScormProgress(course: Course) {
 
     const restored = decodeSuspendData(scorm.getSuspendData?.(), hash, units.length)
     if (restored) {
+      stateRef.current = restored
       setState(restored)
       completedRef.current = calculateProgress(restored, rule).completed
     }
@@ -159,6 +168,7 @@ export function useScormProgress(course: Course) {
           const visited = [...stateRef.current.visited]
           visited[index] = true
           const next = { ...stateRef.current, visited }
+          stateRef.current = next
           setState(next)
           saveState(next)
           return
@@ -190,6 +200,7 @@ export function useScormProgress(course: Course) {
         total,
         firstTry
       )
+      stateRef.current = next
       setState(next)
       saveState(next)
     },
@@ -203,6 +214,7 @@ export function useScormProgress(course: Course) {
 
       const next = completeStepState(stateRef.current, unitIndex, stepIndex)
       if (next === stateRef.current) return
+      stateRef.current = next
       setState(next)
       saveState(next)
     },

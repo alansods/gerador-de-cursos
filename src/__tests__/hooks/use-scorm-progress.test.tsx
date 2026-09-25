@@ -137,6 +137,32 @@ describe('useScormProgress', () => {
     expect(scorm.statusCalls.filter((s) => s === 'completed')).toHaveLength(1)
   })
 
+  it('completes a video lessons course only after every lesson is marked', () => {
+    const scorm = createScorm()
+    install(scorm)
+    const lesson = (title: string): Block => ({ ...block('video', title), videoTitle: title })
+    const course = {
+      ...makeCourse('video-lessons'),
+      units: [unit('u1', [lesson('A'), lesson('B')]), unit('u2', []), unit('u3', [lesson('C')])],
+    } as Course
+    const { result } = renderHook(({ course }) => useScormProgress(course), {
+      initialProps: { course },
+    })
+
+    act(() => result.current.navigate('u1'))
+    act(() => result.current.navigate('u3'))
+    expect(scorm.status).toBe('incomplete')
+    expect(result.current.progress.total).toBe(3)
+
+    act(() => result.current.completeStep('u1', 0))
+    act(() => result.current.completeStep('u1', 1))
+    expect(scorm.status).toBe('incomplete')
+
+    act(() => result.current.completeStep('u3', 0))
+    expect(scorm.status).toBe('completed')
+    expect(result.current.progress.percentage).toBe(100)
+  })
+
   it('ignores unknown units and repeated steps', () => {
     const scorm = createScorm()
     install(scorm)

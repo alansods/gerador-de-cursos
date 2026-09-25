@@ -58,7 +58,8 @@ export async function generateCourseFromText(
   }
 
   const { course: normalized, summary } = normalizeCourse(
-    upgradeCourse(result.course as unknown as Record<string, unknown>) as unknown as Course
+    upgradeCourse(result.course as unknown as Record<string, unknown>) as unknown as Course,
+    layout
   )
   recordDiscards(summary)
 

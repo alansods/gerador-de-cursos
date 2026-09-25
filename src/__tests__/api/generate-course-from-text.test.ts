@@ -207,6 +207,88 @@ describe('generateCourseFromText', () => {
     expect(course.units[0]).not.toHaveProperty('badgeName')
   })
 
+  it('builds only video lessons without links for the video lessons layout', async () => {
+    mockGenerateContent.mockResolvedValue({
+      response: {
+        text: () =>
+          JSON.stringify({
+            title: 'C# do zero',
+            description: 'Curso',
+            units: [
+              {
+                title: 'Fundamentos',
+                description: 'Tipos e variáveis',
+                blocks: [
+                  {
+                    title: 'Tipos',
+                    type: 'video',
+                    content: '',
+                    videoTitle: ' Tipos de dados ',
+                    videoDescription: 'Inteiros e textos.\nConversões.',
+                    videoUrl: '',
+                  },
+                  { title: 'Texto', type: 'paragraph', content: '<p>Extra</p>' },
+                  {
+                    title: 'Quiz',
+                    type: 'quiz',
+                    content: '',
+                    quizData: { questions: [] },
+                  },
+                  {
+                    title: 'Variáveis',
+                    type: 'video',
+                    content: '',
+                    videoTitle: 'Variáveis',
+                    videoDescription: 'x'.repeat(2500),
+                    videoUrl: 'sem link',
+                  },
+                  { title: 'Sem título', type: 'video', content: '', videoUrl: '' },
+                  {
+                    title: 'Do documento',
+                    type: 'video',
+                    content: '',
+                    videoTitle: 'Do documento',
+                    videoUrl: 'https://cdn.example.com/aula.mp4',
+                  },
+                ],
+              },
+            ],
+          }),
+        usageMetadata: {},
+      },
+    })
+
+    const { course, summary } = await generateCourseFromText('Conteúdo', 'auto', 'video-lessons')
+    const lessons = course.units[0].blocks
+
+    expect(sentPrompt()).toContain('## Layout Aulas em vídeo')
+    expect(course.layout).toBe('video-lessons')
+    expect(lessons.map((block) => block.type)).toEqual(['video', 'video', 'video'])
+    expect(lessons[0]).toMatchObject({
+      videoTitle: 'Tipos de dados',
+      videoDescription: 'Inteiros e textos.\nConversões.',
+      videoUrl: '',
+      videoSource: 'youtube',
+    })
+    expect(lessons[1].videoUrl).toBe('')
+    expect(lessons[1].videoDescription).toHaveLength(2000)
+    expect(lessons[2]).toMatchObject({
+      videoUrl: 'https://cdn.example.com/aula.mp4',
+      videoSource: 'file',
+    })
+    expect(summary.discarded.map((item) => item.reason)).toEqual([
+      'fora do layout',
+      'fora do layout',
+      'aula sem título',
+    ])
+  })
+
+  it('tells the model to ignore other markers in the video lessons layout', async () => {
+    await generateCourseFromText('QUIZ_INICIO\nQUIZ_FIM', 'markers', 'video-lessons')
+
+    expect(sentPrompt()).toContain('Ignore os marcadores de outros recursos')
+  })
+
   it('asks for three to five quiz options', async () => {
     await generateCourseFromText('Conteúdo', 'auto')
 

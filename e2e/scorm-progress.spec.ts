@@ -3,6 +3,7 @@ import JSZip from 'jszip'
 import { generateSCORMFromPlayerDist } from '../src/lib/scorm-service'
 import { testCourse } from './scorm-fixtures/course'
 import { trailCourse } from './scorm-fixtures/trail-course'
+import { videoLessonsCourse } from './scorm-fixtures/video-lessons-course'
 import {
   servePackage,
   sco,
@@ -212,6 +213,77 @@ test.describe('trail layout', () => {
     await expect(
       sco(page).getByRole('heading', { level: 1, name: 'Parabéns, Aluno!' })
     ).toBeVisible()
+  })
+})
+
+test.describe('video lessons layout', () => {
+  let lessons: ServedPackage
+
+  test.beforeAll(async () => {
+    lessons = await servePackage(videoLessonsCourse)
+  })
+
+  test.afterAll(async () => {
+    await lessons?.close()
+  })
+
+  test.beforeEach(async ({ page }) => {
+    await page.route(/youtube\.com|ytimg\.com|googlevideo\.com/, (route) => route.abort())
+  })
+
+  const button = (page: Page, name: RegExp | string) =>
+    sco(page).getByRole('button', { name }).first()
+  const lessonTitle = (page: Page) => sco(page).getByRole('heading', { level: 1 })
+  const settle = (page: Page) => page.waitForTimeout(600)
+
+  test('completes each lesson, resumes on the first pending one and completes the course', async ({
+    page,
+  }) => {
+    await openPackage(page, lessons.base)
+
+    await expect(lessonTitle(page)).toHaveText('Rails do zero')
+    expect((await cmi(page)).cmi['cmi.core.lesson_status']).toBe('incomplete')
+
+    await button(page, /Começar curso/).click()
+    await expect(lessonTitle(page)).toHaveText('Instalando o Rails')
+    await button(page, /Marcar como concluída/).click()
+    await settle(page)
+
+    await expect(button(page, /^Concluída$/)).toBeDisabled()
+    expect((await cmi(page)).cmi['cmi.core.lesson_location']).toBe('primeiros-passos')
+    expect((await cmi(page)).cmi['cmi.core.lesson_status']).toBe('incomplete')
+
+    await sco(page).evaluate(() => window.dispatchEvent(new Event('pagehide')))
+    await page.waitForTimeout(400)
+    expect((await cmi(page)).cmi['cmi.core.exit']).toBe('suspend')
+
+    await openPackage(page, lessons.base)
+
+    await expect(lessonTitle(page)).toHaveText('Primeiro projeto')
+    await expect(sco(page).getByText('1 de 3 aulas concluídas').first()).toBeVisible()
+
+    await button(page, /Próxima aula/).click()
+    await settle(page)
+
+    await expect(lessonTitle(page)).toHaveText('Rotas REST')
+    expect((await cmi(page)).cmi['cmi.core.lesson_location']).toBe('rotas')
+    await expect(sco(page).getByText('2 de 3 aulas concluídas').first()).toBeVisible()
+    expect((await cmi(page)).cmi['cmi.core.lesson_status']).toBe('incomplete')
+
+    await button(page, /Concluir curso/).click()
+    await settle(page)
+
+    await expect(lessonTitle(page)).toHaveText('Rails do zero')
+    expect((await cmi(page)).cmi['cmi.core.lesson_status']).toBe('completed')
+    await expect(sco(page).getByText('Módulo concluído')).toHaveCount(2)
+
+    const completedCalls = await page.evaluate(
+      () =>
+        (window as unknown as { __chamadas: string[] }).__chamadas.filter(
+          (call) => call === 'Set:cmi.core.lesson_status=completed'
+        ).length
+    )
+    expect(completedCalls).toBe(1)
   })
 })
 
