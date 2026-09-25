@@ -1,6 +1,7 @@
 import type { Course, Unit } from '@/types/course'
 import type { ReadMode } from '@/lib/markers'
 import { BADGE_ICONS, BADGE_NAME_MAX_LENGTH } from '@/lib/trail-progress'
+import { VIDEO_LESSONS_LAYOUT_ID } from '@/lib/layout-blocks'
 
 export const COURSE_LAYOUT_IDS = ['classic', 'sidebar', 'trail', 'video-lessons'] as const
 
@@ -11,6 +12,7 @@ export function isCourseLayoutId(value: unknown): value is CourseLayoutId {
 }
 
 export function layoutPromptSection(layout: string | undefined, mode: ReadMode): string {
+  if (layout === VIDEO_LESSONS_LAYOUT_ID) return videoLessonsPromptSection(mode)
   if (layout !== 'trail') return ''
 
   const activities =
@@ -40,6 +42,34 @@ ${activities}
   concluir a missão. De 2 a 4 palavras, até ${BADGE_NAME_MAX_LENGTH} caracteres, ligado ao tema
   da unidade, sem emoji. Exemplo: { "title": "Higiene na cozinha", "badgeName": "Mãos limpas",
   "description": "...", "blocks": [...] }`
+}
+
+function videoLessonsPromptSection(mode: ReadMode): string {
+  const markers =
+    mode === 'markers'
+      ? `
+- Ignore os marcadores de outros recursos (quiz, accordion, imagem, lista etc.): eles não
+  viram blocos neste layout. Se o conteúdo deles explicar a aula, resuma-o na descrição.`
+      : ''
+
+  return `
+
+## Layout Aulas em vídeo (estrutura fixa)
+
+O curso será exibido como uma lista de aulas em vídeo. Esta seção SUBSTITUI as regras
+anteriores sobre quais blocos gerar e sobre vídeos sem URL.
+
+- Cada Unidade é um módulo do curso. Use o título e a descrição da unidade para o módulo.
+- Em "blocks", gere SOMENTE blocos do tipo "video", um por aula, na ordem do documento.
+  Nenhum outro tipo de bloco é permitido neste layout.
+- Cada aula é um assunto do documento. Não invente aulas nem assuntos.
+- Formato de cada aula:
+  { "title": "Título da aula", "type": "video", "content": "", "videoTitle": "Título da aula",
+    "videoDescription": "Texto simples, sem HTML, com o que o aluno verá na aula (até 2000
+    caracteres; use quebras de linha para separar parágrafos)", "videoUrl": "",
+    "videoSource": "youtube" }
+- "videoUrl" fica vazio: o autor adiciona o vídeo depois. Só preencha com um link de vídeo
+  que apareça literalmente no documento para aquela aula.${markers}`
 }
 
 export function applyLayoutToGeneratedCourse(course: Course, layout?: CourseLayoutId): Course {

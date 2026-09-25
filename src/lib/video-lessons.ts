@@ -23,6 +23,24 @@ export function limitVideoDescription(value: unknown): { videoDescription?: stri
     : {}
 }
 
+export function toGeneratedLesson(block: Block): Block | null {
+  const title = typeof block.videoTitle === 'string' ? block.videoTitle.trim() : ''
+  if (!title) return null
+
+  const url = typeof block.videoUrl === 'string' ? block.videoUrl.trim() : ''
+  const videoUrl = /^https?:\/\/\S+$/i.test(url) ? url : ''
+
+  return {
+    ...block,
+    videoTitle: title,
+    videoUrl,
+    videoSource: /\.(mp4|webm)(\?|$)/i.test(videoUrl) ? 'file' : 'youtube',
+    ...limitVideoDescription(
+      typeof block.videoDescription === 'string' ? block.videoDescription.trim() : undefined
+    ),
+  }
+}
+
 export function deriveLessons(unit: Pick<Unit, 'title' | 'blocks'>): VideoLesson[] {
   const lessons: VideoLesson[] = []
 

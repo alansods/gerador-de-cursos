@@ -63,11 +63,13 @@ layout é sempre escuro, independente do tema do app.
   (`StepLayout`) não precisa da trava: o layout é escolhido antes de o curso existir, e a
   geração já sai só com vídeos.
 - **IA e .docx geram só a estrutura.** Com o layout `video-lessons`, o prompt pede
-  módulos com aulas `video` de `videoTitle` e `videoDescription`, `videoUrl` vazio.
-  `applyLayoutToGeneratedCourse` descarta blocos de outros tipos. O filtro leniente
-  `validate` do vídeo exige URL; para este layout, o aproveitamento de bloco gerado
-  aceita vídeo sem URL quando há título. Marcadores de outros blocos no documento são
-  ignorados neste layout.
+  módulos com aulas `video` de `videoTitle` e `videoDescription`, `videoUrl` vazio. A
+  única exceção é um link de vídeo que apareça literalmente no documento: esse é
+  aproveitado na aula. A normalização (`normalizeCourse(course, layout)`) descarta blocos
+  de outros tipos com o motivo "fora do layout" e, neste layout, aceita vídeo sem URL
+  quando há título; URL inválida vira vazia e a descrição é cortada em 2.000 caracteres.
+  Marcadores de outros blocos no documento são ignorados neste layout; o conteúdo deles
+  pode entrar na descrição da aula correspondente.
 - **Aula sem vídeo** (gerada pela IA e ainda não preenchida) aparece no editor com o
   aviso "Vídeo pendente" e no preview com um espaço "Vídeo ainda não adicionado". A
   exportação SCORM é bloqueada enquanto houver aula sem vídeo, com a lista das aulas
@@ -149,9 +151,11 @@ layout é sempre escuro, independente do tema do app.
 
 ### Geração
 
-- `layoutPromptSection` e `applyLayoutToGeneratedCourse` (`src/lib/layout-prompt.ts`):
-  seção do prompt para `video-lessons` e filtro de blocos; aceitar vídeo sem URL com
-  título neste layout.
+- `layoutPromptSection` (`src/lib/layout-prompt.ts`): seção do prompt para
+  `video-lessons`, que substitui a regra geral "nunca gere vídeo sem URL".
+- `normalizeCourse(course, layout)` (`src/lib/blocks.ts`): filtra pelos
+  `allowedBlockTypes` do layout e usa `toGeneratedLesson` (`src/lib/video-lessons.ts`)
+  para aproveitar a aula sem URL.
 
 ## Fora do escopo
 
@@ -247,7 +251,7 @@ Cada item só é marcado quando o critério de "Pronto quando" foi verificado.
 
 ### Fase 5 — Geração
 
-- [ ] **IA e .docx geram a estrutura**
+- [x] **IA e .docx geram a estrutura**
   - Pronto quando: gerar um curso neste layout produz módulos só com aulas `video` (título
     e descrição, URL vazia), sem outros blocos, com teste em
     `api/generate-course-from-text.test.ts`.
