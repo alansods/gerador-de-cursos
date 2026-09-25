@@ -105,6 +105,11 @@ layout é sempre escuro, independente do tema do app.
   de vídeo, senão o tutor fica sem conteúdo neste layout.
 - **Durações e aba "Materiais" do protótipo ficam de fora** (sem dado no modelo).
 - **Drawer** reusa o `Sheet` do shadcn, como o `ClassicNavbar`.
+- **Acordeões dos módulos animados.** O acordeão da introdução (um módulo aberto por vez)
+  e o da lista lateral da aula (vários abertos) usam o `@radix-ui/react-accordion`, que já
+  é dependência, com as animações `animate-accordion-down`/`animate-accordion-up` do
+  `tw-animate-css` (já importado no app e no player). A seta gira junto. Com
+  `prefers-reduced-motion`, a animação é desligada (`motion-reduce:animate-none`).
 - Textos de UI em pt-BR inline, como nos outros layouts; código em inglês.
 
 ## Arquitetura
@@ -261,6 +266,10 @@ Cada item só é marcado quando o critério de "Pronto quando" foi verificado.
 - [x] **Menu drawer**
   - Pronto quando: botão só com ícone (com `aria-label`) abre o drawer nas duas telas;
     clicar numa aula navega e fecha; fecha pelo X, pelo fundo e pelo Esc.
+- [x] **Acordeões dos módulos animados**
+  - Pronto quando: na introdução e na lista lateral da aula os módulos abrem e fecham
+    com animação de altura, a seta gira, o teclado continua funcionando, a animação some
+    com `prefers-reduced-motion`, e os testes do layout seguem verdes.
 - [x] **Tutor IA e responsividade**
   - Pronto quando: o widget não cobre controles da aula, o tutor responde com base nas
     descrições das aulas, e em 390px a lista lateral some (fica o drawer) e o player

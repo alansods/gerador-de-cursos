@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import * as Accordion from '@radix-ui/react-accordion'
 import { ChevronDown, Clock, Layers, Play, Target, Check } from 'lucide-react'
 import type { Course } from '@/types/course'
 import type { VideoLesson } from '@/lib/video-lessons'
@@ -119,42 +120,42 @@ export function VideoLessonsHome({
             </h2>
             <span className="text-sm text-[var(--vl-muted)]">{summary}</span>
           </div>
-          <div className="flex flex-col gap-3">
+          <Accordion.Root
+            type="single"
+            collapsible
+            value={openModule === null ? '' : String(openModule)}
+            onValueChange={(value) => setOpenModule(value === '' ? null : Number(value))}
+            className="flex flex-col gap-3"
+          >
             {units.map((unit, unitIndex) => {
               const lessons = lessonsByUnit[unitIndex] ?? []
-              const isOpen = openModule === unitIndex
-              const panelId = `vl-module-${unit.id}`
               return (
-                <div
+                <Accordion.Item
                   key={unit.id}
+                  value={String(unitIndex)}
                   className="overflow-hidden rounded-[14px] border border-[var(--vl-line)] bg-[var(--vl-surface)]"
                 >
-                  <button
-                    type="button"
-                    aria-expanded={isOpen}
-                    aria-controls={panelId}
-                    onClick={() => setOpenModule(isOpen ? null : unitIndex)}
-                    className="flex w-full items-center gap-5 px-6 py-5 text-left"
-                  >
-                    <span className="vl-mono text-sm text-[var(--vl-accent-strong)]">
-                      {moduleNumber(unitIndex)}
-                    </span>
-                    <span className="flex grow flex-col gap-1">
-                      <span className="text-lg font-semibold">{unit.title}</span>
-                      <span className="text-[13px] text-[var(--vl-muted)]">
-                        {lessons.length} {lessons.length === 1 ? 'aula' : 'aulas'}
-                      </span>
-                    </span>
-                    <ChevronDown
-                      className={`h-5 w-5 shrink-0 text-[var(--vl-muted)] transition-transform ${isOpen ? 'rotate-180' : ''}`}
-                      aria-hidden
-                    />
-                  </button>
-                  {isOpen && (
-                    <div
-                      id={panelId}
-                      className="flex flex-col border-t border-[var(--vl-line)] px-3 pt-2 pb-3"
-                    >
+                  <Accordion.Header asChild>
+                    <div>
+                      <Accordion.Trigger className="group flex w-full items-center gap-5 px-6 py-5 text-left">
+                        <span className="vl-mono text-sm text-[var(--vl-accent-strong)]">
+                          {moduleNumber(unitIndex)}
+                        </span>
+                        <span className="flex grow flex-col gap-1">
+                          <span className="text-lg font-semibold">{unit.title}</span>
+                          <span className="text-[13px] text-[var(--vl-muted)]">
+                            {lessons.length} {lessons.length === 1 ? 'aula' : 'aulas'}
+                          </span>
+                        </span>
+                        <ChevronDown
+                          className="h-5 w-5 shrink-0 text-[var(--vl-muted)] transition-transform duration-200 group-data-[state=open]:rotate-180 motion-reduce:transition-none"
+                          aria-hidden
+                        />
+                      </Accordion.Trigger>
+                    </div>
+                  </Accordion.Header>
+                  <Accordion.Content className="overflow-hidden data-[state=closed]:animate-accordion-up data-[state=open]:animate-accordion-down motion-reduce:animate-none">
+                    <div className="flex flex-col border-t border-[var(--vl-line)] px-3 pt-2 pb-3">
                       {unit.description?.trim() && (
                         <p className="px-3 pt-2 pb-1 text-sm leading-relaxed text-[var(--vl-muted)]">
                           {unit.description}
@@ -180,11 +181,11 @@ export function VideoLessonsHome({
                         ))
                       )}
                     </div>
-                  )}
-                </div>
+                  </Accordion.Content>
+                </Accordion.Item>
               )
             })}
-          </div>
+          </Accordion.Root>
         </div>
 
         <aside className="flex flex-col gap-5 lg:pt-[60px]">

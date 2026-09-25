@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import * as Accordion from '@radix-ui/react-accordion'
 import { ChevronDown } from 'lucide-react'
 import type { Unit } from '@/types/course'
 import type { LessonRef, VideoLesson } from '@/lib/video-lessons'
@@ -23,6 +24,11 @@ export function VideoLessonsSidebar({
 }: VideoLessonsSidebarProps) {
   const [closed, setClosed] = useState<Record<string, boolean>>({})
   const totalLessons = lessonsByUnit.reduce((sum, lessons) => sum + lessons.length, 0)
+  const openIds = units
+    .filter((unit, unitIndex) =>
+      closed[unit.id] === undefined ? unitIndex === current.unitIndex : !closed[unit.id]
+    )
+    .map((unit) => unit.id)
 
   return (
     <aside
@@ -35,35 +41,39 @@ export function VideoLessonsSidebar({
           {lessonCountLabel(units.length, totalLessons)}
         </span>
       </div>
-      <div className="grow overflow-y-auto p-2">
+      <Accordion.Root
+        type="multiple"
+        value={openIds}
+        onValueChange={(ids) =>
+          setClosed(Object.fromEntries(units.map((unit) => [unit.id, !ids.includes(unit.id)])))
+        }
+        className="grow overflow-y-auto p-2"
+      >
         {units.map((unit, unitIndex) => {
           const lessons = lessonsByUnit[unitIndex] ?? []
-          const isOpen =
-            closed[unit.id] === undefined ? unitIndex === current.unitIndex : !closed[unit.id]
           const done = lessons.filter((_, lessonIndex) => isDone(unitIndex, lessonIndex)).length
           return (
-            <div key={unit.id} className="flex flex-col">
-              <button
-                type="button"
-                aria-expanded={isOpen}
-                onClick={() => setClosed((state) => ({ ...state, [unit.id]: isOpen }))}
-                className="flex min-h-[60px] items-center gap-3.5 rounded-[10px] px-4 py-3.5 text-left transition-colors hover:bg-[var(--vl-panel)]"
-              >
-                <span className="vl-mono text-[13px] text-[var(--vl-accent-strong)]">
-                  {moduleNumber(unitIndex)}
-                </span>
-                <span className="flex grow flex-col gap-0.5">
-                  <span className="text-[15px] font-semibold">{unit.title}</span>
-                  <span className="text-xs text-[var(--vl-muted)]">
-                    {done} de {lessons.length} aulas concluídas
-                  </span>
-                </span>
-                <ChevronDown
-                  className={`h-4 w-4 shrink-0 text-[var(--vl-muted)] transition-transform ${isOpen ? 'rotate-180' : ''}`}
-                  aria-hidden
-                />
-              </button>
-              {isOpen && (
+            <Accordion.Item key={unit.id} value={unit.id} className="flex flex-col">
+              <Accordion.Header asChild>
+                <div>
+                  <Accordion.Trigger className="group flex min-h-[60px] w-full items-center gap-3.5 rounded-[10px] px-4 py-3.5 text-left transition-colors hover:bg-[var(--vl-panel)]">
+                    <span className="vl-mono text-[13px] text-[var(--vl-accent-strong)]">
+                      {moduleNumber(unitIndex)}
+                    </span>
+                    <span className="flex grow flex-col gap-0.5">
+                      <span className="text-[15px] font-semibold">{unit.title}</span>
+                      <span className="text-xs text-[var(--vl-muted)]">
+                        {done} de {lessons.length} aulas concluídas
+                      </span>
+                    </span>
+                    <ChevronDown
+                      className="h-4 w-4 shrink-0 text-[var(--vl-muted)] transition-transform duration-200 group-data-[state=open]:rotate-180 motion-reduce:transition-none"
+                      aria-hidden
+                    />
+                  </Accordion.Trigger>
+                </div>
+              </Accordion.Header>
+              <Accordion.Content className="overflow-hidden data-[state=closed]:animate-accordion-up data-[state=open]:animate-accordion-down motion-reduce:animate-none">
                 <div className="flex flex-col gap-0.5 pb-2">
                   {lessons.map((lesson, lessonIndex) => {
                     const isCurrent =
@@ -91,11 +101,11 @@ export function VideoLessonsSidebar({
                     )
                   })}
                 </div>
-              )}
-            </div>
+              </Accordion.Content>
+            </Accordion.Item>
           )
         })}
-      </div>
+      </Accordion.Root>
     </aside>
   )
 }
