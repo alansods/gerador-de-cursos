@@ -323,9 +323,17 @@ Cada item só é marcado quando o critério de "Pronto quando" foi verificado.
 
 ### Fase 6 — Fechamento
 
-- [ ] **E2E do pacote**
+- [x] **E2E do pacote**
   - Pronto quando: fixture e `describe` novos em `e2e/scorm-progress.spec.ts` cobrem
     conclusão, retomada e `lesson_status`, verdes no chromium.
+  - Como: fixture `e2e/scorm-fixtures/video-lessons-course.ts` com 2 módulos (2 aulas + 1
+    aula) e links do YouTube; as requisições ao YouTube são abortadas no teste, para não
+    depender de rede. O roteiro no LMS de teste: introdução com `incomplete`; "Começar
+    curso" e "Marcar como concluída"; sair (`pagehide` → `exit = suspend`); reabrir e
+    retomar no módulo salvo (`lesson_location`) na primeira aula pendente; "Próxima aula"
+    atravessando o módulo com a última aula dele concluída; "Concluir curso" deixa
+    `lesson_status = completed` (gravado uma vez só) e volta à introdução com os dois
+    módulos concluídos.
 - [x] **Build e testes**
   - Pronto quando: `pnpm build` limpo, `pnpm test` verde e um curso criado, editado, visto
     no preview e exportado (após `pnpm build:player`) no layout novo.
