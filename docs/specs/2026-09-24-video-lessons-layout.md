@@ -64,8 +64,8 @@ layout é sempre escuro, independente do tema do app.
   geração já sai só com vídeos.
 - **Curso em "Aulas em vídeo" não muda de layout.** Depois de salvo neste layout, o curso
   fica preso a ele: no `LayoutSelector` as outras opções aparecem desabilitadas com o
-  motivo ("Cursos no layout Aulas em vídeo não podem mudar de layout"), e o `PUT
-/api/courses` recusa a troca com 400. A regra vale para o layout salvo no banco
+  motivo ("Cursos no layout Aulas em vídeo não podem mudar de layout"), e o
+  `PUT /api/courses` recusa a troca com 400. A regra vale para o layout salvo no banco
   (`isLayoutLocked` em `src/lib/layout-blocks.ts`), não para a escolha ainda não salva no
   painel. A trava é só de saída: um curso de outro layout, só com vídeos, ainda pode
   entrar neste.
@@ -126,32 +126,39 @@ layout é sempre escuro, independente do tema do app.
 ### Dados
 
 - `prisma/schema.prisma`: `objectives String[] @default([])` no `Course`, com migration
-  só de `ADD COLUMN`, validada num branch descartável do Neon; produção só com
-  `prisma migrate deploy` e branch de backup antes. Nunca usar a `DATABASE_URL` real como
-  shadow.
+  só de `ADD COLUMN` (`20260924120000_add_course_objectives`), validada num banco
+  descartável; produção só com `prisma migrate deploy` e backup antes (feito com
+  `pg_dump`, ver Fase 1). Nunca usar a `DATABASE_URL` real como shadow.
 - `src/types/course.ts`: `objectives?: string[]` no `Course`; `videoDescription?: string`
   no bloco.
 - `src/app/api/courses/route.ts` (POST e PUT): gravar `objectives` (itens vazios fora,
-  até 8 × 160 caracteres) e recusar blocos fora de `allowedBlockTypes`.
+  até 8 × 160 caracteres), recusar blocos fora de `allowedBlockTypes` e, no PUT, recusar
+  a troca de layout de um curso salvo em `video-lessons` (`isLayoutLocked`).
 - Conferir que o JSON levado ao pacote (`scorm-build-service.ts`) inclui `objectives` e
   `videoDescription`.
 
 ### Regras do layout
 
 - `src/lib/layout-blocks.ts`: `allowedBlockTypes(layoutId)`,
-  `blocksOutsideLayout(units, layoutId)` e `canUseLayout(course, layoutId)`.
+  `blocksOutsideLayout(units, layoutId)`, `canUseLayout(course, layoutId)`,
+  `onlyBlockType(layoutId)` e `isLayoutLocked(layoutId)` com `LAYOUT_LOCKED_REASON`.
 - `src/components/course/layouts/types.ts`: `allowedBlockTypes?` em `LayoutMeta`.
 - `src/lib/video-lessons.ts`: `deriveLessons(unit)` (vídeos da unidade com índice do
-  bloco), `videoLessonsCompletionRule(course)` e `lessonsMissingVideo(course)`.
-- `src/hooks/useScormProgress.ts:61-64`: `trail` → `trailCompletionRule`,
-  `video-lessons` → `videoLessonsCompletionRule`, resto → `units`.
+  bloco), `lessonSequence(units)`, `videoLessonsCompletionRule(course)`,
+  `lessonsMissingVideo(course)`, `missingVideoExportError(course)` e
+  `toGeneratedLesson(block)`.
+- `src/hooks/useScormProgress.ts`: `trail` → `trailCompletionRule`,
+  `video-lessons` → `videoLessonsCompletionRule`, resto → `units`. Toda escrita de estado
+  atualiza `stateRef.current` na hora (ver a correção na Fase 4).
 
 ### Layout (player)
 
 - `src/components/course/layouts/video-lessons/`: `meta.ts`, `VideoLessonsPlayer.tsx`,
   `VideoLessonsHome.tsx`, `VideoLessonsLesson.tsx`, `VideoLessonsDrawer.tsx`,
-  `VideoLessonsSidebar.tsx`. Padrão do `ClassicPlayer`: `useScormProgress(course)`,
-  `ScormProgressProvider`, `currentUnit === null` = introdução.
+  `VideoLessonsSidebar.tsx` e `VideoLessonsParts.tsx` (cabeçalho, `LessonVideo`,
+  `LessonStatusIcon`, `ModuleMarker`, `isModuleDone`). Padrão do `ClassicPlayer`:
+  `useScormProgress(course)`, `ScormProgressProvider`, `currentUnit === null` =
+  introdução. Acordeões de módulo com `@radix-ui/react-accordion`.
 - Registro em `layouts/registry.ts`, id em `COURSE_LAYOUT_IDS`
   (`src/lib/layout-prompt.ts`), miniatura em `LayoutThumbnail.tsx`.
 - `<img>`/`<video>` puros e sem TanStack Query (roda no player Vite). O widget do tutor
@@ -160,14 +167,15 @@ layout é sempre escuro, independente do tema do app.
 ### Editor
 
 - `src/app/(app)/courses/[id]/edit/page.tsx`: com um tipo só (`onlyBlockType(layout)`, em
-  `src/lib/layout-blocks.ts`), o
-  botão vira "Adicionar aula" e abre o formulário direto; aula sem URL mostra
-  "Vídeo pendente".
-- `src/components/ContentBlockDrawer.tsx`: prop `showVideoDescription`; campo "Descrição da aula" (multiline) no
-  formulário do vídeo, visível neste layout.
-- `LayoutSelector.tsx`: recebe as unidades e desabilita a opção via `blocksOutsideLayout`.
-- `CourseSettingsDrawer.tsx`: aviso do layout (`VideoLessonsLayoutNotice`, modelo: `TrailLayoutNotice`)
-  e editor de objetivos (`CourseObjectivesField`), só neste layout.
+  `src/lib/layout-blocks.ts`), o botão vira "Adicionar aula" e abre o formulário direto;
+  aula sem URL mostra "Vídeo pendente".
+- `src/components/ContentBlockDrawer.tsx`: prop `showVideoDescription`; campo "Descrição
+  da aula" (multiline) no formulário do vídeo, visível neste layout.
+- `LayoutSelector.tsx`: recebe as unidades e desabilita a opção via `blocksOutsideLayout`;
+  com `locked`, desabilita todas as outras opções com `LAYOUT_LOCKED_REASON`.
+- `CourseSettingsDrawer.tsx`: aviso do layout (`VideoLessonsLayoutNotice`, modelo:
+  `TrailLayoutNotice`), editor de objetivos (`CourseObjectivesField`), só neste layout, e
+  `locked={isLayoutLocked(courseData.layout)}` no `LayoutSelector`.
 - Exportação: `/api/generate-scorm-v2` devolve 400 com a mensagem de
   `missingVideoExportError` (lista "Módulo N · Aula M (título)"); o `useSCORM` já mostra o
   erro da resposta num toast. O card da aula sem URL (`VideoBlock`) mostra "Vídeo pendente".
@@ -188,14 +196,16 @@ layout é sempre escuro, independente do tema do app.
 - Texto formatado (rich text) na descrição da aula.
 - Desmarcar aula concluída.
 - Converter um curso existente com outros blocos para este layout.
+- Tirar um curso deste layout (a trava é só de saída; ver Decisões).
 - Tema claro do layout.
 
 ## Verificação
 
 - Jest: `deriveLessons`, `canUseLayout`, `lessonsMissingVideo`, regra de conclusão
   (incluindo módulo sem aulas), render das duas telas, drawer, marcar concluída, retomada,
-  API (`objectives` e recusa de bloco fora do permitido), formulário do vídeo com
-  descrição, opção de layout desabilitada.
+  API (`objectives`, recusa de bloco fora do permitido e da troca de layout), formulário
+  do vídeo com descrição, opção de layout desabilitada ou travada, módulo concluído,
+  última aula do módulo concluída ao avançar, geração só com aulas.
 - E2E: pacote de fixture neste layout no LMS de teste do `e2e/scorm-progress.spec.ts`:
   concluir aulas, recarregar, conferir retomada e `lesson_status = completed`.
 - Manual: criar pelo wizard com IA, conferir estrutura gerada, preencher os vídeos
