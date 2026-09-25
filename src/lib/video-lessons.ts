@@ -70,3 +70,14 @@ export function missingVideoExportError(course: Pick<Course, 'layout' | 'units'>
     .join('; ')
   return `Adicione o vídeo das aulas pendentes antes de exportar: ${lessons}`
 }
+
+export interface LessonRef {
+  unitIndex: number
+  lessonIndex: number
+}
+
+export function lessonSequence(units: Pick<Unit, 'title' | 'blocks'>[] | undefined): LessonRef[] {
+  return (units ?? []).flatMap((unit, unitIndex) =>
+    deriveLessons(unit).map((_, lessonIndex) => ({ unitIndex, lessonIndex }))
+  )
+}

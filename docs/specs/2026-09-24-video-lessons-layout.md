@@ -31,7 +31,10 @@ curso no topo.
 Paleta do protótipo (tema escuro): fundo `#0B1117`, superfícies `#121A21`, borda
 `#22303B`, cor principal `#1D6AE5`, destaque `#7CB8FF`, concluído `#3DD68C`, texto
 `#E8EEF2`, texto secundário `#95A4B1`. Fontes: Sora (títulos), IBM Plex Sans (texto),
-JetBrains Mono (rótulos).
+JetBrains Mono (rótulos). As três vão empacotadas em `src/styles/fonts/video-lessons/`
+(woff2 variável, licença OFL junto), como as do Trilha: o pacote SCORM não carrega Google
+Fonts. Os estilos ficam em `src/styles/video-lessons.css`, sob `[data-video-lessons]`, e o
+layout é sempre escuro, independente do tema do app.
 
 ## Decisões
 
@@ -216,10 +219,10 @@ Cada item só é marcado quando o critério de "Pronto quando" foi verificado.
 
 ### Fase 4 — Player
 
-- [ ] **Registro do layout**
+- [x] **Registro do layout**
   - Pronto quando: `video-lessons` está no registry, em `COURSE_LAYOUT_IDS` (teste de
     `layout-prompt` atualizado) e tem miniatura própria.
-- [ ] **Tela de introdução**
+- [x] **Tela de introdução**
   - Pronto quando: hero com ou sem vídeo, "O que você vai aprender", acordeão de módulos,
     progresso e objetivos (oculto se vazio), fiel ao protótipo, com teste.
 - [ ] **Tela de aula**

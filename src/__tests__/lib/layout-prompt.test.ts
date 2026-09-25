@@ -26,6 +26,7 @@ describe('course layout ids', () => {
 
   it('accept only known ids', () => {
     expect(isCourseLayoutId('trail')).toBe(true)
+    expect(isCourseLayoutId('video-lessons')).toBe(true)
     expect(isCourseLayoutId('mosaic')).toBe(false)
     expect(isCourseLayoutId(3)).toBe(false)
   })

@@ -2,7 +2,7 @@ import type { Course, Unit } from '@/types/course'
 import type { ReadMode } from '@/lib/markers'
 import { BADGE_ICONS, BADGE_NAME_MAX_LENGTH } from '@/lib/trail-progress'
 
-export const COURSE_LAYOUT_IDS = ['classic', 'sidebar', 'trail'] as const
+export const COURSE_LAYOUT_IDS = ['classic', 'sidebar', 'trail', 'video-lessons'] as const
 
 export type CourseLayoutId = (typeof COURSE_LAYOUT_IDS)[number]
 
