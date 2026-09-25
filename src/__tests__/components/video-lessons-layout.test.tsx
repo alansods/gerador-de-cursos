@@ -336,3 +336,50 @@ describe('video lessons menu drawer', () => {
     expect(screen.queryByRole('dialog')).toBeNull()
   })
 })
+
+describe('video lessons module completion', () => {
+  it('marks only the modules whose lessons are all done', async () => {
+    const user = userEvent.setup()
+    const course = buildCourse()
+    const saved = completeStep(completeStep(createEmptyState(course.units.length), 0, 0), 1, 0)
+    installScorm({
+      suspendData: encodeSuspendData(saved, hashCourse({ id: course.id!, units: course.units })),
+    })
+
+    render(<CoursePlayer course={course} />)
+
+    expect(screen.getByRole('button', { name: /Fundamentos de C#/ })).toHaveTextContent(
+      'Módulo concluído'
+    )
+    expect(screen.getByRole('button', { name: /Fundamentos de C#/ })).toHaveTextContent(
+      '· Concluído'
+    )
+    expect(screen.getByRole('button', { name: /Primeiros passos/ })).not.toHaveTextContent(
+      'Concluído'
+    )
+    expect(screen.getByRole('button', { name: /Módulo vazio/ })).not.toHaveTextContent('Concluído')
+
+    await user.click(screen.getByRole('button', { name: 'Abrir lista de aulas' }))
+
+    expect(
+      within(screen.getByRole('navigation', { name: 'Aulas do curso' })).getAllByText(
+        'Módulo concluído'
+      )
+    ).toHaveLength(1)
+  })
+
+  it('keeps the last lesson of a module done when next moves to the following module', async () => {
+    const user = userEvent.setup()
+    installScorm()
+    render(<CoursePlayer course={buildCourse()} />)
+
+    await user.click(screen.getByRole('button', { name: 'Começar curso' }))
+    await user.click(screen.getByRole('button', { name: /Próxima aula/ }))
+    await user.click(screen.getByRole('button', { name: /Próxima aula/ }))
+
+    expect(lessonHeading()).toHaveTextContent('Tipos e variáveis')
+    const firstModule = within(sidebar()).getByRole('button', { name: /Primeiros passos/ })
+    expect(firstModule).toHaveTextContent('2 de 2 aulas concluídas')
+    expect(firstModule).toHaveTextContent('Módulo concluído')
+  })
+})

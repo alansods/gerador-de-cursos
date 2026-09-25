@@ -11,6 +11,42 @@ export function moduleNumber(unitIndex: number): string {
   return String(unitIndex + 1).padStart(2, '0')
 }
 
+export function isModuleDone(
+  lessonCount: number,
+  unitIndex: number,
+  isDone: (unitIndex: number, lessonIndex: number) => boolean
+): boolean {
+  if (lessonCount === 0) return false
+  return Array.from({ length: lessonCount }, (_, lessonIndex) =>
+    isDone(unitIndex, lessonIndex)
+  ).every(Boolean)
+}
+
+export function ModuleMarker({
+  unitIndex,
+  done,
+  className = '',
+}: {
+  unitIndex: number
+  done: boolean
+  className?: string
+}) {
+  return (
+    <span className="flex w-6 shrink-0 justify-center">
+      {done ? (
+        <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[var(--vl-done)] text-[var(--vl-ground)]">
+          <Check className="h-3.5 w-3.5" strokeWidth={3} aria-hidden />
+          <span className="sr-only">Módulo concluído</span>
+        </span>
+      ) : (
+        <span className={`vl-mono text-[var(--vl-accent-strong)] ${className}`}>
+          {moduleNumber(unitIndex)}
+        </span>
+      )}
+    </span>
+  )
+}
+
 export function lessonCountLabel(modules: number, lessons: number): string {
   return `${modules} ${modules === 1 ? 'módulo' : 'módulos'} · ${lessons} ${lessons === 1 ? 'aula' : 'aulas'}`
 }

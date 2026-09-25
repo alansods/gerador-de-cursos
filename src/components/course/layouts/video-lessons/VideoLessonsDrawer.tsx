@@ -10,7 +10,7 @@ import {
 } from '@/components/ui/sheet'
 import type { Unit } from '@/types/course'
 import type { LessonRef, VideoLesson } from '@/lib/video-lessons'
-import { LessonStatusIcon, lessonCountLabel, moduleNumber } from './VideoLessonsParts'
+import { isModuleDone, LessonStatusIcon, lessonCountLabel, ModuleMarker } from './VideoLessonsParts'
 
 interface VideoLessonsDrawerProps {
   open: boolean
@@ -89,9 +89,11 @@ export function VideoLessonsDrawer({
           {units.map((unit, unitIndex) => (
             <div key={unit.id} className="flex flex-col gap-0.5">
               <div className="flex items-center gap-3 px-3 pt-3.5 pb-1.5">
-                <span className="vl-mono text-xs text-[var(--vl-accent-strong)]">
-                  {moduleNumber(unitIndex)}
-                </span>
+                <ModuleMarker
+                  unitIndex={unitIndex}
+                  done={isModuleDone((lessonsByUnit[unitIndex] ?? []).length, unitIndex, isDone)}
+                  className="text-xs"
+                />
                 <span className="text-[13px] font-semibold tracking-[0.02em] text-[var(--vl-ink-dim)]">
                   {unit.title}
                 </span>

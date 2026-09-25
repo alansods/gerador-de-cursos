@@ -6,7 +6,7 @@ import { ChevronDown, Clock, Layers, Play, Target, Check } from 'lucide-react'
 import type { Course } from '@/types/course'
 import type { VideoLesson } from '@/lib/video-lessons'
 import { extractYouTubeId } from '@/lib/youtube'
-import { LessonStatusIcon, lessonCountLabel, moduleNumber } from './VideoLessonsParts'
+import { isModuleDone, LessonStatusIcon, lessonCountLabel, ModuleMarker } from './VideoLessonsParts'
 
 const CONTENT_ID = 'vl-course-content'
 
@@ -129,6 +129,7 @@ export function VideoLessonsHome({
           >
             {units.map((unit, unitIndex) => {
               const lessons = lessonsByUnit[unitIndex] ?? []
+              const moduleDone = isModuleDone(lessons.length, unitIndex, isDone)
               return (
                 <Accordion.Item
                   key={unit.id}
@@ -138,13 +139,17 @@ export function VideoLessonsHome({
                   <Accordion.Header asChild>
                     <div>
                       <Accordion.Trigger className="group flex w-full items-center gap-5 px-6 py-5 text-left">
-                        <span className="vl-mono text-sm text-[var(--vl-accent-strong)]">
-                          {moduleNumber(unitIndex)}
-                        </span>
+                        <ModuleMarker unitIndex={unitIndex} done={moduleDone} className="text-sm" />
                         <span className="flex grow flex-col gap-1">
                           <span className="text-lg font-semibold">{unit.title}</span>
                           <span className="text-[13px] text-[var(--vl-muted)]">
                             {lessons.length} {lessons.length === 1 ? 'aula' : 'aulas'}
+                            {moduleDone && (
+                              <span className="font-medium text-[var(--vl-done)]">
+                                {' '}
+                                · Concluído
+                              </span>
+                            )}
                           </span>
                         </span>
                         <ChevronDown

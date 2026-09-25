@@ -113,6 +113,7 @@ export function useScormProgress(course: Course) {
 
     const restored = decodeSuspendData(scorm.getSuspendData?.(), hash, units.length)
     if (restored) {
+      stateRef.current = restored
       setState(restored)
       completedRef.current = calculateProgress(restored, rule).completed
     }
@@ -167,6 +168,7 @@ export function useScormProgress(course: Course) {
           const visited = [...stateRef.current.visited]
           visited[index] = true
           const next = { ...stateRef.current, visited }
+          stateRef.current = next
           setState(next)
           saveState(next)
           return
@@ -198,6 +200,7 @@ export function useScormProgress(course: Course) {
         total,
         firstTry
       )
+      stateRef.current = next
       setState(next)
       saveState(next)
     },
@@ -211,6 +214,7 @@ export function useScormProgress(course: Course) {
 
       const next = completeStepState(stateRef.current, unitIndex, stepIndex)
       if (next === stateRef.current) return
+      stateRef.current = next
       setState(next)
       saveState(next)
     },

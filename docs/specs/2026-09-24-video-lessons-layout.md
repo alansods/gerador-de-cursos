@@ -105,6 +105,10 @@ layout é sempre escuro, independente do tema do app.
   de vídeo, senão o tutor fica sem conteúdo neste layout.
 - **Durações e aba "Materiais" do protótipo ficam de fora** (sem dado no modelo).
 - **Drawer** reusa o `Sheet` do shadcn, como o `ClassicNavbar`.
+- **Módulo concluído.** Quando todas as aulas de um módulo estão concluídas, o número do
+  módulo vira um círculo verde com check (texto para leitor de tela "Módulo concluído") na
+  introdução, na lista lateral da aula e no menu; na introdução, a linha "N aulas" ganha
+  "· Concluído" em verde. Módulo sem aulas nunca aparece como concluído.
 - **Acordeões dos módulos animados.** O acordeão da introdução (um módulo aberto por vez)
   e o da lista lateral da aula (vários abertos) usam o `@radix-ui/react-accordion`, que já
   é dependência, com as animações `animate-accordion-down`/`animate-accordion-up` do
@@ -266,6 +270,17 @@ Cada item só é marcado quando o critério de "Pronto quando" foi verificado.
 - [x] **Menu drawer**
   - Pronto quando: botão só com ícone (com `aria-label`) abre o drawer nas duas telas;
     clicar numa aula navega e fecha; fecha pelo X, pelo fundo e pelo Esc.
+- [x] **Correção: última aula do módulo não era concluída**
+  - Causa: em `useScormProgress`, `completeStep` e `navigate` partiam de `stateRef.current`,
+    que só era atualizado no render seguinte. "Próxima aula" na última aula de um módulo
+    chama `completeStep` e depois `navigate` para o módulo seguinte (ainda não visitado);
+    o `navigate` gravava o estado antigo por cima e a aula voltava a pendente.
+  - Correção: toda escrita de estado no hook atualiza `stateRef.current` na hora.
+  - Pronto quando: um teste avança com "Próxima aula" até o módulo seguinte e a última aula
+    do módulo anterior fica concluída; os testes de `trail` e `classic` seguem verdes.
+- [x] **Módulo concluído**
+  - Pronto quando: com todas as aulas de um módulo marcadas, o módulo aparece concluído
+    na introdução, na lista lateral e no menu; módulo parcial ou vazio não; com teste.
 - [x] **Acordeões dos módulos animados**
   - Pronto quando: na introdução e na lista lateral da aula os módulos abrem e fecham
     com animação de altura, a seta gira, o teclado continua funcionando, a animação some

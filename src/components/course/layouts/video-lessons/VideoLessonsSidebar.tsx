@@ -5,7 +5,7 @@ import * as Accordion from '@radix-ui/react-accordion'
 import { ChevronDown } from 'lucide-react'
 import type { Unit } from '@/types/course'
 import type { LessonRef, VideoLesson } from '@/lib/video-lessons'
-import { LessonStatusIcon, lessonCountLabel, moduleNumber } from './VideoLessonsParts'
+import { LessonStatusIcon, lessonCountLabel, ModuleMarker } from './VideoLessonsParts'
 
 interface VideoLessonsSidebarProps {
   units: Unit[]
@@ -57,9 +57,11 @@ export function VideoLessonsSidebar({
               <Accordion.Header asChild>
                 <div>
                   <Accordion.Trigger className="group flex min-h-[60px] w-full items-center gap-3.5 rounded-[10px] px-4 py-3.5 text-left transition-colors hover:bg-[var(--vl-panel)]">
-                    <span className="vl-mono text-[13px] text-[var(--vl-accent-strong)]">
-                      {moduleNumber(unitIndex)}
-                    </span>
+                    <ModuleMarker
+                      unitIndex={unitIndex}
+                      done={lessons.length > 0 && done === lessons.length}
+                      className="text-[13px]"
+                    />
                     <span className="flex grow flex-col gap-0.5">
                       <span className="text-[15px] font-semibold">{unit.title}</span>
                       <span className="text-xs text-[var(--vl-muted)]">
