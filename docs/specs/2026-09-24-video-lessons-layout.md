@@ -184,10 +184,16 @@ Cada item só é marcado quando o critério de "Pronto quando" foi verificado.
 
 ### Fase 1 — Dados
 
-- [ ] **Campo `objectives` no curso**
-  - Pronto quando: migration aditiva validada num branch descartável do Neon, tipo
-    atualizado, API grava e devolve a lista com limpeza e limites, com teste em
-    `api/courses.test.ts`.
+- [x] **Campo `objectives` no curso**
+  - Pronto quando: migration aditiva validada num banco descartável (branch do Neon ou
+    Postgres local), tipo atualizado, API grava e devolve a lista com limpeza e limites,
+    com teste em `api/courses.test.ts`.
+  - Validação (2026-09-25): a história de migrations não sobe de banco vazio (a primeira
+    começa com `DELETE FROM cursos`). Num Postgres descartável (`pgvector/pgvector:pg16`
+    no Docker), o estado anterior foi montado pelo schema sem `objectives`, as migrations
+    antigas marcadas como aplicadas e `prisma migrate deploy` aplicou só a nova; o
+    `migrate diff` entre o banco e `schema.prisma` saiu vazio. Produção pendente:
+    `prisma migrate deploy`, com branch de backup do Neon antes.
 - [x] **`videoDescription` no bloco de vídeo**
   - Pronto quando: o tipo tem o campo, o limite de 2.000 caracteres é aplicado e o
     pacote exportado traz o campo e os objetivos no JSON lido pelo player.
