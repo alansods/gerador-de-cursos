@@ -29,3 +29,8 @@ export function blocksOutsideLayout(
 export function canUseLayout(course: Pick<Course, 'units'>, layoutId: string): boolean {
   return blocksOutsideLayout(course.units, layoutId) === 0
 }
+
+export function onlyBlockType(layoutId: string | undefined): BlockType | null {
+  const allowed = allowedBlockTypes(layoutId)
+  return allowed?.length === 1 ? allowed[0] : null
+}

@@ -63,6 +63,7 @@ import {
 import { MEDIA_POLICY, type MediaCategory } from '@/lib/media'
 import { uploadFile } from '@/lib/client-upload'
 import { extractYouTubeId } from '@/lib/youtube'
+import { MAX_VIDEO_DESCRIPTION_LENGTH } from '@/lib/video-lessons'
 import { cleanDistractors, fillBlanksAnswers } from '@/lib/fill-blanks'
 import { RichTextEditor } from './RichTextEditor'
 import { IllustrationPicker } from './IllustrationPicker'
@@ -81,6 +82,7 @@ interface ContentBlockDrawerProps {
   blockData: Partial<Block> | null
   onSave: (data: Omit<Block, 'id' | 'order'>) => void
   onCancel: () => void
+  showVideoDescription?: boolean
 }
 
 function prepareForm(blockData: Partial<Block> | null): Partial<Block> {
@@ -950,6 +952,7 @@ export function ContentBlockDrawer({
   blockData,
   onSave,
   onCancel,
+  showVideoDescription = false,
 }: ContentBlockDrawerProps) {
   const [selectedType, setSelectedType] = useState<Block['type'] | null>(blockData?.type || null)
 
@@ -1326,6 +1329,18 @@ export function ContentBlockDrawer({
               placeholderUrl="ou cole o link do YouTube aqui..."
               hint="Envie um MP4/WebM (ideal até 25 MB) ou cole um link do YouTube."
             />
+
+            {showVideoDescription && (
+              <FormField label="Descrição da aula">
+                <Textarea
+                  value={formData.videoDescription || ''}
+                  onChange={(e) => setFormData({ ...formData, videoDescription: e.target.value })}
+                  placeholder="O que o aluno vai ver nesta aula..."
+                  maxLength={MAX_VIDEO_DESCRIPTION_LENGTH}
+                  rows={6}
+                />
+              </FormField>
+            )}
 
             {formData.videoUrl && (
               <FormField label="Pré-visualização" className="mt-4">

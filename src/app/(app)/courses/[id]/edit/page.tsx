@@ -95,6 +95,7 @@ import { QuizContent } from '@/components/QuizContent'
 import { InfoBox } from '@/components/InfoBox'
 import { BlockThemeProvider } from '@/components/course/blocks'
 import { resolveLayout } from '@/components/course/layouts'
+import { onlyBlockType, VIDEO_LESSONS_LAYOUT_ID } from '@/lib/layout-blocks'
 import { QuizData, QuizQuestion, Block } from '@/types/course'
 import {
   BLOCK_CATALOG,
@@ -127,6 +128,8 @@ function CourseEditor() {
   } = useCourseEditor()
   const { user } = useAuth()
   const editorBlockTheme = resolveLayout(state.currentCourse?.layout).meta.blockTheme
+  const lessonBlockType = onlyBlockType(state.currentCourse?.layout)
+  const isVideoLessons = state.currentCourse?.layout === VIDEO_LESSONS_LAYOUT_ID
   const { openPreview } = usePreview()
   const { isDarkMode, toggleDarkMode } = useTheme()
   const { generatePDF, isGenerating: isGeneratingPDF } = usePDF()
@@ -544,6 +547,10 @@ function CourseEditor() {
 
   const handleOpenAddContentDrawer = (unitId: string, index: number) => {
     insertAtIndex.current = { unitId, index }
+    if (lessonBlockType) {
+      handleSelectBlockType(lessonBlockType, unitId)
+      return
+    }
     setAddBlockModal(true)
   }
 
@@ -1365,7 +1372,11 @@ function CourseEditor() {
                                           {/* Botão circular */}
                                           <TooltipButton
                                             icon={Plus}
-                                            tooltip="Inserir conteúdo aqui"
+                                            tooltip={
+                                              isVideoLessons
+                                                ? 'Inserir aula aqui'
+                                                : 'Inserir conteúdo aqui'
+                                            }
                                             onClick={(e) => {
                                               e?.stopPropagation()
                                               console.log(
@@ -1729,7 +1740,7 @@ function CourseEditor() {
                             className="w-full px-6 py-4 bg-white dark:bg-gray-800 border-2 border-dashed border-blue-500 dark:border-blue-400 text-blue-600 dark:text-blue-400 rounded-xl hover:bg-blue-50 dark:hover:bg-blue-950/20 transition-all flex items-center justify-center gap-2 font-semibold text-sm"
                           >
                             <Plus className="h-5 w-5" />
-                            <span>Adicionar conteúdo</span>
+                            <span>{isVideoLessons ? 'Adicionar aula' : 'Adicionar conteúdo'}</span>
                           </button>
                         </div>
 
@@ -4494,6 +4505,7 @@ function CourseEditor() {
           blockData={contentDrawerBlockData}
           onSave={handleSaveContentFromDrawer}
           onCancel={handleCancelContentDrawer}
+          showVideoDescription={isVideoLessons}
         />
       )}
     </div>

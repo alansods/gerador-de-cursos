@@ -3,6 +3,7 @@ import {
   allowedBlockTypes,
   blocksOutsideLayout,
   canUseLayout,
+  onlyBlockType,
 } from '@/lib/layout-blocks'
 import type { Block, Unit } from '@/types/course'
 
@@ -29,5 +30,10 @@ describe('layout block rules', () => {
     )
     expect(canUseLayout({ units: [unit('video', 'heading')] }, VIDEO_LESSONS_LAYOUT_ID)).toBe(false)
     expect(canUseLayout({ units: [] }, VIDEO_LESSONS_LAYOUT_ID)).toBe(true)
+  })
+
+  it('names the single block type a layout adds straight away', () => {
+    expect(onlyBlockType(VIDEO_LESSONS_LAYOUT_ID)).toBe('video')
+    expect(onlyBlockType('classic')).toBeNull()
   })
 })

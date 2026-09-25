@@ -126,10 +126,11 @@ JetBrains Mono (rótulos).
 
 ### Editor
 
-- `src/app/(app)/courses/[id]/edit/page.tsx`: com `allowedBlockTypes` de um tipo só, o
+- `src/app/(app)/courses/[id]/edit/page.tsx`: com um tipo só (`onlyBlockType(layout)`, em
+  `src/lib/layout-blocks.ts`), o
   botão vira "Adicionar aula" e abre o formulário direto; aula sem URL mostra
   "Vídeo pendente".
-- `src/components/ContentBlockDrawer.tsx`: campo "Descrição da aula" (multiline) no
+- `src/components/ContentBlockDrawer.tsx`: prop `showVideoDescription`; campo "Descrição da aula" (multiline) no
   formulário do vídeo, visível neste layout.
 - `LayoutSelector.tsx` e `StepLayout.tsx`: opção desabilitada via `canUseLayout`.
 - `CourseSettingsDrawer.tsx`: aviso do layout (modelo: `TrailLayoutNotice`) e editor de
@@ -194,7 +195,7 @@ Cada item só é marcado quando o critério de "Pronto quando" foi verificado.
 
 ### Fase 3 — Editor
 
-- [ ] **"Adicionar aula"**
+- [x] **"Adicionar aula"**
   - Pronto quando: neste layout o editor não oferece outros tipos, o botão abre direto o
     formulário do vídeo com título, fonte (YouTube/arquivo) e descrição, e a aula criada
     reabre igual.

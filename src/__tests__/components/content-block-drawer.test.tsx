@@ -186,6 +186,60 @@ describe('ContentBlockDrawer', () => {
     }
   })
 
+  it('shows the lesson description only when asked and reopens it unchanged', async () => {
+    const user = userEvent.setup()
+    const onSave = jest.fn()
+    const { rerender } = render(
+      <ContentBlockDrawer
+        open
+        onOpenChange={jest.fn()}
+        mode="add"
+        blockData={{ type: 'video' }}
+        onSave={onSave}
+        onCancel={jest.fn()}
+      />
+    )
+    expect(screen.queryByText('Descrição da aula')).toBeNull()
+
+    rerender(
+      <ContentBlockDrawer
+        open
+        onOpenChange={jest.fn()}
+        mode="add"
+        blockData={{ type: 'video' }}
+        onSave={onSave}
+        onCancel={jest.fn()}
+        showVideoDescription
+      />
+    )
+    await user.type(screen.getByPlaceholderText('Digite o título do vídeo...'), 'Aula 1')
+    await user.type(
+      screen.getByPlaceholderText('ou cole o link do YouTube aqui...'),
+      'https://youtu.be/dQw4w9WgXcQ'
+    )
+    await user.type(screen.getByPlaceholderText('O que o aluno vai ver nesta aula...'), 'Linha 1')
+    await user.click(screen.getByRole('button', { name: /salvar|adicionar/i }))
+
+    expect(onSave).toHaveBeenCalledWith(
+      expect.objectContaining({ type: 'video', videoTitle: 'Aula 1', videoDescription: 'Linha 1' })
+    )
+
+    rerender(
+      <ContentBlockDrawer
+        open
+        onOpenChange={jest.fn()}
+        mode="edit"
+        blockData={onSave.mock.calls[0][0]}
+        onSave={jest.fn()}
+        onCancel={jest.fn()}
+        showVideoDescription
+      />
+    )
+    expect(screen.getByPlaceholderText('O que o aluno vai ver nesta aula...')).toHaveValue(
+      'Linha 1'
+    )
+  })
+
   it('warns about the offline package as soon as a YouTube link is pasted', async () => {
     const user = userEvent.setup()
     mount('interactive-video')
