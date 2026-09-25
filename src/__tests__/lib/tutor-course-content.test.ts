@@ -61,6 +61,18 @@ describe('blockText', () => {
     )
   })
 
+  it('reads the lesson title and description of a video', () => {
+    expect(
+      blockText(
+        block({
+          type: 'video',
+          videoTitle: 'Minimal APIs',
+          videoDescription: 'Criamos o primeiro endpoint.\nDepois, rotas com parâmetros.',
+        })
+      )
+    ).toBe('Minimal APIs\nCriamos o primeiro endpoint.\nDepois, rotas com parâmetros.')
+  })
+
   it('leaves out graded activities so the tutor does not hand out answers', () => {
     expect(
       blockText(

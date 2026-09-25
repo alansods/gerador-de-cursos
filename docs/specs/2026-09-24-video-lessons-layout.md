@@ -235,10 +235,15 @@ Cada item só é marcado quando o critério de "Pronto quando" foi verificado.
 - [x] **Menu drawer**
   - Pronto quando: botão só com ícone (com `aria-label`) abre o drawer nas duas telas;
     clicar numa aula navega e fecha; fecha pelo X, pelo fundo e pelo Esc.
-- [ ] **Tutor IA e responsividade**
+- [x] **Tutor IA e responsividade**
   - Pronto quando: o widget não cobre controles da aula, o tutor responde com base nas
     descrições das aulas, e em 390px a lista lateral some (fica o drawer) e o player
     ocupa a largura.
+  - Verificado: `blockText` indexa `videoTitle` e `videoDescription` (teste em
+    `tutor-course-content.test.ts`); a lista lateral termina 12rem acima do rodapé, livre do
+    botão do tutor, e a página tem folga inferior para rolar os controles acima dele; sem
+    transbordo em largura estreita (`scrollWidth` = `clientWidth`). A resposta do tutor
+    com o Gemini fica para o teste manual da Fase 6.
 
 ### Fase 5 — Geração
 

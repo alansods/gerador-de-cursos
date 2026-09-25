@@ -27,7 +27,7 @@ export function VideoLessonsSidebar({
   return (
     <aside
       aria-label="Aulas do curso"
-      className="sticky top-24 hidden max-h-[calc(100vh-7.5rem)] min-w-0 flex-col overflow-hidden rounded-2xl border border-[var(--vl-line)] bg-[var(--vl-surface)] lg:flex"
+      className="sticky top-24 hidden max-h-[calc(100vh-12rem)] min-w-0 flex-col overflow-hidden rounded-2xl border border-[var(--vl-line)] bg-[var(--vl-surface)] lg:flex"
     >
       <div className="flex flex-col gap-1 border-b border-[var(--vl-line)] px-6 py-5">
         <span className="vl-display text-lg font-semibold">Conteúdo do curso</span>

@@ -66,7 +66,7 @@ export function blockText(block: Block): string {
     case 'audio':
       return lines(block.audioTitle, block.transcript)
     case 'video':
-      return lines(block.videoTitle)
+      return lines(block.videoTitle, block.videoDescription)
     case 'pdf':
       return lines(block.pdfTitle)
     case 'interactive-image':
