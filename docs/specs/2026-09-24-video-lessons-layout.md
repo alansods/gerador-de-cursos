@@ -77,7 +77,10 @@ layout é sempre escuro, independente do tema do app.
   só neste layout. O card "Objetivos" some se a lista estiver vazia.
 - **Vídeo da introdução** reusa `bannerVideoUrl` (YouTube). Sem ele, o hero ocupa a
   largura toda.
-- **Player das aulas** reusa o `VideoBlock` (YouTube em iframe, arquivo em `<video>`).
+- **Player das aulas** reusa a lógica do `VideoBlock` (`videoSource` e `extractYouTubeId`:
+  YouTube em iframe, arquivo em `<video>`) num `LessonVideo` próprio, porque o `VideoBlock`
+  imprime o título acima do vídeo e usa as cores do tema claro. A última aula troca
+  "Próxima aula" por "Concluir curso", que marca a aula e volta à introdução.
 - **Progresso** reusa a regra `{ kind: 'steps' }` e o bitmap `steps` do suspend_data v2
   (o mesmo do trail), com `stepCounts` = nº de vídeos de cada unidade. "Marcar como
   concluída" e "Próxima aula" chamam `completeStep(unitId, lessonIndex)`. O curso fica
@@ -225,7 +228,7 @@ Cada item só é marcado quando o critério de "Pronto quando" foi verificado.
 - [x] **Tela de introdução**
   - Pronto quando: hero com ou sem vídeo, "O que você vai aprender", acordeão de módulos,
     progresso e objetivos (oculto se vazio), fiel ao protótipo, com teste.
-- [ ] **Tela de aula**
+- [x] **Tela de aula**
   - Pronto quando: player (YouTube e arquivo), "Módulo N · Aula M", título, descrição com
     quebras de linha, anterior/próxima atravessando módulos, "Marcar como concluída",
     lista lateral com status e abertura na primeira aula pendente, com teste.
