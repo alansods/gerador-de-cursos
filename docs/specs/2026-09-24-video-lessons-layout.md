@@ -17,8 +17,8 @@ Duas telas:
 
 - **Introdução do curso** (`currentUnit === null`): topo só com o botão do menu; hero com
   título, descrição, carga horária, nº de módulos e aulas e os botões "Começar curso" e
-  "Ver conteúdo"; vídeo de apresentação ao lado; "O que você vai aprender"; lista de
-  módulos em acordeão com as aulas; coluna lateral com "Seu progresso" e "Objetivos".
+  "Ver conteúdo"; vídeo de apresentação ao lado; lista de módulos em acordeão com a
+  descrição e as aulas do módulo aberto; coluna lateral com "Seu progresso" e "Objetivos".
 - **Aula**: topo com o botão do menu e a barra de progresso; player grande; rótulo
   "Módulo N · Aula M", título, botões anterior / marcar como concluída / próxima aula;
   descrição da aula abaixo; lista de aulas fixa à direita com o status de cada uma
@@ -90,8 +90,10 @@ layout é sempre escuro, independente do tema do app.
   "Concluída" e fica desabilitado.
 - **Retomada**: `lesson_location` continua com o `unitId`; ao abrir a unidade, mostra a
   primeira aula não concluída dela (ou a primeira, se todas estiverem).
-- **"O que você vai aprender"**: um card por módulo (título e descrição da unidade), até 4;
-  some se nenhuma unidade tiver descrição.
+- **Sem "O que você vai aprender"**: a seção de cards do protótipo repetia os
+  "Objetivos" (escritos pelo autor para isso) e os módulos de "Conteúdo do curso", e foi
+  removida. A descrição da unidade aparece no acordeão, acima das aulas do módulo aberto,
+  só quando tem texto.
 - **Tutor IA**: a indexação passa a incluir `videoTitle` e `videoDescription` dos blocos
   de vídeo, senão o tutor fica sem conteúdo neste layout.
 - **Durações e aba "Materiais" do protótipo ficam de fora** (sem dado no modelo).
@@ -239,7 +241,7 @@ Cada item só é marcado quando o critério de "Pronto quando" foi verificado.
   - Pronto quando: `video-lessons` está no registry, em `COURSE_LAYOUT_IDS` (teste de
     `layout-prompt` atualizado) e tem miniatura própria.
 - [x] **Tela de introdução**
-  - Pronto quando: hero com ou sem vídeo, "O que você vai aprender", acordeão de módulos,
+  - Pronto quando: hero com ou sem vídeo, acordeão de módulos com a descrição do módulo,
     progresso e objetivos (oculto se vazio), fiel ao protótipo, com teste.
 - [x] **Tela de aula**
   - Pronto quando: player (YouTube e arquivo), "Módulo N · Aula M", título, descrição com

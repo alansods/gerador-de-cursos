@@ -67,7 +67,7 @@ describe('video lessons layout registration', () => {
 })
 
 describe('video lessons intro screen', () => {
-  it('shows the hero, the intro video, what you will learn, the modules and the objectives', () => {
+  it('shows the hero, the intro video, the modules and the objectives', () => {
     render(<CoursePlayer course={buildCourse()} />)
 
     expect(screen.getByRole('heading', { level: 1, name: 'Fundamentos de .NET' })).toBeVisible()
@@ -78,7 +78,7 @@ describe('video lessons intro screen', () => {
       'https://www.youtube.com/embed/abcdefghijk'
     )
 
-    expect(screen.getByRole('heading', { name: 'O que você vai aprender' })).toBeVisible()
+    expect(screen.queryByRole('heading', { name: 'O que você vai aprender' })).toBeNull()
     expect(screen.getByText('Instalar o SDK e rodar o primeiro programa.')).toBeVisible()
 
     expect(screen.getByRole('button', { name: /Primeiros passos/ })).toHaveAttribute(
@@ -114,7 +114,6 @@ describe('video lessons intro screen', () => {
     )
 
     expect(screen.queryByTitle('Apresentação do curso')).toBeNull()
-    expect(screen.queryByRole('heading', { name: 'O que você vai aprender' })).toBeNull()
     expect(screen.queryByRole('heading', { name: /OBJETIVOS/ })).toBeNull()
   })
 

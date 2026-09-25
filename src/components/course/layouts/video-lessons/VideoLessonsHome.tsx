@@ -8,7 +8,6 @@ import { extractYouTubeId } from '@/lib/youtube'
 import { LessonStatusIcon, lessonCountLabel, moduleNumber } from './VideoLessonsParts'
 
 const CONTENT_ID = 'vl-course-content'
-const MAX_LEARNING_CARDS = 4
 
 interface VideoLessonsHomeProps {
   course: Course
@@ -32,10 +31,6 @@ export function VideoLessonsHome({
   const units = course.units ?? []
   const [openModule, setOpenModule] = useState<number | null>(0)
   const bannerVideoId = course.bannerVideoUrl ? extractYouTubeId(course.bannerVideoUrl) : ''
-  const learningCards = units
-    .map((unit, index) => ({ unit, index }))
-    .filter(({ unit }) => unit.description?.trim())
-    .slice(0, MAX_LEARNING_CARDS)
   const objectives = (course.objectives ?? []).filter((objective) => objective.trim())
   const percentage = totalLessons > 0 ? Math.round((doneCount / totalLessons) * 100) : 0
   const started = doneCount > 0
@@ -113,30 +108,6 @@ export function VideoLessonsHome({
         )}
       </section>
 
-      {learningCards.length > 0 && (
-        <section className="mx-auto flex max-w-[1312px] flex-col gap-7 px-4 pb-16 sm:px-8 lg:pb-[72px]">
-          <h2 className="vl-display text-2xl font-semibold tracking-[-0.01em] sm:text-[30px]">
-            O que você vai aprender
-          </h2>
-          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-            {learningCards.map(({ unit, index }) => (
-              <div
-                key={unit.id}
-                className="flex flex-col gap-3.5 rounded-2xl border border-[var(--vl-line)] bg-[var(--vl-surface)] p-6"
-              >
-                <span className="vl-mono flex h-11 w-11 items-center justify-center rounded-xl bg-[var(--vl-accent-soft)] text-sm text-[var(--vl-accent)]">
-                  {moduleNumber(index)}
-                </span>
-                <div className="text-[17px] font-semibold">{unit.title}</div>
-                <div className="text-sm leading-relaxed text-[var(--vl-muted)]">
-                  {unit.description}
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
-      )}
-
       <section
         id={CONTENT_ID}
         className="mx-auto grid max-w-[1312px] scroll-mt-20 items-start gap-8 px-4 sm:px-8 lg:grid-cols-[minmax(0,1fr)_minmax(280px,400px)] lg:gap-12"
@@ -184,6 +155,11 @@ export function VideoLessonsHome({
                       id={panelId}
                       className="flex flex-col border-t border-[var(--vl-line)] px-3 pt-2 pb-3"
                     >
+                      {unit.description?.trim() && (
+                        <p className="px-3 pt-2 pb-1 text-sm leading-relaxed text-[var(--vl-muted)]">
+                          {unit.description}
+                        </p>
+                      )}
                       {lessons.length === 0 ? (
                         <p className="p-3 text-sm text-[var(--vl-muted)]">
                           Este módulo ainda não tem aulas.
