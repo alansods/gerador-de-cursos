@@ -10,10 +10,12 @@ import { VideoLessonsHeader } from './VideoLessonsParts'
 import { VideoLessonsHome } from './VideoLessonsHome'
 import { VideoLessonsLesson } from './VideoLessonsLesson'
 import { VideoLessonsSidebar } from './VideoLessonsSidebar'
+import { VideoLessonsDrawer } from './VideoLessonsDrawer'
 
 export function VideoLessonsPlayer({ course }: LayoutPlayerProps) {
   const { currentUnit, navigate, recordQuiz, completeStep, state } = useScormProgress(course)
   const [lessonByUnit, setLessonByUnit] = useState<Record<string, number>>({})
+  const [menuOpen, setMenuOpen] = useState(false)
 
   const units = useMemo(() => course.units ?? [], [course.units])
   const lessonsByUnit = useMemo(() => units.map((unit) => deriveLessons(unit)), [units])
@@ -83,8 +85,18 @@ export function VideoLessonsPlayer({ course }: LayoutPlayerProps) {
     <ScormProgressProvider value={{ unitId: currentUnit, recordQuiz }}>
       <div data-video-lessons className="min-h-screen">
         <VideoLessonsHeader
-          onOpenMenu={() => undefined}
+          onOpenMenu={() => setMenuOpen(true)}
           progress={unit ? { done: doneCount, total: sequence.length } : undefined}
+        />
+        <VideoLessonsDrawer
+          open={menuOpen}
+          onOpenChange={setMenuOpen}
+          units={units}
+          lessonsByUnit={lessonsByUnit}
+          current={unit ? { unitIndex, lessonIndex } : null}
+          isDone={isDone}
+          onHome={goHome}
+          onSelect={openLesson}
         />
         {unit ? (
           <VideoLessonsLesson

@@ -31,40 +31,42 @@
     U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
 }
 
-[data-video-lessons] {
-  --vl-display: 'Video Lessons Sora', 'Segoe UI', system-ui, sans-serif;
-  --vl-body: 'Video Lessons IBM Plex Sans', 'Segoe UI', system-ui, sans-serif;
-  --vl-mono: 'Video Lessons JetBrains Mono', ui-monospace, 'SFMono-Regular', monospace;
+@layer base {
+  [data-video-lessons] {
+    --vl-display: 'Video Lessons Sora', 'Segoe UI', system-ui, sans-serif;
+    --vl-body: 'Video Lessons IBM Plex Sans', 'Segoe UI', system-ui, sans-serif;
+    --vl-mono: 'Video Lessons JetBrains Mono', ui-monospace, 'SFMono-Regular', monospace;
 
-  --vl-ground: #0b1117;
-  --vl-surface: #121a21;
-  --vl-panel: #0f161c;
-  --vl-video: #080d12;
-  --vl-line: #22303b;
-  --vl-line-strong: #2e3d49;
-  --vl-ink: #e8eef2;
-  --vl-ink-soft: #c7d2da;
-  --vl-ink-dim: #d3dce3;
-  --vl-muted: #95a4b1;
-  --vl-pending: #43525e;
-  --vl-primary: #1d6ae5;
-  --vl-accent: #7cb8ff;
-  --vl-accent-strong: #5aa2ff;
-  --vl-accent-soft: #16283a;
-  --vl-current: #15283d;
-  --vl-done: #3dd68c;
-  --vl-done-soft: #10301f;
+    --vl-ground: #0b1117;
+    --vl-surface: #121a21;
+    --vl-panel: #0f161c;
+    --vl-video: #080d12;
+    --vl-line: #22303b;
+    --vl-line-strong: #2e3d49;
+    --vl-ink: #e8eef2;
+    --vl-ink-soft: #c7d2da;
+    --vl-ink-dim: #d3dce3;
+    --vl-muted: #95a4b1;
+    --vl-pending: #43525e;
+    --vl-primary: #1d6ae5;
+    --vl-accent: #7cb8ff;
+    --vl-accent-strong: #5aa2ff;
+    --vl-accent-soft: #16283a;
+    --vl-current: #15283d;
+    --vl-done: #3dd68c;
+    --vl-done-soft: #10301f;
 
-  background-color: var(--vl-ground);
-  color: var(--vl-ink);
-  font-family: var(--vl-body);
-  color-scheme: dark;
-}
+    background-color: var(--vl-ground);
+    color: var(--vl-ink);
+    font-family: var(--vl-body);
+    color-scheme: dark;
+  }
 
-[data-video-lessons] .vl-display {
-  font-family: var(--vl-display);
-}
+  [data-video-lessons] .vl-display {
+    font-family: var(--vl-display);
+  }
 
-[data-video-lessons] .vl-mono {
-  font-family: var(--vl-mono);
+  [data-video-lessons] .vl-mono {
+    font-family: var(--vl-mono);
+  }
 }

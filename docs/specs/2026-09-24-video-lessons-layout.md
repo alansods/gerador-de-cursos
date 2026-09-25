@@ -232,7 +232,7 @@ Cada item só é marcado quando o critério de "Pronto quando" foi verificado.
   - Pronto quando: player (YouTube e arquivo), "Módulo N · Aula M", título, descrição com
     quebras de linha, anterior/próxima atravessando módulos, "Marcar como concluída",
     lista lateral com status e abertura na primeira aula pendente, com teste.
-- [ ] **Menu drawer**
+- [x] **Menu drawer**
   - Pronto quando: botão só com ícone (com `aria-label`) abre o drawer nas duas telas;
     clicar numa aula navega e fecha; fecha pelo X, pelo fundo e pelo Esc.
 - [ ] **Tutor IA e responsividade**

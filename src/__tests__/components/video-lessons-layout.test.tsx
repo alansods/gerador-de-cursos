@@ -270,3 +270,70 @@ describe('video lessons lesson screen', () => {
     expect(screen.getByText('1 de 3 aulas concluídas')).toBeInTheDocument()
   })
 })
+
+describe('video lessons menu drawer', () => {
+  const openMenu = (user: ReturnType<typeof userEvent.setup>) =>
+    user.click(screen.getByRole('button', { name: 'Abrir lista de aulas' }))
+
+  it('lists the intro and every lesson, navigates and closes on the intro screen', async () => {
+    const user = userEvent.setup()
+    render(<CoursePlayer course={buildCourse()} />)
+
+    await openMenu(user)
+    const drawer = screen.getByRole('dialog', { name: 'Conteúdo do curso' })
+    const nav = within(drawer).getByRole('navigation', { name: 'Aulas do curso' })
+    expect(within(nav).getByRole('button', { name: /Apresentação do curso/ })).toHaveAttribute(
+      'aria-current',
+      'page'
+    )
+    expect(within(nav).getByText('Módulo vazio')).toBeInTheDocument()
+
+    await user.click(within(nav).getByRole('button', { name: /Tipos e variáveis/ }))
+
+    expect(screen.queryByRole('dialog')).toBeNull()
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Tipos e variáveis')
+  })
+
+  it('opens on the lesson screen and goes back to the intro', async () => {
+    const user = userEvent.setup()
+    render(<CoursePlayer course={buildCourse()} />)
+    await user.click(screen.getByRole('button', { name: /Começar curso/ }))
+
+    await openMenu(user)
+    const drawer = screen.getByRole('dialog')
+    expect(within(drawer).getByRole('button', { name: /O que é o \.NET/ })).toHaveAttribute(
+      'aria-current',
+      'step'
+    )
+
+    await user.click(within(drawer).getByRole('button', { name: /Apresentação do curso/ }))
+
+    expect(screen.queryByRole('dialog')).toBeNull()
+    expect(screen.getByRole('heading', { level: 1, name: 'Fundamentos de .NET' })).toBeVisible()
+  })
+
+  it('closes with the X button and with Escape', async () => {
+    const user = userEvent.setup()
+    render(<CoursePlayer course={buildCourse()} />)
+
+    await openMenu(user)
+    await user.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Fechar' }))
+    expect(screen.queryByRole('dialog')).toBeNull()
+
+    await openMenu(user)
+    await user.keyboard('{Escape}')
+    expect(screen.queryByRole('dialog')).toBeNull()
+  })
+
+  it('closes when the backdrop is clicked', async () => {
+    const user = userEvent.setup()
+    render(<CoursePlayer course={buildCourse()} />)
+
+    await openMenu(user)
+    const overlay = document.querySelector('[data-state="open"].fixed.inset-0') as HTMLElement
+    expect(overlay).not.toBeNull()
+    await user.click(overlay)
+
+    expect(screen.queryByRole('dialog')).toBeNull()
+  })
+})
