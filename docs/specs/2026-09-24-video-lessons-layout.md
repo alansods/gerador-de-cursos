@@ -192,8 +192,11 @@ Cada item só é marcado quando o critério de "Pronto quando" foi verificado.
     começa com `DELETE FROM cursos`). Num Postgres descartável (`pgvector/pgvector:pg16`
     no Docker), o estado anterior foi montado pelo schema sem `objectives`, as migrations
     antigas marcadas como aplicadas e `prisma migrate deploy` aplicou só a nova; o
-    `migrate diff` entre o banco e `schema.prisma` saiu vazio. Produção pendente:
-    `prisma migrate deploy`, com branch de backup do Neon antes.
+    `migrate diff` entre o banco e `schema.prisma` saiu vazio.
+  - Produção (2026-09-25): backup com `pg_dump -Fc` completo, fora do repositório, com as
+    12 tabelas conferidas no índice do arquivo; depois `prisma migrate deploy` aplicou
+    `20260924120000_add_course_objectives` e `prisma migrate status` confirmou o banco em
+    dia.
 - [x] **`videoDescription` no bloco de vídeo**
   - Pronto quando: o tipo tem o campo, o limite de 2.000 caracteres é aplicado e o
     pacote exportado traz o campo e os objetivos no JSON lido pelo player.
