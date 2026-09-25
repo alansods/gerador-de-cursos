@@ -2,6 +2,8 @@ import type { Block, Course, Unit } from '@/types/course'
 
 export type BlockType = Block['type']
 
+export type LayoutUnits = { blocks?: readonly Pick<Block, 'type'>[] }[]
+
 export const VIDEO_LESSONS_LAYOUT_ID = 'video-lessons'
 
 const LAYOUT_ALLOWED_BLOCK_TYPES: Partial<Record<string, readonly BlockType[]>> = {
@@ -13,7 +15,7 @@ export function allowedBlockTypes(layoutId: string | undefined): readonly BlockT
 }
 
 export function blocksOutsideLayout(
-  units: Pick<Unit, 'blocks'>[] | undefined,
+  units: LayoutUnits | undefined,
   layoutId: string | undefined
 ): number {
   const allowed = allowedBlockTypes(layoutId)

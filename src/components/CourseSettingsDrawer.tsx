@@ -21,6 +21,7 @@ import { TrailLayoutNotice } from '@/components/course/TrailLayoutNotice'
 import { FormField } from '@/components/ui/form-field'
 import { COURSE_CATEGORIES } from '@/lib/constants'
 import { isValidYouTubeUrl, extractYouTubeId } from '@/lib/youtube'
+import type { Block } from '@/types/course'
 
 import { ManageCollaborators } from '@/components/collaboration/ManageCollaborators'
 
@@ -28,7 +29,7 @@ interface Unit {
   id: string
   title: string
   description?: string
-  blocks?: unknown[]
+  blocks?: Pick<Block, 'type'>[]
 }
 
 interface CourseData {
@@ -214,6 +215,7 @@ export function CourseSettingsDrawer({
               <LayoutSelector
                 value={localCourseData.layout || DEFAULT_LAYOUT_ID}
                 onChange={(layout) => setLocalCourseData({ ...localCourseData, layout })}
+                units={localUnits}
               />
             </FormField>
 

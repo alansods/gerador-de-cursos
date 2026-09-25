@@ -55,8 +55,10 @@ JetBrains Mono (rótulos).
 - **Título da aula** é o `videoTitle`, que o formulário já exige.
 - **Troca de layout**: `canUseLayout(course, layoutId)` diz se todos os blocos do curso
   cabem em `allowedBlockTypes`. Se não couberem, a opção aparece desabilitada no
-  `LayoutSelector` e no wizard com o motivo ("Este layout aceita apenas vídeos; o curso
-  tem N blocos de outros tipos"). Nada é apagado nem escondido.
+  `LayoutSelector` do painel "Sobre o curso" com o motivo ("Este layout aceita apenas aulas
+  em vídeo; o curso tem N blocos de outros tipos"). Nada é apagado nem escondido. O wizard
+  (`StepLayout`) não precisa da trava: o layout é escolhido antes de o curso existir, e a
+  geração já sai só com vídeos.
 - **IA e .docx geram só a estrutura.** Com o layout `video-lessons`, o prompt pede
   módulos com aulas `video` de `videoTitle` e `videoDescription`, `videoUrl` vazio.
   `applyLayoutToGeneratedCourse` descarta blocos de outros tipos. O filtro leniente
@@ -132,7 +134,7 @@ JetBrains Mono (rótulos).
   "Vídeo pendente".
 - `src/components/ContentBlockDrawer.tsx`: prop `showVideoDescription`; campo "Descrição da aula" (multiline) no
   formulário do vídeo, visível neste layout.
-- `LayoutSelector.tsx` e `StepLayout.tsx`: opção desabilitada via `canUseLayout`.
+- `LayoutSelector.tsx`: recebe as unidades e desabilita a opção via `blocksOutsideLayout`.
 - `CourseSettingsDrawer.tsx`: aviso do layout (modelo: `TrailLayoutNotice`) e editor de
   objetivos.
 - Exportação (`useSCORM.ts` / rota de export): bloquear com `lessonsMissingVideo`.
@@ -199,9 +201,10 @@ Cada item só é marcado quando o critério de "Pronto quando" foi verificado.
   - Pronto quando: neste layout o editor não oferece outros tipos, o botão abre direto o
     formulário do vídeo com título, fonte (YouTube/arquivo) e descrição, e a aula criada
     reabre igual.
-- [ ] **Escolha de layout protegida**
+- [x] **Escolha de layout protegida**
   - Pronto quando: em curso com outros blocos a opção aparece desabilitada com o motivo
-    no painel e no wizard; em curso novo ou só com vídeos ela funciona.
+    no painel; em curso vazio ou só com vídeos ela funciona; o layout atual nunca fica
+    desabilitado.
 - [ ] **Objetivos e aviso no painel "Sobre o curso"**
   - Pronto quando: com o layout escolhido aparecem o aviso e o editor de objetivos, e o
     valor salvo reabre igual.

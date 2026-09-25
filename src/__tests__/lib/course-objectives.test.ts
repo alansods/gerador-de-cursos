@@ -18,7 +18,7 @@ describe('normalizeObjectives', () => {
     const many = Array.from({ length: 12 }, (_, i) => `Objetivo ${i + 1}`)
 
     expect(normalizeObjectives(['  Um  ', '', '   ', 7, 'Dois'])).toEqual(['Um', 'Dois'])
-    expect(normalizeObjectives(['a'.repeat(300)])[0]).toHaveLength(MAX_OBJECTIVE_LENGTH)
+    expect(normalizeObjectives(['a'.repeat(300)])?.[0]).toHaveLength(MAX_OBJECTIVE_LENGTH)
     expect(normalizeObjectives(many)).toHaveLength(MAX_COURSE_OBJECTIVES)
   })
 })
