@@ -105,6 +105,11 @@ layout é sempre escuro, independente do tema do app.
   de vídeo, senão o tutor fica sem conteúdo neste layout.
 - **Durações e aba "Materiais" do protótipo ficam de fora** (sem dado no modelo).
 - **Drawer** reusa o `Sheet` do shadcn, como o `ClassicNavbar`.
+- **Hero em faixa própria.** Sem a seção "O que você vai aprender", o hero e "Conteúdo
+  do curso" ficaram próximos demais. O hero passa a ser uma faixa de ponta a ponta com
+  fundo `--vl-panel` e borda inferior `--vl-line`, e "Conteúdo do curso" ganha margem
+  superior própria (48px no celular, 64px em tela larga). O resumo "N módulos · M aulas"
+  ao lado do título "Conteúdo do curso" sai: o hero já mostra a mesma informação.
 - **Módulo concluído.** Quando todas as aulas de um módulo estão concluídas, o número do
   módulo vira um círculo verde com check (texto para leitor de tela "Módulo concluído") na
   introdução, na lista lateral da aula e no menu; na introdução, a linha "N aulas" ganha
@@ -278,6 +283,10 @@ Cada item só é marcado quando o critério de "Pronto quando" foi verificado.
   - Correção: toda escrita de estado no hook atualiza `stateRef.current` na hora.
   - Pronto quando: um teste avança com "Próxima aula" até o módulo seguinte e a última aula
     do módulo anterior fica concluída; os testes de `trail` e `classic` seguem verdes.
+- [x] **Hero em faixa própria**
+  - Pronto quando: o hero tem fundo e borda próprios de ponta a ponta, "Conteúdo do
+    curso" tem margem superior própria e sem o resumo repetido, conferido em 1440px e
+    500px.
 - [x] **Módulo concluído**
   - Pronto quando: com todas as aulas de um módulo marcadas, o módulo aparece concluído
     na introdução, na lista lateral e no menu; módulo parcial ou vazio não; com teste.

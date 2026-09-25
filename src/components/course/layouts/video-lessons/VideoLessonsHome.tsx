@@ -43,83 +43,82 @@ export function VideoLessonsHome({
 
   return (
     <div className="pb-28">
-      <section
-        className={`mx-auto grid max-w-[1312px] gap-10 px-4 py-12 sm:px-8 lg:py-[72px] ${
-          bannerVideoId
-            ? 'lg:grid-cols-[minmax(0,512px)_minmax(0,1fr)] lg:items-center lg:gap-16'
-            : ''
-        }`}
-      >
-        <div className={`flex flex-col gap-7 ${bannerVideoId ? '' : 'max-w-3xl'}`}>
-          {course.category && (
-            <span className="vl-mono self-start rounded-full border border-[#24476b] bg-[#122233] px-3 py-1.5 text-xs uppercase tracking-[0.08em] text-[var(--vl-accent)]">
-              {course.category}
-            </span>
-          )}
-          <h1 className="vl-display text-4xl leading-[1.05] font-bold tracking-[-0.02em] sm:text-[56px]">
-            {course.title}
-          </h1>
-          {course.description && (
-            <p className="text-lg leading-relaxed whitespace-pre-line text-[#b3c0ca]">
-              {course.description}
-            </p>
-          )}
-          <div className="grid gap-x-6 gap-y-3.5 text-[15px] text-[var(--vl-ink-dim)] sm:grid-cols-2">
-            {course.workload && (
-              <div className="flex items-center gap-2.5">
-                <Clock className="h-[18px] w-[18px] text-[var(--vl-accent-strong)]" aria-hidden />
-                {course.workload} de carga horária
-              </div>
+      <div className="border-b border-[var(--vl-line)] bg-[var(--vl-panel)]">
+        <section
+          className={`mx-auto grid max-w-[1312px] gap-10 px-4 py-12 sm:px-8 lg:py-[72px] ${
+            bannerVideoId
+              ? 'lg:grid-cols-[minmax(0,512px)_minmax(0,1fr)] lg:items-center lg:gap-16'
+              : ''
+          }`}
+        >
+          <div className={`flex flex-col gap-7 ${bannerVideoId ? '' : 'max-w-3xl'}`}>
+            {course.category && (
+              <span className="vl-mono self-start rounded-full border border-[#24476b] bg-[#122233] px-3 py-1.5 text-xs uppercase tracking-[0.08em] text-[var(--vl-accent)]">
+                {course.category}
+              </span>
             )}
-            <div className="flex items-center gap-2.5">
-              <Layers className="h-[18px] w-[18px] text-[var(--vl-accent-strong)]" aria-hidden />
-              {summary}
+            <h1 className="vl-display text-4xl leading-[1.05] font-bold tracking-[-0.02em] sm:text-[56px]">
+              {course.title}
+            </h1>
+            {course.description && (
+              <p className="text-lg leading-relaxed whitespace-pre-line text-[#b3c0ca]">
+                {course.description}
+              </p>
+            )}
+            <div className="grid gap-x-6 gap-y-3.5 text-[15px] text-[var(--vl-ink-dim)] sm:grid-cols-2">
+              {course.workload && (
+                <div className="flex items-center gap-2.5">
+                  <Clock className="h-[18px] w-[18px] text-[var(--vl-accent-strong)]" aria-hidden />
+                  {course.workload} de carga horária
+                </div>
+              )}
+              <div className="flex items-center gap-2.5">
+                <Layers className="h-[18px] w-[18px] text-[var(--vl-accent-strong)]" aria-hidden />
+                {summary}
+              </div>
+            </div>
+            <div className="mt-2 flex flex-wrap gap-3">
+              <button
+                type="button"
+                onClick={onStart}
+                disabled={totalLessons === 0}
+                className="flex h-[52px] items-center gap-2.5 rounded-xl bg-[var(--vl-primary)] px-6 text-base font-semibold text-white transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                <Play className="h-4 w-4 fill-current" aria-hidden />
+                {started ? 'Continuar curso' : 'Começar curso'}
+              </button>
+              <button
+                type="button"
+                onClick={showContent}
+                className="flex h-[52px] items-center rounded-xl border border-[var(--vl-line-strong)] bg-[var(--vl-surface)] px-6 text-base font-medium text-[var(--vl-ink)] transition-colors hover:border-[var(--vl-muted)]"
+              >
+                Ver conteúdo
+              </button>
             </div>
           </div>
-          <div className="mt-2 flex flex-wrap gap-3">
-            <button
-              type="button"
-              onClick={onStart}
-              disabled={totalLessons === 0}
-              className="flex h-[52px] items-center gap-2.5 rounded-xl bg-[var(--vl-primary)] px-6 text-base font-semibold text-white transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              <Play className="h-4 w-4 fill-current" aria-hidden />
-              {started ? 'Continuar curso' : 'Começar curso'}
-            </button>
-            <button
-              type="button"
-              onClick={showContent}
-              className="flex h-[52px] items-center rounded-xl border border-[var(--vl-line-strong)] bg-[var(--vl-surface)] px-6 text-base font-medium text-[var(--vl-ink)] transition-colors hover:border-[var(--vl-muted)]"
-            >
-              Ver conteúdo
-            </button>
-          </div>
-        </div>
 
-        {bannerVideoId && (
-          <div className="aspect-video w-full overflow-hidden rounded-[18px] border border-[#26343f] bg-[var(--vl-video)]">
-            <iframe
-              src={`https://www.youtube.com/embed/${bannerVideoId}`}
-              title="Apresentação do curso"
-              className="h-full w-full"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-              allowFullScreen
-            />
-          </div>
-        )}
-      </section>
+          {bannerVideoId && (
+            <div className="aspect-video w-full overflow-hidden rounded-[18px] border border-[#26343f] bg-[var(--vl-video)]">
+              <iframe
+                src={`https://www.youtube.com/embed/${bannerVideoId}`}
+                title="Apresentação do curso"
+                className="h-full w-full"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+              />
+            </div>
+          )}
+        </section>
+      </div>
 
       <section
         id={CONTENT_ID}
-        className="mx-auto grid max-w-[1312px] scroll-mt-20 items-start gap-8 px-4 sm:px-8 lg:grid-cols-[minmax(0,1fr)_minmax(280px,400px)] lg:gap-12"
+        className="mx-auto grid max-w-[1312px] scroll-mt-20 items-start gap-8 px-4 pt-12 sm:px-8 lg:pt-16 lg:grid-cols-[minmax(0,1fr)_minmax(280px,400px)] lg:gap-12"
       >
         <div className="flex flex-col gap-6">
-          <div className="flex flex-wrap items-baseline justify-between gap-2">
-            <h2 className="vl-display text-2xl font-semibold tracking-[-0.01em] sm:text-[30px]">
-              Conteúdo do curso
-            </h2>
-            <span className="text-sm text-[var(--vl-muted)]">{summary}</span>
-          </div>
+          <h2 className="vl-display text-2xl font-semibold tracking-[-0.01em] sm:text-[30px]">
+            Conteúdo do curso
+          </h2>
           <Accordion.Root
             type="single"
             collapsible

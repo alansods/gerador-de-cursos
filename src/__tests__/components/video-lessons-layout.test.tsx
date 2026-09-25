@@ -72,7 +72,7 @@ describe('video lessons intro screen', () => {
 
     expect(screen.getByRole('heading', { level: 1, name: 'Fundamentos de .NET' })).toBeVisible()
     expect(screen.getByText('40h de carga horária')).toBeVisible()
-    expect(screen.getAllByText('3 módulos · 3 aulas').length).toBeGreaterThan(0)
+    expect(screen.getByText('3 módulos · 3 aulas')).toBeVisible()
     expect(screen.getByTitle('Apresentação do curso')).toHaveAttribute(
       'src',
       'https://www.youtube.com/embed/abcdefghijk'
