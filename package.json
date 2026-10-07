@@ -2,6 +2,7 @@
   "name": "course-generator",
   "version": "0.1.0",
   "private": true,
+  "license": "UNLICENSED",
   "scripts": {
     "dev": "next dev",
     "build:player": "vite build --config player/vite.config.ts",

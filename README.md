@@ -235,4 +235,4 @@ generate-scorm-isolated.mjs     # Isolated SCORM build script
 
 ## License
 
-MIT — open source educational content generator.
+Proprietary — all rights reserved. Copying, modifying or redistributing this code without written permission is not allowed. See [`LICENSE`](LICENSE).
