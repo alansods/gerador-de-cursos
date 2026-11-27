@@ -74,17 +74,14 @@ export default function SignupPage() {
 
     setLoading(true)
     try {
-      const fullName = name.trim()
-      const user = email ? email.split('@')[0] : name.trim().toLowerCase()
-
       const response = await fetch('/api/auth/signup', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          name: fullName,
-          username: user,
+          name: name.trim(),
+          email: email.trim(),
           password,
         }),
       })
